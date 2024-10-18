@@ -1,0 +1,123 @@
+.analysis {
+  padding: 8px 5px;
+
+  /* count */
+  .analysis-count {
+    .count-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 160px;
+      padding: 20px 28px;
+      overflow-x: hidden;
+      cursor: pointer;
+      border: none;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      &:hover {
+        box-shadow: var(--hooks-boxShadowAnalysis);
+        transform: translateY(-4px) scale(1.01);
+      }
+      .count-number {
+        .ant-statistic-title {
+          font-size: 18px;
+          color: #ffffff;
+        }
+        .ant-statistic-content {
+          font-size: 32px;
+          font-weight: 500;
+          color: #ffffff;
+        }
+      }
+      .count-trend {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        .count-echarts {
+          width: 150px;
+          height: 60px;
+        }
+        .count-percentage {
+          .ant-statistic-content {
+            font-size: 16px;
+            color: #ffffff;
+            .ant-statistic-content-prefix {
+              font-size: 20px;
+            }
+          }
+        }
+      }
+    }
+    & :nth-child(1) .count-item {
+      background: linear-gradient(90deg, #31c5de 0%, #4776f7 100%);
+    }
+    & :nth-child(2) .count-item {
+      background: linear-gradient(90deg, #fa9797 0%, #ff75b2 100%);
+    }
+    & :nth-child(3) .count-item {
+      background: linear-gradient(90deg, #3dd3b2 0%, #10a0e6 100%);
+    }
+    & :nth-child(4) .count-item {
+      background: linear-gradient(90deg, #ea83f7 0%, #7773f3 100%);
+    }
+  }
+
+  /* overview */
+  .analysis-overview {
+    .overview-box {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      padding: 0;
+      .overview-head {
+        padding: 15px 38px 0;
+        .overview-title {
+          float: left;
+          margin-top: 6px;
+          font-size: 23px;
+          color: var(---hooks-colorTextSecondaryHeader);
+        }
+        .overview-tabs {
+          float: right;
+          .ant-tabs-nav::before {
+            border: none;
+          }
+          .ant-tabs-tab {
+            padding: 12px 0 10px;
+            font-size: 16px;
+          }
+        }
+      }
+      .overview-echarts {
+        flex: 1;
+        .title {
+          font-size: 15px;
+          color: #595959;
+        }
+        .value {
+          font-size: 20px;
+          color: #222222;
+        }
+      }
+    }
+  }
+
+  /* record */
+  .analysis-record {
+    .record-table {
+      display: flex;
+      width: 100%;
+      height: 440px;
+    }
+    .record-proportion {
+      width: 100%;
+      height: 440px;
+    }
+  }
+}
+
+@media screen and (max-width: 750px) {
+  .overview-title {
+    display: none;
+  }
+}

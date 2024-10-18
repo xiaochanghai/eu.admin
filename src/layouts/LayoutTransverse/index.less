@@ -1,0 +1,65 @@
+.layout-transverse {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .ant-layout-header {
+    display: flex;
+    height: 55px;
+    padding: 0 40px 0 11px;
+    line-height: 55px;
+    background-color: var(--hooks-colorBgHeader);
+    border-bottom: 1px solid var(--hooks-colorBorderHeader);
+    .logo {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      height: 55px;
+      margin: 0 30px 0 0;
+      .logo-img {
+        // width: 30px;
+        height: 30px;
+      }
+      .logo-text {
+        margin: 0 0 0 6px;
+        font-size: 23.5px;
+        font-weight: bold;
+        line-height: 23.5px;
+        color: var(--hooks-colorTextHeader);
+        white-space: nowrap;
+      }
+    }
+    .ant-menu-horizontal {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      overflow: hidden;
+      background-color: var(--hooks-colorBgHeader);
+      border-bottom: none;
+      > *::after {
+        display: none;
+      }
+      .ant-menu-overflow-item {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 0 calc(var(--hooks-paddingLG) * 0.9px);
+        border-radius: calc(var(--hooks-borderRadius) * 1px);
+      }
+      .ant-menu-item-selected,
+      .ant-menu-submenu-selected {
+        color: #ffffff;
+        background-color: var(--hooks-colorPrimary);
+        .ant-menu-submenu-title {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 700px) {
+    .logo {
+      display: none !important;
+    }
+  }
+}

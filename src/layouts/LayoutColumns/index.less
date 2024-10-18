@@ -1,0 +1,105 @@
+.layout-columns {
+  display: flex;
+  height: 100%;
+  .logo {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 55px;
+    overflow: hidden;
+    .logo-img {
+      width: 34px;
+      height: 34px;
+    }
+    .logo-text {
+      font-size: 26px;
+      font-weight: bold;
+      line-height: 26px;
+      color: var(--hooks-colorTextSider);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+  }
+  .sider-split {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 70px;
+    height: 100%;
+    background-color: var(--hooks-colorBgSider);
+    border-right: 1px solid var(--hooks-colorBorderSider);
+    .menu-list {
+      flex: 1;
+      overflow: auto;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+      .menu-item {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        margin: 5px 6px 10px;
+        color: var(--hooks-colorTextSecondarySider);
+        cursor: pointer;
+        border-radius: calc(var(--hooks-borderRadius) * 1px);
+        transition: all 0.3s cubic-bezier(0.2, 0, 0, 1) 0s;
+        .anticon {
+          margin: 13px 0 4px;
+          font-size: 16px;
+          line-height: 16px;
+        }
+        .title {
+          width: 100%;
+          margin: 0 0 11px;
+          font-size: 12px;
+          line-height: 20px;
+          text-align: center;
+        }
+      }
+      .menu-active {
+        color: #ffffff;
+        background-color: var(--hooks-colorPrimary);
+      }
+    }
+  }
+  .not-sider {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+  }
+  .ant-layout-sider {
+    background-color: var(--hooks-colorBgSider);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1) 0s;
+    .ant-layout-sider-children {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border-right: 1px solid var(--hooks-colorBorderSider);
+      .ant-menu-root {
+        flex: 1;
+        width: 100%;
+        overflow-y: auto;
+        background-color: var(--hooks-colorBgSider);
+        border-right: none;
+      }
+    }
+  }
+  .ant-layout {
+    /* Solve the problem that tabs do not shrink beyond the limit */
+    overflow-x: hidden;
+    .ant-layout-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 55px;
+      padding: 0 40px 0 20px;
+      line-height: 55px;
+      background-color: var(--hooks-colorBgHeader);
+      border-bottom: 1px solid var(--hooks-colorBorderHeader);
+    }
+  }
+}

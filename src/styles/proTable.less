@@ -1,0 +1,96 @@
+/* ant-pro-table internal scrolling */
+.ant-pro-table-scroll {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .ant-pro-table-search {
+    margin-block-end: 10px;
+  }
+  .ant-pro-card:last-child {
+    flex: 1;
+    overflow: hidden;
+    .ant-pro-card-body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      .ant-table-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .ant-spin-nested-loading {
+          height: 100%;
+          .ant-spin-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            .ant-table {
+              flex: auto;
+              overflow: hidden;
+              .ant-table-container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                .ant-table-header {
+                  flex: none;
+                }
+                .ant-table-body {
+                  flex: auto;
+                }
+              }
+              .ant-table-pagination {
+                flex: none;
+              }
+            }
+
+            /* table empty */
+            .ant-table-empty {
+              .ant-table-content,
+              table {
+                height: 100%;
+                .ant-table-expanded-row-fixed {
+                  margin: -12px -150px !important;
+                }
+              }
+            }
+
+            /* table bordered */
+            .ant-table-bordered {
+              position: relative;
+              &::before {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                z-index: 3;
+                width: 100%;
+                height: 1px;
+                content: "";
+                background-color: var(--hooks-colorBorderSecondary);
+              }
+              .ant-table-container {
+                border-right: 1px solid var(--hooks-colorBorderSecondary);
+              }
+              .ant-table-tbody > tr > td:last-child {
+                border-inline-end: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+.ant-pro-table-scroll .ant-pro-table-list-toolbar-right {
+  justify-content: flex-start !important;
+}
+.ant-pro-table-scroll .ant-pro-table-list-toolbar-left {
+  display: none;
+}
+.ant-pro-table-scroll .ant-table-cell .ant-tag {
+  margin-inline-end: 8px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.ant-table-wrapper .ant-table {
+  /* stylelint-disable-next-line property-no-unknown */
+  scrollbar-color: initial;
+}

@@ -1,0 +1,74 @@
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "查询成功",
+  "MessageDev": null,
+  "Count": 0,
+  "Data": [
+    {
+      "id": "3b3dd42d-6fe0-4b6b-82af-284aa5b288e5",
+      "path": "/home/index",
+      "element": "/home/index",
+      "redirect": "",
+      "children": [],
+      "meta": {
+        "key": "home",
+        "icon": "HomeOutlined",
+        "title": "首页",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true
+      }
+    },
+    {
+      "id": "a6d0f0fe-1877-47ca-9dd5-5f063eaa0565",
+      "path": "/system/common/detail/:id",
+      "element": "/system/common/detail",
+      "redirect": "",
+      "children": [],
+      "meta": {
+        "key": "fd8d3237-8787-40a1-9088-877257505522",
+        "icon": "HomeOutlined",
+        "title": "xxxxxx",
+        "isLink": "",
+        "isHide": true,
+        "isFull": false,
+        "isAffix": false
+      }
+    },
+    {
+      "id": "9325a17e-457c-4e6c-b2c7-97a74f665b1f",
+      "path": "/system",
+      "element": "",
+      "redirect": "/system/accountManage",
+      "children": [
+        {
+          "id": "c5132cdf-9938-4c60-b762-973342cb6490",
+          "path": "/system/common/SM_AUTOCODE_MNG",
+          "element": "/system/common/index",
+          "redirect": "",
+          "children": [],
+          "meta": {
+            "key": "SM_AUTOCODE_MNG",
+            "icon": "",
+            "title": "自动编号",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false
+          }
+        }
+      ],
+      "meta": {
+        "key": "SM_SYSTEM_MNG",
+        "icon": "SettingOutlined",
+        "title": "系统管理",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false
+      }
+    }
+  ]
+}

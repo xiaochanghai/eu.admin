@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dsznajder.es7-react-js-snippets",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "esbenp.prettier-vscode",
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker",
+    "mikestead.dotenv"
+  ]
+}

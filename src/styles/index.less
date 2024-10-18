@@ -1,0 +1,146 @@
+@import url("./common.less");
+@import url("./proTable.less");
+@import url("./transition.less");
+
+/* global */
+html,
+body,
+#root,
+.ant-app,
+.watermark-content {
+  height: 100%;
+  background-color: var(--hooks-colorBgContainer);
+}
+
+/* scroll bar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--hooks-scrollbarThumb);
+  border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--hooks-scrollbarThumb1);
+}
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* nprogress */
+#nprogress .bar {
+  background: var(--hooks-colorPrimary) !important;
+}
+#nprogress .spinner-icon {
+  border-top-color: var(--hooks-colorPrimary) !important;
+  border-left-color: var(--hooks-colorPrimary) !important;
+}
+#nprogress .peg {
+  box-shadow:
+    0 0 10px var(--hooks-colorPrimary),
+    0 0 5px var(--hooks-colorPrimary) !important;
+}
+.ant-input-number,
+.ant-picker {
+  width: 100%;
+}
+.card-small .ant-pro-card-body {
+  padding: 0;
+}
+.font-size {
+  font-size: 20px;
+}
+
+// @keyframes slide-in {
+//   from {
+//     transform: scale(0.8);
+//   }
+//   to {
+//     transform: scale(1);
+//   }
+// }
+
+// @keyframes fade-in {
+//   0% {
+//     opacity: 0;
+//   }
+//   100% {
+//     opacity: 1;
+//   }
+// }
+
+// @keyframes fade-slide {
+//   from {
+//     opacity: 0;
+//     transform: translateX(-30px);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateX(0);
+//   }
+// }
+
+// @keyframes fade-bottom {
+//   from {
+//     opacity: 0;
+//     transform: translateY(-10%);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
+
+// @keyframes fade-scale {
+//   from {
+//     opacity: 0;
+//     transform: scale(1.2);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: scale(1);
+//   }
+// }
+
+// @keyframes zoom-fade {
+//   from {
+//     opacity: 0;
+//     transform: scale(0.92);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: scale(1);
+//   }
+// }
+
+// @keyframes zoom-out {
+//   from {
+//     opacity: 0;
+//     transform: scale(0);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: scale(1);
+//   }
+// }
+// .fade {
+//   animation:
+//     fade-in 300s ease-in-out,
+//     slide-in 300s ease-in-out;
+// }
+// .fade-slide {
+//   animation: fade-slide 0.3s ease-in-out;
+// }
+// .fade-bottom {
+//   animation: fade-bottom 0.3s ease-in-out;
+// }
+// .fade-scale {
+//   animation: fade-scale 0.28s ease-in-out;
+// }
+// .zoom-fade {
+//   animation: zoom-fade 0.3s ease-in-out;
+// }
+// .zoom-out {
+//   animation: zoom-out 0.15s ease-in-out;
+// }

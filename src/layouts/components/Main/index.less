@@ -1,0 +1,31 @@
+.ant-layout-content {
+  box-sizing: border-box;
+  flex: 1;
+  padding: 10px 12px;
+  overflow: auto;
+  background-color: var(--hooks-colorBgContent);
+}
+
+/* maximize */
+.maximize-icon {
+  position: fixed;
+  top: -25px;
+  right: -25px;
+  z-index: 999;
+  width: 55px;
+  height: 55px;
+  cursor: pointer;
+  background-color: var(--hooks-colorIcon);
+  border-radius: 50%;
+  opacity: 0.7;
+  &:hover {
+    background-color: var(--hooks-colorIconHover);
+  }
+  .iconfont {
+    position: relative;
+    top: 48%;
+    left: 19%;
+    font-size: 14px;
+    color: #ffffff;
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "Status": 200,
+  "Success": true,
+  "Message": "查询成功",
+  "MessageDev": "",
+  "Count": 0,
+  "Data": [
+    {
+      "id": "609ca9eb-1274-45fb-afa7-415e0aa70589",
+      "path": "/home/index",
+      "element": "/home/index",
+      "redirect": "",
+      "children": [],
+      "meta": {
+        "key": "home",
+        "icon": "HomeOutlined",
+        "title": "首页",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": true
+      }
+    },
+    {
+      "path": "/feat/tabs/detail/:id",
+      "element": "/feat/tabs/detail",
+      "meta": {
+        "key": "tabsDetail",
+        "icon": "AppstoreOutlined",
+        "title": "Tab 详情",
+        "activeMenu": "/feat/tabs",
+        "isLink": "",
+        "isHide": true,
+        "isFull": false,
+        "isAffix": false
+      }
+    },
+    {
+      "id": "fb06ea7a-4576-4702-8cab-1f25ce2db453",
+      "path": "/system/common/detail/:id",
+      "element": "/system/common/detail",
+      "redirect": "",
+      "children": [],
+      "meta": {
+        "key": "742c13d2-1c4c-4b12-aa18-f7c4fc2a5b06",
+        "icon": "HomeOutlined",
+        "title": "xxxxxx",
+        "isLink": "",
+        "isHide": true,
+        "isFull": false,
+        "isAffix": false
+      }
+    },
+    {
+      "path": "/system",
+      "redirect": "/system/accountManage",
+      "meta": {
+        "key": "system",
+        "icon": "SettingOutlined",
+        "title": "系统管理",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false
+      },
+      "children": [
+        {
+          "id": "c5132cdf-9938-4c60-b762-973342cb6490",
+          "path": "/system/common/detail/SM_AUTOCODE_MNG3",
+          "element": "/system/common/detail",
+          "redirect": "",
+          "children": [],
+          "meta": {
+            "key": "SM_AUTOCODE_MNG",
+            "icon": "",
+            "title": "自动编号",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false
+          }
+        }
+      ]
+    }
+  ]
+}

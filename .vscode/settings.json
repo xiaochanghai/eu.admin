@@ -1,0 +1,94 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.stylelint": "explicit"
+  },
+  "stylelint.enable": true,
+  "stylelint.validate": ["css", "less", "postcss", "scss", "sass", "html"],
+  "files.eol": "\n",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[less]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.words": [
+    "acroutes",
+    "adcode",
+    "ahooks",
+    "alicdn",
+    "AMAP",
+    "antd",
+    "anticon",
+    "apifox",
+    "Appstore",
+    "Biao",
+    "breakline",
+    "brotli",
+    "commitlint",
+    "contentleft",
+    "contentright",
+    "countup",
+    "curveness",
+    "Dingding",
+    "doclock",
+    "echarts",
+    "esbuild",
+    "fangda",
+    "geeker",
+    "Gitee",
+    "hexs",
+    "hoverable",
+    "Iconfont",
+    "juejin",
+    "liquidfill",
+    "loglevel",
+    "metas",
+    "nprogress",
+    "openapi",
+    "persistor",
+    "Popconfirm",
+    "Prefixs",
+    "reduxjs",
+    "screenfull",
+    "Sider",
+    "signalr",
+    "sortablejs",
+    "sousuo",
+    "styl",
+    "stylelint",
+    "suoxiao",
+    "truetype",
+    "tuichu",
+    "Visibles",
+    "xiala",
+    "xiao",
+    "xiaoxi",
+    "zhongyingwen",
+    "zhuti",
+    "zlevel",
+    "Zustand"
+  ],
+  "i18n-ally.localesPaths": ["src/languages"]
+}

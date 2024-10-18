@@ -1,0 +1,32 @@
+.no-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  .content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+    height: 300px;
+    cursor: pointer;
+    background-color: var(--hooks-colorFillContent);
+    border-radius: 20px;
+    transition: all 0.3s;
+    &:hover {
+      background-color: var(--hooks-colorFillContentHover);
+    }
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 150px;
+      height: 150px;
+      background-color: var(--hooks-colorPrimary);
+      border-radius: 50%;
+      img {
+        width: 150px;
+      }
+    }
+  }
+}

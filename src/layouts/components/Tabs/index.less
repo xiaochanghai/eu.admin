@@ -1,0 +1,95 @@
+.tabs-box {
+  position: relative;
+  padding: 0 0 0 13px;
+  background-color: var(--hooks-colorBgContainer);
+  border-bottom: 1px solid var(--hooks-colorBorderSecondary);
+  .ant-tabs-nav {
+    margin: 0;
+    &::before {
+      border: none;
+    }
+    .ant-tabs-nav-wrap {
+      .ant-tabs-ink-bar {
+        visibility: visible;
+      }
+      .ant-tabs-tab {
+        padding: 8px 25px;
+        color: #a0a0a0;
+        background: transparent;
+        border: none;
+        transition: none;
+        .ant-tabs-tab-btn {
+          .anticon {
+            margin-right: 8px;
+          }
+        }
+        .ant-tabs-tab-remove {
+          position: absolute;
+          right: 0;
+          color: #a0a0a0;
+          opacity: 0;
+          transition: 0.1s ease-in-out;
+          &:hover {
+            color: var(--hooks-colorPrimaryText);
+          }
+        }
+      }
+      .ant-tabs-tab.ant-tabs-tab-with-remove:hover {
+        .ant-tabs-tab-remove {
+          top: 3px;
+          padding: 0;
+          margin: 7px 13px;
+          opacity: 1;
+        }
+        .ant-tabs-tab-btn {
+          transform: translateX(-9px);
+        }
+      }
+      .ant-tabs-tab-active.ant-tabs-tab-with-remove {
+        .ant-tabs-tab-remove {
+          top: 3px;
+          padding: 0;
+          margin: 7px 13px;
+          color: var(--hooks-colorPrimaryText);
+          opacity: 1;
+        }
+        .ant-tabs-tab-btn {
+          transform: translateX(-9px);
+        }
+      }
+    }
+    .ant-tabs-extra-content {
+      height: 100%;
+      .more-button {
+        display: flex;
+        height: 100%;
+        .more-button-item {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 45px;
+          height: 100%;
+          cursor: pointer;
+          border-left: 1px solid var(--hooks-colorBorderSecondary);
+          &:hover {
+            background-color: var(--hooks-colorBorderSecondary);
+            transition: all 0.3s;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* tabs out of style for display */
+.ant-tabs-dropdown {
+  .ant-tabs-dropdown-menu {
+    max-height: 50vh;
+    .ant-tabs-dropdown-menu-item {
+      margin: 5px 0;
+      .anticon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
