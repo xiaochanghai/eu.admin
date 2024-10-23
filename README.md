@@ -24,7 +24,7 @@
 
 前后端分离，使用 JWT 认证。
 
-后端：基于 .NET8 、SqlSugar、 EF Core、Dapper、，集成常用组件。
+后端：基于 .NET8 、SqlSugar、 EF Core、Dapper，集成常用组件。
 > 后端开源地址：[https://gitee.com/xiaochanghai520/EU.Core](https://gitee.com/xiaochanghai520/EU.Core "https://gitee.com/xiaochanghai520/EU.Core")
 
 ### 在线预览地址 👀
@@ -83,6 +83,7 @@
 ![image-20230602140542](./doc/images/20230602140542.png)
 ![image-20230602140529](./doc/images/20230602140529.png)
 ![image-20230602140537](./doc/images/20230602140537.png)
+> 数据库文件见Model：[https://gitee.com/xiaochanghai520/EU.Core](https://gitee.com/xiaochanghai520/EU.Core "https://gitee.com/xiaochanghai520/EU.Core")
 
 ## 部署
 
