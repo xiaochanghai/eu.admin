@@ -9,11 +9,12 @@ export type deps = {
 export interface designProp {
   name: string; //title
   icon?: any;
-  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea"; //设置组件的类型
+  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea" | "comboGrid" | "inputNumber"; //设置组件的类型
   tag?: "basic" | "layout"; //所在分组标签
   mode?: Mode[] | Mode; //使用场景
   deps?: deps | deps[]; //字段显示依赖,如果是数组都需要满足
   tooltip?: string; //提示语 label
+  comboGridCode?: string; //提示语 label
   items?: {
     //多选时的内容
     icon?: any;
@@ -39,11 +40,16 @@ export const schemaDef: SchemaClz = {
     type: "input",
     tag: "basic"
   },
+  DataIndex: {
+    name: "表栏位字段",
+    type: "input",
+    tag: "basic"
+  },
   DefaultValue: {
     name: "默认值",
     type: "input",
     tag: "basic",
-    deps: { field: "FieldType", value: ["Input", "InputNumber", "TextArea", "ComboGrid", "ComboBox"] },
+    deps: { field: "FieldType", value: ["Input", "InputNumber", "TextArea"] },
     mode: Mode.form
   },
   HideInForm: {
@@ -98,7 +104,7 @@ export const schemaDef: SchemaClz = {
     mode: Mode.form,
     deps: { field: "Validator", value: ["pattern"] }
   },
-  Unique: {
+  IsUnique: {
     name: "不允许重复",
     type: "switch",
     mode: Mode.form,
@@ -119,16 +125,16 @@ export const schemaDef: SchemaClz = {
     mode: Mode.form,
     deps: { field: "FieldType", value: ["Input", "TextArea"] }
   },
-  maximum: {
+  Maximum: {
     name: "最大值",
-    type: "input",
+    type: "inputNumber",
     tag: "basic",
     mode: Mode.form,
     deps: { field: "FieldType", value: ["InputNumber"] }
   },
-  minimum: {
+  Minimum: {
     name: "最小值",
-    type: "input",
+    type: "inputNumber",
     tag: "basic",
     mode: Mode.form,
     deps: { field: "FieldType", value: ["InputNumber"] }
@@ -215,7 +221,38 @@ export const schemaDef: SchemaClz = {
     name: "字段占比",
     type: "buttonGroup",
     tag: "layout",
-    items: []
+    mode: Mode.form
+    // items: [
+    //   { value: 25, label: "25" },
+    //   { value: 50, label: "50" },
+    //   { value: 100, label: "100" }
+    // ]
+  },
+  ComboBoxDataSource: {
+    name: "数据来源",
+    type: "comboGrid",
+    tag: "basic",
+    comboGridCode: "SmLov",
+    deps: { field: "FieldType", value: ["ComboBox"] },
+    mode: Mode.form
+  },
+  ComboGridDataSource: {
+    name: "数据来源",
+    type: "comboGrid",
+    tag: "basic",
+    comboGridCode: "SmCommonListSql",
+    deps: { field: "FieldType", value: ["ComboGrid"] },
+    mode: Mode.form
+  },
+  Remark: {
+    name: "备注",
+    type: "input",
+    tag: "basic"
   }
+  // HideInForm: {
+  //   name: "yinc",
+  //   type: "input",
+  //   tag: "basic"
+  // }
 };
 export default schemaDef;

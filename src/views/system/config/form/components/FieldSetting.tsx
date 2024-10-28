@@ -1,4 +1,5 @@
 import { Select, Form } from "antd";
+import { Icon } from "@/components/Icon";
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -21,11 +22,16 @@ export default ({ field, compDatas, onDataChange }: any) => {
               });
             onDataChange(value, Option, r);
           }}
+          allowClear
         >
           {compDatas &&
             compDatas.length > 0 &&
             compDatas.map((item: any) => {
-              return <Option key={item.component}>{item.label}</Option>;
+              return (
+                <Option key={item.fieldType}>
+                  <Icon className="icon" name={item.icon} /> {item.label}
+                </Option>
+              );
             })}
         </Select>
       </FormItem>

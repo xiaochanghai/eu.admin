@@ -1,11 +1,18 @@
 /**
  * 表单组件资产配置定义
  */
+import Input from "@/components/Elements/Input";
+import InputNumber from "@/components/Elements/InputNumber";
+import ComBoBox from "@/components/Elements/ComBoBox";
+import ComboGrid from "@/components/Elements/ComboGrid";
+import Switch from "@/components/Elements/Switch";
+
 export const FormComponents = [
   {
     key: 1,
-    component: "Input",
-    // icon: "IconFont",
+    fieldType: "Input",
+    component: Input,
+    icon: "Input",
     label: "单行文字",
     props: {
       // className: "  !bg-white focus:!border-red-400",
@@ -13,28 +20,55 @@ export const FormComponents = [
   },
   {
     key: 2,
-    component: "InputNumber",
+    component: InputNumber,
+    icon: "InputNumber",
+    fieldType: "InputNumber",
     label: "数字输入框"
   },
   {
     key: 3,
-    component: "ComboBox",
+    component: ComBoBox,
+    icon: "ComBoBox",
+    fieldType: "ComboBox",
     label: "下拉选择(字典)"
   },
   {
     key: 4,
-    component: "ComboGrid",
+    component: ComboGrid,
+    icon: "ComBoBox",
+    fieldType: "ComboGrid",
     label: "下拉选择(接口)"
   },
   {
     key: 5,
     icon: "Switch",
+    component: Switch,
+    fieldType: "Switch",
     label: "开关"
   },
   {
     key: 6,
     icon: "TextArea",
+    fieldType: "TextArea",
     label: "多行文字"
+  },
+  {
+    key: 7,
+    icon: "DatePicker",
+    fieldType: "DatePicker",
+    label: "日期选择器"
+  },
+  {
+    key: 8,
+    icon: "TimePicker",
+    fieldType: "TimePicker",
+    label: "时间选择器"
+  },
+  {
+    key: 9,
+    icon: "DateTimePicker",
+    fieldType: "DateTimePicker",
+    label: "日期时间选择器"
   }
   // VfCheckbox: {
   //   component: VfCheckbox,

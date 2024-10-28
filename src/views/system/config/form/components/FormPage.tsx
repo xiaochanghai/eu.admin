@@ -2,7 +2,7 @@ import { Card, Form, Flex, Tag } from "antd";
 // import { ReactSortable } from "react-sortablejs";
 import { Icon } from "@/components/Icon";
 import Layout from "@/components/Elements/Layout";
-import { Mode } from "./dsl/base";
+// import { Mode } from "./dsl/base";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -10,14 +10,13 @@ import { DndProvider } from "react-dnd";
 import http from "@/api";
 
 interface FieldSetCenterProps {
-  mode: Mode;
+  // mode: Mode;
   fieldList: any[];
   currentField: any;
-  handleChooseField: (ang: any[]) => void;
   onDataChange: (ang: any[]) => void; //数据返回出去
   onSelect: (field: string) => void; //当前选中字段
 }
-const FieldSetCenter = ({ fieldList, currentField, handleChooseField, onSelect, onDataChange }: FieldSetCenterProps) => {
+const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: FieldSetCenterProps) => {
   //删除添加的布局字段
   // const handleDelete = (e, id) => {
   //   e.stopPropagation();
@@ -69,11 +68,11 @@ const FieldSetCenter = ({ fieldList, currentField, handleChooseField, onSelect, 
         {/* {text} */}
         <Tag
           className="main-hide-field-tag"
-          style={{ width: 100 }}
+          style={{ width: 100, textAlign: "center" }}
           onClick={event => {
             event.stopPropagation();
             // 处理按钮的点击事件
-            onSelect(field.fieldName);
+            onSelect(field);
           }}
         >
           {text}
@@ -145,7 +144,7 @@ const FieldSetCenter = ({ fieldList, currentField, handleChooseField, onSelect, 
                         width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
                       }}
                       key={index}
-                      onClick={() => handleChooseField(item)}
+                      onClick={() => onSelect(item)}
                     >
                       <Layout field={item} />
                     </div>

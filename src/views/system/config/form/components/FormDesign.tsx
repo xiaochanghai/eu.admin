@@ -6,6 +6,9 @@ import { Mode } from "./dsl/base";
 import { FormSetDiv } from "./style";
 import { Col, Row, Button } from "antd";
 import http from "@/api";
+import { Icon } from "@/components/Icon";
+// import ButtonGroup from "antd/lib/button/button-group";
+import { message } from "@/hooks/useMessage";
 
 const Index: React.FC = () => {
   // let [fieldList, setFieldList] = useState([]);
@@ -148,24 +151,22 @@ const Index: React.FC = () => {
       }
     ]
   };
-  // fieldList = currModel.fields;
 
-  const saveFormColumn = () => {
-    // let { currentField } = me.state;
-    // let result = await UpdateFormColumn(currentField);
-    // if (result.Success)
-    //   message.success(result.Message);
-    // else
-    //   message.error(response.Message);
+  const saveFormColumn = async () => {
+    let { Success, Message } = await http.put<any>(`/api/SmModule/UpdateFormColumn/SD_SALES_ORDER_MNG`, currentField);
+    if (Success) message.success(Message);
   };
 
   return (
     <FormSetDiv className={"bg-white"}>
       <div className="fieldSet-main">
         <Row className={"bg-white"}>
-          <Col span={18}> </Col>
+          <Col span={3}> </Col>
+          <Col span={15}> </Col>
           <Col span={6}>
-            <Button onClick={saveFormColumn}>保存</Button>
+            <Button onClick={saveFormColumn} icon={<Icon name="SaveOutlined" />}>
+              保存
+            </Button>
           </Col>
         </Row>
         <Row className="fieldSet-main-content">
@@ -189,7 +190,7 @@ const Index: React.FC = () => {
             <FormPage
               fieldList={columns}
               currentField={currentField}
-              mode={Mode.form}
+              // mode={Mode.form}
               onDataChange={fields => {
                 setColumns(fields);
                 // saveFormColumnTaxisNo(fields);
@@ -198,7 +199,7 @@ const Index: React.FC = () => {
                 setCurrentField(field);
               }}
               // onFieldChange={(list: any) => setFieldList(list)}
-              handleChooseField={(field: any) => setCurrentField(field)}
+              // handleChooseField={(field: any) => setCurrentField(field)}
             />
           </Col>
           {/* form表单设置 */}

@@ -1,9 +1,10 @@
 import { ReactNode, useCallback, useMemo } from "react";
-import { Input, Tabs, Form, Select, Switch, Tooltip, Divider } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio } from "antd";
+import { Icon } from "@/components/Icon";
 import FieldSetting from "./FieldSetting";
 import { FormComponents } from "./CompDatas";
 import { Mode } from "./dsl/base";
+import ComboGrid from "@/components/ComBoGrid/index";
 
 const { TextArea } = Input;
 const { TabPane } = Tabs;
@@ -35,18 +36,18 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
         });
       });
     }
-
+    form = { ...form, modelSize: 4 };
     if (form.modelSize) {
       const obj: { [key: string]: number } =
         form.modelSize + "" === "4"
-          ? { "25": 1, "50": 2, "75": 3, "100": 4 }
+          ? { "25": 25, "50": 50, "75": 75, "100": 100 }
           : form.modelSize + "" === "3"
             ? { "33": 1, "66": 2, "100": 3 }
             : form.modelSize + "" === "2"
               ? { "50": 1, "100": 2 }
               : { "100": 1 };
 
-      schemaDef["x_decorator_props$gridSpan"].items = Object.keys(obj).map((key: string) => {
+      schemaDef["GridSpan"].items = Object.keys(obj).map((key: string) => {
         return {
           value: obj[key],
           label: key,
@@ -127,8 +128,21 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
           return (
             <Input
               key={"input_" + key}
-              // field={key}
-              // label=
+              value={field[key]}
+              style={{ width: "100%" }}
+              onChange={value => {
+                onDataChange({
+                  ...field,
+                  [key]: value.target.value
+                });
+              }}
+            ></Input>
+          );
+        }
+        if (fieldsConf[key].type === "inputNumber") {
+          return (
+            <InputNumber
+              key={"inputNumber_" + key}
               value={field[key]}
               style={{ width: "100%" }}
               onChange={value => {
@@ -137,7 +151,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                   [key]: value
                 });
               }}
-            ></Input>
+            ></InputNumber>
           );
         }
         if (fieldsConf[key].type === "textArea") {
@@ -149,7 +163,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
               onChange={value => {
                 onDataChange({
                   ...field,
-                  [key]: value
+                  [key]: value.target.value
                 });
               }}
             ></TextArea>
@@ -157,7 +171,6 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
         }
         if (fieldsConf[key].type === "switch") {
           return (
-            // <InputGroup key={"inputgroup" + key}>
             <Switch
               checked={field[key]}
               onChange={val => {
@@ -167,34 +180,44 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                 });
               }}
               key={"switch" + key}
-              // field={key}
             ></Switch>
-            // </InputGroup>
           );
+        }
+        if (fieldsConf[key].type === "comboGrid") {
+          return <ComboGrid value={field[key]} code={fieldsConf[key].comboGridCode} />;
         }
         const items = fieldsConf[key]?.items;
         if (fieldsConf[key].type === "buttonGroup" && items !== undefined && items.length > 0) {
-          // return (
-          //   <ButtonGroup key={"ButtonGroup" + key} className=" flex items-end ">
-          //     {items?.map((item, index) => {
-          //       return (
-          //         <Button
-          //           key={`subButton_${key + index}`}
-          //           type={item.value + "" === field[key] + "" ? "primary" : `tertiary`}
-          //           value={item.value + ""}
-          //           onClick={() => {
-          //             onDataChange({
-          //               ...field,
-          //               [key]: item.value
-          //             });
-          //           }}
-          //         >
-          //           {item.label}
-          //         </Button>
-          //       );
-          //     })}
-          //   </ButtonGroup>
-          // );
+          return (
+            <Radio.Group
+              value={field[key]}
+              buttonStyle="solid"
+              onChange={e => {
+                onDataChange({
+                  ...field,
+                  [key]: e.target.value
+                });
+              }}
+            >
+              {items?.map((item, index) => {
+                return (
+                  <Radio.Button
+                    key={`subButton_${key + index}`}
+                    type={item.value + "" === field[key] + "" ? "primary" : `tertiary`}
+                    value={item.value}
+                    onClick={() => {
+                      onDataChange({
+                        ...field,
+                        [key]: item.value
+                      });
+                    }}
+                  >
+                    {item.label}
+                  </Radio.Button>
+                );
+              })}
+            </Radio.Group>
+          );
         }
         //类型时表单，默认值使用他，目前存在部分类型组件可以不需要默认值。
         // if (fieldsConf[key].type === "form" && field && field.fieldName !== undefined) {
@@ -229,14 +252,17 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
         style={{
           fontSize: "14px",
           borderStyle: "dotted solid dashed solid",
-          borderColor: "#cccccc"
+          borderColor: "#cccccc",
+          marginTop: 10,
+          paddingTop: 10,
+          paddingBottom: 10
         }}
       >
         {field ? (
           <div>
             <b style={{ font: "14px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;标识/分类/模型：{field.fieldName}/{field.dataType}/{field.fieldType}
-              <Divider dashed />
+              &nbsp;&nbsp;&nbsp;&nbsp;标识/模型：{field.DataIndex}/{field.FieldType}
+              {/* <Divider dashed /> */}
             </b>
           </div>
         ) : (
@@ -248,7 +274,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
           return (
             <TabPane key={"panel_" + index} tab={t.title} icon={<t.icon></t.icon>} style={{ padding: "2px" }}>
               {/* 第一个panel设置组件 */}
-              {index === 0 && field.fieldName && (
+              {index === 0 && (
                 // <FieldSetting
                 //   field={field}
                 //   formVo={form}
@@ -269,6 +295,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                 //     onDataChange(fmv);
                 //   }}
                 // />
+
                 <FieldSetting
                   field={field}
                   formVo={form}
@@ -276,15 +303,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                   onDataChange={(data: any) => {
                     const fmv = {
                       ...field,
-                      x_component: data.x_component,
-                      pageComponentPropDtos: data.pageComponentPropDtos
-                        ? [
-                            //把失效的属性去除
-                            ...data.pageComponentPropDtos.filter((d: any) =>
-                              Object.keys(FormComponents[data.x_component].props || {}).includes(d.propName || "")
-                            )
-                          ]
-                        : []
+                      FieldType: data
                     };
                     onDataChange(fmv);
                   }}
@@ -319,17 +338,14 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                   const RenderObj = render(key); //待渲染的数据
                   return (
                     RenderObj && (
-                      <div
-                        //  key={currentField?.dataIndex + "_" + key}
-                        key={key}
-                      >
+                      <div key={key} style={{ marginTop: 10 }}>
                         <FormItem
                           label={
                             <label>
                               {fieldsConf[key].name}
                               {fieldsConf[key].tooltip && (
                                 <Tooltip title={fieldsConf[key].tooltip}>
-                                  <ExclamationCircleOutlined />
+                                  <Icon name="ExclamationCircleOutlined" />
                                 </Tooltip>
                               )}
                             </label>
