@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 import { useDispatch } from "@/redux";
-import { Card, Form, Flex, Tabs, message } from "antd";
+import { Card, Form, Flex, Tabs } from "antd";
 import { Loading } from "@/components/Loading/index";
 import TableList from "./TableList";
 import { querySingle, add, update } from "@/api/modules/module";
@@ -9,6 +9,7 @@ import Layout from "@/components/Elements/Layout";
 import FormToolbar from "@/components/FormToolbar/index";
 import { RootState, useSelector } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { message } from "@/hooks/useMessage";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();
