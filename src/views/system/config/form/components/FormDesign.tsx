@@ -4,7 +4,7 @@ import SiderSetting from "./SiderSetting";
 import FormPage from "./FormPage";
 import { Mode } from "./dsl/base";
 import { FormSetDiv } from "./style";
-import { Col, Row, Button } from "antd";
+import { Col, Row, Button, Flex } from "antd";
 import http from "@/api";
 import { Icon } from "@/components/Icon";
 // import ButtonGroup from "antd/lib/button/button-group";
@@ -164,9 +164,13 @@ const Index: React.FC = () => {
           <Col span={3}> </Col>
           <Col span={15}> </Col>
           <Col span={6}>
-            <Button onClick={saveFormColumn} icon={<Icon name="SaveOutlined" />}>
-              保存
-            </Button>
+            {currentField && (
+              <Flex justify={"flex-end"} align={"flex-start"}>
+                <Button onClick={saveFormColumn} style={{ marginRight: 10 }} icon={<Icon name="SaveOutlined" />}>
+                  保存
+                </Button>
+              </Flex>
+            )}
           </Col>
         </Row>
         <Row className="fieldSet-main-content">

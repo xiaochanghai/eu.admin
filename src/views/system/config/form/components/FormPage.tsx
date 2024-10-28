@@ -117,7 +117,7 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: Fie
         <TabPane
           key={"panel_table"}
           tab="表格栏位"
-          // icon={<t.icon></t.icon>}
+          icon={<Icon className="icon" name="TableOutlined" />}
           // style={{ padding: "2px" }}
         >
           <Form
@@ -186,7 +186,7 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: Fie
         <TabPane
           key={"panel_form"}
           tab="表单栏位"
-          // icon={<t.icon></t.icon>}
+          icon={<Icon className="icon" name="MenuOutlined" />}
           // style={{ padding: "2px" }}
         >
           1111
