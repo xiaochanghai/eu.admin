@@ -75,7 +75,8 @@ export const FormSetDiv = styled.div`
       }
       &-center {
         padding: 8px 8px 15px;
-        background-color: #f3f6fc;
+        // background-color: #f3f6fc;
+        border: 1px solid #f3f6fc;
         height: 100%;
         overflow: auto;
         box-sizing: border-box;

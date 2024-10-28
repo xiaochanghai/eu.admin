@@ -1,5 +1,4 @@
-import { Card, Form, Flex, Tag } from "antd";
-// import { ReactSortable } from "react-sortablejs";
+import { Tabs, Card, Form, Flex, Tag } from "antd";
 import { Icon } from "@/components/Icon";
 import Layout from "@/components/Elements/Layout";
 // import { Mode } from "./dsl/base";
@@ -8,6 +7,7 @@ import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
 import http from "@/api";
+const { TabPane } = Tabs;
 
 interface FieldSetCenterProps {
   // mode: Mode;
@@ -112,70 +112,87 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: Fie
     //   forceFallback={true}
     //   className="field-center"
     // >
-    <>
-      <Form
-        labelCol={{
-          xs: { span: 8 },
-          sm: { span: 8 },
-          md: { span: 8 }
-        }}
-        wrapperCol={{
-          xs: { span: 16 },
-          sm: { span: 16 },
-          md: { span: 16 }
-        }}
-        labelWrap
-      >
-        <Card size="small" title={<span>可编辑栏位</span>}>
-          <Flex wrap="wrap">
-            {fieldList.filter(f => f.HideInForm === false).length === 0 ? (
-              <div className="main-tooltip">请选择左侧的字段</div>
-            ) : (
-              fieldList
-                .filter(f => f.HideInForm === false)
-                .map((item, index) => {
-                  return (
-                    <div
-                      className="main-field"
-                      style={{
-                        border: currentField?.ID === item?.ID ? "1px solid #3b82f680" : "",
-                        background: currentField?.ID === item?.ID ? "#F8FBFF" : "",
-                        // borderRadius: currentField?.ID === item?.ID ? 10 : 0,
-                        width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
-                      }}
-                      key={index}
-                      onClick={() => onSelect(item)}
-                    >
-                      <Layout field={item} />
-                    </div>
-                  );
-                })
-            )}
-          </Flex>
-        </Card>
-        <div style={{ height: 20 }}></div>
-        <Card size="small" title={<span>隐藏栏位</span>}>
-          <DndProvider backend={HTML5Backend}>
-            <div style={{ padding: "20px" }}>
-              <Flex wrap gap="small">
-                {fieldList
-                  .filter(f => f.HideInForm != false)
-                  .map((item, index) => (
-                    <DragItem
-                      key={item.ID}
-                      id={item.ID}
-                      text={item.FormTitle || item.DataIndex}
-                      index={index}
-                      field={item}
-                      moveItem={moveItem}
-                    />
-                  ))}
+    <div style={{ backgroundColor: "#fff" }}>
+      <Tabs defaultActiveKey={"panel_table"}>
+        <TabPane
+          key={"panel_table"}
+          tab="表格栏位"
+          // icon={<t.icon></t.icon>}
+          // style={{ padding: "2px" }}
+        >
+          <Form
+            labelCol={{
+              xs: { span: 8 },
+              sm: { span: 8 },
+              md: { span: 8 }
+            }}
+            wrapperCol={{
+              xs: { span: 16 },
+              sm: { span: 16 },
+              md: { span: 16 }
+            }}
+            labelWrap
+          >
+            <Card size="small" title={<span>可编辑栏位</span>}>
+              <Flex wrap="wrap">
+                {fieldList.filter(f => f.HideInForm === false).length === 0 ? (
+                  <div className="main-tooltip">请选择左侧的字段</div>
+                ) : (
+                  fieldList
+                    .filter(f => f.HideInForm === false)
+                    .map((item, index) => {
+                      return (
+                        <div
+                          className="main-field"
+                          style={{
+                            border: currentField?.ID === item?.ID ? "1px solid #3b82f680" : "",
+                            background: currentField?.ID === item?.ID ? "#F8FBFF" : "",
+                            // borderRadius: currentField?.ID === item?.ID ? 10 : 0,
+                            width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
+                          }}
+                          key={index}
+                          onClick={() => onSelect(item)}
+                        >
+                          <Layout field={item} />
+                        </div>
+                      );
+                    })
+                )}
               </Flex>
-            </div>
-          </DndProvider>
-        </Card>
-      </Form>
-    </>
+            </Card>
+            <div style={{ height: 20 }}></div>
+            <Card size="small" title={<span>隐藏栏位</span>}>
+              <DndProvider backend={HTML5Backend}>
+                <div style={{ padding: "20px" }}>
+                  <Flex wrap gap="small">
+                    {fieldList
+                      .filter(f => f.HideInForm != false)
+                      .map((item, index) => (
+                        <DragItem
+                          key={item.ID}
+                          id={item.ID}
+                          text={item.FormTitle || item.DataIndex}
+                          index={index}
+                          field={item}
+                          moveItem={moveItem}
+                        />
+                      ))}
+                  </Flex>
+                </div>
+              </DndProvider>
+            </Card>
+          </Form>
+        </TabPane>
+        <TabPane
+          key={"panel_form"}
+          tab="表单栏位"
+          // icon={<t.icon></t.icon>}
+          // style={{ padding: "2px" }}
+        >
+          1111
+        </TabPane>
+      </Tabs>
+    </div>
     // </ReactSortable>
   );
 };
