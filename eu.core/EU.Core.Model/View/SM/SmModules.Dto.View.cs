@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/20 23:12:41  SimonHsiao   初版
+*V0.01  2024/10/29 12:36:27  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -16,7 +16,6 @@
 */ 
 
 namespace EU.Core.Model.Models;
-
 
 /// <summary>
 /// 系统模板(Dto.View)

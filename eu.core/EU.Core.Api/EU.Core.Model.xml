@@ -8020,6 +8020,16 @@
             是否bool
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.QueryValue">
+            <summary>
+            QueryValue
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.QueryValueType">
+            <summary>
+            QueryValueType
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.HideInSearch">
             <summary>
             查询中隐藏
@@ -8165,6 +8175,11 @@
             TextArea最小行数
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.FromFieldGroup">
             <summary>
             表单字段组别
@@ -8195,11 +8210,6 @@
             模块名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SmModulesBase.ModuleType">
-            <summary>
-            模块类型
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.TaxisNo">
             <summary>
             排序号
@@ -8212,17 +8222,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.RoutePath">
             <summary>
-            路由地址
+            路由
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.ParentId">
             <summary>
-            ParentId
+            上级模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsParent">
             <summary>
-            IsParent
+            是否目录
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.ApiUrl">
@@ -8232,32 +8242,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowAdd">
             <summary>
-            是否显示新增
+            是否允许新建
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowBatchDelete">
             <summary>
-            是否显示批量删除
+            是否允许批量删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowDelete">
             <summary>
-            是否显示删除
+            是否允许删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowUpdate">
             <summary>
-            是否显示更新
+            是否允许更新
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowView">
             <summary>
-            是否显示查看
+            是否允许查看
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsDetail">
             <summary>
-            是否为从表
+            是否从表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.BelongModuleId">
@@ -8267,27 +8277,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowSubmit">
             <summary>
-            是否显示提交
+            是否允许提交
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.DefaultSort">
             <summary>
-            默认排序
+            DefaultSort
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.DefaultSortOrder">
             <summary>
-            默认正序/倒序
+            DefaultSortOrder
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowAudit">
             <summary>
-            是否显示审核
+            IsShowAudit
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowGoBack">
             <summary>
-            是否显示返回
+            IsShowGoBack
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsExecQuery">
@@ -8310,9 +8320,19 @@
             编辑页路径
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModulesBase.ModuleType">
+            <summary>
+            模块类型，Form表单/FormGroup表单集
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.FormPageWidth">
             <summary>
             编辑页宽度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModulesBase.Element">
+            <summary>
+            路由文件地址
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleSqlBase">
@@ -9437,7 +9457,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.EditSmModuleColumnInput">
             <summary>
-            SmModuleColumn (Dto.EditInput)
+            模块列 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.EditSmModulesInput">
@@ -10142,7 +10162,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.InsertSmModuleColumnInput">
             <summary>
-            SmModuleColumn (Dto.InsertInput)
+            模块列 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.InsertSmModulesInput">
@@ -18305,6 +18325,16 @@
             是否bool
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.QueryValue">
+            <summary>
+            QueryValue
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.QueryValueType">
+            <summary>
+            QueryValueType
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumn.HideInSearch">
             <summary>
             查询中隐藏
@@ -18450,6 +18480,11 @@
             TextArea最小行数
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumn.FromFieldGroup">
             <summary>
             表单字段组别
@@ -18463,11 +18498,6 @@
         <member name="P:EU.Core.Model.Models.SmModuleColumn.IsAutoCode">
             <summary>
             是否自动编号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.SmModuleColumn.Remark">
-            <summary>
-            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModules">
@@ -18485,11 +18515,6 @@
             模块名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SmModules.ModuleType">
-            <summary>
-            模块类型
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SmModules.TaxisNo">
             <summary>
             排序号
@@ -18502,17 +18527,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.RoutePath">
             <summary>
-            路由地址
+            路由
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.ParentId">
             <summary>
-            ParentId
+            上级模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsParent">
             <summary>
-            IsParent
+            是否目录
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.ApiUrl">
@@ -18522,32 +18547,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowAdd">
             <summary>
-            是否显示新增
+            是否允许新建
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowBatchDelete">
             <summary>
-            是否显示批量删除
+            是否允许批量删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowDelete">
             <summary>
-            是否显示删除
+            是否允许删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowUpdate">
             <summary>
-            是否显示更新
+            是否允许更新
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowView">
             <summary>
-            是否显示查看
+            是否允许查看
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsDetail">
             <summary>
-            是否为从表
+            是否从表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.BelongModuleId">
@@ -18557,27 +18582,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowSubmit">
             <summary>
-            是否显示提交
+            是否允许提交
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.DefaultSort">
             <summary>
-            默认排序
+            DefaultSort
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.DefaultSortOrder">
             <summary>
-            默认正序/倒序
+            DefaultSortOrder
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowAudit">
             <summary>
-            是否显示审核
+            IsShowAudit
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowGoBack">
             <summary>
-            是否显示返回
+            IsShowGoBack
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsExecQuery">
@@ -18600,9 +18625,19 @@
             编辑页路径
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModules.ModuleType">
+            <summary>
+            模块类型，Form表单/FormGroup表单集
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModules.FormPageWidth">
             <summary>
             编辑页宽度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModules.Element">
+            <summary>
+            路由文件地址
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleSql">
@@ -19926,7 +19961,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumnDto">
             <summary>
-            SmModuleColumn(Dto.View)
+            模块列(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModulesDto">

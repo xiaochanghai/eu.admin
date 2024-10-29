@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/30 9:38:27  SimonHsiao   初版
+*V0.01  2024/10/29 12:25:00  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,8 +14,8 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
 
+namespace EU.Core.Model.Models;
 
 /// <summary>
 /// 模块列 (Dto.Base)
@@ -31,19 +31,19 @@ public class SmModuleColumnBase
     /// <summary>
     /// 列名称
     /// </summary>
-    [Display(Name = "Title"), Description("列名称"), MaxLength(2000, ErrorMessage = "列名称 不能超过 32 个字符")]
+    [Display(Name = "Title"), Description("列名称"), MaxLength(32, ErrorMessage = "列名称 不能超过 32 个字符")]
     public string Title { get; set; }
 
     /// <summary>
     /// 栏位名
     /// </summary>
-    [Display(Name = "DataIndex"), Description("栏位名"), MaxLength(2000, ErrorMessage = "栏位名 不能超过 32 个字符")]
+    [Display(Name = "DataIndex"), Description("栏位名"), MaxLength(32, ErrorMessage = "栏位名 不能超过 32 个字符")]
     public string DataIndex { get; set; }
 
     /// <summary>
     /// 列表数据类型
     /// </summary>
-    [Display(Name = "ValueType"), Description("列表数据类型"), MaxLength(2000, ErrorMessage = "列表数据类型 不能超过 32 个字符")]
+    [Display(Name = "ValueType"), Description("列表数据类型"), MaxLength(32, ErrorMessage = "列表数据类型 不能超过 32 个字符")]
     public string ValueType { get; set; }
 
     /// <summary>
@@ -91,6 +91,18 @@ public class SmModuleColumnBase
     /// 是否bool
     /// </summary>
     public bool? IsBool { get; set; }
+
+    /// <summary>
+    /// QueryValue
+    /// </summary>
+    [Display(Name = "QueryValue"), Description("QueryValue"), MaxLength(2000, ErrorMessage = "QueryValue 不能超过 2000 个字符")]
+    public string QueryValue { get; set; }
+
+    /// <summary>
+    /// QueryValueType
+    /// </summary>
+    [Display(Name = "QueryValueType"), Description("QueryValueType"), MaxLength(2000, ErrorMessage = "QueryValueType 不能超过 2000 个字符")]
+    public string QueryValueType { get; set; }
 
     /// <summary>
     /// 查询中隐藏
@@ -203,29 +215,31 @@ public class SmModuleColumnBase
     /// <summary>
     /// 表单项标题
     /// </summary>
+    [Display(Name = "FormTitle"), Description("表单项标题"), MaxLength(32, ErrorMessage = "表单项标题 不能超过 32 个字符")]
     public string FormTitle { get; set; }
 
     /// <summary>
     /// 字段控件类型
     /// </summary>
+    [Display(Name = "FieldType"), Description("字段控件类型"), MaxLength(32, ErrorMessage = "字段控件类型 不能超过 32 个字符")]
     public string FieldType { get; set; }
 
     /// <summary>
     /// 占位符
     /// </summary>
+    [Display(Name = "Placeholder"), Description("占位符"), MaxLength(32, ErrorMessage = "占位符 不能超过 32 个字符")]
     public string Placeholder { get; set; }
 
     /// <summary>
     /// 数据来源方式
     /// </summary>
-    [Display(Name = "DataSourceType"), Description("数据来源方式"), MaxLength(2000, ErrorMessage = "数据来源方式 不能超过 2000 个字符")]
+    [Display(Name = "DataSourceType"), Description("数据来源方式"), MaxLength(32, ErrorMessage = "数据来源方式 不能超过 32 个字符")]
     public string DataSourceType { get; set; }
-
 
     /// <summary>
     /// 数据来源
     /// </summary>
-    [Display(Name = "DataSource"), Description("数据来源"), MaxLength(2000, ErrorMessage = "数据来源 不能超过 2000 个字符")]
+    [Display(Name = "DataSource"), Description("数据来源"), MaxLength(32, ErrorMessage = "数据来源 不能超过 32 个字符")]
     public string DataSource { get; set; }
 
     /// <summary>
@@ -247,6 +261,12 @@ public class SmModuleColumnBase
     /// TextArea最小行数
     /// </summary>
     public int? MinRows { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string Remark { get; set; }
 
     /// <summary>
     /// 表单字段组别

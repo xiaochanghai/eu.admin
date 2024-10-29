@@ -1,12 +1,12 @@
 ﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * SmModuleColumn.cs
 *
-*功 能： N / A
+* 功 能： N / A
 * 类 名： SmModuleColumn
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/30 9:38:27  SimonHsiao   初版
+* V0.01  2024/10/29 12:25:00  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,8 +14,8 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
 
+namespace EU.Core.Model.Models;
 
 /// <summary>
 /// 模块列 (Model)
@@ -27,24 +27,25 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 模块ID
     /// </summary>
+    [Display(Name = "SmModuleId"), Description("模块ID")]
     public Guid? SmModuleId { get; set; }
 
     /// <summary>
     /// 列名称
     /// </summary>
-    [Display(Name = "Title"), Description("列名称"), MaxLength(2000, ErrorMessage = "列名称 不能超过 32 个字符")]
+    [Display(Name = "Title"), Description("列名称"), MaxLength(32, ErrorMessage = "列名称 不能超过 32 个字符")]
     public string Title { get; set; }
 
     /// <summary>
     /// 栏位名
     /// </summary>
-    [Display(Name = "DataIndex"), Description("栏位名"), MaxLength(2000, ErrorMessage = "栏位名 不能超过 32 个字符")]
+    [Display(Name = "DataIndex"), Description("栏位名"), MaxLength(32, ErrorMessage = "栏位名 不能超过 32 个字符")]
     public string DataIndex { get; set; }
 
     /// <summary>
     /// 列表数据类型
     /// </summary>
-    [Display(Name = "ValueType"), Description("列表数据类型"), MaxLength(2000, ErrorMessage = "列表数据类型 不能超过 32 个字符")]
+    [Display(Name = "ValueType"), Description("列表数据类型"), MaxLength(32, ErrorMessage = "列表数据类型 不能超过 32 个字符")]
     public string ValueType { get; set; }
 
     /// <summary>
@@ -56,46 +57,67 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 列表中隐藏
     /// </summary>
+    [Display(Name = "HideInTable"), Description("列表中隐藏")]
     public bool? HideInTable { get; set; }
 
     /// <summary>
     /// 是否排序
     /// </summary>
+    [Display(Name = "Sorter"), Description("是否排序")]
     public bool? Sorter { get; set; }
 
     /// <summary>
     /// filters
     /// </summary>
+    [Display(Name = "filters"), Description("filters")]
     public bool? filters { get; set; }
 
     /// <summary>
     /// filterMultiple
     /// </summary>
+    [Display(Name = "filterMultiple"), Description("filterMultiple")]
     public bool? filterMultiple { get; set; }
 
     /// <summary>
     /// 是否导出Excel
     /// </summary>
+    [Display(Name = "IsExport"), Description("是否导出Excel")]
     public bool? IsExport { get; set; }
 
     /// <summary>
     /// 排序号
     /// </summary>
+    [Display(Name = "TaxisNo"), Description("排序号")]
     public int? TaxisNo { get; set; }
 
     /// <summary>
     /// 是否参数
     /// </summary>
+    [Display(Name = "IsLovCode"), Description("是否参数")]
     public bool? IsLovCode { get; set; }
 
     /// <summary>
     /// 是否bool
     /// </summary>
+    [Display(Name = "IsBool"), Description("是否bool")]
     public bool? IsBool { get; set; }
+
+    /// <summary>
+    /// QueryValue
+    /// </summary>
+    [Display(Name = "QueryValue"), Description("QueryValue"), MaxLength(2000, ErrorMessage = "QueryValue 不能超过 2000 个字符")]
+    public string QueryValue { get; set; }
+
+    /// <summary>
+    /// QueryValueType
+    /// </summary>
+    [Display(Name = "QueryValueType"), Description("QueryValueType"), MaxLength(2000, ErrorMessage = "QueryValueType 不能超过 2000 个字符")]
+    public string QueryValueType { get; set; }
 
     /// <summary>
     /// 查询中隐藏
     /// </summary>
+    [Display(Name = "HideInSearch"), Description("查询中隐藏")]
     public bool? HideInSearch { get; set; }
 
     /// <summary>
@@ -119,11 +141,13 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 是否合计
     /// </summary>
+    [Display(Name = "IsSum"), Description("是否合计")]
     public bool? IsSum { get; set; }
 
     /// <summary>
     /// 表单排序号
     /// </summary>
+    [Display(Name = "FromTaxisNo"), Description("表单排序号")]
     public int? FromTaxisNo { get; set; }
 
     /// <summary>
@@ -135,16 +159,19 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 表单隐藏
     /// </summary>
+    [Display(Name = "HideInForm"), Description("表单隐藏")]
     public bool? HideInForm { get; set; }
 
     /// <summary>
     /// 是否必填
     /// </summary>
+    [Display(Name = "Required"), Description("是否必填")]
     public bool? Required { get; set; }
 
     /// <summary>
     /// 只读
     /// </summary>
+    [Display(Name = "Disabled"), Description("只读")]
     public bool? Disabled { get; set; }
 
     /// <summary>
@@ -162,16 +189,19 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 是否唯一
     /// </summary>
+    [Display(Name = "IsUnique"), Description("是否唯一")]
     public bool? IsUnique { get; set; }
 
     /// <summary>
     /// 最大长度
     /// </summary>
+    [Display(Name = "MaxLength"), Description("最大长度")]
     public int? MaxLength { get; set; }
 
     /// <summary>
     /// 最小长度
     /// </summary>
+    [Display(Name = "MinLength"), Description("最小长度")]
     public int? MinLength { get; set; }
 
     /// <summary>
@@ -189,84 +219,96 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 新增时隐藏
     /// </summary>
+    [Display(Name = "CreateHide"), Description("新增时隐藏")]
     public bool? CreateHide { get; set; }
 
     /// <summary>
     /// 修改时只读
     /// </summary>
+    [Display(Name = "ModifyDisabled"), Description("修改时只读")]
     public bool? ModifyDisabled { get; set; }
 
     /// <summary>
     /// 字段占比
     /// </summary>
+    [Display(Name = "GridSpan"), Description("字段占比")]
     public int? GridSpan { get; set; }
 
     /// <summary>
     /// 表单项标题
     /// </summary>
+    [Display(Name = "FormTitle"), Description("表单项标题"), MaxLength(32, ErrorMessage = "表单项标题 不能超过 32 个字符")]
     public string FormTitle { get; set; }
 
     /// <summary>
     /// 字段控件类型
     /// </summary>
+    [Display(Name = "FieldType"), Description("字段控件类型"), MaxLength(32, ErrorMessage = "字段控件类型 不能超过 32 个字符")]
     public string FieldType { get; set; }
 
     /// <summary>
     /// 占位符
     /// </summary>
+    [Display(Name = "Placeholder"), Description("占位符"), MaxLength(32, ErrorMessage = "占位符 不能超过 32 个字符")]
     public string Placeholder { get; set; }
 
     /// <summary>
     /// 数据来源方式
     /// </summary>
-    [Display(Name = "DataSourceType"), Description("数据来源方式"), MaxLength(2000, ErrorMessage = "数据来源方式 不能超过 2000 个字符")]
+    [Display(Name = "DataSourceType"), Description("数据来源方式"), MaxLength(32, ErrorMessage = "数据来源方式 不能超过 32 个字符")]
     public string DataSourceType { get; set; }
-
 
     /// <summary>
     /// 数据来源
     /// </summary>
-    [Display(Name = "DataSource"), Description("数据来源"), MaxLength(2000, ErrorMessage = "数据来源 不能超过 2000 个字符")]
+    [Display(Name = "DataSource"), Description("数据来源"), MaxLength(32, ErrorMessage = "数据来源 不能超过 32 个字符")]
     public string DataSource { get; set; }
 
     /// <summary>
     /// 是否为Master栏位
     /// </summary>
+    [Display(Name = "IsMasterId"), Description("是否为Master栏位")]
     public bool? IsMasterId { get; set; }
 
     /// <summary>
     /// 标签布局
     /// </summary>
+    [Display(Name = "LabelCol"), Description("标签布局")]
     public int? LabelCol { get; set; }
 
     /// <summary>
     /// 控件布局
     /// </summary>
+    [Display(Name = "WrapperCol"), Description("控件布局")]
     public int? WrapperCol { get; set; }
 
     /// <summary>
     /// TextArea最小行数
     /// </summary>
+    [Display(Name = "MinRows"), Description("TextArea最小行数")]
     public int? MinRows { get; set; }
-
-    /// <summary>
-    /// 表单字段组别
-    /// </summary>
-    public int? FromFieldGroup { get; set; }
-
-    /// <summary>
-    /// 是否表格编辑
-    /// </summary>
-    public bool? IsTableEditable { get; set; }
-
-    /// <summary>
-    /// 是否自动编号
-    /// </summary>
-    public bool? IsAutoCode { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 表单字段组别
+    /// </summary>
+    [Display(Name = "FromFieldGroup"), Description("表单字段组别")]
+    public int? FromFieldGroup { get; set; }
+
+    /// <summary>
+    /// 是否表格编辑
+    /// </summary>
+    [Display(Name = "IsTableEditable"), Description("是否表格编辑")]
+    public bool? IsTableEditable { get; set; }
+
+    /// <summary>
+    /// 是否自动编号
+    /// </summary>
+    [Display(Name = "IsAutoCode"), Description("是否自动编号")]
+    public bool? IsAutoCode { get; set; }
 }

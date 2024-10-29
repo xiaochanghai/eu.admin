@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using EU.Core.Common.Helper;
+using EU.Core.Model;
 using SqlSugar;
 
 namespace EU.Core.Common.Seed;
@@ -311,9 +312,14 @@ public class {ClassName}Controller : BaseController<I{ClassName}Services, {Class
         {
             string newkey = "_" + item.Key.First().ToString().ToLower() + item.Key.Substring(1);
             string newvalue = item.Value.Replace("_" + item.Key, newkey);
-            newdic.Add(item.Key, newvalue);
+            strPath = strPath + @"\" + groupName;
+            var fileName = $"{string.Format("{0}Controller", item.Key)}.cs";
+            var fileFullPath = Path.Combine(strPath, fileName);
+
+            if (!File.Exists(fileFullPath))
+                newdic.Add(item.Key, newvalue);
         }
-        CreateFilesByClassStringList(newdic, strPath + @"\" + groupName, "{0}Controller");
+        CreateFilesByClassStringList(newdic, strPath, "{0}Controller");
     }
     #endregion
 
@@ -893,7 +899,13 @@ public interface I{ClassName}Services : IBaseServices<{ClassName}, {ClassName}Dt
 }")
 
                .ToClassStringList(strNameSpace);
-        CreateFilesByClassStringList(ls, strPath + @"\" + groupName, "I{0}Services");
+
+        strPath = strPath + @"\" + groupName;
+        var fileName = $"{string.Format("I{0}Services", lstTableNames[0])}.cs";
+        var fileFullPath = Path.Combine(strPath, fileName);
+
+        if (!File.Exists(fileFullPath))
+            CreateFilesByClassStringList(ls, strPath, "I{0}Services");
     }
     #endregion
 
@@ -1038,7 +1050,12 @@ public class {ClassName}Services : BaseServices<{ClassName}, {ClassName}Dto, Ins
 }")
               .ToClassStringList(strNameSpace);
 
-        CreateFilesByClassStringList(ls, strPath + @"\" + groupName, "{0}Services");
+        strPath = strPath + @"\" + groupName;
+        var fileName = $"{string.Format("{0}Services", lstTableNames[0])}.cs";
+        var fileFullPath = Path.Combine(strPath, fileName);
+
+        if (!File.Exists(fileFullPath))
+            CreateFilesByClassStringList(ls, strPath, "{0}Services");
     }
     #endregion
 

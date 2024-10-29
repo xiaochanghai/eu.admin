@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/21 0:35:39  SimonHsiao   初版
+*V0.01  2024/10/29 12:25:00  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -15,13 +15,11 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// SmModuleColumn (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmModuleColumnInput : SmModuleColumnBase
-    {
-    }
+/// <summary>
+/// 模块列 (Dto.InsertInput)
+/// </summary>
+public class InsertSmModuleColumnInput : SmModuleColumnBase
+{
 }
