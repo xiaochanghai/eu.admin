@@ -86,7 +86,7 @@
 ![image-20230602140542](./doc/images/20230602140542.png)
 ![image-20230602140529](./doc/images/20230602140529.png)
 ![image-20230602140537](./doc/images/20230602140537.png)
-> 数据库文件见Model：[https://gitee.com/xiaochanghai520/EU.Core](https://gitee.com/xiaochanghai520/EU.Core "https://gitee.com/xiaochanghai520/EU.Core")
+> [数据库设计文件](`/model` 文件夹)
 
 ## 部署
 
