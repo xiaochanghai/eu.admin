@@ -42,6 +42,9 @@ export const FormSetDiv = styled.div`
           font-size: 16px;
           color: var(--hooks-colorPrimary);
         }
+        .icon.active {
+          color: #3b82f680;
+        }
       }
     }
     &-content {

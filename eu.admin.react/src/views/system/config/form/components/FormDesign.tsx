@@ -199,6 +199,14 @@ const Index: React.FC = () => {
                 setColumns(fields);
                 // saveFormColumnTaxisNo(fields);
               }}
+              onPlus={field => {
+                columns = columns.map(f => {
+                  if (f.ID === field.ID) return field;
+                  return f;
+                });
+                setColumns(columns);
+                setCurrentField(field);
+              }}
               onSelect={field => {
                 setCurrentField(field);
               }}

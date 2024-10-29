@@ -1,6 +1,6 @@
 import { Tabs, Card, Form, Flex, Tag } from "antd";
 import { Icon } from "@/components/Icon";
-import Layout from "@/components/Elements/Layout";
+import Layout from "@/components/Elements/Index";
 // import { Mode } from "./dsl/base";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -15,21 +15,9 @@ interface FieldSetCenterProps {
   currentField: any;
   onDataChange: (ang: any[]) => void; //数据返回出去
   onSelect: (field: string) => void; //当前选中字段
+  onPlus: (field: any) => void; //当前选中字段
 }
-const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: FieldSetCenterProps) => {
-  //删除添加的布局字段
-  // const handleDelete = (e, id) => {
-  //   e.stopPropagation();
-  //   const newFieldList = [...fieldList];
-  //   const curIndex = newFieldList.findIndex((item) => item.id === id);
-  //   if (curIndex !== -1) {
-  //     let deleteItem = newFieldList.splice(curIndex, 1);
-  //     if (deleteItem?.[0]?.id === currentField?.id) {
-  //       handleChooseField({});
-  //     }
-  //     onFieldChange(newFieldList);
-  //   }
-  // };
+const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlus }: FieldSetCenterProps) => {
   const DragItem = ({ id, text, index, moveItem, field }: any) => {
     const ref = React.useRef(null);
 
@@ -68,7 +56,14 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: Fie
         {/* {text} */}
         <Tag
           className="main-hide-field-tag"
-          style={{ width: 100, textAlign: "center" }}
+          style={{
+            width: 100,
+            textAlign: "center",
+            border: currentField?.ID === field?.ID ? "1px solid #3b82f680" : "",
+            background: currentField?.ID === field?.ID ? "#F8FBFF" : ""
+            // borderRadius: currentField?.ID === item?.ID ? 10 : 0,
+            // width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
+          }}
           onClick={event => {
             event.stopPropagation();
             // 处理按钮的点击事件
@@ -76,8 +71,17 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange }: Fie
           }}
         >
           {text}
-          <span className="plus">
-            <Icon className="icon" name="PlusCircleFilled" />
+          <span
+            className="plus"
+            onClick={event => {
+              event.stopPropagation();
+              onPlus({
+                ...field,
+                HideInForm: false
+              });
+            }}
+          >
+            <Icon className={currentField?.ID === field?.ID ? "icon active" : "icon"} name="PlusCircleFilled" />
           </span>
         </Tag>
       </div>
