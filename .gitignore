@@ -382,8 +382,10 @@ EU.Core/WMBlog.db
 EU.Core/EU.Core*.xml
 EU.Core.Api/WMBlog.db
 EU.Core.Api/wwwroot/ui/
-Admin/EU.Core.Api/wwwroot/files/
-EU.Core.Api/Logs
+eu.core/EU.Core.Api/wwwroot/files/
+eu.core/EU.Core.Api/wwwroot/importexcel/
+eu.core/EU.Core.Api/wwwroot/importtemplate/
+eu.core/EU.Core.Api/Logs
 *.db
 /EU.Core.Api/WMBlog.db-journal
 .docs/.vuepress/dist/

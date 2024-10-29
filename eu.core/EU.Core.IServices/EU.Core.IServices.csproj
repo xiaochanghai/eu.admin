@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\build\common.targets" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\EU.Core.Model\EU.Core.Model.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="IDS4Db\" />
+  </ItemGroup>
+
+</Project>

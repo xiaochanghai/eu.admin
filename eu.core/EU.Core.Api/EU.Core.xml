@@ -1,0 +1,4234 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EU.Core.Api</name>
+    </assembly>
+    <members>
+        <member name="T:EU.Core.Api.Controllers.ApCheckDetailController">
+            <summary>
+            应付对账单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApCheckDetail})">
+            <summary>
+            应付对账单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.Add(EU.Core.Model.Models.ApCheckDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApCheckDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.Update(System.Object)">
+            <summary>
+            更新
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckDetailController.GenerateDetail(System.Guid)">
+            <summary>
+            生成明细数据
+            </summary>
+            <param name="orderId">订单ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApCheckOrderController">
+            <summary>
+            应付对账单(Controller)
+            </summary> 
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApCheckOrder})">
+            <summary>
+            应付对账单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckOrderController.Add(EU.Core.Model.Models.ApCheckOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApCheckOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApInitAccountDetailController">
+            <summary>
+            应付期初建账明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApInitAccountDetail})">
+            <summary>
+            应付期初建账明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.Add(EU.Core.Model.Models.ApInitAccountDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApInitAccountDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.Update(System.Object)">
+            <summary>
+            更新
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApInitAccountOrderController">
+            <summary>
+            应付期初建账(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApInitAccountOrder})">
+            <summary>
+            应付期初建账
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountOrderController.Add(EU.Core.Model.Models.ApInitAccountOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountOrderController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInitAccountOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApInvoiceAssociationController">
+            <summary>
+            应付对应发票(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceAssociationController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApInvoiceAssociation})">
+            <summary>
+            应付对应发票
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceAssociationController.Add(EU.Core.Model.Models.ApInvoiceAssociation)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceAssociationController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceAssociationController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApInvoiceDetailController">
+            <summary>
+            应付发票单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApInvoiceDetail})">
+            <summary>
+            应付发票单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.Add(EU.Core.Model.Models.ApInvoiceDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApInvoiceDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.ApInvoiceDetail})">
+            <summary>
+            批量删除
+            </summary>
+            <param name="entryList">list</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceDetailController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApInvoiceOrderController">
+            <summary>
+            应付发票单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApInvoiceOrder})">
+            <summary>
+            应付发票单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceOrderController.Add(EU.Core.Model.Models.ApInvoiceOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApInvoiceOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApPaymentDetailController">
+            <summary>
+            采购付款单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApPaymentDetail})">
+            <summary>
+            采购付款单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentDetailController.Add(EU.Core.Model.Models.ApPaymentDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApPaymentDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApPaymentOrderController">
+            <summary>
+            采购付款单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApPaymentOrder})">
+            <summary>
+            采购付款单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentOrderController.Add(EU.Core.Model.Models.ApPaymentOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApPaymentWriteOffController">
+            <summary>
+            采购付款核销明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApPaymentWriteOff})">
+            <summary>
+            采购付款核销明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.Add(EU.Core.Model.Models.ApPaymentWriteOff)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApPaymentWriteOff})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPaymentWriteOffController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <param name="paramData">参数</param>
+            <param name="masterId">masterId</param>
+            <param name="Source">来源</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApPrepaidDetailController">
+            <summary>
+            采购预付款明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ApPrepaidDetail})">
+            <summary>
+            采购预付款明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.Add(EU.Core.Model.Models.ApPrepaidDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ApPrepaidDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ApPrepaidDetailController.Update(System.Object)">
+            <summary>
+            更新
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ApPrepaidOrderController">
+            <summary>
+            采购预付款(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArCheckDetailController">
+            <summary>
+            应收对账单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArCheckDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArCheckDetail})">
+            <summary>
+            应收对账单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArCheckDetailController.Add(EU.Core.Model.Models.ArCheckDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArCheckDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArCheckDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArCheckDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArCheckDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArCheckOrderController">
+            <summary>
+            应收对账单(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArInitAccountDetailController">
+            <summary>
+            应收期初建账明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArInitAccountDetail})">
+            <summary>
+            应收期初建账明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.Add(EU.Core.Model.Models.ArInitAccountDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArInitAccountDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.Update(System.Object)">
+            <summary>
+            更新
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArInitAccountOrderController">
+            <summary>
+            应收期初建账(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArInitAccountOrder})">
+            <summary>
+            应收期初建账
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountOrderController.Add(EU.Core.Model.Models.ArInitAccountOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountOrderController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInitAccountOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArInvoiceAssociationController">
+            <summary>
+            应收开票对应发票(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceAssociationController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArInvoiceAssociation})">
+            <summary>
+            应收开票对应发票
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceAssociationController.Add(EU.Core.Model.Models.ArInvoiceAssociation)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceAssociationController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArInvoiceAssociation})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceAssociationController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceAssociationController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArInvoiceDetailController">
+            <summary>
+            应收开票明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArInvoiceDetail})">
+            <summary>
+            应收开票明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceDetailController.Add(EU.Core.Model.Models.ArInvoiceDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArInvoiceDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArInvoiceOrderController">
+            <summary>
+            应收开票(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArInvoiceOrder})">
+            <summary>
+            应收开票
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceOrderController.Add(EU.Core.Model.Models.ArInvoiceOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArInvoiceOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArPrepaidDetailController">
+            <summary>
+            销售预收款明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArPrepaidDetail})">
+            <summary>
+            销售预收款明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.Add(EU.Core.Model.Models.ArPrepaidDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArPrepaidDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidDetailController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArPrepaidOrderController">
+            <summary>
+            销售预收款(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArPrepaidOrder})">
+            <summary>
+            销售预收款
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidOrderController.Add(EU.Core.Model.Models.ArPrepaidOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArPrepaidOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArSalesCollectionDetailController">
+            <summary>
+            销售收款单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArSalesCollectionDetail})">
+            <summary>
+            销售收款单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionDetailController.Add(EU.Core.Model.Models.ArSalesCollectionDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArSalesCollectionDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArSalesCollectionOrderController">
+            <summary>
+            销售收款单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArSalesCollectionOrder})">
+            <summary>
+            销售收款单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionOrderController.Add(EU.Core.Model.Models.ArSalesCollectionOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController">
+            <summary>
+            销售收款核销明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.ArSalesCollectionWriteOff})">
+            <summary>
+            销售收款核销明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.Add(EU.Core.Model.Models.ArSalesCollectionWriteOff)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.ArSalesCollectionWriteOff})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ArSalesCollectionWriteOffController.GetSourceList(System.String,System.String,System.String)">
+            <summary>
+            获取来源数据
+            </summary>
+            <param name="paramData">参数</param>
+            <param name="masterId">masterId</param>
+            <param name="Source">来源</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.CustomerController">
+            <summary>
+            客户(Controller)
+            </summary>
+            
+        </member>
+        <member name="T:EU.Core.Api.Controllers.CustomerDeliveryAddressController">
+            <summary>
+            客户地址(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.CustomerDeliveryAddressController.GetDefaultData(System.Guid)">
+            <summary>
+            获取客户默认地址
+            </summary>
+            <param name="customerId">客户ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.GoodsLocationController">
+            <summary>
+            货位(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MaterialController">
+            <summary>
+            物料管理(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MaterialInventoryController">
+            <summary>
+            物料库存(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdMaterialIVChangeController">
+            <summary>
+            BdMaterialIVChange(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MaterialTypeController">
+            <summary>
+            物料类型(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MaterialTypeController.GetAllMaterialType">
+            <summary>
+            获取物料类型树结构数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MaterialTypeController.QueryClass(System.Guid)">
+            <summary>
+            获取物料类型树结构数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MaterialTypeController.QueryClass">
+            <summary>
+            获取物料类型树结构数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SettlementWayController">
+            <summary>
+            结算方式(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.StockController">
+            <summary>
+            仓库 (Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SupplierController">
+            <summary>
+            供应商(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MachineController">
+            <summary>
+            设备基础资料(Controller)
+            </summary>  
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MachineController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.EmMachine})">
+            <summary>
+            设备基础资料
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MachineController.Add(EU.Core.Model.Models.EmMachine)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MachineController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MachineTypeController">
+            <summary>
+            设备分类(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MachineTypeController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvActualCheckController">
+            <summary>
+            实际盘点录入(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvActualCheck})">
+            <summary>
+            
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Add(EU.Core.Model.Models.IvActualCheck)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.ConfirmCheck(System.Guid)">
+            <summary>
+            盘点确认
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GenerateCheckDetail(System.Guid)">
+            <summary>
+            生成盘点单
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GenerateCheckDetailData(System.Guid)">
+            <summary>
+            自动生成明细数据
+            </summary>
+            <param name="Id">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GetCheckList(System.String,System.String)">
+            <summary>
+            获取存货盘点
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvActualCheckDetailController">
+            <summary>
+            实际盘点单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvActualCheckDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvAdjustController">
+            <summary>
+            库存调整单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvAdjustDetailController">
+            <summary>
+            库存调整单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvAdjustDetail})">
+            <summary>
+            库存调整单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Add(EU.Core.Model.Models.IvAdjustDetail)">
+            <summary>
+            
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvAdjustDetail})">
+            <summary>
+            
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Update(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Delete(System.Guid)">
+            <summary>
+            
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.IvAdjustDetail})">
+            <summary>
+            
+            </summary>
+            <param name="entryList"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvCheckController">
+            <summary>
+            库存盘点单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvCheckController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvCheckController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvCheckController.GenerateCheckDetailData(System.Guid)">
+            <summary>
+            自动生成明细数据
+            </summary>
+            <param name="Id">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvCheckDetailController">
+            <summary>
+            库存盘点单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvCheckDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvInitController">
+            <summary>
+            库存初始化(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvInitController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvInitController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvInitController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvInitDetailController">
+            <summary>
+            库存初始化明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvInitDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOtherInController">
+            <summary>
+            其他入库单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherInController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherInController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOtherInDetailController">
+            <summary>
+            其他入库单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherInDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOtherOutController">
+            <summary>
+            其他出库单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvOtherOut})">
+            <summary>
+            其他入库单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.Add(EU.Core.Model.Models.IvOtherOut)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.ConfirmOut(System.Guid)">
+            <summary>
+            确认出库
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOtherOutDetailController">
+            <summary>
+            其他出库单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvOtherOutDetail})">
+            <summary>
+            其他入库单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.Add(EU.Core.Model.Models.IvOtherOutDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvOtherOutDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.IvOtherOutDetail})">
+            <summary>
+            删除
+            </summary>
+            <param name="entryList"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvTransfersController">
+            <summary>
+            库存调拨单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersController.ConfirmTransfers(System.Guid)">
+            <summary>
+            确认调整
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvTransfersDetailController">
+            <summary>
+            库存调拨单明细(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvTransfersDetail})">
+            <summary>
+            库存调拨单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.Add(EU.Core.Model.Models.IvTransfersDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvTransfersDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id">Id</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MfInOrderController">
+            <summary>
+            MfInOrder(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MfInOrderController.AuditMfInOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MfInOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MfInOrderDetailController">
+            <summary>
+            MfInOrderDetail(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MfInOrderDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MouldController">
+            <summary>
+            MfMould(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MouldTypeController">
+            <summary>
+            MfMouldType(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.NacosController">
+            <summary>
+            服务管理 
+            </summary>
+        </member>
+        <member name="F:EU.Core.Api.Controllers.NacosController.NacosNamingService">
+            <summary>
+            INacosNamingService
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.NacosController.#ctor(Nacos.V2.INacosNamingService)">
+            <summary>
+            
+            </summary>
+            <param name="nacosNamingService"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.NacosController.CheckSystemStartFinish">
+            <summary>
+            系统实例是否启动完成
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.NacosController.GetStatus">
+            <summary>
+            获取Nacos 状态
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.NacosController.Register">
+            <summary>
+            服务上线
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.NacosController.Deregister">
+            <summary>
+            服务下线
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SignalRTestController">
+            <summary>
+            SignalR测试
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SplitDemoController">
+            <summary>
+            分表demo
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SplitDemoController.Get(System.DateTime,System.DateTime,System.Int32,System.String,System.Int32)">
+            <summary>
+            分页获取数据
+            </summary>
+            <param name="beginTime"></param>
+            <param name="endTime"></param>
+            <param name="page"></param>
+            <param name="key"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SplitDemoController.GetById(System.Int64)">
+            <summary>
+            根据ID获取信息
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SplitDemoController.Post(EU.Core.Model.Models.SplitDemo)">
+            <summary>
+            添加一条测试数据
+            </summary>
+            <param name="splitDemo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SplitDemoController.Put(EU.Core.Model.Models.SplitDemo)">
+            <summary>
+            修改一条测试数据
+            </summary>
+            <param name="splitDemo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SplitDemoController.Delete(System.Int64)">
+            <summary>
+            根据id删除数据
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdCompleteDetailController">
+            <summary>
+            PdCompleteDetail(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdCompleteDetail})">
+            <summary>
+            产品完工入库-工单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteDetailController.Add(EU.Core.Model.Models.PdCompleteDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PdCompleteDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdCompleteOrderController">
+            <summary>
+            产品完工入库
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdCompleteOrder})">
+            <summary>
+            产品完工入库
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.Add(EU.Core.Model.Models.PdCompleteOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.GetSourceList(System.String)">
+            <summary>
+            获取来源列表
+            </summary>
+            <param name="paramData">参数</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdCompleteOrderController.ConfirmIn(System.Guid)">
+            <summary>
+            确认入库
+            </summary>
+            <param name="Id">入库单ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOrderController">
+            <summary>
+            生产工单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOrder})">
+            <summary>
+            生产工单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.Add(EU.Core.Model.Models.PdOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id">数据ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.GetSourceList(System.String,System.String)">
+            <summary>
+            获取来源列表
+            </summary>
+            <param name="paramData">参数</param>
+            <param name="source">来源</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.GenerateDetail(System.Guid)">
+            <summary>
+            生成明细
+            </summary>
+            <param name="Id">生产单ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderController.GetCloseList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            获取工单批量结清列表
+            </summary>
+            <param name="paramData"></param>
+            <param name="moduleCode"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOrderDetailController">
+            <summary>
+            生产工单-对应订单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOrderDetail})">
+            <summary>
+            生产工单-对应订单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOrderMaterialController">
+            <summary>
+            生产工单-材料明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderMaterialController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOrderMaterial})">
+            <summary>
+            生产工单-材料明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderMaterialController.Add(EU.Core.Model.Models.PdOrderMaterial)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderMaterialController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOrderMouldController">
+            <summary>
+            生产工单-工模治具
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderMouldController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOrderMould})">
+            <summary>
+            生产工单-工模治具
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOrderProcessController">
+            <summary>
+            生产工单-工艺路线
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOrderProcessController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOrderProcess})">
+            <summary>
+            生产工单-工艺路线
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOutDetailController">
+            <summary>
+            材料出库工单-工单明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOutDetail})">
+            <summary>
+            材料出库工单-工单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutDetailController.Add(EU.Core.Model.Models.PdOutDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PdOutDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdOutOrderController">
+            <summary>
+            材料出库工单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdOutOrder})">
+            <summary>
+            材料出库工单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.Add(EU.Core.Model.Models.PdOutOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.GetSourceList(System.String)">
+            <summary>
+            获取来源列表
+            </summary>
+            <param name="paramData">参数</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdOutOrderController.ConfirmOut(System.Guid)">
+            <summary>
+            确认出库
+            </summary>
+            <param name="Id">出库单ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdPlanDetailController">
+            <summary>
+            PdPlanDetail(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdPlanOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdPlanOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdReissueDetailController">
+            <summary>
+            材料补发工单-工单明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdReissueDetail})">
+            <summary>
+            材料补发工单-工单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueDetailController.Add(EU.Core.Model.Models.PdReissueDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PdReissueDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdReissueOrderController">
+            <summary>
+            材料补发工单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdReissueOrder})">
+            <summary>
+            材料补发工单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.Add(EU.Core.Model.Models.PdReissueOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model">PdReissueOrder</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.GetById(System.Guid)">
+            <summary>
+            获取详情
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.GetSourceList(System.String)">
+            <summary>
+            获取来源列表
+            </summary>
+            <param name="paramData">参数</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReissueOrderController.ConfirmReissue(System.Guid)">
+            <summary>
+            确认补发
+            </summary>
+            <param name="Id">补发单ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdRequireAnalysisController">
+            <summary>
+            工单分析
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireAnalysisController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdRequireAnalysis})">
+            <summary>
+            工单分析
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireAnalysisController.Add(EU.Core.Model.Models.PdRequireAnalysis)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireAnalysisController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PdRequireAnalysis})">
+            <summary>
+            
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireAnalysisController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdRequireOrderController">
+            <summary>
+            需求分析工单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdRequireOrder})">
+            <summary>
+            需求分析工单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireOrderController.Add(EU.Core.Model.Models.PdRequireOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdRequireOrderController.GetAnalysisList(System.String,System.String)">
+            <summary>
+            获取分析明细列表
+            </summary>
+            <param name="paramData">参数</param>
+            <param name="masterId">主表ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdReturnDetailController">
+            <summary>
+            材料退库工单-工单明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdReturnDetail})">
+            <summary>
+            材料退库工单-工单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnDetailController.Add(EU.Core.Model.Models.PdReturnDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PdReturnDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PdReturnOrderController">
+            <summary>
+            材料退库工单
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PdReturnOrder})">
+            <summary>
+            材料退库工单
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.Add(EU.Core.Model.Models.PdReturnOrder)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.AuditOrder(System.Object)">
+            <summary>
+            审核
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.GetSourceList(System.String)">
+            <summary>
+            获取来源列表
+            </summary>
+            <param name="paramData">参数</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PdReturnOrderController.ConfirmReturn(System.Guid)">
+            <summary>
+            确认退库
+            </summary>
+            <param name="Id">材料退库单ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoArrivalOrderController">
+            <summary>
+            采购到货通知单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoArrivalOrderController.BulkInsertDetailAsync(System.Object,System.Guid)">
+            <summary>
+            批量导入明细
+            </summary>
+            <param name="entity">数据</param>
+            <param name="id">订单ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoArrivalOrderController.BulkInsertInAsync(System.Object)">
+            <summary>
+            批量导入入库单
+            </summary>
+            <param name="entity">数据</param> 
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoArrivalOrderController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoArrivalOrderDetailController">
+            <summary>
+            采购到货通知单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoDeductionDetailController">
+            <summary>
+            采购扣款单明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoDeductionDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PoDeductionDetail})">
+            <summary>
+            采购扣款单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoDeductionDetailController.Add(EU.Core.Model.Models.PoDeductionDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoDeductionDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PoDeductionDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="list"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoDeductionDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoDeductionDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoFeeDetailController">
+            <summary>
+            采购费用单明细
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoFeeDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PoFeeDetail})">
+            <summary>
+            采购费用单明细
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoFeeDetailController.Add(EU.Core.Model.Models.PoFeeDetail)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoFeeDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PoFeeDetail})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="list"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoFeeDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoFeeDetailController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoInOrderController">
+            <summary>
+            采购入库单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoInOrderController.BulkInsertDetailAsync(System.Object,System.Guid)">
+            <summary>
+            批量导入明细
+            </summary>
+            <param name="entity">数据</param> 
+            <param name="id">id</param> 
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoInOrderController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoInOrderController.BulkOrderCarryTo(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoInOrderDetailController">
+            <summary>
+            采购入库单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoOrderController">
+            <summary>
+            采购单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderController.BulkInsertNotice(System.Object)">
+            <summary>
+            批量导入出货通知单
+            </summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderController.BulkInsertIn(System.Object)">
+            <summary>
+            批量导入入库单
+            </summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoOrderDetailController">
+            <summary>
+            采购单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoOrderPrepaymentController">
+            <summary>
+            采购单预付账款(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderPrepaymentController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PoOrderPrepayment})">
+            <summary>
+            采购单预付账款
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderPrepaymentController.Add(EU.Core.Model.Models.PoOrderPrepayment)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderPrepaymentController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="orderId">订单ID</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoOrderPrepaymentController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoRequestionController">
+            <summary>
+            请购单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoRequestionController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoRequestionDetailController">
+            <summary>
+            请购单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoReturnOrderController">
+            <summary>
+            采购退货单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoReturnOrderController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.PoReturnOrderController.BulkOrderCarryTo(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.PoReturnOrderDetailController">
+            <summary>
+            采购退货单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BOMController">
+            <summary>
+            PsBOM(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.BaseCRUDVM{EU.Core.Model.Models.PsBOM})">
+            <summary>
+            
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMController.GetBOMTree(System.Nullable{System.Guid})">
+            <summary>
+            获取BOM树
+            </summary>
+            <param name="bomId">获取bomId</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMController.Copy(EU.Core.Model.Models.PsBOM)">
+            <summary>
+            拷贝
+            </summary>
+            <param name="Model">数据</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BOMMaterialController">
+            <summary>
+            PsBOMMaterial(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PsBOMMaterial})">
+            <summary>
+            
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.Add(EU.Core.Model.Models.PsBOMMaterial)">
+            <summary>
+            新增
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PsBOMMaterial})">
+             <summary>
+            批量新增
+             </summary>
+             <param name="data"></param>
+             <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="BOMId">BOMId</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMaterialController.GetMaterialList(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            获取物料列表
+            </summary>
+            <param name="paramData"></param>
+            <param name="moduleCode"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMMouldController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="BOMId">BOMId</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BOMProcessController">
+            <summary>
+            PsBOMProcess(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PsBOMProcess})">
+            <summary>
+            BOM工艺路线
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.Add(EU.Core.Model.Models.PsBOMProcess)">
+            <summary>
+            
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.PsBOMProcess})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.Update(System.Object)">
+            <summary>
+            更新
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.BatchUpdateProcess(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="BOMId">BOMId</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.BatchUpdateSerialNumber(System.Nullable{System.Guid})">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="BOMId">BOMId</param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.BOMProcessController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.PsBOMProcess})">
+            <summary>
+            批量删除
+            </summary>
+            <param name="entryList"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessBadReasonController">
+            <summary>
+            PsProcessBadReason(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessBadReasonController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessController">
+            <summary>
+            PsProcess(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessController.GetMachineList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            获取工序设备
+            </summary>
+            <param name="paramData"></param>
+            <param name="moduleCode"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessEmployeeController">
+            <summary>
+            PsProcessEmployee(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessMachineController">
+            <summary>
+            工序机台
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessMachineController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.PsProcessMachine})">
+            <summary>
+            工序机台
+            </summary>
+            <param name="_context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessPriceController">
+            <summary>
+            PsProcessPrice(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessSupplierController">
+            <summary>
+            PsProcessSupplier(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessTemplateController">
+            <summary>
+            PsProcessTemplate(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessTemplateController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessTemplateDetailController">
+            <summary>
+            PsProcessTemplateDetail(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.ProcessTemplateDetailController.BatchUpdateSerialNumber(System.String)">
+            <summary>
+            批量更新排序号
+            </summary>
+            <param name="TemplateId">模板ID</param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.ProcessTemplateMaterialController">
+            <summary>
+            PsProcessTemplateMaterial(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.WorkShopController">
+            <summary>
+            PsWorkShop(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.WorkShopController.Update(System.Object)">
+            <summary>
+            更新重写
+            </summary>
+            <param name="modelModify"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdChangeOrderController">
+            <summary>
+            销售变更单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdChangeOrderController.BulkOrderChange(System.Guid[])">
+            <summary>
+            执行变更
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdChangeOrderDetailController">
+            <summary>
+            销售变更单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdOrderController">
+            <summary>
+            销售单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdOrderController.BulkInsertShip(System.Object)">
+            <summary>
+            批量导入出货通知单
+            </summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdOrderController.BulkInsertOut(System.Object)">
+            <summary>
+            批量导入出库单
+            </summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdOrderController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdOrderController.BulkOrderChange(System.Collections.Generic.List{System.Guid})">
+            <summary>
+            订单变更
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdOrderDetailController">
+            <summary>
+            销售订单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdOutOrderController">
+            <summary>
+            出库单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdOutOrderController.BulkOrderCarryTo(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdOutOrderDetailController">
+            <summary>
+            出库单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdReturnOrderController">
+            <summary>
+            退库单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkInsertDetail(System.Collections.Generic.List{EU.Core.Model.Models.SdReturnOrderDetail},System.Guid)">
+            <summary>
+            批量导入出库明细
+            </summary>
+            <param name="entitys"></param>
+            <param name="orderId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkOrderCarryTo(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdReturnOrderDetailController">
+            <summary>
+            退货单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdShipOrderController">
+            <summary>
+            发货单((Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdShipOrderController.BulkInsertShip(System.Object,System.Guid)">
+            <summary>
+            批量导入出货明细
+            </summary>
+            <param name="entity"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdShipOrderController.BulkOrderComplete(System.Guid[])">
+            <summary>
+            订单完结
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SdShipOrderController.BulkInsertOut(System.Object)">
+            <summary>
+            批量导入出库单
+            </summary>
+            <param name="entity"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SdShipOrderDetailController">
+            <summary>
+            发货单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Systems.CacheManageController">
+            <summary>
+            缓存管理
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.CacheManageController.Get">
+            <summary>
+            获取全部缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.CacheManageController.Get(System.String)">
+            <summary>
+            获取缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.CacheManageController.Post(System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            新增
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.CacheManageController.Delete">
+            <summary>
+            删除全部缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.CacheManageController.Delete(System.String)">
+            <summary>
+            删除缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Systems.DataBaseController">
+            <summary>
+            数据库管理
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DataBaseController.GetAllConfig">
+            <summary>
+            获取库配置
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DataBaseController.GetTableInfoList(System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表信息
+            </summary>
+            <param name="configId">配置Id</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DataBaseController.GetColumnInfosByTableName(System.String,System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表字段
+            </summary>
+            <param name="tableName">表名</param>
+            <param name="configId">ConfigId</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DataBaseController.PutTableEditRemark(EU.Core.Model.Systems.DataBase.EditTableInput)">
+            <summary>
+            编辑表备注
+            </summary>
+            <param name="input"></param>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DataBaseController.PutColumnEditRemark(EU.Core.Model.Systems.DataBase.EditColumnInput)">
+            <summary>
+            编辑列备注
+            </summary>
+            <param name="input"></param>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController">
+            <summary>
+            动态建表 CURD
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController.GetDynamicType">
+            <summary>
+            动态type
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController.GetDynamicType2">
+            <summary>
+            动态type 继承BaseEntity
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController.TestCreateTable">
+            <summary>
+            测试建表
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController.TestQuery">
+            <summary>
+            测试查询
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Systems.DynamicCodeFirstController.TestInsert(System.String,System.String)">
+            <summary>
+            测试写入
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.FileController">
+            <summary>
+            文件服务(Controller)
+            </summary>
+        </member>
+        <member name="F:EU.Core.Api.Controllers.FileController._configuration">
+            <summary>
+            配置信息
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.UploadAsync(EU.Core.Model.UploadForm)">
+            <summary>
+            上传附件接口
+            </summary>
+            <param name="upload"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.UploadImageAsync(EU.Core.Model.UploadForm)">
+            <summary>
+            上传图片
+            </summary>
+            <param name="upload"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.UploadVideoAsync(EU.Core.Model.ChunkUpload)">
+            <summary>
+            上传视频
+            </summary>
+            <param name="upload"></param> 
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.GetByUrl(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="url"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.GetById(System.Guid)">
+            <summary>
+            获取图片
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.Download(System.Guid)">
+            <summary>
+            下载文件
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmAutoCodeController">
+            <summary>
+            自动编号(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmCityController">
+            <summary>
+            城市(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmCommonListSqlController">
+            <summary>
+            系统通用下拉(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmCompanyController">
+            <summary>
+            组织(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmComponentController">
+            <summary>
+            SmComponent(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmConfigController">
+            <summary>
+            系统配置(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmConfigController.GetListByGroup">
+            <summary>
+            系统参数明细 -- 根据参数分组查询
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmConfigController.SmConfigView">
+            <summary>
+            SmConfigView
+            </summary>
+        </member>
+        <member name="P:EU.Core.Api.Controllers.SmConfigController.SmConfigView.detail">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmConfigGroupController">
+            <summary>
+            系统配置组(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmCountyController">
+            <summary>
+            区县(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmDepartmentController">
+            <summary>
+            部门(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmEmployeeController">
+            <summary>
+            员工管理(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmFieldCatalogController">
+            <summary>
+            映射表字段(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmFunctionPrivilegeController">
+            <summary>
+            功能权限(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportDataDetailController">
+            <summary>
+            系统导入数据明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportErrorController">
+            <summary>
+            系统导入模板异常信息(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImpTemplateController">
+            <summary>
+            系统导入模板(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmImpTemplateController.QueryByModuleId(System.Guid)">
+            <summary>
+            根据模板ID获取明细
+            </summary>
+            <param name="moduleId">模板ID</param> 
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImpTemplateDetailController">
+            <summary>
+            导入模板定义明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmLovController">
+            <summary>
+            SmLov(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmLovController.GetByCode(System.String)">
+            <summary>
+            根据code获取ComBoBox下拉值
+            </summary>
+            <param name="code">代码</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmLovDetailController">
+            <summary>
+            SmLovDetail(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmModuleColumnController">
+            <summary>
+            SmModuleColumn(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmModulesController">
+            <summary>
+            系统模板(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetMenuData">
+            <summary>
+            获取左侧菜单
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetAuthMenu">
+            <summary>
+            获取左侧菜单
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleInfo(System.String)">
+            <summary>
+            获取模块信息
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleInfo1(System.String)">
+            <summary>
+            获取模块信息
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleFormColumn(System.String)">
+            <summary>
+            获取模块表单列信息
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleLogInfo(System.String,System.String)">
+            <summary>
+            获取模块日志信息
+            </summary>
+            <param name="moduleCode"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.ExportModuleSqlScript(System.Collections.Generic.List{EU.Core.Model.Models.SmModules})">
+            <summary>
+            导出模块SQL
+            </summary>
+            <param name="list">ids</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetPatchRoutes">
+            <summary>
+            App.js动态加载路由
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateFormColumnTaxisNo(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn})">
+            <summary>
+            更新模块表单列排序号
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="columns">columns</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateFormColumnAsync(System.String,EU.Core.Model.SmModuleFormOption)">
+            <summary>
+            更新模块表单列
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="column">column</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTableColumnTaxisNo(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn})">
+            <summary>
+            更新模块表格列排序号
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="columns">columns</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTableColumnAsync(System.String,EU.Core.Model.Models.SmModuleColumn)">
+            <summary>
+            更新模块表格列
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="column">column</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.RecordUserMoudleColumn(System.Guid,Newtonsoft.Json.Linq.JObject)">
+            <summary>
+            记录用户模块列
+            </summary>
+            <param name="moduleId">模块ID</param>
+            <param name="param">columns</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.CopyAsync(System.Guid,EU.Core.Model.Models.SmModules)">
+            <summary>
+            复制模块
+            </summary>
+            <param name="moduleId">模块ID</param> 
+            <param name="module">模块</param> 
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmModuleSqlController">
+            <summary>
+            系统模块SQL(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModuleSqlController.GetModuleInfo(System.Guid)">
+            <summary>
+            获取模块信息
+            </summary>
+            <param name="moduleId">模块ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModuleSqlController.GetModuleFullSql(System.Guid)">
+            <summary>
+            获取模块信息
+            </summary>
+            <param name="moduleId">模块ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmProvinceController">
+            <summary>
+            省份(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmQuartzJobController">
+            <summary>
+            任务调度(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmQuartzJobController.Operate(System.Guid,System.String,EU.Core.Model.Models.SmQuartzJob)">
+            <summary>
+            远程操作
+            </summary>
+            <param name="id">任务清单标识</param>
+            <param name="operate">操作值 字典Code为`DIC.TASK.OPERATE`</param>
+            <param name="args">操作参数，当操作为修改参数是必填</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmQuartzJobLogController">
+            <summary>
+            执行任务日志(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmRoleFunctionController">
+            <summary>
+            功能定义 (Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetModuleFunction(System.Guid,System.Guid)">
+            <summary>
+            获取模块按钮权限
+            </summary>
+            <param name="roleId">角色ID</param>
+            <param name="moduleId">模块ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.SaveModuleFunction(EU.Core.Model.RoleFuncVM)">
+            <summary>
+            保存模块按钮权限
+            </summary>
+            <param name="roleFuncVm"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetAllFuncPriv">
+            <summary>
+            获取功能权限定义
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.SaveRoleFuncPriv(EU.Core.Model.RoleFuncPric)">
+            <summary>
+            保存功能权限定义
+            </summary>
+            <param name="roleFuncPric"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetRoleFuncPriv(System.Guid)">
+            <summary>
+            获取角色功能定义
+            </summary>
+            <param name="RoleId">角色ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmRoleModuleController">
+            <summary>
+            角色模块权限(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleModuleController.BatchInsertRoleModule(EU.Core.Model.RoleModuleVM)">
+            <summary>
+            批量导入模块权限
+            </summary>
+            <param name="roleModuleVm"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleModuleController.UpdateRoleModule(System.Guid,System.Collections.Generic.List{System.String})">
+            <summary>
+            更新角色模块权限
+            </summary>
+            <param name="roleId">角色ID</param>
+            <param name="moduleList">模块</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleModuleController.GetAllModuleList">
+            <summary>
+            获取模块数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleModuleController.GetRoleModule(System.Guid)">
+            <summary>
+            获取角色模块数据
+            </summary>
+            <param name="roleId">角色ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmRolesController">
+            <summary>
+            系统角色(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmTableCatalogController">
+            <summary>
+            映射表(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmTableCatalogController.InitAssignmentTable(System.Guid)">
+            <summary>
+            初始化指定表
+            </summary>
+            <param name="id">映射表id</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmTableCatalogController.InitAllTable">
+            <summary>
+            初始化所有表
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmUserModuleColumnController">
+            <summary>
+            用户模块列(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmUserRoleController">
+            <summary>
+            用户角色(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmUserRoleController.QueryUserRole(System.Guid)">
+            <summary>
+            获取用户角色数据
+            </summary>
+            <param name="userId">用户ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmUserController">
+            <summary>
+            系统用户(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmUserController.UploadAvatarAsync(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            上传头像
+            </summary>
+            <param name="file">文件</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Tenant.TenantByDbController">
+            <summary>
+            多租户-多库方案 测试
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByDbController.GetAll">
+            <summary>
+            获取租户下全部业务数据 <br/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByDbController.Post(EU.Core.Model.Models.SubLibraryBusinessTable)">
+            <summary>
+            新增数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Tenant.TenantByIdController">
+            <summary>
+            多租户-Id方案 测试
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByIdController.GetAll">
+            <summary>
+            获取租户下全部业务数据 <br/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByIdController.Post(EU.Core.Model.Models.BusinessTable)">
+            <summary>
+            新增业务数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Tenant.TenantByTableController">
+            <summary>
+            多租户-多表方案 测试
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByTableController.GetAll">
+            <summary>
+            获取租户下全部业务数据 <br/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantByTableController.Post(EU.Core.Model.Models.MultiBusinessTable)">
+            <summary>
+            新增数据
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.Tenant.TenantManagerController">
+            <summary>
+            租户管理
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantManagerController.GetAll">
+            <summary>
+            获取全部租户
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantManagerController.GetInfo(System.Int64)">
+            <summary>
+            获取租户信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantManagerController.Post(EU.Core.Model.Models.SysTenant)">
+            <summary>
+            新增租户信息 <br/>
+            此处只做演示，具体要以实际业务为准
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantManagerController.Put(EU.Core.Model.Models.SysTenant)">
+            <summary>
+            修改租户信息 <br/>
+            此处只做演示，具体要以实际业务为准
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.Tenant.TenantManagerController.Delete(System.Int64)">
+            <summary>
+            删除租户 <br/>
+            此处只做演示，具体要以实际业务为准
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.WxConfigController">
+            <summary>
+            账号配置(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Filter.GlobalActionFilter">
+            <summary>
+            全局请求验证
+            </summary>
+        </member>
+        <member name="P:EU.Core.Api.Filter.GlobalActionFilter.Message">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
+            <summary>
+            
+            </summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
+            <summary>
+            
+            </summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuting(Microsoft.AspNetCore.Mvc.Filters.ResultExecutingContext)">
+            <summary>
+            
+            </summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuted(Microsoft.AspNetCore.Mvc.Filters.ResultExecutedContext)">
+            <summary>
+            
+            </summary>
+            <param name="filterContext"></param>
+        </member>
+        <member name="T:EU.Core.Controllers.AuthorizeController">
+            <summary>
+            登录管理【无权限】
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.AuthorizeController})">
+            <summary>
+            构造函数注入
+            </summary>
+            <param name="smUsersServices"></param> 
+            <param name="requirement"></param>
+            <param name="logger"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.Login(EU.Core.Model.LoginRequest)">
+            <summary>
+            用户认证-认证授权
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.CurrentUser">
+            <summary>
+            获取用户信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.RestPassword(EU.Core.Model.RestPassword)">
+            <summary>
+            修改密码
+            </summary>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.LogOut">
+            <summary>
+            退出登录
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.BaseController`5">
+            <summary>
+            增删改查基础服务
+            </summary>
+            <typeparam name="IServiceBase"></typeparam>
+            <typeparam name="TEntity"></typeparam>
+            <typeparam name="TEntityDto"></typeparam>
+            <typeparam name="TInsertDto"></typeparam>
+            <typeparam name="TEditDto"></typeparam>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.#ctor(`0)">
+            <summary>
+            初始化 (注入)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.QueryByFilter(EU.Core.Common.QueryFilter)">
+            <summary>
+            根据条件查询数据
+            </summary>
+            <param name="filter">条件</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.QueryById(System.Guid)">
+            <summary>
+             根据Id查询数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.GetPageList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            查询数据
+            </summary>
+            <param name="paramData"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <param name="moduleCode"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Insert(System.Object)">
+            <summary>
+            新增数据
+            </summary>
+            <param name="insertModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkInsert(System.Collections.Generic.List{`3})">
+            <summary>
+            批量新增数据
+            </summary>
+            <param name="insertModels"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Put(System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <param name="editModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.UpdateReturn(System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <param name="editModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Delete(System.Guid)">
+            <summary>
+            删除数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkDelete(System.Guid[])">
+            <summary>
+            批量删除数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Audit(System.Guid)">
+             <summary>
+            审核数据
+             </summary>
+             <param name="Id">主键ID</param>
+             <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkAudit(System.Guid[])">
+            <summary>
+            审核删除数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Revocation(System.Guid)">
+            <summary>
+            撤销数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkRevocation(System.Guid[])">
+            <summary>
+            批量撤销数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Object[])">
+            <summary>
+            反射调用service方法
+            </summary>
+            <param name="methodName"></param>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Type[],System.Object[])">
+            <summary>
+            反射调用service方法
+            </summary>
+            <param name="methodName"></param>
+            <param name="types">为要调用重载的方法参数类型：new Type[] { typeof(SaveDataModel)</param>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.BaseController1`1">
+            <summary>
+            基础Controllers类
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1._context">
+            <summary>
+            _context
+            </summary>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1._BaseCrud">
+            <summary>
+            _BaseCrud
+            </summary>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1.UserInfo">
+            <summary>
+            用户信息
+            </summary>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1.UserId">
+            <summary>
+            用户ID
+            </summary>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1.CompanyId">
+            <summary>
+            公司ID
+            </summary>
+        </member>
+        <member name="F:EU.Core.Controllers.BaseController1`1.GroupId">
+            <summary>
+            集团ID
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{`0})">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+            <param name="BaseCrud"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.DoAddPrepare(`0)">
+            <summary>
+            增删查改
+            </summary>
+            <param name="Entity"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.DoEditPrepare(`0)">
+            <summary>
+            增删查改
+            </summary>
+            <param name="Entity"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetPageList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            查询数据
+            </summary>
+            <param name="paramData"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <param name="moduleCode"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetById(System.Guid)">
+            <summary>
+            根据Id查询数据
+            </summary>
+            <param name="Id">id</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Get(System.Guid)">
+            <summary>
+            根据Id查询数据
+            </summary>
+            <param name="Id">id</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Add(`0)">
+            <summary>
+            新增数据
+            </summary>
+            <param name="Model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.BatchAdd(System.Collections.Generic.List{`0})">
+            <summary>
+            批量新增
+            </summary>
+            <param name="data"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Update(System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="modelModify">data</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Delete(System.Guid)">
+            <summary>
+            删除
+            </summary>
+            <param name="Id">id</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.BatchDelete(System.Collections.Generic.List{`0})">
+            <summary>
+            批量删除
+            </summary>
+            <param name="entryList">list</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Update``1(System.Object)">
+            <summary>
+            更新指定实体
+            </summary>
+            <typeparam name="TEntity">数据表实体Model模型</typeparam>
+            <param name="modelNew">动态Json数据</param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.Update``1(System.Object,System.String)">
+            <summary>
+            更新指定实体,不更新指定字段
+            </summary>
+            <typeparam name="TEntity">数据表实体Model模型</typeparam>
+            <param name="modelNew">动态Json数据</param>
+            <param name="fieldProNames">不更新的字段列表数组</param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.UpdateSpecify``1(System.Object)">
+            <summary>
+            更新指定实体,不更新指定字段,如果每个表中有相同不更新的字段，可以这样写
+            </summary>
+            <typeparam name="TEntity">数据表实体Model模型</typeparam>
+            <param name="modelNew">动态Json数据</param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.UpdateSpecify``1(System.Object,System.String)">
+            <summary>
+            更新指定实体,不更新指定字段,如果每个表中有相同不更新的字段，可以这样写,扩展方法
+            </summary>
+            <typeparam name="TEntity">数据表实体Model模型</typeparam>
+            <param name="modelNew">动态Json数据</param>
+            <param name="fieldProNames">不更新的字段列表数组</param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetGridList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            自定义列模块数据返回
+            </summary>
+            <param name="paramData"></param>
+            <param name="moduleCode"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetPageData(System.String,System.String,EU.Core.Common.QueryFilter,System.String,System.String,System.String)">
+            <summary>
+            自定义列模块数据返回
+            </summary>
+            <param name="paramData"></param>
+            <param name="moduleCode"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetCompanyId">
+            <summary>
+            获得当前公司ID
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController1`1.GetGroupId">
+            <summary>
+            获得当前集团ID
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.CommonController">
+            <summary>
+            公共服务
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.GetGridList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            自定义列模块数据返回
+            </summary>
+            <param name="paramData">查询条件</param>
+            <param name="moduleCode">模块代码</param>
+            <param name="sorter">排序</param>
+            <param name="filter">过滤条件</param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ClearCache">
+            <summary>
+            清空缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ExportExcel(System.String,System.String,System.String,System.String)">
+            <summary>
+            Excel导出
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ImportExcelAsync(EU.Core.Model.ImportExcelForm)">
+            <summary>
+            Excel导入
+            </summary>
+            <param name="import"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">
+            <summary>
+            Excel导入数据转换
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">
+            <summary>
+            获取通用下拉数据
+            </summary>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <param name="current"></param>
+            <param name="pageSize"></param>
+            <param name="code"></param>
+            <param name="items"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            构造函数
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFiles">
+            <summary>
+            获取 整体框架 文件(主库)(一般可用第一次生成)
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNames(System.String[],System.String)">
+            <summary>
+            获取仓储层和服务层(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForEntity(System.String[],System.String)">
+            <summary>
+            获取实体(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForController(System.String[],System.String)">
+            <summary>
+            获取控制器(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetAllFrameFilesByTableNames(System.String,System.String)">
+            <summary>
+            DbFrist 根据数据库表名 生成整体框架,包含Model层(一般可用第一次生成)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableName">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetTableInfoList(System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表信息
+            </summary>
+            <param name="configId">配置Id</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetColumnInfosByTableName(System.String,System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表字段
+            </summary>
+            <param name="tableName">表名</param>
+            <param name="configId">ConfigId</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.LoginController">
+            <summary>
+            登录管理【无权限】
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.LoginController})">
+            <summary>
+            构造函数注入
+            </summary>  
+            <param name="smUsersServices"></param> 
+            <param name="requirement"></param> 
+            <param name="logger"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtStr(System.String,System.String)">
+            <summary>
+            获取JWT的方法1
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtStrForNuxt(System.String,System.String)">
+            <summary>
+            获取JWT的方法2：给Nuxt提供
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtToken3(System.String,System.String)">
+            <summary>
+            获取JWT的方法3：整个系统主要方法
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.RefreshToken(System.String)">
+            <summary>
+            请求刷新Token（以旧换新）
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.Getjsonp(System.String,System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            获取JWT的方法4：给 JSONP 测试
+            </summary>
+            <param name="callBack"></param>
+            <param name="id"></param>
+            <param name="sub"></param>
+            <param name="expiresSliding"></param>
+            <param name="expiresAbsoulute"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.Md5Password(System.String)">
+            <summary>
+            测试 MD5 加密字符串
+            </summary>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.SwgLogin(EU.Core.Controllers.SwaggerLoginRequest)">
+            <summary>
+            swagger登录
+            </summary>
+            <param name="loginRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.WxLogin(System.String,System.String)">
+            <summary>
+            weixin登录
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.MonitorController.Server">
+            <summary>
+            服务器配置信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.MonitorController.Get">
+            <summary>
+            SignalR send data
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.ValuesController">
+            <summary>
+            Values控制器
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.#ctor(EU.Core.Model.Love,EU.Core.Common.HttpContextUser.IUser,EU.Core.Common.Https.HttpPolly.IHttpPollyHelper,EU.Core.EventBus.IRabbitMQPersistentConnection,Microsoft.Extensions.Options.IOptions{EU.Core.Common.Option.SeqOptions})">
+            <summary>
+            ValuesController
+            </summary>  
+            <param name="love"></param> 
+            <param name="user"></param> 
+            <param name="httpPollyHelper"></param>
+            <param name="persistentConnection"></param>
+            <param name="seqOptions"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqPublish">
+            <summary>
+            测试Rabbit消息队列发送
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqSubscribe">
+            <summary>
+            测试Rabbit消息队列订阅
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.RedisMq(EU.Core.Extensions.IRedisBasketRepository)">
+            <summary>
+            测试Redis消息队列
+            </summary>
+            <param name="_redisBasketRepository"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.EventBusTry(EU.Core.EventBus.IEventBus,System.String)">
+            <summary>
+            测试RabbitMQ事件总线
+            </summary>
+            <param name="_eventBus"></param>
+            <param name="TiobonId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Get(System.Int32)">
+            <summary>
+            Get(int id)方法
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.RequiredP(System.String)">
+            <summary>
+            测试参数是必填项
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetUserInfo(System.String)">
+            <summary>
+            通过 HttpContext 获取用户信息
+            </summary>
+            <param name="ClaimType">声明类型，默认 jti </param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Source">
+            <summary>
+            to redirect by route template name.
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Destination">
+            <summary>
+            route with template name.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestPostPara(System.String)">
+            <summary>
+            测试 post 参数
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.FluentVaTest(EU.Core.Filter.UserRegisterVo)">
+            <summary>
+            测试Fulent做参数校验
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Put(System.Int32,System.String)">
+            <summary>
+            Put方法
+            </summary>
+            <param name="id"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Delete(System.Int32)">
+            <summary>
+            Delete方法
+            </summary>
+            <param name="id"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetAllConfigByAppllo(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            测试接入Apollo获取配置信息
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetConfigByAppllo(System.String)">
+            <summary>
+            通过此处的key格式为 xx:xx:x
+            </summary>
+        </member>
+        <member name="T:EU.Core.Filter.GlobalRouteAuthorizeConvention">
+            <summary>
+            Summary:全局路由权限公约
+            Remarks:目的是针对不同的路由，采用不同的授权过滤器
+            如果 controller 上不加 [Authorize] 特性，默认都是 Permission 策略
+            否则，如果想特例其他授权机制的话，需要在 controller 上带上  [Authorize]，然后再action上自定义授权即可，比如 [Authorize(Roles = "Admin")]
+            </summary>
+        </member>
+        <member name="T:EU.Core.Filter.GlobalAuthorizeFilter">
+            <summary>
+            全局权限过滤器【无效】
+            </summary>
+        </member>
+        <member name="T:EU.Core.Filter.GlobalExceptionsFilter">
+            <summary>
+            全局异常错误日志
+            </summary>
+        </member>
+        <member name="M:EU.Core.Filter.GlobalExceptionsFilter.WriteLog(System.String,System.Exception)">
+            <summary>
+            自定义返回格式
+            </summary>
+            <param name="throwMsg"></param>
+            <param name="ex"></param>
+            <returns></returns>
+        </member>
+        <member name="P:EU.Core.Filter.JsonErrorResponse.Message">
+            <summary>
+            生产环境的消息
+            </summary>
+        </member>
+        <member name="P:EU.Core.Filter.JsonErrorResponse.DevelopmentMessage">
+            <summary>
+            开发环境的消息
+            </summary>
+        </member>
+        <member name="T:EU.Core.Filter.GlobalRoutePrefixFilter">
+            <summary>
+            全局路由前缀公约
+            </summary>
+        </member>
+        <member name="T:EU.Core.SwaggerHelper.CustomRouteAttribute">
+            <summary>
+            自定义路由 /api/{version}/[controler]/[action]
+            </summary>
+        </member>
+        <member name="P:EU.Core.SwaggerHelper.CustomRouteAttribute.GroupName">
+            <summary>
+            分组名称,是来实现接口 IApiDescriptionGroupNameProvider
+            </summary>
+        </member>
+        <member name="M:EU.Core.SwaggerHelper.CustomRouteAttribute.#ctor(System.String)">
+            <summary>
+            自定义路由构造函数，继承基类路由
+            </summary>
+            <param name="actionName"></param>
+        </member>
+        <member name="M:EU.Core.SwaggerHelper.CustomRouteAttribute.#ctor(EU.Core.Extensions.CustomApiVersion.ApiVersions,System.String)">
+            <summary>
+            自定义版本+路由构造函数，继承基类路由
+            </summary>
+            <param name="actionName"></param>
+            <param name="version"></param>
+        </member>
+        <member name="T:EU.Web.Controllers.Server.ServerController">
+            <summary>
+            系统服务器监控服务
+            </summary>
+        </member>
+        <member name="M:EU.Web.Controllers.Server.ServerController.GetServerBase">
+            <summary>
+            获取服务器配置信息
+            </summary> 
+            <returns></returns>
+        </member>
+        <member name="M:EU.Web.Controllers.Server.ServerController.ParseToLong(System.Object)">
+            <summary>
+            将object转换为long，若失败则返回0
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Web.Controllers.Server.ServerController.GetServerUsed">
+            <summary>
+            获取服务器使用信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Web.Controllers.Server.ServerController.GetServerDisk">
+            <summary>
+            获取服务器磁盘信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Web.Controllers.Server.ServerController.GetAssemblyList">
+            <summary>
+            获取框架主要程序集
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

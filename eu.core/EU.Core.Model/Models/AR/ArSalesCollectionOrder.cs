@@ -1,0 +1,72 @@
+﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
+* ArSalesCollectionOrder.cs
+*
+*功 能： N / A
+* 类 名： ArSalesCollectionOrder
+*
+* Ver    变更日期 负责人  变更内容
+* ───────────────────────────────────
+*V0.01  2024/5/6 11:16:14  SimonHsiao   初版
+*
+* Copyright(c) 2024 EU Corporation. All Rights Reserved.
+*┌──────────────────────────────────┐
+*│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
+*│　作者：SimonHsiao                                                  │
+*└──────────────────────────────────┘
+*/ 
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using SqlSugar;
+
+namespace EU.Core.Model.Models
+{
+
+    /// <summary>
+    /// 销售收款单 (Model)
+    /// </summary>
+    [SugarTable("ArSalesCollectionOrder", "ArSalesCollectionOrder"), Entity(TableCnName = "销售收款单", TableName = "ArSalesCollectionOrder")]
+    public class ArSalesCollectionOrder : BasePoco
+    {
+
+        /// <summary>
+        /// 单号
+        /// </summary>
+        [Display(Name = "OrderNo"), Description("单号"), MaxLength(32, ErrorMessage = "单号 不能超过 32 个字符")]
+        public string OrderNo { get; set; }
+
+        /// <summary>
+        /// 订单日期
+        /// </summary>
+        public DateTime? OrderDate { get; set; }
+
+        /// <summary>
+        /// 客户ID
+        /// </summary>
+        public Guid? CustomerId { get; set; }
+
+        /// <summary>
+        /// 应收金额
+        /// </summary>
+        [Display(Name = "ReceivableAmount"), Description("应收金额"), Column(TypeName = "decimal(20,2)")]
+        public decimal? ReceivableAmount { get; set; }
+
+        /// <summary>
+        /// 实收金额
+        /// </summary>
+        [Display(Name = "ActualAmount"), Description("实收金额"), Column(TypeName = "decimal(20,2)")]
+        public decimal? ActualAmount { get; set; }
+
+        /// <summary>
+        /// 收款差额
+        /// </summary>
+        [Display(Name = "DiffAmount"), Description("收款差额"), Column(TypeName = "decimal(20,2)")]
+        public decimal? DiffAmount { get; set; }
+
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+        public string Remark { get; set; }
+    }
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EU.Core.Gateway</name>
+    </assembly>
+    <members>
+        <member name="T:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware">
+            <summary>
+            中间件
+            原做为自定义授权中间件
+            先做检查 header token的使用
+            </summary>
+        </member>
+        <member name="P:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware.Schemes">
+            <summary>
+            验证方案提供对象
+            </summary>
+        </member>
+        <member name="F:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware._next">
+            <summary>
+            请求上下文
+            </summary>
+        </member>
+        <member name="M:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware.Invoke(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            网关授权
+            </summary>
+            <param name="httpContext"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware.SendResponse(Microsoft.AspNetCore.Http.HttpContext,System.String,System.Net.HttpStatusCode)">
+            <summary>
+            返回相应
+            </summary>
+            <param name="context"></param>
+            <param name="message"></param>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.AuthHelper.CustomJwtTokenAuthMiddleware.CheckWhiteList(System.String)">
+            <summary>
+            判断是否在白名单内，支持通配符 **** 
+            </summary>
+            <param name="url"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.AdminMvc.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            ┌──────────────────────────────────────────────────────────────┐
+            │　描    述：模拟一个网关项目         
+            │　测    试：在网关swagger中查看具体的服务         
+            │　作    者：anson zhang                                             
+            └──────────────────────────────────────────────────────────────┘
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,113 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <Import Project="..\build\common.targets" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+	<ImplicitUsings>enable</ImplicitUsings>
+    <!--<AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>-->
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>..\EU.Core.Api\EU.Core.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>..\EU.Core\EU.Core.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ApplicationIcon>wwwroot\logo\favicon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Extensions\**" />
+    <Compile Remove="Hubs\**" />
+    <Compile Remove="Logs\**" />
+    <Compile Remove="Log\**" />
+    <Compile Remove="Middlewares\**" />
+    <Compile Remove="wwwroot\ui\**" />
+    <Content Remove="Extensions\**" />
+    <Content Remove="Hubs\**" />
+    <Content Remove="Logs\**" />
+    <Content Remove="Log\**" />
+    <Content Remove="Middlewares\**" />
+    <Content Remove="wwwroot\ui\**" />
+    <EmbeddedResource Remove="Extensions\**" />
+    <EmbeddedResource Remove="Hubs\**" />
+    <EmbeddedResource Remove="Logs\**" />
+    <EmbeddedResource Remove="Log\**" />
+    <EmbeddedResource Remove="Middlewares\**" />
+    <EmbeddedResource Remove="wwwroot\ui\**" />
+    <None Remove="Extensions\**" />
+    <None Remove="Hubs\**" />
+    <None Remove="Logs\**" />
+    <None Remove="Log\**" />
+    <None Remove="Middlewares\**" />
+    <None Remove="wwwroot\ui\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Controllers\SD\SdOrderController111.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\EUCore.Data.excel\Department.xlsx" />
+    <Content Remove="wwwroot\EUCore.Data.json\Department.tsv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="index.html" />
+    <None Remove="StopContainerImg.sh" />
+    <None Remove="WangWu.db" />
+    <None Remove="WMTiobon.db" />
+    <None Remove="WMTiobonLog.db" />
+    <None Remove="WMTiobonLog.db-journal" />
+    <None Remove="ZhaoLiu.db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+	<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\EUCore.Data.json\Permission.tsv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\EM\" />
+    <Folder Include="wwwroot\EUCore.Data.excel\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Extensions\EU.Core.Extensions.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Tasks\EU.Core.Tasks.csproj" />
+  </ItemGroup>
+
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties appsettings_1json__JsonSchema="" />
+    </VisualStudio>
+  </ProjectExtensions>
+
+</Project>

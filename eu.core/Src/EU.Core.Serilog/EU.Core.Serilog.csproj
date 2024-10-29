@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\build\common.targets" />
+
+	<ItemGroup>
+		<PackageReference Include="Mapster" Version="7.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\EU.Core.Common\EU.Core.Common.csproj" />
+	</ItemGroup>
+
+</Project>

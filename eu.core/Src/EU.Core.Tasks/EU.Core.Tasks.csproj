@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\build\common.targets" />
+
+	<ItemGroup>
+	  <Compile Remove="Jobs\Job_AccessTrendLog_Quartz.cs" />
+	  <Compile Remove="Jobs\Job_OperateLog_Quartz.cs" />
+	  <Compile Remove="Jobs\Job_URL_Quartz.cs" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Quartz" Version="3.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EU.Core.IServices\EU.Core.IServices.csproj" />
+    <ProjectReference Include="..\..\EU.Core.Repository\EU.Core.Repository.csproj" />
+    <ProjectReference Include="..\EU.Core.Common\EU.Core.Common.csproj" />
+    <ProjectReference Include="..\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
+  </ItemGroup>
+
+</Project>

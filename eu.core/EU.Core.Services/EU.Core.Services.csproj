@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\build\common.targets" />
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<OutputPath>..\EU.Core.Api\bin\Debug\</OutputPath>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<OutputPath>..\EU.Core\bin\Release\</OutputPath>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <Compile Remove="WeChatCompanyServices.cs" />
+	  <Compile Remove="WeChatConfigServices.cs" />
+	  <Compile Remove="WeChatPushLogServices.cs" />
+	  <Compile Remove="WeChatSubServices.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="AgileObjects.AgileMapper" Version="1.8.1" />
+	</ItemGroup>
+	 
+
+	<ItemGroup>
+		<ProjectReference Include="..\EU.Core.IServices\EU.Core.IServices.csproj" />
+		<ProjectReference Include="..\EU.Core.Repository\EU.Core.Repository.csproj" />
+		<ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
+		<ProjectReference Include="..\Src\EU.Core.Tasks\EU.Core.Tasks.csproj" />
+	</ItemGroup>
+	 
+
+	<ItemGroup>
+	  <Folder Include="IDS4Db\" />
+	</ItemGroup>
+
+</Project>
