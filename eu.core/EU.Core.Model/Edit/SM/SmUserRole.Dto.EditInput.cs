@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 用户角色 (Dto.EditInput)
-    /// </summary>
-    public class EditSmUserRoleInput : SmUserRoleBase
-    {
-    }
+
+/// <summary>
+/// 用户角色 (Dto.EditInput)
+/// </summary>
+public class EditSmUserRoleInput : SmUserRoleBase
+{
 }

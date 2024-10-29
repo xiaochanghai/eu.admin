@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// BdMaterialIVChange (Dto.EditInput)
-    /// </summary>
-    public class EditBdMaterialIVChangeInput : BdMaterialIVChangeBase
-    {
-    }
+
+/// <summary>
+/// BdMaterialIVChange (Dto.EditInput)
+/// </summary>
+public class EditBdMaterialIVChangeInput : BdMaterialIVChangeBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 供应商 (Dto.EditInput)
-    /// </summary>
-    public class EditBdSupplierInput : BdSupplierBase
-    {
-    }
+
+/// <summary>
+/// 供应商 (Dto.EditInput)
+/// </summary>
+public class EditBdSupplierInput : BdSupplierBase
+{
 }

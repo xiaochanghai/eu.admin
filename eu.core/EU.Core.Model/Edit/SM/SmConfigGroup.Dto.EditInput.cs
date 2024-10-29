@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统配置组 (Dto.EditInput)
-    /// </summary>
-    public class EditSmConfigGroupInput : SmConfigGroupBase
-    {
-    }
+
+/// <summary>
+/// 系统配置组 (Dto.EditInput)
+/// </summary>
+public class EditSmConfigGroupInput : SmConfigGroupBase
+{
 }

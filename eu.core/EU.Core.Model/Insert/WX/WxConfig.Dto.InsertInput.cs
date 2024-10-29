@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// WxConfig (Dto.InsertInput)
-    /// </summary>
-    public class InsertWxConfigInput : WxConfigBase
-    {
-    }
+
+/// <summary>
+/// WxConfig (Dto.InsertInput)
+/// </summary>
+public class InsertWxConfigInput : WxConfigBase
+{
 }

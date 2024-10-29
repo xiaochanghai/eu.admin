@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 请购单明细 (Dto.EditInput)
-    /// </summary>
-    public class EditPoRequestionDetailInput : PoRequestionDetailBase
-    {
-    }
+
+/// <summary>
+/// 请购单明细 (Dto.EditInput)
+/// </summary>
+public class EditPoRequestionDetailInput : PoRequestionDetailBase
+{
 }

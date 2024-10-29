@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 物料库存 (Dto.EditInput)
-    /// </summary>
-    public class EditBdMaterialInventoryInput : BdMaterialInventoryBase
-    {
-    }
+
+/// <summary>
+/// 物料库存 (Dto.EditInput)
+/// </summary>
+public class EditBdMaterialInventoryInput : BdMaterialInventoryBase
+{
 }

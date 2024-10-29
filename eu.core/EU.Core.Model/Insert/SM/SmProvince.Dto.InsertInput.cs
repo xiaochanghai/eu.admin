@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 省份 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmProvinceInput : SmProvinceBase
-    {
-    }
+
+/// <summary>
+/// 省份 (Dto.InsertInput)
+/// </summary>
+public class InsertSmProvinceInput : SmProvinceBase
+{
 }

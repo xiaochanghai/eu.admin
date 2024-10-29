@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 用户模块列 (Dto.EditInput)
-    /// </summary>
-    public class EditSmUserModuleColumnInput : SmUserModuleColumnBase
-    {
-    }
+
+/// <summary>
+/// 用户模块列 (Dto.EditInput)
+/// </summary>
+public class EditSmUserModuleColumnInput : SmUserModuleColumnBase
+{
 }

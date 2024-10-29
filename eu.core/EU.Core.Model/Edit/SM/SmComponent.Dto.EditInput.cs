@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// SmComponent (Dto.EditInput)
-    /// </summary>
-    public class EditSmComponentInput : SmComponentBase
-    {
-    }
+
+/// <summary>
+/// SmComponent (Dto.EditInput)
+/// </summary>
+public class EditSmComponentInput : SmComponentBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 退货单明细 (Dto.EditInput)
-    /// </summary>
-    public class EditSdReturnOrderDetailInput : SdReturnOrderDetailBase
-    {
-    }
+
+/// <summary>
+/// 退货单明细 (Dto.EditInput)
+/// </summary>
+public class EditSdReturnOrderDetailInput : SdReturnOrderDetailBase
+{
 }

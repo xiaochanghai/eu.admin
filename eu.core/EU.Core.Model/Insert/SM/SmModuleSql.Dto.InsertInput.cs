@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统模块SQL (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmModuleSqlInput : SmModuleSqlBase
-    {
-    }
+
+/// <summary>
+/// 系统模块SQL (Dto.InsertInput)
+/// </summary>
+public class InsertSmModuleSqlInput : SmModuleSqlBase
+{
 }

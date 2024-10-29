@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// SmRoleFunction (Dto.EditInput)
-    /// </summary>
-    public class EditSmRoleFunctionInput : SmRoleFunctionBase
-    {
-    }
+
+/// <summary>
+/// SmRoleFunction (Dto.EditInput)
+/// </summary>
+public class EditSmRoleFunctionInput : SmRoleFunctionBase
+{
 }

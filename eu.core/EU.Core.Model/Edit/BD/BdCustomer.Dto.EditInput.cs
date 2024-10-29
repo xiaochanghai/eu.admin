@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 客户 (Dto.EditInput)
-    /// </summary>
-    public class EditBdCustomerInput : BdCustomerBase
-    {
-    }
+
+/// <summary>
+/// 客户 (Dto.EditInput)
+/// </summary>
+public class EditBdCustomerInput : BdCustomerBase
+{
 }

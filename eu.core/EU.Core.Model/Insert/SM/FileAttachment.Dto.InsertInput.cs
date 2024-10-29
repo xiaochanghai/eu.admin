@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// FileAttachment (Dto.InsertInput)
-    /// </summary>
-    public class InsertFileAttachmentInput : FileAttachmentBase
-    {
-    }
+
+/// <summary>
+/// FileAttachment (Dto.InsertInput)
+/// </summary>
+public class InsertFileAttachmentInput : FileAttachmentBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 销售变更单 (Dto.EditInput)
-    /// </summary>
-    public class EditSdChangeOrderInput : SdChangeOrderBase
-    {
-    }
+
+/// <summary>
+/// 销售变更单 (Dto.EditInput)
+/// </summary>
+public class EditSdChangeOrderInput : SdChangeOrderBase
+{
 }

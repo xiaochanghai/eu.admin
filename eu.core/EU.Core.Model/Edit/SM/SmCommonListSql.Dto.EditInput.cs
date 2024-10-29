@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统通用下拉 (Dto.EditInput)
-    /// </summary>
-    public class EditSmCommonListSqlInput : SmCommonListSqlBase
-    {
-    }
+
+/// <summary>
+/// 系统通用下拉 (Dto.EditInput)
+/// </summary>
+public class EditSmCommonListSqlInput : SmCommonListSqlBase
+{
 }

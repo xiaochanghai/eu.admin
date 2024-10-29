@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 物料类型 (Dto.EditInput)
-    /// </summary>
-    public class EditBdMaterialTypeInput : BdMaterialTypeBase
-    {
-    }
+
+/// <summary>
+/// 物料类型 (Dto.EditInput)
+/// </summary>
+public class EditBdMaterialTypeInput : BdMaterialTypeBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 发货单明细 (Dto.EditInput)
-    /// </summary>
-    public class EditSdShipOrderDetailInput : SdShipOrderDetailBase
-    {
-    }
+
+/// <summary>
+/// 发货单明细 (Dto.EditInput)
+/// </summary>
+public class EditSdShipOrderDetailInput : SdShipOrderDetailBase
+{
 }

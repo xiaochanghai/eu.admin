@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/7/30 22:51:36  SimonHsiao   初版
+*V0.01  2024/10/29 13:14:28  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,8 +14,8 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
 
+namespace EU.Core.Model.Models;
 
 /// <summary>
 /// 物料管理 (Dto.Base)
@@ -196,6 +196,6 @@ public class BdMaterialBase
     /// <summary>
     /// 来源类型
     /// </summary>
-    [Display(Name = "Source"), Description("来源类型"), MaxLength(64, ErrorMessage = "来源类型 不能超过 32 个字符")]
+    [Display(Name = "Source"), Description("来源类型"), MaxLength(32, ErrorMessage = "来源类型 不能超过 32 个字符")]
     public string Source { get; set; }
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// SmComponent (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmComponentInput : SmComponentBase
-    {
-    }
+
+/// <summary>
+/// SmComponent (Dto.InsertInput)
+/// </summary>
+public class InsertSmComponentInput : SmComponentBase
+{
 }

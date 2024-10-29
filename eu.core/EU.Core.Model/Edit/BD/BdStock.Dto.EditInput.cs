@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 仓库 (Dto.EditInput)
-    /// </summary>
-    public class EditBdStockInput : BdStockBase
-    {
-    }
+
+/// <summary>
+/// 仓库 (Dto.EditInput)
+/// </summary>
+public class EditBdStockInput : BdStockBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 映射表 (Dto.EditInput)
-    /// </summary>
-    public class EditSmTableCatalogInput : SmTableCatalogBase
-    {
-    }
+
+/// <summary>
+/// 映射表 (Dto.EditInput)
+/// </summary>
+public class EditSmTableCatalogInput : SmTableCatalogBase
+{
 }

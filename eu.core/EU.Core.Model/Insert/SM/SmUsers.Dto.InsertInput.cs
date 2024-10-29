@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统用户 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmUsersInput : SmUsersBase
-    {
-    }
+
+/// <summary>
+/// 系统用户 (Dto.InsertInput)
+/// </summary>
+public class InsertSmUsersInput : SmUsersBase
+{
 }

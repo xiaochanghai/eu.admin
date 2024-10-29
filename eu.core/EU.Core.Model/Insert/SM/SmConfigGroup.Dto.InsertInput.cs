@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统配置组 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmConfigGroupInput : SmConfigGroupBase
-    {
-    }
+
+/// <summary>
+/// 系统配置组 (Dto.InsertInput)
+/// </summary>
+public class InsertSmConfigGroupInput : SmConfigGroupBase
+{
 }

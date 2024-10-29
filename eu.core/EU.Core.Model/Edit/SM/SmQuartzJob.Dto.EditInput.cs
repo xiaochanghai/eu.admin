@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 任务调度 (Dto.EditInput)
-    /// </summary>
-    public class EditSmQuartzJobInput : SmQuartzJobBase
-    {
-    }
+
+/// <summary>
+/// 任务调度 (Dto.EditInput)
+/// </summary>
+public class EditSmQuartzJobInput : SmQuartzJobBase
+{
 }

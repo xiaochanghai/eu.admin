@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// SmLovDetail (Dto.EditInput)
-    /// </summary>
-    public class EditSmLovDetailInput : SmLovDetailBase
-    {
-    }
+
+/// <summary>
+/// SmLovDetail (Dto.EditInput)
+/// </summary>
+public class EditSmLovDetailInput : SmLovDetailBase
+{
 }

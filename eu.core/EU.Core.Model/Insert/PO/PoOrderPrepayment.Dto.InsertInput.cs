@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 采购单预付账款 (Dto.InsertInput)
-    /// </summary>
-    public class InsertPoOrderPrepaymentInput : PoOrderPrepaymentBase
-    {
-    }
+
+/// <summary>
+/// 采购单预付账款 (Dto.InsertInput)
+/// </summary>
+public class InsertPoOrderPrepaymentInput : PoOrderPrepaymentBase
+{
 }

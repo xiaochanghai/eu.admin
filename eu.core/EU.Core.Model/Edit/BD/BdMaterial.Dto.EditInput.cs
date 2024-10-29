@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/25 17:53:43  SimonHsiao   初版
+*V0.01  2024/10/29 13:14:28  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -15,13 +15,11 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 物料管理 (Dto.EditInput)
-    /// </summary>
-    public class EditBdMaterialInput : BdMaterialBase
-    {
-    }
+/// <summary>
+/// 物料管理 (Dto.EditInput)
+/// </summary>
+public class EditBdMaterialInput : BdMaterialBase
+{
 }

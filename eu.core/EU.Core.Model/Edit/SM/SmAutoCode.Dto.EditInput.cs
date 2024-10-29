@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 自动编号 (Dto.EditInput)
-    /// </summary>
-    public class EditSmAutoCodeInput : SmAutoCodeBase
-    {
-    }
+
+/// <summary>
+/// 自动编号 (Dto.EditInput)
+/// </summary>
+public class EditSmAutoCodeInput : SmAutoCodeBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 出库单明细 (Dto.EditInput)
-    /// </summary>
-    public class EditSdOutOrderDetailInput : SdOutOrderDetailBase
-    {
-    }
+
+/// <summary>
+/// 出库单明细 (Dto.EditInput)
+/// </summary>
+public class EditSdOutOrderDetailInput : SdOutOrderDetailBase
+{
 }

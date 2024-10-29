@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 导入模板定义明细 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmImpTemplateDetailInput : SmImpTemplateDetailBase
-    {
-    }
+
+/// <summary>
+/// 导入模板定义明细 (Dto.InsertInput)
+/// </summary>
+public class InsertSmImpTemplateDetailInput : SmImpTemplateDetailBase
+{
 }

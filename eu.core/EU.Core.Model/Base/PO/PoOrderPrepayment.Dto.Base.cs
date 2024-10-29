@@ -13,81 +13,76 @@
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
-*/ 
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+*/
+namespace EU.Core.Model.Models;
 
-namespace EU.Core.Model.Models
+
+/// <summary>
+/// 采购单预付账款 (Dto.Base)
+/// </summary>
+public class PoOrderPrepaymentBase
 {
 
     /// <summary>
-    /// 采购单预付账款 (Dto.Base)
+    /// 订单ID
     /// </summary>
-    public class PoOrderPrepaymentBase
-    {
+    public Guid? OrderId { get; set; }
 
-        /// <summary>
-        /// 订单ID
-        /// </summary>
-        public Guid? OrderId { get; set; }
+    /// <summary>
+    /// 序号
+    /// </summary>
+    public int? SerialNumber { get; set; }
 
-        /// <summary>
-        /// 序号
-        /// </summary>
-        public int? SerialNumber { get; set; }
+    /// <summary>
+    /// 预付比例
+    /// </summary>
+    [Display(Name = "Percent"), Description("预付比例"), Column(TypeName = "decimal(20,2)")]
+    public decimal? Percent { get; set; }
 
-        /// <summary>
-        /// 预付比例
-        /// </summary>
-        [Display(Name = "Percent"), Description("预付比例"), Column(TypeName = "decimal(20,2)")]
-        public decimal? Percent { get; set; }
+    /// <summary>
+    /// 预付金额
+    /// </summary>
+    [Display(Name = "Amount"), Description("预付金额"), Column(TypeName = "decimal(20,2)")]
+    public decimal? Amount { get; set; }
 
-        /// <summary>
-        /// 预付金额
-        /// </summary>
-        [Display(Name = "Amount"), Description("预付金额"), Column(TypeName = "decimal(20,2)")]
-        public decimal? Amount { get; set; }
+    /// <summary>
+    /// 预付时间
+    /// </summary>
+    public DateTime? PayTime { get; set; }
 
-        /// <summary>
-        /// 预付时间
-        /// </summary>
-        public DateTime? PayTime { get; set; }
+    /// <summary>
+    /// 已付金额
+    /// </summary>
+    [Display(Name = "HasAmount"), Description("已付金额"), Column(TypeName = "decimal(20,2)")]
+    public decimal? HasAmount { get; set; }
 
-        /// <summary>
-        /// 已付金额
-        /// </summary>
-        [Display(Name = "HasAmount"), Description("已付金额"), Column(TypeName = "decimal(20,2)")]
-        public decimal? HasAmount { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string Remark { get; set; }
 
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
-        public string Remark { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "ExtRemark1"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string ExtRemark1 { get; set; }
 
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [Display(Name = "ExtRemark1"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
-        public string ExtRemark1 { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "ExtRemark2"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string ExtRemark2 { get; set; }
 
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [Display(Name = "ExtRemark2"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
-        public string ExtRemark2 { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "ExtRemark3"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string ExtRemark3 { get; set; }
 
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [Display(Name = "ExtRemark3"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
-        public string ExtRemark3 { get; set; }
-
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
-        public string ExtRemark4 { get; set; }
-    }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string ExtRemark4 { get; set; }
 }

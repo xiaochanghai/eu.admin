@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 城市 (Dto.EditInput)
-    /// </summary>
-    public class EditSmCityInput : SmCityBase
-    {
-    }
+
+/// <summary>
+/// 城市 (Dto.EditInput)
+/// </summary>
+public class EditSmCityInput : SmCityBase
+{
 }

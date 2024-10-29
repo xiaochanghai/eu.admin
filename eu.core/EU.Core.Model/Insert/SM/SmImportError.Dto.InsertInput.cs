@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 系统导入模板异常信息 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmImportErrorInput : SmImportErrorBase
-    {
-    }
+
+/// <summary>
+/// 系统导入模板异常信息 (Dto.InsertInput)
+/// </summary>
+public class InsertSmImportErrorInput : SmImportErrorBase
+{
 }

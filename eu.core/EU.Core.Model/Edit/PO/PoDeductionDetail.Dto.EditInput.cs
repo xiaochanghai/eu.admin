@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// PoDeductionDetail (Dto.EditInput)
-    /// </summary>
-    public class EditPoDeductionDetailInput : PoDeductionDetailBase
-    {
-    }
+
+/// <summary>
+/// PoDeductionDetail (Dto.EditInput)
+/// </summary>
+public class EditPoDeductionDetailInput : PoDeductionDetailBase
+{
 }

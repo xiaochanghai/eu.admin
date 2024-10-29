@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 映射表字段 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmFieldCatalogInput : SmFieldCatalogBase
-    {
-    }
+
+/// <summary>
+/// 映射表字段 (Dto.InsertInput)
+/// </summary>
+public class InsertSmFieldCatalogInput : SmFieldCatalogBase
+{
 }

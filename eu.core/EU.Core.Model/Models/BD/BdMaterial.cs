@@ -1,12 +1,12 @@
 ﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * BdMaterial.cs
 *
-*功 能： N / A
+* 功 能： N / A
 * 类 名： BdMaterial
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/7/30 22:51:36  SimonHsiao   初版
+* V0.01  2024/10/29 13:14:28  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,13 +14,13 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
 
+namespace EU.Core.Model.Models;
 
 /// <summary>
 /// 物料管理 (Model)
 /// </summary>
-[SugarTable("BdMaterial", "BdMaterial"), Entity(TableCnName = "物料管理", TableName = "BdMaterial")]
+[SugarTable("BdMaterial", "物料管理"), Entity(TableCnName = "物料管理", TableName = "BdMaterial")]
 public class BdMaterial : BasePoco
 {
 
@@ -45,11 +45,13 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 材质ID
     /// </summary>
+    [Display(Name = "TextureId"), Description("材质ID")]
     public Guid? TextureId { get; set; }
 
     /// <summary>
     /// 物料类型
     /// </summary>
+    [Display(Name = "MaterialTypeId"), Description("物料类型")]
     public Guid? MaterialTypeId { get; set; }
 
     /// <summary>
@@ -91,6 +93,7 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 颜色ID
     /// </summary>
+    [Display(Name = "ColorId"), Description("颜色ID")]
     public Guid? ColorId { get; set; }
 
     /// <summary>
@@ -102,6 +105,7 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 单位
     /// </summary>
+    [Display(Name = "UnitId"), Description("单位")]
     public Guid? UnitId { get; set; }
 
     /// <summary>
@@ -131,11 +135,13 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 保质期
     /// </summary>
+    [Display(Name = "ExpirationDate"), Description("保质期")]
     public int? ExpirationDate { get; set; }
 
     /// <summary>
     /// 是否批号管
     /// </summary>
+    [Display(Name = "IsBatchControl"), Description("是否批号管")]
     public bool? IsBatchControl { get; set; }
 
     /// <summary>
@@ -159,11 +165,13 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 生产采购前置天数
     /// </summary>
+    [Display(Name = "ProductionPurchasePreDays"), Description("生产采购前置天数")]
     public int? ProductionPurchasePreDays { get; set; }
 
     /// <summary>
     /// 生产采购周期
     /// </summary>
+    [Display(Name = "ProductionPurchasePeriod"), Description("生产采购周期")]
     public int? ProductionPurchasePeriod { get; set; }
 
     /// <summary>
@@ -181,6 +189,7 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 物料分类
     /// </summary>
+    [Display(Name = "MaterialClassId"), Description("物料分类")]
     public Guid? MaterialClassId { get; set; }
 
     /// <summary>
@@ -192,11 +201,12 @@ public class BdMaterial : BasePoco
     /// <summary>
     /// 重量单位ID
     /// </summary>
+    [Display(Name = "WeightUnitId"), Description("重量单位ID")]
     public Guid? WeightUnitId { get; set; }
 
     /// <summary>
     /// 来源类型
     /// </summary>
-    [Display(Name = "Source"), Description("来源类型"), MaxLength(64, ErrorMessage = "来源类型 不能超过 32 个字符")]
+    [Display(Name = "Source"), Description("来源类型"), MaxLength(32, ErrorMessage = "来源类型 不能超过 32 个字符")]
     public string Source { get; set; }
 }

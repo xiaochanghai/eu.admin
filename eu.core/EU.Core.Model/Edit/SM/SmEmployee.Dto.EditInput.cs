@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 员工管理 (Dto.EditInput)
-    /// </summary>
-    public class EditSmEmployeeInput : SmEmployeeBase
-    {
-    }
+
+/// <summary>
+/// 员工管理 (Dto.EditInput)
+/// </summary>
+public class EditSmEmployeeInput : SmEmployeeBase
+{
 }

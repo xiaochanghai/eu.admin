@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 功能权限 (Dto.EditInput)
-    /// </summary>
-    public class EditSmFunctionPrivilegeInput : SmFunctionPrivilegeBase
-    {
-    }
+
+/// <summary>
+/// 功能权限 (Dto.EditInput)
+/// </summary>
+public class EditSmFunctionPrivilegeInput : SmFunctionPrivilegeBase
+{
 }

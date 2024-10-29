@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 货位 (Dto.EditInput)
-    /// </summary>
-    public class EditBdGoodsLocationInput : BdGoodsLocationBase
-    {
-    }
+
+/// <summary>
+/// 货位 (Dto.EditInput)
+/// </summary>
+public class EditBdGoodsLocationInput : BdGoodsLocationBase
+{
 }

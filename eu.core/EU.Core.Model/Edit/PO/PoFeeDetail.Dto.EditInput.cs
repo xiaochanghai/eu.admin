@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// PoFeeDetail (Dto.EditInput)
-    /// </summary>
-    public class EditPoFeeDetailInput : PoFeeDetailBase
-    {
-    }
+
+/// <summary>
+/// PoFeeDetail (Dto.EditInput)
+/// </summary>
+public class EditPoFeeDetailInput : PoFeeDetailBase
+{
 }

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 结算方式 (Dto.EditInput)
-    /// </summary>
-    public class EditBdSettlementWayInput : BdSettlementWayBase
-    {
-    }
+
+/// <summary>
+/// 结算方式 (Dto.EditInput)
+/// </summary>
+public class EditBdSettlementWayInput : BdSettlementWayBase
+{
 }

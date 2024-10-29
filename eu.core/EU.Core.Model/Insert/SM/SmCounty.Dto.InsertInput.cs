@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models
-{
+namespace EU.Core.Model.Models;
 
-    /// <summary>
-    /// 区县 (Dto.InsertInput)
-    /// </summary>
-    public class InsertSmCountyInput : SmCountyBase
-    {
-    }
+
+/// <summary>
+/// 区县 (Dto.InsertInput)
+/// </summary>
+public class InsertSmCountyInput : SmCountyBase
+{
 }

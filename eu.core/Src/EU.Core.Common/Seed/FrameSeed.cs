@@ -704,7 +704,13 @@ namespace " + strNameSpace + @"
         //build.Append("}\r\n");
 
         ls.Add(tableName + ".Dto.InsertInput", build.ToString());
-        CreateFilesByClassStringList(ls, strPath + @"\Insert\" + groupName, "{0}");
+
+        string strPath1 = strPath + @"\Insert\" + groupName;
+        var fileName = $"{string.Format("{0}", tableName + ".Dto.InsertInput")}.cs";
+        var fileFullPath = Path.Combine(strPath, fileName);
+
+        if (!File.Exists(fileFullPath))
+            CreateFilesByClassStringList(ls, strPath1, "{0}");
         #endregion
 
         #region Edit
@@ -741,7 +747,13 @@ namespace " + strNameSpace + @"
         //build.Append("}\r\n");
 
         ls.Add(tableName + ".Dto.EditInput", build.ToString());
-        CreateFilesByClassStringList(ls, strPath + @"\Edit\" + groupName, "{0}");
+
+        strPath1 = strPath + @"\Edit\" + groupName;
+        fileName = $"{string.Format("{0}", tableName + ".Dto.EditInput")}.cs";
+        fileFullPath = Path.Combine(strPath, fileName);
+
+        if (!File.Exists(fileFullPath))
+            CreateFilesByClassStringList(ls, strPath1, "{0}");
         #endregion
 
         #region View
@@ -778,7 +790,13 @@ namespace " + strNameSpace + @"
         //build.Append("}\r\n");
 
         ls.Add(tableName + ".Dto.View", build.ToString());
-        CreateFilesByClassStringList(ls, strPath + @"\View\" + groupName, "{0}");
+
+        strPath1 = strPath + @"\View\" + groupName;
+        fileName = $"{string.Format("{0}", tableName + ".Dto.View")}.cs";
+        fileFullPath = Path.Combine(strPath, fileName);
+
+        if (!File.Exists(fileFullPath))
+            CreateFilesByClassStringList(ls, strPath1, "{0}");
         #endregion
 
     }
