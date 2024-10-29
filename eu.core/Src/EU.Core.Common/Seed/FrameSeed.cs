@@ -707,7 +707,7 @@ namespace " + strNameSpace + @"
 
         string strPath1 = strPath + @"\Insert\" + groupName;
         var fileName = $"{string.Format("{0}", tableName + ".Dto.InsertInput")}.cs";
-        var fileFullPath = Path.Combine(strPath, fileName);
+        var fileFullPath = Path.Combine(strPath1, fileName);
 
         if (!File.Exists(fileFullPath))
             CreateFilesByClassStringList(ls, strPath1, "{0}");
@@ -750,7 +750,7 @@ namespace " + strNameSpace + @"
 
         strPath1 = strPath + @"\Edit\" + groupName;
         fileName = $"{string.Format("{0}", tableName + ".Dto.EditInput")}.cs";
-        fileFullPath = Path.Combine(strPath, fileName);
+        fileFullPath = Path.Combine(strPath1, fileName);
 
         if (!File.Exists(fileFullPath))
             CreateFilesByClassStringList(ls, strPath1, "{0}");
@@ -793,7 +793,7 @@ namespace " + strNameSpace + @"
 
         strPath1 = strPath + @"\View\" + groupName;
         fileName = $"{string.Format("{0}", tableName + ".Dto.View")}.cs";
-        fileFullPath = Path.Combine(strPath, fileName);
+        fileFullPath = Path.Combine(strPath1, fileName);
 
         if (!File.Exists(fileFullPath))
             CreateFilesByClassStringList(ls, strPath1, "{0}");
