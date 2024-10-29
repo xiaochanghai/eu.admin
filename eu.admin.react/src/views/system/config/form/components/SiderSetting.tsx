@@ -261,8 +261,9 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
         {field ? (
           <div>
             <b style={{ font: "14px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;标识/模型：{field.DataIndex}/{field.FieldType}
-              {/* <Divider dashed /> */}
+              &nbsp;&nbsp;&nbsp;&nbsp;标识/模型：{field.DataIndex}
+              {field.FieldType ? "/" : null}
+              {field.FieldType}
             </b>
           </div>
         ) : (
@@ -275,63 +276,17 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
             <TabPane key={"panel_" + index} tab={t.title} icon={<t.icon></t.icon>} style={{ padding: "2px" }}>
               {/* 第一个panel设置组件 */}
               {index === 0 && (
-                // <FieldSetting
-                //   field={field}
-                //   formVo={form}
-                //   compDatas={FormComponents}
-                //   onDataChange={(data: { x_component: number; pageComponentPropDtos?: Partial<PageComponentPropDto>[] }) => {
-                //     const fmv: any = {
-                //       ...field,
-                //       x_component: data.x_component,
-                //       pageComponentPropDtos: data.pageComponentPropDtos
-                //         ? [
-                //             //把失效的属性去除
-                //             ...data.pageComponentPropDtos.filter(d =>
-                //               Object.keys(FormComponents[data.x_component].props || {}).includes(d.propName || "")
-                //             )
-                //           ]
-                //         : []
-                //     };
-                //     onDataChange(fmv);
-                //   }}
-                // />
-
                 <FieldSetting
                   field={field}
-                  formVo={form}
                   compDatas={FormComponents}
                   onDataChange={(data: any) => {
-                    const fmv = {
+                    onDataChange({
                       ...field,
                       FieldType: data
-                    };
-                    onDataChange(fmv);
+                    });
                   }}
                 />
               )}
-
-              {/* {Object.keys(fieldsConf)
-                .filter(key => fieldsConf[key].tag === t.value)
-                .map((key: string) => {
-                  const RenderObj = render(key); //待渲染的数据
-                  return (
-                    RenderObj && (
-                      <div key={key} className="flex items-center space-x-2 w-full mt-2">
-                        <div className="semi-form-field-label-text semi-form-field-label">
-                          <label>
-                            {fieldsConf[key].name}
-                            {fieldsConf[key].tooltip && (
-                              <Tooltip title={fieldsConf[key].tooltip}>
-                                <ExclamationCircleOutlined />
-                              </Tooltip>
-                            )}
-                          </label>
-                        </div>
-                        <div className=" w-full ">{RenderObj}</div>
-                      </div>
-                    )
-                  );
-                })} */}
               {Object.keys(fieldsConf)
                 .filter(key => fieldsConf[key].tag === t.value)
                 .map(key => {
@@ -342,7 +297,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                         <FormItem
                           label={
                             <label>
-                              {fieldsConf[key].name}
+                              {fieldsConf[key].name}{" "}
                               {fieldsConf[key].tooltip && (
                                 <Tooltip title={fieldsConf[key].tooltip}>
                                   <Icon name="ExclamationCircleOutlined" />

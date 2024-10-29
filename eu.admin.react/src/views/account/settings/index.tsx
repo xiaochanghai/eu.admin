@@ -1,4 +1,5 @@
-import { Button, Input, Upload, Form, Space, message, Card, Col, Row } from "antd";
+import { Button, Input, Upload, Form, Space, Card, Col, Row } from "antd";
+import { message } from "@/hooks/useMessage";
 import React, { useState } from "react";
 import { RootState, useSelector } from "@/redux";
 import { Icon } from "@/components/Icon";

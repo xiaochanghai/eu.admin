@@ -1,4 +1,5 @@
-import { Button, Space, message, Modal } from "antd";
+import { Button, Space, Modal } from "antd";
+import { message } from "@/hooks/useMessage";
 import { Icon } from "@/components/Icon/index";
 import { ModifyType } from "@/api/interface/index";
 import { batchAudit, batchRevocation } from "@/api/modules/module";

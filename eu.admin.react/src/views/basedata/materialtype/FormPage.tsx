@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 // import { useDispatch } from "@/redux";
-import { Card, Form, message } from "antd";
+import { Card, Form } from "antd";
+import { message } from "@/hooks/useMessage";
 import { Button, Input, Row, Col, Space, InputNumber } from "antd";
 import { querySingle, add, update } from "@/api/modules/module";
 import { Loading } from "@/components/Loading/index";

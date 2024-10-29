@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button, Upload, Space, message, Tag, Modal } from "antd";
+import { Button, Upload, Space, Tag, Modal } from "antd";
+import { message } from "@/hooks/useMessage";
 import { useDispatch } from "@/redux";
 import { RootState, useSelector } from "@/redux";
 import SmProTable from "@/components/ProTable";

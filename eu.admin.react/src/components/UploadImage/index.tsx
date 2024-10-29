@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Upload, Space, message } from "antd";
+import { Modal, Upload, Space } from "antd";
+import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
 import http from "@/api";
 // import styles from "../index.less";

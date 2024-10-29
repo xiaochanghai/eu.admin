@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 import { useDispatch } from "@/redux";
-import { Flex, Form, TreeSelect, Tabs, message } from "antd";
+import { Flex, Form, TreeSelect, Tabs } from "antd";
+import { message } from "@/hooks/useMessage";
 import { Loading } from "@/components/Loading/index";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
