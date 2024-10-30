@@ -32,7 +32,7 @@
 
 ### 在线预览地址 👀
 
-- Link：http://cloud.auto-free.cn
+- Link：http://eu-keji.com/
 - 账号密码：Admin，1
 
 
