@@ -8195,6 +8195,11 @@
             是否自动编号
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.ColumnMode">
+            <summary>
+            栏位模式
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -18498,6 +18503,11 @@
         <member name="P:EU.Core.Model.Models.SmModuleColumn.IsAutoCode">
             <summary>
             是否自动编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.ColumnMode">
+            <summary>
+            栏位模式
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModules">

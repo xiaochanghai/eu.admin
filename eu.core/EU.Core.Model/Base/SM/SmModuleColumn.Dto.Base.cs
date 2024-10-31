@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/10/29 12:25:00  SimonHsiao   初版
+*V0.01  2024/10/31 17:02:57  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -282,4 +282,10 @@ public class SmModuleColumnBase
     /// 是否自动编号
     /// </summary>
     public bool? IsAutoCode { get; set; }
+
+    /// <summary>
+    /// 栏位模式
+    /// </summary>
+    [Display(Name = "ColumnMode"), Description("栏位模式"), MaxLength(32, ErrorMessage = "栏位模式 不能超过 32 个字符")]
+    public string ColumnMode { get; set; }
 }

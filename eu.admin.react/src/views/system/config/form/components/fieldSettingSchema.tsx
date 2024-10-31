@@ -330,6 +330,16 @@ export const schemaDef: SchemaClz = {
     mode: Mode.list,
     tag: "basic"
   },
+  ColumnMode: {
+    name: "栏位模式",
+    type: "select",
+    tag: "basic",
+    items: [
+      { value: null, label: "通用" },
+      { value: Mode.list, label: "列表" },
+      { value: Mode.form, label: "表单" }
+    ]
+  },
   Remark: {
     name: "备注",
     type: "input",

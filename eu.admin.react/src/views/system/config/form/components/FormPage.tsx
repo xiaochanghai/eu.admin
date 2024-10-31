@@ -216,7 +216,7 @@ const FieldSetCenter = ({
             onSelect(field);
           }}
         >
-          {field.FormTitle || field.DataIndex}
+          {field.Title || field.DataIndex}
 
           <span
             className="plus"
@@ -290,7 +290,7 @@ const FieldSetCenter = ({
             <DndProvider backend={HTML5Backend}>
               <Flex wrap>
                 {fieldList
-                  .filter(f => f.HideInTable === false)
+                  .filter(f => f.HideInTable === false && f.ColumnMode != Mode.form)
                   .sort((a, b) => a.TaxisNo - b.TaxisNo)
                   .map((item, index) => (
                     <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListItem} />
@@ -303,11 +303,12 @@ const FieldSetCenter = ({
             <DndProvider backend={HTML5Backend}>
               <Flex wrap gap="small">
                 {fieldList
-                  .filter(f => f.HideInTable != false)
+                  .filter(f => f.HideInTable != false && f.ColumnMode != Mode.form)
                   .sort((a, b) => a.TaxisNo - b.TaxisNo)
                   .map((item, index) => (
                     <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListHideItem} />
                   ))}
+                {fieldList.filter(f => f.HideInTable != false && f.ColumnMode != Mode.form).length == 0 ? "暂无隐藏栏位" : null}
               </Flex>
             </DndProvider>
           </Card>
@@ -330,7 +331,7 @@ const FieldSetCenter = ({
               <DndProvider backend={HTML5Backend}>
                 <Flex wrap>
                   {fieldList
-                    .filter(f => f.HideInForm === false)
+                    .filter(f => f.HideInForm === false && f.ColumnMode != Mode.list)
                     .map((item, index) => (
                       <DragFormItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveFormItem} />
                     ))}
@@ -342,7 +343,7 @@ const FieldSetCenter = ({
               <DndProvider backend={HTML5Backend}>
                 <Flex wrap gap="small">
                   {fieldList
-                    .filter(f => f.HideInForm != false)
+                    .filter(f => f.HideInForm != false && f.ColumnMode != Mode.list)
                     .map((item, index) => (
                       <DragFormHideItem
                         key={item.ID}
@@ -353,6 +354,7 @@ const FieldSetCenter = ({
                         moveItem={moveFormHideItem}
                       />
                     ))}
+                  {fieldList.filter(f => f.HideInForm != false && f.ColumnMode != Mode.list).length == 0 ? "暂无隐藏栏位" : null}
                 </Flex>
               </DndProvider>
             </Card>

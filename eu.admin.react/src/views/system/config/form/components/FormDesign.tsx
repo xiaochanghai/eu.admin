@@ -83,6 +83,7 @@ const Index: React.FC<any> = props => {
               }}
               onSetMode={(mode: Mode) => {
                 setMode(mode);
+                setCurrentField(null);
               }}
             />
           </Col>

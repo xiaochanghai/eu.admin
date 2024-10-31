@@ -939,6 +939,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.ModifyDisabled,
                     x.GridSpan,
                     x.DataSource,
+                    x.ColumnMode,
                     x.Remark,
                     x.UpdateBy,
                     x.UpdateTime
@@ -965,6 +966,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.IsSum,
                     x.Align,
                     x.Remark,
+                    x.ColumnMode,
                     x.UpdateBy,
                     x.UpdateTime
                 })
