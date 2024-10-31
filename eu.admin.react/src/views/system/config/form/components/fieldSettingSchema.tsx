@@ -29,15 +29,19 @@ export interface designProp {
 export interface SchemaClz {
   [key: string]: designProp; //扩展字段
 }
-export const types: { title: string; value: string; icon?: any }[] = [
+export const formTypes: { title: string; value: string; icon?: any }[] = [
   { title: "数据属性", value: "basic", icon: DatabaseOutlined },
   { title: "布局样式", value: "layout", icon: ProductOutlined }
+];
+export const listTypes: { title: string; value: string; icon?: any }[] = [
+  { title: "数据属性", value: "basic", icon: DatabaseOutlined }
 ];
 
 export const schemaDef: SchemaClz = {
   FormTitle: {
     name: "标题",
     type: "input",
+    mode: Mode.form,
     tag: "basic"
   },
   DataIndex: {
@@ -244,15 +248,92 @@ export const schemaDef: SchemaClz = {
     deps: { field: "FieldType", value: ["ComboGrid"] },
     mode: Mode.form
   },
+  Title: {
+    name: "标题",
+    type: "input",
+    tag: "basic",
+    mode: Mode.list
+  },
+  ValueType: {
+    name: "列表数据类型",
+    type: "buttonGroup",
+    tag: "layout",
+    mode: Mode.list,
+    items: [
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" }
+    ]
+  },
+  DataFormate: {
+    name: "数据格式",
+    type: "inputNumber",
+    tag: "basic",
+    mode: Mode.list,
+    deps: { field: "FieldType", value: ["InputNumber"] }
+  },
+
+  Width: {
+    name: "宽度",
+    type: "inputNumber",
+    tag: "basic",
+    mode: Mode.list,
+    deps: { field: "FieldType", value: ["InputNumber"] }
+  },
+  HideInTable: {
+    name: "列表中隐藏",
+    // tooltip: "保存后生效",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  Sorter: {
+    name: "是否排序",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  IsExport: {
+    name: "是否导出Excel",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  IsLovCode: {
+    name: "是否参数",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  IsBool: {
+    name: "是否bool",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  HideInSearch: {
+    name: "查询中隐藏",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  Align: {
+    name: "对齐方式",
+    type: "inputNumber",
+    tag: "basic",
+    mode: Mode.list,
+    deps: { field: "FieldType", value: ["InputNumber"] }
+  },
+  IsSum: {
+    name: "是否合计",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
   Remark: {
     name: "备注",
     type: "input",
     tag: "basic"
   }
-  // HideInForm: {
-  //   name: "yinc",
-  //   type: "input",
-  //   tag: "basic"
-  // }
 };
 export default schemaDef;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import FieldSelect from "./FieldSelect";
+// import FieldSelect from "./FieldSelect";
 import SiderSetting from "./SiderSetting";
 import FormPage from "./FormPage";
 import { Mode } from "./dsl/base";
@@ -13,6 +13,7 @@ const Index: React.FC<any> = props => {
   let { moduleCode } = props;
   let [currentField, setCurrentField] = useState<any>(null);
   let [columns, setColumns] = useState<any[]>([]);
+  let [mode, setMode] = useState<Mode>(Mode.list);
   useEffect(() => {
     const queryFormColumn = async () => {
       let { Data } = await http.get<any>(`/api/SmModule/FormColumn/${moduleCode}`);
@@ -24,7 +25,7 @@ const Index: React.FC<any> = props => {
   let currModel: any = {};
 
   const saveFormColumn = async () => {
-    let { Success, Message } = await http.put<any>(`/api/SmModule/UpdateFormColumn/${moduleCode}`, currentField);
+    let { Success, Message } = await http.put<any>(`/api/SmModule/UpdateColumn/${moduleCode}/${mode}`, currentField);
     if (Success) message.success(Message);
   };
 
@@ -46,7 +47,7 @@ const Index: React.FC<any> = props => {
         </Row>
         <Row className="fieldSet-main-content">
           {/* 模块选择 */}
-          <Col span={3} className="fieldSet-main-content-left">
+          {/* <Col span={3} className="fieldSet-main-content-left">
             <FieldSelect
               key={currModel.type + "_fieldSelect"}
               fields={columns}
@@ -58,9 +59,9 @@ const Index: React.FC<any> = props => {
                 setCurrentField(field);
               }}
             />
-          </Col>
+          </Col> */}
           {/* 表单预览 */}
-          <Col span={15} className="fieldSet-main-content-center">
+          <Col span={18} className="fieldSet-main-content-center">
             <FormPage
               moduleCode={moduleCode}
               fieldList={columns}
@@ -80,6 +81,9 @@ const Index: React.FC<any> = props => {
               onSelect={field => {
                 setCurrentField(field);
               }}
+              onSetMode={(mode: Mode) => {
+                setMode(mode);
+              }}
             />
           </Col>
           {/* form表单设置 */}
@@ -87,7 +91,7 @@ const Index: React.FC<any> = props => {
             {currentField && (
               <>
                 <SiderSetting
-                  mode={Mode.form}
+                  mode={mode}
                   form={currModel}
                   field={currentField}
                   onDataChange={data => {

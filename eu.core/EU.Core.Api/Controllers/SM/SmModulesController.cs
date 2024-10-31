@@ -114,10 +114,11 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// 更新模块表单列排序号
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
-    /// <param name="columns">columns</param>
+    /// <param name="columns">栏位列表</param>
+    /// <param name="type">类型（list、form）</param>
     /// <returns></returns>
-    [HttpPut, Route("UpdateFormColumnTaxisNo/{moduleCode}")]
-    public async Task<ServiceResult> UpdateFormColumnTaxisNo(string moduleCode, [FromBody] List<SmModuleColumn> columns) => await _service.UpdateFormColumnTaxisNoAsync(moduleCode, columns);
+    [HttpPut, Route("UpdateTaxisNo/{moduleCode}/{type}")]
+    public async Task<ServiceResult> UpdateTaxisNoAsync(string moduleCode, [FromBody] List<SmModuleColumn> columns, string type) => await _service.UpdateTaxisNoAsync(moduleCode, columns, type);
     #endregion
 
     #region 更新模块表单列
@@ -125,33 +126,12 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// 更新模块表单列
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
-    /// <param name="column">column</param>
+    /// <param name="column">栏位</param>
+    /// <param name="type">类型（list、form）</param>
     /// <returns></returns>
-    [HttpPut, Route("UpdateFormColumn/{moduleCode}")]
-    public async Task<ServiceResult> UpdateFormColumnAsync(string moduleCode, [FromBody] SmModuleFormOption column) => await _service.UpdateFormColumnAsync(moduleCode, column);
-    #endregion
-
-    #region 更新模块表格列排序号
-    /// <summary>
-    /// 更新模块表格列排序号
-    /// </summary>
-    /// <param name="moduleCode">模块代码</param>
-    /// <param name="columns">columns</param>
-    /// <returns></returns>
-    [HttpPut, Route("UpdateTableColumnTaxisNo/{moduleCode}")]
-    public async Task<ServiceResult> UpdateTableColumnTaxisNo(string moduleCode, [FromBody] List<SmModuleColumn> columns) => await _service.UpdateTableColumnTaxisNoAsync(moduleCode, columns);
-    #endregion
-
-    #region 更新模块表格列
-    /// <summary>
-    /// 更新模块表格列
-    /// </summary>
-    /// <param name="moduleCode">模块代码</param>
-    /// <param name="column">column</param>
-    /// <returns></returns>
-    [HttpPut, Route("UpdateTableColumn/{moduleCode}")]
-    public async Task<ServiceResult> UpdateTableColumnAsync(string moduleCode, [FromBody] SmModuleColumn column) => await _service.UpdateTableColumnAsync(moduleCode, column);
-    #endregion
+    [HttpPut, Route("UpdateColumn/{moduleCode}/{type}")]
+    public async Task<ServiceResult> UpdateColumnAsync(string moduleCode, [FromBody] SmModuleFormOption column, string type) => await _service.UpdateColumnAsync(moduleCode, column, type);
+    #endregion 
 
     #region 记录用户模块列
     /// <summary>
@@ -174,5 +154,14 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     [HttpPost("Copy/{moduleId}")]
     public async Task<ServiceResult> CopyAsync(Guid moduleId, [FromBody] SmModules module) => await _service.CopyAsync(moduleId, module);
     #endregion 
+
+    //#region 获取全部模块数据
+    ///// <summary>
+    ///// 获取全部模块数据
+    ///// </summary>
+    ///// <returns></returns>
+    //[HttpGet, Route("QueryAllModuleList")]
+    //public async Task<ServiceResult<ModuleTree>> GetAllModuleList() => await _service.GetAllModuleList();
+    //#endregion
 
 }

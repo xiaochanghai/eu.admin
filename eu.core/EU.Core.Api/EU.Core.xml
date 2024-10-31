@@ -3125,36 +3125,22 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateFormColumnTaxisNo(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn})">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn},System.String)">
             <summary>
             更新模块表单列排序号
             </summary>
             <param name="moduleCode">模块代码</param>
-            <param name="columns">columns</param>
+            <param name="columns">栏位列表</param>
+            <param name="type">类型（list、form）</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateFormColumnAsync(System.String,EU.Core.Model.SmModuleFormOption)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateColumnAsync(System.String,EU.Core.Model.SmModuleFormOption,System.String)">
             <summary>
             更新模块表单列
             </summary>
             <param name="moduleCode">模块代码</param>
-            <param name="column">column</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTableColumnTaxisNo(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn})">
-            <summary>
-            更新模块表格列排序号
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="columns">columns</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTableColumnAsync(System.String,EU.Core.Model.Models.SmModuleColumn)">
-            <summary>
-            更新模块表格列
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="column">column</param>
+            <param name="column">栏位</param>
+            <param name="type">类型（list、form）</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.RecordUserMoudleColumn(System.Guid,Newtonsoft.Json.Linq.JObject)">

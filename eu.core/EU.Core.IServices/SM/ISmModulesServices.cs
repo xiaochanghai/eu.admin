@@ -32,17 +32,15 @@ public interface ISmModulesServices : IBaseServices<SmModules, SmModulesDto, Ins
 
     Task<ServiceResult<Guid>> ExportModuleSqlScript(List<SmModules> list);
 
-    Task<ServiceResult<List<TreeMenuData>>> GetPatchRoutes(); 
+    Task<ServiceResult<List<TreeMenuData>>> GetPatchRoutes();
     Task<ServiceResult> RecordUserModuleColumn(Guid smModuleId, JObject param);
 
     Task<ServiceResult<List<TreeAuthMenu>>> GetAuthMenu();
     Task<ServiceResult> CopyAsync(Guid moduleId, SmModules module);
 
-    Task<ServiceResult> UpdateFormColumnTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns);
+    Task<ServiceResult> UpdateTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns, string type);
 
-    Task<ServiceResult> UpdateFormColumnAsync(string moduleCode, SmModuleFormOption column);
+    Task<ServiceResult> UpdateColumnAsync(string moduleCode, SmModuleFormOption column, string type);
 
-    Task<ServiceResult> UpdateTableColumnTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns);
-
-    Task<ServiceResult> UpdateTableColumnAsync(string moduleCode, SmModuleColumn column);
+    Task<ServiceResult<ModuleTree>> GetAllModuleList();
 }

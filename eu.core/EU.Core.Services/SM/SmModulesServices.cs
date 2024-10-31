@@ -852,30 +852,46 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     }
     #endregion
 
-    #region 更新模块表单排序号
+    #region 更新模块列排序号
     /// <summary>
-    /// 更新模块表单列排序号
+    /// 更新模块列排序号
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <param name="column">表单信息</param>
     /// <returns></returns>
-    public async Task<ServiceResult> UpdateFormColumnTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns)
+    public async Task<ServiceResult> UpdateTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns, string type)
     {
         if (columns is null || (columns != null && !columns.Any()))
-            return ServiceResult.OprateSuccess("模块表单列顺序修改成功！");
-        int i = 1;
-        columns.ForEach(x =>
+            return ServiceResult.OprateSuccess();
+
+        if (type == "form")
         {
-            x.FromTaxisNo = 100 * i;
-            i++;
-        });
-        await Db.Updateable(columns)
-            .UpdateColumns(x => new { x.FromTaxisNo, x.UpdateBy, x.UpdateTime })
-            .ExecuteCommandAsync();
+            int i = 1;
+            columns.ForEach(x =>
+            {
+                x.FromTaxisNo = 100 * i;
+                i++;
+            });
+            await Db.Updateable(columns)
+                .UpdateColumns(x => new { x.FromTaxisNo, x.UpdateBy, x.UpdateTime })
+                .ExecuteCommandAsync();
+        }
+        else
+        {
+            int i = 1;
+            columns.ForEach(x =>
+            {
+                x.TaxisNo = 100 * i;
+                i++;
+            });
+            await Db.Updateable(columns)
+                .UpdateColumns(x => new { x.TaxisNo, x.UpdateBy, x.UpdateTime })
+                .ExecuteCommandAsync();
+        }
 
         ModuleSqlColumn.Reload(moduleCode);
 
-        return ServiceResult.OprateSuccess("模块表单列顺序修改成功！");
+        return ServiceResult.OprateSuccess();
     }
     #endregion
 
@@ -886,122 +902,80 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <param name="moduleCode">模块代码</param>
     /// <param name="column">表单信息</param>
     /// <returns></returns>
-    public async Task<ServiceResult> UpdateFormColumnAsync(string moduleCode, SmModuleFormOption column)
+    public async Task<ServiceResult> UpdateColumnAsync(string moduleCode, SmModuleFormOption column, string type)
     {
         if (column is null)
-            return ServiceResult.OprateSuccess("模块表单列顺序修改成功！");
+            return ServiceResult.OprateSuccess();
 
         var entity = Mapper.Map(column).ToANew<SmModuleColumn>();
 
-        if (column.FieldType == "ComboGrid")
-            entity.DataSource = column.ComboGridDataSource;
-        if (column.FieldType == "ComboBox")
+        if (type == "form")
         {
-            entity.DataSource = column.ComboBoxDataSource;
-            if (column.DataSource.IsNullOrEmpty() && column.IsLovCode == true)
-                entity.DataSource = entity.DataIndex;
+            if (column.FieldType == "ComboGrid")
+                entity.DataSource = column.ComboGridDataSource;
+            if (column.FieldType == "ComboBox")
+            {
+                entity.DataSource = column.ComboBoxDataSource;
+                if (column.DataSource.IsNullOrEmpty() && column.IsLovCode == true)
+                    entity.DataSource = entity.DataIndex;
+            }
+
+            await Db.Updateable(entity)
+                .UpdateColumns(x => new
+                {
+                    x.FormTitle,
+                    x.DataIndex,
+                    x.DefaultValue,
+                    x.HideInForm,
+                    x.Required,
+                    x.Disabled,
+                    x.IsUnique,
+                    x.MaxLength,
+                    x.MinLength,
+                    x.Maximum,
+                    x.Minimum,
+                    x.Placeholder,
+                    x.CreateHide,
+                    x.ModifyDisabled,
+                    x.GridSpan,
+                    x.DataSource,
+                    x.Remark,
+                    x.UpdateBy,
+                    x.UpdateTime
+                })
+                .ExecuteCommandAsync();
         }
-
-        await Db.Updateable(entity)
-            .UpdateColumns(x => new
-            {
-                x.FormTitle,
-                x.DataIndex,
-                x.DefaultValue,
-                x.HideInForm,
-                x.Required,
-                x.Disabled,
-                x.IsUnique,
-                x.MaxLength,
-                x.MinLength,
-                x.Maximum,
-                x.Minimum,
-                x.Placeholder,
-                x.CreateHide,
-                x.ModifyDisabled,
-                x.GridSpan,
-                x.DataSource,
-                x.Remark,
-                x.UpdateBy,
-                x.UpdateTime
-            })
-            .ExecuteCommandAsync();
-
-        ModuleSqlColumn.Reload(moduleCode);
-
-        return ServiceResult.OprateSuccess("模块表单列顺序修改成功！");
-    }
-
-    #endregion
-
-    #region 更新模块表格排序号
-    /// <summary>
-    /// 更新模块表格列排序号
-    /// </summary>
-    /// <param name="moduleCode">模块代码</param>
-    /// <param name="column">表格信息</param>
-    /// <returns></returns>
-    public async Task<ServiceResult> UpdateTableColumnTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns)
-    {
-        if (columns is null || (columns != null && !columns.Any()))
-            return ServiceResult.OprateSuccess("模块表格列顺序修改成功！");
-        int i = 1;
-        columns.ForEach(x =>
+        else
         {
-            x.FromTaxisNo = 100 * i;
-            i++;
-        });
-        await Db.Updateable(columns)
-            .UpdateColumns(x => new { x.TaxisNo, x.UpdateBy, x.UpdateTime })
-            .ExecuteCommandAsync();
-
+            await Db.Updateable(entity)
+                .UpdateColumns(x => new
+                {
+                    x.Title,
+                    x.DataIndex,
+                    x.ValueType,
+                    x.Width,
+                    x.HideInTable,
+                    x.Sorter,
+                    x.IsExport,
+                    x.IsLovCode,
+                    x.IsBool,
+                    x.HideInSearch,
+                    x.DataFormate,
+                    x.IsTableEditable,
+                    x.IsSum,
+                    x.Align,
+                    x.Remark,
+                    x.UpdateBy,
+                    x.UpdateTime
+                })
+                .ExecuteCommandAsync();
+        }
         ModuleSqlColumn.Reload(moduleCode);
 
-        return ServiceResult.OprateSuccess("模块表格列顺序修改成功！");
-    }
-    #endregion
-
-    #region 更新模块表格列
-    /// <summary>
-    /// 更新模块表格列
-    /// </summary>
-    /// <param name="moduleCode">模块代码</param>
-    /// <param name="column">表单信息</param>
-    /// <returns></returns>
-    public async Task<ServiceResult> UpdateTableColumnAsync(string moduleCode, SmModuleColumn column)
-    {
-        if (column is null)
-            return ServiceResult.OprateSuccess("模块表格列顺序修改成功！");
-
-        await Db.Updateable(column)
-            .UpdateColumns(x => new
-            {
-                x.Title,
-                x.DataIndex,
-                x.ValueType, 
-                x.Width, 
-                x.HideInTable, 
-                x.Sorter, 
-                x.IsExport, 
-                x.IsLovCode, 
-                x.IsBool, 
-                x.HideInSearch, 
-                x.DataFormate,
-                x.IsTableEditable,
-                x.IsSum,
-                x.Align,
-                x.Remark,
-                x.UpdateBy,
-                x.UpdateTime
-            })
-            .ExecuteCommandAsync();
-
-        ModuleSqlColumn.Reload(moduleCode);
-
-        return ServiceResult.OprateSuccess("模块表格列顺序修改成功！");
+        return ServiceResult.OprateSuccess();
     }
 
-    #endregion
+    #endregion  
 
     #region 获取模块表单信息
     /// <summary>
@@ -1153,6 +1127,56 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         await Db.Insertable(columns).ExecuteCommandAsync();
 
         return ServiceResult.OprateSuccess("复制成功！");
+    }
+    #endregion
+
+    #region 获取全部模块数据
+    public async Task<ServiceResult<ModuleTree>> GetAllModuleList()
+    {
+
+        var moduleTree = new ModuleTree();
+        moduleTree.key = "All";
+        moduleTree.title = "请选择角色模块";
+
+        var moduleList = ModuleInfo.GetModuleList();
+
+
+        LoopToAppendChildren(moduleList, moduleTree);
+
+        return ServiceResult<ModuleTree>.OprateSuccess(moduleTree, ResponseText.QUERY_SUCCESS);
+    }
+
+
+    public void LoopToAppendChildren(List<SmModules> smModules, ModuleTree moduleTree)
+    {
+        var subItems = new List<ModuleTree>();
+        if (moduleTree.key == "All")
+        {
+            subItems = smModules
+                .Where(x => x.IsParent == true && string.IsNullOrEmpty(x.ParentId.ToString()))
+                .Select(y => new ModuleTree
+                {
+                    title = y.ModuleName,
+                    key = y.ID.ToString(),
+                    isLeaf = y.IsParent != null ? !y.IsParent : true
+                }).ToList();
+        }
+        else
+        {
+            subItems = smModules
+                .Where(x => x.ParentId == Guid.Parse(moduleTree.key))
+                .Select(y => new ModuleTree
+                {
+                    title = y.IsDetail == true && y.BelongModuleId != null ? ModuleInfo.GetModuleNameById(y.BelongModuleId) + "/" + y.ModuleName : y.ModuleName,
+                    key = y.ID.ToString(),
+                    isLeaf = y.IsParent != null ? !y.IsParent : true
+                }).ToList();
+        }
+        moduleTree.children = [.. subItems];
+        foreach (var subItem in subItems)
+        {
+            LoopToAppendChildren(smModules, subItem);
+        }
     }
     #endregion
 }

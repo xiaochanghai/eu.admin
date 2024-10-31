@@ -9,7 +9,7 @@ import ComboGrid from "@/components/ComBoGrid/index";
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 const FormItem = Form.Item;
-import schemaDef, { deps, SchemaClz, types } from "./fieldSettingSchema";
+import schemaDef, { deps, SchemaClz, formTypes, listTypes } from "./fieldSettingSchema";
 
 interface SiderSettingProps {
   mode: Mode; //当前组件场景
@@ -51,13 +51,15 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
         return {
           value: obj[key],
           label: key,
+          mode: Mode.form,
           tooltip: `一行${form.modelSize}列占${obj[key]}列`
         };
       });
     }
     return schemaDef;
   }, [JSON.stringify(form)]);
-
+  let types = formTypes;
+  if (mode == Mode.list) types = listTypes;
   /** 设置的属性是否能够展示进行检查，依赖的项目是否满足 */
   const check = useCallback(
     (_fieldName: string, dd: deps | deps[] | undefined): boolean => {
@@ -273,9 +275,15 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
       <Tabs defaultActiveKey={"panel_0"}>
         {types.map((t, index) => {
           return (
-            <TabPane key={"panel_" + index} tab={t.title} icon={<t.icon></t.icon>} style={{ padding: "2px" }}>
+            <TabPane
+              key={"panel_" + index}
+              tab={t.title}
+              icon={<t.icon></t.icon>}
+              style={{ padding: "2px" }}
+              disabled={mode == Mode.list && t.value == "layout" ? true : false}
+            >
               {/* 第一个panel设置组件 */}
-              {index === 0 && (
+              {index === 0 && mode === Mode.form && (
                 <FieldSetting
                   field={field}
                   compDatas={FormComponents}

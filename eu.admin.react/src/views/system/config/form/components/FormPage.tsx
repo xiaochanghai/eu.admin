@@ -6,6 +6,7 @@ import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
 import http from "@/api";
+import { Mode } from "./dsl/base";
 const { TabPane } = Tabs;
 
 interface FieldSetCenterProps {
@@ -15,8 +16,17 @@ interface FieldSetCenterProps {
   onDataChange: (ang: any[]) => void; //数据返回出去
   onSelect: (field: string) => void; //当前选中字段
   onPlus: (field: any) => void; //当前选中字段
+  onSetMode: (mode: Mode) => void; //设置表单配置还是列表配置
 }
-const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlus, moduleCode }: FieldSetCenterProps) => {
+const FieldSetCenter = ({
+  fieldList,
+  currentField,
+  onSelect,
+  onDataChange,
+  onPlus,
+  moduleCode,
+  onSetMode
+}: FieldSetCenterProps) => {
   const DragFormHideItem = ({ id, text, index, moveItem, field }: any) => {
     const ref = React.useRef(null);
 
@@ -46,8 +56,8 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlu
         style={{
           // width: 120,
           opacity: isDragging ? 0.5 : 1,
-          cursor: "move"
-          // padding: "10px",
+          cursor: "move",
+          padding: 10
           // border: "1px solid #ccc",
           // margin: "5px"
         }}
@@ -149,13 +159,124 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlu
     saveFormColumnTaxisNo(items);
     onDataChange(items);
   };
-  const saveFormColumnTaxisNo = async (columns: any) =>
-    await http.put<any>(`/api/SmModule/UpdateFormColumnTaxisNo/${moduleCode}`, columns);
+  const saveFormColumnTaxisNo = async (columns: any[]) => {
+    let items1 = columns.map(x => {
+      return { ID: x.ID, FromTaxisNo: x.FromTaxisNo };
+    });
+    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/form`, items1);
+  };
 
+  const DragListItem = ({ id, index, moveItem, field }: any) => {
+    const ref = React.useRef(null);
+
+    const [{ isDragging }, drag] = useDrag(() => ({
+      type: "item",
+      item: { id, index },
+      collect: monitor => ({
+        isDragging: !!monitor.isDragging()
+      })
+    }));
+
+    const [, drop] = useDrop(() => ({
+      accept: "item",
+      hover: (item: any) => {
+        if (item.index !== index) {
+          moveItem(item.index, index);
+          item.index = index;
+        }
+      }
+    }));
+
+    drag(drop(ref));
+
+    return (
+      <div
+        ref={ref}
+        style={{
+          // width: 120,
+          opacity: isDragging ? 0.5 : 1,
+          cursor: "move",
+          padding: 10
+          // border: "1px solid #ccc",
+          // margin: "5px"
+        }}
+      >
+        {/* {text} */}
+        <Tag
+          className="main-hide-field-tag"
+          style={{
+            width: 100,
+            textAlign: "center",
+            border: currentField?.ID === field?.ID ? "1px solid #3b82f680" : "",
+            background: currentField?.ID === field?.ID ? "#F8FBFF" : ""
+          }}
+          onClick={event => {
+            event.stopPropagation();
+            // 处理按钮的点击事件
+            onSelect(field);
+          }}
+        >
+          {field.FormTitle || field.DataIndex}
+
+          <span
+            className="plus"
+            onClick={event => {
+              event.stopPropagation();
+              onPlus({
+                ...field,
+                HideInForm: false
+              });
+            }}
+          >
+            <Icon
+              className={currentField?.ID === field?.ID ? "icon active" : "icon"}
+              name={field.HideInTable != false ? "PlusCircleFilled" : "MinusCircleFilled"}
+            />
+          </span>
+        </Tag>
+      </div>
+    );
+  };
+
+  const moveListHideItem = (fromIndex: number, toIndex: number) => {
+    let updatedItems = [...fieldList.filter(f => f.HideInTable != false)];
+    const [movedItem] = updatedItems.splice(fromIndex, 1);
+    updatedItems.splice(toIndex, 0, movedItem);
+    let items = [...fieldList.filter(f => f.HideInTable == false), ...updatedItems];
+    saveListColumnTaxisNo(items);
+  };
+
+  const moveListItem = (fromIndex: number, toIndex: number) => {
+    let updatedItems = [...fieldList.filter(f => f.HideInTable === false)];
+    const [movedItem] = updatedItems.splice(fromIndex, 1);
+    updatedItems.splice(toIndex, 0, movedItem);
+
+    let items = [...fieldList.filter(f => f.HideInTable != false), ...updatedItems];
+    saveListColumnTaxisNo(items);
+  };
+
+  const saveListColumnTaxisNo = async (items: any[]) => {
+    let i = 1;
+    items.map(x => {
+      x.TaxisNo = 100 * i;
+      i++;
+    });
+    onDataChange(items);
+    let items1 = items.map(x => {
+      return { ID: x.ID, TaxisNo: x.TaxisNo };
+    });
+    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/list`, items1);
+  };
+
+  const onTabsChange = (key: string) => {
+    console.log(key);
+    onSetMode(key == "panel_list" ? Mode.list : Mode.form);
+  };
   return (
     <div style={{ backgroundColor: "#fff" }}>
       <Tabs
         defaultActiveKey={"panel_table"}
+        onChange={onTabsChange}
         tabBarExtraContent={{
           right: (
             <Button type="primary" icon={<Icon name="PlusOutlined" />}>
@@ -164,7 +285,34 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlu
           )
         }}
       >
-        <TabPane key="panel_table" tab="表格栏位" icon={<Icon name="TableOutlined" />}>
+        <TabPane key="panel_list" tab="表格栏位" icon={<Icon name="TableOutlined" />}>
+          <Card size="small" title="显示栏位">
+            <DndProvider backend={HTML5Backend}>
+              <Flex wrap>
+                {fieldList
+                  .filter(f => f.HideInTable === false)
+                  .sort((a, b) => a.TaxisNo - b.TaxisNo)
+                  .map((item, index) => (
+                    <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListItem} />
+                  ))}
+              </Flex>
+            </DndProvider>
+          </Card>
+          <div style={{ height: 20 }}></div>
+          <Card size="small" title="隐藏栏位">
+            <DndProvider backend={HTML5Backend}>
+              <Flex wrap gap="small">
+                {fieldList
+                  .filter(f => f.HideInTable != false)
+                  .sort((a, b) => a.TaxisNo - b.TaxisNo)
+                  .map((item, index) => (
+                    <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListHideItem} />
+                  ))}
+              </Flex>
+            </DndProvider>
+          </Card>
+        </TabPane>
+        <TabPane key="panel_form" tab="表单栏位" icon={<Icon name="MenuOutlined" />}>
           <Form
             labelCol={{
               xs: { span: 8 },
@@ -180,42 +328,35 @@ const FieldSetCenter = ({ fieldList, currentField, onSelect, onDataChange, onPlu
           >
             <Card size="small" title="可编辑栏位">
               <DndProvider backend={HTML5Backend}>
-                <div style={{ padding: "20px" }}>
-                  <Flex wrap>
-                    {fieldList
-                      .filter(f => f.HideInForm === false)
-                      .map((item, index) => (
-                        <DragFormItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveFormItem} />
-                      ))}
-                  </Flex>
-                </div>
+                <Flex wrap>
+                  {fieldList
+                    .filter(f => f.HideInForm === false)
+                    .map((item, index) => (
+                      <DragFormItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveFormItem} />
+                    ))}
+                </Flex>
               </DndProvider>
             </Card>
             <div style={{ height: 20 }}></div>
             <Card size="small" title="隐藏栏位">
               <DndProvider backend={HTML5Backend}>
-                <div style={{ padding: "20px" }}>
-                  <Flex wrap gap="small">
-                    {fieldList
-                      .filter(f => f.HideInForm != false)
-                      .map((item, index) => (
-                        <DragFormHideItem
-                          key={item.ID}
-                          id={item.ID}
-                          text={item.FormTitle || item.DataIndex}
-                          index={index}
-                          field={item}
-                          moveItem={moveFormHideItem}
-                        />
-                      ))}
-                  </Flex>
-                </div>
+                <Flex wrap gap="small">
+                  {fieldList
+                    .filter(f => f.HideInForm != false)
+                    .map((item, index) => (
+                      <DragFormHideItem
+                        key={item.ID}
+                        id={item.ID}
+                        text={item.FormTitle || item.DataIndex}
+                        index={index}
+                        field={item}
+                        moveItem={moveFormHideItem}
+                      />
+                    ))}
+                </Flex>
               </DndProvider>
             </Card>
           </Form>
-        </TabPane>
-        <TabPane key="panel_form" tab="表单栏位" icon={<Icon name="MenuOutlined" />}>
-          1111
         </TabPane>
       </Tabs>
     </div>

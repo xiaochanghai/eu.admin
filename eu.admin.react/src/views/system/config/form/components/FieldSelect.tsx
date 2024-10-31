@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { Tree } from "antd";
+import http from "@/api";
+
 interface FieldSelectProps {
   className?: string;
   fields: any[]; //参与排序的字段
@@ -7,7 +11,29 @@ interface FieldSelectProps {
 }
 // const FieldSelect = ({ fields, mode, onSelect, className, onDataChange }: FieldSelectProps) => {
 const FieldSelect = ({ className }: FieldSelectProps) => {
-  return <div className={`${className}  bottom-1 border-black p-4`}></div>;
+  const [treeData, setTreeData] = useState<any>([]);
+
+  useEffect(() => {
+    const getAllModuleList = async () => {
+      let { Data, Success } = await http.get<any>("/api/SmModule/QueryAllModuleList");
+      if (Success) setTreeData([Data]);
+    };
+    getAllModuleList();
+  }, []);
+
+  return (
+    <div className={`${className}  bottom-1 border-black p-4`}>
+      <Tree
+        defaultExpandedKeys={["All"]}
+        // defaultExpandParent={true}
+        // checkedKeys={checkedModuleKeys}
+        // onCheck={onModuleCheck}
+        // checkable
+        // onSelect={selectModule}
+        treeData={treeData}
+      />
+    </div>
+  );
 };
 
 export default FieldSelect;
