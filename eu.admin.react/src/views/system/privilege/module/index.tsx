@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TableList from "../../common/components/TableList";
 import SqlEdit from "./SqlEdit";
+import FormDesign from "../../config/form/components/FormDesign";
 
 // import { useDispatch } from "@/redux";
 
@@ -10,14 +11,14 @@ const SystemModule: React.FC<any> = () => {
   const [formPageIsView, setFormPageIsView] = useState("Index");
 
   const changePage = (value: any, id: string, isView: any) => {
-    if (value == "SqlEdit") {
-      setViewType(value);
-      setFormPageId(id);
-      setFormPageIsView(isView);
-    } else if (value == "FormIndex") {
+    if (value == "FormIndex") {
       setViewType(value);
       setFormPageId("");
       setFormPageIsView("");
+    } else {
+      setViewType(value);
+      setFormPageId(id);
+      setFormPageIsView(isView);
     }
   };
 
@@ -26,6 +27,9 @@ const SystemModule: React.FC<any> = () => {
       {viewType == "FormIndex" ? <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} /> : null}
       {viewType == "SqlEdit" ? (
         <SqlEdit moduleCode="SM_IMPORT_TEMPLATE_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />
+      ) : null}
+      {viewType == "FormCollocate" ? (
+        <FormDesign moduleCode="SD_SALES_ORDER_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />
       ) : null}
     </>
   );

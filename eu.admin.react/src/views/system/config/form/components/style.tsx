@@ -9,7 +9,7 @@ export const FormSetDiv = styled.div`
     border-bottom: 1px solid #eee;
   }
   .fieldSet-main {
-    padding: 16px 0px;
+    // padding: 16px 0px;
     height: calc(100% - 65px);
     box-sizing: border-box;
     .main-field {

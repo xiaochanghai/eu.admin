@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Button, message, Tabs, Input, Card, Form, Row, Col, Space, Modal, Skeleton } from "antd";
+import { Button, Tabs, Input, Card, Form, Row, Col, Space, Modal, Skeleton } from "antd";
 import { SaveOutlined, RollbackOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { getModuleFullSql, add, update, getModuleSqlInfo } from "@/api/modules/module";
 import TableList from "../../common/components/TableList";
+import { message } from "@/hooks/useMessage";
 
 const { TextArea } = Input;
 const FormItem = Form.Item;
