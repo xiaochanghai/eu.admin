@@ -205,7 +205,7 @@ const FieldSetCenter = ({
         <Tag
           className="main-hide-field-tag"
           style={{
-            width: 100,
+            // width: 100,
             textAlign: "center",
             border: currentField?.ID === field?.ID ? "1px solid #3b82f680" : "",
             background: currentField?.ID === field?.ID ? "#F8FBFF" : ""
