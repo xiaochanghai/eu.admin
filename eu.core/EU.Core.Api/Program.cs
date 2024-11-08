@@ -55,9 +55,9 @@ builder.Services.AddAllOptionRegister();
 builder.Services.AddUiFilesZipSetup(builder.Environment);
 ServiceExtensions.Init();
 
-Permissions.IsUseIds4 = AppSettings.app(new string[] { "Startup", "IdentityServer4", "Enabled" }).ObjToBool1();
-Permissions.IsUseAuthing = AppSettings.app(new string[] { "Startup", "Authing", "Enabled" }).ObjToBool1();
-RoutePrefix.Name = AppSettings.app(new string[] { "AppSettings", "SvcName" }).ObjToString1();
+Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool1();
+Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool1();
+RoutePrefix.Name = AppSettings.app(["AppSettings", "SvcName"]).ObjToString1();
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 

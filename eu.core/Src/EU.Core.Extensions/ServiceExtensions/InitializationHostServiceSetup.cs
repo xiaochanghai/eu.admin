@@ -15,7 +15,7 @@ public static class InitializationHostServiceSetup
         {
             ArgumentNullException.ThrowIfNull(nameof(services));
         }
-        services.AddHostedService<SeedDataHostedService>();
+        //services.AddHostedService<SeedDataHostedService>();
         //services.AddHostedService<QuartzJobHostedService>();
         services.AddHostedService<ConsulHostedService>();
         services.AddHostedService<EventBusHostedService>();
