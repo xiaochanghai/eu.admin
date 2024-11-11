@@ -478,10 +478,24 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     {
         var data = await BaseDal.QueryFilterPage(filter);
 
-        return new ServicePageResult<TEntityDto>(filter.PageIndex, data.TotalCount, filter.PageSize, Mapper.Map(data.Data).ToANew<List<TEntityDto>>());
+        var data1 = Mapper.Map(data.Data).ToANew<List<TEntityDto>>();
+        int i = 0;
+        foreach (var entityInfo in data1)
+        {
+            if (entityInfo is RootEntityTkey<Guid> rootEntity)
+            {
+                var entityInfo1 = data.Data[i];
+                var getType = entityInfo1.GetType();
+                var id = getType.GetProperty("ID");
+                rootEntity.ID = Guid.Parse(id.GetValue(entityInfo1).ToString());
+            }
+            i++;
+        }
+
+        return new ServicePageResult<TEntityDto>(filter.PageIndex, data.TotalCount, filter.PageSize, data1);
     }
 
-    public virtual async Task<dynamic> GetPageList(string paramData, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null)
+    public virtual async Task<dynamic> GetPageList(string paramData = "{}", string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null)
     {
         dynamic obj = new ExpandoObject();
         var success = true;

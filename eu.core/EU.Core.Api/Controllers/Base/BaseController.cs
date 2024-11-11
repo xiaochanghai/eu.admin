@@ -66,7 +66,7 @@ public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEdit
     /// <param name="moduleCode"></param>
     /// <returns></returns>
     [HttpGet, Route("GetPageList")]
-    public async Task<IActionResult> GetPageList(string paramData, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null)
+    public async Task<IActionResult> GetPageList(string paramData = "{}", string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null)
     {
         var data = (await InvokeServiceAsync("GetPageList", [paramData, sorter, filter, parentColumn, parentId, moduleCode])) as dynamic;
         return Ok(data);
