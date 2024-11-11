@@ -8,15 +8,16 @@ import tabs from "./modules/tabs";
 import auth from "./modules/auth";
 import user from "./modules/user";
 import module from "./modules/module";
+import workflow from "./modules/workflow";
 
 // create reducer
-const reducer = combineReducers({ global, tabs, auth, user, module });
+const reducer = combineReducers({ global, tabs, auth, user, module, workflow });
 
 // redux persist
 const persistConfig = {
   key: "redux-state",
   storage: storage,
-  blacklist: ["auth", "module"]
+  blacklist: ["auth", "module", "workflow"]
 };
 const persistReducerConfig = persistReducer(persistConfig, reducer);
 

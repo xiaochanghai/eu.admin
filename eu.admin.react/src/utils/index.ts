@@ -1,4 +1,4 @@
-import { store } from "@/redux";
+import { store, useDispatch } from "@/redux";
 import { ResPage } from "@/api/interface";
 import { RouteObjectType } from "@/routers/interface";
 import { RequestData } from "@ant-design/pro-components";
@@ -112,6 +112,10 @@ export function getMenuByPath(
   return menuItem || {};
 }
 
+export function dispatch() {
+  return useDispatch;
+}
+
 /**
  * @description Use recursion to find all breadcrumbs and store them in redux.
  * @param {Array} menuList - The menu list.
@@ -221,4 +225,19 @@ export function randomStr(length = 32) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
+}
+export function modifyWorkFlowStartNode(obj: any, targetKey: string, newValue: any, parentId: any): void {
+  if (obj["nodeType"] == "route" || obj["nodeType"] == "condition") {
+    if (obj["id"] == parentId) {
+      obj["childNode"] = newValue;
+    } else if (obj.conditionNodeList)
+      obj.conditionNodeList.map((con: any) => {
+        if (con["id"] == parentId) con["childNode"] = newValue;
+        else if (con["childNode"]) modifyWorkFlowStartNode(con["childNode"], targetKey, newValue, parentId);
+      });
+  } else if (obj["id"] == parentId) {
+    obj["childNode"] = newValue;
+  } else {
+    if (obj["childNode"]) modifyWorkFlowStartNode(obj["childNode"], targetKey, newValue, parentId);
+  }
 }
