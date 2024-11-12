@@ -4,7 +4,7 @@ import { useTranslate } from "../../react-locales";
 import { styled } from "styled-components";
 // import { useEditorEngine } from "../../hooks";
 import { createUuid } from "../../utils/create-uuid";
-import { useWorkFlow } from "@/utils/workflow";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 // import { ActionType, AddNodeAction } from "@/workflow-editor/actions";
 
 const MaterialShell = styled.div`

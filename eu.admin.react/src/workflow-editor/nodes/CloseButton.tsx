@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { styled } from "styled-components";
 import { Button } from "antd";
 import { Icon } from "@/components/Icon";
-import { useWorkFlow } from "@/utils/workflow";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 
 const CloseStyledButton = styled(Button)`
   position: absolute;

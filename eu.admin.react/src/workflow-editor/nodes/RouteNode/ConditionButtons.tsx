@@ -4,7 +4,7 @@ import { useTranslate } from "../../react-locales";
 import { IRouteNode, IBranchNode } from "../../interfaces";
 import { Tooltip } from "antd";
 import { Icon } from "@/components/Icon";
-import { useWorkFlow } from "@/utils/workflow";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 
 const Container = styled.div`
   position: absolute;

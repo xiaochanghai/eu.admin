@@ -12,7 +12,7 @@ import {
   SELECT_NODE,
   DELETE_NODE
 } from "@/redux/modules/workflow";
-import { useEditorEngine } from "../workflow-editor/hooks";
+import { useEditorEngine } from ".";
 import { IErrors } from "@/workflow-editor/interfaces/state";
 import { IBranchNode, IRouteNode, IWorkFlowNode, NodeType } from "@/workflow-editor/interfaces";
 import { createUuid } from "@/utils";

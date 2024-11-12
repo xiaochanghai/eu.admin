@@ -6,7 +6,7 @@ import { useRedoList } from "../../hooks/useRedoList";
 import { useUndoList } from "../../hooks/useUndoList";
 // import { useEditorEngine } from "../../hooks";
 import { Button, Space } from "antd";
-import { useWorkFlow } from "@/utils/workflow";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 
 export const OperationBar = memo((props: { float?: boolean }) => {
   const { float } = props;

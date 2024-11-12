@@ -10,7 +10,7 @@ import { FormVo } from "@/api/Form";
 import { Drawer } from "antd";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { SELECT_NODE } from "@/redux/modules/workflow";
-import { useWorkFlow } from "@/utils/workflow";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 
 const Content = styled.div`
   display: flex;
