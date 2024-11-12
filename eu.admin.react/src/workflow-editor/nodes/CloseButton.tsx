@@ -1,9 +1,10 @@
 import { useCallback } from "react";
-import { useEditorEngine } from "../hooks";
+// import { useEditorEngine } from "../hooks";
 // import { CloseOutlined } from "@ant-design/icons"
 import { styled } from "styled-components";
 import { Button } from "antd";
 import { Icon } from "@/components/Icon";
+import { useWorkFlow } from "@/utils/workflow";
 
 const CloseStyledButton = styled(Button)`
   position: absolute;
@@ -17,11 +18,12 @@ const CloseStyledButton = styled(Button)`
 `;
 export const CloseButton = (props: { nodeId?: string }) => {
   const { nodeId } = props;
-  const store = useEditorEngine();
+  // const store = useEditorEngine();
+  const workFlow = useWorkFlow();
 
   const handleClose = useCallback(() => {
-    store?.removeNode(nodeId);
-  }, [nodeId, store]);
+    workFlow.removeNode(nodeId);
+  }, [nodeId, workFlow]);
 
   return (
     <CloseStyledButton

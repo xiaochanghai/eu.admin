@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+// import { useEffect } from "react";
 import { useDispatch } from "@/redux";
 import { store } from "@/redux";
 import {
@@ -6,40 +6,38 @@ import {
   SET_VALIDATED,
   SET_UNOLIST,
   SET_REDOLIST,
-  // SET_START_NODE,
+  SET_START_NODE,
   CHANGE_NODE,
   ADD_NODE,
-  SELECT_NODE
-  // DELETE_NODE
+  SELECT_NODE,
+  DELETE_NODE
 } from "@/redux/modules/workflow";
 import { useEditorEngine } from "../workflow-editor/hooks";
-import { IErrors } from "../workflow-editor/interfaces/state";
-import { IRouteNode, IWorkFlowNode, NodeType } from "../workflow-editor/interfaces";
+import { IErrors } from "@/workflow-editor/interfaces/state";
+import { IBranchNode, IRouteNode, IWorkFlowNode, NodeType } from "@/workflow-editor/interfaces";
+import { createUuid } from "@/utils";
+import { useTranslate } from "@/workflow-editor/react-locales";
 
 export function useWorkFlow() {
   const dispatch = useDispatch();
   const editorStore = useEditorEngine();
-  useEffect(() => {}, []);
+  const t = useTranslate();
+  // useEffect(() => {}, []);
   function addNode(parentId: string, node: IWorkFlowNode) {
     backup();
     dispatch(ADD_NODE({ parentId, node }));
-
     revalidate();
   }
   function backup() {
-    const list = [
-      ...store.getState().workflow.undoList,
-      { startNode: store.getState().workflow.startNode, validated: store.getState().workflow.validated }
-    ];
+    let state = store.getState().workflow;
+    const list = [...state.undoList, { startNode: state.startNode, validated: state.validated }];
 
     dispatch(SET_UNOLIST(list));
     dispatch(SET_REDOLIST([]));
   }
   //审批流节点不多，节点变化全部重新校验一遍，无需担心性能问题，以后有需求再优化
   function revalidate() {
-    if (store.getState().workflow.validated) {
-      validate();
-    }
+    if (store.getState().workflow.validated) validate();
   }
 
   function validate() {
@@ -84,5 +82,82 @@ export function useWorkFlow() {
 
     revalidate();
   }
-  return { validate, addNode, selectNode, changeNode };
+
+  //dlc 取消
+  function undo() {
+    let state = store.getState().workflow;
+    const newUndoList = [...state.undoList];
+    const snapshot = newUndoList.pop();
+    if (!snapshot) {
+      console.error("No element in undo list");
+      return;
+    }
+    dispatch(SET_UNOLIST(newUndoList));
+
+    const list = [...state.redoList, { startNode: state.startNode }];
+
+    dispatch(SET_REDOLIST(list));
+    dispatch(SET_START_NODE(snapshot?.startNode));
+    dispatch(SET_VALIDATED(snapshot?.validated));
+  }
+
+  // dlc 重做
+  function redo() {
+    let state = store.getState().workflow;
+    const newRedoList = [...state.redoList];
+    const snapshot = newRedoList.pop();
+    if (!snapshot) {
+      console.error("No element in redo list");
+      return;
+    }
+
+    dispatch(SET_REDOLIST(newRedoList));
+
+    dispatch(SET_UNOLIST([...state.undoList, { startNode: state.startNode }]));
+
+    dispatch(SET_START_NODE(snapshot?.startNode));
+    dispatch(SET_VALIDATED(snapshot?.validated));
+  }
+  function removeNode(id?: string) {
+    if (id) {
+      backup();
+      dispatch(DELETE_NODE(id));
+      revalidate();
+    }
+  }
+
+  function removeCondition(node: IRouteNode, conditionId: string) {
+    //如果只剩2个分支，则删除节点
+    if (node.conditionNodeList.length <= 2) {
+      removeNode(node.id);
+      return;
+    }
+    backup();
+    const newNode: IRouteNode = { ...node, conditionNodeList: node.conditionNodeList.filter(co => co.id !== conditionId) };
+    changeNode(newNode);
+  }
+  function resetId(node: IWorkFlowNode) {
+    node.id = createUuid();
+    if (node.childNode) {
+      resetId(node.childNode);
+    }
+    if (node.nodeType === NodeType.route) {
+      for (const condition of (node as IRouteNode).conditionNodeList) {
+        resetId(condition);
+      }
+    }
+  }
+  //克隆一个条件
+  function cloneCondition(node: IRouteNode, condition: IBranchNode) {
+    const newCondition = JSON.parse(JSON.stringify(condition));
+    newCondition.name = newCondition.name + t?.("ofCopy");
+    //重写Id
+    resetId(newCondition);
+    const index = node.conditionNodeList.indexOf(condition);
+    const newList = [...node.conditionNodeList];
+    newList.splice(index + 1, 0, newCondition);
+    const newNode: IRouteNode = { ...node, conditionNodeList: newList };
+    changeNode(newNode);
+  }
+  return { validate, addNode, selectNode, changeNode, undo, redo, removeNode, removeCondition, cloneCondition };
 }

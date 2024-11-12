@@ -2,6 +2,7 @@ import { store, useDispatch } from "@/redux";
 import { ResPage } from "@/api/interface";
 import { RouteObjectType } from "@/routers/interface";
 import { RequestData } from "@ant-design/pro-components";
+import { v4 as uuid4 } from "uuid";
 
 const mode = import.meta.env.VITE_ROUTER_MODE;
 
@@ -240,4 +241,8 @@ export function modifyWorkFlowStartNode(obj: any, targetKey: string, newValue: a
   } else {
     if (obj["childNode"]) modifyWorkFlowStartNode(obj["childNode"], targetKey, newValue, parentId);
   }
+}
+
+export function createUuid() {
+  return uuid4();
 }
