@@ -1,8 +1,5 @@
 import { useCallback } from "react";
-// import { CloseOutlined } from "@ant-design/icons";
-// import { Button, Tooltip } from "antd";
 import { styled } from "styled-components";
-// import { useEditorEngine } from "../../hooks";
 import { useTranslate } from "../../react-locales";
 import { IRouteNode, IBranchNode } from "../../interfaces";
 import { Tooltip } from "antd";
@@ -20,7 +17,6 @@ const Container = styled.div`
 
 export const ConditionButtons = (props: { parent: IRouteNode; node: IBranchNode }) => {
   const { parent, node } = props;
-  // const store = useEditorEngine();
   const t = useTranslate();
   const workFlow = useWorkFlow();
 
@@ -33,15 +29,13 @@ export const ConditionButtons = (props: { parent: IRouteNode; node: IBranchNode 
   }, [node, parent, workFlow]);
 
   return (
-    <Container className="mini-bar space-x-2">
+    <Container className="mini-bar">
       <Tooltip placement="topRight" title={t("copyCodition")}>
-        {/* <i className="text-base  hover:text-blue-500 icon-task-copy" onClick={handleClone} /> */}
-        <i className="icon" onClick={handleClone}>
+        <i className="icon font-size14" onClick={handleClone}>
           <Icon name="CopyOutlined" />
         </i>
       </Tooltip>
-      {/* <i className="text-base hover:text-blue-500 icon-delete" onClick={handleClose}> */}
-      <i className="icon" onClick={handleClose}>
+      <i className="icon font-size14 ml-5" onClick={handleClose}>
         <Icon name="CloseOutlined" />
       </i>
     </Container>
