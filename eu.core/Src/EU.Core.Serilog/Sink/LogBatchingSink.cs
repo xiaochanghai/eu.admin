@@ -28,9 +28,7 @@ public class LogBatchingSink : IBatchedLogEventSink
     private async Task WriteLogs(ISqlSugarClient db, IEnumerable<LogEvent> batch)
     {
         if (!batch.Any())
-        {
             return;
-        }
 
         var group = batch.GroupBy(s => s.Level);
         foreach (var v in group)
@@ -54,81 +52,73 @@ public class LogBatchingSink : IBatchedLogEventSink
     private async Task WriteInformationLog(ISqlSugarClient db, IEnumerable<LogEvent> batch)
     {
         if (!batch.Any())
-        {
             return;
-        }
 
-        var logs = new List<GlobalInformationLog>();
+        var logs = new List<SmInformationLog>();
         foreach (var logEvent in batch)
         {
-            var log = logEvent.Adapt<GlobalInformationLog>();
+            var log = logEvent.Adapt<SmInformationLog>();
             log.Message = logEvent.RenderMessage();
             log.Properties = logEvent.Properties.ToJson();
             log.DateTime = logEvent.Timestamp.DateTime;
             logs.Add(log);
         }
 
-        await db.AsTenant().InsertableWithAttr(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
+        await db.Insertable(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
     }
 
     private async Task WriteWarningLog(ISqlSugarClient db, IEnumerable<LogEvent> batch)
     {
         if (!batch.Any())
-        {
             return;
-        }
 
-        var logs = new List<GlobalWarningLog>();
+        var logs = new List<SmWarningLog>();
         foreach (var logEvent in batch)
         {
-            var log = logEvent.Adapt<GlobalWarningLog>();
+            var log = logEvent.Adapt<SmWarningLog>();
             log.Message = logEvent.RenderMessage();
             log.Properties = logEvent.Properties.ToJson();
             log.DateTime = logEvent.Timestamp.DateTime;
             logs.Add(log);
         }
 
-        await db.AsTenant().InsertableWithAttr(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
+        await db.Insertable(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
     }
 
     private async Task WriteErrorLog(ISqlSugarClient db, IEnumerable<LogEvent> batch)
     {
         if (!batch.Any())
-        {
             return;
-        }
 
-        var logs = new List<GlobalErrorLog>();
+        var logs = new List<SmErrorLog>();
         foreach (var logEvent in batch)
         {
-            var log = logEvent.Adapt<GlobalErrorLog>();
+            var log = logEvent.Adapt<SmErrorLog>();
             log.Message = logEvent.RenderMessage();
             log.Properties = logEvent.Properties.ToJson();
             log.DateTime = logEvent.Timestamp.DateTime;
             logs.Add(log);
         }
 
-        await db.AsTenant().InsertableWithAttr(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
+        await db.Insertable(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
     }
 
     private async Task WriteSqlLog(ISqlSugarClient db, IEnumerable<LogEvent> batch)
     {
         if (!batch.Any())
-        {
             return;
-        }
 
-        var logs = new List<AuditSqlLog>();
+        var logs = new List<SmSqlLog>();
         foreach (var logEvent in batch)
         {
-            var log = logEvent.Adapt<AuditSqlLog>();
+            var log = logEvent.Adapt<SmSqlLog>();
             log.Message = logEvent.RenderMessage();
             log.Properties = logEvent.Properties.ToJson();
             log.DateTime = logEvent.Timestamp.DateTime;
             logs.Add(log);
         }
 
-        await db.AsTenant().InsertableWithAttr(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
+        await db.Insertable(logs).SplitTable().ExecuteReturnSnowflakeIdAsync();
     }
 
     #endregion
