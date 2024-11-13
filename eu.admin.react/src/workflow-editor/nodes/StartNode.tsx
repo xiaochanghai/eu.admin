@@ -6,31 +6,34 @@ import { RightOutlined } from "@ant-design/icons";
 import { ChildNode } from "./ChildNode";
 import { NodeWrap, NodeWrapBox, NodeContent } from "./NormalNode";
 import { EndNode } from "./EndNode";
-import { useEditorEngine } from "../hooks";
+// import { useEditorEngine } from "../hooks";
 import { NodeTitleSchell } from "./NodeTitle";
 import { useNodeMaterial } from "../hooks/useNodeMaterial";
 import { useMaterialUI } from "../hooks/useMaterialUI";
-import { useDispatch } from "@/redux";
+import { useWorkFlow } from "../hooks";
+// import { useDispatch } from "@/redux";
 // import { ErrorTip } from "./ErrorTip";
 
-import { SELECT_NODE } from "@/redux/modules/workflow";
+// import { SELECT_NODE } from "@/redux/modules/workflow";
 export const StartNode = memo(() => {
   //dlc 一个IWorkFlowNode 类型的数据
   const startNode = useStartNode();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
+  const workFlow = useWorkFlow();
   //dlc 国际化转换对象
   const t = useTranslate();
   //dlc 理解是物料配置的右侧面板信息
   const materialUi = useMaterialUI(startNode);
   //dlc 获得 EditorEngine  编辑器引擎的上下文对象 ，我把它看成一个action 提供各种接口使用
-  const store = useEditorEngine();
+  // const store = useEditorEngine();
   //dlc 当前堪称一个节点的信息
   const material = useNodeMaterial(startNode);
 
   const handleClick = useCallback(() => {
     // store?.selectNode(startNode?.id);
-    dispatch(SELECT_NODE(startNode?.id));
-  }, [startNode?.id, store]);
+    // dispatch(SELECT_NODE(startNode?.id));
+    workFlow.selectNode(startNode?.id);
+  }, [startNode?.id, workFlow]);
   return (
     <NodeWrap className="node-wrap start">
       {/* NodeWrapBox 卡片节点DIV */}

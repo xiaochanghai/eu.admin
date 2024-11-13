@@ -4,8 +4,8 @@ import { styled } from "styled-components";
 import { ConditionButtons } from "./ConditionButtons";
 import { ConditionPriority } from "./ConditionPriority";
 import { useTranslate } from "../../react-locales";
-import { useEditorEngine } from "../../hooks";
 import { Input, TitleResponse } from "../NodeTitle";
+import { useWorkFlow } from "../../hooks";
 
 const TitleWrapper = styled.div`
   position: relative;
@@ -30,17 +30,17 @@ export const ConditionNodeTitle = memo((props: { node: IBranchNode; parent: IRou
   const { node, parent, index } = props;
   const [editting, setEditting] = useState(false);
   const [inputValue, setInputValue] = useState(node.name);
+  const workFlow = useWorkFlow();
 
   useEffect(() => {
     setInputValue(node.name);
   }, [node.name]);
 
   const t = useTranslate();
-  const editorStore = useEditorEngine();
 
   const changeName = useCallback(() => {
-    editorStore?.changeCondition(parent, { ...node, name: inputValue });
-  }, [editorStore, inputValue, node, parent]);
+    workFlow.changeCondition(parent, { ...node, name: inputValue });
+  }, [workFlow, inputValue, node, parent]);
 
   const handleNameClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

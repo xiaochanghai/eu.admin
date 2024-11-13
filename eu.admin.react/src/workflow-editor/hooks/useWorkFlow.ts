@@ -10,7 +10,11 @@ import {
   CHANGE_NODE,
   ADD_NODE,
   SELECT_NODE,
-  DELETE_NODE
+  DELETE_NODE,
+  ADD_CONDITION,
+  REMOVE_CONDITION,
+  MODIFY_CONDITION,
+  MODIFY_NODE_NAME
 } from "@/redux/modules/workflow";
 import { useEditorEngine } from ".";
 import { IErrors } from "@/workflow-editor/interfaces/state";
@@ -82,6 +86,9 @@ export function useWorkFlow() {
 
     revalidate();
   }
+  function modifyNodeName(node: any, name: string) {
+    dispatch(MODIFY_NODE_NAME({ node, name }));
+  }
 
   //dlc 取消
   function undo() {
@@ -134,7 +141,9 @@ export function useWorkFlow() {
     }
     backup();
     const newNode: IRouteNode = { ...node, conditionNodeList: node.conditionNodeList.filter(co => co.id !== conditionId) };
-    changeNode(newNode);
+    dispatch(REMOVE_CONDITION(newNode));
+
+    revalidate();
   }
   function resetId(node: IWorkFlowNode) {
     node.id = createUuid();
@@ -159,5 +168,63 @@ export function useWorkFlow() {
     const newNode: IRouteNode = { ...node, conditionNodeList: newList };
     changeNode(newNode);
   }
-  return { validate, addNode, selectNode, changeNode, undo, redo, removeNode, removeCondition, cloneCondition };
+
+  function addCondition(node: IRouteNode, condition: IBranchNode) {
+    const newNode: IRouteNode = { ...node, conditionNodeList: [...node.conditionNodeList, condition] };
+    // changeNode(newNode);
+    backup();
+
+    dispatch(ADD_CONDITION(newNode));
+
+    revalidate();
+  }
+  function changeCondition(node: IRouteNode, condition: IBranchNode) {
+    const newNode: IRouteNode = {
+      ...node,
+      conditionNodeList: node.conditionNodeList.map(con => (con.id === condition.id ? condition : con))
+    };
+    changeNode(newNode);
+  }
+
+  //条件左移一位
+  function transConditionOneStepToLeft(node: IRouteNode, index: number) {
+    if (index > 0) {
+      backup();
+      const newConditions = [...node.conditionNodeList];
+      newConditions[index] = newConditions.splice(index - 1, 1, newConditions[index])[0];
+      const newNode: IRouteNode = { ...node, conditionNodeList: newConditions };
+      dispatch(MODIFY_CONDITION(newNode));
+      revalidate();
+    }
+  }
+
+  //条件右移一位
+  function transConditionOneStepToRight(node: IRouteNode, index: number) {
+    const newConditions = [...node.conditionNodeList];
+    if (index < newConditions.length - 1) {
+      backup();
+      newConditions[index] = newConditions.splice(index + 1, 1, newConditions[index])[0];
+      const newNode: IRouteNode = { ...node, conditionNodeList: newConditions };
+
+      dispatch(MODIFY_CONDITION(newNode));
+      revalidate();
+    }
+  }
+
+  return {
+    validate,
+    addNode,
+    selectNode,
+    changeNode,
+    undo,
+    redo,
+    removeNode,
+    removeCondition,
+    cloneCondition,
+    addCondition,
+    changeCondition,
+    transConditionOneStepToLeft,
+    transConditionOneStepToRight,
+    modifyNodeName
+  };
 }

@@ -43,8 +43,8 @@ export const NodeTitleEditor = memo((props: { value?: string; onChange?: (value?
   );
 
   const handleChange = useCallback((value: any) => {
-    // setInputValue(e.target.value);
-    setInputValue(value);
+    setInputValue(value.target.value);
+    // setInputValue(value);
   }, []);
   return (
     <>

@@ -32,9 +32,12 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
   //   store?.selectNode(undefined);
   // }, [store]);
 
-  const handleNameChange = useCallback(() => {
-    // selectedNode && store?.changeNode({ ...selectedNode, name });
-  }, [store, selectedNode]);
+  const handleNameChange = useCallback(
+    (name?: string) => {
+      selectedNode && workFlow.modifyNodeName(selectedNode, name ?? "");
+    },
+    [store, selectedNode]
+  );
 
   const handleSettingsChange = useCallback(
     (value: any) => {
@@ -43,12 +46,10 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
         selectedNode?.nodeType === "audit" || //办理节点
         selectedNode?.nodeType === "start" || //开始节点
         selectedNode?.nodeType === "notifier" //抄送节点
-      ) {
+      )
         workFlow.changeNode({ ...selectedNode, approverSettings: { auditList: value } });
-        // dispatch(CHANGE_NODE({ ...selectedNode, approverSettings: { auditList: value } }));
-      } else if (selectedNode?.nodeType === "condition") {
-        workFlow.changeNode({ ...selectedNode, conditions: value });
-      }
+      // dispatch(CHANGE_NODE({ ...selectedNode, approverSettings: { auditList: value } }));
+      else if (selectedNode?.nodeType === "condition") workFlow.changeNode({ ...selectedNode, conditions: value }); //条件节点
     },
     [selectedNode]
   );

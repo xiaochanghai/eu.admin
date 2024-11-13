@@ -7,10 +7,10 @@ import { canvasColor } from "../../utils/canvasColor";
 import { AddButton } from "../AddButton";
 import { ChildNode } from "../ChildNode";
 import { useTranslate } from "../../react-locales";
-import { useEditorEngine } from "../../hooks";
 import { ConditionNodeTitle } from "./ConditionNodeTitle";
 import { useMaterialUI } from "../../hooks/useMaterialUI";
 import { ErrorTip } from "../ErrorTip";
+import { useWorkFlow } from "../../hooks";
 
 const ColBox = styled.div`
   display: inline-flex;
@@ -167,27 +167,27 @@ const NodeContent = styled.div`
 export const BranchNode = memo((props: { parent: IRouteNode; node: IBranchNode; index: number; length: number }) => {
   const { parent, node, index, length } = props;
   const t = useTranslate();
-  const editorStore = useEditorEngine();
   const materialUi = useMaterialUI(node);
+  const workFlow = useWorkFlow();
 
   const handleClick = useCallback(() => {
-    editorStore?.selectNode(node?.id);
-  }, [editorStore, node?.id]);
+    workFlow.selectNode(node?.id);
+  }, [workFlow, node?.id]);
 
-  const hanldeMoveLeft = useCallback(
+  const moveLeft = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      node.id && editorStore?.transConditionOneStepToLeft(parent, index);
+      node.id && workFlow.transConditionOneStepToLeft(parent, index);
     },
-    [editorStore, index, node.id, parent]
+    [workFlow, index, node.id, parent]
   );
 
-  const handleMoveRight = useCallback(
+  const moveRight = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      node.id && editorStore?.transConditionOneStepToRight(parent, index);
+      node.id && workFlow.transConditionOneStepToRight(parent, index);
     },
-    [editorStore, index, node.id, parent]
+    [workFlow, index, node.id, parent]
   );
 
   return (
@@ -196,14 +196,14 @@ export const BranchNode = memo((props: { parent: IRouteNode; node: IBranchNode; 
         <BranchNodeBox className="condition-node-box" draggable={false}>
           <AutoJudge className="auto-judge" draggable={false} onClick={handleClick}>
             {index !== 0 && (
-              <SortHandler className="sort-handler left" onClick={hanldeMoveLeft}>
+              <SortHandler className="sort-handler left" onClick={moveLeft}>
                 &lt;
               </SortHandler>
             )}
             <ConditionNodeTitle node={node} parent={parent} index={index} />
             <NodeContent className="content">{materialUi?.viewContent && materialUi?.viewContent(node, { t })}</NodeContent>
             {index !== length - 1 && (
-              <SortHandler className="sort-handler right" onClick={handleMoveRight}>
+              <SortHandler className="sort-handler right" onClick={moveRight}>
                 &gt;
               </SortHandler>
             )}

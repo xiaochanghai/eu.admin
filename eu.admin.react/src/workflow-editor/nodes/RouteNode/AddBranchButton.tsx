@@ -3,8 +3,8 @@ import styled from "styled-components";
 import { useTranslate } from "../../react-locales";
 import { nodeColor } from "../../utils/nodeColor";
 import { IRouteNode, NodeType } from "../../interfaces";
-import { useEditorEngine } from "../../hooks";
 import { createUuid } from "../../utils/create-uuid";
+import { useWorkFlow } from "../../hooks";
 
 const AddBranch = styled.button`
   border: none;
@@ -45,17 +45,18 @@ const AddBranch = styled.button`
 export const AddBranchButton = memo((props: { node: IRouteNode }) => {
   const { node } = props;
   const t = useTranslate();
-  const editorStore = useEditorEngine();
+  const workFlow = useWorkFlow();
 
   const handleClick = useCallback(() => {
     const newId = createUuid();
-    editorStore?.addCondition(node, {
+    // workFlow.addCondition(node, {
+    workFlow.addCondition(node, {
       id: newId,
       nodeType: NodeType.condition,
       name: t("condition") + (node.conditionNodeList.length + 1)
     });
-    editorStore?.selectNode(newId);
-  }, [editorStore, node, t]);
+    workFlow.selectNode(newId);
+  }, [workFlow, node, t]);
 
   return <AddBranch onClick={handleClick}>{t("addCondition")}</AddBranch>;
 });

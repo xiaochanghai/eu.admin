@@ -3,6 +3,7 @@ import { ResPage } from "@/api/interface";
 import { RouteObjectType } from "@/routers/interface";
 import { RequestData } from "@ant-design/pro-components";
 import { v4 as uuid4 } from "uuid";
+import { ActionType } from "@/workflow-editor/actions";
 
 const mode = import.meta.env.VITE_ROUTER_MODE;
 
@@ -227,22 +228,52 @@ export function randomStr(length = 32) {
   }
   return result;
 }
-export function modifyWorkFlowStartNode(obj: any, targetKey: string, newValue: any, parentId: any): void {
-  if (obj["nodeType"] == "route" || obj["nodeType"] == "condition") {
-    if (obj["id"] == parentId) {
+export function modifyWorkFlowStartNode(action: ActionType, obj: any, newValue: any, parentId: any): void {
+  if (action == ActionType.ADD_NODE) {
+    if (obj["nodeType"] == "route" || obj["nodeType"] == "condition") {
+      if (obj["id"] == parentId) {
+        obj["childNode"] = newValue;
+      } else if (obj.conditionNodeList)
+        obj.conditionNodeList.map((con: any) => {
+          if (con["id"] == parentId) con["childNode"] = newValue;
+          else if (con["childNode"]) modifyWorkFlowStartNode(action, con["childNode"], newValue, parentId);
+        });
+    } else if (obj["id"] == parentId) {
       obj["childNode"] = newValue;
-    } else if (obj.conditionNodeList)
-      obj.conditionNodeList.map((con: any) => {
-        if (con["id"] == parentId) con["childNode"] = newValue;
-        else if (con["childNode"]) modifyWorkFlowStartNode(con["childNode"], targetKey, newValue, parentId);
-      });
-  } else if (obj["id"] == parentId) {
-    obj["childNode"] = newValue;
-  } else {
-    if (obj["childNode"]) modifyWorkFlowStartNode(obj["childNode"], targetKey, newValue, parentId);
+    } else {
+      if (obj["childNode"]) modifyWorkFlowStartNode(action, obj["childNode"], newValue, parentId);
+    }
+  } else if (action == ActionType.ADD_CONDITION) {
+    if (obj["id"] == parentId) {
+      obj["conditionNodeList"] = [...newValue.conditionNodeList];
+    } else {
+      if (obj["childNode"]) modifyWorkFlowStartNode(action, obj["childNode"], newValue, parentId);
+    }
   }
 }
-
+export function modifyNodeName(obj: any, newValue: any, node: any): void {
+  if (node.nodeType === "condition") {
+    //条件节点
+    if (obj["conditionNodeList"])
+      obj["conditionNodeList"] = obj.conditionNodeList.map((con: any) => (con.id === node.id ? { ...con, name: newValue } : con));
+    else if (obj["childNode"]) modifyNodeName(obj["childNode"], newValue, node);
+    // if (obj["id"] == node.id) {
+    //   if (obj["conditionNodeList"])
+    //     obj["conditionNodeList"] = node.conditionNodeList.map((con: any) =>
+    //       con.id === node.id ? { ...node, name: newValue } : con
+    //     );
+    //   // obj["name"] = newValue;
+    // } else {
+    //   if (obj["childNode"]) modifyNodeName(obj["childNode"], newValue, node);
+    // }
+  } else {
+    if (obj["id"] == node.id) {
+      obj["name"] = newValue;
+    } else {
+      if (obj["childNode"]) modifyNodeName(obj["childNode"], newValue, node);
+    }
+  }
+}
 export function createUuid() {
   return uuid4();
 }

@@ -8,11 +8,12 @@ import { canvasColor } from "../utils/canvasColor";
 import { lineColor } from "../utils/lineColor";
 import { nodeColor } from "../utils/nodeColor";
 import { useTranslate } from "../react-locales";
-import { useEditorEngine } from "../hooks";
+// import { useEditorEngine } from "../hooks";
 import { NodeTitle } from "./NodeTitle";
 import { useNodeMaterial } from "../hooks/useNodeMaterial";
 import { useMaterialUI } from "../hooks/useMaterialUI";
 import { ErrorTip } from "./ErrorTip";
+import { useWorkFlow } from "../hooks";
 
 export const NodeWrap = styled.div`
   display: flex;
@@ -117,11 +118,12 @@ export const NormalNode = memo((props: { node: IWorkFlowNode }) => {
   const t = useTranslate();
   const material = useNodeMaterial(node);
   const materialUi = useMaterialUI(node);
-  const store = useEditorEngine();
+  // const store = useEditorEngine();
+  const workFlow = useWorkFlow();
 
   const handleClick = useCallback(() => {
-    store?.selectNode(node?.id);
-  }, [node?.id, store]);
+    workFlow.selectNode(node?.id);
+  }, [node?.id, workFlow]);
 
   return (
     //就是一个div
