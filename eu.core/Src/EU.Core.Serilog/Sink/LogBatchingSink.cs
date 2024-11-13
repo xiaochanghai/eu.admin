@@ -14,8 +14,8 @@ public class LogBatchingSink : IBatchedLogEventSink
     {
         var sugar = App.GetService<ISqlSugarClient>(false);
 
-        await WriteSqlLog(sugar, batch.FilterSqlLog());
-        await WriteLogs(sugar, batch.FilterRemoveOtherLog());
+        //await WriteSqlLog(sugar, batch.FilterSqlLog());
+        //await WriteLogs(sugar, batch.FilterRemoveOtherLog());
     }
 
     public Task OnEmptyBatchAsync()
