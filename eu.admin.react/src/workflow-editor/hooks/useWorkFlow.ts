@@ -210,7 +210,27 @@ export function useWorkFlow() {
       revalidate();
     }
   }
-
+  function getNode(nodeId: string, parentNode?: IWorkFlowNode): IWorkFlowNode | undefined {
+    const startNode = parentNode || store.getState().workflow.startNode;
+    if (startNode?.id === nodeId && nodeId) {
+      return startNode;
+    }
+    if (startNode?.childNode) {
+      const foundNode = getNode(nodeId, startNode?.childNode);
+      if (foundNode) {
+        return foundNode;
+      }
+    }
+    if (startNode?.nodeType === NodeType.route) {
+      for (const conditionNode of (startNode as IRouteNode).conditionNodeList) {
+        const foundNode = getNode(nodeId, conditionNode);
+        if (foundNode) {
+          return foundNode;
+        }
+      }
+    }
+    return undefined;
+  }
   return {
     validate,
     addNode,
@@ -225,6 +245,7 @@ export function useWorkFlow() {
     changeCondition,
     transConditionOneStepToLeft,
     transConditionOneStepToRight,
-    modifyNodeName
+    modifyNodeName,
+    getNode
   };
 }

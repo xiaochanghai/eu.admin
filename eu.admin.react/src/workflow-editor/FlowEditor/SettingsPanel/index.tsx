@@ -3,7 +3,7 @@
 // import { Footer } from "./Footer";
 import { memo, useCallback } from "react";
 import { NodeTitle } from "./NodeTitle";
-import { useEditorEngine } from "../../hooks";
+// import { useEditorEngine } from "../../hooks";
 import { styled } from "styled-components";
 import { useMaterialUI } from "../../hooks/useMaterialUI";
 import { FormVo } from "@/api/Form";
@@ -17,12 +17,12 @@ const Content = styled.div`
   flex-flow: column;
 `;
 export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
-  const store = useEditorEngine();
+  // const store = useEditorEngine();
   const dispatch = useDispatch();
   const workFlow = useWorkFlow();
   // const workflow = useSelector((state: RootState) => state.workflow);
   const selectedId = useSelector((state: RootState) => state.workflow.selectedId);
-  const selectedNode = selectedId ? store?.getNode(selectedId) : undefined;
+  const selectedNode = selectedId ? workFlow.getNode(selectedId) : undefined;
 
   const materialUi = useMaterialUI(selectedNode);
   const handelClose = () => {
@@ -36,7 +36,7 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
     (name?: string) => {
       selectedNode && workFlow.modifyNodeName(selectedNode, name ?? "");
     },
-    [store, selectedNode]
+    [workFlow, selectedNode]
   );
 
   const handleSettingsChange = useCallback(
