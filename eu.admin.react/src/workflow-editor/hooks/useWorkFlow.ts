@@ -231,6 +231,10 @@ export function useWorkFlow() {
     }
     return undefined;
   }
+  function getSelectedId() {
+    debugger;
+    return store.getState().workflow.selectedId;
+  }
   return {
     validate,
     addNode,
@@ -246,6 +250,7 @@ export function useWorkFlow() {
     transConditionOneStepToLeft,
     transConditionOneStepToRight,
     modifyNodeName,
-    getNode
+    getNode,
+    getSelectedId
   };
 }

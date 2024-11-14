@@ -1,15 +1,10 @@
-// import { CloseOutlined } from "@ant-design/icons";
-// import { Drawer } from "antd";
-// import { Footer } from "./Footer";
 import { memo, useCallback } from "react";
 import { NodeTitle } from "./NodeTitle";
-// import { useEditorEngine } from "../../hooks";
 import { styled } from "styled-components";
 import { useMaterialUI } from "../../hooks/useMaterialUI";
 import { FormVo } from "@/api/Form";
 import { Drawer } from "antd";
-import { useDispatch, RootState, useSelector } from "@/redux";
-import { SELECT_NODE } from "@/redux/modules/workflow";
+import { RootState, useSelector } from "@/redux";
 import { useWorkFlow } from "@/workflow-editor/hooks";
 
 const Content = styled.div`
@@ -17,20 +12,14 @@ const Content = styled.div`
   flex-flow: column;
 `;
 export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
-  // const store = useEditorEngine();
-  const dispatch = useDispatch();
   const workFlow = useWorkFlow();
-  // const workflow = useSelector((state: RootState) => state.workflow);
   const selectedId = useSelector((state: RootState) => state.workflow.selectedId);
   const selectedNode = selectedId ? workFlow.getNode(selectedId) : undefined;
 
   const materialUi = useMaterialUI(selectedNode);
   const handelClose = () => {
-    dispatch(SELECT_NODE(null));
+    workFlow.selectNode(undefined);
   };
-  // const handleConfirm = useCallback(() => {
-  //   store?.selectNode(undefined);
-  // }, [store]);
 
   const handleNameChange = useCallback(
     (name?: string) => {
