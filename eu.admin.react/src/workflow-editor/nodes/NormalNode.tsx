@@ -8,7 +8,6 @@ import { canvasColor } from "../utils/canvasColor";
 import { lineColor } from "../utils/lineColor";
 import { nodeColor } from "../utils/nodeColor";
 import { useTranslate } from "../react-locales";
-// import { useEditorEngine } from "../hooks";
 import { NodeTitle } from "./NodeTitle";
 import { useNodeMaterial } from "../hooks/useNodeMaterial";
 import { useMaterialUI } from "../hooks/useMaterialUI";
@@ -118,7 +117,6 @@ export const NormalNode = memo((props: { node: IWorkFlowNode }) => {
   const t = useTranslate();
   const material = useNodeMaterial(node);
   const materialUi = useMaterialUI(node);
-  // const store = useEditorEngine();
   const workFlow = useWorkFlow();
 
   const handleClick = useCallback(() => {

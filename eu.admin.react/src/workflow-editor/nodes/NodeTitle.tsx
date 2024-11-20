@@ -3,7 +3,6 @@ import { styled } from "styled-components";
 import { IWorkFlowNode } from "../interfaces";
 import { CloseButton } from "./CloseButton";
 import { INodeMaterial } from "../interfaces/material";
-// import { useEditorEngine } from "../hooks";
 import { useWorkFlow } from "../hooks";
 
 export const NodeTitleSchell = styled.div`
@@ -65,7 +64,6 @@ export const NodeTitle = memo((props: { node: IWorkFlowNode; material?: INodeMat
   const [editting, setEditting] = useState(false);
   const [inputValue, setInputValue] = useState(node.name);
 
-  // const editorStore = useEditorEngine();
   const workFlow = useWorkFlow();
 
   useEffect(() => {
@@ -73,7 +71,6 @@ export const NodeTitle = memo((props: { node: IWorkFlowNode; material?: INodeMat
   }, [node.name]);
 
   const changeName = useCallback(() => {
-    // editorStore?.changeNode({ ...node, name: inputValue });
     workFlow.modifyNodeName(node, inputValue ?? "");
   }, [workFlow, inputValue, node]);
 

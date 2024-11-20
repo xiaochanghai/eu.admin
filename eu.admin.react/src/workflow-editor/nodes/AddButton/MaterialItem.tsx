@@ -2,7 +2,6 @@ import { memo, useCallback } from "react";
 import { INodeMaterial } from "../../interfaces/material";
 import { useTranslate } from "../../react-locales";
 import { styled } from "styled-components";
-// import { useEditorEngine } from "../../hooks";
 import { createUuid } from "../../utils/create-uuid";
 import { useWorkFlow } from "@/workflow-editor/hooks";
 // import { ActionType, AddNodeAction } from "@/workflow-editor/actions";

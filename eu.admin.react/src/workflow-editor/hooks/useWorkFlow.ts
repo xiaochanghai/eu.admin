@@ -232,7 +232,6 @@ export function useWorkFlow() {
     return undefined;
   }
   function getSelectedId() {
-    debugger;
     return store.getState().workflow.selectedId;
   }
   return {

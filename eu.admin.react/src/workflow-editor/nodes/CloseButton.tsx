@@ -1,6 +1,4 @@
 import { useCallback } from "react";
-// import { useEditorEngine } from "../hooks";
-// import { CloseOutlined } from "@ant-design/icons"
 import { styled } from "styled-components";
 import { Button } from "antd";
 import { Icon } from "@/components/Icon";
@@ -18,7 +16,6 @@ const CloseStyledButton = styled(Button)`
 `;
 export const CloseButton = (props: { nodeId?: string }) => {
   const { nodeId } = props;
-  // const store = useEditorEngine();
   const workFlow = useWorkFlow();
 
   const handleClose = useCallback(() => {
