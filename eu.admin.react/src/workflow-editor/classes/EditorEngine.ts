@@ -42,9 +42,9 @@ export class EditorEngine {
     this.state = this.store.getState().workflow;
   }
 
-  validate = () => {
-    return true;
-  };
+  // validate = () => {
+  //   return true;
+  // };
 
   backup = () => {
     const list = [...this.state.undoList, { startNode: this.state.startNode, validated: this.state.validated }];

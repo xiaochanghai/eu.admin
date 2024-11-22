@@ -1,9 +1,10 @@
 import { memo, useState } from "react";
-import { IWorkFlowNode, useEditorEngine } from "../../workflow-editor";
+import { IWorkFlowNode } from "../../workflow-editor";
 import { useTranslate } from "../../workflow-editor/react-locales";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { styled } from "styled-components";
 import { Modal } from "antd";
+import { useWorkFlow } from "@/workflow-editor/hooks";
 // import { notification as Notification } from "@/hooks/useMessage";
 import { useUpdateEffect } from "ahooks";
 const Title = styled.div`
@@ -49,10 +50,14 @@ export interface IErrorItem {
 export const PublishButton = memo(
   ({ onValidate, iWorkFlowNode }: { iWorkFlowNode?: IWorkFlowNode; onValidate?: (result: boolean) => void }) => {
     const [errors, setErrors] = useState<IErrorItem[]>();
+    const workFlow = useWorkFlow();
+
+    const t = useTranslate();
+    // const editorStore = useEditorEngine();
 
     useUpdateEffect(() => {
       if (iWorkFlowNode && iWorkFlowNode.childNode) {
-        const result = editorStore?.validate();
+        const result = workFlow.validate();
         if (result !== true && result !== undefined) {
           onValidate?.(false);
         } else {
@@ -60,9 +65,6 @@ export const PublishButton = memo(
         }
       }
     }, [iWorkFlowNode]);
-
-    const t = useTranslate();
-    const editorStore = useEditorEngine();
 
     // const handleValidate = () => {
     //   const result = editorStore?.validate();

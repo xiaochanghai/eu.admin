@@ -1,14 +1,14 @@
 import { memo } from "react";
 import React from "react";
 // import { Avatar, Space } from "antd";
-// import { Icon } from "@/components/Icon";
+import { Icon } from "@/components/Icon";
 import MemberSelect from "@/workflow-editor/components/MemberSelect";
 // import { useTranslate } from "../../workflow-editor/react-locales";
 // import { VF } from "@src/dsl/VF";
 // import FormPage from "@src/pages/common/formPage";
 // import { IApproverSettings } from "@/workflow-editor/classes/vlife";
 import { FormVo } from "@/api/Form";
-
+import { Switch } from "antd";
 /**
  * // 审批节点信息
 export interface AuditInfo extends IModel{
@@ -45,49 +45,20 @@ export const StartPanel = memo((props: { value?: any; formVo?: FormVo; onChange?
         }}
         showUser={true}
       />
-      {/* <Space size={16} wrap>
-        <Avatar>U</Avatar>
-        <Avatar>U</Avatar>
-        <Avatar>U</Avatar>
-        <Avatar>U</Avatar>
-        <Icon name="PlusOutlined" className="icon" />
-      </Space> */}
+      <div className="w-full flex  items-center">
+        <div className="w-10 pt-10">
+          <Icon name="user-group font-size30 pr-5" />
+        </div>
+        <div className="flex-1 pt-10">
+          <div className="flex justify-between">
+            <span className="block font-bold justify-start">流程撤回</span>
+            <div className="justify-end semi-switch">
+              <Switch />
+            </div>
+          </div>
+          <div className="font-thin text-gray-400 pt-5">节点负责人可对已处理过的待办数据进行撤回</div>
+        </div>
+      </div>
     </>
-
-    // <FormPage
-    //   terse
-    //   fontBold
-    //   type="iApproverSettings"
-    //   formData={props.value}
-    //   onDataChange={props.onChange}
-    //   reaction={[
-    //     VF.then("nodeType").value("start"),
-    //     VF.then(
-    //       "nodeType",
-    //       "joinType",
-    //       "emptyPass",
-    //       "emptyUserId",
-    //       "handleType",
-    //       "transfer",
-    //       "addSign",
-    //       "rollback",
-    //       "rejected",
-    //       "auditLevel",
-    //       "fields"
-    //     ).hide(),
-    //     VF.then("entityType").value(props?.formVo?.entityType).hide(),
-    //     VF.field("handleType").default("general"),
-    //     VF.field("handleType").eq("general").then("auditList").show().title("流程发起人")
-
-    //     // VF.then("recall").title("111111111"),
-    //     // VF.field("fields").default(
-    //     //   props?.formVo?.fields
-    //     //     .filter((f) => f.x_hidden !== true)
-    //     //     .map((f) => {
-    //     //       return { title: f.title, fieldName: f.fieldName };
-    //     //     })
-    //     // ),
-    //   ]}
-    // />
   );
 });
