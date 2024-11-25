@@ -18,9 +18,8 @@ import {
 import { ModuleInfoBeforeAction } from "@/api/interface/index";
 import { Icon } from "@/components/Icon";
 import { RecordLogData } from "@/api/interface/index";
-import { useDispatch } from "@/redux";
 import { setTableParam, setSearchVisible, setModuleInfo } from "@/redux/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { useDispatch, RootState, useSelector } from "@/redux";
 import ComboGrid from "@/components/ComBoGrid";
 import UploadExcel from "@/components/UploadExcel";
 
