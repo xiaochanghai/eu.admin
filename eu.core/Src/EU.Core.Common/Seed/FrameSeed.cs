@@ -294,7 +294,6 @@ public class FrameSeed
 /// <summary>
 /// " + TableCnName + @"(Controller)
 /// </summary>
-[Route(""api/[controller]"")]
 [ApiController, GlobalActionFilter]
 [Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_" + groupName + @")]
 public class {ClassName}Controller : BaseController<I{ClassName}Services, {ClassName}, {ClassName}Dto, Insert{ClassName}Input, Edit{ClassName}Input>
