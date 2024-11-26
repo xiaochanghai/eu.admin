@@ -21,7 +21,7 @@ namespace EU.Core.Api.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController, GlobalActionFilter]
-[Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_SM)]
+[Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_BD)]
 public class MaterialController : BaseController<IBdMaterialServices, BdMaterial, BdMaterialDto, InsertBdMaterialInput, EditBdMaterialInput>
 {
     public MaterialController(IBdMaterialServices service) : base(service)
