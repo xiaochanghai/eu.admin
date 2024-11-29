@@ -11,7 +11,7 @@ namespace EU.Core.Controllers;
 /// <typeparam name="TEntityDto"></typeparam>
 /// <typeparam name="TInsertDto"></typeparam>
 /// <typeparam name="TEditDto"></typeparam>
-[Route("api/[controller]")]
+[Route("api/[controller]/[action]")]
 public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEditDto> : Controller
 {
     #region 初始化
