@@ -156,7 +156,7 @@ const SmProTable: React.FC<any> = props => {
           dataIndex: "option",
           fixed: "left",
           valueType: "option",
-          width: 150,
+          width: 100,
           align: "center",
           // render: (text, record, _, action) => component(text, record, _, action)
 
