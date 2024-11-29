@@ -4,7 +4,7 @@ import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
 import http from "@/api";
 // import styles from "../index.less";
-import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
+import { Icon } from "@/components/Icon";
 // import { useNavigate } from "react-router-dom";
 let flag = true;
 let baseURL = import.meta.env.VITE_API_URL as string;
@@ -125,7 +125,7 @@ const UploadImage: React.FC<any> = props => {
                 <img src={imageUrl} alt={imageUrl} style={{ width: "100%" }} />
               ) : (
                 <div>
-                  {loading ? <LoadingOutlined style={{ fontSize: 24 }} /> : <PlusOutlined style={{ fontSize: 24 }} />}
+                  <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} className="font-size24" />
                   <div className="ant-upload-text">图片上传</div>
                 </div>
               )}
@@ -156,7 +156,7 @@ const UploadImage: React.FC<any> = props => {
                       }}
                     >
                       <div>
-                        {loading ? <LoadingOutlined style={{ fontSize: 24 }} /> : <PlusOutlined style={{ fontSize: 24 }} />}
+                        <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} className="font-size24" />
                         <div className="ant-upload-text">图片上传</div>
                       </div>
                     </Upload>

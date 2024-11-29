@@ -1,9 +1,9 @@
 import { Drawer, Divider, Switch, Popover, InputNumber, Tooltip } from "antd";
 import { setGlobalState } from "@/redux/modules/global";
 import { RootState, useDispatch, useSelector } from "@/redux";
-import { LayoutOutlined, FireOutlined, SettingOutlined, CheckCircleFilled, QuestionCircleOutlined } from "@ant-design/icons";
 import ColorPicker from "./components/ColorPicker";
 import "./index.less";
+import { Icon } from "@/components/Icon";
 
 const ThemeDrawer: React.FC = () => {
   const dispatch = useDispatch();
@@ -43,7 +43,7 @@ const ThemeDrawer: React.FC = () => {
     >
       {/* layout switching */}
       <Divider className="divider">
-        <LayoutOutlined />
+        <Icon name="LayoutOutlined" />
         布局样式
       </Divider>
       <div className="layout-box">
@@ -57,7 +57,7 @@ const ThemeDrawer: React.FC = () => {
               <div className="layout-light"></div>
               <div className="layout-content"></div>
             </div>
-            {layout === "vertical" && <CheckCircleFilled />}
+            {layout === "vertical" && <Icon name="CheckCircleFilled" />}
           </div>
         </Tooltip>
         <Tooltip placement="top" title="经典" arrow={true} mouseEnterDelay={0.2}>
@@ -70,7 +70,7 @@ const ThemeDrawer: React.FC = () => {
               <div className="layout-light"></div>
               <div className="layout-content"></div>
             </div>
-            {layout === "classic" && <CheckCircleFilled />}
+            {layout === "classic" && <Icon name="CheckCircleFilled" />}
           </div>
         </Tooltip>
         <Tooltip placement="top" title="横向" arrow={true} mouseEnterDelay={0.2}>
@@ -80,7 +80,7 @@ const ThemeDrawer: React.FC = () => {
           >
             <div className="layout-dark"></div>
             <div className="layout-content"></div>
-            {layout === "transverse" && <CheckCircleFilled />}
+            {layout === "transverse" && <Icon name="CheckCircleFilled" />}
           </div>
         </Tooltip>
         <Tooltip placement="top" title="分栏" arrow={true} mouseEnterDelay={0.2}>
@@ -91,7 +91,7 @@ const ThemeDrawer: React.FC = () => {
             <div className="layout-dark"></div>
             <div className="layout-light"></div>
             <div className="layout-content"></div>
-            {layout === "columns" && <CheckCircleFilled />}
+            {layout === "columns" && <Icon name="CheckCircleFilled" />}
           </div>
         </Tooltip>
       </div>
@@ -99,7 +99,9 @@ const ThemeDrawer: React.FC = () => {
         <span>
           菜单分割
           <Tooltip title="经典模式下生效">
-            <QuestionCircleOutlined />
+            <span>
+              <Icon name="QuestionCircleOutlined" />
+            </span>
           </Tooltip>
         </span>
         <Switch
@@ -112,7 +114,9 @@ const ThemeDrawer: React.FC = () => {
         <span>
           侧边栏反转色
           <Tooltip title="侧边栏颜色变为深色模式">
-            <QuestionCircleOutlined />
+            <span>
+              <Icon name="QuestionCircleOutlined" />
+            </span>
           </Tooltip>
         </span>
         <Switch checked={siderInverted} onChange={value => dispatch(setGlobalState({ key: "siderInverted", value }))} />
@@ -121,7 +125,9 @@ const ThemeDrawer: React.FC = () => {
         <span>
           头部反转色
           <Tooltip title="头部颜色变为深色模式">
-            <QuestionCircleOutlined />
+            <span>
+              <Icon name="QuestionCircleOutlined" />
+            </span>
           </Tooltip>
         </span>
         <Switch checked={headerInverted} onChange={value => dispatch(setGlobalState({ key: "headerInverted", value }))} />
@@ -129,7 +135,7 @@ const ThemeDrawer: React.FC = () => {
 
       {/* theme settings */}
       <Divider className="divider">
-        <FireOutlined />
+        <Icon name="FireOutlined" />
         全局主题
       </Divider>
       <div className="theme-item">
@@ -193,7 +199,7 @@ const ThemeDrawer: React.FC = () => {
 
       {/* interface settings */}
       <Divider className="divider">
-        <SettingOutlined />
+        <Icon name="SettingOutlined" />
         界面设置
       </Divider>
       <div className="theme-item">

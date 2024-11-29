@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, CSSProperties } from "react";
+import React, { useContext, useEffect } from "react";
 import { Dropdown, Tabs, MenuProps } from "antd";
 import { CSS } from "@dnd-kit/utilities";
 import { useUpdateEffect } from "ahooks";
@@ -16,15 +16,6 @@ import { setGlobalState } from "@/redux/modules/global";
 import { RefreshContext } from "@/context/Refresh";
 import { HOME_URL } from "@/config";
 import "./index.less";
-import {
-  ReloadOutlined,
-  ExpandOutlined,
-  CloseCircleOutlined,
-  ColumnWidthOutlined,
-  SwitcherOutlined,
-  VerticalLeftOutlined,
-  VerticalRightOutlined
-} from "@ant-design/icons";
 
 type TargetKey = string | React.MouseEvent<Element, MouseEvent> | React.KeyboardEvent<Element>;
 
@@ -111,20 +102,21 @@ const LayoutTabs: React.FC = () => {
     // setTimeout(() => {
     // }, 6000);
   };
-  const style: CSSProperties = { fontSize: "14px" };
-
+  const getIcon = (type: string) => {
+    return <Icon name={type} className="font-size14" />;
+  };
   const getMenuItems = (item: any, index: any) => {
     const opts: MenuProps["items"] = [
       {
         key: "1",
         label: <span>{t("tabs.refresh")}</span>,
-        icon: <ReloadOutlined style={style} />,
+        icon: getIcon("ReloadOutlined"),
         onClick: refreshCurrentPage
       },
       {
         key: "2",
         label: <span>{t("tabs.maximize")}</span>,
-        icon: <ExpandOutlined style={style} />,
+        icon: getIcon("ExpandOutlined"),
         onClick: () => dispatch(setGlobalState({ key: "maximize", value: true }))
       },
       {
@@ -133,21 +125,21 @@ const LayoutTabs: React.FC = () => {
       {
         key: "3",
         label: <span>{t("tabs.closeCurrent")}</span>,
-        icon: <CloseCircleOutlined style={style} />,
+        icon: getIcon("CloseCircleOutlined"),
         onClick: () => dispatch(removeTab({ path, isCurrent: true })),
         disabled: !item.closable ? true : false
       },
       {
         key: "4",
         label: <span>{t("tabs.closeLeft")}</span>,
-        icon: <VerticalRightOutlined style={style} />,
+        icon: getIcon("VerticalRightOutlined"),
         onClick: () => dispatch(closeTabsOnSide({ path, type: "left" })),
         disabled: index == 0 ? true : false
       },
       {
         key: "5",
         label: <span>{t("tabs.closeRight")}</span>,
-        icon: <VerticalLeftOutlined style={style} />,
+        icon: getIcon("VerticalLeftOutlined"),
         onClick: () => dispatch(closeTabsOnSide({ path, type: "right" })),
         disabled: index + 1 == tabsList.length ? true : false
       },
@@ -157,13 +149,13 @@ const LayoutTabs: React.FC = () => {
       {
         key: "6",
         label: <span>{t("tabs.closeOther")}</span>,
-        icon: <ColumnWidthOutlined style={style} />,
+        icon: getIcon("ColumnWidthOutlined"),
         onClick: () => dispatch(closeMultipleTab({ path }))
       },
       {
         key: "7",
         label: <span>{t("tabs.closeAll")}</span>,
-        icon: <SwitcherOutlined style={style} />,
+        icon: getIcon("SwitcherOutlined"),
         onClick: () => {
           dispatch(closeMultipleTab({}));
           navigate(HOME_URL);

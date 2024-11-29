@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Button, Tabs, Input, Card, Form, Row, Col, Space, Modal, Skeleton } from "antd";
-import { SaveOutlined, RollbackOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { getModuleFullSql, add, update, getModuleSqlInfo } from "@/api/modules/module";
 import TableList from "../../common/components/TableList";
 import { message } from "@/hooks/useMessage";
+import { Icon } from "@/components/Icon";
 
 const { TextArea } = Input;
 const FormItem = Form.Item;
@@ -84,11 +84,11 @@ const SqlEdit: React.FC<any> = props => {
               <Button type="default" onClick={() => Index.changePage(<TableList />)}>生成当前XML</Button>
               <Button type="default" onClick={() => Index.changePage(<TableList />)}>生成全部XML</Button> */}
           <Button type="default" onClick={getFullSql}>
-            <InfoCircleOutlined />
+            <Icon name="InfoCircleOutlined" />
             查看完整SQL
           </Button>
           <Button type="default" onClick={() => changePage("FormIndex")}>
-            <RollbackOutlined />
+            <Icon name="RollbackOutlined" />
           </Button>
         </Space>
         <div style={{ height: 10 }}></div>
@@ -289,20 +289,16 @@ const SqlEdit: React.FC<any> = props => {
             <Space style={{ display: "flex", justifyContent: "center" }}>
               {!IsView ? (
                 <Button type="primary" htmlType="submit">
-                  <SaveOutlined />
+                  <Icon name="SaveOutlined" />
                   保存
                 </Button>
-              ) : (
-                ""
-              )}
+              ) : null}
               <Button type="default" onClick={() => changePage("FormIndex")}>
-                <RollbackOutlined />
+                <Icon name="RollbackOutlined" />
                 返回
               </Button>
             </Space>
-          ) : (
-            ""
-          )}
+          ) : null}
         </Card>
       </Form>
     </>

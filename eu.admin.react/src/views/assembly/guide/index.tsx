@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { type TourProps, Button, Divider, Space, Tour, Alert, Typography, Card } from "antd";
-import { EllipsisOutlined } from "@ant-design/icons";
+import { Icon } from "@/components/Icon";
 import illustration01 from "@/assets/images/illustration01.svg";
 import illustration02 from "@/assets/images/illustration02.svg";
 import illustration03 from "@/assets/images/illustration03.svg";
@@ -64,7 +64,7 @@ const GuidePage: React.FC = () => {
         <Button ref={ref2} type="primary">
           Save
         </Button>
-        <Button ref={ref3} icon={<EllipsisOutlined />} />
+        <Button ref={ref3} icon={<Icon name="EllipsisOutlined" />} />
       </Space>
 
       <Tour open={open} onClose={() => setOpen(false)} steps={steps} />

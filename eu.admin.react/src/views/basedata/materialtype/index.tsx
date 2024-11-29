@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Tree, Tabs, Space, Button, Card, Popconfirm } from "antd";
-import { DownOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Icon } from "@/components/Icon";
 import { useDispatch } from "@/redux";
 import { RootState, useSelector } from "@/redux";
 // import TableList from "../../system/common/components/TableList";
@@ -74,7 +74,7 @@ const ImportTemplate: React.FC<any> = () => {
                     setTabKey("1");
                   }}
                 >
-                  <PlusOutlined /> 新建
+                  <Icon name="PlusOutlined" /> 新建
                 </Button>
                 {Id ? (
                   <>
@@ -103,7 +103,7 @@ const ImportTemplate: React.FC<any> = () => {
                       cancelText="取消"
                     >
                       <Button danger>
-                        <DeleteOutlined /> 删除
+                        <Icon name="DeleteOutlined" /> 删除
                       </Button>
                     </Popconfirm>
                     {/* <Button
@@ -127,7 +127,13 @@ const ImportTemplate: React.FC<any> = () => {
                 <legend style={{ width: "auto", fontSize: 14, border: 0, paddingLeft: 10, paddingRight: 10, color: "#333" }}>
                   物料类型树
                 </legend>
-                <Tree showLine switcherIcon={<DownOutlined />} defaultExpandAll={true} onSelect={onSelect} treeData={treeData} />
+                <Tree
+                  showLine
+                  switcherIcon={<Icon name="DownOutlined" />}
+                  defaultExpandAll={true}
+                  onSelect={onSelect}
+                  treeData={treeData}
+                />
               </fieldset>
             </>
           ) : null}

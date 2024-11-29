@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import { HomeOutlined, UserOutlined, FormOutlined, LoginOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { type MenuProps, Dropdown, Avatar } from "antd";
 import { HOME_URL, LOGIN_URL } from "@/config";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,8 @@ import { RootState, useSelector } from "@/redux";
 import InfoModal, { InfoModalRef } from "./InfoModal";
 import PasswordModal, { PasswordModalRef } from "./PasswordModal";
 import avatar from "@/assets/images/avatar.png";
+import { Icon } from "@/components/Icon";
+
 let baseURL = import.meta.env.VITE_API_URL as string;
 let VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
 
@@ -26,7 +27,7 @@ const AvatarIcon: React.FC = () => {
   const logout = () => {
     modal.confirm({
       title: "温馨提示 🧡",
-      icon: <ExclamationCircleOutlined />,
+      icon: <Icon name="ExclamationCircleOutlined" />,
       content: "是否确认退出登录？",
       okText: "确认",
       cancelText: "取消",
@@ -49,26 +50,27 @@ const AvatarIcon: React.FC = () => {
     });
   };
 
-  const style = { fontSize: "14px" };
-
+  const getIcon = (type: string) => {
+    return <Icon name={type} className="font-size14" />;
+  };
   const items: MenuProps["items"] = [
     {
       key: "1",
       label: <span className="dropdown-item">首页</span>,
-      icon: <HomeOutlined style={style} />,
+      icon: getIcon("HomeOutlined"),
       onClick: () => navigate(HOME_URL)
     },
     {
       key: "2",
       label: <span className="dropdown-item">个人信息</span>,
-      icon: <UserOutlined style={style} />,
+      icon: getIcon("UserOutlined"),
       // onClick: () => infoRef.current?.showModal({ name: "hooks" })
       onClick: () => navigate("/account/settings/index")
     },
     {
       key: "3",
       label: <span className="dropdown-item">修改密码</span>,
-      icon: <FormOutlined style={style} />,
+      icon: getIcon("FormOutlined"),
       onClick: () => passRef.current?.showModal({ name: "hooks" })
     },
     {
@@ -77,7 +79,7 @@ const AvatarIcon: React.FC = () => {
     {
       key: "4",
       label: <span className="dropdown-item">退出登录</span>,
-      icon: <LoginOutlined style={style} />,
+      icon: getIcon("LoginOutlined"),
       onClick: logout
     }
   ];

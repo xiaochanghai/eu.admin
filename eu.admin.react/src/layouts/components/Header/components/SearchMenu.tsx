@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { Empty, Input, InputRef, Modal } from "antd";
-import { EnterOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { RouteObjectType } from "@/routers/interface";
 import { RootState, useSelector } from "@/redux";
@@ -102,7 +101,7 @@ const SearchMenu: React.FC = () => {
           ref={inputRef}
           placeholder="菜单搜索：支持菜单名称、路径"
           size="large"
-          prefix={<SearchOutlined style={{ fontSize: "18px" }} />}
+          prefix={<Icon className="font-size18" name="SearchOutlined" />}
           allowClear={true}
           value={searchValue}
           onChange={handleInputChange}
@@ -118,7 +117,7 @@ const SearchMenu: React.FC = () => {
               >
                 <Icon className="menu-icon" name={item.meta!.icon!} />
                 <span className="menu-title">{item.meta?.title}</span>
-                <EnterOutlined className="menu-enter" />
+                <Icon className="menu-enter" name="EnterOutlined" />
               </div>
             ))}
           </div>

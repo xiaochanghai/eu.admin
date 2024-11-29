@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, Skeleton } from "antd";
 import { pagination } from "@/config/proTable";
-import { SearchOutlined } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
 import { message } from "@/hooks/useMessage";
@@ -424,7 +423,7 @@ const SmProTable: React.FC<any> = props => {
       ) : null}
       <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0 }}>
         <Tooltip placement="top" title="查询">
-          <SearchOutlined style={{ fontSize: 16 }} />
+          <Icon name="SearchOutlined" className="font-size16" />
         </Tooltip>
       </Button>
 

@@ -1,4 +1,4 @@
-import { useContext, CSSProperties } from "react";
+import { useContext } from "react";
 import { Dropdown, MenuProps } from "antd";
 import { HOME_URL } from "@/config";
 import { useTranslation } from "react-i18next";
@@ -7,21 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { RefreshContext } from "@/context/Refresh";
 import { setGlobalState } from "@/redux/modules/global";
 import { removeTab, closeMultipleTab, closeTabsOnSide } from "@/redux/modules/tabs";
-import {
-  ReloadOutlined,
-  ExpandOutlined,
-  CloseCircleOutlined,
-  ColumnWidthOutlined,
-  SwitcherOutlined,
-  VerticalLeftOutlined,
-  VerticalRightOutlined
-} from "@ant-design/icons";
+import { Icon } from "@/components/Icon";
 
 interface MoreButtonProps {
   path: string;
 }
-
-const style: CSSProperties = { fontSize: "14px" };
 
 const MoreButton: React.FC<MoreButtonProps> = ({ path }) => {
   const navigate = useNavigate();
@@ -35,18 +25,20 @@ const MoreButton: React.FC<MoreButtonProps> = ({ path }) => {
     updateOutletShow(false);
     setTimeout(() => updateOutletShow(true));
   };
-
+  const getIcon = (type: string) => {
+    return <Icon name={type} className="font-size14" />;
+  };
   const items: MenuProps["items"] = [
     {
       key: "1",
       label: <span>{t("tabs.refresh")}</span>,
-      icon: <ReloadOutlined style={style} />,
+      icon: getIcon("ReloadOutlined"),
       onClick: refreshCurrentPage
     },
     {
       key: "2",
       label: <span>{t("tabs.maximize")}</span>,
-      icon: <ExpandOutlined style={style} />,
+      icon: getIcon("ExpandOutlined"),
       onClick: () => dispatch(setGlobalState({ key: "maximize", value: true }))
     },
     {
@@ -56,19 +48,19 @@ const MoreButton: React.FC<MoreButtonProps> = ({ path }) => {
     {
       key: "3",
       label: <span>{t("tabs.closeCurrent")}</span>,
-      icon: <CloseCircleOutlined style={style} />,
+      icon: getIcon("CloseCircleOutlined"),
       onClick: () => dispatch(removeTab({ path, isCurrent: true }))
     },
     {
       key: "4",
       label: <span>{t("tabs.closeLeft")}</span>,
-      icon: <VerticalRightOutlined style={style} />,
+      icon: getIcon("VerticalRightOutlined"),
       onClick: () => dispatch(closeTabsOnSide({ path, type: "left" }))
     },
     {
       key: "5",
       label: <span>{t("tabs.closeRight")}</span>,
-      icon: <VerticalLeftOutlined style={style} />,
+      icon: getIcon("VerticalLeftOutlined"),
       onClick: () => dispatch(closeTabsOnSide({ path, type: "right" }))
     },
     {
@@ -77,13 +69,13 @@ const MoreButton: React.FC<MoreButtonProps> = ({ path }) => {
     {
       key: "6",
       label: <span>{t("tabs.closeOther")}</span>,
-      icon: <ColumnWidthOutlined style={style} />,
+      icon: getIcon("ColumnWidthOutlined"),
       onClick: () => dispatch(closeMultipleTab({ path }))
     },
     {
       key: "7",
       label: <span>{t("tabs.closeAll")}</span>,
-      icon: <SwitcherOutlined style={style} />,
+      icon: getIcon("SwitcherOutlined"),
       onClick: () => {
         dispatch(closeMultipleTab({}));
         navigate(HOME_URL);
