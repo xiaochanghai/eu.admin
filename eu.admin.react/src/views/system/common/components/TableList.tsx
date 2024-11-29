@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Loading } from "@/components/Loading/index";
 import SmProTable from "@/components/ProTable";
-import { useDispatch } from "@/redux";
-import { RootState, useSelector } from "@/redux";
+import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { Drawer, Modal, Button, Space } from "antd";
 import { Icon } from "@/components/Icon";
