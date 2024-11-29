@@ -3327,6 +3327,24 @@
             <param name="file">文件</param>
             <returns></returns>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmWorkFlowController">
+            <summary>
+            工作流(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.NodeSave(EU.Core.Model.WorkFlowNode,System.Guid)">
+            <summary>
+            流程节点保存
+            </summary>
+            <param name="node">节点数据</param>
+            <param name="id">流程ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeController">
+            <summary>
+            工作流节点(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.Tenant.TenantByDbController">
             <summary>
             多租户-多库方案 测试

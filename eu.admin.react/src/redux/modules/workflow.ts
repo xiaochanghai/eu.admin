@@ -46,6 +46,8 @@ const workflowSlice = createSlice({
       else modifyWorkFlowStartNode(ActionType.CHANGE_NODE, state.startNode, payload.node, payload.id);
     },
     ADD_NODE(state, { payload }: PayloadAction<any>) {
+      // let code = JSON.stringify(state.startNode);
+      // debugger;
       if (state.startNode.id === payload.parentId)
         state.startNode = { ...state.startNode, childNode: { ...payload.node, childNode: state.startNode.childNode } };
       else modifyWorkFlowStartNode(ActionType.ADD_NODE, state.startNode, payload.node, payload.parentId);
