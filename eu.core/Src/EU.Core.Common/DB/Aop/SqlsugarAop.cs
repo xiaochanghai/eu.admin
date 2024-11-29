@@ -5,6 +5,7 @@ using StackExchange.Profiling;
 using Serilog;
 using EU.Core.Common.LogHelper;
 using EU.Core.Model;
+using EU.Core.Common.Helper;
 
 namespace EU.Core.Common.DB.Aop;
 
@@ -71,7 +72,14 @@ public static class SqlSugarAop
                             baseEntity.CreatedBy = App.User.ID;
                             //baseEntity.CreatedBy = App.User.Name;
                         }
-
+                        if (baseEntity.GroupId.IsNullOrEmpty())
+                            baseEntity.GroupId = Utility.GetGroupGuidId();
+                        if (baseEntity.CompanyId.IsNullOrEmpty())
+                            baseEntity.CompanyId = Utility.GetCompanyGuidId();
+                        if (baseEntity.ModificationNum.IsNullOrEmpty())
+                            baseEntity.ModificationNum = 0;
+                        if (baseEntity.Tag.IsNullOrEmpty())
+                            baseEntity.Tag = 0;
                         break;
                 }
             }
