@@ -254,23 +254,44 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     mode: Mode.list
   },
+  // ValueType: {
+  //   name: "列表数据类型",
+  //   type: "buttonGroup",
+  //   tag: "layout",
+  //   mode: Mode.list,
+  //   items: [
+  //     { value: 25, label: "25" },
+  //     { value: 50, label: "50" },
+  //     { value: 100, label: "100" }
+  //   ]
+  // },
   ValueType: {
-    name: "列表数据类型",
-    type: "buttonGroup",
-    tag: "layout",
+    name: "数据类型",
+    type: "select",
+    tag: "basic",
     mode: Mode.list,
     items: [
-      { value: 25, label: "25" },
-      { value: 50, label: "50" },
-      { value: 100, label: "100" }
+      { value: null, label: " " },
+      { value: "text", label: "文本框" },
+      { value: "date", label: "日期" },
+      { value: "dateTime", label: "日期和时间" },
+      { value: "dateRange", label: "日期区间" },
+      { value: "dateTimeRange", label: "日期和时间区间" },
+      { value: "time", label: "时间" },
+      { value: "timeRange", label: "时间区间" },
+      { value: "digit", label: "数字" },
+      { value: "dateWeek", label: "周" },
+      { value: "dateMonth", label: "月" },
+      { value: "dateQuarter", label: "季度输入" },
+      { value: "dateYear", label: "金额" },
+      { value: "money", label: "金额" }
     ]
   },
   DataFormate: {
     name: "数据格式",
     type: "inputNumber",
     tag: "basic",
-    mode: Mode.list,
-    deps: { field: "FieldType", value: ["InputNumber"] }
+    mode: Mode.list
   },
 
   Width: {
