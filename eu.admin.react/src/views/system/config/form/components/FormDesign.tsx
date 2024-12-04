@@ -4,10 +4,9 @@ import SiderSetting from "./SiderSetting";
 import FormPage from "./FormPage";
 import { Mode } from "./dsl/base";
 import { FormSetDiv } from "./style";
-import { Button, Input, Card, Form, Row, Col, Space, Skeleton } from "antd";
+import { Button, Card, Row, Col, Space, Skeleton, Descriptions } from "antd";
 import http from "@/api";
 import { Icon } from "@/components/Icon";
-const FormItem = Form.Item;
 import { message } from "@/hooks/useMessage";
 import { getModuleSqlInfo } from "@/api/modules/module";
 
@@ -15,9 +14,9 @@ const Index: React.FC<any> = props => {
   const { ModuleId, changePage } = props;
   let [currentField, setCurrentField] = useState<any>(null);
   let [moduleCode, setModuleCode] = useState<any>(null);
+  let [moduleName, setModuleName] = useState<any>(null);
   let [columns, setColumns] = useState<any[]>([]);
   let [mode, setMode] = useState<Mode>(Mode.list);
-  const [form] = Form.useForm();
 
   useEffect(() => {
     if (ModuleId) {
@@ -28,7 +27,7 @@ const Index: React.FC<any> = props => {
             setModuleCode(Data.module.ModuleCode);
           }
           queryFormColumn(Data.module.ModuleCode);
-          form.setFieldsValue(Data.module);
+          setModuleName(Data.module.ModuleName);
         }
       };
       querySingleData();
@@ -58,28 +57,15 @@ const Index: React.FC<any> = props => {
         </Card>
       ) : (
         <>
-          <Form labelCol={{ span: 4 }} wrapperCol={{ span: 16 }} form={form}>
-            <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button type="default" onClick={() => changePage("FormIndex")} icon={<Icon name="RollbackOutlined" />}></Button>
-            </Space>
-            <div style={{ height: 10 }}></div>
-            <Card>
-              <Row gutter={24} justify={"center"}>
-                <Col span={12}>
-                  <FormItem name="ModuleCode" label="模块代码" rules={[{ required: true }]}>
-                    <Input placeholder="请输入" disabled={true} />
-                  </FormItem>
-                </Col>
-                <Col span={12}>
-                  <FormItem name="ModuleName" label="模块名称" rules={[{ required: true }]}>
-                    <Input placeholder="请输入" disabled={true} />
-                  </FormItem>
-                </Col>
-              </Row>
-            </Card>
-            <div style={{ height: 10 }}></div>
-          </Form>
+          <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button type="default" onClick={() => changePage("FormIndex")} icon={<Icon name="RollbackOutlined" />}></Button>
+          </Space>
+          <div style={{ height: 10 }}></div>
           <Card>
+            <Descriptions title="表单配置">
+              <Descriptions.Item label="模块代码">{moduleCode}</Descriptions.Item>
+              <Descriptions.Item label="模块名称">{moduleName}</Descriptions.Item>
+            </Descriptions>
             <FormSetDiv className={"bg-white"}>
               <div className="fieldSet-main">
                 <Row className={"bg-white"}>

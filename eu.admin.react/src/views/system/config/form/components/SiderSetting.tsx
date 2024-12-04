@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useMemo } from "react";
-import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio } from "antd";
+import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio, ColorPicker } from "antd";
 import { Icon } from "@/components/Icon";
 import FieldSetting from "./FieldSetting";
 import { FormComponents } from "./CompDatas";
@@ -185,6 +185,21 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
             ></Switch>
           );
         }
+        if (fieldsConf[key].type === "colorPicker") {
+          return (
+            <ColorPicker
+              defaultValue={field[key]}
+              defaultFormat="hex"
+              showText
+              onChange={(_val: any, css: string) => {
+                onDataChange({
+                  ...field,
+                  [key]: css
+                });
+              }}
+            />
+          );
+        }
         if (fieldsConf[key].type === "comboGrid") {
           return <ComboGrid value={field[key]} code={fieldsConf[key].comboGridCode} />;
         }
@@ -250,28 +265,30 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
 
   return (
     <div>
-      <div
-        style={{
-          fontSize: "14px",
-          borderStyle: "dotted solid dashed solid",
-          borderColor: "#cccccc",
-          marginTop: 10,
-          paddingTop: 10,
-          paddingBottom: 10
-        }}
-      >
-        {field ? (
-          <div>
-            <b style={{ font: "14px" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;标识/模型：{field.DataIndex}
-              {field.FieldType ? "/" : null}
-              {field.FieldType}
-            </b>
-          </div>
-        ) : (
-          "请选择一个表单元素"
-        )}
-      </div>
+      {mode === Mode.form ? (
+        <div
+          style={{
+            fontSize: "14px",
+            borderStyle: "dotted solid dashed solid",
+            borderColor: "#cccccc",
+            marginTop: 10,
+            paddingTop: 10,
+            paddingBottom: 10
+          }}
+        >
+          {field ? (
+            <div>
+              <b style={{ font: "14px" }}>
+                &nbsp;&nbsp;&nbsp;&nbsp;标识/模型：{field.DataIndex}
+                {field.FieldType ? "/" : null}
+                {field.FieldType}
+              </b>
+            </div>
+          ) : (
+            "请选择一个表单元素"
+          )}
+        </div>
+      ) : null}
       <Tabs defaultActiveKey={"panel_0"}>
         {types.map((t, index) => {
           return (
@@ -308,7 +325,9 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                               {fieldsConf[key].name}{" "}
                               {fieldsConf[key].tooltip && (
                                 <Tooltip title={fieldsConf[key].tooltip}>
-                                  <Icon name="ExclamationCircleOutlined" />
+                                  <span>
+                                    <Icon name="ExclamationCircleOutlined" />
+                                  </span>
                                 </Tooltip>
                               )}
                             </label>

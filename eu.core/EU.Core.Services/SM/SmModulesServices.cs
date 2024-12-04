@@ -551,7 +551,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
     public JArray GetModuleColumn(Guid moduleId, SmModules moduleInfo)
     {
-        var column = new JArray();
+        var columns = new JArray();
         var moduleColumnInfo = new ModuleSqlColumn(moduleInfo.ModuleCode);
         var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
         //moduleColumns = moduleColumns.OrderBy(y => y.TaxisNo).ToList();
@@ -564,53 +564,79 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         for (int i = 0; i < data.Count; i++)
         {
+            var column = data[i];
             var item = new JObject
             {
-                new JProperty("title", data[i].Title),
-                new JProperty("id", data[i].ID),
-                new JProperty("dataIndex", data[i].DataIndex),
-                new JProperty("hideInTable", data[i].HideInTable),
-                new JProperty("fieldType", data[i].FieldType),
-                new JProperty("dataSource", data[i].DataSource),
+                new JProperty("title", column.Title),
+                new JProperty("id", column.ID),
+                new JProperty("dataIndex", column.DataIndex),
+                new JProperty("hideInTable", column.HideInTable),
+                new JProperty("fieldType", column.FieldType),
+                new JProperty("dataSource", column.DataSource),
                 new JProperty("ellipsis", true),
             };
 
-            if (data[i].Width != null)
-                item.Add(new JProperty("width", data[i].Width));
+            if (column.Width != null)
+                item.Add(new JProperty("width", column.Width));
             //else
             //    item.Add(new JProperty("width", 100));
 
-            if (data[i].Align.IsNullOrEmpty())
+            if (column.Align.IsNullOrEmpty())
                 item.Add(new JProperty("align", "center"));
             else
-                item.Add(new JProperty("align", data[i].Align));
-            item.Add(new JProperty("sorter", data[i].Sorter));
-            if (data[i].ValueType.IsNotEmptyOrNull() && string.IsNullOrEmpty(data[i].DataFormate))
-                item.Add(new JProperty("valueType", data[i].ValueType));
-            if (moduleInfo.DefaultSort == data[i].DataIndex)
+                item.Add(new JProperty("align", column.Align));
+            item.Add(new JProperty("sorter", column.Sorter));
+            if (column.ValueType.IsNotEmptyOrNull() && string.IsNullOrEmpty(column.DataFormate))
+                item.Add(new JProperty("valueType", column.ValueType));
+            if (moduleInfo.DefaultSort == column.DataIndex)
                 item.Add(new JProperty("defaultSortOrder", moduleInfo.DefaultSortOrder));
-            if (data[i].IsTableEditable == true)
+            if (column.IsTableEditable == true)
                 item.Add(new JProperty("editable", true));
             else
                 item.Add(new JProperty("editable", false));
 
-            if (data[i].IsBool == true)
+            if (column.IsCopy == true)
+                item.Add(new JProperty("copyable", true));
+
+            if (column.IsTooltip == true)
+                item.Add(new JProperty("tooltip", column.TooltipContent));
+            if (column.IsThemeColor != true)
             {
+                if (column.Color.IsNotEmptyOrNull())
+                    item.Add(new JProperty("color", column.Color));
+                else
+                    item.Add(new JProperty("color", null));
+            }
+            else
+                item.Add(new JProperty("isFollowThemeColor", true));
+
+            if (column.IsBool == true)
+            {
+                var trueObj = new JObject
+                {
+                    new JProperty("text", "是"),
+                    new JProperty("status","Success"),
+                };
+                var falseObj = new JObject
+                {
+                    new JProperty("text", "否"),
+                    new JProperty("status","Default"),
+                };
                 var enumobj = new JObject
                 {
-                    new JProperty("true", new JObject(new JProperty("text", "是"))),
-                    new JProperty("false", new JObject(new JProperty("text", "否"))),
+                    new JProperty("true", trueObj),
+                    new JProperty("false", falseObj),
                 };
                 item.Add(new JProperty("valueEnum", enumobj));
                 item.Add(new JProperty("filters", false));
             }
-            else if (data[i].IsLovCode == true)
+            else if (column.IsLovCode == true)
             {
                 JObject enumobj = new();
 
-                var enumData = LovHelper.GetLovList(data[i].DataIndex);
-                if (data[i].DataSource.IsNotEmptyOrNull())
-                    enumData = LovHelper.GetLovList(data[i].DataSource);
+                var enumData = LovHelper.GetLovList(column.DataIndex);
+                if (column.DataSource.IsNotEmptyOrNull())
+                    enumData = LovHelper.GetLovList(column.DataSource);
                 if (enumData.Count() > 0)
                 {
                     for (int n = 0; n < enumData.Count(); n++)
@@ -621,13 +647,13 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 }
             }
 
-            if (data[i].HideInSearch == true)
+            if (column.HideInSearch == true)
                 item.Add(new JProperty("hideInSearch", true));
 
-            column.Add(item);
+            columns.Add(item);
         }
 
-        return column;
+        return columns;
     }
     #endregion
 
@@ -940,6 +966,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.GridSpan,
                     x.DataSource,
                     x.ColumnMode,
+                    x.IsTooltip,
+                    x.TooltipContent,
                     x.Remark,
                     x.UpdateBy,
                     x.UpdateTime
@@ -967,6 +995,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.Align,
                     x.Remark,
                     x.ColumnMode,
+                    x.IsCopy,
+                    x.IsTooltip,
+                    x.TooltipContent,
+                    x.Color,
+                    x.IsThemeColor,
                     x.UpdateBy,
                     x.UpdateTime
                 })
@@ -987,46 +1020,38 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <returns></returns>
     public ServicePageResult<SmModuleFormOption> GetModuleFormColumn(string moduleCode)
     {
-        try
+        var result = new List<SmModuleFormOption>();
+
+        //获取模块信息
+        var module = ModuleInfo.GetModuleInfo(moduleCode);
+
+        if (module == null)
+            throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
+
+        var moduleId = module.ID;
+        var moduleColumnInfo = new ModuleSqlColumn(module.ModuleCode);
+        var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
+
+        moduleColumns = moduleColumns.OrderBy(x => x.FromTaxisNo).ToList();
+        result = Mapper.Map(moduleColumns).ToANew<List<SmModuleFormOption>>();
+
+        int i = 0;
+        result.ForEach(x =>
         {
-            var result = new List<SmModuleFormOption>();
-
-            //获取模块信息
-            var module = ModuleInfo.GetModuleInfo(moduleCode);
-
-            if (module == null)
-                throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
-
-            var moduleId = module.ID;
-            var moduleColumnInfo = new ModuleSqlColumn(module.ModuleCode);
-            var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
-
-            moduleColumns = moduleColumns.OrderBy(x => x.FromTaxisNo).ToList();
-            result = Mapper.Map(moduleColumns).ToANew<List<SmModuleFormOption>>();
-
-            int i = 0;
-            result.ForEach(x =>
+            x.FormTitle = string.IsNullOrWhiteSpace(x.FormTitle) ? x.Title : x.FormTitle;
+            if (x.FieldType == "ComboGrid")
+                x.ComboGridDataSource = x.DataSource;
+            if (x.FieldType == "ComboBox")
             {
-                x.FormTitle = string.IsNullOrWhiteSpace(x.FormTitle) ? x.Title : x.FormTitle;
-                if (x.FieldType == "ComboGrid")
-                    x.ComboGridDataSource = x.DataSource;
-                if (x.FieldType == "ComboBox")
-                {
-                    if (x.DataSource.IsNullOrEmpty() && x.IsLovCode == true)
-                        x.DataSource = x.DataIndex;
-                    x.ComboBoxDataSource = x.DataSource;
+                if (x.DataSource.IsNullOrEmpty() && x.IsLovCode == true)
+                    x.DataSource = x.DataIndex;
+                x.ComboBoxDataSource = x.DataSource;
 
-                }
-                result[i].ID = moduleColumns[i].ID;
-                i++;
-            });
-            return new ServicePageResult<SmModuleFormOption>(1, 1, 1, result);
-
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+            }
+            result[i].ID = moduleColumns[i].ID;
+            i++;
+        });
+        return new ServicePageResult<SmModuleFormOption>(1, 1, 1, result);
     }
     #endregion
 

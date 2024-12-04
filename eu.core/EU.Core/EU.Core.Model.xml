@@ -8020,6 +8020,16 @@
             是否bool
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.QueryValue">
+            <summary>
+            QueryValue
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.QueryValueType">
+            <summary>
+            QueryValueType
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.HideInSearch">
             <summary>
             查询中隐藏
@@ -8165,6 +8175,11 @@
             TextArea最小行数
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.FromFieldGroup">
             <summary>
             表单字段组别
@@ -8178,6 +8193,11 @@
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsAutoCode">
             <summary>
             是否自动编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.ColumnMode">
+            <summary>
+            栏位模式
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModulesBase">
@@ -8195,11 +8215,6 @@
             模块名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SmModulesBase.ModuleType">
-            <summary>
-            模块类型
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.TaxisNo">
             <summary>
             排序号
@@ -8212,17 +8227,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.RoutePath">
             <summary>
-            路由地址
+            路由
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.ParentId">
             <summary>
-            ParentId
+            上级模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsParent">
             <summary>
-            IsParent
+            是否目录
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.ApiUrl">
@@ -8232,32 +8247,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowAdd">
             <summary>
-            是否显示新增
+            是否允许新建
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowBatchDelete">
             <summary>
-            是否显示批量删除
+            是否允许批量删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowDelete">
             <summary>
-            是否显示删除
+            是否允许删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowUpdate">
             <summary>
-            是否显示更新
+            是否允许更新
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowView">
             <summary>
-            是否显示查看
+            是否允许查看
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsDetail">
             <summary>
-            是否为从表
+            是否从表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.BelongModuleId">
@@ -8267,27 +8282,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowSubmit">
             <summary>
-            是否显示提交
+            是否允许提交
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.DefaultSort">
             <summary>
-            默认排序
+            DefaultSort
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.DefaultSortOrder">
             <summary>
-            默认正序/倒序
+            DefaultSortOrder
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowAudit">
             <summary>
-            是否显示审核
+            IsShowAudit
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsShowGoBack">
             <summary>
-            是否显示返回
+            IsShowGoBack
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.IsExecQuery">
@@ -8310,9 +8325,19 @@
             编辑页路径
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModulesBase.ModuleType">
+            <summary>
+            模块类型，Form表单/FormGroup表单集
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModulesBase.FormPageWidth">
             <summary>
             编辑页宽度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModulesBase.Element">
+            <summary>
+            路由文件地址
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleSqlBase">
@@ -8738,6 +8763,106 @@
         <member name="P:EU.Core.Model.Models.SmUsersBase.AvatarFileId">
             <summary>
             用户头像ID
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowBase">
+            <summary>
+            工作流 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.SmModuleId">
+            <summary>
+            模块ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.FlowCode">
+            <summary>
+            流程代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.FlowName">
+            <summary>
+            流程名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowBase.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowNodeBase">
+            <summary>
+            工作流节点 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.WorkFlowId">
+            <summary>
+            工作流ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.ParentNodeId">
+            <summary>
+            上级节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.NodeId">
+            <summary>
+            节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.NodeType">
+            <summary>
+            节点类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.NodeName">
+            <summary>
+            节点名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNodeBase.ExtRemark4">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.WxConfigBase">
@@ -9437,7 +9562,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.EditSmModuleColumnInput">
             <summary>
-            SmModuleColumn (Dto.EditInput)
+            模块列 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.EditSmModulesInput">
@@ -9498,6 +9623,16 @@
         <member name="T:EU.Core.Model.Models.EditSmUsersInput">
             <summary>
             系统用户 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditSmWorkFlowInput">
+            <summary>
+            工作流 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditSmWorkFlowNodeInput">
+            <summary>
+            工作流节点 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.EditWxConfigInput">
@@ -10142,7 +10277,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.InsertSmModuleColumnInput">
             <summary>
-            SmModuleColumn (Dto.InsertInput)
+            模块列 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.InsertSmModulesInput">
@@ -10203,6 +10338,16 @@
         <member name="T:EU.Core.Model.Models.InsertSmUsersInput">
             <summary>
             系统用户 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowInput">
+            <summary>
+            SmWorkFlow (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowNodeInput">
+            <summary>
+            工作流节点 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.InsertWxConfigInput">
@@ -18305,6 +18450,16 @@
             是否bool
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.QueryValue">
+            <summary>
+            QueryValue
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.QueryValueType">
+            <summary>
+            QueryValueType
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumn.HideInSearch">
             <summary>
             查询中隐藏
@@ -18450,6 +18605,11 @@
             TextArea最小行数
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumn.FromFieldGroup">
             <summary>
             表单字段组别
@@ -18463,6 +18623,11 @@
         <member name="P:EU.Core.Model.Models.SmModuleColumn.IsAutoCode">
             <summary>
             是否自动编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.ColumnMode">
+            <summary>
+            栏位模式
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModules">
@@ -18480,11 +18645,6 @@
             模块名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SmModules.ModuleType">
-            <summary>
-            模块类型
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SmModules.TaxisNo">
             <summary>
             排序号
@@ -18497,17 +18657,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.RoutePath">
             <summary>
-            路由地址
+            路由
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.ParentId">
             <summary>
-            ParentId
+            上级模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsParent">
             <summary>
-            IsParent
+            是否目录
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.ApiUrl">
@@ -18517,32 +18677,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowAdd">
             <summary>
-            是否显示新增
+            是否允许新建
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowBatchDelete">
             <summary>
-            是否显示批量删除
+            是否允许批量删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowDelete">
             <summary>
-            是否显示删除
+            是否允许删除
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowUpdate">
             <summary>
-            是否显示更新
+            是否允许更新
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowView">
             <summary>
-            是否显示查看
+            是否允许查看
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsDetail">
             <summary>
-            是否为从表
+            是否从表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.BelongModuleId">
@@ -18552,27 +18712,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowSubmit">
             <summary>
-            是否显示提交
+            是否允许提交
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.DefaultSort">
             <summary>
-            默认排序
+            DefaultSort
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.DefaultSortOrder">
             <summary>
-            默认正序/倒序
+            DefaultSortOrder
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowAudit">
             <summary>
-            是否显示审核
+            IsShowAudit
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsShowGoBack">
             <summary>
-            是否显示返回
+            IsShowGoBack
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmModules.IsExecQuery">
@@ -18595,9 +18755,19 @@
             编辑页路径
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModules.ModuleType">
+            <summary>
+            模块类型，Form表单/FormGroup表单集
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.SmModules.FormPageWidth">
             <summary>
             编辑页宽度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModules.Element">
+            <summary>
+            路由文件地址
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleSql">
@@ -19023,6 +19193,106 @@
         <member name="P:EU.Core.Model.Models.SmUsers.AvatarFileId">
             <summary>
             用户头像ID
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlow">
+            <summary>
+            工作流 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.SmModuleId">
+            <summary>
+            模块ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.FlowCode">
+            <summary>
+            流程代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.FlowName">
+            <summary>
+            流程名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlow.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowNode">
+            <summary>
+            工作流节点 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.WorkFlowId">
+            <summary>
+            工作流ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.ParentNodeId">
+            <summary>
+            上级节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.NodeId">
+            <summary>
+            节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.NodeType">
+            <summary>
+            节点类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.NodeName">
+            <summary>
+            节点名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmWorkFlowNode.ExtRemark4">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SysTenant">
@@ -19921,7 +20191,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumnDto">
             <summary>
-            SmModuleColumn(Dto.View)
+            模块列(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModulesDto">
@@ -19982,6 +20252,16 @@
         <member name="T:EU.Core.Model.Models.SmUsersDto">
             <summary>
             系统用户(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowDto">
+            <summary>
+            工作流(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowNodeDto">
+            <summary>
+            工作流节点(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.WxConfigDto">
@@ -21007,31 +21287,6 @@
             客户
             </summary>
         </member>
-        <member name="T:EU.Core.Model.ArrivalOrderDetailExtend">
-            <summary>
-            采购到货通知单明细
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ArrivalOrderDetailExtend.MaterialName">
-            <summary>
-            货品名称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ArrivalOrderDetailExtend.Specifications">
-            <summary>
-            规格
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ArrivalOrderDetailExtend.UnitName">
-            <summary>
-            单位
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ArrivalOrderDetailExtend.UnitId">
-            <summary>
-            单位ID
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.CompleteSourceList.MaterialNo">
             <summary>
             物料编号
@@ -21055,51 +21310,6 @@
         <member name="P:EU.Core.Model.CompleteSourceList.UnitName">
             <summary>
             单位
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.InOrderDetailExtend">
-            <summary>
-            采购入库单明细
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.ROWNUM">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.MaterialNo">
-            <summary>
-            /
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.MaterialName">
-            <summary>
-            货品名称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.Specifications">
-            <summary>
-            规格
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.UnitId">
-            <summary>
-            单位
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.Description">
-            <summary>
-            描述
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.UnitName">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.InOrderDetailExtend.MaxInQTY">
-            <summary>
-            
             </summary>
         </member>
         <member name="P:EU.Core.Model.IvAdjustDetailExtend.MaterialName">
@@ -21160,21 +21370,6 @@
         <member name="P:EU.Core.Model.IvTransfersDetailExtend.UnitId">
             <summary>
             单位ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.OrderDetailExtend.MaterialNo">
-            <summary>
-            材质编号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.OrderDetailExtend.UnitName">
-            <summary>
-            类型名称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.OrderDetailExtend.OccupyQTY">
-            <summary>
-            订单占用数量
             </summary>
         </member>
         <member name="P:EU.Core.Model.OrderSourceList.MaterialNo">
@@ -21357,91 +21552,6 @@
             配方
             </summary>
         </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.SerialNumber">
-            <summary>
-            序号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OrderId">
-            <summary>
-            订单ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OrderSource">
-            <summary>
-            出货来源
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OutOrderNo">
-            <summary>
-            出库单号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OutOrderId">
-            <summary>
-            出库订单ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OutOrderDetailId">
-            <summary>
-            出库订单明细ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.SalesOrderNo">
-            <summary>
-            销售单号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.SalesOrderId">
-            <summary>
-            销售订单ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.SalesOrderDetailId">
-            <summary>
-            销售订单明细ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.MaterialId">
-            <summary>
-            货品ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.MaterialNo">
-            <summary>
-            物料编号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.MaterialName">
-            <summary>
-            物料名称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.MaterialSpecifications">
-            <summary>
-            规格
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.OutQTY">
-            <summary>
-            出库数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.ReturnQTY">
-            <summary>
-            退货数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.InventoryQTY">
-            <summary>
-            当前库存
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ReturnOrderExtend.IsEntity">
-            <summary>
-            是否实物退货
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.ReturnSourceList.PdMaterialNo">
             <summary>
             物料编号
@@ -21495,26 +21605,6 @@
         <member name="P:EU.Core.Model.ReturnSourceList.UnitName">
             <summary>
             单位
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ShipOrderExtend.Price">
-            <summary>
-            单价
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ShipOrderExtend.NoTaxAmount">
-            <summary>
-            未税金额
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ShipOrderExtend.TaxAmount">
-            <summary>
-            税额
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ShipOrderExtend.TaxIncludedAmount">
-            <summary>
-            含税金额
             </summary>
         </member>
         <member name="P:EU.Core.Model.ImportExcelForm.file">

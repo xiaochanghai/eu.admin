@@ -9,7 +9,7 @@ export type deps = {
 export interface designProp {
   name: string; //title
   icon?: any;
-  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea" | "comboGrid" | "inputNumber"; //设置组件的类型
+  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea" | "comboGrid" | "inputNumber" | "colorPicker"; //设置组件的类型
   tag?: "basic" | "layout"; //所在分组标签
   mode?: Mode[] | Mode; //使用场景
   deps?: deps | deps[]; //字段显示依赖,如果是数组都需要满足
@@ -339,6 +339,40 @@ export const schemaDef: SchemaClz = {
       { value: Mode.list, label: "列表" },
       { value: Mode.form, label: "表单" }
     ]
+  },
+  IsThemeColor: {
+    name: "跟随主题颜色",
+    tooltip: "跟随主题色自动切换",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic",
+    deps: { field: "IsLovCode", value: [false] }
+  },
+  Color: {
+    name: "文字颜色",
+    type: "colorPicker",
+    tag: "basic",
+    deps: [
+      { field: "IsLovCode", value: [false] },
+      { field: "IsThemeColor", value: [false] }
+    ]
+  },
+  IsCopy: {
+    name: "支持复制",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  IsTooltip: {
+    name: "显示提示",
+    type: "switch",
+    tag: "basic"
+  },
+  TooltipContent: {
+    name: "提示内容",
+    type: "input",
+    tag: "basic",
+    deps: [{ field: "IsTooltip", value: [true] }]
   },
   Remark: {
     name: "备注",

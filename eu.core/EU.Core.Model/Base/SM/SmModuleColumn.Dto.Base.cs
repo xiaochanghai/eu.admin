@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/10/31 17:02:57  SimonHsiao   初版
+*V0.01  2024/12/4 8:57:57  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -284,8 +284,35 @@ public class SmModuleColumnBase
     public bool? IsAutoCode { get; set; }
 
     /// <summary>
-    /// 栏位模式
+    /// 栏位模式,通用/列表/表单
     /// </summary>
-    [Display(Name = "ColumnMode"), Description("栏位模式"), MaxLength(32, ErrorMessage = "栏位模式 不能超过 32 个字符")]
+    [Display(Name = "ColumnMode"), Description("栏位模式,通用/列表/表单"), MaxLength(32, ErrorMessage = "栏位模式,通用/列表/表单 不能超过 32 个字符")]
     public string ColumnMode { get; set; }
+
+    /// <summary>
+    /// 是否复制
+    /// </summary>
+    public bool? IsCopy { get; set; }
+
+    /// <summary>
+    /// 是否提示
+    /// </summary>
+    public bool? IsTooltip { get; set; }
+
+    /// <summary>
+    /// 提示内容
+    /// </summary>
+    [Display(Name = "TooltipContent"), Description("提示内容"), MaxLength(64, ErrorMessage = "提示内容 不能超过 64 个字符")]
+    public string TooltipContent { get; set; }
+
+    /// <summary>
+    /// 字段颜色
+    /// </summary>
+    [Display(Name = "Color"), Description("字段颜色"), MaxLength(32, ErrorMessage = "字段颜色 不能超过 32 个字符")]
+    public string Color { get; set; }
+
+    /// <summary>
+    /// 跟随主题颜色
+    /// </summary>
+    public bool? IsThemeColor { get; set; }
 }

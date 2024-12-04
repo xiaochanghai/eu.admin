@@ -3125,6 +3125,24 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn},System.String)">
+            <summary>
+            更新模块表单列排序号
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="columns">栏位列表</param>
+            <param name="type">类型（list、form）</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateColumnAsync(System.String,EU.Core.Model.SmModuleFormOption,System.String)">
+            <summary>
+            更新模块表单列
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="column">栏位</param>
+            <param name="type">类型（list、form）</param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.RecordUserMoudleColumn(System.Guid,Newtonsoft.Json.Linq.JObject)">
             <summary>
             记录用户模块列
@@ -3308,6 +3326,24 @@
             </summary>
             <param name="file">文件</param>
             <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmWorkFlowController">
+            <summary>
+            工作流(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.NodeSave(EU.Core.Model.WorkFlowNode,System.Guid)">
+            <summary>
+            流程节点保存
+            </summary>
+            <param name="node">节点数据</param>
+            <param name="id">流程ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeController">
+            <summary>
+            工作流节点(Controller)
+            </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.Tenant.TenantByDbController">
             <summary>

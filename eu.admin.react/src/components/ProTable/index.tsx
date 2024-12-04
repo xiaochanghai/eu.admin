@@ -543,12 +543,31 @@ const SmProTable: React.FC<any> = props => {
 
   columns &&
     columns.map((item: any, index: any) => {
+      let column = columns[index];
       if (!item.hideInSearch && item.fieldType == "ComboGrid") {
         let renderFormItem = () => <ComboGrid code={item.dataSource} />;
-        let column = columns[index];
         column = { ...column, renderFormItem };
-        columns[index] = column;
       }
+      if (item.isFollowThemeColor) {
+        let renderText = (val: string) => {
+          return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
+        };
+        column = { ...column, renderText };
+      } else if (item.color) {
+        let renderText = (val: string) => {
+          return <span style={{ color: item.color }}>{val}</span>;
+        };
+        column = { ...column, renderText };
+      }
+
+      // if (item.color) {
+      //   // let render = (_: any, record: any) => {
+      //   let render = (_: any, record: any) => {
+      //     return <span>{record[item.dataIndex]}</span>;
+      //   };
+      //   column = { ...column, render };
+      // }
+      columns[index] = column;
     });
   return (
     <>

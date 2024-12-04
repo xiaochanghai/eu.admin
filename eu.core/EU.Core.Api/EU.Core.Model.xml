@@ -8197,7 +8197,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumnBase.ColumnMode">
             <summary>
-            栏位模式
+            栏位模式,通用/列表/表单
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsCopy">
+            <summary>
+            是否复制
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsTooltip">
+            <summary>
+            是否提示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.TooltipContent">
+            <summary>
+            提示内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.Color">
+            <summary>
+            字段颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsThemeColor">
+            <summary>
+            跟随主题颜色
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModulesBase">
@@ -18627,7 +18652,32 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmModuleColumn.ColumnMode">
             <summary>
-            栏位模式
+            栏位模式,通用/列表/表单
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.IsCopy">
+            <summary>
+            是否复制
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.IsTooltip">
+            <summary>
+            是否提示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.TooltipContent">
+            <summary>
+            提示内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.Color">
+            <summary>
+            字段颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.IsThemeColor">
+            <summary>
+            跟随主题颜色
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModules">
