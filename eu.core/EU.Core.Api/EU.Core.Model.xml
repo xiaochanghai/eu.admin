@@ -8255,6 +8255,16 @@
             跟随主题颜色
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsColor">
+            <summary>
+            是否颜色显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.IsIcon">
+            <summary>
+            是否图标显示
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -18738,6 +18748,16 @@
         <member name="P:EU.Core.Model.Models.SmModuleColumn.IsThemeColor">
             <summary>
             跟随主题颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.IsColor">
+            <summary>
+            是否颜色显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.IsIcon">
+            <summary>
+            是否图标显示
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModules">

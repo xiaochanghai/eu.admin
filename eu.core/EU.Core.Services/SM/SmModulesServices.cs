@@ -643,8 +643,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         item.Add(new JProperty("isTagDisplay", true));
                     for (int n = 0; n < enumData.Count(); n++)
                         enumobj.Add(new JProperty(enumData[n].Value, new JObject(
-                            new JProperty("text", enumData[n].Text), 
-                            new JProperty("tagColor", enumData[n].TagColor), 
+                            new JProperty("text", enumData[n].Text),
+                            new JProperty("tagColor", enumData[n].TagColor),
                             new JProperty("tagBordered", enumData[n].TagBordered),
                             new JProperty("tagIcon", enumData[n].TagIcon)
                             )));
@@ -656,6 +656,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             if (column.HideInSearch == true)
                 item.Add(new JProperty("hideInSearch", true));
+
+            if (column.IsColor == true)
+                item.Add(new JProperty("isColor", true));
+            if (column.IsIcon == true)
+                item.Add(new JProperty("isIcon", true));
 
             columns.Add(item);
         }
@@ -1007,6 +1012,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.TooltipContent,
                     x.Color,
                     x.IsThemeColor,
+                    x.IsColor,
+                    x.IsIcon,
                     x.UpdateBy,
                     x.UpdateTime
                 })

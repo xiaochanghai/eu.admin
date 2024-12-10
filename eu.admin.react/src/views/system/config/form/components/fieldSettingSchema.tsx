@@ -395,6 +395,18 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     deps: [{ field: "IsTooltip", value: [true] }]
   },
+  IsColor: {
+    name: "颜色显示",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
+  IsIcon: {
+    name: "图标显示",
+    type: "switch",
+    mode: Mode.list,
+    tag: "basic"
+  },
   Remark: {
     name: "备注",
     type: "input",

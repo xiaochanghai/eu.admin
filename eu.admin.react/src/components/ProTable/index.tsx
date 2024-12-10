@@ -1,10 +1,9 @@
 import React, { useRef, useState } from "react";
-import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, Skeleton } from "antd";
+import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, ColorPicker, Skeleton } from "antd";
 import { pagination } from "@/config/proTable";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
 import { message } from "@/hooks/useMessage";
-
 import {
   query,
   getModuleLogInfo,
@@ -203,9 +202,9 @@ const SmProTable: React.FC<any> = props => {
                     items: getDropActions(record, action)
                   }}
                 >
-                  <Tag>
+                  <span className="cursor-pointer">
                     <Icon name="EllipsisOutlined" />
-                  </Tag>
+                  </span>
                 </Dropdown>
               ) : null}
             </>
@@ -548,7 +547,7 @@ const SmProTable: React.FC<any> = props => {
         let renderFormItem = () => <ComboGrid code={item.dataSource} />;
         column = { ...column, renderFormItem };
       }
-      if (item.isFollowThemeColor) {
+      if (item.isFollowThemeColor === true) {
         let renderText = (val: string) => {
           return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
         };
@@ -560,7 +559,7 @@ const SmProTable: React.FC<any> = props => {
         column = { ...column, renderText };
       }
 
-      if (item.isTagDisplay) {
+      if (item.isTagDisplay === true) {
         // let render = (_: any, record: any) => {
         let render = (_: any, record: any) => {
           let valueEnum = item.valueEnum[record[item.dataIndex]];
@@ -572,6 +571,21 @@ const SmProTable: React.FC<any> = props => {
         };
         column = { ...column, render };
       }
+      if (item.isColor === true) {
+        let render = (_: any, record: any) => {
+          if (record[item.dataIndex]) return <ColorPicker disabled defaultValue={record[item.dataIndex]} size="small" showText />;
+          else return null;
+        };
+        column = { ...column, render };
+      }
+      if (item.isIcon === true) {
+        let render = (_: any, record: any) => {
+          if (record[item.dataIndex]) return <Icon name={record[item.dataIndex]} />;
+          else return null;
+        };
+        column = { ...column, render };
+      }
+
       columns[index] = column;
     });
   return (

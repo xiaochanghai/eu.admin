@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/12/4 8:57:57  SimonHsiao   初版
+*V0.01  2024/12/10 19:28:04  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -26,6 +26,7 @@ public class SmModuleColumnBase
     /// <summary>
     /// 模块ID
     /// </summary>
+    [Display(Name = "SmModuleId"), Description("模块ID")]
     public Guid? SmModuleId { get; set; }
 
     /// <summary>
@@ -55,41 +56,49 @@ public class SmModuleColumnBase
     /// <summary>
     /// 列表中隐藏
     /// </summary>
+    [Display(Name = "HideInTable"), Description("列表中隐藏")]
     public bool? HideInTable { get; set; }
 
     /// <summary>
     /// 是否排序
     /// </summary>
+    [Display(Name = "Sorter"), Description("是否排序")]
     public bool? Sorter { get; set; }
 
     /// <summary>
     /// filters
     /// </summary>
+    [Display(Name = "filters"), Description("filters")]
     public bool? filters { get; set; }
 
     /// <summary>
     /// filterMultiple
     /// </summary>
+    [Display(Name = "filterMultiple"), Description("filterMultiple")]
     public bool? filterMultiple { get; set; }
 
     /// <summary>
     /// 是否导出Excel
     /// </summary>
+    [Display(Name = "IsExport"), Description("是否导出Excel")]
     public bool? IsExport { get; set; }
 
     /// <summary>
     /// 排序号
     /// </summary>
+    [Display(Name = "TaxisNo"), Description("排序号")]
     public int? TaxisNo { get; set; }
 
     /// <summary>
     /// 是否参数
     /// </summary>
+    [Display(Name = "IsLovCode"), Description("是否参数")]
     public bool? IsLovCode { get; set; }
 
     /// <summary>
     /// 是否bool
     /// </summary>
+    [Display(Name = "IsBool"), Description("是否bool")]
     public bool? IsBool { get; set; }
 
     /// <summary>
@@ -107,6 +116,7 @@ public class SmModuleColumnBase
     /// <summary>
     /// 查询中隐藏
     /// </summary>
+    [Display(Name = "HideInSearch"), Description("查询中隐藏")]
     public bool? HideInSearch { get; set; }
 
     /// <summary>
@@ -130,11 +140,13 @@ public class SmModuleColumnBase
     /// <summary>
     /// 是否合计
     /// </summary>
+    [Display(Name = "IsSum"), Description("是否合计")]
     public bool? IsSum { get; set; }
 
     /// <summary>
     /// 表单排序号
     /// </summary>
+    [Display(Name = "FromTaxisNo"), Description("表单排序号")]
     public int? FromTaxisNo { get; set; }
 
     /// <summary>
@@ -146,16 +158,19 @@ public class SmModuleColumnBase
     /// <summary>
     /// 表单隐藏
     /// </summary>
+    [Display(Name = "HideInForm"), Description("表单隐藏")]
     public bool? HideInForm { get; set; }
 
     /// <summary>
     /// 是否必填
     /// </summary>
+    [Display(Name = "Required"), Description("是否必填")]
     public bool? Required { get; set; }
 
     /// <summary>
     /// 只读
     /// </summary>
+    [Display(Name = "Disabled"), Description("只读")]
     public bool? Disabled { get; set; }
 
     /// <summary>
@@ -173,16 +188,19 @@ public class SmModuleColumnBase
     /// <summary>
     /// 是否唯一
     /// </summary>
+    [Display(Name = "IsUnique"), Description("是否唯一")]
     public bool? IsUnique { get; set; }
 
     /// <summary>
     /// 最大长度
     /// </summary>
+    [Display(Name = "MaxLength"), Description("最大长度")]
     public int? MaxLength { get; set; }
 
     /// <summary>
     /// 最小长度
     /// </summary>
+    [Display(Name = "MinLength"), Description("最小长度")]
     public int? MinLength { get; set; }
 
     /// <summary>
@@ -200,16 +218,19 @@ public class SmModuleColumnBase
     /// <summary>
     /// 新增时隐藏
     /// </summary>
+    [Display(Name = "CreateHide"), Description("新增时隐藏")]
     public bool? CreateHide { get; set; }
 
     /// <summary>
     /// 修改时只读
     /// </summary>
+    [Display(Name = "ModifyDisabled"), Description("修改时只读")]
     public bool? ModifyDisabled { get; set; }
 
     /// <summary>
     /// 字段占比
     /// </summary>
+    [Display(Name = "GridSpan"), Description("字段占比")]
     public int? GridSpan { get; set; }
 
     /// <summary>
@@ -245,21 +266,25 @@ public class SmModuleColumnBase
     /// <summary>
     /// 是否为Master栏位
     /// </summary>
+    [Display(Name = "IsMasterId"), Description("是否为Master栏位")]
     public bool? IsMasterId { get; set; }
 
     /// <summary>
     /// 标签布局
     /// </summary>
+    [Display(Name = "LabelCol"), Description("标签布局")]
     public int? LabelCol { get; set; }
 
     /// <summary>
     /// 控件布局
     /// </summary>
+    [Display(Name = "WrapperCol"), Description("控件布局")]
     public int? WrapperCol { get; set; }
 
     /// <summary>
     /// TextArea最小行数
     /// </summary>
+    [Display(Name = "MinRows"), Description("TextArea最小行数")]
     public int? MinRows { get; set; }
 
     /// <summary>
@@ -271,16 +296,19 @@ public class SmModuleColumnBase
     /// <summary>
     /// 表单字段组别
     /// </summary>
+    [Display(Name = "FromFieldGroup"), Description("表单字段组别")]
     public int? FromFieldGroup { get; set; }
 
     /// <summary>
     /// 是否表格编辑
     /// </summary>
+    [Display(Name = "IsTableEditable"), Description("是否表格编辑")]
     public bool? IsTableEditable { get; set; }
 
     /// <summary>
     /// 是否自动编号
     /// </summary>
+    [Display(Name = "IsAutoCode"), Description("是否自动编号")]
     public bool? IsAutoCode { get; set; }
 
     /// <summary>
@@ -292,11 +320,13 @@ public class SmModuleColumnBase
     /// <summary>
     /// 是否复制
     /// </summary>
+    [Display(Name = "IsCopy"), Description("是否复制")]
     public bool? IsCopy { get; set; }
 
     /// <summary>
     /// 是否提示
     /// </summary>
+    [Display(Name = "IsTooltip"), Description("是否提示")]
     public bool? IsTooltip { get; set; }
 
     /// <summary>
@@ -314,5 +344,18 @@ public class SmModuleColumnBase
     /// <summary>
     /// 跟随主题颜色
     /// </summary>
+    [Display(Name = "IsThemeColor"), Description("跟随主题颜色")]
     public bool? IsThemeColor { get; set; }
+
+    /// <summary>
+    /// 是否颜色显示
+    /// </summary>
+    [Display(Name = "IsColor"), Description("是否颜色显示")]
+    public bool? IsColor { get; set; }
+
+    /// <summary>
+    /// 是否图标显示
+    /// </summary>
+    [Display(Name = "IsIcon"), Description("是否图标显示")]
+    public bool? IsIcon { get; set; }
 }

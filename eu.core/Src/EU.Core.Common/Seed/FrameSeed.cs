@@ -602,9 +602,8 @@ namespace " + strNameSpace + @"
                 build.Append($"    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), Column(TypeName = \"decimal(" + NUMERIC_PRECISION + "," + NUMERIC_SCALE + ")\")]\r\n");
             else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\")]\r\n");
-            else if (dataType == "decimal")
+            else
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\")]\r\n");
-
             switch (dataType)
             {
                 #region 字符串
