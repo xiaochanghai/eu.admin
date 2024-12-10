@@ -560,13 +560,18 @@ const SmProTable: React.FC<any> = props => {
         column = { ...column, renderText };
       }
 
-      // if (item.color) {
-      //   // let render = (_: any, record: any) => {
-      //   let render = (_: any, record: any) => {
-      //     return <span>{record[item.dataIndex]}</span>;
-      //   };
-      //   column = { ...column, render };
-      // }
+      if (item.isTagDisplay) {
+        // let render = (_: any, record: any) => {
+        let render = (_: any, record: any) => {
+          let valueEnum = item.valueEnum[record[item.dataIndex]];
+          return (
+            <Tag color={valueEnum.tagColor} bordered={valueEnum.tagBordered}>
+              {valueEnum.text}
+            </Tag>
+          );
+        };
+        column = { ...column, render };
+      }
       columns[index] = column;
     });
   return (

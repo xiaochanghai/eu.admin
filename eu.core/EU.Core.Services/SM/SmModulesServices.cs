@@ -639,8 +639,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     enumData = LovHelper.GetLovList(column.DataSource);
                 if (enumData.Count() > 0)
                 {
+                    if (enumData.Where(x => x.IsTagDisplay == true).Any())
+                        item.Add(new JProperty("isTagDisplay", true));
                     for (int n = 0; n < enumData.Count(); n++)
-                        enumobj.Add(new JProperty(enumData[n].Value, new JObject(new JProperty("text", enumData[n].Text))));
+                        enumobj.Add(new JProperty(enumData[n].Value, new JObject(
+                            new JProperty("text", enumData[n].Text), 
+                            new JProperty("tagColor", enumData[n].TagColor), 
+                            new JProperty("tagBordered", enumData[n].TagBordered),
+                            new JProperty("tagIcon", enumData[n].TagIcon)
+                            )));
 
                     item.Add(new JProperty("valueEnum", enumobj));
                     item.Add(new JProperty("filters", false));

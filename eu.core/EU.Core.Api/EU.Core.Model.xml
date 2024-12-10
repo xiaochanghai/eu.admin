@@ -7892,62 +7892,92 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmLovBase">
             <summary>
-            SmLov (Dto.Base)
+            字典管理 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovBase.LovCode">
             <summary>
-            LovCode
+            字典代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovBase.LovName">
             <summary>
-            LovName
+            字典名称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovBase.InureTime">
             <summary>
-            InureTime
+            生效时间
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovBase.AbateTime">
             <summary>
-            AbateTime
+            失效时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovBase.IsTagDisplay">
+            <summary>
+            是否标签显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmLovDetailBase">
             <summary>
-            SmLovDetail (Dto.Base)
+            字典明细 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.SmLovId">
             <summary>
-            SmLovId
+            字典ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.TaxisNo">
             <summary>
-            TaxisNo
+            排序
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.Value">
             <summary>
-            Value
+            参数值
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.Text">
             <summary>
-            Text
+            参数
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.InureTime">
             <summary>
-            InureTime
+            生效时间
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetailBase.AbateTime">
             <summary>
-            AbateTime
+            失效时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetailBase.TagColor">
+            <summary>
+            标签颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetailBase.TagBordered">
+            <summary>
+            标签是否有边框
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetailBase.TagIcon">
+            <summary>
+            标签图标
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetailBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumnBase">
@@ -18347,62 +18377,92 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmLov">
             <summary>
-            SmLov (Model)
+            字典管理 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLov.LovCode">
             <summary>
-            LovCode
+            字典代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLov.LovName">
             <summary>
-            LovName
+            字典名称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLov.InureTime">
             <summary>
-            InureTime
+            生效时间
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLov.AbateTime">
             <summary>
-            AbateTime
+            失效时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLov.IsTagDisplay">
+            <summary>
+            是否标签显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLov.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmLovDetail">
             <summary>
-            SmLovDetail (Model)
+            字典明细 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.SmLovId">
             <summary>
-            SmLovId
+            字典ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.TaxisNo">
             <summary>
-            TaxisNo
+            排序
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.Value">
             <summary>
-            Value
+            参数值
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.Text">
             <summary>
-            Text
+            参数
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.InureTime">
             <summary>
-            InureTime
+            生效时间
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmLovDetail.AbateTime">
             <summary>
-            AbateTime
+            失效时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetail.TagColor">
+            <summary>
+            标签颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetail.TagBordered">
+            <summary>
+            标签是否有边框
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetail.TagIcon">
+            <summary>
+            标签图标
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmLovDetail.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumn">

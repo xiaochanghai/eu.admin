@@ -588,7 +588,7 @@ public class ImportHelper
             string sql = @" SELECT A.{0} AS LovValue
                                   FROM SmImportDataDetail A
                                  WHERE A.ImportDataId = '{1}' AND A.SheetName='{3}'
-                                   AND NOT EXISTS (SELECT 1 FROM SmLovV B
+                                   AND NOT EXISTS (SELECT 1 FROM SmLov_V B
                                                 WHERE B.VALUE = A.{0}
                                                   AND B.LovCode='{2}')";
             sql = string.Format(sql, columnName, importDataId, lovCode, sheetName);
