@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/4/21 1:10:41  SimonHsiao   初版
+*V0.01  2024/12/10 9:21:46  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,34 +14,45 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
+
 namespace EU.Core.Model.Models;
 
-
 /// <summary>
-/// SmLov (Dto.Base)
+/// 字典管理 (Dto.Base)
 /// </summary>
 public class SmLovBase
 {
 
     /// <summary>
-    /// LovCode
+    /// 字典代码
     /// </summary>
-    [Display(Name = "LovCode"), Description("LovCode"), MaxLength(50, ErrorMessage = "LovCode 不能超过 50 个字符")]
+    [Display(Name = "LovCode"), Description("字典代码"), MaxLength(32, ErrorMessage = "字典代码 不能超过 32 个字符")]
     public string LovCode { get; set; }
 
     /// <summary>
-    /// LovName
+    /// 字典名称
     /// </summary>
-    [Display(Name = "LovName"), Description("LovName"), MaxLength(50, ErrorMessage = "LovName 不能超过 50 个字符")]
+    [Display(Name = "LovName"), Description("字典名称"), MaxLength(32, ErrorMessage = "字典名称 不能超过 32 个字符")]
     public string LovName { get; set; }
 
     /// <summary>
-    /// InureTime
+    /// 生效时间
     /// </summary>
     public DateTime? InureTime { get; set; }
 
     /// <summary>
-    /// AbateTime
+    /// 失效时间
     /// </summary>
     public DateTime? AbateTime { get; set; }
+
+    /// <summary>
+    /// 是否标签显示
+    /// </summary>
+    public bool? IsTagDisplay { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    public string Remark { get; set; }
 }
