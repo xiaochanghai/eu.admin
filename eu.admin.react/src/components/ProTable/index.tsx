@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, ColorPicker, Skeleton } from "antd";
+import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, Skeleton, Switch } from "antd";
 import { pagination } from "@/config/proTable";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
@@ -558,7 +558,6 @@ const SmProTable: React.FC<any> = props => {
         };
         column = { ...column, renderText };
       }
-
       if (item.isTagDisplay === true) {
         // let render = (_: any, record: any) => {
         let render = (_: any, record: any) => {
@@ -571,19 +570,23 @@ const SmProTable: React.FC<any> = props => {
         };
         column = { ...column, render };
       }
-      if (item.isColor === true) {
-        let render = (_: any, record: any) => {
-          if (record[item.dataIndex]) return <ColorPicker disabled defaultValue={record[item.dataIndex]} size="small" showText />;
-          else return null;
-        };
-        column = { ...column, render };
-      }
-      if (item.isIcon === true) {
-        let render = (_: any, record: any) => {
-          if (record[item.dataIndex]) return <Icon name={record[item.dataIndex]} />;
-          else return null;
-        };
-        column = { ...column, render };
+
+      switch (item.valueType) {
+        case "icon":
+          // eslint-disable-next-line no-case-declarations
+          let render1 = (_: any, record: any) => {
+            if (record[item.dataIndex]) return <Icon name={record[item.dataIndex]} />;
+            else return "";
+          };
+          column = { ...column, render: render1 };
+          break;
+        case "switch":
+          // eslint-disable-next-line no-case-declarations
+          let render = (_: any, record: any) => {
+            return <Switch disabled checked={record[item.dataIndex] === "true" ? true : false} />;
+          };
+          column = { ...column, render };
+          break;
       }
 
       columns[index] = column;

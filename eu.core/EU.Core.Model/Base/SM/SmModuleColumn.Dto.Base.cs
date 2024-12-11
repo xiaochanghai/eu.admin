@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2024/12/10 19:28:04  SimonHsiao   初版
+*V0.01  2024/12/11 11:32:05  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -346,16 +346,4 @@ public class SmModuleColumnBase
     /// </summary>
     [Display(Name = "IsThemeColor"), Description("跟随主题颜色")]
     public bool? IsThemeColor { get; set; }
-
-    /// <summary>
-    /// 是否颜色显示
-    /// </summary>
-    [Display(Name = "IsColor"), Description("是否颜色显示")]
-    public bool? IsColor { get; set; }
-
-    /// <summary>
-    /// 是否图标显示
-    /// </summary>
-    [Display(Name = "IsIcon"), Description("是否图标显示")]
-    public bool? IsIcon { get; set; }
 }

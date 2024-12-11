@@ -284,16 +284,12 @@ export const schemaDef: SchemaClz = {
       { value: "dateMonth", label: "月" },
       { value: "dateQuarter", label: "季度输入" },
       { value: "dateYear", label: "金额" },
-      { value: "money", label: "金额" }
+      { value: "money", label: "金额" },
+      { value: "switch", label: "开关" },
+      { value: "color", label: "颜色选择器" },
+      { value: "icon", label: "图标" }
     ]
   },
-  DataFormate: {
-    name: "数据格式",
-    type: "inputNumber",
-    tag: "basic",
-    mode: Mode.list
-  },
-
   Width: {
     name: "宽度",
     type: "inputNumber",
@@ -394,18 +390,6 @@ export const schemaDef: SchemaClz = {
     type: "input",
     tag: "basic",
     deps: [{ field: "IsTooltip", value: [true] }]
-  },
-  IsColor: {
-    name: "颜色显示",
-    type: "switch",
-    mode: Mode.list,
-    tag: "basic"
-  },
-  IsIcon: {
-    name: "图标显示",
-    type: "switch",
-    mode: Mode.list,
-    tag: "basic"
   },
   Remark: {
     name: "备注",

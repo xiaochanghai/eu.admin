@@ -586,7 +586,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             else
                 item.Add(new JProperty("align", column.Align));
             item.Add(new JProperty("sorter", column.Sorter));
-            if (column.ValueType.IsNotEmptyOrNull() && string.IsNullOrEmpty(column.DataFormate))
+            if (column.ValueType.IsNotEmptyOrNull())
                 item.Add(new JProperty("valueType", column.ValueType));
             if (moduleInfo.DefaultSort == column.DataIndex)
                 item.Add(new JProperty("defaultSortOrder", moduleInfo.DefaultSortOrder));
@@ -656,11 +656,6 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             if (column.HideInSearch == true)
                 item.Add(new JProperty("hideInSearch", true));
-
-            if (column.IsColor == true)
-                item.Add(new JProperty("isColor", true));
-            if (column.IsIcon == true)
-                item.Add(new JProperty("isIcon", true));
 
             columns.Add(item);
         }
@@ -1012,8 +1007,6 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.TooltipContent,
                     x.Color,
                     x.IsThemeColor,
-                    x.IsColor,
-                    x.IsIcon,
                     x.UpdateBy,
                     x.UpdateTime
                 })
