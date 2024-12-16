@@ -391,6 +391,13 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     deps: [{ field: "IsTooltip", value: [true] }]
   },
+  AllowClear: {
+    name: "允许清除",
+    type: "switch",
+    mode: Mode.form,
+    tag: "basic",
+    deps: { field: "FieldType", value: ["DatePicker", "Input"] }
+  },
   Remark: {
     name: "备注",
     type: "input",

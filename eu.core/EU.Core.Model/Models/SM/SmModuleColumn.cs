@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2024/12/11 11:32:05  SimonHsiao   初版
+* V0.01  2024/12/11 17:03:06  SimonHsiao   初版
 *
 * Copyright(c) 2024 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -347,4 +347,10 @@ public class SmModuleColumn : BasePoco
     /// </summary>
     [Display(Name = "IsThemeColor"), Description("跟随主题颜色")]
     public bool? IsThemeColor { get; set; }
+
+    /// <summary>
+    /// 清空内容
+    /// </summary>
+    [Display(Name = "AllowClear"), Description("清空内容")]
+    public bool? AllowClear { get; set; }
 }

@@ -201,6 +201,22 @@ public class SmModuleForm
     /// 表单字段组别
     /// </summary>
     public int? FromFieldGroup { get; set; }
+
+    /// <summary>
+    /// 清空内容
+    /// </summary>
+    [Display(Name = "AllowClear"), Description("清空内容")]
+    public bool? AllowClear { get; set; }
+
+    /// <summary>
+    /// 是否提示
+    /// </summary>
+    public bool? IsTooltip { get; set; }
+
+    /// <summary>
+    /// 提示内容
+    /// </summary>
+    public string TooltipContent { get; set; }
 }
 
 public class SmModuleFormOption : SmModuleColumn

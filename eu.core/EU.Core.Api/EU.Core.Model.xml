@@ -8255,6 +8255,11 @@
             跟随主题颜色
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumnBase.AllowClear">
+            <summary>
+            清空内容
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -18740,6 +18745,11 @@
             跟随主题颜色
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleColumn.AllowClear">
+            <summary>
+            清空内容
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModules">
             <summary>
             系统模板 (Model)
@@ -21935,6 +21945,21 @@
         <member name="P:EU.Core.Model.SmModuleForm.FromFieldGroup">
             <summary>
             表单字段组别
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.AllowClear">
+            <summary>
+            清空内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.IsTooltip">
+            <summary>
+            是否提示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.TooltipContent">
+            <summary>
+            提示内容
             </summary>
         </member>
         <member name="T:EU.Core.Model.GridListReturn">

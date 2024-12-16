@@ -975,6 +975,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.ColumnMode,
                     x.IsTooltip,
                     x.TooltipContent,
+                    x.AllowClear,
                     x.Remark,
                     x.UpdateBy,
                     x.UpdateTime
