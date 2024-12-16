@@ -1,16 +1,21 @@
 import { Form } from "antd";
 import ComboGrid from "@/components/ComBoGrid/index";
 import { ModifyType } from "@/api/interface/index";
+import FieldTitle from "./FieldTitle";
 
 const FormItem = Form.Item;
 
 const InputField: React.FC<any> = props => {
   let { field, disabled, onChange, parentColumn, parentId, modifyType } = props;
-  const { FormTitle, DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled } = field;
+  const { DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled } = field;
   if ((modifyType == ModifyType.Edit && ModifyDisabled) || Disabled) disabled = true;
 
   return (
-    <FormItem name={DataIndex} label={FormTitle} rules={[{ required: Required ?? false }]}>
+    <FormItem
+      name={DataIndex}
+      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
+      rules={[{ required: Required ?? false }]}
+    >
       <ComboGrid
         code={DataSource}
         disabled={disabled}

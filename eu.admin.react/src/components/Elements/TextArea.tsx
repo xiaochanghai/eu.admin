@@ -2,10 +2,11 @@ import React from "react";
 import { Input, Form } from "antd";
 const { TextArea } = Input;
 const FormItem = Form.Item;
+import FieldTitle from "./FieldTitle";
 
 const InputField: React.FC<any> = props => {
   const { field, disabled } = props;
-  const { FormTitle, DefaultValue, DataIndex, Placeholder, Required, Disabled, MaxLength, LabelCol, WrapperCol, MinRows } = field;
+  const { DefaultValue, DataIndex, Placeholder, Required, Disabled, MaxLength, LabelCol, WrapperCol, MinRows } = field;
 
   return (
     <FormItem
@@ -28,7 +29,7 @@ const InputField: React.FC<any> = props => {
           : {}
       }
       name={DataIndex}
-      label={FormTitle}
+      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
       rules={[{ required: Required ?? false }]}
       initialValue={DefaultValue ?? null}
     >

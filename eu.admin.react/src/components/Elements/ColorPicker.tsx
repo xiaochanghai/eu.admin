@@ -1,15 +1,16 @@
 import React from "react";
 import { ColorPicker, Form } from "antd";
+import FieldTitle from "./FieldTitle";
 
 const FormItem = Form.Item;
 
 const InputField: React.FC<any> = props => {
   const { field, disabled } = props;
-  const { FormTitle, DefaultValue, DataIndex, Required, Disabled } = field;
+  const { DefaultValue, DataIndex, Required, Disabled } = field;
   return (
     <FormItem
       name={DataIndex}
-      label={FormTitle}
+      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
       rules={[{ required: Required ?? false }]}
       initialValue={DefaultValue ?? null}
       normalize={value => {

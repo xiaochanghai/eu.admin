@@ -542,21 +542,25 @@ const SmProTable: React.FC<any> = props => {
 
   columns &&
     columns.map((item: any, index: any) => {
+      let hasChange = false;
       let column = columns[index];
       if (!item.hideInSearch && item.fieldType == "ComboGrid") {
         let renderFormItem = () => <ComboGrid code={item.dataSource} />;
         column = { ...column, renderFormItem };
+        hasChange = true;
       }
       if (item.isFollowThemeColor === true) {
         let renderText = (val: string) => {
           return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
         };
         column = { ...column, renderText };
+        hasChange = true;
       } else if (item.color) {
         let renderText = (val: string) => {
           return <span style={{ color: item.color }}>{val}</span>;
         };
         column = { ...column, renderText };
+        hasChange = true;
       }
       if (item.isTagDisplay === true) {
         // let render = (_: any, record: any) => {
@@ -569,6 +573,7 @@ const SmProTable: React.FC<any> = props => {
           );
         };
         column = { ...column, render };
+        hasChange = true;
       }
 
       switch (item.valueType) {
@@ -579,6 +584,7 @@ const SmProTable: React.FC<any> = props => {
             else return "";
           };
           column = { ...column, render: render1 };
+          hasChange = true;
           break;
         case "switch":
           // eslint-disable-next-line no-case-declarations
@@ -586,10 +592,10 @@ const SmProTable: React.FC<any> = props => {
             return <Switch disabled checked={record[item.dataIndex] === "true" ? true : false} />;
           };
           column = { ...column, render };
+          hasChange = true;
           break;
       }
-
-      columns[index] = column;
+      if (hasChange == true) columns[index] = column;
     });
   return (
     <>
