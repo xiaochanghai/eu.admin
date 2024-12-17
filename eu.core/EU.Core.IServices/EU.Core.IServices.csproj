@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Folder Include="IDS4Db\" />
+    <Folder Include="IV\" />
   </ItemGroup>
 
 </Project>

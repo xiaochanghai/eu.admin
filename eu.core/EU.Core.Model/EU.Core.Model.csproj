@@ -18,7 +18,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Base\IV\" />
+	  <Folder Include="Edit\IV\" />
 	  <Folder Include="Entity\AttributeManager\" />
+	  <Folder Include="Insert\IV\" />
+	  <Folder Include="Models\IV\" />
+	  <Folder Include="View\IV\" />
 	</ItemGroup>
 
 </Project>
