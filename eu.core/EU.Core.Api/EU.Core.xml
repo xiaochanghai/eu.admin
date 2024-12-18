@@ -1050,6 +1050,51 @@
             <param name="modelModify"></param>
             <returns></returns>
         </member>
+        <member name="T:EU.Core.Api.Controllers.IvAccountingController">
+            <summary>
+            库存建帐(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvAccountingDetailController">
+            <summary>
+            库存建帐明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvCheckController">
+            <summary>
+            库存盘点单(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvCheckDetailController">
+            <summary>
+            库存盘点单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvInController">
+            <summary>
+            库存入库单(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvInDetailController">
+            <summary>
+            库存入库单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOutController">
+            <summary>
+            库存出库单(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvOutDetailController">
+            <summary>
+            库存出库单明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.IvSafeConfigController">
+            <summary>
+            安全库存设置(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.MfInOrderController">
             <summary>
             MfInOrder(Controller)

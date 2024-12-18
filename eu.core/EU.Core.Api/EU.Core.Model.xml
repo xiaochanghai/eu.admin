@@ -2464,6 +2464,371 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.IvAccountingBase">
+            <summary>
+            库存建帐 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingBase.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingBase.OrderDate">
+            <summary>
+            初始化日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvAccountingDetailBase">
+            <summary>
+            库存建帐明细 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.InitTime">
+            <summary>
+            初始化时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheckBase">
+            <summary>
+            库存盘点单 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderDate">
+            <summary>
+            盘点日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.StockId">
+            <summary>
+            盘点仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.GoodsLocationId">
+            <summary>
+            盘点货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheckDetailBase">
+            <summary>
+            库存盘点单明细 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.QTY">
+            <summary>
+            初始数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.Check_QTY">
+            <summary>
+            盘点数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvInBase">
+            <summary>
+            库存入库单 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.OrderDate">
+            <summary>
+            日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.SupplyId">
+            <summary>
+            供应商ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvInDetailBase">
+            <summary>
+            库存入库单明细 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.DrawingNo">
+            <summary>
+            图号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.Price">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.BatchNo">
+            <summary>
+            批次号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailBase.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOutBase">
+            <summary>
+            库存出库单 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.OrderDate">
+            <summary>
+            日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.CustomerId">
+            <summary>
+            客户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOutDetailBase">
+            <summary>
+            库存出库单明细 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.Price">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.BatchNo">
+            <summary>
+            批次号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvSafeConfigBase">
+            <summary>
+            安全库存设置 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfigBase.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfigBase.Safe_QTY">
+            <summary>
+            安全库存量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfigBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.MfInOrderBase">
             <summary>
             MfInOrder (Dto.Base)
@@ -8325,6 +8690,51 @@
             设备分类 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.EditIvAccountingInput">
+            <summary>
+            库存建帐 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvAccountingDetailInput">
+            <summary>
+            库存建帐明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvCheckInput">
+            <summary>
+            库存盘点单 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvCheckDetailInput">
+            <summary>
+            库存盘点单明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvInInput">
+            <summary>
+            库存入库单 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvInDetailInput">
+            <summary>
+            库存入库单明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvOutInput">
+            <summary>
+            库存出库单 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvOutDetailInput">
+            <summary>
+            库存出库单明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EditIvSafeConfigInput">
+            <summary>
+            安全库存设置 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.EditMfInOrderInput">
             <summary>
             MfInOrder (Dto.EditInput)
@@ -8968,6 +9378,51 @@
         <member name="T:EU.Core.Model.Models.InsertEmMachineTypeInput">
             <summary>
             设备分类 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvAccountingInput">
+            <summary>
+            库存建帐 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvAccountingDetailInput">
+            <summary>
+            库存建帐明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvCheckInput">
+            <summary>
+            库存盘点单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvCheckDetailInput">
+            <summary>
+            库存盘点单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvInInput">
+            <summary>
+            库存入库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvInDetailInput">
+            <summary>
+            库存入库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvOutInput">
+            <summary>
+            库存出库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvOutDetailInput">
+            <summary>
+            库存出库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvSafeConfigInput">
+            <summary>
+            安全库存设置 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.InsertMfInOrderInput">
@@ -11891,6 +12346,371 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.EmMachineType.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvAccounting">
+            <summary>
+            库存建帐 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccounting.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccounting.OrderDate">
+            <summary>
+            初始化日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccounting.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvAccountingDetail">
+            <summary>
+            库存建帐明细 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.InitTime">
+            <summary>
+            初始化时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheck">
+            <summary>
+            库存盘点单 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.OrderDate">
+            <summary>
+            盘点日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.StockId">
+            <summary>
+            盘点仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.GoodsLocationId">
+            <summary>
+            盘点货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheckDetail">
+            <summary>
+            库存盘点单明细 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.QTY">
+            <summary>
+            初始数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.Check_QTY">
+            <summary>
+            盘点数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvIn">
+            <summary>
+            库存入库单 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.OrderDate">
+            <summary>
+            日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.SupplyId">
+            <summary>
+            供应商ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvIn.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvInDetail">
+            <summary>
+            库存入库单明细 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.DrawingNo">
+            <summary>
+            图号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.Price">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.BatchNo">
+            <summary>
+            批次号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetail.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOut">
+            <summary>
+            库存出库单 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.OrderDate">
+            <summary>
+            日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.CustomerId">
+            <summary>
+            客户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOutDetail">
+            <summary>
+            库存出库单明细 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.OrderId">
+            <summary>
+            订单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.SerialNumber">
+            <summary>
+            序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.QTY">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.Price">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.BatchNo">
+            <summary>
+            批次号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.StockId">
+            <summary>
+            仓库ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.GoodsLocationId">
+            <summary>
+            货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvSafeConfig">
+            <summary>
+            安全库存设置 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfig.MaterialId">
+            <summary>
+            物料ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfig.Safe_QTY">
+            <summary>
+            安全库存量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvSafeConfig.Remark">
             <summary>
             备注
             </summary>
@@ -18032,6 +18852,51 @@
         <member name="T:EU.Core.Model.Models.EmMachineTypeDto">
             <summary>
             设备分类(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvAccountingDto">
+            <summary>
+            库存建帐(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvAccountingDetailDto">
+            <summary>
+            库存建帐明细(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheckDto">
+            <summary>
+            库存盘点单(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvCheckDetailDto">
+            <summary>
+            库存盘点单明细(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvInDto">
+            <summary>
+            库存入库单(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvInDetailDto">
+            <summary>
+            库存入库单明细(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOutDto">
+            <summary>
+            库存出库单(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvOutDetailDto">
+            <summary>
+            库存出库单明细(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.IvSafeConfigDto">
+            <summary>
+            安全库存设置(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.MfInOrderDto">
