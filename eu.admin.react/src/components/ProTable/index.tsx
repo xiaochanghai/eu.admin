@@ -549,19 +549,7 @@ const SmProTable: React.FC<any> = props => {
         column = { ...column, renderFormItem };
         hasChange = true;
       }
-      if (item.isFollowThemeColor === true) {
-        let renderText = (val: string) => {
-          return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
-        };
-        column = { ...column, renderText };
-        hasChange = true;
-      } else if (item.color) {
-        let renderText = (val: string) => {
-          return <span style={{ color: item.color }}>{val}</span>;
-        };
-        column = { ...column, renderText };
-        hasChange = true;
-      }
+
       if (item.isTagDisplay === true) {
         // let render = (_: any, record: any) => {
         let render = (_: any, record: any) => {
@@ -593,6 +581,21 @@ const SmProTable: React.FC<any> = props => {
           };
           column = { ...column, render };
           hasChange = true;
+          break;
+        case "fontColor":
+          if (item.isFollowThemeColor === true) {
+            let renderText = (val: string) => {
+              return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
+            };
+            column = { ...column, renderText };
+            hasChange = true;
+          } else if (item.color) {
+            let renderText = (val: string) => {
+              return <span style={{ color: item.color }}>{val}</span>;
+            };
+            column = { ...column, renderText };
+            hasChange = true;
+          }
           break;
       }
       if (hasChange == true) columns[index] = column;

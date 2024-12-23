@@ -286,6 +286,7 @@ export const schemaDef: SchemaClz = {
       { value: "dateYear", label: "金额" },
       { value: "money", label: "金额" },
       { value: "switch", label: "开关" },
+      { value: "fontColor", label: "字体颜色" },
       { value: "color", label: "颜色选择器" },
       { value: "icon", label: "图标" }
     ]
@@ -340,6 +341,21 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     mode: Mode.list,
     deps: { field: "FieldType", value: ["InputNumber"] }
+  },
+  IsAutoCode: {
+    name: "自动编号",
+    type: "switch",
+    mode: Mode.form,
+    tag: "basic",
+    deps: { field: "FieldType", value: ["Input"] }
+  },
+  AutoCodeDataSource: {
+    name: "自动编号来源",
+    type: "comboGrid",
+    tag: "basic",
+    comboGridCode: "SmAutoCode",
+    deps: { field: "IsAutoCode", value: [true] },
+    mode: Mode.form
   },
   IsSum: {
     name: "是否合计",

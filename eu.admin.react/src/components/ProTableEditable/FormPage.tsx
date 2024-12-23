@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "@/redux";
-import { Popconfirm, Button } from "antd";
+import { Popconfirm, Button, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
 import { Loading } from "@/components/Loading/index";
 import { getModuleInfo } from "@/api/modules/module";
@@ -18,7 +18,7 @@ const ProTableEditable: React.FC<any> = props => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  let { moduleCode, modifyType, masterId, tableRef, editableCallBack, addCallBack } = props;
+  let { moduleCode, modifyType, masterId, tableRef, editableCallBack, addCallBack, successCallBack, failCallBack } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
   let { masterColumn, url } = moduleInfo || {};
 
@@ -119,20 +119,24 @@ const ProTableEditable: React.FC<any> = props => {
               //   </Space>
               // ]}
               toolBarRender={() => [
-                <Button
-                  disabled={modifyType == ModifyType.Edit ? false : true}
-                  type="primary"
-                  icon={<Icon name="PlusOutlined" />}
-                  onClick={() => {
-                    if (!masterId) {
-                      message.error("请先保存主表数据！");
-                      return;
-                    }
-                    if (addCallBack) addCallBack();
-                  }}
-                >
-                  添加
-                </Button>
+                <Space style={{ display: "flex", justifyContent: "center" }}>
+                  {addCallBack ? (
+                    <Button
+                      disabled={modifyType == ModifyType.Edit ? false : true}
+                      type="primary"
+                      icon={<Icon name="PlusOutlined" />}
+                      onClick={() => {
+                        if (!masterId) {
+                          message.error("请先保存主表数据！");
+                          return;
+                        }
+                        if (addCallBack) addCallBack();
+                      }}
+                    >
+                      添加
+                    </Button>
+                  ) : null}
+                </Space>
               ]}
               tableAlertRender={false}
               tableAlertOptionRender={false}
@@ -204,9 +208,12 @@ const ProTableEditable: React.FC<any> = props => {
                 type: "multiple",
                 editableKeys,
                 onSave: async (rowKey, data: any, _row) => {
-                  let params = { ...data, ModuleCode: moduleCode };
+                  let params = { ...data, ModuleCode: moduleCode, masterId };
                   let { Success, Data } = await http.put<any>(url + "/UpdateReturn/" + rowKey, params);
-                  if (Success) if (editableCallBack) data = editableCallBack(data, Data);
+                  if (Success) {
+                    if (editableCallBack) data = editableCallBack(data, Data);
+                    if (successCallBack) data = successCallBack(data, Data);
+                  } else if (failCallBack) data = failCallBack();
                 },
                 onChange: setEditableRowKeys
               }}
