@@ -13,7 +13,7 @@
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
-*/ 
+*/
 
 namespace EU.Core.Model.Models;
 
@@ -22,4 +22,14 @@ namespace EU.Core.Model.Models;
 /// </summary>
 public class BdMaterialDto : BdMaterial
 {
+
+    /// <summary>
+    /// 物料名称
+    /// </summary>
+    public string MaterialName { get; set; }
+
+    /// <summary>
+    /// 单位
+    /// </summary>
+    public string UnitName { get; set; }
 }

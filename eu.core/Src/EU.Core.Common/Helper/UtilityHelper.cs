@@ -66,7 +66,8 @@ public partial class Utility
                     columnName = dvModuleColumns[j].DataIndex;
                     valueType = dvModuleColumns[j].ValueType;
                     dateFormat = dvModuleColumns[j].DataFormate;
-                    value = dt.Rows[i][columnName].ToString();
+                    if (dt.Columns.Contains(columnName))
+                        value = dt.Rows[i][columnName].ToString();
 
                     if (dvModuleColumns[j].IsBool != null && dvModuleColumns[j].IsBool.Value)
                         IsBool = dvModuleColumns[j].IsBool.Value;

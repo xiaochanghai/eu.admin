@@ -59,21 +59,21 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="entity">实体类</param>
     /// <returns>主键ID</returns>
-    public virtual async Task<Guid> Add(TInsertDto entity)
+    public virtual async Task<Guid> Add(TInsertDto entity, Guid? id = null)
     {
         var entity1 = Mapper.Map(entity).ToANew<TEntity>();
-        return await Add(entity1);
+        return await Add(entity1, id);
     }
     /// <summary>
     /// 写入实体数据
     /// </summary>
     /// <param name="entity">实体类</param>
     /// <returns>主键ID</returns>
-    public virtual async Task<Guid> Add(TEntity entity)
+    public virtual async Task<Guid> Add(TEntity entity, Guid? id = null)
     {
         CheckForm(entity, OperateType.Add);
 
-        return await BaseDal.Add(entity);
+        return await BaseDal.Add(entity, id);
     }
     /// <summary>
     /// 写入实体数据
@@ -325,7 +325,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="objId">id（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
     /// <returns>数据实体</returns>
-    public async Task<TEntityDto> QueryById(object objId)
+    public virtual async Task<TEntityDto> QueryById(object objId)
     {
         return await QueryDto(objId, false);
     }
@@ -335,7 +335,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <param name="objId">id（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
     /// <param name="blnUseCache">是否使用缓存</param>
     /// <returns>数据实体Dto</returns>
-    public async Task<TEntityDto> QueryDto(object objId, bool blnUseCache = false)
+    public virtual async Task<TEntityDto> QueryDto(object objId, bool blnUseCache = false)
     {
         var data = await Query(objId, blnUseCache);
         return Mapper.Map(data).ToANew<TEntityDto>();

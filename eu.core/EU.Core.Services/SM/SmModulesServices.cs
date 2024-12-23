@@ -56,6 +56,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     }
     #endregion
 
+    #region 更新
+
+    public override async Task<bool> Update(Guid Id, object entity)
+    {
+        ModuleInfo.Init();
+        return await base.Update(Id, entity);
+    }
+    #endregion
+
     #region 获取左侧菜单
     /// <summary>
     /// 左侧菜单递归
@@ -571,6 +580,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 new JProperty("id", column.ID),
                 new JProperty("dataIndex", column.DataIndex),
                 new JProperty("hideInTable", column.HideInTable),
+                new JProperty("hideInForm", column.HideInForm),
                 new JProperty("fieldType", column.FieldType),
                 new JProperty("dataSource", column.DataSource),
                 new JProperty("ellipsis", true),
@@ -946,11 +956,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         {
             if (column.FieldType == "ComboGrid")
                 entity.DataSource = column.ComboGridDataSource;
-            if (column.FieldType == "ComboBox")
+            else if (column.FieldType == "ComboBox")
             {
                 entity.DataSource = column.ComboBoxDataSource;
                 if (column.DataSource.IsNullOrEmpty() && column.IsLovCode == true)
                     entity.DataSource = entity.DataIndex;
+            }
+            else if (column.FieldType == "Input" && column.IsAutoCode == true)
+            {
+                entity.DataSource = column.AutoCodeDataSource;
             }
 
             await Db.Updateable(entity)
@@ -1049,13 +1063,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             x.FormTitle = string.IsNullOrWhiteSpace(x.FormTitle) ? x.Title : x.FormTitle;
             if (x.FieldType == "ComboGrid")
                 x.ComboGridDataSource = x.DataSource;
-            if (x.FieldType == "ComboBox")
+            else if (x.FieldType == "ComboBox")
             {
                 if (x.DataSource.IsNullOrEmpty() && x.IsLovCode == true)
                     x.DataSource = x.DataIndex;
                 x.ComboBoxDataSource = x.DataSource;
 
             }
+            else if (x.FieldType == "Input" && x.IsAutoCode == true)
+                x.AutoCodeDataSource = x.DataSource;
             result[i].ID = moduleColumns[i].ID;
             i++;
         });

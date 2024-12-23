@@ -23,9 +23,61 @@ namespace EU.Core.Services;
 public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAccountingDetailDto, InsertIvAccountingDetailInput, EditIvAccountingDetailInput>, IIvAccountingDetailServices
 {
     private readonly IBaseRepository<IvAccountingDetail> _dal;
-    public IvAccountingDetailServices(IBaseRepository<IvAccountingDetail> dal)
+    private readonly IBdMaterialServices _materialServices;
+    public IvAccountingDetailServices(IBaseRepository<IvAccountingDetail> dal, IBdMaterialServices materialServices)
     {
         this._dal = dal;
         base.BaseDal = dal;
+        _materialServices = materialServices;
     }
+
+    #region 更新
+    public override async Task<IvAccountingDetailDto> UpdateReturn(Guid Id, object entity1)
+    {
+        try
+        {
+            var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+            var orderId = dict["masterId"].ObjToGuid();
+            var entity = await Query(Id);
+            var model = ConvertToEntity(entity1);
+
+            //if (model.MaterialId != null && model.StockId != null && model.GoodsLocationId != null)
+            //{
+            //    var detail = await base.QuerySingle(x =>
+            //    x.OrderId == orderId &&
+            //    x.MaterialId == model.MaterialId &&
+            //    x.StockId == model.StockId &&
+            //    x.GoodsLocationId == model.GoodsLocationId);
+            //}
+
+            if (entity is null)
+                await base.Add(new InsertIvAccountingDetailInput() { OrderId = orderId }, Id);
+
+            var lstColumns = new ModuleSqlColumn("IV_STOCK_ACCOUNTING_DETAIL_MNG").GetModuleTableEditableColumns();
+
+            lstColumns.Add("UpdateBy");
+            lstColumns.Add("UpdateTime");
+            await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
+
+            var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();
+
+            var material = await _materialServices.QueryDto(model.MaterialId);
+            model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
+            model1.Specifications = material.Specifications;
+            model1.UnitName = material.UnitName;
+            if (model.StockId != null)
+                model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
+            if (model.GoodsLocationId != null)
+                model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
+
+            await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvAccountingDetail", orderId);
+
+            return model1;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    #endregion
 }

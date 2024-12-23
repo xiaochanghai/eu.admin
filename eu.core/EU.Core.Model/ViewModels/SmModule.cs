@@ -222,7 +222,9 @@ public class SmModuleForm
 public class SmModuleFormOption : SmModuleColumn
 {
     public string ComboBoxDataSource { get; set; }
+    
     public string ComboGridDataSource { get; set; }
+    public string AutoCodeDataSource { get; set; }
 }
 
 /// <summary>

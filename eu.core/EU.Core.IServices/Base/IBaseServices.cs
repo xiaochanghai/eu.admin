@@ -45,14 +45,14 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     /// </summary>
     /// <param name="entity">实体类</param>
     /// <returns>主键ID</returns>
-    Task<Guid> Add(TInsertDto model);
+    Task<Guid> Add(TInsertDto model, Guid? id = null);
 
     /// <summary>
     /// 写入实体数据
     /// </summary>
     /// <param name="entity">实体类</param>
     /// <returns>主键ID</returns>
-    Task<Guid> Add(TEntity model);
+    Task<Guid> Add(TEntity model, Guid? id = null);
 
     /// <summary>
     /// 写入实体数据

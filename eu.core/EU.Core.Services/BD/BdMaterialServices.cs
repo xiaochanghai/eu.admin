@@ -28,4 +28,10 @@ public class BdMaterialServices : BaseServices<BdMaterial, BdMaterialDto, Insert
         this._dal = dal;
         base.BaseDal = dal;
     }
+    public override async Task<BdMaterialDto> QueryDto(object objId, bool blnUseCache = false)
+    {
+        var data = await Db.Ado.SqlQuerySingleAsync<BdMaterialDto>($"SELECT * FROM BdMaterial_V WHERE ID='{objId}'") ;
+        return data;
+    }
+
 }

@@ -18814,6 +18814,16 @@
             物料管理(Dto.View)
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialDto.MaterialName">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialDto.UnitName">
+            <summary>
+            单位
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdMaterialInventoryDto">
             <summary>
             物料库存(Dto.View)
@@ -18862,6 +18872,31 @@
         <member name="T:EU.Core.Model.Models.IvAccountingDetailDto">
             <summary>
             库存建帐明细(Dto.View)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailDto.MaterialName">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailDto.Specifications">
+            <summary>
+            规格
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailDto.UnitName">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailDto.StockName">
+            <summary>
+            仓库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvAccountingDetailDto.GoodsLocationName">
+            <summary>
+            货位
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvCheckDto">

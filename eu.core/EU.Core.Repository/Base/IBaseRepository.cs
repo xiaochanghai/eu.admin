@@ -46,7 +46,7 @@ public interface IBaseRepository<TEntity> where TEntity : class
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    Task<Guid> Add(TEntity model);
+    Task<Guid> Add(TEntity model, Guid? id = null);
 
 
     Task<Guid> Add(TEntity entity, List<string> insertColumns);

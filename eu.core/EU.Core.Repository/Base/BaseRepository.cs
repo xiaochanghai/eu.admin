@@ -102,15 +102,18 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// </summary>
     /// <param name="entity">实体类</param>
     /// <returns></returns>
-    public async Task<Guid> Add(TEntity entity)
+    public async Task<Guid> Add(TEntity entity, Guid? id = null)
     {
-        var id = Guid.Empty;
+        var id1 = Guid.Empty;
+        if (id != null)
+            if (entity is RootEntityTkey<Guid> rootEntity1)
+                rootEntity1.ID = id.Value;
         var insert = _db.Insertable(entity);
         string sql = insert.ToSqlString();
         if (entity is RootEntityTkey<Guid> rootEntity)
-            id = rootEntity.ID;
+            id1 = rootEntity.ID;
         await _db.Ado.ExecuteCommandAsync(sql);
-        return id;
+        return id1;
     }
 
     /// <summary>
