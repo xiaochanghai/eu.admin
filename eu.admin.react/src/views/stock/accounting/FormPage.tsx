@@ -3,7 +3,7 @@ import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { useDispatch } from "@/redux";
 import { Flex, Form, Card, Popconfirm } from "antd";
 import FormToolbar from "@/components/FormToolbar/index";
-import EditableProTable from "@/components/ProTableEditable/FormPage";
+import EditableProTable from "@/components/ProTableEditable/index";
 import { Loading } from "@/components/Loading/index";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
 import Layout from "@/components/Elements/Layout";
@@ -28,6 +28,7 @@ const FormPage: React.FC<any> = props => {
   const [auditStatus, setAuditStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [dataSource, setDataSource] = useState<any>([]);
+  // const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
 
   const [form] = Form.useForm();
   const tableRef = useRef<any>();
@@ -237,6 +238,11 @@ const FormPage: React.FC<any> = props => {
     columns.map((item: any, index: any) => {
       let hasChange = false;
       let column = columns[index];
+      let formItemProps = () => {
+        return {
+          rules: [{ required: true, message: "此项为必填项" }]
+        };
+      };
       if (item.dataIndex == "MaterialId") {
         // let renderFormItem = () => <ComboGrid code="BdMaterialClass" />;
 
@@ -258,7 +264,7 @@ const FormPage: React.FC<any> = props => {
           return <>{record.MaterialName}</>;
         };
 
-        column = { ...column, renderFormItem, render };
+        column = { ...column, renderFormItem, render, formItemProps };
         hasChange = true;
       } else if (item.dataIndex == "StockId") {
         let renderFormItem = (item: any, { isEditable }: any, _form: any) => {
@@ -288,7 +294,7 @@ const FormPage: React.FC<any> = props => {
           return <>{record.StockName != "" ? record.StockName : "-"}</>;
         };
 
-        column = { ...column, renderFormItem, render };
+        column = { ...column, renderFormItem, render, formItemProps };
         hasChange = true;
       } else if (item.dataIndex == "GoodsLocationId") {
         let renderFormItem = (item: any, { isEditable }: any, _form: any) => {
@@ -314,7 +320,7 @@ const FormPage: React.FC<any> = props => {
           return <>{record.GoodsLocationName != "" ? record.GoodsLocationName : "-"}</>;
         };
 
-        column = { ...column, renderFormItem, render };
+        column = { ...column, renderFormItem, render, formItemProps };
         hasChange = true;
       }
 
@@ -366,6 +372,7 @@ const FormPage: React.FC<any> = props => {
                   tableRef={tableRef}
                   modifyType={modifyType}
                   masterId={id}
+                  moduleInfo={moduleInfo1}
                   columns={columns}
                   // addCallBack={() => {
                   //   tableRef.current.addEditRecord?.({
@@ -374,7 +381,8 @@ const FormPage: React.FC<any> = props => {
                   //   // setWaitSelectVisible(true);
                   // }}
                   recordCreatorProps={{
-                    newRecordType: "dataSource",
+                    position: "end",
+                    // newRecordType: "dataSource",
                     record: () => ({
                       ID: createUuid()
                     })
