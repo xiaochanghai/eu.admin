@@ -584,26 +584,21 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 new JProperty("fieldType", column.FieldType),
                 new JProperty("dataSource", column.DataSource),
                 new JProperty("ellipsis", true),
+                new JProperty("required", column.Required == true ? true : false),
+                new JProperty("align", column.Align.IsNullOrEmpty() ? "center" : column.Align),
+                new JProperty("sorter",  column.Sorter),
+                new JProperty("editable", column.IsTableEditable == true ? true : false),
             };
 
             if (column.Width != null)
                 item.Add(new JProperty("width", column.Width));
             //else
             //    item.Add(new JProperty("width", 100));
-
-            if (column.Align.IsNullOrEmpty())
-                item.Add(new JProperty("align", "center"));
-            else
-                item.Add(new JProperty("align", column.Align));
-            item.Add(new JProperty("sorter", column.Sorter));
+              
             if (column.ValueType.IsNotEmptyOrNull())
                 item.Add(new JProperty("valueType", column.ValueType));
             if (moduleInfo.DefaultSort == column.DataIndex)
                 item.Add(new JProperty("defaultSortOrder", moduleInfo.DefaultSortOrder));
-            if (column.IsTableEditable == true)
-                item.Add(new JProperty("editable", true));
-            else
-                item.Add(new JProperty("editable", false));
 
             if (column.IsCopy == true)
                 item.Add(new JProperty("copyable", true));
