@@ -194,7 +194,7 @@ const FormPage: React.FC<any> = props => {
   const actionColumn = {
     title: "操作",
     dataIndex: "option",
-    fixed: "right",
+    fixed: "left",
     valueType: "option",
     width: 150,
     // render: (text, record, _, action) => component(text, record, _, action)
@@ -244,34 +244,20 @@ const FormPage: React.FC<any> = props => {
         };
       };
       if (item.dataIndex == "MaterialId") {
-        // let renderFormItem = () => <ComboGrid code="BdMaterialClass" />;
-
-        let renderFormItem = (item: any, { isEditable }: any, _form: any) => {
-          return isEditable ? (
-            <ComboGrid
-              code="BdMaterial"
-              // comboValue={item.entity.StockId ?? null}
-              // onChange={async (value: any) => {
-              //   if (value) {
-              //   }
-              // }}
-            />
-          ) : (
-            <>{item.entity.MaterialName}-111</>
-          );
+        let renderFormItem = (_item: any, { isEditable }: any, _form: any) => {
+          return isEditable ? <ComboGrid code="BdMaterial" /> : null;
         };
         let render = (_text: any, record: any) => {
           return <>{record.MaterialName}</>;
         };
 
-        column = { ...column, renderFormItem, render, formItemProps };
+        column = { ...column, renderFormItem, render };
         hasChange = true;
       } else if (item.dataIndex == "StockId") {
         let renderFormItem = (item: any, { isEditable }: any, _form: any) => {
           return isEditable ? (
             <ComboGrid
               code="BdStock"
-              // comboValue={item.entity.StockId ?? null}
               onChange={async (value: any) => {
                 if (value) {
                   item.entity = { ...item.entity, StockId: value };
@@ -286,15 +272,13 @@ const FormPage: React.FC<any> = props => {
                 }
               }}
             />
-          ) : (
-            <>{item.entity.MaterialName}-111</>
-          );
+          ) : null;
         };
         let render = (_text: any, record: any) => {
           return <>{record.StockName != "" ? record.StockName : "-"}</>;
         };
 
-        column = { ...column, renderFormItem, render, formItemProps };
+        column = { ...column, renderFormItem, render };
         hasChange = true;
       } else if (item.dataIndex == "GoodsLocationId") {
         let renderFormItem = (item: any, { isEditable }: any, _form: any) => {
@@ -322,6 +306,11 @@ const FormPage: React.FC<any> = props => {
 
         column = { ...column, renderFormItem, render, formItemProps };
         hasChange = true;
+      }
+
+      if (item.required === true) {
+        hasChange = true;
+        column = { ...column, formItemProps };
       }
 
       if (hasChange == true) columns[index] = column;
