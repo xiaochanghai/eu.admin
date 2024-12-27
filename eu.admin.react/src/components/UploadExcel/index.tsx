@@ -119,7 +119,7 @@ const UploadExcel = (props: any) => {
 
   const onDownload = (fileId: any, templateName: string) => {
     if (!fileId) {
-      message.error("请先在【导入管理】上传【" + templateName + "】导入模板", 3);
+      message.error("请先在【导入管理】维护导入模板！", 3);
       return;
     }
     downloadFile(fileId, templateName);
@@ -128,7 +128,7 @@ const UploadExcel = (props: any) => {
   return (
     <>
       <Steps type="navigation" current={stepsCurrent} size="small" className="site-navigation-steps">
-        <Step status="process" title="上传Execl" />
+        <Step status="process" title="上传Excel" />
         <Step status="process" title="数据预览" />
         <Step status="process" title="导入数据" />
       </Steps>
