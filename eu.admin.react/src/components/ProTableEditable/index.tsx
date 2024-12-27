@@ -13,20 +13,23 @@ import { pagination1 } from "@/config/proTable";
 import { query } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { Icon } from "@/components/Icon";
+import UploadExcel from "@/components/UploadExcel";
 
 const Index: React.FC<any> = props => {
+  let tableAction: any;
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  let { moduleCode, modifyType, masterId, tableRef, addCallBack, editCallBack, successCallBack, failCallBack } = props;
+  let { moduleCode, IsView, modifyType, masterId, tableRef, addCallBack, editCallBack, successCallBack, failCallBack } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  let { masterColumn, url } = moduleInfo || {};
+  let { masterColumn, url, actions } = moduleInfo || {};
 
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any>([]);
   const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
   const [recordLogVisible, setRecordLogVisible] = useState(false);
   const [recordLogData, setRecordLogData] = useState<RecordLogData | null>(null);
+  const [uploadExcelVisible, setUploadExcelVisible] = useState(false);
 
   useEffect(() => {
     const getModuleInfo1 = async () => {
@@ -44,6 +47,11 @@ const Index: React.FC<any> = props => {
     setSelectedRowKeys(keys);
     // 可以在这里处理选中行的数据，例如执行某些操作
   };
+
+  let actionAuthButton: { [key: string]: boolean } = {};
+  actions?.forEach((item: any) => {
+    actionAuthButton[item] = true;
+  });
   const actionColumn = {
     title: "操作",
     dataIndex: "option",
@@ -110,7 +118,7 @@ const Index: React.FC<any> = props => {
           添加
         </Button>
       ) : null}
-      {/* {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") && !IsView ? (
+      {actionAuthButton.ImportExcel && !IsView ? (
         <Button
           icon={<Icon name="excel-import" />}
           onClick={() => {
@@ -120,7 +128,7 @@ const Index: React.FC<any> = props => {
         >
           Excel导入
         </Button>
-      ) : null}  */}
+      ) : null}
       {moduleInfo && moduleInfo.Success == true && moduleInfo.menuData.length > 0 ? (
         <>
           {moduleInfo.menuData.map((item: any) => {
@@ -289,7 +297,7 @@ const Index: React.FC<any> = props => {
               {moduleInfo && moduleInfo.Success == true ? (
                 <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
                   {recordLogData ? (
-                    <Descriptions title="表信息" bordered>
+                    <Descriptions bordered>
                       <Descriptions.Item label="表名称">{recordLogData.TableName}</Descriptions.Item>
                       <Descriptions.Item label="表主键" span={2}>
                         {recordLogData.ID}
@@ -306,6 +314,36 @@ const Index: React.FC<any> = props => {
                   ) : (
                     <Skeleton active />
                   )}
+                </Modal>
+              ) : null}
+              {actionAuthButton.ImportExcel ? (
+                <Modal
+                  destroyOnClose
+                  title={moduleInfo.moduleName + "-导入"}
+                  open={uploadExcelVisible}
+                  maskClosable={false}
+                  width={1000}
+                  onCancel={() => {
+                    setUploadExcelVisible(false);
+                  }}
+                  footer={[
+                    <Button
+                      key="back"
+                      onClick={() => {
+                        setUploadExcelVisible(false);
+                      }}
+                    >
+                      关闭
+                    </Button>
+                  ]}
+                >
+                  <UploadExcel
+                    moduleInfo={moduleInfo}
+                    onCancel={() => setUploadExcelVisible(false)}
+                    onReload={() => {
+                      tableAction?.reload();
+                    }}
+                  />
                 </Modal>
               ) : null}
             </>

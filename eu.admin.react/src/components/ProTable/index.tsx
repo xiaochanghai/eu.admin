@@ -687,7 +687,7 @@ const SmProTable: React.FC<any> = props => {
       {moduleInfo && moduleInfo.Success == true ? (
         <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
           {recordLogData ? (
-            <Descriptions title="表信息" bordered>
+            <Descriptions bordered>
               <Descriptions.Item label="表名称">{recordLogData.TableName}</Descriptions.Item>
               <Descriptions.Item label="表主键" span={2}>
                 {recordLogData.ID}
