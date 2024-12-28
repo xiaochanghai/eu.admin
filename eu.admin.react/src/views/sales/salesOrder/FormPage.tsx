@@ -278,159 +278,140 @@ const FormPage: React.FC<any> = props => {
 
   return (
     <>
-      <Form
-        labelCol={{
-          xs: { span: 8 },
-          sm: { span: 8 },
-          md: { span: 8 }
-        }}
-        wrapperCol={{
-          xs: { span: 16 },
-          sm: { span: 16 },
-          md: { span: 16 }
-        }}
-        labelWrap
-        onFinish={onFinish}
-        onValuesChange={onValuesChange}
-        form={form}
-      >
-        <FormToolbar
-          moduleInfo={moduleInfo}
-          disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
-          onFinishAdd={onSaveAdd}
-          modifyType={orderStatus == "WaitShip" ? modifyType : ModifyType.View}
-          auditStatus={auditStatus}
-          masterId={id}
-          onBack={() => changePage("FormIndex")}
-          onReload={() => querySingleData()}
-          // expendAction={
-          //   moduleInfo &&
-          //   auditStatus == "CompleteAudit" &&
-          //   // modifyType == ModifyType.Edit &&
-          //   moduleInfo.menuData &&
-          //   moduleInfo.menuData.map((item: any) => {
-          //     return (
-          //       <Button
-          //         onClick={() => {
-          //           props[item.FunctionCode]();
-          //         }}
-          //       >
-          //         {item.FunctionName}
-          //       </Button>
-          //     );
-          //   })
-          // }
-          // expendAction={() => [
-          //   modifyType == ModifyType.AuditPass &&
-          //   (orderStatus == "WaitShip" || orderStatus == "InShip") &&
-          //   actionAuthButton.SalesOrderShippingNotice ? (
-          //     <Button
-          //       onClick={() => {
-          //         setWaitShipSelectVisible(true);
-          //         setWaitShipSelectType("Ship");
-          //       }}
-          //     >
-          //       出货通知
-          //     </Button>
-          //   ) : null,
-          //   modifyType == ModifyType.AuditPass &&
-          //   (orderStatus == "WaitShip" || orderStatus == "InOut") &&
-          //   actionAuthButton.SalesOrderDelivery ? (
-          //     <Button
-          //       onClick={() => {
-          //         setWaitShipSelectVisible(true);
-          //         setWaitShipSelectType("Out");
-          //       }}
-          //     >
-          //       发货
-          //     </Button>
-          //   ) : null,
-          //   modifyType == ModifyType.AuditPass &&
-          //   (orderStatus == "InOut" || orderStatus == "InShip") &&
-          //   actionAuthButton.SalesOrderChange ? (
-          //     <Button
-          //       onClick={() => {
-          //         SalesOrderChange();
-          //       }}
-          //     >
-          //       订单变更
-          //     </Button>
-          //   ) : null,
-          //   modifyType == ModifyType.AuditPass &&
-          //   (orderStatus == "WaitShip" || orderStatus == "InOut" || orderStatus == "InShip") &&
-          //   actionAuthButton.SalesOrderCompleted ? (
-          //     <Button
-          //       onClick={() => {
-          //         SalesOrderCompleted();
-          //       }}
-          //     >
-          //       订单完结
-          //     </Button>
-          //   ) : null
-          // ]}
-        />
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <>
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <Form
+            labelCol={{
+              xs: { span: 8 },
+              sm: { span: 8 },
+              md: { span: 8 }
+            }}
+            wrapperCol={{
+              xs: { span: 16 },
+              sm: { span: 16 },
+              md: { span: 16 }
+            }}
+            labelWrap
+            onFinish={onFinish}
+            onValuesChange={onValuesChange}
+            form={form}
+          >
+            <FormToolbar
+              moduleInfo={moduleInfo}
+              disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
+              onFinishAdd={onSaveAdd}
+              modifyType={orderStatus == "WaitShip" ? modifyType : ModifyType.View}
+              auditStatus={auditStatus}
+              masterId={id}
+              onBack={() => changePage("FormIndex")}
+              onReload={() => querySingleData()}
+              // expendAction={
+              //   moduleInfo &&
+              //   auditStatus == "CompleteAudit" &&
+              //   // modifyType == ModifyType.Edit &&
+              //   moduleInfo.menuData &&
+              //   moduleInfo.menuData.map((item: any) => {
+              //     return (
+              //       <Button
+              //         onClick={() => {
+              //           props[item.FunctionCode]();
+              //         }}
+              //       >
+              //         {item.FunctionName}
+              //       </Button>
+              //     );
+              //   })
+              // }
+              // expendAction={() => [
+              //   modifyType == ModifyType.AuditPass &&
+              //   (orderStatus == "WaitShip" || orderStatus == "InShip") &&
+              //   actionAuthButton.SalesOrderShippingNotice ? (
+              //     <Button
+              //       onClick={() => {
+              //         setWaitShipSelectVisible(true);
+              //         setWaitShipSelectType("Ship");
+              //       }}
+              //     >
+              //       出货通知
+              //     </Button>
+              //   ) : null,
+              //   modifyType == ModifyType.AuditPass &&
+              //   (orderStatus == "WaitShip" || orderStatus == "InOut") &&
+              //   actionAuthButton.SalesOrderDelivery ? (
+              //     <Button
+              //       onClick={() => {
+              //         setWaitShipSelectVisible(true);
+              //         setWaitShipSelectType("Out");
+              //       }}
+              //     >
+              //       发货
+              //     </Button>
+              //   ) : null,
+              //   modifyType == ModifyType.AuditPass &&
+              //   (orderStatus == "InOut" || orderStatus == "InShip") &&
+              //   actionAuthButton.SalesOrderChange ? (
+              //     <Button
+              //       onClick={() => {
+              //         SalesOrderChange();
+              //       }}
+              //     >
+              //       订单变更
+              //     </Button>
+              //   ) : null,
+              //   modifyType == ModifyType.AuditPass &&
+              //   (orderStatus == "WaitShip" || orderStatus == "InOut" || orderStatus == "InShip") &&
+              //   actionAuthButton.SalesOrderCompleted ? (
+              //     <Button
+              //       onClick={() => {
+              //         SalesOrderCompleted();
+              //       }}
+              //     >
+              //       订单完结
+              //     </Button>
+              //   ) : null
+              // ]}
+            />
             <Card size="small" bordered={false}>
               {component()}
             </Card>
+          </Form>
 
-            <div style={{ height: 20 }}></div>
-            <MaterialQuery
-              modalVisible={materialQueryVisible}
-              onCancel={() => setMaterialQueryVisible(false)}
-              onSubmit={async (values: any) => {
-                for (let i = 0; i < values.length; i++) values[i].OrderId = id;
-                let { Success } = await http.post<any>("/api/SdOrderDetail/BulkInsert", values);
-                if (Success) if (tableRef.current) tableRef.current.reload();
+          <div style={{ height: 20 }}></div>
+          <MaterialQuery
+            modalVisible={materialQueryVisible}
+            onCancel={() => setMaterialQueryVisible(false)}
+            onSubmit={async (values: any) => {
+              for (let i = 0; i < values.length; i++) values[i].OrderId = id;
+              let { Success } = await http.post<any>("/api/SdOrderDetail/BulkInsert", values);
+              if (Success) if (tableRef.current) tableRef.current.reload();
+            }}
+          />
+          <Card title="物料信息" bordered={false}>
+            <EditableProTable
+              moduleCode="SD_SALES_ORDER_DETAIL_MNG"
+              tableRef={tableRef}
+              modifyType={modifyType}
+              masterId={id}
+              addCallBack={() => {
+                setMaterialQueryVisible(true);
+              }}
+              editableCallBack={(originData: any, data: any) => {
+                originData.NoTaxAmount = data.NoTaxAmount;
+                originData.TaxAmount = data.TaxAmount;
+                originData.TaxIncludedAmount = data.TaxIncludedAmount;
+                return originData;
               }}
             />
-            <Card title="物料信息" bordered={false} className="card-small">
-              <EditableProTable
-                moduleCode="SD_SALES_ORDER_DETAIL_MNG"
-                tableRef={tableRef}
-                modifyType={modifyType}
-                masterId={id}
-                addCallBack={() => {
-                  setMaterialQueryVisible(true);
-                }}
-                editableCallBack={(originData: any, data: any) => {
-                  originData.NoTaxAmount = data.NoTaxAmount;
-                  originData.TaxAmount = data.TaxAmount;
-                  originData.TaxIncludedAmount = data.TaxIncludedAmount;
-                  return originData;
-                }}
-              />
-            </Card>
+          </Card>
 
-            <div style={{ height: 20 }}></div>
-            <Card title="附件" bordered={false} className="card-small">
-              <Attachment Id={id} IsView={modifyType == ModifyType.Edit ? false : true} />
-            </Card>
-          </>
-        )}
-      </Form>
-      {/* <WaitShipSelect
-        modalVisible={waitShipSelectVisible}
-        waitShipSelectType={waitShipSelectType}
-        selectedRowIds={[id]}
-        onCancel={() => setWaitShipSelectVisible(false)}
-        onSubmit={async (values: any) => {
-          message.loading("数据提交中...", 0);
-          let { Success, Message } = await http.post<any>(
-            waitShipSelectType == "Ship" ? "/api/SdOrder/BulkInsertShip" : "/api/SdOrder/BulkInsertOut",
-            values
-          );
-          message.destroy();
-          if (Success) {
-            message.success(Message);
-            querySingleData();
-            if (tableRef.current) tableRef.current.reload();
-          }
-        }}
-      /> */}
+          <div style={{ height: 20 }}></div>
+          <Card title="附件" bordered={false}>
+            <Attachment Id={id} IsView={modifyType == ModifyType.Edit ? false : true} />
+          </Card>
+        </>
+      )}
     </>
   );
 };
