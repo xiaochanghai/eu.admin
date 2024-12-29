@@ -781,7 +781,7 @@ namespace " + strNameSpace + @"
         build.Append("/// <summary>\r\n");
         build.Append("/// " + TableCnName + "(Dto.View)\r\n");
         build.Append("/// </summary>\r\n");
-        build.Append("public class " + tableName + "Dto : " + tableName + "Base\r\n");
+        build.Append("public class " + tableName + "Dto : " + tableName + "\r\n");
         build.Append("{\r\n");
 
         build.Append("}\r\n");

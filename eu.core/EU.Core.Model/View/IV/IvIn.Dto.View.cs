@@ -20,6 +20,6 @@ namespace EU.Core.Model.Models;
 /// <summary>
 /// 库存入库单(Dto.View)
 /// </summary>
-public class IvInDto : IvInBase
+public class IvInDto : IvIn
 {
 }

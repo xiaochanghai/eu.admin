@@ -8,7 +8,7 @@ import FormPage from "./FormPage";
 // const { confirm } = Modal;
 
 const Index: React.FC<any> = () => {
-  let moduleCode = "IV_ACCOUNTING_MNG";
+  let moduleCode = "IV_IN_MNG";
   const [viewType, setViewType] = useState("FormIndex");
   const [formPageId, setFormPageId] = useState<string>("");
   const [formPageIsView, setFormPageIsView] = useState("Index");
