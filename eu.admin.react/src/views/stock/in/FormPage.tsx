@@ -59,7 +59,6 @@ const FormPage: React.FC<any> = props => {
       dispatch(setId({ moduleCode, id: Id ?? id }));
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
-      debugger;
       if (Data.AuditStatus != "Add") {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
