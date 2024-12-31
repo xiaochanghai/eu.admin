@@ -680,7 +680,7 @@ const SmProTable: React.FC<any> = props => {
         }}
         // search={{ labelWidth: "auto" }}
         dateFormatter="string"
-        columnEmptyText={""}
+        columnEmptyText={"-"}
         {...props}
         // headerTitle="使用 ProTable"
       />

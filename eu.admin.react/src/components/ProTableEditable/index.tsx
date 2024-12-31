@@ -22,7 +22,7 @@ const Index: React.FC<any> = props => {
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let { moduleCode, IsView, modifyType, masterId, tableRef, addCallBack, editCallBack, successCallBack, failCallBack } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  let { masterColumn, url, actions } = moduleInfo || {};
+  let { masterColumn, isDetail, url, actions } = moduleInfo || {};
 
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any>([]);
@@ -250,25 +250,29 @@ const Index: React.FC<any> = props => {
                 tableAlertOptionRender={false}
                 columns={columns}
                 request={async (_params, sorter, filterCondition) => {
-                  if (masterId) {
-                    if (masterColumn) filterCondition = { ...filterCondition, [masterColumn]: masterId };
-                    let result = await query({
+                  if (isDetail) {
+                    if (masterId) {
+                      if (masterColumn) filterCondition = { ...filterCondition, [masterColumn]: masterId };
+                      return await query({
+                        paramData: JSON.stringify(_params),
+                        sorter: JSON.stringify(sorter),
+                        filter: JSON.stringify(filterCondition),
+                        moduleCode
+                      });
+                    } else
+                      return {
+                        data: [],
+                        success: true,
+                        total: 0
+                      };
+                  } else {
+                    return await query({
                       paramData: JSON.stringify(_params),
                       sorter: JSON.stringify(sorter),
                       filter: JSON.stringify(filterCondition),
                       moduleCode
                     });
-                    return {
-                      data: result.data,
-                      total: result.total,
-                      success: true
-                    };
-                  } else
-                    return {
-                      data: [],
-                      total: 0,
-                      success: true
-                    };
+                  }
                 }}
                 pagination={pagination1}
                 options={{
