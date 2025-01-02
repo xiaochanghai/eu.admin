@@ -554,11 +554,13 @@ const SmProTable: React.FC<any> = props => {
         // let render = (_: any, record: any) => {
         let render = (_: any, record: any) => {
           let valueEnum = item.valueEnum[record[item.dataIndex]];
-          return (
-            <Tag color={valueEnum.tagColor} bordered={valueEnum.tagBordered}>
-              {valueEnum.text}
-            </Tag>
-          );
+          if (valueEnum)
+            return (
+              <Tag color={valueEnum.tagColor} bordered={valueEnum.tagBordered}>
+                {valueEnum.text}
+              </Tag>
+            );
+          else return record[item.dataIndex];
         };
         column = { ...column, render };
         hasChange = true;
