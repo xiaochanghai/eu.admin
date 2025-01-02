@@ -28,7 +28,8 @@ const FormPage: React.FC<any> = props => {
   const [auditStatus, setAuditStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [dataSource, setDataSource] = useState<any>([]);
-  // const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
+  const [masterStockId, setMasterStockId] = useState(null);
+  const [masterGoodsLocationId, setMasterGoodsLocationId] = useState(null);
 
   const [form] = Form.useForm();
   const tableRef = useRef<any>();
@@ -59,6 +60,9 @@ const FormPage: React.FC<any> = props => {
       dispatch(setId({ moduleCode, id: Id ?? id }));
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
+      setStockId(Data.StockId);
+      setMasterStockId(Data.StockId);
+      setMasterGoodsLocationId(Data.GoodsLocationId);
       if (Data.AuditStatus != "Add") {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
@@ -371,9 +375,10 @@ const FormPage: React.FC<any> = props => {
                   // }}
                   recordCreatorProps={{
                     position: "end",
-                    // newRecordType: "dataSource",
                     record: () => ({
-                      ID: createUuid()
+                      ID: createUuid(),
+                      StockId: masterStockId,
+                      GoodsLocationId: masterGoodsLocationId
                     })
                   }}
                   value={dataSource}
