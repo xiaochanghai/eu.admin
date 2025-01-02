@@ -45,7 +45,7 @@ const FormPage: React.FC<any> = props => {
     changePage
   } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  let moduleCode1 = "IV_STOCK_ACCOUNTING_DETAIL_MNG";
+  let moduleCode1 = "IV_IN_DETAIL_MNG";
   let moduleInfo1 = moduleInfos[moduleCode1];
 
   let { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
@@ -193,7 +193,7 @@ const FormPage: React.FC<any> = props => {
   const actionColumn = {
     title: "操作",
     dataIndex: "option",
-    fixed: "left",
+    fixed: "right",
     valueType: "option",
     width: 150,
     // render: (text, record, _, action) => component(text, record, _, action)
@@ -216,7 +216,7 @@ const FormPage: React.FC<any> = props => {
         title="提醒"
         description="是否确定删除记录?"
         onConfirm={async () => {
-          let { Success, Message } = await http.delete<any>("/api/PoArrivalOrderDetail/" + record.ID);
+          let { Success, Message } = await http.delete<any>("/api/IvInDetail/" + record.ID);
           if (Success) message.success(Message);
           if (tableRef.current) tableRef.current.reload();
         }}
@@ -303,7 +303,7 @@ const FormPage: React.FC<any> = props => {
           return <>{record.GoodsLocationName != "" ? record.GoodsLocationName : "-"}</>;
         };
 
-        column = { ...column, renderFormItem, render, formItemProps };
+        column = { ...column, renderFormItem, render };
         hasChange = true;
       }
 
@@ -314,7 +314,14 @@ const FormPage: React.FC<any> = props => {
 
       if (hasChange == true) columns[index] = column;
     });
-
+  const tableProps: any = {
+    moduleCode: moduleCode1,
+    tableRef,
+    modifyType,
+    masterId: id,
+    moduleInfo: moduleInfo1,
+    columns
+  };
   return (
     <>
       <Form
@@ -356,12 +363,6 @@ const FormPage: React.FC<any> = props => {
             <Card title="物料信息" bordered={false} className="card-small">
               {moduleInfo1 && columns ? (
                 <EditableProTable
-                  moduleCode={moduleCode1}
-                  tableRef={tableRef}
-                  modifyType={modifyType}
-                  masterId={id}
-                  moduleInfo={moduleInfo1}
-                  columns={columns}
                   // addCallBack={() => {
                   //   tableRef.current.addEditRecord?.({
                   //     ID: createUuid()
@@ -385,11 +386,13 @@ const FormPage: React.FC<any> = props => {
                     originData.GoodsLocationName = data.GoodsLocationName;
                     originData.StockName = data.StockName;
                     originData.QTY = data.QTY;
+                    originData.Amount = data.Amount;
                     return originData;
                   }}
                   failCallBack={() => {
                     if (tableRef.current) tableRef.current.reload();
                   }}
+                  {...tableProps}
                 />
               ) : (
                 <Loading />

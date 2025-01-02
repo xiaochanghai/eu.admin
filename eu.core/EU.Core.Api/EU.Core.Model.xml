@@ -2669,11 +2669,6 @@
             物料ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.IvInDetailBase.DrawingNo">
-            <summary>
-            图号
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.IvInDetailBase.QTY">
             <summary>
             数量
@@ -12555,11 +12550,6 @@
             物料ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.IvInDetail.DrawingNo">
-            <summary>
-            图号
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.IvInDetail.QTY">
             <summary>
             数量
@@ -18917,6 +18907,36 @@
         <member name="T:EU.Core.Model.Models.IvInDetailDto">
             <summary>
             库存入库单明细(Dto.View)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.MaterialName">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.Specifications">
+            <summary>
+            规格
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.UnitName">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.StockName">
+            <summary>
+            仓库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.GoodsLocationName">
+            <summary>
+            货位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvInDetailDto.Amount">
+            <summary>
+            金额
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvOutDto">

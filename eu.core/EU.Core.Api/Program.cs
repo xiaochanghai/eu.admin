@@ -136,9 +136,8 @@ app.UseApplicationSetup();
 app.UseResponseBodyRead();
 
 if (app.Environment.IsDevelopment())
-{
     app.UseDeveloperExceptionPage();
-}
+
 else
 {
     app.UseExceptionHandler("/Error");
@@ -177,9 +176,7 @@ app.UseSerilogRequestLogging(options =>
 app.UseRouting();
 
 if (builder.Configuration.GetValue<bool>("AppSettings:UseLoadTest"))
-{
     app.UseMiddleware<ByPassAuthMiddleware>();
-}
 //配置HttpContext
 app.UseStaticHttpContext();
 

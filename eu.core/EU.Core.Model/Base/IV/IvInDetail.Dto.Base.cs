@@ -42,12 +42,6 @@ public class IvInDetailBase
     public Guid? MaterialId { get; set; }
 
     /// <summary>
-    /// 图号
-    /// </summary>
-    [Display(Name = "DrawingNo"), Description("图号"), MaxLength(32, ErrorMessage = "图号 不能超过 32 个字符")]
-    public string DrawingNo { get; set; }
-
-    /// <summary>
     /// 数量
     /// </summary>
     [Display(Name = "QTY"), Description("数量"), Column(TypeName = "decimal(20,8)")]
