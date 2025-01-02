@@ -61,6 +61,7 @@ const FormPage: React.FC<any> = props => {
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
       setStockId(Data.StockId);
+      setStockId1(Data.StockId);
       setMasterStockId(Data.StockId);
       setMasterGoodsLocationId(Data.GoodsLocationId);
       if (Data.AuditStatus != "Add") {

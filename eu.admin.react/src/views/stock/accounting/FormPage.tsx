@@ -22,14 +22,12 @@ const FormPage: React.FC<any> = props => {
   const [id, setViewId] = useState(null);
   const [modifyType, setModifyType] = useState(ModifyType.Add);
   const [disabledToolbar, setDisabledToolbar] = useState(true);
-  const [stockId, setStockId] = useState(null);
+  // const [stockId, setStockId] = useState(null);
   const [stockId1, setStockId1] = useState(null);
   const [goodsLocationId, setGoodsLocationId] = useState(null);
   const [auditStatus, setAuditStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [dataSource, setDataSource] = useState<any>([]);
-  const [masterStockId, setMasterStockId] = useState(null);
-  const [masterGoodsLocationId, setMasterGoodsLocationId] = useState(null);
 
   const [form] = Form.useForm();
   const tableRef = useRef<any>();
@@ -60,9 +58,6 @@ const FormPage: React.FC<any> = props => {
       dispatch(setId({ moduleCode, id: Id ?? id }));
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
-      setStockId(Data.StockId);
-      setMasterStockId(Data.StockId);
-      setMasterGoodsLocationId(Data.GoodsLocationId);
       // debugger;
       if (Data.AuditStatus != "Add") {
         setDisabled(true);
@@ -99,53 +94,53 @@ const FormPage: React.FC<any> = props => {
               .filter((f: any) => f.HideInForm === false)
               .map((item: any, index: any) => {
                 const width = (item.GridSpan != null ? item?.GridSpan : 50) + "%";
-                if (item.DataIndex == "StockId")
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Layout
-                        field={item}
-                        disabled={disabled ?? IsView}
-                        modifyType={modifyType}
-                        onChange={async (value: any) => {
-                          setStockId(value);
-                          form.setFieldsValue({ GoodsLocationId: null });
-                        }}
-                      />
-                    </div>
-                  );
-                else if (item.DataIndex == "GoodsLocationId")
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Layout
-                        field={item}
-                        disabled={stockId ? disabled ?? IsView : true}
-                        modifyType={modifyType}
-                        parentColumn="StockId"
-                        parentId={stockId}
-                      />
-                    </div>
-                  );
-                else
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
-                    </div>
-                  );
+                // if (item.DataIndex == "StockId")
+                //   return (
+                //     <div
+                //       style={{
+                //         width
+                //       }}
+                //       key={index}
+                //     >
+                //       <Layout
+                //         field={item}
+                //         disabled={disabled ?? IsView}
+                //         modifyType={modifyType}
+                //         onChange={async (value: any) => {
+                //           setStockId(value);
+                //           form.setFieldsValue({ GoodsLocationId: null });
+                //         }}
+                //       />
+                //     </div>
+                //   );
+                // else if (item.DataIndex == "GoodsLocationId")
+                //   return (
+                //     <div
+                //       style={{
+                //         width
+                //       }}
+                //       key={index}
+                //     >
+                //       <Layout
+                //         field={item}
+                //         disabled={stockId ? disabled ?? IsView : true}
+                //         modifyType={modifyType}
+                //         parentColumn="StockId"
+                //         parentId={stockId}
+                //       />
+                //     </div>
+                //   );
+                // else
+                return (
+                  <div
+                    style={{
+                      width
+                    }}
+                    key={index}
+                  >
+                    <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                  </div>
+                );
               })}
       </Flex>
     );
@@ -198,7 +193,7 @@ const FormPage: React.FC<any> = props => {
   const actionColumn = {
     title: "操作",
     dataIndex: "option",
-    fixed: "left",
+    fixed: "right",
     valueType: "option",
     width: 150,
     // render: (text, record, _, action) => component(text, record, _, action)
@@ -371,9 +366,7 @@ const FormPage: React.FC<any> = props => {
                     position: "end",
                     // newRecordType: "dataSource",
                     record: () => ({
-                      ID: createUuid(),
-                      StockId: masterStockId,
-                      GoodsLocationId: masterGoodsLocationId
+                      ID: createUuid()
                     })
                   }}
                   value={dataSource}

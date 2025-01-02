@@ -18949,6 +18949,36 @@
             库存出库单明细(Dto.View)
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.MaterialName">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.Specifications">
+            <summary>
+            规格
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.UnitName">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.StockName">
+            <summary>
+            仓库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.GoodsLocationName">
+            <summary>
+            货位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutDetailDto.Amount">
+            <summary>
+            金额
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.IvSafeConfigDto">
             <summary>
             安全库存设置(Dto.View)
