@@ -28,7 +28,8 @@ const FormPage: React.FC<any> = props => {
   const [auditStatus, setAuditStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [dataSource, setDataSource] = useState<any>([]);
-  // const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
+  const [masterStockId, setMasterStockId] = useState(null);
+  const [masterGoodsLocationId, setMasterGoodsLocationId] = useState(null);
 
   const [form] = Form.useForm();
   const tableRef = useRef<any>();
@@ -45,7 +46,7 @@ const FormPage: React.FC<any> = props => {
     changePage
   } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  let moduleCode1 = "IV_STOCK_ACCOUNTING_DETAIL_MNG";
+  let moduleCode1 = "IV_ACCOUNTING_DETAIL_MNG";
   let moduleInfo1 = moduleInfos[moduleCode1];
 
   let { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
@@ -59,6 +60,9 @@ const FormPage: React.FC<any> = props => {
       dispatch(setId({ moduleCode, id: Id ?? id }));
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
+      setStockId(Data.StockId);
+      setMasterStockId(Data.StockId);
+      setMasterGoodsLocationId(Data.GoodsLocationId);
       // debugger;
       if (Data.AuditStatus != "Add") {
         setDisabled(true);
@@ -363,17 +367,13 @@ const FormPage: React.FC<any> = props => {
                   masterId={id}
                   moduleInfo={moduleInfo1}
                   columns={columns}
-                  // addCallBack={() => {
-                  //   tableRef.current.addEditRecord?.({
-                  //     ID: createUuid()
-                  //   });
-                  //   // setWaitSelectVisible(true);
-                  // }}
                   recordCreatorProps={{
                     position: "end",
                     // newRecordType: "dataSource",
                     record: () => ({
-                      ID: createUuid()
+                      ID: createUuid(),
+                      StockId: masterStockId,
+                      GoodsLocationId: masterGoodsLocationId
                     })
                   }}
                   value={dataSource}
