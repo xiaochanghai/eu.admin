@@ -18899,6 +18899,31 @@
             库存盘点单明细(Dto.View)
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.MaterialName">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.Specifications">
+            <summary>
+            规格
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.UnitName">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.StockName">
+            <summary>
+            仓库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.GoodsLocationName">
+            <summary>
+            货位
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.IvInDto">
             <summary>
             库存入库单(Dto.View)

@@ -1050,408 +1050,50 @@
             <param name="modelModify"></param>
             <returns></returns>
         </member>
-        <member name="T:EU.Core.Api.Controllers.IvActualCheckController">
+        <member name="T:EU.Core.Api.Controllers.IvAccountingController">
             <summary>
-            实际盘点录入(Controller)
+            库存建帐(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvActualCheck})">
+        <member name="T:EU.Core.Api.Controllers.IvAccountingDetailController">
             <summary>
-            
+            库存建帐明细(Controller)
             </summary>
-            <param name="_context"></param>
-            <param name="BaseCrud"></param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Add(EU.Core.Model.Models.IvActualCheck)">
-            <summary>
-            新增
-            </summary>
-            <param name="Model"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.ConfirmCheck(System.Guid)">
-            <summary>
-            盘点确认
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GenerateCheckDetail(System.Guid)">
-            <summary>
-            生成盘点单
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.Update(System.Object)">
-            <summary>
-            更新重写
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GenerateCheckDetailData(System.Guid)">
-            <summary>
-            自动生成明细数据
-            </summary>
-            <param name="Id">订单ID</param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckController.GetCheckList(System.String,System.String)">
-            <summary>
-            获取存货盘点
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvActualCheckDetailController">
-            <summary>
-            实际盘点单明细(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvActualCheckDetailController.BatchUpdateSerialNumber(System.String)">
-            <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvAdjustController">
-            <summary>
-            库存调整单(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvAdjustDetailController">
-            <summary>
-            库存调整单明细(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvAdjustDetail})">
-            <summary>
-            库存调整单明细
-            </summary>
-            <param name="_context"></param>
-            <param name="BaseCrud"></param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Add(EU.Core.Model.Models.IvAdjustDetail)">
-            <summary>
-            
-            </summary>
-            <param name="Model"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvAdjustDetail})">
-            <summary>
-            
-            </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Update(System.Object)">
-            <summary>
-            
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchUpdateSerialNumber(System.String)">
-            <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.Delete(System.Guid)">
-            <summary>
-            
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvAdjustDetailController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.IvAdjustDetail})">
-            <summary>
-            
-            </summary>
-            <param name="entryList"></param>
-            <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.IvCheckController">
             <summary>
             库存盘点单(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvCheckController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvCheckController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvCheckController.GenerateCheckDetailData(System.Guid)">
-            <summary>
-            自动生成明细数据
-            </summary>
-            <param name="Id">订单ID</param>
-        </member>
         <member name="T:EU.Core.Api.Controllers.IvCheckDetailController">
             <summary>
             库存盘点单明细(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvCheckDetailController.BatchUpdateSerialNumber(System.String)">
+        <member name="T:EU.Core.Api.Controllers.IvInController">
             <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvInitController">
-            <summary>
-            库存初始化(Controller)
+            库存入库单(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvInitController.Update(System.Object)">
+        <member name="T:EU.Core.Api.Controllers.IvInDetailController">
             <summary>
-            更新重写
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvInitController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvInitController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvInitDetailController">
-            <summary>
-            库存初始化明细(Controller)
+            库存入库单明细(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvInitDetailController.BatchUpdateSerialNumber(System.String)">
+        <member name="T:EU.Core.Api.Controllers.IvOutController">
             <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvOtherInController">
-            <summary>
-            其他入库单(Controller)
+            库存出库单(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherInController.AuditOrder(System.Object)">
+        <member name="T:EU.Core.Api.Controllers.IvOutDetailController">
             <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherInController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvOtherInDetailController">
-            <summary>
-            其他入库单明细(Controller)
+            库存出库单明细(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherInDetailController.BatchUpdateSerialNumber(System.String)">
+        <member name="T:EU.Core.Api.Controllers.IvSafeConfigController">
             <summary>
-            批量更新排序号
+            安全库存设置(Controller)
             </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvOtherOutController">
-            <summary>
-            其他出库单(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvOtherOut})">
-            <summary>
-            其他入库单
-            </summary>
-            <param name="_context"></param>
-            <param name="BaseCrud"></param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.Add(EU.Core.Model.Models.IvOtherOut)">
-            <summary>
-            新增
-            </summary>
-            <param name="Model"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutController.ConfirmOut(System.Guid)">
-            <summary>
-            确认出库
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvOtherOutDetailController">
-            <summary>
-            其他出库单明细(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvOtherOutDetail})">
-            <summary>
-            其他入库单明细
-            </summary>
-            <param name="_context"></param>
-            <param name="BaseCrud"></param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.Add(EU.Core.Model.Models.IvOtherOutDetail)">
-            <summary>
-            新增
-            </summary>
-            <param name="Model"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvOtherOutDetail})">
-            <summary>
-            批量新增
-            </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchUpdateSerialNumber(System.String)">
-            <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvOtherOutDetailController.BatchDelete(System.Collections.Generic.List{EU.Core.Model.Models.IvOtherOutDetail})">
-            <summary>
-            删除
-            </summary>
-            <param name="entryList"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvTransfersController">
-            <summary>
-            库存调拨单(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersController.AuditOrder(System.Object)">
-            <summary>
-            审核
-            </summary>
-            <param name="modelModify"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersController.ConfirmTransfers(System.Guid)">
-            <summary>
-            确认调整
-            </summary>
-            <param name="Id"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.IvTransfersDetailController">
-            <summary>
-            库存调拨单明细(Controller)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.#ctor(EU.Core.DataAccess.DataContext,EU.Core.Domain.IBaseCRUDVM{EU.Core.Model.Models.IvTransfersDetail})">
-            <summary>
-            库存调拨单明细
-            </summary>
-            <param name="_context"></param>
-            <param name="BaseCrud"></param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.Add(EU.Core.Model.Models.IvTransfersDetail)">
-            <summary>
-            新增
-            </summary>
-            <param name="Model"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.BatchAdd(System.Collections.Generic.List{EU.Core.Model.Models.IvTransfersDetail})">
-            <summary>
-            批量新增
-            </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.BatchUpdateSerialNumber(System.String)">
-            <summary>
-            批量更新排序号
-            </summary>
-            <param name="orderId">订单ID</param>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.IvTransfersDetailController.Delete(System.Guid)">
-            <summary>
-            删除
-            </summary>
-            <param name="Id">Id</param>
-            <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.MfInOrderController">
             <summary>
