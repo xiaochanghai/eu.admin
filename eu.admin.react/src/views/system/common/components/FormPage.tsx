@@ -85,6 +85,8 @@ const FormPage: React.FC<any> = props => {
     );
   };
   const onFinish = async (data: any, type = "Save") => {
+    if (onDisabled) onDisabled(true);
+    message.loading("数据提交中...", 0);
     if (id) data = { ...data, url, Id: id ?? null };
     else data = { ...data, url };
     if (isDetail) data[masterColumn] = masterId;
@@ -92,15 +94,16 @@ const FormPage: React.FC<any> = props => {
 
     for (let key in data) data[key] = data[key] ?? null;
     let { Data, Success, Message } = id ? await update(data) : await add(data);
+    message.destroy();
     if (Success) {
+      if (onDisabled) onDisabled(false);
       message.success(Message);
-      if (onDisabled) onDisabled(true);
       if (openType === "Modal" || openType === "Drawer") onReload();
 
       if (type != "SaveAdd" && onClose) onClose();
       if (type === "SaveAdd") {
         setViewId(null);
-        setDisabled(true);
+        setDisabled(false);
         form.resetFields();
       } else if (!id) {
         if (setFormPageId) setFormPageId(Data);

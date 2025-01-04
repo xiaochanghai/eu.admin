@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Loading } from "@/components/Loading/index";
 import SmProTable from "@/components/ProTable";
 import { useDispatch, RootState, useSelector } from "@/redux";
@@ -9,6 +9,7 @@ import FormPage from "./FormPage";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import Extend from "./Extend";
+import type { ActionType } from "@ant-design/pro-components";
 
 const MenuMange: React.FC<any> = props => {
   const dispatch = useDispatch();
@@ -23,7 +24,7 @@ const MenuMange: React.FC<any> = props => {
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
   let id = ids[moduleCode];
   const formRef = React.createRef<any>();
-  const tableRef = React.createRef<any>();
+  const tableRef = useRef<ActionType>();
   const formPageRef = React.createRef<any>();
   const extendPageRef = React.createRef<any>();
 
@@ -58,7 +59,7 @@ const MenuMange: React.FC<any> = props => {
             Id={id}
             masterId={masterId}
             IsView={isVIew}
-            onReload={() => tableRef.current.reload()}
+            onReload={() => tableRef.current?.reload()}
             onClose={onClose}
             formPageRef={formPageRef}
             onDisabled={(value: any) => setDisabled(value)}
@@ -69,7 +70,7 @@ const MenuMange: React.FC<any> = props => {
             Id={id}
             masterId={masterId}
             IsView={isVIew}
-            onReload={() => tableRef.current.reload()}
+            onReload={() => tableRef.current?.reload()}
             onClose={onClose}
             formPageRef={formPageRef}
             onDisabled={(value: any) => setDisabled(value)}
@@ -94,7 +95,6 @@ const MenuMange: React.FC<any> = props => {
       if (item.FunctionJs) eval(item.FunctionJs);
     });
   //#endregion
-
   return (
     <>
       {moduleInfo && moduleInfo.Success === true ? (

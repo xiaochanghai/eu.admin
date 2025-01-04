@@ -5,14 +5,14 @@ import FieldTitle from "./FieldTitle";
 
 const InputField: React.FC<any> = props => {
   const { field, disabled } = props;
-  const { DefaultValue, DataIndex, Placeholder, Required, Disabled, DataFormate, AllowClear } = field;
+  const { DefaultValue, DataIndex, Placeholder, Required, Disabled, DataFormate, AllowClear, FormTitle } = field;
   let allowClear = AllowClear === true ? true : false;
 
   return (
     <Form.Item
       name={DataIndex}
       label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={[{ required: Required ?? false }]}
+      rules={[{ required: Required ?? false, message: `请输入${FormTitle}!` }]}
       initialValue={DefaultValue ?? null}
       getValueProps={value => ({ value: value && dayjs(value) })}
     >

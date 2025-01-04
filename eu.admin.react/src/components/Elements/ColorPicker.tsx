@@ -6,12 +6,12 @@ const FormItem = Form.Item;
 
 const InputField: React.FC<any> = props => {
   const { field, disabled } = props;
-  const { DefaultValue, DataIndex, Required, Disabled } = field;
+  const { DefaultValue, DataIndex, Required, Disabled, FormTitle } = field;
   return (
     <FormItem
       name={DataIndex}
       label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={[{ required: Required ?? false }]}
+      rules={[{ required: Required ?? false, message: `请输入${FormTitle}!` }]}
       initialValue={DefaultValue ?? null}
       normalize={value => {
         return value && `${value.toHexString()}`;
