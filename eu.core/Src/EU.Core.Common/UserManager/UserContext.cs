@@ -44,11 +44,13 @@ public class UserContext
         {
             try
             {
-                if (Context == null)
-                    return null;
-                //string aa = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                string userId = Context?.User?.Identity?.Name;
-                return string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId);
+
+                return App.User.ID;
+                //if (Context == null)
+                //    return null;
+                ////string aa = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                //string userId = Context?.User?.Identity?.Name;
+                //return string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId);
             }
             catch (Exception)
             {

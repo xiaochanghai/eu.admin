@@ -765,6 +765,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <param name="pTargetObjSrc"></param>
     /// <param name="pTargetObjDest"></param>
     /// <returns></returns>
+    public static string ConvertToString(TEntity json) => JsonHelper.ObjToJson(json);
     public static TEntity ConvertToEntity(string json) => JsonHelper.JsonToObj<TEntity>(json);
     public static TEntity ConvertToEntity(object json) => ConvertToEntity(json.ToString());
     public static Dictionary<string, object> ConvertToDic(string json) => JsonHelper.JsonToObj<Dictionary<string, object>>(json);
