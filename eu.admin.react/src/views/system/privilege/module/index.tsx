@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import TableList from "../../common/components/TableList";
 import SqlEdit from "./SqlEdit";
 import FormDesign from "../../config/form/components/FormDesign";
+import FormPage from "./FormPage";
 
 // import { useDispatch } from "@/redux";
 
@@ -24,7 +25,9 @@ const SystemModule: React.FC<any> = () => {
 
   return (
     <>
-      {viewType == "FormIndex" ? <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} /> : null}
+      {viewType == "FormIndex" ? (
+        <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} DynamicFormPage={FormPage} />
+      ) : null}
       {viewType == "SqlEdit" ? (
         <SqlEdit moduleCode="SM_IMPORT_TEMPLATE_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />
       ) : null}

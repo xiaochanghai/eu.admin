@@ -4,6 +4,7 @@ import { getModuleFullSql, add, update, getModuleSqlInfo } from "@/api/modules/m
 import TableList from "../../common/components/TableList";
 import { message } from "@/hooks/useMessage";
 import { Icon } from "@/components/Icon";
+import ColumnFormPage from "./ColumnFormPage";
 
 const { TextArea } = Input;
 const FormItem = Form.Item;
@@ -282,7 +283,13 @@ const SqlEdit: React.FC<any> = props => {
             </TabPane>
             <TabPane tab={<span>模块列</span>} key="3">
               {/* {this.state.Id ? <DetailTable Id={this.state.Id} /> : null} */}
-              <TableList moduleCode="SM_MODULE_COLUMN_MNG" changePage={changePage} masterId={ModuleId} IsView={IsView} />
+              <TableList
+                moduleCode="SM_MODULE_COLUMN_MNG"
+                changePage={changePage}
+                masterId={ModuleId}
+                IsView={IsView}
+                DynamicFormPage={ColumnFormPage}
+              />
             </TabPane>
           </Tabs>
           {tabKey != "3" ? (

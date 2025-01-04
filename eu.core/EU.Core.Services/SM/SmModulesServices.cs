@@ -48,7 +48,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     #region 新增
     public override async Task<Guid> Add(object entity)
     {
-        var id = await base.Add(entity);
+
+        var entity1 = ConvertToEntity(entity);
+        if (entity1.OpenType is null)
+            entity1.OpenType = "Drawer";
+        var id = await base.Add(ConvertToString(entity1));
 
         ModuleInfo.Init();
 
@@ -594,7 +598,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 item.Add(new JProperty("width", column.Width));
             //else
             //    item.Add(new JProperty("width", 100));
-              
+
             if (column.ValueType.IsNotEmptyOrNull())
                 item.Add(new JProperty("valueType", column.ValueType));
             if (moduleInfo.DefaultSort == column.DataIndex)
