@@ -85,18 +85,30 @@ public class BdMaterialTypeServices : BaseServices<BdMaterialType, BdMaterialTyp
     public async Task<ServiceResult<MaterialTypeTree>> QueryClass(Guid classId)
     {
         var type = await base.QuerySingle(x => x.ID == classId);
-        var moduleTree = new MaterialTypeTree()
+        if (type != null)
         {
-            key = type.ID.ToString(),
-            value = type.ID.ToString(),
-            title = type.MaterialTypeNames,
-            selectable = false
-        };
+            var moduleTree = new MaterialTypeTree()
+            {
+                key = type.ID.ToString(),
+                value = type.ID.ToString(),
+                title = type.MaterialTypeNames,
+                selectable = false
+            };
 
-        var list = await base.Query("", "TaxisNo ASC");
-        LoopToAppendChildren(list, moduleTree);
+            var list = await base.Query("", "TaxisNo ASC");
+            LoopToAppendChildren(list, moduleTree);
 
-        return Success<MaterialTypeTree>(moduleTree);
+            return Success<MaterialTypeTree>(moduleTree);
+        }
+        else
+        {
+            var moduleTree = new MaterialTypeTree()
+            {
+                selectable = false
+            };
+            return Success<MaterialTypeTree>(moduleTree);
+        }
+
     }
     #endregion
 
