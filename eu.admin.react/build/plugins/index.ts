@@ -7,15 +7,15 @@ import { createSvgIconsPlugin } from "vite-plugin-svg-icons";
 import react from "@vitejs/plugin-react";
 import checker from "vite-plugin-checker";
 import viteCompression from "vite-plugin-compression";
+import { setupHtmlPlugin } from "./html";
 
 /**
  * Create vite plugin
  * @param viteEnv
  */
-export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOption[])[] => {
+export function createVitePlugins(viteEnv: ViteEnv, buildTime: string) {
   const { VITE_GLOB_APP_TITLE, VITE_REPORT, VITE_PWA } = viteEnv;
-
-  return [
+  const plugins: PluginOption = [
     react(),
     // esLint error messages are displayed on the browser interface
     checker({ typescript: true }),
@@ -36,10 +36,11 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
     // vitePWA
     VITE_PWA && createVitePwa(viteEnv),
     // Whether to generate package preview, analyze dependent package size for optimization
-    VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as PluginOption)
+    VITE_REPORT && (visualizer({ filename: "stats.html", gzipSize: true, brotliSize: true }) as PluginOption),
+    setupHtmlPlugin(buildTime)
   ];
-};
-
+  return plugins;
+}
 /**
  * Generate different compression rules according to the compress configuration
  * @param viteEnv

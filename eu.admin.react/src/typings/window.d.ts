@@ -7,6 +7,7 @@ declare global {
   }
   interface Window {
     $navigate: NavigateFunction;
+    $notification: import("antd/es/notification/interface").NotificationInstance;
     EyeDropper: new () => {
       open(options?: { signal: AbortSignal }): Promise<{ sRGBHex: string }>;
     };

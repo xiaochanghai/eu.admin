@@ -37,7 +37,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       // Load proxy configuration from .env.development
       proxy: createProxy(viteEnv.VITE_PROXY)
     },
-    plugins: createVitePlugins(viteEnv),
+    plugins: createVitePlugins(viteEnv, __APP_INFO__.lastBuildTime),
     esbuild: {
       pure: viteEnv.VITE_DROP_CONSOLE ? ["console.log", "debugger"] : []
     },
