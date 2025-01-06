@@ -53,7 +53,9 @@ public partial class Utility
             for (int i = 0; i < dvModuleColumns.Count; i++)
             {
                 columnName = dvModuleColumns[i].DataIndex;
-                dtTree.Columns.Add(columnName, typeof(string));
+
+                if (!dtTree.Columns.Contains(columnName))
+                    dtTree.Columns.Add(columnName, typeof(string));
             }
 
         for (int i = 0; i < dt.Rows.Count; i++)

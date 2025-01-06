@@ -103,6 +103,7 @@ public class AspNetUser : IUser
 
         if (!IsAuthenticated()) return GetClaimsIdentity(GetToken());
 
+        if (_accessor.HttpContext == null) return ArraySegment<Claim>.Empty;
         var claims = _accessor.HttpContext.User.Claims.ToList();
         var headers = _accessor.HttpContext.Request.Headers;
         foreach (var header in headers)

@@ -2586,17 +2586,7 @@
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.QTY">
             <summary>
-            初始数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.Check_QTY">
-            <summary>
             盘点数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BatchNo">
-            <summary>
-            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.StockId">
@@ -12467,17 +12457,7 @@
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.QTY">
             <summary>
-            初始数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.IvCheckDetail.Check_QTY">
-            <summary>
             盘点数量
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.IvCheckDetail.BatchNo">
-            <summary>
-            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.StockId">

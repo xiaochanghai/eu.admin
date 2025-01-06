@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2024/12/18 15:50:11  SimonHsiao   初版
+* V0.01  2025/1/5 21:53:22  SimonHsiao   初版
 *
-* Copyright(c) 2024 EU Corporation. All Rights Reserved.
+* Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SimonHsiao                                                  │
@@ -43,22 +43,10 @@ public class IvCheckDetail : BasePoco
     public Guid? MaterialId { get; set; }
 
     /// <summary>
-    /// 初始数量
-    /// </summary>
-    [Display(Name = "QTY"), Description("初始数量"), Column(TypeName = "decimal(20,8)")]
-    public decimal? QTY { get; set; }
-
-    /// <summary>
     /// 盘点数量
     /// </summary>
-    [Display(Name = "Check_QTY"), Description("盘点数量"), Column(TypeName = "decimal(20,8)")]
-    public decimal? Check_QTY { get; set; }
-
-    /// <summary>
-    /// 批号/炉号
-    /// </summary>
-    [Display(Name = "BatchNo"), Description("批号/炉号"), MaxLength(32, ErrorMessage = "批号/炉号 不能超过 32 个字符")]
-    public string BatchNo { get; set; }
+    [Display(Name = "QTY"), Description("盘点数量"), Column(TypeName = "decimal(20,8)")]
+    public decimal? QTY { get; set; }
 
     /// <summary>
     /// 仓库ID
