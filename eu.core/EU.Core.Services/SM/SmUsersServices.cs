@@ -66,7 +66,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         fileAttachment.Path = path;
 
         await Db.Insertable(fileAttachment).ExecuteCommandAsync();
-        return ServiceResult<Guid>.OprateSuccess(fileAttachment.ID, "上传成功！");
+        return Success(fileAttachment.ID, "上传成功！");
     }
 
     public override async Task<bool> Update(Guid Id, object entity)
@@ -119,7 +119,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                 Utility.RecordEntryLog(User.ID, "UserLogin");
             #endregion
 
-            return ServiceResult<LoginReturn>.OprateSuccess(result, ResponseText.QUERY_SUCCESS);
+            return Success(result, ResponseText.QUERY_SUCCESS);
         }
         else
             return ServiceResult<LoginReturn>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
@@ -145,7 +145,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             result.UserName = user.UserName;
             result.UserId = user.ID;
             result.AvatarFileId = user.AvatarFileId;
-            return ServiceResult<CurrentUser>.OprateSuccess(result, ResponseText.QUERY_SUCCESS);
+            return Success(result, ResponseText.QUERY_SUCCESS);
         }
         else
             return ServiceResult<CurrentUser>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
@@ -168,7 +168,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             user.PassWord = MD5Helper.MD5Encrypt32(password.newPassword);
             await Update(user, ["PassWord"]);
         }
-        return ServiceResult.OprateSuccess(ResponseText.UPDATE_SUCCESS);
+        return Success(ResponseText.UPDATE_SUCCESS);
     }
     #endregion
 
@@ -180,7 +180,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     public async Task<ServiceResult> LogOutAsync()
     {
         await Query(UserId);
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

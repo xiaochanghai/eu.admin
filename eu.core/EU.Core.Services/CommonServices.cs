@@ -507,6 +507,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict.Add("ID", id);
         dict.Add("CreatedTime", DateTime.Now);
         dict.Add("CreatedBy", App.User.ID);
+        dict.Add("ModificationNum", 0);
+        dict.Add("GroupId", Utility.GetGroupId());
+        dict.Add("CompanyId", Utility.GetCompanyId());
         await Db.Insertable(dict).AS(tableName).ExecuteCommandAsync();
 
         return Success<Guid>(id, ResponseText.INSERT_SUCCESS);

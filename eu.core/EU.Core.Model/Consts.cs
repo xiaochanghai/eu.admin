@@ -294,6 +294,40 @@ public class Consts
     }
     #endregion
 
+    #region 库存管理
+    /// <summary>
+    /// 库存入库单-订单状态
+    /// </summary>
+    public static class DIC_IV_IN_STATUS
+    {
+        /// <summary>
+        /// 待入库
+        /// </summary>
+        public const string WaitIn = "WaitIn";
+
+        /// <summary>
+        /// 入库完成
+        /// </summary>
+        public const string InComplete = "InComplete";
+    }
+
+    /// <summary>
+    /// 库存出库单-订单状态
+    /// </summary>
+    public static class DIC_IV_OUT_STATUS
+    {
+        /// <summary>
+        /// 待出库
+        /// </summary>
+        public const string WaitOut = "WaitOut";
+
+        /// <summary>
+        /// 出库完成
+        /// </summary>
+        public const string OutComplete = "OutComplete";
+    }
+    #endregion
+
     #region 系统
 
     /// <summary>

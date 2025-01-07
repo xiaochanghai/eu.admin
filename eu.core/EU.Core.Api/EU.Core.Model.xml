@@ -2634,6 +2634,11 @@
             供应商ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvInBase.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvInBase.Remark">
             <summary>
             备注
@@ -2737,6 +2742,11 @@
         <member name="P:EU.Core.Model.Models.IvOutBase.CustomerId">
             <summary>
             客户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOutBase.OrderStatus">
+            <summary>
+            订单状态
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvOutBase.Remark">
@@ -12505,6 +12515,11 @@
             供应商ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvIn.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvIn.Remark">
             <summary>
             备注
@@ -12608,6 +12623,11 @@
         <member name="P:EU.Core.Model.Models.IvOut.CustomerId">
             <summary>
             客户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvOut.OrderStatus">
+            <summary>
+            订单状态
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvOut.Remark">
@@ -19727,6 +19747,36 @@
         <member name="F:EU.Core.Model.Consts.DIC_PURCHASE_RETURN_ORDER_STATUS.OrderComplete">
             <summary>
              订单完结
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Consts.DIC_IV_IN_STATUS">
+            <summary>
+            库存入库单-订单状态
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_IN_STATUS.WaitIn">
+            <summary>
+            待入库
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_IN_STATUS.InComplete">
+            <summary>
+            入库完成
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Consts.DIC_IV_OUT_STATUS">
+            <summary>
+            库存出库单-订单状态
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_OUT_STATUS.WaitOut">
+            <summary>
+            待出库
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_OUT_STATUS.OutComplete">
+            <summary>
+            出库完成
             </summary>
         </member>
         <member name="T:EU.Core.Model.Consts.DIC_SYSTEM_AUDIT_STATUS">

@@ -138,7 +138,6 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
 
     Task<PageModel<TEntity>> QueryPage(Expression<Func<TEntity, bool>> whereExpression, int pageIndex = 1, int pageSize = 20, string orderByFields = null);
     Task<ServicePageResult<TEntityDto>> QueryFilterPage([FromFilter] QueryFilter filter);
-    Task<dynamic> GetPageList(string paramData, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null);
 
     /// <summary>
     /// 查询数据

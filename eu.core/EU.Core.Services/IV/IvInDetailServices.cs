@@ -84,4 +84,15 @@ public class IvInDetailServices : BaseServices<IvInDetail, IvInDetailDto, Insert
         }
     }
     #endregion
+
+    #region 删除
+    public override async Task<bool> Delete(Guid[] ids)
+    {
+        var result = await base.Delete(ids);
+        var orderDetail = await Db.Queryable<IvInDetail>().FirstAsync(x => x.ID == ids[0]);
+        if (orderDetail != null)
+            await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvInDetail", orderDetail.OrderId);
+        return result;
+    }
+    #endregion 
 }

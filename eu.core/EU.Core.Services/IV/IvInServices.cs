@@ -28,4 +28,94 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
         this._dal = dal;
         base.BaseDal = dal;
     }
+
+    #region 删除数据 
+    /// <summary>
+    /// 删除指定ID集合的数据(批量删除)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public override async Task<bool> Delete(Guid[] ids)
+    {
+        var entities = new List<IvIn>();
+        foreach (var id in ids)
+        {
+            if (!await AnyAsync(id))
+                continue;
+
+            var entity = await Query(id);
+
+            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
+                throw new Exception($"订单【{entity.OrderNo}】已审核通过，不可删除！");
+
+            entity.IsDeleted = true;
+            entities.Add(entity);
+
+            await Db.Updateable<IvInDetail>()
+                .SetColumns(x => new IvInDetail()
+                {
+                    IsDeleted = true,
+                    UpdateTime = DateTime.Now,
+                    UpdateBy = UserId
+                })
+                .Where(x => x.OrderId == id && x.IsDeleted == false)
+                .ExecuteCommandAsync();
+        }
+        return await BaseDal.Update(entities, ["IsDeleted"]);
+    }
+    #endregion
+
+    #region 审核数据
+    /// <summary>
+    /// 审核指定ID集合的数据(批量审核)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public override async Task<bool> BulkAudit(Guid[] ids)
+    {
+        List<IvIn> entities = new();
+        foreach (var id in ids)
+        {
+            if (!await AnyAsync(id))
+                continue;
+
+            var entity = await Query(id);
+
+            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
+            {
+                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
+                entities.Add(entity);
+            }
+        }
+        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_IN_STATUS.WaitIn}'");
+        return true;
+    }
+    #endregion
+
+    #region 撤销数据 
+    /// <summary>
+    /// 撤销指定ID集合的数据(批量撤销)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public override async Task<bool> BulkRevocation(Guid[] ids)
+    {
+        List<IvIn> entities = new();
+        foreach (var id in ids)
+        {
+            if (!await AnyAsync(id))
+                continue;
+
+            var entity = await Query(id);
+
+            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit && entity.OrderStatus == DIC_IV_IN_STATUS.WaitIn)
+            {
+                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.Add;
+                entities.Add(entity);
+            }
+        }
+        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_IN_STATUS.WaitIn}'");
+        return true;
+    }
+    #endregion
 }

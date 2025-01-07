@@ -40,7 +40,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <summary>
     /// 用户ID
     /// </summary>
-    public string UserId1 = UserContext.Current.User_Id != null ? UserContext.Current.User_Id.ToString() : null;
+    public string UserId1 => UserId?.ToString();
 
     /// <summary>
     /// 公司ID
@@ -190,7 +190,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>true or false</returns>
     public async Task<bool> Update(Dictionary<Guid, TEditDto> editModels)
     {
-        List<TEntity> entities = new List<TEntity>();
+        List<TEntity> entities = new();
         foreach (var keyValuePairs in editModels)
         {
             if (keyValuePairs.Value == null || !BaseDal.Any(keyValuePairs.Key))
@@ -495,134 +495,6 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         return new ServicePageResult<TEntityDto>(filter.PageIndex, data.TotalCount, filter.PageSize, data1);
     }
 
-    public virtual async Task<dynamic> GetPageList(string paramData = "{}", string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null, string moduleCode = null)
-    {
-        dynamic obj = new ExpandoObject();
-        var success = true;
-        string message = string.Empty;
-        int current = 1;
-        int pageSize = 20;
-        RefAsync<int> total = 0;
-
-        string sortType = string.Empty;
-
-        try
-        {
-            var query = Db.Queryable<TEntity>();
-            var searchParam = ConvertToDic(paramData);
-            var filterParam = ConvertToDic(filter);
-            var whereSql = "1=1";
-
-            var exp = Expressionable.Create<SmModules>() //创建表达式
-          .And(it => it.IsActive == true)
-          .And(it => it.IsDeleted == true);//注意 这一句 不能少
-
-            foreach (var item in searchParam)
-            {
-                if (item.Key == "current")
-                {
-                    searchParam.Remove(item.Key);
-                    current = int.Parse(item.Value.ToString());
-                    continue;
-                }
-
-                if (item.Key == "pageSize")
-                {
-                    searchParam.Remove(item.Key);
-                    pageSize = int.Parse(item.Value.ToString());
-                    continue;
-                }
-
-                if (item.Key == "_timestamp")
-                {
-                    searchParam.Remove(item.Key);
-                    continue;
-                }
-
-                if (item.Value.ToString() == "{}")
-                    searchParam.Remove(item.Key);
-                //string type = typeof(T).GetProperties().Where(x => x.Name.ToLower() == item.Key.ToLower())
-                //                  .FirstOrDefault()
-                //                  ?.PropertyType.GetGenericArguments().FirstOrDefault()
-                //                  ?.Name ?? typeof(T).GetProperties().Where(x => x.Name.ToLower() == item.Key.ToLower())
-                //                  .FirstOrDefault()
-                //                  ?.PropertyType.Name;
-                //if (item.Value.GetType().Name == "JArray")
-                //{
-                //    var jArray = JArray.Parse(item.Value.ToString());
-                //    if (type == "DateTime" && jArray.Count == 2)
-                //    {
-                //        lamadaExtention.GetExpression(item.Key, DateTime.Parse(jArray.First.ToString()), ExpressionType.GreaterThanOrEqual);
-                //        lamadaExtention.GetExpression(item.Key, DateTime.Parse(jArray.Last.ToString()), ExpressionType.LessThanOrEqual);
-                //    }
-                //}
-                //else
-                //    lamadaExtention.GetExpression(item.Key, item.Value.ToString().Trim(), GetExpressionType(type));
-            }
-
-            foreach (var item in searchParam)
-            {
-                if (!string.IsNullOrEmpty(item.Value.ToString()))
-                    whereSql += " AND " + item.Key + " LIKE'%" + item.Value + "%'";
-            }
-
-            foreach (var item in filterParam)
-            {
-                if (!string.IsNullOrEmpty(item.Value.ToString()))
-                    whereSql += " AND " + item.Key + "='" + item.Value + "'";
-            }
-
-            whereSql += " AND IsDeleted='false'";
-            if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(parentColumn))
-
-                whereSql += " AND " + parentColumn + " = '" + parentId + "'";
-
-
-            if (default(TEntity).HasField("IsActive"))
-                whereSql += " AND IsActive='true'";
-
-            query = query.Where(whereSql);
-
-            var sorterParam = JsonHelper.JsonToObj<Dictionary<string, string>>(sorter);
-
-            if (sorterParam.Count == 0 && !string.IsNullOrEmpty(moduleCode))
-            {
-                SmModules module = ModuleInfo.GetModuleInfo(moduleCode);
-                if (module != null && !string.IsNullOrEmpty(module.DefaultSort) && !string.IsNullOrEmpty(module.DefaultSortOrder))
-                    sorterParam.Add(module.DefaultSort, module.DefaultSortOrder);
-            }
-
-            if (sorterParam.Count > 0)
-            {
-                foreach (var item in sorterParam)
-                {
-                    #region 排序
-                    if (item.Value == "ascend")
-                        query = query.OrderBy(item.Key + " ASC");
-
-                    else if (item.Value == "descend")
-                        query = query.OrderBy(item.Key + " DESC");
-
-                    #endregion
-                }
-            }
-            obj.data = await query.ToPageListAsync(current, pageSize, total);
-
-        }
-        catch (Exception E)
-        {
-            message = E.Message;
-        }
-
-        obj.current = current;
-        obj.pageSize = pageSize;
-        obj.total = total.Value;
-        obj.success = success;
-        obj.message = message;
-        return obj;
-    }
-
-
     public async Task<List<TResult>> QueryMuch<T, T2, T3, TResult>(Expression<Func<T, T2, T3, object[]>> joinExpression, Expression<Func<T, T2, T3, TResult>> selectExpression, Expression<Func<T, T2, T3, bool>> whereLambda = null) where T : class, new()
     {
         return await BaseDal.QueryMuch(joinExpression, selectExpression, whereLambda);
@@ -677,7 +549,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns></returns>
     public virtual async Task<bool> BulkAudit(Guid[] ids)
     {
-        var entities = new List<TEntity>();
+        List<TEntity> entities = new();
         foreach (var id in ids)
         {
             if (!await AnyAsync(id))
@@ -712,7 +584,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns></returns>
     public virtual async Task<bool> BulkRevocation(Guid[] ids)
     {
-        var entities = new List<TEntity>();
+        List<TEntity> entities = new();
         foreach (var id in ids)
         {
             if (!await AnyAsync(id))
@@ -991,7 +863,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         return new ServiceResult() { Success = true, Message = message, Data = null };
     }
 
-
+    public ServiceResult<T> Failed<T>(T data, string message = "查询成功")
+    {
+        return new ServiceResult<T>() { Success = false, Message = message, Data = data };
+    }
     public ServiceResult Failed(string message = "失败", int status = 500)
     {
         return new ServiceResult() { Success = false, Status = status, Message = message, Data = null };
@@ -1001,6 +876,5 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     {
         return new ServiceResult<T>() { Success = false, Status = status, Message = message, Data = default };
     }
-
     #endregion
 }
