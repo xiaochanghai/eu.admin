@@ -26,4 +26,14 @@ public class IvInController : BaseController<IIvInServices, IvIn, IvInDto, Inser
     public IvInController(IIvInServices service) : base(service)
     {
     }
+
+    #region 过账
+    /// <summary>
+    /// 过账
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
+    [HttpPost("Posting")]
+    public async Task<ServiceResult> BulkOrderPosting([FromBody] Guid[] ids) => await _service.BulkOrderPostingAsync(ids);
+    #endregion
 }

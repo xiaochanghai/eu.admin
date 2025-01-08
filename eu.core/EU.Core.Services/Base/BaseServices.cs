@@ -317,6 +317,11 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>true or false</returns>
     public async Task<bool> AnyAsync(object objId) => await BaseDal.AnyAsync(objId);
 
+
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression)
+    { 
+        return await BaseDal.AnyAsync(whereExpression);
+    }
     #endregion
 
     #region 根据ID查询查询一条数据 

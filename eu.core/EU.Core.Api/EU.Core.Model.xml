@@ -2139,9 +2139,24 @@
             货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventoryBase.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.BdMaterialInventoryBase.QTY">
             <summary>
             数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventoryBase.LastInTime">
+            <summary>
+            最近入库日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventoryBase.LastOutTime">
+            <summary>
+            最近出库日期
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialInventoryBase.Remark">
@@ -2151,7 +2166,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.BdMaterialIVChangeBase">
             <summary>
-            BdMaterialIVChange (Dto.Base)
+            物料库存变化 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.MaterialId">
@@ -2167,6 +2182,11 @@
         <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.QTY">
@@ -2189,11 +2209,6 @@
             变化类型
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.Remark">
-            <summary>
-            备注
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.OrderId">
             <summary>
             订单ID
@@ -2202,6 +2217,11 @@
         <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.OrderDetailId">
             <summary>
             订单明细ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialIVChangeBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.BdMaterialTypeBase">
@@ -12020,9 +12040,24 @@
             货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventory.BatchNo">
+            <summary>
+            批号/炉号
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.BdMaterialInventory.QTY">
             <summary>
             数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventory.LastInTime">
+            <summary>
+            最近入库日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialInventory.LastOutTime">
+            <summary>
+            最近出库日期
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialInventory.Remark">
@@ -12032,7 +12067,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.BdMaterialIVChange">
             <summary>
-            BdMaterialIVChange (Model)
+            物料库存变化 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChange.MaterialId">
@@ -12048,6 +12083,11 @@
         <member name="P:EU.Core.Model.Models.BdMaterialIVChange.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialIVChange.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChange.QTY">
@@ -12070,11 +12110,6 @@
             变化类型
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdMaterialIVChange.Remark">
-            <summary>
-            备注
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.BdMaterialIVChange.OrderId">
             <summary>
             订单ID
@@ -12083,6 +12118,11 @@
         <member name="P:EU.Core.Model.Models.BdMaterialIVChange.OrderDetailId">
             <summary>
             订单明细ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdMaterialIVChange.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.BdMaterialType">
@@ -19747,6 +19787,21 @@
         <member name="F:EU.Core.Model.Consts.DIC_PURCHASE_RETURN_ORDER_STATUS.OrderComplete">
             <summary>
              订单完结
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Consts.DIC_IV_CHANGE_TYPE">
+            <summary>
+            库存操作类型
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHANGE_TYPE.IvIn">
+            <summary>
+            库存入库
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHANGE_TYPE.IvOut">
+            <summary>
+            库存出库
             </summary>
         </member>
         <member name="T:EU.Core.Model.Consts.DIC_IV_IN_STATUS">

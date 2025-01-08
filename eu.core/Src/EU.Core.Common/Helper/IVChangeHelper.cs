@@ -1,24 +1,92 @@
-﻿using System.Data;
-using EU.Core.Model.Models;
+﻿using EU.Core.Model.Models;
+using Org.BouncyCastle.Crypto;
 using SqlSugar;
+using System.Data;
+using static EU.Core.Model.Consts;
 
 namespace EU.Core.Common.Helper;
 
 public class IVChangeHelper
 {
-    public static void Add(BdMaterialIVChange change, IDbTransaction trans = null)
+    /// <summary>
+    /// 处理库存
+    /// </summary>
+    /// <param name="Db">Db</param>
+    /// <param name="materialId">物料ID</param>
+    /// <param name="stockId">仓库ID</param>
+    /// <param name="locationId">货位ID</param>
+    /// <param name="qty">数量</param>
+    /// <param name="changeType">库存类型</param>
+    /// <param name="orderId">订单ID</param>
+    /// <param name="orderDetailId">订单明细ID</param>
+    /// <param name="batchNo">批次</param>
+    /// <param name="remark">备注</param>
+    /// <returns></returns>
+    public static async Task Add(ISqlSugarClient Db, Guid? materialId, Guid? stockId, Guid? locationId, decimal? qty, string changeType, Guid? orderId, Guid? orderDetailId, string batchNo = null, string remark = null)
     {
-        DbInsert di = new("BdMaterialIVChange");
-        di.Values("MaterialId", change.MaterialId);
-        di.Values("StockId", change.StockId);
-        di.Values("GoodsLocationId", change.GoodsLocationId);
-        di.Values("QTY", change.QTY);
-        di.Values("BeforeQTY", change.BeforeQTY);
-        di.Values("AfterQTY", change.AfterQTY);
-        di.Values("ChangeType", change.ChangeType);
-        di.Values("OrderId", change.OrderId);
-        di.Values("OrderDetailId", change.OrderDetailId);
-        DBHelper.ExecuteDML(di.GetSql(), null, null, trans);
+        var inventory = await Db.Queryable<BdMaterialInventory>()
+            .Where(x => x.StockId == stockId && 
+            x.GoodsLocationId == locationId && 
+            x.MaterialId == materialId)
+            .WhereIF(batchNo.IsNotEmptyOrNull(), x => x.BatchNo == batchNo)
+            .FirstAsync();
+
+        if (inventory is null)
+        {
+            BdMaterialInventory inventoryInsert = new()
+            {
+                MaterialId = materialId,
+                StockId = stockId,
+                GoodsLocationId = locationId,
+                BatchNo = batchNo,
+                QTY = 0
+            };
+            await Db.Insertable(inventoryInsert).ExecuteCommandAsync();
+
+            inventory = await Db.Queryable<BdMaterialInventory>()
+                .Where(x => x.StockId == stockId && x.GoodsLocationId == locationId)
+                .WhereIF(batchNo.IsNotEmptyOrNull(), x => x.BatchNo == batchNo)
+                .FirstAsync();
+        }
+
+        BdMaterialIVChange change = new()
+        {
+            MaterialId = materialId,
+            StockId = stockId,
+            GoodsLocationId = locationId,
+            BatchNo = batchNo,
+            QTY = qty,
+            ChangeType = changeType,
+            OrderId = orderId,
+            OrderDetailId = orderDetailId,
+            Remark = remark,
+            BeforeQTY = inventory.QTY
+        };
+
+
+        switch (changeType)
+        {
+            case DIC_IV_CHANGE_TYPE.IvIn:
+                inventory.QTY += qty;
+                break;
+            case DIC_IV_CHANGE_TYPE.IvOut:
+                inventory.QTY -= qty;
+                break;
+
+                //default:
+                //    {
+                //        return ExpressionType.Equal;
+                //    }
+        }
+        change.AfterQTY = inventory.QTY;
+        await Db.Updateable<BdMaterialInventory>()
+            .SetColumns(it => new BdMaterialInventory()
+            {
+                QTY = inventory.QTY
+            }, true)
+            .Where(it => it.ID == inventory.ID)
+            .ExecuteCommandAsync();
+        await Db.Insertable(change).ExecuteCommandAsync();
     }
 
     /// <summary>

@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using SqlSugar;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -116,6 +118,47 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
         }
         await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_IN_STATUS.WaitIn}'");
         return true;
+    }
+    #endregion
+
+    #region 订单过账
+    /// <summary>
+    /// 订单过账指定ID集合的数据(订单过账)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public async Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids)
+    {
+        for (int i = 0; i < ids.Length; i++)
+        {
+            var id = ids[i];
+            if (await Db.Queryable<IvIn>().AnyAsync(x => x.ID == id && (x.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add || x.OrderStatus == DIC_IV_IN_STATUS.InComplete)))
+                continue;
+            var details = await Db.Queryable<IvInDetail>().Where(x => x.OrderId == id).TranLock(DbLockType.Wait).ToListAsync();
+
+            for (int j = 0; j < details.Count; j++)
+            {
+                var detail = details[j];
+                await IVChangeHelper.Add(Db,
+                    detail.MaterialId,
+                    detail.StockId,
+                    detail.GoodsLocationId,
+                    detail.QTY,
+                    DIC_IV_CHANGE_TYPE.IvIn, id, detail.ID, detail.BatchNo
+                    );
+            }
+        }
+        await Db.Updateable<IvIn>()
+              .SetColumns(it => new IvIn()
+              {
+                  OrderStatus = DIC_IV_IN_STATUS.InComplete
+              }, true)
+              .Where(it => ids.Contains(it.ID) &&
+              it.OrderStatus == DIC_IV_IN_STATUS.WaitIn &&
+              it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
+              .ExecuteCommandAsync();
+
+        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

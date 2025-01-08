@@ -161,9 +161,6 @@ const FormPage: React.FC<any> = props => {
     let { Data, Success, Message } = id ? await update(data) : await add(data);
 
     message.destroy();
-    if (modifyType == ModifyType.View) {
-      // modifyType = "1";
-    }
     if (Success) {
       message.success(Message);
       setDisabledToolbar(true);
@@ -178,8 +175,10 @@ const FormPage: React.FC<any> = props => {
       } else if (!id) {
         setViewId(Data);
         setModifyType(ModifyType.Edit);
-        setOrderStatus("WaitShip");
+        setOrderStatus("WaitIn");
         setAuditStatus("Add");
+        setMasterStockId(data.StockId);
+        setMasterGoodsLocationId(data.GoodsLocationId);
       }
     }
   };
@@ -234,7 +233,7 @@ const FormPage: React.FC<any> = props => {
     ]
   };
   let columns: any = [];
-  if (modifyType == ModifyType.Edit) {
+  if (modifyType != ModifyType.View) {
     if (moduleInfo1 && moduleInfo1.columns) columns = [...moduleInfo1.columns, actionColumn];
   } else if (moduleInfo1 && moduleInfo1.columns) columns = [...moduleInfo1.columns];
 
@@ -374,14 +373,18 @@ const FormPage: React.FC<any> = props => {
                   //   });
                   //   // setWaitSelectVisible(true);
                   // }}
-                  recordCreatorProps={{
-                    position: "end",
-                    record: () => ({
-                      ID: createUuid(),
-                      StockId: masterStockId,
-                      GoodsLocationId: masterGoodsLocationId
-                    })
-                  }}
+                  recordCreatorProps={
+                    id
+                      ? {
+                          position: "end",
+                          record: () => ({
+                            ID: createUuid(),
+                            StockId: masterStockId,
+                            GoodsLocationId: masterGoodsLocationId
+                          })
+                        }
+                      : false
+                  }
                   value={dataSource}
                   onChange={setDataSource}
                   successCallBack={(originData: any, data: any) => {

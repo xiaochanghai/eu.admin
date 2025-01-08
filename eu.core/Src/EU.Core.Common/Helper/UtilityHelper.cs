@@ -70,6 +70,7 @@ public partial class Utility
                     dateFormat = dvModuleColumns[j].DataFormate;
                     if (dt.Columns.Contains(columnName))
                         value = dt.Rows[i][columnName].ToString();
+                    else value = string.Empty;
 
                     if (dvModuleColumns[j].IsBool != null && dvModuleColumns[j].IsBool.Value)
                         IsBool = dvModuleColumns[j].IsBool.Value;

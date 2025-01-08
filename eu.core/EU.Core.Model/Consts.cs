@@ -295,6 +295,23 @@ public class Consts
     #endregion
 
     #region 库存管理
+
+    /// <summary>
+    /// 库存操作类型
+    /// </summary>
+    public static class DIC_IV_CHANGE_TYPE
+    {
+        /// <summary>
+        /// 库存入库
+        /// </summary>
+        public const string IvIn = "IvIn";
+
+        /// <summary>
+        /// 库存出库
+        /// </summary>
+        public const string IvOut = "IvOut";
+    }
+
     /// <summary>
     /// 库存入库单-订单状态
     /// </summary>

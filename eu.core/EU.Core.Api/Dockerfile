@@ -3,7 +3,7 @@
 
 #FROM swr.cn-south-1.myhuaweicloud.com/mcr/aspnet:5.0-alpine
 #FROM mcr.microsoft.com/dotnet/core/aspnet:5.0-buster-slim
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
 
@@ -38,4 +38,4 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 WORKDIR /app
 COPY . . 
 EXPOSE 9291 
-ENTRYPOINT ["dotnet", "Tiobon.Core.Api.dll","-b","0.0.0.0"]
+ENTRYPOINT ["dotnet", "EU.Core.Api.dll","-b","0.0.0.0"]
