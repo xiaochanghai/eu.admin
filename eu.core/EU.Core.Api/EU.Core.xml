@@ -1092,6 +1092,13 @@
             库存出库单(Controller)
             </summary>
         </member>
+        <member name="M:EU.Core.Api.Controllers.IvOutController.BulkOrderPosting(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.IvOutDetailController">
             <summary>
             库存出库单明细(Controller)

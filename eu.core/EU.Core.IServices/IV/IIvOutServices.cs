@@ -21,4 +21,5 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface IIvOutServices : IBaseServices<IvOut, IvOutDto, InsertIvOutInput, EditIvOutInput>
 {
+    Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids);
 }

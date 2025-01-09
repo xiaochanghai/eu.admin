@@ -1,5 +1,4 @@
 ﻿using EU.Core.Model.Models;
-using Org.BouncyCastle.Crypto;
 using SqlSugar;
 using System.Data;
 using static EU.Core.Model.Consts;
@@ -25,8 +24,8 @@ public class IVChangeHelper
     public static async Task Add(ISqlSugarClient Db, Guid? materialId, Guid? stockId, Guid? locationId, decimal? qty, string changeType, Guid? orderId, Guid? orderDetailId, string batchNo = null, string remark = null)
     {
         var inventory = await Db.Queryable<BdMaterialInventory>()
-            .Where(x => x.StockId == stockId && 
-            x.GoodsLocationId == locationId && 
+            .Where(x => x.StockId == stockId &&
+            x.GoodsLocationId == locationId &&
             x.MaterialId == materialId)
             .WhereIF(batchNo.IsNotEmptyOrNull(), x => x.BatchNo == batchNo)
             .FirstAsync();
@@ -70,6 +69,12 @@ public class IVChangeHelper
                 inventory.QTY += qty;
                 break;
             case DIC_IV_CHANGE_TYPE.IvOut:
+                if ((inventory.QTY - qty) < 0)
+                {
+                    var material = await Db.Queryable<BdMaterial>().FirstAsync(x => x.ID == materialId);
+                    throw new Exception($"【{material.MaterialNames}】库存不足，剩余库存：{StringHelper.TrimDecimalString(inventory.QTY)}");
+                }
+
                 inventory.QTY -= qty;
                 break;
 
@@ -78,6 +83,7 @@ public class IVChangeHelper
                 //        return ExpressionType.Equal;
                 //    }
         }
+
         change.AfterQTY = inventory.QTY;
         await Db.Updateable<BdMaterialInventory>()
             .SetColumns(it => new BdMaterialInventory()

@@ -15,8 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using EU.Core.Common.Extensions;
-
 namespace EU.Core.Services;
 
 /// <summary>
@@ -73,25 +71,7 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        List<IvOut> entities = new();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_OUT_STATUS.WaitOut}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await base.BulkAudit(ids, $"OrderStatus = '{DIC_IV_OUT_STATUS.WaitOut}'");
     #endregion
 
     #region 撤销数据 
@@ -118,6 +98,59 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
         }
         await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_OUT_STATUS.WaitOut}'");
         return true;
+    }
+    #endregion
+
+    #region 订单过账
+    /// <summary>
+    /// 订单过账指定ID集合的数据(订单过账)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public async Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids)
+    {
+        try
+        {
+            await Db.Ado.BeginTranAsync();
+            for (int i = 0; i < ids.Length; i++)
+            {
+                var id = ids[i];
+                if (await Db.Queryable<IvOut>().AnyAsync(x => x.ID == id && (x.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add || x.OrderStatus == DIC_IV_OUT_STATUS.OutComplete)))
+                    continue;
+                var details = await Db.Queryable<IvOutDetail>().Where(x => x.OrderId == id).ToListAsync();
+
+                for (int j = 0; j < details.Count; j++)
+                {
+                    var detail = details[j];
+
+                    await IVChangeHelper.Add(Db,
+                         detail.MaterialId,
+                         detail.StockId,
+                         detail.GoodsLocationId,
+                         detail.QTY,
+                         DIC_IV_CHANGE_TYPE.IvOut, id, detail.ID, detail.BatchNo
+                         );
+                }
+            }
+            await Db.Updateable<IvOut>()
+                  .SetColumns(it => new IvOut()
+                  {
+                      OrderStatus = DIC_IV_OUT_STATUS.OutComplete
+                  }, true)
+                  .Where(it => ids.Contains(it.ID) &&
+                  it.OrderStatus == DIC_IV_OUT_STATUS.WaitOut &&
+                  it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
+                  .ExecuteCommandAsync();
+
+
+            await Db.Ado.CommitTranAsync();
+            return Success(ResponseText.EXECUTE_SUCCESS);
+        }
+        catch (Exception E)
+        {
+            await Db.Ado.RollbackTranAsync();
+            return Failed(E.Message);
+        }
     }
     #endregion
 }
