@@ -203,7 +203,12 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
             up = up.IgnoreColumns(lstIgnoreColumns.ToArray());
 
         if (lstColumns != null && lstColumns.Count > 0)
+        {
+            lstColumns.Add("UpdateBy");
+            lstColumns.Add("UpdateTime");
+            lstColumns.Add("ModificationNum");
             up = up.UpdateColumns(lstColumns.ToArray());
+        }
 
         if (!string.IsNullOrEmpty(where))
             up = up.Where(where);
@@ -225,20 +230,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <param name="lstIgnoreColumns">不更新某列</param>
     /// <param name="where">where条件</param>
     /// <returns></returns>
-    public async Task<bool> Update(TEntity entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)
-    {
-        var up = _db.Updateable(entity);
-        if (lstIgnoreColumns != null && lstIgnoreColumns.Count > 0)
-            up = up.IgnoreColumns(lstIgnoreColumns.ToArray());
-
-        if (lstColumns != null && lstColumns.Count > 0)
-            up = up.UpdateColumns(lstColumns.ToArray());
-
-        if (!string.IsNullOrEmpty(where))
-            up = up.Where(where);
-
-        return await up.ExecuteCommandHasChangeAsync();
-    }
+    public async Task<bool> Update(TEntity entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)=> await Update([entity], lstColumns, lstIgnoreColumns, where);
 
     /// <summary>
     /// 根据实体删除一条数据

@@ -319,7 +319,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
 
 
     public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression)
-    { 
+    {
         return await BaseDal.AnyAsync(whereExpression);
     }
     #endregion
@@ -552,7 +552,14 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public virtual async Task<bool> BulkAudit(Guid[] ids)
+    public virtual async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, null);
+
+    /// <summary>
+    /// 审核指定ID集合的数据(批量审核)
+    /// </summary>
+    /// <param name="ids">主键ID集合</param>
+    /// <returns></returns>
+    public virtual async Task<bool> BulkAudit(Guid[] ids, string where = null)
     {
         List<TEntity> entities = new();
         foreach (var id in ids)
@@ -569,7 +576,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
                 entities.Add(entity);
             }
         }
-        await BaseDal.Update(entities, ["AuditStatus"]);
+        await BaseDal.Update(entities, ["AuditStatus"], null, where);
         return true;
     }
     #endregion

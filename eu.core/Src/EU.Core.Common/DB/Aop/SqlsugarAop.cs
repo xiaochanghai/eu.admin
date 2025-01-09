@@ -38,85 +38,92 @@ public static class SqlSugarAop
 
     public static void DataExecuting(object oldValue, DataFilterModel entityInfo)
     {
-        if (entityInfo.EntityValue is RootEntityTkey<Guid> rootEntity)
-            if (rootEntity.ID == Guid.Empty)
-                rootEntity.ID = Guid.NewGuid();
 
-        if (entityInfo.EntityValue is BaseEntity baseEntity)
+        if (entityInfo.PropertyName == "CreatedBy" ||
+            entityInfo.PropertyName == "CreatedTime" ||
+            entityInfo.PropertyName == "UpdateTime" ||
+            entityInfo.PropertyName == "UpdateTime" ||
+            entityInfo.PropertyName == "GroupId" ||
+            entityInfo.PropertyName == "CompanyId" ||
+            entityInfo.PropertyName == "Tag" ||
+            entityInfo.PropertyName == "ModificationNum")
         {
-            // 新增操作
-            if (entityInfo.OperationType == DataFilterType.InsertByObject)
-                if (baseEntity.CreatedTime == DateTime.MinValue || baseEntity.CreatedTime is null)
-                    baseEntity.CreatedTime = DateTime.Now;
+            if (entityInfo.EntityValue is RootEntityTkey<Guid> rootEntity)
+                if (rootEntity.ID == Guid.Empty)
+                    rootEntity.ID = Guid.NewGuid();
 
-            if (entityInfo.OperationType == DataFilterType.UpdateByObject)
-                baseEntity.UpdateTime = DateTime.Now;
-
-            if (App.User?.ID != null)
+            if (entityInfo.EntityValue is BaseEntity baseEntity)
             {
-                if (baseEntity is ITenantEntity tenant && App.User.TenantId > 0)
+                // 新增操作
+                if (entityInfo.OperationType == DataFilterType.InsertByObject)
+                    if (baseEntity.CreatedTime == DateTime.MinValue || baseEntity.CreatedTime is null)
+                        baseEntity.CreatedTime = Utility.GetSysDate();
+                if (entityInfo.OperationType == DataFilterType.UpdateByObject)
+                    baseEntity.UpdateTime = Utility.GetSysDate();
+
+                if (App.User?.ID != null)
                 {
-                    if (tenant.TenantId == 0)
-                        tenant.TenantId = App.User.TenantId;
+                    if (baseEntity is ITenantEntity tenant && App.User.TenantId > 0)
+                    {
+                        if (tenant.TenantId == 0)
+                            tenant.TenantId = App.User.TenantId;
+                    }
+
+                    switch (entityInfo.OperationType)
+                    {
+                        case DataFilterType.UpdateByObject:
+                            baseEntity.UpdateBy = App.User.ID;
+                            baseEntity.ModificationNum = baseEntity.ModificationNum is null ? 0 : baseEntity.ModificationNum + 1;
+                            break;
+                        case DataFilterType.InsertByObject:
+                            if (baseEntity.CreatedBy.IsNullOrEmpty())
+                                baseEntity.CreatedBy = App.User.ID;
+                            if (baseEntity.GroupId.IsNullOrEmpty())
+                                baseEntity.GroupId = Utility.GetGroupGuidId();
+                            if (baseEntity.CompanyId.IsNullOrEmpty())
+                                baseEntity.CompanyId = Utility.GetCompanyGuidId();
+                            if (baseEntity.ModificationNum.IsNullOrEmpty())
+                                baseEntity.ModificationNum = 0;
+                            if (baseEntity.Tag.IsNullOrEmpty())
+                                baseEntity.Tag = 0;
+                            break;
+                    }
                 }
+            }
+            else
+            {
+                //兼容以前的表 
+                //这里要小心 在AOP里用反射 数据量多性能就会有问题
+                //要么都统一使用基类
+                //要么考虑老的表没必要兼容老的表
+                //
+
+                var getType = entityInfo.EntityValue.GetType();
 
                 switch (entityInfo.OperationType)
                 {
-                    case DataFilterType.UpdateByObject:
-                        baseEntity.UpdateBy = App.User.ID;
-                        //baseEntity.UpdateBy = App.User.Name;
-                        break;
                     case DataFilterType.InsertByObject:
-                        if (baseEntity.CreatedBy.IsNullOrEmpty() || baseEntity.CreatedBy is null)
-                        {
-                            baseEntity.CreatedBy = App.User.ID;
-                            //baseEntity.CreatedBy = App.User.Name;
-                        }
-                        if (baseEntity.GroupId.IsNullOrEmpty())
-                            baseEntity.GroupId = Utility.GetGroupGuidId();
-                        if (baseEntity.CompanyId.IsNullOrEmpty())
-                            baseEntity.CompanyId = Utility.GetCompanyGuidId();
-                        if (baseEntity.ModificationNum.IsNullOrEmpty())
-                            baseEntity.ModificationNum = 0;
-                        if (baseEntity.Tag.IsNullOrEmpty())
-                            baseEntity.Tag = 0;
+                        var dyCreatedBy = getType.GetProperty("CreatedBy");
+                        var dyCreateTime = getType.GetProperty("CreatedTime");
+
+                        if (App.User?.ID != null && dyCreatedBy != null && dyCreatedBy.GetValue(entityInfo.EntityValue) == null)
+                            dyCreatedBy.SetValue(entityInfo.EntityValue, App.User.ID);
+
+                        if ((dyCreateTime != null && dyCreateTime.GetValue(entityInfo.EntityValue) is null) || (dyCreateTime != null && dyCreateTime.GetValue(entityInfo.EntityValue) != null && (DateTime)dyCreateTime.GetValue(entityInfo.EntityValue) == DateTime.MinValue))
+                            dyCreateTime.SetValue(entityInfo.EntityValue, DateTime.Now);
+
+                        break;
+                    case DataFilterType.UpdateByObject:
+                        var UpdateBy = getType.GetProperty("UpdateBy");
+                        var dyModifyTime = getType.GetProperty("UpdateTime");
+
+                        if (App.User?.ID != null && UpdateBy != null)
+                            UpdateBy.SetValue(entityInfo.EntityValue, App.User.ID);
+
+                        if (dyModifyTime != null)
+                            dyModifyTime.SetValue(entityInfo.EntityValue, DateTime.Now);
                         break;
                 }
-            }
-        }
-        else
-        {
-            //兼容以前的表 
-            //这里要小心 在AOP里用反射 数据量多性能就会有问题
-            //要么都统一使用基类
-            //要么考虑老的表没必要兼容老的表
-            //
-
-            var getType = entityInfo.EntityValue.GetType();
-
-            switch (entityInfo.OperationType)
-            {
-                case DataFilterType.InsertByObject:
-                    var dyCreatedBy = getType.GetProperty("CreatedBy");
-                    var dyCreateTime = getType.GetProperty("CreatedTime");
-
-                    if (App.User?.ID != null && dyCreatedBy != null && dyCreatedBy.GetValue(entityInfo.EntityValue) == null)
-                        dyCreatedBy.SetValue(entityInfo.EntityValue, App.User.ID);
-
-                    if ((dyCreateTime != null && dyCreateTime.GetValue(entityInfo.EntityValue) is null) || (dyCreateTime != null && dyCreateTime.GetValue(entityInfo.EntityValue) != null && (DateTime)dyCreateTime.GetValue(entityInfo.EntityValue) == DateTime.MinValue))
-                        dyCreateTime.SetValue(entityInfo.EntityValue, DateTime.Now);
-
-                    break;
-                case DataFilterType.UpdateByObject:
-                    var UpdateBy = getType.GetProperty("UpdateBy");
-                    var dyModifyTime = getType.GetProperty("UpdateTime");
-
-                    if (App.User?.ID != null && UpdateBy != null)
-                        UpdateBy.SetValue(entityInfo.EntityValue, App.User.ID);
-
-                    if (dyModifyTime != null)
-                        dyModifyTime.SetValue(entityInfo.EntityValue, DateTime.Now);
-                    break;
             }
         }
     }

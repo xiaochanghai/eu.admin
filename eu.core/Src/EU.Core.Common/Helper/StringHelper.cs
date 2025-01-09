@@ -136,6 +136,23 @@ public class StringHelper
             throw;
         }
     }
+    public static string TrimDecimalString(object value)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (value != null)
+            {
+                Decimal tmp = Decimal.Parse(value.ToString());
+                result = string.Format("{0:#0.##########}", tmp);
+            }
+            return result;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
 
     /// <summary>
     /// 格式化数字字符，并保留指定的小数位
