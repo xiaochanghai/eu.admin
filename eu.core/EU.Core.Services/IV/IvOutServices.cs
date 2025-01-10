@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using static EU.Core.Common.Helper.IVChangeHelper;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -128,7 +130,7 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
                          detail.StockId,
                          detail.GoodsLocationId,
                          detail.QTY,
-                         DIC_IV_CHANGE_TYPE.IvOut, id, detail.ID, detail.BatchNo
+                         ChangeType.InventoryOut, id, detail.ID, detail.BatchNo
                          );
                 }
             }

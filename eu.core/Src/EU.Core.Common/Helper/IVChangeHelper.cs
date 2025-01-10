@@ -21,7 +21,7 @@ public class IVChangeHelper
     /// <param name="batchNo">批次</param>
     /// <param name="remark">备注</param>
     /// <returns></returns>
-    public static async Task Add(ISqlSugarClient Db, Guid? materialId, Guid? stockId, Guid? locationId, decimal? qty, string changeType, Guid? orderId, Guid? orderDetailId, string batchNo = null, string remark = null)
+    public static async Task Add(ISqlSugarClient Db, Guid? materialId, Guid? stockId, Guid? locationId, decimal? qty, ChangeType changeType, Guid? orderId, Guid? orderDetailId, string batchNo = null, string remark = null)
     {
         var inventory = await Db.Queryable<BdMaterialInventory>()
             .Where(x => x.StockId == stockId &&
@@ -55,7 +55,7 @@ public class IVChangeHelper
             GoodsLocationId = locationId,
             BatchNo = batchNo,
             QTY = qty,
-            ChangeType = changeType,
+            ChangeType = changeType.ToString(),
             OrderId = orderId,
             OrderDetailId = orderDetailId,
             Remark = remark,
@@ -65,10 +65,10 @@ public class IVChangeHelper
 
         switch (changeType)
         {
-            case DIC_IV_CHANGE_TYPE.IvIn:
+            case ChangeType.InventoryIn:
                 inventory.QTY += qty;
                 break;
-            case DIC_IV_CHANGE_TYPE.IvOut:
+            case ChangeType.InventoryOut:
                 if ((inventory.QTY - qty) < 0)
                 {
                     var material = await Db.Queryable<BdMaterial>().FirstAsync(x => x.ID == materialId);
@@ -159,13 +159,13 @@ public class IVChangeHelper
         /// </summary>
         InventoryCheck,
         /// <summary>
-        /// 库存其他入库单
+        /// 库存入库单
         /// </summary>
-        InventoryOtherIn,
+        InventoryIn,
         /// <summary>
-        /// 库存其他出库单
+        /// 库存出库单
         /// </summary>
-        InventoryOtherOut,
+        InventoryOut,
         /// <summary>
         /// 库存初始化
         /// </summary>

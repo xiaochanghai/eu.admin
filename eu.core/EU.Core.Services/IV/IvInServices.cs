@@ -16,6 +16,7 @@
 */
 
 using SqlSugar;
+using static EU.Core.Common.Helper.IVChangeHelper;
 
 namespace EU.Core.Services;
 
@@ -127,7 +128,7 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
                         detail.StockId,
                         detail.GoodsLocationId,
                         detail.QTY,
-                        DIC_IV_CHANGE_TYPE.IvIn, id, detail.ID, detail.BatchNo
+                        ChangeType.InventoryIn, id, detail.ID, detail.BatchNo
                         );
                 }
             }
