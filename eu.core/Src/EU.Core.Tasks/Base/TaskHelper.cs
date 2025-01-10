@@ -1,12 +1,8 @@
-﻿using System.Data;
-using System.Text;
-using EU.Core.Common.Const;
-using EU.Core.Common.Helper;
-using EU.Core.Common.LogHelper;
+﻿using EU.Core.Common.Const;
 using EU.Core.DataAccess;
-using EU.Core.Model.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Quartz;
+using System.Data;
+using System.Text;
 
 namespace EU.Core.Tasks;
 

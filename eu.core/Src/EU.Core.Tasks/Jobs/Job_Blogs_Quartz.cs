@@ -1,7 +1,4 @@
-﻿using EU.Core.IServices;
-using Quartz;
-
-/// <summary>
+﻿/// <summary>
 /// 这里要注意下，命名空间和程序集是一样的，不然反射不到
 /// </summary>
 namespace EU.Core.Tasks;

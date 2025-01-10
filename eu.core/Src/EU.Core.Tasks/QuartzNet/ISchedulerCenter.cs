@@ -1,5 +1,4 @@
 ﻿using EU.Core.Model;
-using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels;
 
 namespace EU.Core.Tasks;

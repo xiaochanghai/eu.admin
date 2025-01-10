@@ -1,16 +1,12 @@
-﻿using EU.Core.Common.Helper;
-using EU.Core.Common;
-using EU.Core.Model.Models;
-using Quartz;
+﻿using EU.Core.Common;
+using EU.Core.Common.Const;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels;
 using Quartz.Impl;
 using Quartz.Impl.Triggers;
 using Quartz.Spi;
 using System.Collections.Specialized;
 using System.Reflection;
-using EU.Core.Common.LogHelper;
-using EU.Core.Model.ViewModels;
-using EU.Core.Model;
-using EU.Core.Common.Const;
 
 namespace EU.Core.Tasks;
 

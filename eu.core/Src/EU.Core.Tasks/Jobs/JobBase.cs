@@ -1,10 +1,4 @@
-﻿using EU.Core.Common.Helper;
-using EU.Core.Common.LogHelper;
-using EU.Core.IServices;
-using EU.Core.Model.Models;
-using Quartz;
-
-namespace EU.Core.Tasks;
+﻿namespace EU.Core.Tasks;
 
 public class JobBase
 {
