@@ -101,7 +101,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             await Db.Ado.RollbackTranAsync();
             throw;
         }
-        return ServiceResult.OprateSuccess("角色模块保存成功！");
+        return Success("角色模块保存成功！");
     }
 
     public async Task<ServiceResult> UpdateRoleModule(Guid RoleId, List<string> ModuleList)
@@ -172,7 +172,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             await Db.Ado.RollbackTranAsync();
             throw;
         }
-        return ServiceResult.OprateSuccess("角色模块保存成功！");
+        return Success("角色模块保存成功！");
     }
 
     public void LoopToAppendParentModuleId(List<SmModules> modules, Guid? moduleId, List<Guid?> moduleIds)
@@ -227,7 +227,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
 
         LoopToAppendChildren(smModules, moduleTree, functionPrivileges);
 
-        return ServiceResult<ModuleTree>.OprateSuccess(moduleTree, ResponseText.QUERY_SUCCESS);
+        return Success(moduleTree, ResponseText.QUERY_SUCCESS);
     }
     public void LoopToAppendChildren(List<SmModules> smModules, ModuleTree moduleTree, List<SmFunctionPrivilege> functionPrivileges)
     {

@@ -54,7 +54,7 @@ public class SmQuartzJobServices : BaseServices<SmQuartzJob, SmQuartzJobDto, Ins
             Args = args.ScheduleRule
         };
         //发送消息至对应的任务
-        var result = ServiceResult.OprateSuccess();
+        var result = Success();
         switch (operate)
         {
             //获取配置文件
@@ -69,7 +69,7 @@ public class SmQuartzJobServices : BaseServices<SmQuartzJob, SmQuartzJobDto, Ins
                     if (suc)
                         result.Data = o;
                     else
-                        result = ServiceResult.OprateFailed(o.ToString());
+                        result = Failed(o.ToString());
                     break;
                 }
             default:
@@ -80,11 +80,11 @@ public class SmQuartzJobServices : BaseServices<SmQuartzJob, SmQuartzJobDto, Ins
                         {
                             var expression = new CronExpression(taskMsg.Args);
                             if (expression == null)
-                                return ServiceResult.OprateFailed($"表达式格式不正确!");
+                                return Failed($"表达式格式不正确!");
                         }
                         catch (Exception ex)
                         {
-                            return ServiceResult.OprateFailed($"表达式格式不正确:{ex.Message}");
+                            return Failed($"表达式格式不正确:{ex.Message}");
                         }
 
                     }

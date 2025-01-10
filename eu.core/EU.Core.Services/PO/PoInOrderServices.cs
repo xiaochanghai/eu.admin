@@ -44,10 +44,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                 .SetColumns(it => new PoInOrderDetail()
                 {
                     StockId = model.StockId,
-                    GoodsLocationId = model.GoodsLocationId,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    GoodsLocationId = model.GoodsLocationId
+                }, true)
                 .Where(x => x.OrderId == Id && (x.StockId == null || x.GoodsLocationId == null))
                 .ExecuteCommandAsync();
         return result;
@@ -92,25 +90,7 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<PoInOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, "OrderStatus = 'Wait'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, "OrderStatus = 'Wait'");
     #endregion
 
     #region 撤销数据 
@@ -192,10 +172,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                         await Db.Updateable<PoArrivalOrderDetail>()
                             .SetColumns(it => new PoArrivalOrderDetail()
                             {
-                                InQTY = poNoticeOrderDetail.InQTY,
-                                UpdateBy = userId,
-                                UpdateTime = dt
-                            })
+                                InQTY = poNoticeOrderDetail.InQTY
+                            }, true)
                             .Where(it => it.ID == poNoticeOrderDetailId)
                             .ExecuteCommandAsync();
 
@@ -243,10 +221,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                         await Db.Updateable<PoOrderDetail>()
                             .SetColumns(it => new PoOrderDetail()
                             {
-                                InQTY = poOrderDetail.InQTY,
-                                UpdateBy = userId,
-                                UpdateTime = dt
-                            })
+                                InQTY = poOrderDetail.InQTY
+                            }, true)
                             .Where(it => it.ID == poOrderDetailId)
                             .ExecuteCommandAsync();
 
@@ -288,14 +264,14 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
 
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
 
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -311,17 +287,15 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
         await Db.Updateable<PoInOrder>()
             .SetColumns(it => new PoInOrder()
             {
-                OrderStatus = DIC_PURCHASE_IN_ORDER_STATUS.OrderComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_PURCHASE_IN_ORDER_STATUS.OrderComplete
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_PURCHASE_IN_ORDER_STATUS.Wait &&
             it.OrderStatus != DIC_PURCHASE_IN_ORDER_STATUS.OrderComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
 
     }
     #endregion
@@ -337,16 +311,14 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
         await Db.Updateable<PoInOrder>()
             .SetColumns(it => new PoInOrder()
             {
-                OrderStatus = DIC_PURCHASE_IN_ORDER_STATUS.CompleteIn,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_PURCHASE_IN_ORDER_STATUS.CompleteIn
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_PURCHASE_IN_ORDER_STATUS.CompleteIn &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

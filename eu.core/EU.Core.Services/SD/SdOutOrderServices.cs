@@ -37,25 +37,7 @@ public class SdOutOrderServices : BaseServices<SdOutOrder, SdOutOrderDto, Insert
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<SdOutOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_SALES_OUT_ORDER_STATUS.WaitOut}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_SALES_OUT_ORDER_STATUS.WaitOut}'");
     #endregion
 
     #region 撤销数据
@@ -111,8 +93,7 @@ public class SdOutOrderServices : BaseServices<SdOutOrder, SdOutOrderDto, Insert
             if (details.Any())
                 await _sdOutOrderDetailServices.Delete(details);
         }
-        List<string> lstColumns = ["IsDeleted"];
-        var result = await BaseDal.Update(entities, lstColumns);
+        var result = await BaseDal.Update(entities, ["IsDeleted"]);
 
         return result;
     }
@@ -129,17 +110,14 @@ public class SdOutOrderServices : BaseServices<SdOutOrder, SdOutOrderDto, Insert
         await Db.Updateable<SdOutOrder>()
             .SetColumns(it => new SdOutOrder()
             {
-                OrderStatus = DIC_SALES_OUT_ORDER_STATUS.OutComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_SALES_OUT_ORDER_STATUS.OutComplete
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_SALES_OUT_ORDER_STATUS.OutComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
-
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

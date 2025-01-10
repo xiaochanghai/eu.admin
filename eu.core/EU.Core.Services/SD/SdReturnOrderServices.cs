@@ -32,7 +32,6 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
     }
 
     #region 删除数据 
-
     /// <summary>
     /// 删除指定ID集合的数据(批量删除)
     /// </summary>
@@ -58,7 +57,6 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
             var details = await Db.Queryable<SdReturnOrderDetail>().Where(x => x.OrderId == ids[i]).Select(x => x.ID).ToArrayAsync();
             if (details.Any())
                 await _sdReturnOrderDetailServices.Delete(details);
-
         }
         var result = await BaseDal.Update(entities, ["IsDeleted"]);
 
@@ -67,31 +65,12 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
     #endregion
 
     #region 审核数据
-
     /// <summary>
     /// 审核指定ID集合的数据(批量审核)
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<SdReturnOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add && entity.OrderStatus == DIC_SALES_RETURN_ORDER_STATUS.WaitReturn)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_SALES_RETURN_ORDER_STATUS.WaitReturn}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_SALES_RETURN_ORDER_STATUS.WaitReturn}'");
     #endregion
 
     #region 撤销数据
@@ -149,10 +128,7 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
                     }
 
                     var result = await Db.Updateable<SdOutOrderDetail>()
-                      .SetColumns(it => new SdOutOrderDetail()
-                      {
-                          ReturnQTY = sdOutDetail.ReturnQTY
-                      })
+                      .SetColumns(it => new SdOutOrderDetail() { ReturnQTY = sdOutDetail.ReturnQTY }, true)
                       .Where(it => it.ID == entity.OutOrderDetailId)
                       .ExecuteCommandAsync();
                     entity.OrderId = orderId;
@@ -183,7 +159,7 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
 
             if (updates.Any())
                 await Db.Updateable(updates)
-                    .UpdateColumns(it => new { it.ReturnQTY })
+                    .UpdateColumns(it => new { it.ReturnQTY }, true)
                     .ExecuteCommandAsync();
 
             var outOrderIds = entitys.Select(x => x.OutOrderId).Distinct().ToList();
@@ -192,13 +168,13 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
 
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.INSERT_SUCCESS);
+            return Success(ResponseText.INSERT_SUCCESS);
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -212,18 +188,13 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
     public async Task<ServiceResult> BulkOrderCarryTo(Guid[] ids)
     {
         await Db.Updateable<SdReturnOrder>()
-            .SetColumns(it => new SdReturnOrder()
-            {
-                OrderStatus = DIC_SALES_RETURN_ORDER_STATUS.HasReturn,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+            .SetColumns(it => new SdReturnOrder() { OrderStatus = DIC_SALES_RETURN_ORDER_STATUS.HasReturn }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_SALES_RETURN_ORDER_STATUS.HasReturn &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

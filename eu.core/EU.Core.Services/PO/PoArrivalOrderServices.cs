@@ -70,25 +70,7 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<PoArrivalOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_PURCHASE_NOTICE_ORDER_STATUS.Wait}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_PURCHASE_NOTICE_ORDER_STATUS.Wait}'");
     #endregion
 
     #region 撤销数据 
@@ -163,10 +145,8 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                     await Db.Updateable<PoOrderDetail>()
                         .SetColumns(it => new PoOrderDetail()
                         {
-                            NoticeQTY = poOrderDetail.NoticeQTY,
-                            UpdateBy = userId,
-                            UpdateTime = dt
-                        })
+                            NoticeQTY = poOrderDetail.NoticeQTY
+                        }, true)
                         .Where(it => it.ID == poOrderDetailId)
                         .ExecuteCommandAsync();
 
@@ -256,9 +236,7 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                     SupplierId = supplierId,
                     OrderNo = orderNo,
                     OrderDate = dt.Date,
-                    OrderSource = "NoticeOrder",
-                    GroupId = Utility.GetGroupGuidId(),
-                    CompanyId = Utility.GetCompanyGuidId()
+                    OrderSource = "NoticeOrder"
                 });
                 int serialNumber = 1;
                 for (int j = 0; j < dicts.Count; j++)
@@ -298,9 +276,7 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                                 SourceOrderDetailId = sourceOrderDetailId,
                                 MaterialId = Guid.Parse(x["MaterialId"].ToString()),
                                 InQTY = inQTY,
-                                ReturnQTY = 0,
-                                GroupId = Utility.GetGroupGuidId(),
-                                CompanyId = Utility.GetCompanyGuidId()
+                                ReturnQTY = 0
                             });
                             serialNumber++;
                         }
@@ -322,13 +298,13 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
             }
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -344,10 +320,8 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
         await Db.Updateable<PoArrivalOrder>()
             .SetColumns(it => new PoArrivalOrder()
             {
-                OrderStatus = DIC_PURCHASE_NOTICE_ORDER_STATUS.OrderComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_PURCHASE_NOTICE_ORDER_STATUS.OrderComplete
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_PURCHASE_NOTICE_ORDER_STATUS.Wait &&
@@ -380,10 +354,8 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
         await Db.Updateable<PoArrivalOrder>()
             .SetColumns(it => new PoArrivalOrder()
             {
-                OrderStatus = orderStatus,
-                UpdateBy = userId,
-                UpdateTime = dt
-            })
+                OrderStatus = orderStatus
+            }, true)
             .Where(it => it.ID == orderId)
             .ExecuteCommandAsync();
     }

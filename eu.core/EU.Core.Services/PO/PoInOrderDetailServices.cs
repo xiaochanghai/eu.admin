@@ -58,10 +58,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
                 await Db.Updateable<PoArrivalOrderDetail>()
                     .SetColumns(it => new PoArrivalOrderDetail()
                     {
-                        InQTY = orderDetail.InQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        InQTY = orderDetail.InQTY
+                    }, true)
                     .Where(x => x.ID == entity.SourceOrderDetailId && x.InQTY != orderDetail.InQTY)
                     .ExecuteCommandAsync();
 
@@ -82,10 +80,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
                 await Db.Updateable<PoOrderDetail>()
                     .SetColumns(it => new PoOrderDetail()
                     {
-                        InQTY = orderDetail.InQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        InQTY = orderDetail.InQTY
+                    }, true)
                     .Where(x => x.ID == entity.SourceOrderDetailId && x.InQTY != orderDetail.InQTY)
                     .ExecuteCommandAsync();
                 await UpdateSourceOrderStatus(entity.SourceOrderId, "PurchaseOrder");
@@ -93,8 +89,7 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
 
             var lstColumns = new ModuleSqlColumn("PO_IN_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
+
             await Update(model, lstColumns, null, $"ID='{Id}'");
 
             var model1 = Mapper.Map(model).ToANew<PoInOrderDetailDto>();
@@ -153,10 +148,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
                     await Db.Updateable<PoArrivalOrderDetail>()
                         .SetColumns(it => new PoArrivalOrderDetail()
                         {
-                            InQTY = it.InQTY - entity.InQTY,
-                            UpdateBy = UserId,
-                            UpdateTime = Utility.GetSysDate()
-                        })
+                            InQTY = it.InQTY - entity.InQTY
+                        }, true)
                         .Where(it => it.ID == entity.SourceOrderDetailId)
                         .ExecuteCommandAsync();
                     #endregion
@@ -170,10 +163,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
                     await Db.Updateable<PoOrderDetail>()
                         .SetColumns(it => new PoOrderDetail()
                         {
-                            InQTY = it.InQTY - entity.InQTY,
-                            UpdateBy = UserId,
-                            UpdateTime = Utility.GetSysDate()
-                        })
+                            InQTY = it.InQTY - entity.InQTY
+                        }, true)
                         .Where(it => it.ID == entity.SourceOrderDetailId)
                         .ExecuteCommandAsync();
                     #endregion
@@ -235,10 +226,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
             await Db.Updateable<PoArrivalOrder>()
                 .SetColumns(it => new PoArrivalOrder()
                 {
-                    OrderStatus = orderStatus,
-                    UpdateBy = userId,
-                    UpdateTime = dt
-                })
+                    OrderStatus = orderStatus
+                }, true)
                 .Where(x => x.ID == orderId && x.OrderStatus != orderStatus)
                 .ExecuteCommandAsync();
         }
@@ -254,10 +243,8 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
             await Db.Updateable<PoOrder>()
                 .SetColumns(it => new PoOrder()
                 {
-                    OrderStatus = orderStatus,
-                    UpdateBy = userId,
-                    UpdateTime = dt
-                })
+                    OrderStatus = orderStatus
+                }, true)
                 .Where(x => x.ID == orderId && x.OrderStatus != orderStatus)
                 .ExecuteCommandAsync();
         }

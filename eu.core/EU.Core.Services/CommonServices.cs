@@ -14,8 +14,6 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
-using EU.Core.Common.Extensions;
-
 namespace EU.Core.Services;
 
 public partial class CommonServices : BaseServices<SmModules, SmModulesDto, InsertSmModulesInput, EditSmModulesInput>, ICommonServices
@@ -306,7 +304,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         }
         #endregion
 
-        return Success<string>(fileId, "导出成功！");
+        return Success(fileId, "导出成功！");
     }
 
     #endregion
@@ -392,7 +390,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             message = E.Message;
             result.ErrorList = ImportHelper.GetImportErrorList(importDataId);
         }
-        return Success<ImportExcelResult>(result, message);
+        return Success(result, message);
     }
 
     #endregion
@@ -422,7 +420,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     public ServiceResult ClearCache()
     {
         Utility.ReInitCache();
-        return ServiceResult.OprateSuccess();
+        return Success();
     }
     #endregion
 
@@ -512,7 +510,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict.Add("CompanyId", Utility.GetCompanyId());
         await Db.Insertable(dict).AS(tableName).ExecuteCommandAsync();
 
-        return Success<Guid>(id, ResponseText.INSERT_SUCCESS);
+        return Success(id, ResponseText.INSERT_SUCCESS);
     }
 
     public async Task<ServiceResult<Guid>> Update(string moduleCode, Guid id, object entity)
@@ -543,11 +541,11 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         await Db.Updateable(dict).AS(tableName).Where($"IsDeleted='false' AND ID='{id}'").ExecuteCommandAsync();
 
         #region 回写修改次数
-        string sql = $"UPDATE SmQuartzJobLog SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{id}'";
+        string sql = $"UPDATE {tableName} SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{id}'";
         await Db.Ado.ExecuteCommandAsync(sql);
         #endregion
 
-        return Success<Guid>(id, ResponseText.UPDATE_SUCCESS);
+        return Success(id, ResponseText.UPDATE_SUCCESS);
     }
 
     public async Task<ServiceResult> Delete(string moduleCode, Guid id) => await Delete(moduleCode, [id]);

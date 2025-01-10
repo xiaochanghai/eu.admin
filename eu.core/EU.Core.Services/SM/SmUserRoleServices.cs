@@ -48,11 +48,11 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
                 title = x.RoleName,
                 key = x.ID.ToString().ToLower(),
                 isLeaf = true,
-                children = new ()
+                children = new()
 
             }).ToListAsync();
 
-        return ServiceResult<RoleTree>.OprateSuccess(roleTree, ResponseText.QUERY_SUCCESS);
+        return Success(roleTree, ResponseText.QUERY_SUCCESS);
     }
 
     public async Task<ServiceResult> BatchInsertUserRole(UserRoleVM userRoleVm)
@@ -79,6 +79,6 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
             await base.Add(smUserRoles);
 
         Utility.ReInitCache();
-        return ServiceResult.OprateSuccess("用户角色保存成功！");
+        return Success("用户角色保存成功！");
     }
 }

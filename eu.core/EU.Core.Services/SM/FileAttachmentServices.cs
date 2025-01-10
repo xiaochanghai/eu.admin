@@ -190,9 +190,9 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
             await _context.AddAsync(fileAttachment);
             await _context.SaveChangesAsync();
 
-            return ServiceResult<string>.OprateSuccess(null, "上传成功！");
+            return Success<string>(null, "上传成功！");
         }
-        return ServiceResult<string>.OprateSuccess(null, "上传成功！");
+        return Success<string>(null, "上传成功！");
     }
 
     public async Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null)

@@ -20,3 +20,4 @@ global using System.Data;
 global using System.Dynamic;
 global using System.Text;
 global using static EU.Core.Model.Consts;
+global using EU.Core.Common.Extensions;

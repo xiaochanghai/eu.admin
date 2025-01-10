@@ -63,7 +63,7 @@ public class PoRequestionDetailServices : BaseServices<PoRequestionDetail, PoReq
         if (updates.Any())
         {
             await Db.Updateable(updates)
-                .UpdateColumns(it => new { it.QTY })
+                .UpdateColumns(it => new { it.QTY },true)
                 .ExecuteCommandAsync();
             result.AddRange(updates.Select(x => x.ID));
         }

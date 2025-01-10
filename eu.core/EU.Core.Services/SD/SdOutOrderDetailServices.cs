@@ -27,12 +27,13 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
         this._dal = dal;
         base.BaseDal = dal;
     }
+
     #region 更新
     public override async Task<SdOutOrderDetailDto> UpdateReturn(Guid Id, object entity1)
     {
         try
         {
-            await Db.Ado.BeginTranAsync(); 
+            await Db.Ado.BeginTranAsync();
             var model = ConvertToEntity(entity1);
 
             #region 检查是否存在相同值
@@ -55,10 +56,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
                 await Db.Updateable<SdOrderDetail>()
                     .SetColumns(it => new SdOrderDetail()
                     {
-                        OutQTY = orderDetail.OutQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        OutQTY = orderDetail.OutQTY
+                    }, true)
                     .Where(it => it.ID == entity.SalesOrderDetailId)
                     .ExecuteCommandAsync();
 
@@ -77,10 +76,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
                 await Db.Updateable<SdShipOrderDetail>()
                     .SetColumns(it => new SdShipOrderDetail()
                     {
-                        OutQTY = orderDetail.OutQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        OutQTY = orderDetail.OutQTY
+                    }, true)
                     .Where(it => it.ID == entity.ShipOrderDetailId)
                     .ExecuteCommandAsync();
                 await UpdateShipOrderStatus(entity.ShipOrderId);
@@ -88,8 +85,6 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
 
             var lstColumns = new ModuleSqlColumn("SD_OUT_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
             await Update(model, lstColumns, null, $"ID='{Id}'");
 
             model1 = Mapper.Map(model).ToANew<SdOutOrderDetailDto>();
@@ -144,10 +139,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
                     await Db.Updateable<SdOrderDetail>()
                         .SetColumns(x => new SdOrderDetail()
                         {
-                            OutQTY = x.OutQTY - entity.OutQTY,
-                            UpdateBy = UserId,
-                            UpdateTime = Utility.GetSysDate()
-                        })
+                            OutQTY = x.OutQTY - entity.OutQTY
+                        }, true)
                         .Where(it => it.ID == entity.SalesOrderDetailId)
                         .ExecuteCommandAsync();
                     #endregion
@@ -160,10 +153,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
                     await Db.Updateable<SdShipOrderDetail>()
                         .SetColumns(it => new SdShipOrderDetail()
                         {
-                            OutQTY = it.OutQTY - entity.OutQTY,
-                            UpdateBy = UserId,
-                            UpdateTime = Utility.GetSysDate()
-                        })
+                            OutQTY = it.OutQTY - entity.OutQTY
+                        }, true)
                         .Where(it => it.ID == entity.ShipOrderDetailId)
                         .ExecuteCommandAsync();
                     #endregion 
@@ -235,10 +226,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
         await Db.Updateable<SdOrder>()
             .SetColumns(it => new SdOrder()
             {
-                SalesOrderStatus = orderStatus,
-                UpdateBy = UserId,
-                UpdateTime = Utility.GetSysDate()
-            })
+                SalesOrderStatus = orderStatus
+            }, true)
             .Where(it => it.ID == orderId && it.SalesOrderStatus != orderStatus)
             .ExecuteCommandAsync();
     }
@@ -272,9 +261,7 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
         await Db.Updateable<SdShipOrder>()
             .SetColumns(it => new SdShipOrder()
             {
-                OrderStatus = orderStatus,
-                UpdateBy = UserId,
-                UpdateTime = Utility.GetSysDate()
+                OrderStatus = orderStatus
             })
             .Where(it => it.ID == orderId && it.OrderStatus != orderStatus)
             .ExecuteCommandAsync();

@@ -32,7 +32,6 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
     }
 
     #region 删除数据 
-
     /// <summary>
     /// 删除指定ID集合的数据(批量删除)
     /// </summary>
@@ -70,25 +69,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<SdShipOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add && entity.OrderStatus == DIC_SALES_SHIP_ORDER_STATUS.WaitShip)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_SALES_SHIP_ORDER_STATUS.WaitShip}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_SALES_SHIP_ORDER_STATUS.WaitShip}'");
     #endregion
 
     #region 撤销数据
@@ -161,12 +142,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                     }
 
                     await Db.Updateable<SdOrderDetail>()
-                        .SetColumns(it => new SdOrderDetail()
-                        {
-                            ShipQTY = sdOrderDetail.ShipQTY,
-                            UpdateBy = userId,
-                            UpdateTime = dt
-                        })
+                        .SetColumns(it => new SdOrderDetail() { ShipQTY = sdOrderDetail.ShipQTY }, true)
                         .Where(it => it.ID == salesOrderDetailId)
                         .ExecuteCommandAsync();
 
@@ -196,7 +172,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                 await Db.Insertable(addDetails).ExecuteCommandAsync();
 
             if (updateDetails.Any())
-                await Db.Updateable(updateDetails).UpdateColumns(it => new { it.ShipQTY }).ExecuteCommandAsync();
+                await Db.Updateable(updateDetails).UpdateColumns(it => new { it.ShipQTY }, true).ExecuteCommandAsync();
 
             for (int i = 0; i < salesOrderIds.Count; i++)
                 await _sdShipOrderDetailServices.UpdateSalesOrderStatus(salesOrderIds[i]);
@@ -204,14 +180,14 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
             await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "SdShipOrderDetail", id);
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.SAVE_SUCCESS);
+            return Success(ResponseText.SAVE_SUCCESS);
 
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -225,12 +201,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
     public async Task<ServiceResult> BulkOrderComplete(Guid[] ids)
     {
         await Db.Updateable<SdShipOrder>()
-            .SetColumns(it => new SdShipOrder()
-            {
-                OrderStatus = DIC_SALES_ORDER_STATUS.OrderComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+            .SetColumns(it => new SdShipOrder() { OrderStatus = DIC_SALES_ORDER_STATUS.OrderComplete })
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_SALES_ORDER_STATUS.WaitShip &&
@@ -238,7 +209,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
             it.OrderStatus != DIC_SALES_ORDER_STATUS.OutComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 
@@ -313,10 +284,8 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                             var result = await Db.Updateable<SdShipOrderDetail>()
                               .SetColumns(it => new SdShipOrderDetail()
                               {
-                                  OutQTY = sdShipDetail.OutQTY,
-                                  UpdateBy = userId,
-                                  UpdateTime = dt
-                              })
+                                  OutQTY = sdShipDetail.OutQTY
+                              }, true)
                               .Where(it => it.ID == shipOrderDetailId)
                               .ExecuteCommandAsync();
                             details.Add(new SdOutOrderDetail()
@@ -361,20 +330,18 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                 await Db.Updateable<SdShipOrder>()
                     .SetColumns(it => new SdShipOrder()
                     {
-                        OrderStatus = shipOrderStatus,
-                        UpdateBy = userId,
-                        UpdateTime = dt
-                    })
+                        OrderStatus = shipOrderStatus
+                    }, true)
                     .Where(it => it.ID == shipOrderId && it.OrderStatus != shipOrderStatus)
                     .ExecuteCommandAsync();
             }
             await Db.Ado.CommitTranAsync();
-            return ServiceResult.OprateSuccess(ResponseText.SAVE_SUCCESS);
+            return Success(ResponseText.SAVE_SUCCESS);
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion

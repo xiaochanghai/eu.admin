@@ -36,8 +36,6 @@ public class IvInDetailServices : BaseServices<IvInDetail, IvInDetailDto, Insert
     {
         try
         {
-
-
             var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
             var orderId = dict["masterId"].ObjToGuid();
             var entity = await Query(Id);
@@ -54,9 +52,6 @@ public class IvInDetailServices : BaseServices<IvInDetail, IvInDetailDto, Insert
             }
 
             var lstColumns = new ModuleSqlColumn("IV_IN_DETAIL_MNG").GetModuleTableEditableColumns();
-
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
              
             await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
 

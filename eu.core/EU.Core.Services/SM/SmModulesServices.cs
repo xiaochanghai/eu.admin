@@ -818,7 +818,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             //return responseContent.OK("导出成功！", (savePath + "/" + fileName).EncryptDES(AppSetting.Secret.ExportFile));
         }
-        return ServiceResult<Guid>.OprateSuccess(fileId, "导出成功！");
+        return Success(fileId, "导出成功！");
 
     }
     #endregion
@@ -915,7 +915,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 i++;
             });
             await Db.Updateable(columns)
-                .UpdateColumns(x => new { x.FromTaxisNo, x.UpdateBy, x.UpdateTime })
+                .UpdateColumns(x => new { x.FromTaxisNo, x.UpdateBy, x.UpdateTime }, true)
                 .ExecuteCommandAsync();
         }
         else
@@ -927,7 +927,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 i++;
             });
             await Db.Updateable(columns)
-                .UpdateColumns(x => new { x.TaxisNo, x.UpdateBy, x.UpdateTime })
+                .UpdateColumns(x => new { x.TaxisNo, x.UpdateBy, x.UpdateTime }, true)
                 .ExecuteCommandAsync();
         }
 
@@ -992,7 +992,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.Remark,
                     x.UpdateBy,
                     x.UpdateTime
-                })
+                }, true)
                 .ExecuteCommandAsync();
         }
         else
@@ -1023,7 +1023,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.IsThemeColor,
                     x.UpdateBy,
                     x.UpdateTime
-                })
+                }, true)
                 .ExecuteCommandAsync();
         }
         ModuleSqlColumn.Reload(moduleCode);
@@ -1122,7 +1122,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         var cache = DBHelper.QueryList<SmUserModuleColumn>(sql, null);
 
         RedisCacheService.AddObject(userId.ToString(), "UserModuleColumn." + module.ModuleCode, cache);
-        return ServiceResult.OprateSuccess("保存成功！");
+        return Success("保存成功！");
     }
     #endregion
 
@@ -1176,7 +1176,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         await Db.Insertable(moduleSql).ExecuteCommandAsync();
         await Db.Insertable(columns).ExecuteCommandAsync();
 
-        return ServiceResult.OprateSuccess("复制成功！");
+        return Success("复制成功！");
     }
     #endregion
 
@@ -1193,7 +1193,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         LoopToAppendChildren(moduleList, moduleTree);
 
-        return ServiceResult<ModuleTree>.OprateSuccess(moduleTree, ResponseText.QUERY_SUCCESS);
+        return Success(moduleTree, ResponseText.QUERY_SUCCESS);
     }
 
 

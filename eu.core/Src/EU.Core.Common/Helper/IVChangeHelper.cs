@@ -72,7 +72,7 @@ public class IVChangeHelper
                 if ((inventory.QTY - qty) < 0)
                 {
                     var material = await Db.Queryable<BdMaterial>().FirstAsync(x => x.ID == materialId);
-                    throw new Exception($"【{material.MaterialNames}】库存不足，剩余库存：{StringHelper.TrimDecimalString(inventory.QTY)}");
+                    throw new Exception($"【{material.MaterialNames}】库存不足，剩余库存：{Utility.RemoveZero(inventory.QTY)}");
                 }
 
                 inventory.QTY -= qty;

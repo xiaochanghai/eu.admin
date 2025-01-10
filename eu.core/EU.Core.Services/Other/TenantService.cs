@@ -1,10 +1,6 @@
 ﻿using EU.Core.Common.DB;
 using EU.Core.Common.Seed;
-using EU.Core.IServices;
-using EU.Core.Model.Models;
 using EU.Core.Repository.UnitOfWorks;
-using EU.Core.Services.BASE;
-using System.Threading.Tasks;
 
 namespace EU.Core.Services;
 

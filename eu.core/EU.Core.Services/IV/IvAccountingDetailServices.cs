@@ -41,22 +41,11 @@ public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAcc
             var entity = await Query(Id);
             var model = ConvertToEntity(entity1);
 
-            //if (model.MaterialId != null && model.StockId != null && model.GoodsLocationId != null)
-            //{
-            //    var detail = await base.QuerySingle(x =>
-            //    x.OrderId == orderId &&
-            //    x.MaterialId == model.MaterialId &&
-            //    x.StockId == model.StockId &&
-            //    x.GoodsLocationId == model.GoodsLocationId);
-            //}
-
             if (entity is null)
                 await base.Add(new InsertIvAccountingDetailInput() { OrderId = orderId }, Id);
 
             var lstColumns = new ModuleSqlColumn("IV_STOCK_ACCOUNTING_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
             await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
 
             var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();

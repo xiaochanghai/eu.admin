@@ -34,7 +34,7 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
     {
         try
         {
-            await Db.Ado.BeginTranAsync(); 
+            await Db.Ado.BeginTranAsync();
             var model = ConvertToEntity(entity1);
 
             #region 检查是否存在相同值
@@ -54,18 +54,14 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
             var dic = ConvertToDic(entity1);
             var lstColumns = new ModuleSqlColumn("PO_ARRIVAL_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
             await Update(model, lstColumns, null, $"ID='{Id}'");
 
             var model1 = Mapper.Map(model).ToANew<PoArrivalOrderDetailDto>();
             await Db.Updateable<PoOrderDetail>()
                 .SetColumns(it => new PoOrderDetail()
                 {
-                    NoticeQTY = orderDetail.NoticeQTY,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    NoticeQTY = orderDetail.NoticeQTY
+                }, true)
                 .Where(it => it.ID == entity.SourceOrderDetailId)
                 .ExecuteCommandAsync();
 
@@ -119,10 +115,8 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
                 await Db.Updateable<PoOrderDetail>()
                     .SetColumns(it => new PoOrderDetail()
                     {
-                        NoticeQTY = it.NoticeQTY - entity.NoticeQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        NoticeQTY = it.NoticeQTY - entity.NoticeQTY
+                    }, true)
                     .Where(it => it.ID == entity.SourceOrderDetailId)
                     .ExecuteCommandAsync();
                 #endregion
@@ -191,10 +185,8 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
         await Db.Updateable<PoOrder>()
             .SetColumns(it => new PoOrder()
             {
-                OrderStatus = orderStatus,
-                UpdateBy = userId,
-                UpdateTime = dt
-            })
+                OrderStatus = orderStatus
+            }, true)
             .Where(x => x.ID == orderId && x.OrderStatus != orderStatus)
             .ExecuteCommandAsync();
     }

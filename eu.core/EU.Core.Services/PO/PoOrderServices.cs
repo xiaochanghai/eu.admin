@@ -50,7 +50,7 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
                     details[i].TaxAmount = TaxAmount;
                     details[i].TaxIncludedAmount = TaxIncludedAmount;
                 }
-                await Db.Updateable(details).UpdateColumns(it => new { it.NoTaxAmount, it.TaxAmount, it.TaxIncludedAmount }).ExecuteCommandAsync();
+                await Db.Updateable(details).UpdateColumns(it => new { it.NoTaxAmount, it.TaxAmount, it.TaxIncludedAmount }, true).ExecuteCommandAsync();
             }
         }
 
@@ -97,25 +97,7 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<PoOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_PURCHASE_ORDER_STATUS.Wait}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_PURCHASE_ORDER_STATUS.Wait}'");
     #endregion
 
     #region 撤销数据 
@@ -212,10 +194,8 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
                                 var result = await Db.Updateable<PoOrderDetail>()
                                   .SetColumns(it => new PoOrderDetail()
                                   {
-                                      NoticeQTY = poOrderDetail.NoticeQTY,
-                                      UpdateBy = userId,
-                                      UpdateTime = dt
-                                  })
+                                      NoticeQTY = poOrderDetail.NoticeQTY
+                                  }, true)
                                   .Where(it => it.ID == sourceOrderDetailId)
                                   .ExecuteCommandAsync();
 
@@ -302,10 +282,8 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
                                 var result = await Db.Updateable<PoOrderDetail>()
                                   .SetColumns(it => new PoOrderDetail()
                                   {
-                                      InQTY = poOrderDetail.InQTY,
-                                      UpdateBy = userId,
-                                      UpdateTime = dt
-                                  })
+                                      InQTY = poOrderDetail.InQTY
+                                  }, true)
                                   .Where(it => it.ID == sourceOrderDetailId)
                                   .ExecuteCommandAsync();
                                 details.Add(new PoInOrderDetail()
@@ -338,14 +316,14 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
 
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.SAVE_SUCCESS);
+            return Success(ResponseText.SAVE_SUCCESS);
 
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -374,10 +352,8 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
         await Db.Updateable<PoOrder>()
             .SetColumns(it => new PoOrder()
             {
-                OrderStatus = orderStatus,
-                UpdateBy = userId,
-                UpdateTime = dt
-            })
+                OrderStatus = orderStatus
+            }, true)
             .Where(it => it.ID == orderId && it.OrderStatus != orderStatus)
             .ExecuteCommandAsync();
     }

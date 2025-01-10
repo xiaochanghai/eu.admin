@@ -35,6 +35,7 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
         {
             await Db.Ado.BeginTranAsync();
             var model = ConvertToEntity(entity1);
+
             #region 检查是否存在相同值
             CheckOnly(model, Id);
             #endregion
@@ -51,8 +52,6 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
 
             var lstColumns = new ModuleSqlColumn("SD_RETURN_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
             await Update(model, lstColumns, null, $"ID='{Id}'");
 
             var model1 = Mapper.Map(model).ToANew<SdReturnOrderDetailDto>();
@@ -60,10 +59,8 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
             await Db.Updateable<SdOutOrderDetail>()
                 .SetColumns(it => new SdOutOrderDetail()
                 {
-                    ReturnQTY = orderDetail.ReturnQTY,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    ReturnQTY = orderDetail.ReturnQTY
+                }, true)
                 .Where(it => it.ID == entity.OutOrderDetailId)
                 .ExecuteCommandAsync();
 
@@ -119,10 +116,8 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
                 await Db.Updateable<SdOutOrderDetail>()
                     .SetColumns(it => new SdOutOrderDetail()
                     {
-                        ReturnQTY = it.ReturnQTY - entity.ReturnQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                        ReturnQTY = it.ReturnQTY - entity.ReturnQTY
+                    }, true)
                     .Where(it => it.ID == entity.OutOrderDetailId)
                     .ExecuteCommandAsync();
                 #endregion
@@ -182,10 +177,8 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
         await Db.Updateable<SdOutOrder>()
             .SetColumns(it => new SdOutOrder()
             {
-                OrderStatus = orderStatus,
-                UpdateBy = UserId,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = orderStatus
+            }, true)
             .Where(it => it.ID == orderId && it.OrderStatus != orderStatus)
             .ExecuteCommandAsync();
     }

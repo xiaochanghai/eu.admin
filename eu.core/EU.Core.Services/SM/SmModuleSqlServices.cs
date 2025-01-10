@@ -95,7 +95,7 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
         grid.ModuleCode = module.ModuleCode;
         string sql = grid.GetQueryString();
         sql = ModuleInfo.FormatSqlVariable(sql);
-        return ServiceResult<string>.OprateSuccess(sql, ResponseText.QUERY_SUCCESS);
+        return Success(sql, ResponseText.QUERY_SUCCESS);
     }
     #endregion
 

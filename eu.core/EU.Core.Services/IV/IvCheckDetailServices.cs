@@ -44,17 +44,7 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
             if (entity is null)
                 await base.Add(new InsertIvCheckDetailInput() { OrderId = orderId }, Id);
 
-            //var inOrder = await Db.Queryable<IvCheck>().Where(x => x.ID == orderId).FirstAsync();
-            //if (inOrder != null)
-            //{
-            //    model.StockId = inOrder.StockId;
-            //    model.GoodsLocationId = inOrder.GoodsLocationId;
-            //}
-
             var lstColumns = new ModuleSqlColumn("IV_OUT_DETAIL_MNG").GetModuleTableEditableColumns();
-
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
 
             await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
 
@@ -64,14 +54,6 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
             model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
             model1.Specifications = material.Specifications;
             model1.UnitName = material.UnitName;
-            //if (model.StockId != null)
-            //    model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
-            //if (model.GoodsLocationId != null)
-            //    model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
-
-            //if (model.QTY > 0 && model.Price > 0)
-            //    model1.Amount = model.Price * model.QTY;
-
             await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvCheckDetail", orderId);
 
             return model1;

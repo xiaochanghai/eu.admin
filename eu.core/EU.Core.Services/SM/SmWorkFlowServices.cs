@@ -42,7 +42,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
         await _smWorkFlowNodeServices.Delete(x => x.WorkFlowId == id);
         list.ForEach(x => x.WorkFlowId = id);
         await _smWorkFlowNodeServices.Add(list);
-        return ServiceResult.OprateSuccess();
+        return Success();
     }
 
     public static List<InsertSmWorkFlowNodeInput> ConvertTreeToList(WorkFlowNode root)

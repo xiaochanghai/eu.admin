@@ -34,25 +34,7 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<SdChangeOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_SALES_CHANGE_ORDER_STATUS.Invalid}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_SALES_CHANGE_ORDER_STATUS.Invalid}'");
     #endregion
 
     #region 撤销数据
@@ -84,14 +66,11 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
 
     #region 更新
     public override async Task<bool> Update(Guid Id, object entity)
-    { 
+    {
         var model = ConvertToEntity(entity);
 
         var dic = ConvertToDic(entity);
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
-
-        lstColumns.Add("UpdateBy");
-        lstColumns.Add("UpdateTime");
 
         var order = await QueryDto(Id);
         var result = await Update(model, lstColumns, new List<string> { "OrderNo", "CustomerId" }, $"ID='{Id}'");
@@ -162,7 +141,7 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
 
                 if (changeOrder.OrderStatus == DIC_SALES_CHANGE_ORDER_STATUS.Valid)
                     continue;
-                 
+
                 var order = await Db.Queryable<SdOrder>().FirstAsync(x => x.ID == changeOrder.OrderId);
 
                 if (order.SalesOrderStatus == DIC_SALES_ORDER_STATUS.ShipComplete || order.SalesOrderStatus == DIC_SALES_ORDER_STATUS.OutComplete || order.SalesOrderStatus == DIC_SALES_ORDER_STATUS.OrderComplete)
@@ -204,26 +183,22 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
                 await Db.Updateable<SdChangeOrder>()
                 .SetColumns(it => new SdChangeOrder()
                 {
-                    OrderStatus = DIC_SALES_CHANGE_ORDER_STATUS.Valid,
-                    UpdateBy = App.User.ID,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    OrderStatus = DIC_SALES_CHANGE_ORDER_STATUS.Valid
+                }, true)
                 .Where(it => it.ID == id &&
                 it.OrderStatus != DIC_SALES_CHANGE_ORDER_STATUS.Valid &&
                 it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
                 .ExecuteCommandAsync();
             }
 
-
             await Db.Ado.CommitTranAsync();
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
         }
-        catch (Exception)
+        catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
-            throw;
+            return Failed(E.Message);
         }
-
     }
     #endregion
 }

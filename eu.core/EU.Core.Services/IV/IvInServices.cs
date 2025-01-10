@@ -56,9 +56,7 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
             await Db.Updateable<IvInDetail>()
                 .SetColumns(x => new IvInDetail()
                 {
-                    IsDeleted = true,
-                    UpdateTime = DateTime.Now,
-                    UpdateBy = UserId
+                    IsDeleted = true
                 })
                 .Where(x => x.OrderId == id && x.IsDeleted == false)
                 .ExecuteCommandAsync();
@@ -73,25 +71,7 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        List<IvIn> entities = new();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"OrderStatus = '{DIC_IV_IN_STATUS.WaitIn}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"OrderStatus = '{DIC_IV_IN_STATUS.WaitIn}'");
     #endregion
 
     #region 撤销数据 
@@ -129,36 +109,46 @@ public class IvInServices : BaseServices<IvIn, IvInDto, InsertIvInInput, EditIvI
     /// <returns></returns>
     public async Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids)
     {
-        for (int i = 0; i < ids.Length; i++)
+        try
         {
-            var id = ids[i];
-            if (await Db.Queryable<IvIn>().AnyAsync(x => x.ID == id && (x.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add || x.OrderStatus == DIC_IV_IN_STATUS.InComplete)))
-                continue;
-            var details = await Db.Queryable<IvInDetail>().Where(x => x.OrderId == id).TranLock(DbLockType.Wait).ToListAsync();
-
-            for (int j = 0; j < details.Count; j++)
+            await Db.Ado.BeginTranAsync();
+            for (int i = 0; i < ids.Length; i++)
             {
-                var detail = details[j];
-                await IVChangeHelper.Add(Db,
-                    detail.MaterialId,
-                    detail.StockId,
-                    detail.GoodsLocationId,
-                    detail.QTY,
-                    DIC_IV_CHANGE_TYPE.IvIn, id, detail.ID, detail.BatchNo
-                    );
-            }
-        }
-        await Db.Updateable<IvIn>()
-              .SetColumns(it => new IvIn()
-              {
-                  OrderStatus = DIC_IV_IN_STATUS.InComplete
-              }, true)
-              .Where(it => ids.Contains(it.ID) &&
-              it.OrderStatus == DIC_IV_IN_STATUS.WaitIn &&
-              it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
-              .ExecuteCommandAsync();
+                var id = ids[i];
+                if (await Db.Queryable<IvIn>().AnyAsync(x => x.ID == id && (x.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add || x.OrderStatus == DIC_IV_IN_STATUS.InComplete)))
+                    continue;
+                var details = await Db.Queryable<IvInDetail>().Where(x => x.OrderId == id).TranLock(DbLockType.Wait).ToListAsync();
 
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+                for (int j = 0; j < details.Count; j++)
+                {
+                    var detail = details[j];
+                    await IVChangeHelper.Add(Db,
+                        detail.MaterialId,
+                        detail.StockId,
+                        detail.GoodsLocationId,
+                        detail.QTY,
+                        DIC_IV_CHANGE_TYPE.IvIn, id, detail.ID, detail.BatchNo
+                        );
+                }
+            }
+            await Db.Updateable<IvIn>()
+                  .SetColumns(it => new IvIn()
+                  {
+                      OrderStatus = DIC_IV_IN_STATUS.InComplete
+                  }, true)
+                  .Where(it => ids.Contains(it.ID) &&
+                  it.OrderStatus == DIC_IV_IN_STATUS.WaitIn &&
+                  it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
+                  .ExecuteCommandAsync();
+
+            await Db.Ado.CommitTranAsync();
+            return Success(ResponseText.EXECUTE_SUCCESS);
+        }
+        catch (Exception E)
+        {
+            await Db.Ado.RollbackTranAsync();
+            return Failed(E.Message);
+        }
     }
     #endregion
 }

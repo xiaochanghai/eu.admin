@@ -164,14 +164,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var columns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
         if (lstColumns != null && lstColumns.Any())
             columns = lstColumns;
-        columns.Add("UpdateBy");
-        columns.Add("UpdateTime");
-        var result = await Update(model, columns, null, $"ID='{Id}'");
+        var result = await Update(model, columns, null);
+        Type entityType = typeof(TEntity);
 
-        #region 回写修改次数
-        string sql = $"UPDATE SmQuartzJobLog SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{Id}'";
-        await Db.Ado.ExecuteCommandAsync(sql);
-        #endregion
+        //#region 回写修改次数
+        //string sql = $"UPDATE {entityType.GetEntityTableName()} SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{Id}'";
+        //await Db.Ado.ExecuteCommandAsync(sql);
+        //#endregion
 
         return result;
     }

@@ -53,7 +53,6 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         #endregion
 
         return await BaseDal.Add(model, lstColumns);
-
     }
 
     /// <summary>
@@ -91,7 +90,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         if (updates.Any())
         {
             await Db.Updateable(updates)
-                .UpdateColumns(it => new { it.QTY })
+                .UpdateColumns(it => new { it.QTY }, true)
                 .ExecuteCommandAsync();
             result.AddRange(updates.Select(x => x.ID));
         }
@@ -105,6 +104,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
     public override async Task<bool> Update(Guid Id, object entity)
     {
         var model = ConvertToEntity(entity);
+
         #region 检查是否存在相同值
         CheckOnly(model, Id);
         #endregion
@@ -120,8 +120,6 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
 
         var lstColumns = new ModuleSqlColumn("SD_SALES_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-        lstColumns.Add("UpdateBy");
-        lstColumns.Add("UpdateTime");
         lstColumns.Add("NoTaxAmount");
         lstColumns.Add("TaxAmount");
         lstColumns.Add("TaxIncludedAmount");
@@ -131,6 +129,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
     public override async Task<SdOrderDetailDto> UpdateReturn(Guid Id, object entity)
     {
         var model = ConvertToEntity(entity);
+
         #region 检查是否存在相同值
         CheckOnly(model, Id);
         #endregion
@@ -146,8 +145,6 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
 
         var lstColumns = new ModuleSqlColumn("SD_SALES_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-        lstColumns.Add("UpdateBy");
-        lstColumns.Add("UpdateTime");
         lstColumns.Add("NoTaxAmount");
         lstColumns.Add("TaxAmount");
         lstColumns.Add("TaxIncludedAmount");

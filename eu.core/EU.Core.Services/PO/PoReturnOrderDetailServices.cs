@@ -68,7 +68,7 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
                     .SetColumns(it => new PoInOrderDetail()
                     {
                         ReturnQTY = poInDetail.ReturnQTY
-                    })
+                    }, true)
                     .Where(it => it.ID == entity.SourceOrderDetailId)
                     .ExecuteCommandAsync();
 
@@ -85,7 +85,7 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
                     .SetColumns(it => new PoInOrder()
                     {
                         OrderStatus = orderStatus
-                    })
+                    }, true)
                     .Where(it => it.ID == poInDetail.OrderId)
                     .ExecuteCommandAsync();
             }
@@ -105,7 +105,7 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
         if (updates.Any())
         {
             await Db.Updateable(updates)
-                .UpdateColumns(it => new { it.QTY })
+                .UpdateColumns(it => new { it.QTY }, true)
                 .ExecuteCommandAsync();
             result = updates.Select(x => x.ID).ToList();
         }
@@ -189,7 +189,6 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
     /// <returns></returns>
     public async Task UpdateSourceOrderStatus(Guid? orderId, string orderSource)
     {
-        var dt = Utility.GetSysDate();
         var userId = App.User.ID;
         if (orderSource == "NoticeOrder")
         {
@@ -203,10 +202,8 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
             await Db.Updateable<PoArrivalOrder>()
                 .SetColumns(it => new PoArrivalOrder()
                 {
-                    OrderStatus = orderStatus,
-                    UpdateBy = userId,
-                    UpdateTime = dt
-                })
+                    OrderStatus = orderStatus
+                }, true)
                 .Where(x => x.ID == orderId && x.OrderStatus != orderStatus)
                 .ExecuteCommandAsync();
         }
@@ -222,10 +219,8 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
             await Db.Updateable<PoOrder>()
                 .SetColumns(it => new PoOrder()
                 {
-                    OrderStatus = orderStatus,
-                    UpdateBy = userId,
-                    UpdateTime = dt
-                })
+                    OrderStatus = orderStatus
+                }, true)
                 .Where(x => x.ID == orderId && x.OrderStatus != orderStatus)
                 .ExecuteCommandAsync();
         }

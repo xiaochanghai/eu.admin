@@ -142,7 +142,6 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
                   it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
                   .ExecuteCommandAsync();
 
-
             await Db.Ado.CommitTranAsync();
             return Success(ResponseText.EXECUTE_SUCCESS);
         }

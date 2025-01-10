@@ -13,25 +13,19 @@
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
-*/ 
+*/
 
-using EU.Core.IServices;
-using EU.Core.Model.Models;
-using EU.Core.Services.BASE;
-using EU.Core.IRepository.Base;
+namespace EU.Core.Services;
 
-namespace EU.Core.Services
+/// <summary>
+/// PsBOMMaterial (服务)
+/// </summary>
+public class PsBOMMaterialServices : BaseServices<PsBOMMaterial, PsBOMMaterialDto, InsertPsBOMMaterialInput, EditPsBOMMaterialInput>, IPsBOMMaterialServices
 {
-	/// <summary>
-	/// PsBOMMaterial (服务)
-	/// </summary>
-    public class PsBOMMaterialServices : BaseServices<PsBOMMaterial, PsBOMMaterialDto, InsertPsBOMMaterialInput, EditPsBOMMaterialInput>, IPsBOMMaterialServices
+    private readonly IBaseRepository<PsBOMMaterial> _dal;
+    public PsBOMMaterialServices(IBaseRepository<PsBOMMaterial> dal)
     {
-        private readonly IBaseRepository<PsBOMMaterial> _dal;
-        public PsBOMMaterialServices(IBaseRepository<PsBOMMaterial> dal)
-        {
-            this._dal = dal;
-            base.BaseDal = dal;
-        }
+        this._dal = dal;
+        base.BaseDal = dal;
     }
 }

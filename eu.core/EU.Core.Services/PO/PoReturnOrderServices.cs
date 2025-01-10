@@ -44,10 +44,8 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
                 .SetColumns(it => new PoReturnOrderDetail()
                 {
                     StockId = model.StockId,
-                    GoodsLocationId = model.GoodsLocationId,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    GoodsLocationId = model.GoodsLocationId
+                }, true)
                 .Where(x => x.OrderId == Id && (x.StockId == null || x.GoodsLocationId == null))
                 .ExecuteCommandAsync();
         return result;
@@ -92,25 +90,7 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<PoReturnOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, "OrderStatus = 'Wait'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, "OrderStatus = 'Wait'");
     #endregion
 
     #region 撤销数据 
@@ -151,17 +131,15 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
         await Db.Updateable<PoReturnOrder>()
             .SetColumns(it => new PoReturnOrder()
             {
-                OrderStatus = DIC_PURCHASE_RETURN_ORDER_STATUS.OrderComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_PURCHASE_RETURN_ORDER_STATUS.OrderComplete
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_PURCHASE_RETURN_ORDER_STATUS.CompleteReturn &&
             it.OrderStatus != DIC_PURCHASE_RETURN_ORDER_STATUS.OrderComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
 
     }
     #endregion
@@ -177,16 +155,14 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
         await Db.Updateable<PoReturnOrder>()
             .SetColumns(it => new PoReturnOrder()
             {
-                OrderStatus = DIC_PURCHASE_RETURN_ORDER_STATUS.CompleteReturn,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                OrderStatus = DIC_PURCHASE_RETURN_ORDER_STATUS.CompleteReturn
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.OrderStatus != DIC_PURCHASE_RETURN_ORDER_STATUS.CompleteReturn &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 }

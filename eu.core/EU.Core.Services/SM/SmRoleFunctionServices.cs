@@ -79,7 +79,7 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
         if (adds.Any())
             await base.Add(adds);
         new RedisCacheService(1).Clear();
-        return ServiceResult.OprateSuccess(ResponseText.UPDATE_SUCCESS);
+        return Success(ResponseText.UPDATE_SUCCESS);
 
     }
 
@@ -117,7 +117,7 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
                isLeaf = true
            }).ToListAsync();
 
-        return ServiceResult<DataTree>.OprateSuccess(roleTree, ResponseText.QUERY_SUCCESS);
+        return Success(roleTree, ResponseText.QUERY_SUCCESS);
     }
 
     public async Task<ServiceResult> SaveRoleFuncPriv(RoleFuncPric roleFuncPric)
@@ -157,7 +157,7 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
 
         await _context.AddRangeAsync(functions);
         await _context.SaveChangesAsync();
-        return ServiceResult.OprateSuccess("功能定义保存成功！");
+        return Success("功能定义保存成功！");
 
     }
 }

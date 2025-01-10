@@ -33,6 +33,7 @@ public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdC
     public override async Task<SdChangeOrderDetailDto> UpdateReturn(Guid Id, object entity)
     {
         var model = ConvertToEntity(entity);
+
         #region 检查是否存在相同值
         CheckOnly(model, Id);
         #endregion
@@ -45,8 +46,6 @@ public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdC
         var dic = ConvertToDic(entity);
         var lstColumns = new ModuleSqlColumn("SD_SALES_CHANGE_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-        lstColumns.Add("UpdateBy");
-        lstColumns.Add("UpdateTime");
         await Update(model, lstColumns, null, $"ID='{Id}'");
         return Mapper.Map(model).ToANew<SdChangeOrderDetailDto>();
     }

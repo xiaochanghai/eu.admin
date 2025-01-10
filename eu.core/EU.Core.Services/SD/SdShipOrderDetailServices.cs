@@ -54,8 +54,6 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
             orderDetail.ShipQTY = orderDetail.ShipQTY - entity.ShipQTY + model.ShipQTY;
             var lstColumns = new ModuleSqlColumn("SD_SHIP_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
             await Update(model, lstColumns, null, $"ID='{Id}'");
 
             var model1 = Mapper.Map(model).ToANew<SdShipOrderDetailDto>();
@@ -64,12 +62,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
             model1.NoOutQTY = model.ShipQTY - (model.OutQTY ?? 0);
 
             await Db.Updateable<SdOrderDetail>()
-                .SetColumns(it => new SdOrderDetail()
-                {
-                    ShipQTY = orderDetail.ShipQTY,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                .SetColumns(it => new SdOrderDetail() { ShipQTY = orderDetail.ShipQTY }, true)
                 .Where(it => it.ID == entity.SalesOrderDetailId)
                 .ExecuteCommandAsync();
 
@@ -124,12 +117,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
                 shipOrderId = entity.OrderId;
 
                 await Db.Updateable<SdOrderDetail>()
-                    .SetColumns(it => new SdOrderDetail()
-                    {
-                        ShipQTY = it.ShipQTY - entity.ShipQTY,
-                        UpdateBy = UserId,
-                        UpdateTime = Utility.GetSysDate()
-                    })
+                    .SetColumns(it => new SdOrderDetail() { ShipQTY = it.ShipQTY - entity.ShipQTY }, true)
                     .Where(it => it.ID == entity.SalesOrderDetailId)
                     .ExecuteCommandAsync();
                 #endregion
@@ -187,12 +175,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
             orderStatus = DIC_SALES_ORDER_STATUS.ShipComplete;
 
         await Db.Updateable<SdOrder>()
-            .SetColumns(it => new SdOrder()
-            {
-                SalesOrderStatus = orderStatus,
-                UpdateBy = UserId,
-                UpdateTime = Utility.GetSysDate()
-            })
+            .SetColumns(it => new SdOrder() { SalesOrderStatus = orderStatus }, true)
             .Where(it => it.ID == orderId && it.SalesOrderStatus != orderStatus)
             .ExecuteCommandAsync();
     }

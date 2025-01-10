@@ -38,12 +38,12 @@ public class SmImpTemplateServices : BaseServices<SmImpTemplate, SmImpTemplateDt
         if (template != null)
         {
             template1 = Mapper.Map(template).ToANew<SmImpTemplateDto>();
-            
+
             var attachment = await Db.Queryable<FileAttachment>().Where(x => x.MasterId == template.ID).OrderByDescending(x => x.CreatedTime).FirstAsync();
             if (attachment != null)
                 template1.FileId = attachment.ID;
         }
-        return ServiceResult<SmImpTemplateDto>.OprateSuccess(template1, ResponseText.QUERY_SUCCESS);
+        return Success(template1, ResponseText.QUERY_SUCCESS);
     }
     #endregion
 }

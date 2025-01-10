@@ -80,7 +80,7 @@ public class BdMaterialTypeServices : BaseServices<BdMaterialType, BdMaterialTyp
         var list = await base.Query("", "TaxisNo ASC");
         LoopToAppendChildren(list, moduleTree);
 
-        return Success<MaterialTypeTree>(moduleTree);
+        return Success(moduleTree);
     }
     public async Task<ServiceResult<MaterialTypeTree>> QueryClass(Guid classId)
     {
@@ -98,7 +98,7 @@ public class BdMaterialTypeServices : BaseServices<BdMaterialType, BdMaterialTyp
             var list = await base.Query("", "TaxisNo ASC");
             LoopToAppendChildren(list, moduleTree);
 
-            return Success<MaterialTypeTree>(moduleTree);
+            return Success(moduleTree);
         }
         else
         {
@@ -106,7 +106,7 @@ public class BdMaterialTypeServices : BaseServices<BdMaterialType, BdMaterialTyp
             {
                 selectable = false
             };
-            return Success<MaterialTypeTree>(moduleTree);
+            return Success(moduleTree);
         }
 
     }

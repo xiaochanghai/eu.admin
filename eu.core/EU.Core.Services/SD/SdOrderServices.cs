@@ -32,7 +32,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
 
     #region 新增
     public override async Task<Guid> Add(object entity)
-    { 
+    {
         var model = ConvertToEntity(entity);
 
         var dic = ConvertToDic(entity);
@@ -53,14 +53,11 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
 
     #region 更新
     public override async Task<bool> Update(Guid Id, object entity)
-    { 
+    {
         var model = ConvertToEntity(entity);
 
         var dic = ConvertToDic(entity);
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
-
-        lstColumns.Add("UpdateBy");
-        lstColumns.Add("UpdateTime");
 
         var order = await QueryDto(Id);
         var result = await Update(model, lstColumns, new List<string> { "OrderNo" }, $"ID='{Id}'");
@@ -127,25 +124,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
     /// </summary>
     /// <param name="ids">主键ID集合</param>
     /// <returns></returns>
-    public override async Task<bool> BulkAudit(Guid[] ids)
-    {
-        var entities = new List<SdOrder>();
-        foreach (var id in ids)
-        {
-            if (!await AnyAsync(id))
-                continue;
-
-            var entity = await Query(id);
-
-            if (entity.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add)
-            {
-                entity.AuditStatus = DIC_SYSTEM_AUDIT_STATUS.CompleteAudit;
-                entities.Add(entity);
-            }
-        }
-        await BaseDal.Update(entities, ["AuditStatus"], null, $"SalesOrderStatus = '{DIC_SALES_ORDER_STATUS.WaitShip}'");
-        return true;
-    }
+    public override async Task<bool> BulkAudit(Guid[] ids) => await BulkAudit(ids, $"SalesOrderStatus = '{DIC_SALES_ORDER_STATUS.WaitShip}'");
     #endregion
 
     #region 撤销数据 
@@ -241,9 +220,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
                                 var result = await Db.Updateable<SdOrderDetail>()
                                   .SetColumns(it => new SdOrderDetail()
                                   {
-                                      ShipQTY = sdOrderDetail.ShipQTY,
-                                      UpdateBy = userId,
-                                      UpdateTime = dt
+                                      ShipQTY = sdOrderDetail.ShipQTY
                                   })
                                   .Where(it => it.ID == salesOrderDetailId)
                                   .ExecuteCommandAsync();
@@ -372,14 +349,14 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
             }
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
 
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -395,10 +372,8 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         await Db.Updateable<SdOrder>()
             .SetColumns(it => new SdOrder()
             {
-                SalesOrderStatus = DIC_SALES_ORDER_STATUS.OrderComplete,
-                UpdateBy = App.User.ID,
-                UpdateTime = Utility.GetSysDate()
-            })
+                SalesOrderStatus = DIC_SALES_ORDER_STATUS.OrderComplete
+            }, true)
             .Where(it =>
             ids.Contains(it.ID) &&
             it.SalesOrderStatus != DIC_SALES_ORDER_STATUS.WaitShip &&
@@ -407,8 +382,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
             it.SalesOrderStatus != DIC_SALES_ORDER_STATUS.ShipComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
-
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 
@@ -432,7 +406,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         #endregion
 
         if (!ids.Any())
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
 
         var orders = await Db.Queryable<SdOrder>().Where(x =>
                               ids.Contains(x.ID) &&
@@ -441,7 +415,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
 
         ids = orders.Select(x => x.ID).ToList();
         if (!ids.Any())
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
 
         try
         {
@@ -493,12 +467,12 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
             await Db.Insertable(changeOrderDetails).ExecuteCommandAsync();
 
             await Db.Ado.CommitTranAsync();
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
         }
-        catch (Exception)
+        catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
-            throw;
+            return Failed(E.Message);
         }
     }
     #endregion
