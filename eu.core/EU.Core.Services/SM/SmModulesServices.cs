@@ -491,7 +491,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             #endregion
 
             #region 获取模块子模块
-            var modules = await base.Query(x => x.BelongModuleId == module.ID && x.IsActive == true, "TaxisNo ASC");
+            var modules = ModuleInfo.GetLowerModules(moduleCode);
 
             var children = new JArray();
             modules.ForEach(x =>

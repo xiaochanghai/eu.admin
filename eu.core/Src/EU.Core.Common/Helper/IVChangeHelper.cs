@@ -128,6 +128,9 @@ public class IVChangeHelper
         return QTY;
     }
 
+    /// <summary>
+    /// 库存变更类型
+    /// </summary>
     public enum ChangeType
     {
         /// <summary>
@@ -235,7 +238,10 @@ public class IVChangeHelper
     public static async Task UpdataOrderDetailSerialNumber(ISqlSugarClient Db, string tableName, Guid masterId)
     {
         string sql = @$"UPDATE A
-                        SET A.SerialNumber = C.NUM
+                        SET A.SerialNumber = C.NUM,
+                            A.UpdateTime = getdate (),
+                            A.UpdateBy = '{App.User.ID}',
+                            A.ModificationNum = ISNULL (A.ModificationNum, 0) + 1
                         FROM {tableName} A
                              JOIN
                              (SELECT *, ROW_NUMBER () OVER (ORDER BY CreatedTime ASC) NUM
@@ -248,7 +254,7 @@ public class IVChangeHelper
                                                 AND A.IsDeleted = 'false'
                                                 AND A.IsActive = 'true') A) B) C
                                 ON A.ID = C.ID WHERE A.SerialNumber != C.NUM OR A.SerialNumber IS NULL";
-        await Db.Ado.ExecuteCommandAsync(sql);
+        await DBHelper.ExecuteDMLAsync(sql);
     }
     #endregion
 

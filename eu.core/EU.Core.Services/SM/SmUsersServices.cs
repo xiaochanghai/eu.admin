@@ -41,6 +41,12 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         _hostingEnvironment = hostingEnvironment;
     }
 
+    #region 上传头像
+    /// <summary>
+    /// 上传头像
+    /// </summary>
+    /// <param name="file">文件流</param>
+    /// <returns></returns>
     public async Task<ServiceResult<Guid>> UploadAvatarAsync(IFormFile file)
     {
         var directory = $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot";
@@ -68,14 +74,41 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         await Db.Insertable(fileAttachment).ExecuteCommandAsync();
         return Success(fileAttachment.ID, "上传成功！");
     }
+    #endregion
 
+    #region 查询
+    /// <summary>
+    /// 根据ID查询查询一条数据
+    /// </summary>
+    /// <param name="objId"></param>
+    /// <param name="blnUseCache"></param>
+    /// <returns></returns>
+    public override async Task<SmUsersDto> QueryDto(object objId, bool blnUseCache = false)
+    {
+        var data = Redis.Get<SmUsers>(objId.ObjToString());
+        if (data is null)
+            data = await Query(objId, blnUseCache);
+
+        return Mapper.Map(data).ToANew<SmUsersDto>();
+    }
+    #endregion
+
+    #region 更新
+    /// <summary>
+    /// 更新
+    /// </summary>
+    /// <param name="Id">用户ID</param>
+    /// <param name="entity">数据</param>
+    /// <returns></returns>
     public override async Task<bool> Update(Guid Id, object entity)
     {
         var result = await base.Update(Id, entity);
-        var user = await Query(UserId);
-        Redis.AddObject(UserId.ToString(), user, new(0, 1, 0, 0, 0));
+        var user = await Query(Id);
+        Redis.Remove(Id.ObjToString());
+        Redis.AddObject(Id.ObjToString(), user, new(1, 0, 0));
         return result;
     }
+    #endregion
 
     #region 用户登录
     public async Task<ServiceResult<LoginReturn>> LoginAsync(LoginRequest request)
@@ -87,7 +120,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         {
             var User = user;
             Redis.Remove(User.ID.ToString());
-            Redis.AddObject(User.ID.ToString(), User, new(0, 1, 0, 0, 0));
+            Redis.AddObject(User.ID.ToString(), User, new(1, 0, 0));
 
             var claims = new List<Claim>
             {
@@ -140,7 +173,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             if (user == null)
             {
                 user = await QueryDto(UserId);
-                Redis.AddObject(UserId.ToString(), user, new(0, 1, 0, 0, 0));
+                Redis.AddObject(UserId.ToString(), user, new(1, 0, 0));
             }
             result.UserName = user.UserName;
             result.UserId = user.ID;

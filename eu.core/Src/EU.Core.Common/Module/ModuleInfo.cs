@@ -29,6 +29,18 @@ public class ModuleInfo
         return module;
     }
 
+    public static List<SmModules> GetLowerModules(string moduleCode)
+    {
+        var modules = Redis.Get<List<SmModules>>("SM_MODULE_LOWER", moduleCode);
+        if (modules == null)
+        {
+            var module = GetModuleInfo(moduleCode);
+            modules = GetModuleList().Where(x => x.BelongModuleId == module.ID).ToList();
+            Redis.AddObject("SM_MODULE_LOWER", moduleCode, modules);
+        }
+        return modules;
+    }
+
     /// <summary>
     /// 
     /// </summary>
