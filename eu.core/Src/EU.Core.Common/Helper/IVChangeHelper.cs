@@ -254,7 +254,7 @@ public class IVChangeHelper
                                                 AND A.IsDeleted = 'false'
                                                 AND A.IsActive = 'true') A) B) C
                                 ON A.ID = C.ID WHERE A.SerialNumber != C.NUM OR A.SerialNumber IS NULL";
-        await DBHelper.ExecuteDMLAsync(sql);
+        await Db.Ado.ExecuteCommandAsync(sql);
     }
     #endregion
 
