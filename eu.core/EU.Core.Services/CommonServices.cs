@@ -37,7 +37,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <param name="parentColumn"></param>
     /// <param name="parentId"></param>
     /// <returns></returns>
-    public GridListReturn GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null)
+    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null)
     {
         int current = 1;
         int pageSize = 20;

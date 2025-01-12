@@ -28,7 +28,7 @@ public class CommonController : Controller
     /// <param name="parentId"></param>
     /// <returns></returns>
     [HttpGet, Route("GetGridList")]
-    public GridListReturn GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null) => _service.GetGridList(paramData, moduleCode, sorter, filter, parentColumn, parentId);
+    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null) => await _service.GetGridList(paramData, moduleCode, sorter, filter, parentColumn, parentId);
     #endregion
 
     #region 清空缓存
