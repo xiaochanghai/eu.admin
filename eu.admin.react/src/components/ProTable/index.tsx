@@ -13,9 +13,8 @@ import {
   batchAudit,
   batchRevocation
 } from "@/api/modules/module";
-import { ModuleInfoBeforeAction } from "@/api/interface/index";
+import { ModuleInfoBeforeAction, RecordLogData } from "@/api/interface/index";
 import { Icon } from "@/components/Icon";
-import { RecordLogData } from "@/api/interface/index";
 import { setTableParam, setSearchVisible, setModuleInfo } from "@/redux/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import ComboGrid from "@/components/ComBoGrid";
