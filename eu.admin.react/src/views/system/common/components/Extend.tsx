@@ -1,6 +1,7 @@
 import { useImperativeHandle, useState } from "react";
-import { Form, Input, Modal, Button, Row, Col } from "antd";
+import { Form, Input, Modal, Button, Row, Col, Drawer } from "antd";
 import ComboGrid from "@/components/ComBoGrid/index";
+import PermissionSet from "../../privilege/role/PermissionSet";
 import { exportModuleSqlScript } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
 import http from "@/api";
@@ -12,12 +13,11 @@ const Extend: React.FC<any> = props => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isCronModalVisible, setIsCronModalVisible] = useState(false);
   const [tableCode, setTableCode] = useState(null);
+  const [record, setRecord] = useState<any>({});
   const [logContent, setLogContent] = useState("");
   const [id, setId] = useState(null);
   const [form] = Form.useForm();
   const { moduleCode, extendPageRef } = props;
-
-  // useEffect(() => {}, []);
 
   const InitAssignmentTable = async () => {
     if (!tableCode) {
@@ -102,6 +102,15 @@ const Extend: React.FC<any> = props => {
   };
   //系统模块 End
 
+  //用户角色 Begin
+  const SysRolePermissionSet = (value: any, action: any, record: any) => {
+    tempAction = action;
+    setId(value);
+    setIsCronModalVisible(true);
+    setRecord(record);
+  };
+  //用户角色 End
+
   useImperativeHandle(extendPageRef, function () {
     return {
       onSaveAdd,
@@ -110,7 +119,8 @@ const Extend: React.FC<any> = props => {
       InitAssignmentTable,
       jobExecute,
       ModifyJobCron,
-      SysModuleCopy
+      SysModuleCopy,
+      SysRolePermissionSet
     };
   });
   return (
@@ -223,6 +233,25 @@ const Extend: React.FC<any> = props => {
               </Row>
             </Form>
           </Modal>
+        </>
+      ) : null}
+      {moduleCode == "SM_ROLE_MNG" ? (
+        <>
+          <Drawer
+            closable
+            destroyOnClose
+            title={record.RoleName + " - 权限设置"}
+            placement="right"
+            open={isCronModalVisible}
+            // loading={loading}
+            width={1000}
+            onClose={() => {
+              setIsCronModalVisible(false);
+              setId(null);
+            }}
+          >
+            <PermissionSet id={id} />
+          </Drawer>
         </>
       ) : null}
     </>

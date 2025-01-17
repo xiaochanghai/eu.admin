@@ -14,6 +14,8 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
+using System.Collections.Generic;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -162,7 +164,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                     SmModuleId = x,
                     SmRoleId = RoleId,
                 }).ToList();
-                Db.Insertable(roleFunctions).ExecuteCommand();
+                await Db.Insertable(roleFunctions).ExecuteCommandAsync();
             }
             await Add(inserts);
             await Db.Ado.CommitTranAsync();
@@ -196,10 +198,11 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                               AND A.IsDeleted = 'false'";
         var roleFunctions = await Db.Ado.SqlQueryAsync<SmRoleFunction>(sql);
 
-        var ids = roleFunctions.Where(x => x.SmModuleId != null).Select(x => "CommonOption_" + x.ActionCode + "_" + x.SmModuleId).ToList();
+        var ids = roleFunctions.Where(x => x.SmModuleId != null && x.ActionCode != null).Select(x => "CommonOption_" + x.ActionCode + "_" + x.SmModuleId).ToList();
 
         ids.AddRange(roleFunctions.Where(x => x.SmFunctionId != null).Select(x => "functionPrivileges_" + x.SmFunctionId).Distinct());
-
+        var ids1 = await Db.Queryable<SmRoleModule>().Where(x => x.SmRoleId == roleId).Select(x => x.SmModuleId).Distinct().ToListAsync();
+        ids.AddRange(ids1.Select(x => x.ObjToString()));
         return ServiceResult<List<string>>.OprateSuccess(ids, ResponseText.QUERY_SUCCESS);
     }
     #endregion
@@ -226,7 +229,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             }).ToListAsync();
 
         LoopToAppendChildren(smModules, moduleTree, functionPrivileges);
-
+        //moduleTree.children = moduleTree.children.Where(x => x.title == "基础档案").ToList();
         return Success(moduleTree, ResponseText.QUERY_SUCCESS);
     }
     public void LoopToAppendChildren(List<SmModules> smModules, ModuleTree moduleTree, List<SmFunctionPrivilege> functionPrivileges)
