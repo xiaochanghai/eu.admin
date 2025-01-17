@@ -420,7 +420,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     public ServiceResult ClearCache()
     {
         Utility.ReInitCache();
-        return Success();
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 
