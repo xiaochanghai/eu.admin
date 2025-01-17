@@ -538,11 +538,11 @@ const SmProTable: React.FC<any> = props => {
   ];
 
   const actionRef = useRef<ActionType>();
-
-  columns &&
-    columns.map((item: any, index: any) => {
+  let columns1 = [...columns];
+  columns1 &&
+    columns1.map((item: any, index: any) => {
       let hasChange = false;
-      let column = columns[index];
+      let column = columns1[index];
       if (!item.hideInSearch && item.fieldType == "ComboGrid") {
         let renderFormItem = () => <ComboGrid code={item.dataSource} />;
         column = { ...column, renderFormItem };
@@ -599,14 +599,14 @@ const SmProTable: React.FC<any> = props => {
           }
           break;
       }
-      if (hasChange == true) columns[index] = column;
+      if (hasChange == true) columns1[index] = { ...columns1[index], ...column };
     });
   return (
     <>
       <ProTable
         rowKey="ID"
         tableAlertRender={false}
-        columns={columns}
+        columns={columns1}
         toolBarRender={toolBarRender}
         onRow={record => {
           return {

@@ -46,6 +46,7 @@ public static class SqlSugarAop
             entityInfo.PropertyName == "GroupId" ||
             entityInfo.PropertyName == "CompanyId" ||
             entityInfo.PropertyName == "Tag" ||
+            entityInfo.PropertyName == "ID" ||
             entityInfo.PropertyName == "ModificationNum")
         {
             if (entityInfo.EntityValue is RootEntityTkey<Guid> rootEntity)
