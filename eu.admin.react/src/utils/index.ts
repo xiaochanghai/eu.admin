@@ -219,7 +219,11 @@ export function downloadFile(fileId: any, fileName: any) {
   // 用完即删
   document.body.removeChild(link);
 }
-
+/**
+ * @description Generate random string
+ * @param {Number} length string length
+ * @return {String}
+ */
 export function randomStr(length = 32) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -227,6 +231,15 @@ export function randomStr(length = 32) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
+}
+/**
+ * @description Whether exists key  in keys
+ * @param {String[]} keys string[]
+ * @param {String} key string
+ * @return {Boolean}
+ */
+export function some(keys: string[], key: string) {
+  return keys.some((value: string) => value === key);
 }
 export function modifyWorkFlowStartNode(action: ActionType, obj: any, newValue: any, parentId: any): void {
   if (action == ActionType.ADD_NODE) {
@@ -274,6 +287,10 @@ export function modifyNodeName(obj: any, newValue: any, node: any): void {
     }
   }
 }
+/**
+ * @description Generate uuid
+ * @return {uuid}
+ */
 export function createUuid() {
   return uuid4();
 }

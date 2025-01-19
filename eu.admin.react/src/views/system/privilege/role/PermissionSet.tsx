@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Tabs, Card, Button, Checkbox } from "antd";
-import { useDispatch } from "@/redux";
-import { RootState, useSelector } from "@/redux";
+import { Tabs, Card, Button, Checkbox, Collapse } from "antd";
+import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
 import http from "@/api";
-import type { CollapseProps } from "antd";
-import { Collapse } from "antd";
-import type { CSSProperties } from "react";
-const CheckboxGroup = Checkbox.Group;
+import type { CollapseProps, CheckboxProps } from "antd";
 import { PageLoader } from "@/components/Loading/index";
-import type { CheckboxProps } from "antd";
 import { message } from "@/hooks/useMessage";
 import NProgress from "@/config/nprogress";
-// import { CaretRightOutlined } from "@ant-design/icons";
+import { some } from "@/utils";
 
 const { TabPane } = Tabs;
+const CheckboxGroup = Checkbox.Group;
 let moduleCode = "BD_MATERIAL_TYPE_MNG";
+let url = "/api/SmRoleModule";
 
 const PermissionSet: React.FC<any> = props => {
   const dispatch = useDispatch();
@@ -32,36 +29,26 @@ const PermissionSet: React.FC<any> = props => {
   let i = 0;
   let total = 0;
   useEffect(() => {
-    const getModuleInfo1 = async () => {
-      let { Data } = await getModuleInfo(moduleCode);
-      dispatch(setModuleInfo(Data));
-    };
     if (!moduleInfo) getModuleInfo1();
 
     getAllModuleList();
     getRoleModule();
   }, []);
-
-  const panelStyle: React.CSSProperties = {
-    // marginBottom: 0,
-    // border: "none",
-    // background: "transparent"
+  const getModuleInfo1 = async () => {
+    let { Data } = await getModuleInfo(moduleCode);
+    dispatch(setModuleInfo(Data));
   };
   const getRoleModule = async () => {
-    let { Data, Success } = await http.get<any>("/api/SmRoleModule/GetRoleModule/" + id);
+    let { Data, Success } = await http.get<any>(url + "/GetRoleModule/" + id);
     if (Success) setCheckedModuleKeys(Data);
     setLoading(false);
   };
-  // const onCollapseChange: CheckboxProps["onChange"] = e => {
-  //   console.log(`checked = ${e.target.checked}`);
-  // };
-
   const onClick: CheckboxProps["onClick"] = e => {
     e.stopPropagation();
   };
   const onTabClick = async (key: any) => setTabKey(key);
   const getAllModuleList = async () => {
-    let { Data, Success } = await http.get<any>("/api/SmRoleModule/GetAllModuleList");
+    let { Data, Success } = await http.get<any>(url + "/GetAllModuleList");
     if (Success) setModules(Data.children);
   };
   const save = async () => {
@@ -69,7 +56,7 @@ const PermissionSet: React.FC<any> = props => {
     setLoading(true);
     NProgress.start();
 
-    let { Message, Success } = await http.post<any>("/api/SmRoleModule/UpdateRoleModule/" + id, checkedModuleKeys);
+    let { Message, Success } = await http.post<any>(url + "/UpdateRoleModule/" + id, checkedModuleKeys);
     message.destroy();
     setLoading(false);
     NProgress.done();
@@ -77,17 +64,15 @@ const PermissionSet: React.FC<any> = props => {
   };
 
   const getChecked = (item: any) => {
-    let checked: boolean = false;
-    if (checkedModuleKeys.length == 0) return checked;
-
-    checked = checkedModuleKeys.some((value: string) => value === item.key);
-    return checked;
+    // let checked: boolean = false;
+    if (checkedModuleKeys.length == 0) return false;
+    return some(checkedModuleKeys, item.key);
   };
   const getGroupChecked = (items: any[]) => {
     let list: string[] = [];
     if (checkedModuleKeys.length == 0) return list;
     items.map((item: any) => {
-      if (checkedModuleKeys.some((value: string) => value === item.key)) list.push(item.key);
+      if (some(checkedModuleKeys, item.key)) list.push(item.key);
     });
     return list;
   };
@@ -104,16 +89,7 @@ const PermissionSet: React.FC<any> = props => {
     }
     keys = [...keys, ...list];
     setCheckedModuleKeys(keys);
-    // setCheckedList(list);
   };
-  // const getIndeterminate1 = (item: any) => {
-  //   let i = 0;
-  //   item.children.map((item: any) => {
-  //     if (checkedModuleKeys.some((key: string) => item.key === key)) i++;
-  //   });
-  //   if (i != item.children.length && i != 0) return true;
-  //   else false;
-  // };
   const getIndeterminate = (item: any) => {
     if (checkedModuleKeys.length == 0) return false;
     let result = setIndeterminateCount(0, 0, item);
@@ -124,7 +100,7 @@ const PermissionSet: React.FC<any> = props => {
     if (parent.children) {
       total = total + parent.children.length;
       parent.children.map((item: any) => {
-        if (checkedModuleKeys.some((key: string) => item.key === key)) i++;
+        if (some(checkedModuleKeys, item.key)) i++;
         if (item.children) return setIndeterminateCount(i, total, item);
       });
     }
@@ -142,7 +118,7 @@ const PermissionSet: React.FC<any> = props => {
     if (parent.children) {
       total = total + parent.children.length;
       parent.children.map((item: any) => {
-        if (checkedModuleKeys.some((key: string) => item.key === key)) i++;
+        if (some(checkedModuleKeys, item.key)) i++;
         if (item.children) return setIndeterminateCount1(item);
       });
     }
@@ -152,7 +128,7 @@ const PermissionSet: React.FC<any> = props => {
     removeCheckedKeys(keys, parent);
 
     if (e.target.checked) addCheckedKeys(keys, parent);
-    setCheckedModuleKeys(JSON.parse(JSON.stringify(keys)));
+    setCheckedModuleKeys(keys);
   };
 
   const removeCheckedKeys = (keys: string[], parent: any) => {
@@ -173,7 +149,7 @@ const PermissionSet: React.FC<any> = props => {
       });
   };
 
-  const getItems: (panelStyle: CSSProperties) => CollapseProps["items"] = panelStyle => {
+  const getItems: () => CollapseProps["items"] = () => {
     if (modules.length > 0)
       return modules?.map((child: any) => {
         return {
@@ -189,8 +165,8 @@ const PermissionSet: React.FC<any> = props => {
               {child.title}
             </Checkbox>
           ),
-          children: component(child.children, 2),
-          style: panelStyle
+          children: component(child.children, 2)
+          // style: panelStyle
         };
       });
 
@@ -263,7 +239,7 @@ const PermissionSet: React.FC<any> = props => {
                 size="small"
                 // style={{ backgroundColor: "transparent" }}
                 // expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-                items={getItems(panelStyle)}
+                items={getItems()}
               />
 
               {/* <>{component(modules, 0)}</> */}
