@@ -721,12 +721,10 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <param name="moduleCode"></param>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet]
     public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id)
     {
         dynamic data = new ExpandoObject();
         //获取模块信息
-        //var module = await _context.SmModules.AsNoTracking().Where(x => x.IsDeleted == false && x.ModuleCode == moduleCode).FirstOrDefaultAsync();
         var module = await base.QuerySingle(x => x.IsDeleted == false && x.ModuleCode == moduleCode);
         if (module == null)
             throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
@@ -743,17 +741,16 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         if (!string.IsNullOrEmpty(tableName))
         {
-            string sql = @"SELECT A.ID,
+            string sql = @$"SELECT A.ID,
                                            B.UserName CreatedBy,
                                            A.CreatedTime,
                                            C.UserName UpdateBy,
                                            A.UpdateTime
-                                    FROM {1} A
+                                    FROM {tableName} A
                                          LEFT JOIN SmUsers B ON A.CreatedBy = B.ID
                                          LEFT JOIN SmUsers C ON A.UpdateBy = C.ID
-                                    WHERE A.ID = '{0}' AND A.IsDeleted = 'false'";
-            sql = string.Format(sql, id, tableName);
-            var dt = await DBHelper.GetDataTableAsync(sql);
+                                    WHERE A.ID = '{id}' AND A.IsDeleted = 'false'";
+            var dt = await Db.Ado.GetDataTableAsync(sql);
             if (dt.Rows.Count > 0)
             {
                 data.CreatedBy = dt.Rows[0]["CreatedBy"].ToString();
@@ -773,37 +770,35 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// </summary>
     /// <param name="list">ids</param>
     /// <returns></returns>
-    [HttpPost]
-    public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<SmModules> list)
+    public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids)
     {
         var fileId = StringHelper.Id1;
 
-        if (list.Count > 0)
+        if (ids.Any())
         {
             var sb = new StringBuilder();
             StringBuilder temp;
             DBHelper dBHelper = new();
-            foreach (SmModules item in list)
+            foreach (var id in ids)
             {
-                sb.Append("DELETE FROM SmModuleColumn WHERE SmModuleId='" + item.ID + "';\n");
-                sb.Append("DELETE FROM SmModuleSql WHERE ModuleId='" + item.ID + "';\n");
-                sb.Append("DELETE FROM SmModules WHERE ID='" + item.ID + "';\n");
+                sb.Append($"DELETE FROM SmModuleColumn WHERE SmModuleId='{id}';\n");
+                sb.Append($"DELETE FROM SmModuleSql WHERE ModuleId='{id}';\n");
+                sb.Append($"DELETE FROM SmModules WHERE ID='{id}0';\n");
 
-                temp = dBHelper.GetInsertSql("SmModules", "ID", item.ID.ToString());
+                temp = dBHelper.GetInsertSql("SmModules", "ID", id);
                 sb.Append(temp.ToString());
-                temp = dBHelper.GetInsertSql("SmModuleColumn", "SmModuleId", item.ID.ToString());
+                temp = dBHelper.GetInsertSql("SmModuleColumn", "SmModuleId", id);
                 sb.Append(temp.ToString());
-                temp = dBHelper.GetInsertSql("SmModuleSql", "ModuleId", item.ID.ToString());
+                temp = dBHelper.GetInsertSql("SmModuleSql", "ModuleId", id);
                 sb.Append(temp.ToString() + "\n");
             }
 
-            string fileName = $"系统模块.sql";
-            string folder = Utility.GetSysID();
+            string fileName = $"系统模块_{DateTimeHelper.ConvertToSecondString1(DateTime.Now)}.sql";
+            string folder = DateTimeHelper.ConvertToYearMonthString1(DateTime.Now);
             string savePath = $"/Download/SqlExport/{folder}/";
-            if (!Directory.Exists("wwwroot" + savePath))
-                Directory.CreateDirectory("wwwroot" + savePath);
-            FileHelper.WriteFile("wwwroot" + savePath, fileName, sb.ToString());
+            FileHelper.CreateDirectory("wwwroot" + savePath);
 
+            FileHelper.WriteFile("wwwroot" + savePath, fileName, sb.ToString());
 
             #region 导入文件数据
             var di = new DbInsert("FileAttachment");
@@ -1177,56 +1172,6 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         await Db.Insertable(columns).ExecuteCommandAsync();
 
         return Success("复制成功！");
-    }
-    #endregion
-
-    #region 获取全部模块数据
-    public async Task<ServiceResult<ModuleTree>> GetAllModuleList()
-    {
-
-        var moduleTree = new ModuleTree();
-        moduleTree.key = "All";
-        moduleTree.title = "请选择角色模块";
-
-        var moduleList = ModuleInfo.GetModuleList();
-
-
-        LoopToAppendChildren(moduleList, moduleTree);
-
-        return Success(moduleTree, ResponseText.QUERY_SUCCESS);
-    }
-
-
-    public void LoopToAppendChildren(List<SmModules> smModules, ModuleTree moduleTree)
-    {
-        var subItems = new List<ModuleTree>();
-        if (moduleTree.key == "All")
-        {
-            subItems = smModules
-                .Where(x => x.IsParent == true && string.IsNullOrEmpty(x.ParentId.ToString()))
-                .Select(y => new ModuleTree
-                {
-                    title = y.ModuleName,
-                    key = y.ID.ToString(),
-                    isLeaf = y.IsParent != null ? !y.IsParent : true
-                }).ToList();
-        }
-        else
-        {
-            subItems = smModules
-                .Where(x => x.ParentId == Guid.Parse(moduleTree.key))
-                .Select(y => new ModuleTree
-                {
-                    title = y.IsDetail == true && y.BelongModuleId != null ? ModuleInfo.GetModuleNameById(y.BelongModuleId) + "/" + y.ModuleName : y.ModuleName,
-                    key = y.ID.ToString(),
-                    isLeaf = y.IsParent != null ? !y.IsParent : true
-                }).ToList();
-        }
-        moduleTree.children = [.. subItems];
-        foreach (var subItem in subItems)
-        {
-            LoopToAppendChildren(smModules, subItem);
-        }
     }
     #endregion
 }

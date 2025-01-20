@@ -2768,11 +2768,11 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.ExportModuleSqlScript(System.Collections.Generic.List{EU.Core.Model.Models.SmModules})">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.ExportModuleSqlScript(System.Collections.Generic.List{System.Guid})">
             <summary>
             导出模块SQL
             </summary>
-            <param name="list">ids</param>
+            <param name="ids">模块ID列表</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.GetPatchRoutes">

@@ -36,8 +36,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// 获取左侧菜单
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
-    [Route("GetMenuData")]
+    [HttpGet("GetMenuData")]
     public async Task<ServiceResult<List<TreeMenuData>>> GetMenuData() => await _service.GetMenuData();
 
     /// <summary>
@@ -54,7 +53,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpGet, Route("GetModuleInfo")]
+    [HttpGet("GetModuleInfo")]
     public async Task<dynamic> GetModuleInfo(string moduleCode) => await _service.GetModuleInfo(moduleCode);
 
     /// <summary>
@@ -62,7 +61,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpGet, Route("GetModuleInfo/{moduleCode}")]
+    [HttpGet("GetModuleInfo/{moduleCode}")]
 
     public async Task<dynamic> GetModuleInfo1(string moduleCode) => await _service.GetModuleInfo(moduleCode);
     #endregion
@@ -73,7 +72,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpGet, Route("FormColumn/{moduleCode}")]
+    [HttpGet("FormColumn/{moduleCode}")]
     public ServicePageResult<SmModuleFormOption> GetModuleFormColumn(string moduleCode) => _service.GetModuleFormColumn(moduleCode);
     #endregion 
 
@@ -84,8 +83,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <param name="moduleCode"></param>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet]
-    [Route("GetModuleLogInfo")]
+    [HttpGet("GetModuleLogInfo")]
     public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id) => await _service.GetModuleLogInfo(moduleCode, id);
     #endregion
 
@@ -93,11 +91,10 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <summary>
     /// 导出模块SQL
     /// </summary>
-    /// <param name="list">ids</param>
+    /// <param name="ids">模块ID列表</param>
     /// <returns></returns>
-    [HttpPost]
-    [Route("ExportModuleSqlScript")]
-    public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<SmModules> list) => await _service.ExportModuleSqlScript(list);
+    [HttpPost("ExportSqlScript")]
+    public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids) => await _service.ExportModuleSqlScript(ids);
     #endregion
 
     #region App.js动态加载路由
@@ -117,7 +114,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <param name="columns">栏位列表</param>
     /// <param name="type">类型（list、form）</param>
     /// <returns></returns>
-    [HttpPut, Route("UpdateTaxisNo/{moduleCode}/{type}")]
+    [HttpPut("UpdateTaxisNo/{moduleCode}/{type}")]
     public async Task<ServiceResult> UpdateTaxisNoAsync(string moduleCode, [FromBody] List<SmModuleColumn> columns, string type) => await _service.UpdateTaxisNoAsync(moduleCode, columns, type);
     #endregion
 
@@ -129,7 +126,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <param name="column">栏位</param>
     /// <param name="type">类型（list、form）</param>
     /// <returns></returns>
-    [HttpPut, Route("UpdateColumn/{moduleCode}/{type}")]
+    [HttpPut("UpdateColumn/{moduleCode}/{type}")]
     public async Task<ServiceResult> UpdateColumnAsync(string moduleCode, [FromBody] SmModuleFormOption column, string type) => await _service.UpdateColumnAsync(moduleCode, column, type);
     #endregion 
 
@@ -153,15 +150,5 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <returns></returns>
     [HttpPost("Copy/{moduleId}")]
     public async Task<ServiceResult> CopyAsync(Guid moduleId, [FromBody] SmModules module) => await _service.CopyAsync(moduleId, module);
-    #endregion 
-
-    //#region 获取全部模块数据
-    ///// <summary>
-    ///// 获取全部模块数据
-    ///// </summary>
-    ///// <returns></returns>
-    //[HttpGet, Route("QueryAllModuleList")]
-    //public async Task<ServiceResult<ModuleTree>> GetAllModuleList() => await _service.GetAllModuleList();
-    //#endregion
-
+    #endregion
 }

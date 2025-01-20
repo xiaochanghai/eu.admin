@@ -35,7 +35,8 @@ const Extend: React.FC<any> = props => {
   };
   const ExportModuleSqlScript = async (action: any, selectedRows: any) => {
     if (selectedRows.length > 0) {
-      let { Success, Message, Data } = await exportModuleSqlScript(selectedRows);
+      let ids: string[] = selectedRows.map((item: { ID: any }) => item.ID);
+      let { Success, Message, Data } = await exportModuleSqlScript(ids);
       if (Success) downloadFile(Data, "qaids");
       else message.error(Message);
       action.clearSelected();

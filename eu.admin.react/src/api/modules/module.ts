@@ -50,7 +50,7 @@ export const recordUserModuleColumn = (params: any) => {
 };
 
 export const exportModuleSqlScript = (params: any) => {
-  return http.post<any>("/api/SmModule/ExportModuleSqlScript", params);
+  return http.post<any>("/api/SmModule/ExportSqlScript", params);
 };
 export const getModuleFullSql = (id: string) => {
   return http.post<any>("/api/SmModuleSql/GetModuleFullSql/" + id);
