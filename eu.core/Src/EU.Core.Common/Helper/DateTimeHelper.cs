@@ -182,6 +182,20 @@ public class DateTimeHelper
 
         return dateTime.ToString(@"yyyy\/MM\/dd HH:mm:ss");
     }
+
+    /// <summary>
+    /// 格式化DateTime类型为字符串类型，精确到秒，如：20080101180920
+    /// </summary>
+    /// <param name="dateTime"></param>
+    /// <returns></returns>
+    public static string ConvertToSecondString1(DateTime dateTime)
+    {
+        if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
+        {
+            return "";
+        }
+        return dateTime.ToString(@"yyyyMMddHHmmss");
+    }
     /// <summary>
     /// 格式化object类型为字符串类型，精确到秒，如：2008/01/01 18:09:20
     /// </summary>

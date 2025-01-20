@@ -54,17 +54,26 @@ public class DBHelper
             {
                 di = new(tableName, "GetInsertSql");
                 di.IsInitDefaultValue = false;
+                di.IsInitRowId = false;
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
                     di.Values(dt.Columns[j].ColumnName, dt.Rows[i][dt.Columns[j].ColumnName].ToString());
                 }
-                sql = di.GetSql();
+                sql = di .GetSql();
                 sqls.Append(sql + ";\n");
             }
             return sqls;
         }
         catch (Exception) { throw; }
     }
+    /// <summary>
+    /// 获取SQL插入语句
+    /// </summary>
+    /// <param name="tableName">表名</param>
+    /// <param name="columnName">列名</param>
+    /// <param name="columnValue">列值</param>
+    /// <returns>SQL插入语句</returns>
+    public StringBuilder GetInsertSql(string tableName, string columnName, Guid columnValue) => GetInsertSql(tableName, columnName, columnValue.ToString());
 
     #endregion
 
