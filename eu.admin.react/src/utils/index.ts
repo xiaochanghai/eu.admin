@@ -205,8 +205,7 @@ export function blockDebugger() {
  */
 export function downloadFile(fileId: any, fileName: any) {
   let baseURL = import.meta.env.VITE_API_URL as string;
-  const url = (baseURL ? baseURL : "") + `/api/File/Download/${fileId}`;
-
+  const url = (baseURL == "/" ? "" : baseURL) + `/api/File/Download/${fileId}`;
   const link = document.createElement("a");
   link.style.display = "none";
   link.href = url;
