@@ -60,14 +60,6 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
                 })
                 .Where(x => x.ID != Id && x.IsDefault == true)
                 .ExecuteCommandAsync();
-
-        await Db.Updateable<BdCustomer>()
-               .SetColumns(it => new BdCustomer()
-               {
-                   Remark = DateTime.Now.ToString()
-               }, true)
-               .Where(x => x.ID == Guid.Parse("55fcd826-95e1-432d-8929-b16aec8960bd"))
-               .ExecuteCommandAsync();
         return await base.Update(Id, entity);
     }
     #endregion

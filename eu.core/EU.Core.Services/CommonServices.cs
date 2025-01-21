@@ -40,7 +40,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null)
     {
         int current = 1;
-        int pageSize = 20;
+        int pageSize = 10;
         int total = 0;
 
         var searchParam = ConvertToDic(paramData);

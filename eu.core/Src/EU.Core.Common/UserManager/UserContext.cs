@@ -66,9 +66,8 @@ public class UserContext
         get
         {
             if (_userInfo != null)
-            {
                 return _userInfo;
-            }
+
             return GetUserInfo(User_Id);
         }
     }
@@ -77,16 +76,13 @@ public class UserContext
     {
         if (_userInfo != null) return _userInfo;
         if (userId is null || userId == Guid.Empty)
-        {
-            _userInfo = new SmUsers();
-            return _userInfo;
-        }
-        _userInfo = Redis.Get<SmUsers>(userId.ToString());
+            return new SmUsers();
+
+        _userInfo = Redis.Get<SmUsers>(userId);
         if (_userInfo == null)
         {
-            string sql = "SELECT A.* FROM SmUsers A WHERE A.IsDeleted='false' AND ID='{0}'";
-            sql = string.Format(sql, userId);
-            _userInfo = DBHelper.QueryFirst<SmUsers>(sql, null);
+            string sql = $"SELECT A.* FROM SmUsers A WHERE A.IsDeleted='false' AND ID='{userId}'";
+            _userInfo = DBHelper.QueryFirst<SmUsers>(sql);
             Redis.AddObject(userId.ToString(), _userInfo, new TimeSpan(1, 0, 0));
         }
         return _userInfo ?? new SmUsers();

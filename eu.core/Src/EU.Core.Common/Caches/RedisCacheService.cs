@@ -143,9 +143,8 @@ public class RedisCacheService
     public bool Remove(string key)
     {
         if (key == null)
-        {
             throw new ArgumentNullException(nameof(key));
-        }
+
         key = _redisKeyPrefix + key;
         return _cache.KeyDelete(key);
     }
@@ -168,7 +167,6 @@ public class RedisCacheService
     /// <returns></returns>
     public T Get<T>(string key) where T : class
     {
-
         key = _redisKeyPrefix + key;
         var value = _cache.StringGet(key);
 
@@ -176,17 +174,18 @@ public class RedisCacheService
             return null;
 
         return JsonConvert.DeserializeObject<T>(value);
-
+    }
+    public T Get<T>(Guid? key) where T : class
+    {
+        return Get<T>(key.ObjToString());
     }
     /// <summary>
     /// 获取缓存
     /// </summary>
     /// <param name="key">缓存Key</param>
     /// <returns></returns>
-    public string Get(string key)
-    {
-        return _cache.StringGet(_redisKeyPrefix + key).ToString();
-    }
+    public string Get(string key) => _cache.StringGet(_redisKeyPrefix + key).ToString();
+
     /// <summary>
     /// 获取缓存集合
     /// </summary>
