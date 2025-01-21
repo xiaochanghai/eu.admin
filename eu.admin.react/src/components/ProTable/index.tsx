@@ -637,7 +637,11 @@ const SmProTable: React.FC<any> = props => {
           if (params1 && formRef.current) formRef.current.setFieldsValue(params1);
           else if (tableParam && tableParam.params && formRef.current) formRef.current.setFieldsValue({ ...tableParam.params });
         }}
-        pagination={tableParam && tableParam.params ? { current: tableParam.params.current } : pagination}
+        pagination={
+          tableParam && tableParam.params
+            ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize }
+            : pagination
+        }
         request={async (params, sorter, filterCondition) => {
           if (tableParam && tableParam.params && !params._timestamp) params = { ...tableParam.params, ...params };
           if (tableParam && tableParam.sorter) sorter = { ...tableParam.sorter, ...sorter };
