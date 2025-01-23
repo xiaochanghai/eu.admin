@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Descriptions, Skeleton, Switch } from "antd";
+import { type MenuProps, Button, Menu, Dropdown, Tag, Space, Modal, Tooltip, Switch } from "antd";
 import { pagination } from "@/config/proTable";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
@@ -19,6 +19,7 @@ import { setTableParam, setSearchVisible, setModuleInfo } from "@/redux/modules/
 import { useDispatch, RootState, useSelector } from "@/redux";
 import ComboGrid from "@/components/ComBoGrid";
 import UploadExcel from "@/components/UploadExcel";
+import ModuleLog from "@/components/Common/ModuleLog";
 
 const { confirm } = Modal;
 
@@ -683,24 +684,7 @@ const SmProTable: React.FC<any> = props => {
       />
       {moduleInfo && moduleInfo.Success == true ? (
         <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
-          {recordLogData ? (
-            <Descriptions bordered>
-              <Descriptions.Item label="表名称">{recordLogData.TableName}</Descriptions.Item>
-              <Descriptions.Item label="表主键" span={2}>
-                {recordLogData.ID}
-              </Descriptions.Item>
-              <Descriptions.Item label="创建人">{recordLogData.CreatedBy} </Descriptions.Item>
-              <Descriptions.Item label="最后修改人" span={2}>
-                {recordLogData.UpdateBy}
-              </Descriptions.Item>
-              <Descriptions.Item label="创建时间">{recordLogData.CreatedTime} </Descriptions.Item>
-              <Descriptions.Item label="最后修改时间" span={2}>
-                {recordLogData.UpdateTime}
-              </Descriptions.Item>
-            </Descriptions>
-          ) : (
-            <Skeleton active />
-          )}
+          <ModuleLog log={recordLogData} />
         </Modal>
       ) : null}
       {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") ? (

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "@/redux";
-import { Popconfirm, Button, Modal, Descriptions, Space, Skeleton } from "antd";
+import { Popconfirm, Button, Modal, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
 import { Loading } from "@/components/Loading/index";
 import { getModuleLogInfo, getModuleInfo } from "@/api/modules/module";
@@ -14,6 +14,7 @@ import { query } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { Icon } from "@/components/Icon";
 import UploadExcel from "@/components/UploadExcel";
+import ModuleLog from "@/components/Common/ModuleLog";
 
 const Index: React.FC<any> = props => {
   let tableAction: any;
@@ -300,24 +301,7 @@ const Index: React.FC<any> = props => {
               />
               {moduleInfo && moduleInfo.Success == true ? (
                 <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
-                  {recordLogData ? (
-                    <Descriptions bordered>
-                      <Descriptions.Item label="表名称">{recordLogData.TableName}</Descriptions.Item>
-                      <Descriptions.Item label="表主键" span={2}>
-                        {recordLogData.ID}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="创建人">{recordLogData.CreatedBy} </Descriptions.Item>
-                      <Descriptions.Item label="最后修改人" span={2}>
-                        {recordLogData.UpdateBy}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="创建时间">{recordLogData.CreatedTime} </Descriptions.Item>
-                      <Descriptions.Item label="最后修改时间" span={2}>
-                        {recordLogData.UpdateTime}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  ) : (
-                    <Skeleton active />
-                  )}
+                  <ModuleLog log={recordLogData} />
                 </Modal>
               ) : null}
               {actionAuthButton.ImportExcel ? (
