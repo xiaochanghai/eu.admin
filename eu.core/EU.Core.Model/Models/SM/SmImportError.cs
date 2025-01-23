@@ -46,7 +46,7 @@ public class SmImportError : BasePoco
     /// 模块代码
     /// </summary>
     [Display(Name = "ModuleCode"), Description("模块代码"), MaxLength(32, ErrorMessage = "模块代码 不能超过 32 个字符")]
-    public string ModuleCode { get; set; }
+    public override string ModuleCode { get; set; }
 
     /// <summary>
     /// Sheet名

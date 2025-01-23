@@ -71,10 +71,10 @@ public class DataContext : DbContext
     /// </summary>
     public virtual DbSet<PoOrderDetail> PoOrderDetail { get; set; }
 
-    /// <summary>
-    /// 采购单预付账款
-    /// </summary>
-    public virtual DbSet<PoOrderPrepayment> PoOrderPrepayment { get; set; }
+    ///// <summary>
+    ///// 采购单预付账款
+    ///// </summary>
+    //public virtual DbSet<PoOrderPrepayment> PoOrderPrepayment { get; set; }
 
     /// <summary>
     /// 采购到货通知单
@@ -86,341 +86,376 @@ public class DataContext : DbContext
     public virtual DbSet<PoReturnOrder> PoReturnOrder { get; set; }
     public virtual DbSet<PoReturnOrderDetail> PoReturnOrderDetail { get; set; }
 
-    /// <summary>
-    /// 采购扣款单明细
-    /// </summary>
-    public virtual DbSet<PoDeductionDetail> PoDeductionDetail { get; set; }
+    ///// <summary>
+    ///// 采购扣款单明细
+    ///// </summary>
+    //public virtual DbSet<PoDeductionDetail> PoDeductionDetail { get; set; }
 
-    /// <summary>
-    /// 采购费用单明细
-    /// </summary>
-    public virtual DbSet<PoFeeDetail> PoFeeDetail { get; set; }
+    ///// <summary>
+    ///// 采购费用单明细
+    ///// </summary>
+    //public virtual DbSet<PoFeeDetail> PoFeeDetail { get; set; }
     #endregion
 
     #region 应付管理
 
-    /// <summary>
-    /// 应付期初建账
-    /// </summary>
-    public virtual DbSet<ApInitAccountOrder> ApInitAccountOrder { get; set; }
+    ///// <summary>
+    ///// 应付期初建账
+    ///// </summary>
+    //public virtual DbSet<ApInitAccountOrder> ApInitAccountOrder { get; set; }
 
-    /// <summary>
-    /// 应付期初建账明细
-    /// </summary>
-    public virtual DbSet<ApInitAccountDetail> ApInitAccountDetail { get; set; }
+    ///// <summary>
+    ///// 应付期初建账明细
+    ///// </summary>
+    //public virtual DbSet<ApInitAccountDetail> ApInitAccountDetail { get; set; }
 
-    /// <summary>
-    /// 应付对账单
-    /// </summary>
-    public virtual DbSet<ApCheckOrder> ApCheckOrder { get; set; }
+    ///// <summary>
+    ///// 应付对账单
+    ///// </summary>
+    //public virtual DbSet<ApCheckOrder> ApCheckOrder { get; set; }
 
-    /// <summary>
-    /// 应付对账单明细
-    /// </summary>
-    public virtual DbSet<ApCheckDetail> ApCheckDetail { get; set; }
+    ///// <summary>
+    ///// 应付对账单明细
+    ///// </summary>
+    //public virtual DbSet<ApCheckDetail> ApCheckDetail { get; set; }
 
-    /// <summary>
-    /// 应付发票单
-    /// </summary>
-    public virtual DbSet<ApInvoiceOrder> ApInvoiceOrder { get; set; }
+    ///// <summary>
+    ///// 应付发票单
+    ///// </summary>
+    //public virtual DbSet<ApInvoiceOrder> ApInvoiceOrder { get; set; }
 
-    /// <summary>
-    /// 应付对应发票
-    /// </summary>
-    public virtual DbSet<ApInvoiceAssociation> ApInvoiceAssociation { get; set; }
+    ///// <summary>
+    ///// 应付对应发票
+    ///// </summary>
+    //public virtual DbSet<ApInvoiceAssociation> ApInvoiceAssociation { get; set; }
 
-    /// <summary>
-    /// 应付发票单明细
-    /// </summary>
-    public virtual DbSet<ApInvoiceDetail> ApInvoiceDetail { get; set; }
+    ///// <summary>
+    ///// 应付发票单明细
+    ///// </summary>
+    //public virtual DbSet<ApInvoiceDetail> ApInvoiceDetail { get; set; }
 
-    /// <summary>
-    /// 采购付款单明细
-    /// </summary>
-    public virtual DbSet<ApPaymentDetail> ApPaymentDetail { get; set; }
+    ///// <summary>
+    ///// 采购付款单明细
+    ///// </summary>
+    //public virtual DbSet<ApPaymentDetail> ApPaymentDetail { get; set; }
 
-    /// <summary>
-    /// 采购付款单
-    /// </summary>
-    public virtual DbSet<ApPaymentOrder> ApPaymentOrder { get; set; }
+    ///// <summary>
+    ///// 采购付款单
+    ///// </summary>
+    //public virtual DbSet<ApPaymentOrder> ApPaymentOrder { get; set; }
 
-    /// <summary>
-    /// 采购付款核销明细
-    /// </summary>
-    public virtual DbSet<ApPaymentWriteOff> ApPaymentWriteOff { get; set; }
+    ///// <summary>
+    ///// 采购付款核销明细
+    ///// </summary>
+    //public virtual DbSet<ApPaymentWriteOff> ApPaymentWriteOff { get; set; }
 
-    /// <summary>
-    /// 采购预付款
-    /// </summary>
-    public virtual DbSet<ApPrepaidOrder> ApPrepaidOrder { get; set; }
+    ///// <summary>
+    ///// 采购预付款
+    ///// </summary>
+    //public virtual DbSet<ApPrepaidOrder> ApPrepaidOrder { get; set; }
 
-    /// <summary>
-    /// 采购预付款明细
-    /// </summary>
-    public virtual DbSet<ApPrepaidDetail> ApPrepaidDetail { get; set; }
+    ///// <summary>
+    ///// 采购预付款明细
+    ///// </summary>
+    //public virtual DbSet<ApPrepaidDetail> ApPrepaidDetail { get; set; }
 
     #endregion
 
     #region 应收管理
-    /// <summary>
-    /// 应收对账单
-    /// </summary>
-    public virtual DbSet<ArCheckOrder> ArCheckOrder { get; set; }
+    ///// <summary>
+    ///// 应收对账单
+    ///// </summary>
+    //public virtual DbSet<ArCheckOrder> ArCheckOrder { get; set; }
 
-    /// <summary>
-    /// 应收对账单明细
-    /// </summary>
-    public virtual DbSet<ArCheckDetail> ArCheckDetail { get; set; }
+    ///// <summary>
+    ///// 应收对账单明细
+    ///// </summary>
+    //public virtual DbSet<ArCheckDetail> ArCheckDetail { get; set; }
 
-    /// <summary>
-    /// 应收期初建账
-    /// </summary>
-    public virtual DbSet<ArInitAccountOrder> ArInitAccountOrder { get; set; }
+    ///// <summary>
+    ///// 应收期初建账
+    ///// </summary>
+    //public virtual DbSet<ArInitAccountOrder> ArInitAccountOrder { get; set; }
 
-    /// <summary>
-    /// 应收期初建账明细
-    /// </summary>
-    public virtual DbSet<ArInitAccountDetail> ArInitAccountDetail { get; set; }
+    ///// <summary>
+    ///// 应收期初建账明细
+    ///// </summary>
+    //public virtual DbSet<ArInitAccountDetail> ArInitAccountDetail { get; set; }
 
-    /// <summary>
-    /// 应收开票
-    /// </summary>
-    public virtual DbSet<ArInvoiceOrder> ArInvoiceOrder { get; set; }
+    ///// <summary>
+    ///// 应收开票
+    ///// </summary>
+    //public virtual DbSet<ArInvoiceOrder> ArInvoiceOrder { get; set; }
 
-    /// <summary>
-    /// 应收开票明细
-    /// </summary>
-    public virtual DbSet<ArInvoiceDetail> ArInvoiceDetail { get; set; }
+    ///// <summary>
+    ///// 应收开票明细
+    ///// </summary>
+    //public virtual DbSet<ArInvoiceDetail> ArInvoiceDetail { get; set; }
 
-    /// <summary>
-    /// 应收开票对应发票
-    /// </summary>
-    public virtual DbSet<ArInvoiceAssociation> ArInvoiceAssociation { get; set; }
+    ///// <summary>
+    ///// 应收开票对应发票
+    ///// </summary>
+    //public virtual DbSet<ArInvoiceAssociation> ArInvoiceAssociation { get; set; }
 
-    /// <summary>
-    /// 销售收款单
-    /// </summary>
-    public virtual DbSet<ArSalesCollectionOrder> ArSalesCollectionOrder { get; set; }
+    ///// <summary>
+    ///// 销售收款单
+    ///// </summary>
+    //public virtual DbSet<ArSalesCollectionOrder> ArSalesCollectionOrder { get; set; }
 
-    /// <summary>
-    /// 销售收款单明细
-    /// </summary>
-    public virtual DbSet<ArSalesCollectionDetail> ArSalesCollectionDetail { get; set; }
+    ///// <summary>
+    ///// 销售收款单明细
+    ///// </summary>
+    //public virtual DbSet<ArSalesCollectionDetail> ArSalesCollectionDetail { get; set; }
 
-    /// <summary>
-    /// 销售收款核销明细
-    /// </summary>
-    public virtual DbSet<ArSalesCollectionWriteOff> ArSalesCollectionWriteOff { get; set; }
+    ///// <summary>
+    ///// 销售收款核销明细
+    ///// </summary>
+    //public virtual DbSet<ArSalesCollectionWriteOff> ArSalesCollectionWriteOff { get; set; }
 
-    /// <summary>
-    /// 销售预收款
-    /// </summary>
-    public virtual DbSet<ArPrepaidOrder> ArPrepaidOrder { get; set; }
+    ///// <summary>
+    ///// 销售预收款
+    ///// </summary>
+    //public virtual DbSet<ArPrepaidOrder> ArPrepaidOrder { get; set; }
 
-    /// <summary>
-    /// 销售预收款明细
-    /// </summary>
-    public virtual DbSet<ArPrepaidDetail> ArPrepaidDetail { get; set; }
+    ///// <summary>
+    ///// 销售预收款明细
+    ///// </summary>
+    //public virtual DbSet<ArPrepaidDetail> ArPrepaidDetail { get; set; }
 
-
-    #endregion 
+    #endregion
 
     #region 设备管理
 
-    /// <summary>
-    /// 设备分类
-    /// </summary>
-    public virtual DbSet<EmMachineType> EmMachineType { get; set; }
+    ///// <summary>
+    ///// 设备分类
+    ///// </summary>
+    //public virtual DbSet<EmMachineType> EmMachineType { get; set; }
 
-    /// <summary>
-    /// 设备基础资料
-    /// </summary>
-    public virtual DbSet<EmMachine> EmMachine { get; set; }
+    ///// <summary>
+    ///// 设备基础资料
+    ///// </summary>
+    //public virtual DbSet<EmMachine> EmMachine { get; set; }
 
     #endregion
 
     #region 工模治具
-    /// <summary>
-    /// 工模治具
-    /// </summary>
-    public virtual DbSet<MfMould> MfMould { get; set; }
+    ///// <summary>
+    ///// 工模治具
+    ///// </summary>
+    //public virtual DbSet<MfMould> MfMould { get; set; }
 
-    /// <summary>
-    /// 工模治具类别
-    /// </summary>
-    public virtual DbSet<MfMouldType> MfMouldType { get; set; }
+    ///// <summary>
+    ///// 工模治具类别
+    ///// </summary>
+    //public virtual DbSet<MfMouldType> MfMouldType { get; set; }
 
-    /// <summary>
-    /// 工模治具入账
-    /// </summary>
-    public virtual DbSet<MfInOrder> MfInOrder { get; set; }
+    ///// <summary>
+    ///// 工模治具入账
+    ///// </summary>
+    //public virtual DbSet<MfInOrder> MfInOrder { get; set; }
 
-    /// <summary>
-    /// 工模治具入账明细
-    /// </summary>
-    public virtual DbSet<MfInOrderDetail> MfInOrderDetail { get; set; }
+    ///// <summary>
+    ///// 工模治具入账明细
+    ///// </summary>
+    //public virtual DbSet<MfInOrderDetail> MfInOrderDetail { get; set; }    ///// <summary>
+    ///// 工模治具
+    ///// </summary>
+    //public virtual DbSet<MfMould> MfMould { get; set; }
+
+    ///// <summary>
+    ///// 工模治具类别
+    ///// </summary>
+    //public virtual DbSet<MfMouldType> MfMouldType { get; set; }
+
+    ///// <summary>
+    ///// 工模治具入账
+    ///// </summary>
+    //public virtual DbSet<MfInOrder> MfInOrder { get; set; }
+
+    ///// <summary>
+    ///// 工模治具入账明细
+    ///// </summary>
+    //public virtual DbSet<MfInOrderDetail> MfInOrderDetail { get; set; }    ///// <summary>
+    ///// 工模治具
+    ///// </summary>
+    //public virtual DbSet<MfMould> MfMould { get; set; }
+
+    ///// <summary>
+    ///// 工模治具类别
+    ///// </summary>
+    //public virtual DbSet<MfMouldType> MfMouldType { get; set; }
+
+    ///// <summary>
+    ///// 工模治具入账
+    ///// </summary>
+    //public virtual DbSet<MfInOrder> MfInOrder { get; set; }
+
+    ///// <summary>
+    ///// 工模治具入账明细
+    ///// </summary>
+    //public virtual DbSet<MfInOrderDetail> MfInOrderDetail { get; set; }
     #endregion
 
     #region 生产管理
-    /// <summary>
-    /// 生产工单
-    /// </summary>
-    public virtual DbSet<PdOrder> PdOrder { get; set; }
+    ///// <summary>
+    ///// 生产工单
+    ///// </summary>
+    //public virtual DbSet<PdOrder> PdOrder { get; set; }
 
-    /// <summary>
-    /// 生产工单-材料明细
-    /// </summary>
-    public virtual DbSet<PdOrderMaterial> PdOrderMaterial { get; set; }
+    ///// <summary>
+    ///// 生产工单-材料明细
+    ///// </summary>
+    //public virtual DbSet<PdOrderMaterial> PdOrderMaterial { get; set; }
 
-    /// <summary>
-    /// 生产工单-对应订单
-    /// </summary>
-    public virtual DbSet<PdOrderDetail> PdOrderDetail { get; set; }
+    ///// <summary>
+    ///// 生产工单-对应订单
+    ///// </summary>
+    //public virtual DbSet<PdOrderDetail> PdOrderDetail { get; set; }
 
-    /// <summary>
-    /// 生产工单工艺路线
-    /// </summary>
-    public virtual DbSet<PdOrderProcess> PdOrderProcess { get; set; }
+    ///// <summary>
+    ///// 生产工单工艺路线
+    ///// </summary>
+    //public virtual DbSet<PdOrderProcess> PdOrderProcess { get; set; }
 
-    /// <summary>
-    /// 生产工单工模治具
-    /// </summary>
-    public virtual DbSet<PdOrderMould> PdOrderMould { get; set; }
+    ///// <summary>
+    ///// 生产工单工模治具
+    ///// </summary>
+    //public virtual DbSet<PdOrderMould> PdOrderMould { get; set; }
 
-    /// <summary>
-    /// 生产计划工单
-    /// </summary>
-    public virtual DbSet<PdPlanOrder> PdPlanOrder { get; set; }
+    ///// <summary>
+    ///// 生产计划工单
+    ///// </summary>
+    //public virtual DbSet<PdPlanOrder> PdPlanOrder { get; set; }
 
-    /// <summary>
-    /// 生产计划工单明细
-    /// </summary>
-    public virtual DbSet<PdPlanDetail> PdPlanDetail { get; set; }
+    ///// <summary>
+    ///// 生产计划工单明细
+    ///// </summary>
+    //public virtual DbSet<PdPlanDetail> PdPlanDetail { get; set; }
 
-    /// <summary>
-    /// 需求分析工单
-    /// </summary>
-    public virtual DbSet<PdRequireOrder> PdRequireOrder { get; set; }
+    ///// <summary>
+    ///// 需求分析工单
+    ///// </summary>
+    //public virtual DbSet<PdRequireOrder> PdRequireOrder { get; set; }
 
-    /// <summary>
-    /// 需求工单分析
-    /// </summary>
-    public virtual DbSet<PdRequireAnalysis> PdRequireAnalysis { get; set; }
+    ///// <summary>
+    ///// 需求工单分析
+    ///// </summary>
+    //public virtual DbSet<PdRequireAnalysis> PdRequireAnalysis { get; set; }
 
-    /// <summary>
-    /// 材料补发工单
-    /// </summary>
-    public virtual DbSet<PdReissueOrder> PdReissueOrder { get; set; }
+    ///// <summary>
+    ///// 材料补发工单
+    ///// </summary>
+    //public virtual DbSet<PdReissueOrder> PdReissueOrder { get; set; }
 
-    /// <summary>
-    /// 材料补发工单明细
-    /// </summary>
-    public virtual DbSet<PdReissueDetail> PdReissueDetail { get; set; }
+    ///// <summary>
+    ///// 材料补发工单明细
+    ///// </summary>
+    //public virtual DbSet<PdReissueDetail> PdReissueDetail { get; set; }
 
-    /// <summary>
-    /// 材料出库工单
-    /// </summary>
-    public virtual DbSet<PdOutOrder> PdOutOrder { get; set; }
+    ///// <summary>
+    ///// 材料出库工单
+    ///// </summary>
+    //public virtual DbSet<PdOutOrder> PdOutOrder { get; set; }
 
-    /// <summary>
-    /// 材料出库工单明细
-    /// </summary>
-    public virtual DbSet<PdOutDetail> PdOutDetail { get; set; }
+    ///// <summary>
+    ///// 材料出库工单明细
+    ///// </summary>
+    //public virtual DbSet<PdOutDetail> PdOutDetail { get; set; }
 
-    /// <summary>
-    /// 材料退库工单
-    /// </summary>
-    public virtual DbSet<PdReturnOrder> PdReturnOrder { get; set; }
+    ///// <summary>
+    ///// 材料退库工单
+    ///// </summary>
+    //public virtual DbSet<PdReturnOrder> PdReturnOrder { get; set; }
 
-    /// <summary>
-    /// 材料退库工单明细
-    /// </summary>
-    public virtual DbSet<PdReturnDetail> PdReturnDetail { get; set; }
+    ///// <summary>
+    ///// 材料退库工单明细
+    ///// </summary>
+    //public virtual DbSet<PdReturnDetail> PdReturnDetail { get; set; }
 
-    /// <summary>
-    /// 材料完工工单
-    /// </summary>
-    public virtual DbSet<PdCompleteOrder> PdCompleteOrder { get; set; }
+    ///// <summary>
+    ///// 材料完工工单
+    ///// </summary>
+    //public virtual DbSet<PdCompleteOrder> PdCompleteOrder { get; set; }
 
-    /// <summary>
-    /// 产品完工入库明细
-    /// </summary>
-    public virtual DbSet<PdCompleteDetail> PdCompleteDetail { get; set; }
+    ///// <summary>
+    ///// 产品完工入库明细
+    ///// </summary>
+    //public virtual DbSet<PdCompleteDetail> PdCompleteDetail { get; set; }
 
     #endregion
 
     #region 产品结构
 
-    /// <summary>
-    /// 设备分类
-    /// </summary>
-    public virtual DbSet<PsWorkShop> PsWorkShop { get; set; }
+    ///// <summary>
+    ///// 设备分类
+    ///// </summary>
+    //public virtual DbSet<PsWorkShop> PsWorkShop { get; set; }
 
-    /// <summary>
-    /// 工序
-    /// </summary>
-    public virtual DbSet<PsProcess> PsProcess { get; set; }
+    ///// <summary>
+    ///// 工序
+    ///// </summary>
+    //public virtual DbSet<PsProcess> PsProcess { get; set; }
 
-    /// <summary>
-    /// 工序机台
-    /// </summary>
-    public virtual DbSet<PsProcessMachine> PsProcessMachine { get; set; }
+    ///// <summary>
+    ///// 工序机台
+    ///// </summary>
+    //public virtual DbSet<PsProcessMachine> PsProcessMachine { get; set; }
 
-    /// <summary>
-    /// 工序外协厂商
-    /// </summary>
-    public virtual DbSet<PsProcessSupplier> PsProcessSupplier { get; set; }
+    ///// <summary>
+    ///// 工序外协厂商
+    ///// </summary>
+    //public virtual DbSet<PsProcessSupplier> PsProcessSupplier { get; set; }
 
-    /// <summary>
-    /// 工序单价
-    /// </summary>
-    public virtual DbSet<PsProcessPrice> PsProcessPrice { get; set; }
+    ///// <summary>
+    ///// 工序单价
+    ///// </summary>
+    //public virtual DbSet<PsProcessPrice> PsProcessPrice { get; set; }
 
-    /// <summary>
-    /// 工序人员
-    /// </summary>
-    public virtual DbSet<PsProcessEmployee> PsProcessEmployee { get; set; }
+    ///// <summary>
+    ///// 工序人员
+    ///// </summary>
+    //public virtual DbSet<PsProcessEmployee> PsProcessEmployee { get; set; }
 
-    /// <summary>
-    /// 工序不良原因
-    /// </summary>
-    public virtual DbSet<PsProcessBadReason> PsProcessBadReason { get; set; }
+    ///// <summary>
+    ///// 工序不良原因
+    ///// </summary>
+    //public virtual DbSet<PsProcessBadReason> PsProcessBadReason { get; set; }
 
-    /// <summary>
-    /// 工序模板
-    /// </summary>
-    public virtual DbSet<PsProcessTemplate> PsProcessTemplate { get; set; }
+    ///// <summary>
+    ///// 工序模板
+    ///// </summary>
+    //public virtual DbSet<PsProcessTemplate> PsProcessTemplate { get; set; }
 
-    /// <summary>
-    /// 工序模板明细
-    /// </summary>
-    public virtual DbSet<PsProcessTemplateDetail> PsProcessTemplateDetail { get; set; }
+    ///// <summary>
+    ///// 工序模板明细
+    ///// </summary>
+    //public virtual DbSet<PsProcessTemplateDetail> PsProcessTemplateDetail { get; set; }
 
-    /// <summary>
-    /// 工序模板物料
-    /// </summary>
-    public virtual DbSet<PsProcessTemplateMaterial> PsProcessTemplateMaterial { get; set; }
+    ///// <summary>
+    ///// 工序模板物料
+    ///// </summary>
+    //public virtual DbSet<PsProcessTemplateMaterial> PsProcessTemplateMaterial { get; set; }
 
-    /// <summary>
-    /// BOM
-    /// </summary>
-    public virtual DbSet<PsBOM> PsBOM { get; set; }
+    ///// <summary>
+    ///// BOM
+    ///// </summary>
+    //public virtual DbSet<PsBOM> PsBOM { get; set; }
 
-    /// <summary>
-    /// BOM物料
-    /// </summary>
-    public virtual DbSet<PsBOMMaterial> PsBOMMaterial { get; set; }
+    ///// <summary>
+    ///// BOM物料
+    ///// </summary>
+    //public virtual DbSet<PsBOMMaterial> PsBOMMaterial { get; set; }
 
 
-    /// <summary>
-    /// BOM工模治具
-    /// </summary>
-    public virtual DbSet<PsBOMMould> PsBOMMould { get; set; }
+    ///// <summary>
+    ///// BOM工模治具
+    ///// </summary>
+    //public virtual DbSet<PsBOMMould> PsBOMMould { get; set; }
 
-    /// <summary>
-    /// BOM工艺路线
-    /// </summary>
-    public virtual DbSet<PsBOMProcess> PsBOMProcess { get; set; }
+    ///// <summary>
+    ///// BOM工艺路线
+    ///// </summary>
+    //public virtual DbSet<PsBOMProcess> PsBOMProcess { get; set; }
 
     #endregion
 

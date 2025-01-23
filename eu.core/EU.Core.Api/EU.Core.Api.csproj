@@ -93,7 +93,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\EM\" />
     <Folder Include="Controllers\IV\" />
     <Folder Include="wwwroot\EUCore.Data.excel\" />
   </ItemGroup>

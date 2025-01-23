@@ -2,7 +2,7 @@
 
 public class RootEntityTkey<Tkey> where Tkey : IEquatable<Tkey>
 {
-    private Tkey _id;
+    //private Tkey _id;
 
     /// <summary>
     /// ID
