@@ -10,6 +10,7 @@ import { store } from "@/redux";
 
 export interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   loading?: boolean;
+  filter?: object;
 }
 
 const config = {
@@ -38,6 +39,7 @@ class RequestHttp {
         config.loading && showFullScreenLoading();
         if (config.headers && typeof config.headers.set === "function") {
           config.headers.set("Authorization", "Bearer " + store.getState().user.token);
+          if (config.filter) config.headers.set("filter", encodeURIComponent(JSON.stringify(config.filter)));
         }
         return config;
       },

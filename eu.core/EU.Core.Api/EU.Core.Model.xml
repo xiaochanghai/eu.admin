@@ -21092,7 +21092,7 @@
             返回信息
             </summary>
         </member>
-        <member name="P:EU.Core.Model.GridListReturn.current">
+        <member name="P:EU.Core.Model.GridListReturn.pageIndex">
             <summary>
             当前页标
             </summary>

@@ -18,7 +18,6 @@ namespace EU.Core.Services;
 
 public partial class CommonServices : BaseServices<SmModules, SmModulesDto, InsertSmModulesInput, EditSmModulesInput>, ICommonServices
 {
-    private string userId = Utility.GetUserIdString();
     private readonly IBaseRepository<SmModules> _dal;
     public CommonServices(IBaseRepository<SmModules> dal)
     {
@@ -37,14 +36,14 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <param name="parentColumn"></param>
     /// <param name="parentId"></param>
     /// <returns></returns>
-    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null)
+    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null)
     {
         int current = 1;
         int pageSize = 10;
         int total = 0;
 
         var searchParam = ConvertToDic(paramData);
-        var filterParam = ConvertToDic(filter);
+        //var filterParam = ConvertToDic(filter);
         var sorterParam = JsonHelper.JsonToObj<Dictionary<string, string>>(sorter);
 
         string queryCodition = "1=1";
@@ -95,24 +94,24 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             queryCodition += " AND A." + parentColumn + " = '" + parentId + "'";
         #endregion
 
-        #region 处理过滤条件
-        foreach (var item in filterParam)
-        {
+        //#region 处理过滤条件
+        //foreach (var item in filterParam)
+        //{
 
-            if (!string.IsNullOrEmpty(item.Value.ToString()))
-            {
-                if (JsonHelper.IsJson(item.Value))
-                {
-                    var ids = JsonHelper.JsonToObj<List<Guid>>(item.Value.ToString());
-                    if (ids.Any())
-                        queryCodition += $" AND A.{item.Key} IN ({string.Join(",", ids.Select(id => "'" + id + "'"))})";
-                }
-                else
-                    queryCodition += " AND A." + item.Key + " = '" + item.Value.ToString() + "'";
+        //    if (!string.IsNullOrEmpty(item.Value.ToString()))
+        //    {
+        //        if (JsonHelper.IsJson(item.Value))
+        //        {
+        //            var ids = JsonHelper.JsonToObj<List<Guid>>(item.Value.ToString());
+        //            if (ids.Any())
+        //                queryCodition += $" AND A.{item.Key} IN ({string.Join(",", ids.Select(id => "'" + id + "'"))})";
+        //        }
+        //        else
+        //            queryCodition += " AND A." + item.Key + " = '" + item.Value.ToString() + "'";
 
-            }
-        }
-        #endregion
+        //    }
+        //}
+        //#endregion
 
         #region 处理关键字搜索
         string keyWordCondition = string.Empty;
@@ -181,10 +180,151 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         grid.ModuleCode = moduleCode;
         total = grid.GetTotalCount();
         string sql = grid.GetQueryString();
-        var dtTemp = DBHelper.GetDataTable(sql);
+        var dtTemp = await Db.Ado.GetDataTableAsync(sql);
         var dt = Utility.FormatDataTableForTree(moduleCode, userId, dtTemp);
         return new GridListReturn(pageSize, current, total, dt, ResponseText.QUERY_SUCCESS);
     }
+
+    /// <summary>
+    /// 自定义列模块数据返回
+    /// </summary>
+    /// <param name="filter">filter</param>
+    /// <param name="moduleCode">模块代码</param>
+    /// <returns></returns>
+    public async Task<GridListReturn> QueryByFilter(QueryFilter filter, string moduleCode)
+    {
+        int total = 0;
+
+        string queryCodition = "1=1";
+        string keyWord = string.Empty;
+
+        #region 处理查询条件
+        var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
+        var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
+
+        foreach (var item in filter.@params)
+        {
+            if (item.Key == "keyWord")
+            {
+                keyWord = item.Value.ObjToString();
+                continue;
+            }
+            else if (!string.IsNullOrEmpty(item.Value.ObjToString()))
+            {
+                if (moduleColumns.Any())
+                {
+                    var column = moduleColumns.Where(a => a.DataIndex == item.Key).FirstOrDefault();
+                    if (column != null)
+                        queryCodition += " AND " + column.TableAlias + "." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                }
+                else
+                    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+            }
+            //if (string.IsNullOrEmpty(item.Value.ToString()))
+            //    queryCodition += " AND A." + item.Key + " =''";
+            //else
+            //    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
+        }
+        //if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(parentColumn))
+        //    queryCodition += " AND A." + parentColumn + " = '" + parentId + "'";
+        if (filter.Conditions.IsNotEmptyOrNull())
+            queryCodition += " AND " + filter.Conditions;
+
+        #endregion
+
+        //#region 处理过滤条件
+        //foreach (var item in filterParam)
+        //{
+
+        //    if (!string.IsNullOrEmpty(item.Value.ToString()))
+        //    {
+        //        if (JsonHelper.IsJson(item.Value))
+        //        {
+        //            var ids = JsonHelper.JsonToObj<List<Guid>>(item.Value.ToString());
+        //            if (ids.Any())
+        //                queryCodition += $" AND A.{item.Key} IN ({string.Join(",", ids.Select(id => "'" + id + "'"))})";
+        //        }
+        //        else
+        //            queryCodition += " AND A." + item.Key + " = '" + item.Value.ToString() + "'";
+
+        //    }
+        //}
+        //#endregion
+
+        #region 处理关键字搜索
+        var keyWordCondition = string.Empty;
+        if (keyWord.IsNotEmptyOrNull() && moduleColumns.Any())
+            moduleColumns.ForEach(item =>
+            {
+                if (item.ValueType == null && item.HideInSearch == false)
+                {
+                    var TableAlias = item.TableAlias;
+                    var dataIndex = item.DataIndex;
+                    if (string.IsNullOrEmpty(keyWordCondition))
+                        keyWordCondition = TableAlias + "." + dataIndex + " LIKE '%" + keyWord + "%'";
+                    else
+                        keyWordCondition += " OR " + TableAlias + "." + dataIndex + " LIKE '%" + keyWord + "%'";
+                }
+            });
+        #endregion
+
+        var userId = string.Empty;
+        ModuleSql moduleSql = new(moduleCode);
+        GridList grid = new();
+        var tableName = moduleSql.GetTableName();
+        var fullSql = moduleSql.GetFullSql();
+        var SqlSelectBrwAndTable = moduleSql.GetSqlSelectBrwAndTable();
+        var SqlSelectAndTable = moduleSql.GetSqlSelectAndTable();
+        if (tableName.IsNotEmptyOrNull())
+        {
+            SqlSelectBrwAndTable = string.Format(SqlSelectBrwAndTable, tableName);
+            SqlSelectAndTable = string.Format(SqlSelectAndTable, tableName);
+        }
+        var SqlDefaultCondition = moduleSql.GetSqlDefaultCondition();
+
+        #region 处理关键字搜索
+        if (keyWordCondition.IsNotEmptyOrNull())
+            SqlDefaultCondition += " AND (" + keyWordCondition + ")";
+        #endregion
+
+        //SqlDefaultCondition = SqlDefaultCondition.Replace("[UserId]", userId);
+        var DefaultSortField = moduleSql.GetDefaultSortField();
+        var DefaultSortDirection = moduleSql.GetDefaultSortDirection();
+        if (DefaultSortDirection.IsNotEmptyOrNull())
+            DefaultSortDirection = "ASC";
+
+        grid.FullSql = fullSql;
+        grid.SqlSelect = SqlSelectBrwAndTable;
+        grid.SqlDefaultCondition = SqlDefaultCondition;
+        grid.SqlQueryCondition = queryCodition;
+        grid.SortField = DefaultSortField;
+        grid.SortDirection = DefaultSortDirection;
+
+        #region 处理排序
+        if (filter.sorter != null && filter.sorter.Count > 0)
+            foreach (var item in filter.sorter)
+            {
+                grid.SortField = item.Key;
+                grid.SortDirection = item.Value == "ascend" ? "ASC" : "DESC";
+                //grid.SortDirection = item.Value switch
+                //{
+                //    "ascend" => "ASC",
+                //    "descend" => "DESC",
+                //    _ => "ASC"
+                //};
+            }
+        #endregion
+
+        grid.PageSize = filter.PageSize;
+        grid.CurrentPage = filter.PageIndex;
+        grid.ModuleCode = moduleCode;
+        total = grid.GetTotalCount();
+        string sql = grid.GetQueryString();
+        var dtTemp = await Db.Ado.GetDataTableAsync(sql);
+        var dt = Utility.FormatDataTableForTree(moduleCode, userId, dtTemp);
+        return new GridListReturn(filter.PageSize, filter.PageIndex, total, dt, ResponseText.QUERY_SUCCESS);
+    }
+
     #endregion
 
     #region Excel导出

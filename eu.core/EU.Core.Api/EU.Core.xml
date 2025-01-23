@@ -3484,16 +3484,23 @@
             公共服务
             </summary>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.GetGridList(System.String,System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:EU.Core.Controllers.CommonController.GetGridList(System.String,System.String,System.String,System.String,System.String)">
             <summary>
             自定义列模块数据返回
             </summary>
             <param name="paramData">查询条件</param>
             <param name="moduleCode">模块代码</param>
             <param name="sorter">排序</param>
-            <param name="filter">过滤条件</param>
             <param name="parentColumn"></param>
             <param name="parentId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.QueryByFilter(EU.Core.Common.QueryFilter,System.String)">
+            <summary>
+            自定义列模块数据返回
+            </summary>
+            <param name="filter">filter</param>
+            <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Controllers.CommonController.ClearCache">

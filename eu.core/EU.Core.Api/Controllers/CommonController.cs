@@ -23,12 +23,21 @@ public class CommonController : Controller
     /// <param name="paramData">查询条件</param>
     /// <param name="moduleCode">模块代码</param>
     /// <param name="sorter">排序</param>
-    /// <param name="filter">过滤条件</param>
     /// <param name="parentColumn"></param>
     /// <param name="parentId"></param>
     /// <returns></returns>
-    [HttpGet, Route("GetGridList")]
-    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null) => await _service.GetGridList(paramData, moduleCode, sorter, filter, parentColumn, parentId);
+    [HttpGet("GetGridList")]
+    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null) => await _service.GetGridList(paramData, moduleCode, sorter, parentColumn, parentId);
+
+    /// <summary>
+    /// 自定义列模块数据返回
+    /// </summary>
+    /// <param name="filter">filter</param>
+    /// <param name="moduleCode">模块代码</param>
+    /// <returns></returns>
+    [HttpGet("QueryByFilter/{moduleCode}")]
+    public async Task<GridListReturn> QueryByFilter([FromFilter] QueryFilter filter, string moduleCode) => await _service.QueryByFilter(filter, moduleCode);
+
     #endregion
 
     #region 清空缓存
@@ -36,7 +45,7 @@ public class CommonController : Controller
     /// 清空缓存
     /// </summary>
     /// <returns></returns>
-    [HttpGet, Route("ClearCache")]
+    [HttpGet("ClearCache")]
     public ServiceResult ClearCache() => _service.ClearCache();
     #endregion
 
@@ -45,7 +54,7 @@ public class CommonController : Controller
     /// Excel导出
     /// </summary>
     /// <returns></returns>
-    [HttpGet, Route("ExportExcel")]
+    [HttpGet("ExportExcel")]
     public ServiceResult<string> ExportExcel(string moduleCode, string paramData = "{}", string sorter = "{}", string exportExcelColumns = "") => _service.ExportExcel(moduleCode, paramData, sorter, exportExcelColumns);
     #endregion
 
@@ -64,10 +73,11 @@ public class CommonController : Controller
     /// Excel导入数据转换
     /// </summary>
     /// <returns></returns>
-    [HttpPost, Route("TransferExcelData")]
+    [HttpPost("TransferExcelData")]
     public ServiceResult TransferExcelData([FromBody] TransferExcelRequest request) => _service.TransferExcelData(request);
     #endregion
 
+    #region 获取通用下拉数据
     /// <summary>
     /// 获取通用下拉数据
     /// </summary>
@@ -83,6 +93,7 @@ public class CommonController : Controller
     public async Task<ServiceResult<List<ComboGridData>>> ComboGridData(string parentColumn, string parentId, int? current, int? pageSize, string code, [FromBody] string[] items, string key) => await _service.ComboGridData(parentColumn, parentId, current, pageSize, code, items, key);
     [HttpPost("GetComboGridData")]
     public async Task<ServiceResult<List<ComboGridData>>> GetComboGridData([FromBody] ComboGridDataBody body) => await _service.GetComboGridData(body);
+    #endregion
 
     #region 增删查改
 
@@ -103,6 +114,7 @@ public class CommonController : Controller
     public async Task<ServiceResult> Delete(string moduleCode, [FromBody] List<Guid> ids) => await _service.Delete(moduleCode, ids);
     #endregion
 
+    #region 测试
     [HttpGet("Test")]
     public ServiceResult Test()
     {
@@ -118,4 +130,5 @@ public class CommonController : Controller
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 
     }
+    #endregion
 }

@@ -9,6 +9,18 @@ export const getModuleLogInfo = (params: any) => {
 };
 export const query = (params: any) => {
   return http.getGridList(`/api/Common/GetGridList`, params);
+  // debugger;
+  // return http.getGridList(`/api/Common/GetGridList`, params, {
+  //   filter: {
+  //     pageIndex: 1,
+  //     pageSize: 12
+  //   }
+  // });
+};
+export const queryByFilter = (moduleCode: string, params: any, filter: object) => {
+  return http.getGridList(`/api/Common/QueryByFilter/${moduleCode}`, params, {
+    filter
+  });
 };
 export const querySingle = (params: any) => {
   return http.get<any>(params.url + "/" + params.Id);

@@ -5,7 +5,7 @@ import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
 import { message } from "@/hooks/useMessage";
 import {
-  query,
+  queryByFilter,
   getModuleLogInfo,
   singleDelete,
   batchDelete,
@@ -642,34 +642,26 @@ const SmProTable: React.FC<any> = props => {
             ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize }
             : pagination
         }
-        request={async (params, sorter, filterCondition) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        request={async (params, sorter, _filterCondition) => {
           if (tableParam && tableParam.params && !params._timestamp) params = { ...tableParam.params, ...params };
           if (tableParam && tableParam.sorter) sorter = { ...tableParam.sorter, ...sorter };
           params1 = params;
           dispatch(setTableParam({ params: params, sorter, moduleCode }));
+
+          let filter = { PageIndex: params.current, PageSize: params.pageSize, sorter, params, Conditions: "" };
           if (isDetail) {
-            filterCondition = { ...filterCondition, [masterColumn]: masterId };
+            if (masterColumn && masterId) filter = { ...filter, Conditions: `A.${masterColumn} = '${masterId}'` };
+            else filter = { ...filter, Conditions: "1 != 1" };
             // filterCondition[masterColumn] = masterId;
-            if (masterId)
-              return await query({
-                paramData: JSON.stringify(params),
-                sorter: JSON.stringify(sorter),
-                filter: JSON.stringify(filterCondition),
-                moduleCode
-              });
+            if (masterId) return await queryByFilter(moduleCode, {}, filter);
             else
               return {
                 data: [],
                 success: true,
                 total: 0
               };
-          } else
-            return await query({
-              paramData: JSON.stringify(params),
-              sorter: JSON.stringify(sorter),
-              filter: JSON.stringify(filterCondition),
-              moduleCode
-            });
+          } else return await queryByFilter(moduleCode, {}, filter);
         }}
         // columnsState={{
         //   persistenceKey: "use-pro-table-key",

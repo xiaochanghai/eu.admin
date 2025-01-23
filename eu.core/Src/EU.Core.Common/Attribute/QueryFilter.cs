@@ -18,8 +18,8 @@ public class QueryFilter
         set
         {
             //前端默认从分页显示默认1开始，所以后端需要-1
-            if (value >= 1)
-                value -= 1;
+            //if (value >= 1)
+            //    value -= 1;
             _pageIndex = value;
         }
     }
@@ -48,6 +48,27 @@ public class QueryFilter
     /// 排序条件表达式(e.g. LoginName ASC,Name DESC)
     /// </summary>
     public string Sorting { get; set; }
+
+    /// <summary>
+    /// 参数 
+    /// </summary>
+    public Dictionary<string, string> sorter { get; set; }
+
+    private Dictionary<string, object> _params;
+
+    /// <summary>
+    /// 参数 
+    /// </summary>
+    public Dictionary<string, object> @params
+    {
+        get { return _params; }
+        set
+        {
+            if (value.Count > 0)
+                value = value.Where(pair => pair.Key != "current" && pair.Key != "pageSize").ToDictionary(pair => pair.Key, pair => pair.Value); ;
+            _params = value;
+        }
+    }
     /// <summary>
     /// 缺省值
     /// </summary>

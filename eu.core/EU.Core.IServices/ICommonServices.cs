@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EU.Core.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.IServices;
 
@@ -11,7 +12,15 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// 自定义列模块数据返回
     /// </summary>
     /// <returns></returns>
-    Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string filter = "{}", string parentColumn = null, string parentId = null);
+    Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null);
+    
+    /// <summary>
+    /// 自定义列模块数据返回
+    /// </summary>
+    /// <param name="filter">filter</param>
+    /// <param name="moduleCode">模块代码</param>
+    /// <returns></returns>
+    Task<GridListReturn> QueryByFilter(QueryFilter filter,  string moduleCode);
 
     /// <summary>
     /// 清空缓存
