@@ -344,7 +344,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         int pageCount = 999999999;// options.Rows;
         int totalCount;
         int outPageSize;
-        string fileId = StringHelper.Id;
+        string fileId = Utility.GuidId1;
 
 
         var searchParam = ConvertToDic(paramData);
@@ -458,7 +458,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import)
     {
         string message = string.Empty;
-        string importDataId = StringHelper.Id;
+        string importDataId = Utility.GuidId1;
 
         var result = new ImportExcelResult();
 
@@ -641,7 +641,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         CheckForm(moduleCode, dict);
         #endregion
 
-        var id = StringHelper.Id1;
+        var id = Utility.GuidId;
         dict.Add("ID", id);
         dict.Add("CreatedTime", DateTime.Now);
         dict.Add("CreatedBy", App.User.ID);

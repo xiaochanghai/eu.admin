@@ -242,7 +242,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                 var customerId = customerIds[i];
                 var orders = new List<SdOutOrder>();
                 var details = new List<SdOutOrderDetail>();
-                var orderId = StringHelper.Id1;
+                var orderId = Utility.GuidId;
                 var orderNo = await Utility.GenerateContinuousSequence(Db, "SdOutOrderNo");
                 var customer = await Db.Queryable<BdCustomer>().FirstAsync(x => x.ID == customerId);
                 orders.Add(new SdOutOrder()

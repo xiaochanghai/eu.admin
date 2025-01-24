@@ -162,7 +162,7 @@ public class TableManager
                     if (count == 0)
                     {
                         //DataRow row = dtFieldCatalog.NewRow();
-                        //row["ID"] = StringHelper.Id;
+                        //row["ID"] = Utility.GuidId1;
                         //row["TABLE_CODE"] = tableCode;
                         //row["COLUMN_CODE"] = Convert.ToString(dtUserTabColumns.Rows[i]["COLUMN_NAME"]).ToUpper();
                         //row["COLUMN_NAME"] = Convert.ToString(dtUserTabColumns.Rows[i]["COLUMN_NAME"]).ToUpper();

@@ -46,7 +46,7 @@ public class SmQuartzJobServices : BaseServices<SmQuartzJob, SmQuartzJobDto, Ins
         var task = await QueryDto(id);
         var taskMsg = new TaskMsg
         {
-            MsgId = StringHelper.Id1,
+            MsgId = Utility.GuidId,
             TaskType = JobConsts.TASK_TYPE_JOB,
             TaskId = id,
             TaskCode = task.JobCode,

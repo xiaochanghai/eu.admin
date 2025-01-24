@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text;
 using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
@@ -108,13 +109,9 @@ public static class Utility
                     else if (valueType == "digit" && !string.IsNullOrEmpty(dateFormat))
                     {
                         if (string.IsNullOrEmpty(dateFormat) || dateFormat == "-1")
-                        {
-                            value = StringHelper.TrimDecimalString(value, -1);
-                        }
+                            value = TrimDecimalString(value, -1);
                         else
-                        {
-                            value = StringHelper.TrimDecimalString(value, Convert.ToInt32(dateFormat));
-                        }
+                            value = TrimDecimalString(value, Convert.ToInt32(dateFormat));
                     }
                     if (IsBool)
                     {
@@ -152,9 +149,9 @@ public static class Utility
                         if (!string.IsNullOrEmpty(value))
                         {
                             if (string.IsNullOrEmpty(dateFormat) || dateFormat == "-1")
-                                value = StringHelper.TrimDecimalString(value, -1);
+                                value = TrimDecimalString(value, -1);
                             else
-                                value = StringHelper.TrimDecimalString(value, Convert.ToInt32(dateFormat));
+                                value = TrimDecimalString(value, Convert.ToInt32(dateFormat));
                             sum += Convert.ToDecimal(value);
                         }
                     }
@@ -174,10 +171,7 @@ public static class Utility
     /// 求系统当前日期（数据库所在服务器的日期）。
     /// </summary>
     /// <returns></returns>
-    public static DateTime GetSysDate()
-    {
-        return DateTime.Now;
-    }
+    public static DateTime GetSysDate() => DateTime.Now;
     #endregion
 
     #region 求系统唯一字符串
@@ -187,7 +181,7 @@ public static class Utility
     /// <returns>字符串</returns>
     public static string GetSysID()
     {
-        string sid = string.Empty;
+        var sid = string.Empty;
 
         byte[] buffer = Guid.NewGuid().ToByteArray();
         sid = DateTime.Now.ToString("yyMMddHHmmss") + BitConverter.ToInt64(buffer, 0).ToString();
@@ -195,22 +189,58 @@ public static class Utility
     }
     #endregion
 
+    #region 求GUID
+    /// <summary>
+    /// 获取一个GUID
+    /// </summary>
+    /// <param name="format">格式-默认为N</param>
+    /// <returns></returns>
+    public static string GetGUID(string format = "N")
+    {
+        return Guid.NewGuid().ToString(format);
+    }
+
+    /// <summary>  
+    /// 根据GUID获取19位的唯一数字序列  
+    /// </summary>  
+    /// <returns></returns>  
+    public static long GetGuidToLongID()
+    {
+        var buffer = Guid.NewGuid().ToByteArray();
+        return BitConverter.ToInt64(buffer, 0);
+    }
+
+    /// <summary>
+    /// 获取GUID字符串
+    /// </summary>
+    public static string GuidId1
+    {
+        get
+        {
+            var id = Guid.NewGuid();
+            return id.ToString();
+        }
+    }
+
+    /// <summary>
+    /// 获取GUID
+    /// </summary>
+    public static Guid GuidId
+    {
+        get
+        {
+            return Guid.NewGuid();
+        }
+    }
+    #endregion
+
+
     #region 获得当前公司ID
     /// <summary>
     /// 获得当前公司ID
     /// </summary>
     /// <returns></returns>
-    public static string GetCompanyId()
-    {
-        try
-        {
-            return GetCompanyGuidId().ToString();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
+    public static string GetCompanyId() => GetCompanyGuidId().ToString();
     /// <summary>
     /// 获得当前公司ID
     /// </summary>
@@ -269,17 +299,8 @@ public static class Utility
     /// 获得当前集团ID
     /// </summary>
     /// <returns></returns>
-    public static string GetGroupId()
-    {
-        try
-        {
-            return GetGroupGuidId().ToString();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
+    public static string GetGroupId() => GetGroupGuidId().ToString();
+
 
     /// <summary>
     /// 获得当前集团ID
@@ -993,72 +1014,7 @@ public static class Utility
             throw;
         }
     }
-    #endregion
-
-    #region 获取分页数据起始
-    /// <summary>
-    /// 获取分页数据起始
-    /// </summary>
-    /// <param name="paramData"></param>
-    /// <param name="current">当前页码</param>
-    /// <param name="pageSize">一个多个数据</param>
-    public static void GetPageData(string paramData, out int current, out int pageSize)
-    {
-        var searchParam = JsonConvert.DeserializeObject<Dictionary<string, object>>(paramData);
-        current = 1;
-        pageSize = 10000;
-        foreach (var item in searchParam)
-        {
-            if (item.Key == "current")
-            {
-                current = int.Parse(item.Value.ToString());
-                continue;
-            }
-
-            if (item.Key == "pageSize")
-            {
-                pageSize = int.Parse(item.Value.ToString());
-                continue;
-            }
-        }
-    }
-    #endregion
-
-    #region 计算分页起始索引
-    /// <summary>
-    /// 计算分页起始索引
-    /// </summary>
-    /// <param name="paramData"></param>
-    /// <param name="current">计算分页起始索引</param>
-    /// <param name="pageSize">计算分页结束索引</param>
-    public static void GetPageIndex(string paramData, out int startIndex, out int endIndex)
-    {
-        var searchParam = JsonConvert.DeserializeObject<Dictionary<string, object>>(paramData);
-        int current = 1;
-        int pageSize = 10000;
-        foreach (var item in searchParam)
-        {
-            if (item.Key == "current")
-            {
-                current = int.Parse(item.Value.ToString());
-                continue;
-            }
-
-            if (item.Key == "pageSize")
-            {
-                pageSize = int.Parse(item.Value.ToString());
-                continue;
-            }
-        }
-
-        int _pageSize = pageSize;
-        //计算分页起始索引
-        startIndex = current > 1 ? (current - 1) * _pageSize : 0;
-
-        //计算分页结束索引
-        endIndex = current * _pageSize;
-    }
-    #endregion
+    #endregion  
 
     #region 去除后面多余的零
     /// <summary>
@@ -1109,4 +1065,212 @@ public static class Utility
     }
     #endregion
 
+    #region 格式化数字字符
+    /// <summary>
+    /// 格式化数字字符，如传入1.24500，返回1.245
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static string TrimDecimalString(string value)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (!string.IsNullOrEmpty(value))
+            {
+                Decimal tmp = Decimal.Parse(value);
+                result = string.Format("{0:#0.##########}", tmp);
+            }
+            return result;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    public static string TrimDecimalString(object value)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (value != null)
+            {
+                Decimal tmp = Decimal.Parse(value.ToString());
+                result = string.Format("{0:#0.##########}", tmp);
+            }
+            return result;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 格式化数字字符，并保留指定的小数位
+    /// </summary>
+    /// <param name="value">需要处理的值</param>
+    /// <param name="reservedDigit">保留小数点后位数</param>
+    /// <returns></returns>
+    public static string TrimDecimalString(string value, int reservedDigit)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (!string.IsNullOrEmpty(value))
+            {
+                Decimal tmp = Decimal.Parse(value);
+                if (reservedDigit == -1)
+                    result = string.Format("{0:#0.##########}", tmp);
+                else
+                {
+                    result = String.Format("{0:N" + reservedDigit.ToString() + "}", tmp);
+                    result = result.Replace(",", "");
+                }
+            }
+            return result;
+        }
+        catch (Exception) { throw; }
+    }
+
+    /// <summary>
+    /// 格式化数字字符，并保留指定的小数位
+    /// </summary>
+    /// <param name="value">需要处理的值</param>
+    /// <param name="reservedDigit">保留小数点后位数，-1时只会去除小数点后最后几位的0</param>
+    /// <returns></returns>
+    public static string TrimDecimalString(object value, int reservedDigit)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (!string.IsNullOrEmpty(Convert.ToString(value)))
+            {
+                Decimal tmp = Decimal.Parse(Convert.ToString(value));
+                if (reservedDigit == -1)
+                    result = string.Format("{0:#0.##########}", tmp);
+                else
+                {
+                    result = String.Format("{0:N" + reservedDigit.ToString() + "}", tmp);
+                    result = result.Replace(",", "");
+                }
+            }
+            return result;
+        }
+        catch (Exception) { throw; }
+    }
+
+    /// <summary>
+    /// 格式化数字字符，并保留指定的小数位
+    /// </summary>
+    /// <param name="value">需要处理的值</param>
+    /// <param name="reservedDigit">保留小数点后位数，-1时只会去除小数点后最后几位的0</param>
+    /// <returns></returns>
+    public static decimal TrimDecimal(object value, int reservedDigit)
+    {
+        try
+        {
+            string result = string.Empty;
+            if (!string.IsNullOrEmpty(Convert.ToString(value)))
+            {
+                Decimal tmp = Decimal.Parse(Convert.ToString(value));
+                if (reservedDigit == -1)
+                    result = string.Format("{0:#0.##########}", tmp);
+                else
+                {
+                    result = String.Format("{0:N" + reservedDigit.ToString() + "}", tmp);
+                    result = result.Replace(",", "");
+                }
+            }
+            return Convert.ToDecimal(result);
+        }
+        catch (Exception) { throw; }
+    }
+    #endregion
+
+    #region 根据分隔符返回前n条数据
+    /// <summary>
+    /// 根据分隔符返回前n条数据
+    /// </summary>
+    /// <param name="content">数据内容</param>
+    /// <param name="separator">分隔符</param>
+    /// <param name="top">前n条</param>
+    /// <param name="isDesc">是否倒序（默认false）</param>
+    /// <returns></returns>
+    public static List<string> GetTopDataBySeparator(string content, string separator, int top, bool isDesc = false)
+    {
+        if (string.IsNullOrEmpty(content))
+            return new List<string>() { };
+
+        if (string.IsNullOrEmpty(separator))
+            throw new ArgumentException("message", nameof(separator));
+
+        var dataArray = content.Split(separator).Where(d => !string.IsNullOrEmpty(d)).ToArray();
+        if (isDesc)
+            Array.Reverse(dataArray);
+
+        if (top > 0)
+            dataArray = dataArray.Take(top).ToArray();
+
+        return dataArray.ToList();
+    }
+    #endregion
+
+    #region 根据字段拼接get参数
+    /// <summary>
+    /// 根据字段拼接get参数
+    /// </summary>
+    /// <param name="dic"></param>
+    /// <returns></returns>
+    public static string GetPars(Dictionary<string, object> dic)
+    {
+
+        StringBuilder sb = new();
+        string urlPars = null;
+        bool isEnter = false;
+        foreach (var item in dic)
+        {
+            sb.Append($"{(isEnter ? "&" : "")}{item.Key}={item.Value}");
+            isEnter = true;
+        }
+        urlPars = sb.ToString();
+        return urlPars;
+    }
+    #endregion
+
+    #region 根据字段拼接get参数
+    /// <summary>
+    /// 根据字段拼接get参数
+    /// </summary>
+    /// <param name="dic"></param>
+    /// <returns></returns>
+    public static string GetPars(Dictionary<string, string> dic)
+    {
+
+        StringBuilder sb = new();
+        string urlPars = null;
+        bool isEnter = false;
+        foreach (var item in dic)
+        {
+            sb.Append($"{(isEnter ? "&" : "")}{item.Key}={item.Value}");
+            isEnter = true;
+        }
+        urlPars = sb.ToString();
+        return urlPars;
+    }
+    #endregion
+
+    #region 获取字符串最后X行
+    /// <summary>
+    /// 获取字符串最后X行
+    /// </summary>
+    /// <param name="resourceStr"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
+    public static string GetCusLine(string resourceStr, int length)
+    {
+        string[] arrStr = resourceStr.Split("\r\n");
+        return string.Join("", (from q in arrStr select q).Skip(arrStr.Length - length + 1).Take(length).ToArray());
+    }
+    #endregion
 }

@@ -205,7 +205,7 @@ public class DbInsert
     {
         if (isInitRowId == true)
         {
-            rowId = StringHelper.Id;
+            rowId = Utility.GuidId1;
             Values("ID", rowId);
         }
         if (isInitDefaultValue == true)

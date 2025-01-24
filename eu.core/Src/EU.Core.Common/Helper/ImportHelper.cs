@@ -33,7 +33,7 @@ public class ImportHelper
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 var dr = dt1.NewRow();
-                dr["ID"] = StringHelper.Id;
+                dr["ID"] = Utility.GuidId1;
                 dr["CreatedBy"] = userId;
                 dr["CreatedTime"] = Utility.GetSysDate();
                 dr["ImportDataId"] = importDataId;
@@ -415,7 +415,7 @@ public class ImportHelper
                 smImportDataDetailList.Add(smImportDataDetail);
 
                 drImportDataErrorCol = dtImportDataErrorCol.NewRow();
-                drImportDataErrorCol["ID"] = StringHelper.Id;
+                drImportDataErrorCol["ID"] = Utility.GuidId1;
                 drImportDataErrorCol["CreatedBy"] = userId;
                 //drImportDataErrorCol["CREATED_PROGRAM"] = "CommonImport";
                 drImportDataErrorCol["CreatedTime"] = Utility.GetSysDate();
@@ -430,7 +430,7 @@ public class ImportHelper
                 //UpdateImportDataErrorFlag(importDataId1, Convert.ToInt32(dt.Rows[i]["LineNo"]), columnIndex, Resource.GetOnlyMessage("CC-00301"), sheetName, "E", null);
 
                 drImportError = dtImportError.NewRow();
-                drImportError["ID"] = StringHelper.Id;
+                drImportError["ID"] = Utility.GuidId1;
                 drImportError["CreatedBy"] = userId;
                 //drImportError["CREATED_PROGRAM"] = "CommonImport";
                 drImportError["CreatedTime"] = Utility.GetSysDate();
@@ -504,7 +504,7 @@ public class ImportHelper
                     itemNos = itemNos.Substring(0, itemNos.Length - 1);
                 }
                 drImportError = dtImportError.NewRow();
-                drImportError["ID"] = StringHelper.Id;
+                drImportError["ID"] = Utility.GuidId1;
                 drImportError["CreatedBy"] = userId;
                 //drImportError["CREATED_PROGRAM"] = "CommonImport";
                 drImportError["CreatedTime"] = Utility.GetSysDate();
@@ -549,7 +549,7 @@ public class ImportHelper
                     itemNos = itemNos.Substring(0, itemNos.Length - 1);
                 }
                 drImportError = dtImportError.NewRow();
-                drImportError["ID"] = StringHelper.Id;
+                drImportError["ID"] = Utility.GuidId1;
                 drImportError["CreatedBy"] = userId;
                 //drImportError["CREATED_PROGRAM"] = "CommonImport";
                 drImportError["CreatedTime"] = Utility.GetSysDate();
@@ -694,7 +694,7 @@ public class ImportHelper
                     smImportDataDetailList.Add(smImportDataDetail);
 
                     drImportDataErrorCol = dtImportDataErrorCol.NewRow();
-                    drImportDataErrorCol["ID"] = StringHelper.Id;
+                    drImportDataErrorCol["ID"] = Utility.GuidId1;
                     //drImportDataErrorCol["CreatedBy"] = UserCode;
                     //drImportDataErrorCol["CREATED_PROGRAM"] = "CommonImport";
                     drImportDataErrorCol["CreatedTime"] = Utility.GetSysDate();
@@ -714,7 +714,7 @@ public class ImportHelper
                     itemNos = itemNos.Substring(0, itemNos.Length - 1);
                 }
                 drImportError = dtImportError.NewRow();
-                drImportError["ID"] = StringHelper.Id;
+                drImportError["ID"] = Utility.GuidId1;
                 //drImportError["CreatedBy"] = UserCode;
                 //drImportError["CREATED_PROGRAM"] = "CommonImport";
                 drImportError["CreatedTime"] = Utility.GetSysDate();
@@ -836,7 +836,7 @@ public class ImportHelper
                     smImportDataDetailList.Add(smImportDataDetail);
 
                     var drImportDataErrorCol = dtImportDataErrorCol.NewRow();
-                    drImportDataErrorCol["ID"] = StringHelper.Id;
+                    drImportDataErrorCol["ID"] = Utility.GuidId1;
                     drImportDataErrorCol["CreatedBy"] = userId;
                     //drImportDataErrorCol["CREATED_PROGRAM"] = "CommonImport";
                     drImportDataErrorCol["CreatedTime"] = Utility.GetSysDate();
@@ -859,7 +859,7 @@ public class ImportHelper
                 #region Excel中【{0}】行【{1}】列的值【{2}】在表【{3}】的列【{4}】中不存在！
                 errorMsg1 = "Excel中第【{0}】行【{1}】列的值【{2}】在【{3}】对应的【{4}】中不存在！";
                 var drImportError = dtImportError.NewRow();
-                drImportError["ID"] = StringHelper.Id;
+                drImportError["ID"] = Utility.GuidId1;
                 drImportError["CreatedBy"] = userId;
                 //drImportError["CREATED_PROGRAM"] = "CommonImport";
                 drImportError["CreatedTime"] = Utility.GetSysDate();

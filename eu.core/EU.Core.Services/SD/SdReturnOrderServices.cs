@@ -148,7 +148,7 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
                     else
                     {
                         serialNumber++;
-                        entity.ID = StringHelper.Id1;
+                        entity.ID = Utility.GuidId;
                         inserts.Add(entity);
                     }
                 }

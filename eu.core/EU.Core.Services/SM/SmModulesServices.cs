@@ -772,7 +772,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <returns></returns>
     public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids)
     {
-        var fileId = StringHelper.Id1;
+        var fileId = Utility.GuidId;
 
         if (ids.Any())
         {
@@ -1137,7 +1137,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         module.ModuleCode = module1.ModuleCode;
         module.ModuleName = module1.ModuleName;
-        module.ID = StringHelper.Id1;
+        module.ID = Utility.GuidId;
 
         var columns = await Db.Queryable<SmModuleColumn>().Where(x => x.SmModuleId == moduleId).ToListAsync();
         var moduleSql = await Db.Queryable<SmModuleSql>().Where(x => x.ModuleId == moduleId).FirstAsync();
@@ -1150,7 +1150,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (!moduleSql.IsNullOrEmpty())
         {
 
-            moduleSql.ID = StringHelper.Id1;
+            moduleSql.ID = Utility.GuidId;
             moduleSql.CreatedBy = UserId;
             moduleSql.CreatedTime = Utility.GetSysDate();
             moduleSql.ModuleId = module.ID;
@@ -1160,7 +1160,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         columns.ForEach(x =>
         {
-            x.ID = StringHelper.Id1;
+            x.ID = Utility.GuidId;
             x.CreatedBy = UserId;
             x.CreatedTime = Utility.GetSysDate();
             x.SmModuleId = module.ID;

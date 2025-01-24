@@ -161,7 +161,7 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
                     if (order.IsNullOrEmpty())
                         order = new PoArrivalOrder()
                         {
-                            ID = StringHelper.Id1,
+                            ID =  Utility.GuidId,
                             CreatedBy = App.User.ID,
                             CreatedTime = dt,
                             OrderNo = orderNo,
@@ -244,7 +244,7 @@ public class PoOrderServices : BaseServices<PoOrder, PoOrderDto, InsertPoOrderIn
                     var supplierId = supplierIds[i];
                     var orders = new List<PoInOrder>();
                     var details = new List<PoInOrderDetail>();
-                    var orderId = StringHelper.Id1;
+                    var orderId = Utility.GuidId;
                     var orderNo = await Utility.GenerateContinuousSequence(Db, "PoInOrderNo");
                     orders.Add(new PoInOrder()
                     {
