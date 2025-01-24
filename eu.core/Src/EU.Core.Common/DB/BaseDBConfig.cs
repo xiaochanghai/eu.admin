@@ -77,26 +77,35 @@ public class BaseDBConfig
     /// <returns></returns>
     private static MutiDBOperate SpecialDbString(MutiDBOperate mutiDBOperate)
     {
-        if (mutiDBOperate.DbType == DataBaseType.Sqlite)
+        //if (mutiDBOperate.DbType == DataBaseType.Sqlite)
+        //{
+        //    mutiDBOperate.Connection =
+        //        $"DataSource=" + Path.Combine(Environment.CurrentDirectory, mutiDBOperate.Connection);
+        //}
+        //else if (mutiDBOperate.DbType == DataBaseType.SqlServer)
+        //{
+        //    mutiDBOperate.Connection = DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_SqlserverConn.txt",
+        //        mutiDBOperate.Connection);
+        //}
+        //else if (mutiDBOperate.DbType == DataBaseType.MySql)
+        //{
+        //    mutiDBOperate.Connection =
+        //        DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_MySqlConn.txt", mutiDBOperate.Connection);
+        //}
+        //else if (mutiDBOperate.DbType == DataBaseType.Oracle)
+        //{
+        //    mutiDBOperate.Connection =
+        //        DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_OracleConn.txt", mutiDBOperate.Connection);
+        //}
+
+        mutiDBOperate.Connection = mutiDBOperate.DbType switch
         {
-            mutiDBOperate.Connection =
-                $"DataSource=" + Path.Combine(Environment.CurrentDirectory, mutiDBOperate.Connection);
-        }
-        else if (mutiDBOperate.DbType == DataBaseType.SqlServer)
-        {
-            mutiDBOperate.Connection = DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_SqlserverConn.txt",
-                mutiDBOperate.Connection);
-        }
-        else if (mutiDBOperate.DbType == DataBaseType.MySql)
-        {
-            mutiDBOperate.Connection =
-                DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_MySqlConn.txt", mutiDBOperate.Connection);
-        }
-        else if (mutiDBOperate.DbType == DataBaseType.Oracle)
-        {
-            mutiDBOperate.Connection =
-                DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_OracleConn.txt", mutiDBOperate.Connection);
-        }
+            DataBaseType.Sqlite => $"DataSource=" + Path.Combine(Environment.CurrentDirectory, mutiDBOperate.Connection),
+            DataBaseType.SqlServer => DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_SqlserverConn.txt", mutiDBOperate.Connection),
+            DataBaseType.MySql => DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_MySqlConn.txt", mutiDBOperate.Connection),
+            DataBaseType.Oracle => DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_OracleConn.txt", mutiDBOperate.Connection),
+            _ => DifDBConnOfSecurity(@"D:\my-file\dbCountPsw1_SqlserverConn.txt", mutiDBOperate.Connection)
+        };
 
         return mutiDBOperate;
     }

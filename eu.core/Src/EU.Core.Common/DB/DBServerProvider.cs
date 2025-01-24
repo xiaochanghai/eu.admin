@@ -1,62 +1,30 @@
-﻿using System.Data;
-using System.Data.SqlClient;
-using EU.Core.Common.Const;
+﻿using EU.Core.Common.Const;
 using EU.Core.Common.DB.Dapper;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace EU.Core.Common.DB;
 
 public class DBServerProvider
 {
+    /// <summary>
+    /// 数据库连接池
+    /// </summary>
     private static Dictionary<string, string> ConnectionPool = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// 默认数据库连接名
+    /// </summary>
     public static string DefaultConnName = "defalut";
-    public static IConfiguration Configuration { get; private set; }
 
-    /// <summary>
-    /// 封装要操作的字符
-    /// </summary>
-    /// <param name="sections">节点配置</param>
-    /// <returns></returns>
-    public static string app(params string[] sections)
-    {
-        try
-        {
-
-            if (sections.Any())
-            {
-                return Configuration[string.Join(":", sections)];
-            }
-        }
-        catch (Exception) { }
-
-        return "";
-    }
-    /// <summary>
-    /// 递归获取配置信息数组
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="sections"></param>
-    /// <returns></returns>
-    public static List<T> app<T>(params string[] sections)
-    {
-        List<T> list = new List<T>();
-        // 引用 Microsoft.Extensions.Configuration.Binder 包
-        Configuration.Bind(string.Join(":", sections), list);
-        return list;
-    }
     static DBServerProvider()
     {
-        Configuration = new ConfigurationBuilder()
-         .Add(new JsonConfigurationSource { Path = "appsettings.json", ReloadOnChange = true })
-         .Build();
-        MainDb.CurrentDbConnId = app("MainDB");
-        List<MutiDBOperate> listdatabase = app<MutiDBOperate>("DBS")
+        var mainDbId = AppSettings.app(["MainDB"]).ObjToString();
+        var listdatabase = AppSettings.app<MutiDBOperate>("DBS")
            .Where(i => i.Enabled).ToList();
-        var mainConnetctDb = listdatabase.Find(x => x.ConnId == MainDb.CurrentDbConnId);
+        var mainConnetctDb = listdatabase.Find(x => x.ConnId == mainDbId);
         SetConnection(DefaultConnName, mainConnetctDb.Connection);
     }
     public static void SetConnection(string key, string val)
@@ -72,37 +40,48 @@ public class DBServerProvider
     /// 设置默认数据库连接
     /// </summary>
     /// <param name="val"></param>
-    public static void SetDefaultConnection(string val)
-    {
-        SetConnection(DefaultConnName, val);
-    }
+    public static void SetDefaultConnection(string val) => SetConnection(DefaultConnName, val);
 
+    /// <summary>
+    /// 获取默认数据库连接
+    /// </summary>
+    /// <param name="key">数据库连接Key</param>
+    /// <returns></returns>
     public static string GetConnectionString(string key)
     {
         key = key ?? DefaultConnName;
         if (ConnectionPool.ContainsKey(key))
-        {
             return ConnectionPool[key];
-        }
         return key;
     }
     /// <summary>
     /// 获取默认数据库连接
     /// </summary>
     /// <returns></returns>
-    public static string GetConnectionString()
-    {
-        return GetConnectionString(DefaultConnName);
-    }
+    public static string GetConnectionString() => GetConnectionString(DefaultConnName);
+
+    /// <summary>
+    /// 是否Mysql
+    /// </summary>
     private static bool _isMysql = DBType.Name == DbCurrentType.MySql.ToString();
+
+    /// <summary>
+    /// 获取sql server数据库连接
+    /// </summary>
+    /// <param name="connString"></param>
+    /// <returns></returns>
     public static IDbConnection GetDbConnection(string connString = null)
     {
         if (_isMysql)
-        {
             return new MySql.Data.MySqlClient.MySqlConnection(connString ?? ConnectionPool[DefaultConnName]);
-        }
         return new SqlConnection(connString ?? ConnectionPool[DefaultConnName]);
     }
+
+    /// <summary>
+    ///  获取MySql默认数据库连接
+    /// </summary>
+    /// <param name="connString"></param>
+    /// <returns></returns>
     public static IDbConnection GetMyDbConnection(string connString = null)
     {
         //new MySql.Data.MySqlClient.MySqlConnection(connString);

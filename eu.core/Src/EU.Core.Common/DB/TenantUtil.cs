@@ -30,10 +30,7 @@ public static class TenantUtil
     public static ConnectionConfig GetConnectionConfig(this SysTenant tenant)
     {
         if (tenant.DbType is null)
-        {
             throw new ArgumentException("Tenant DbType Must");
-        }
-
 
         return new ConnectionConfig()
         {
@@ -61,16 +58,12 @@ public static class TenantUtil
     {
         var mta = u.GetCustomAttribute<MultiTenantAttribute>();
         if (mta is null)
-        {
             return false;
-        }
 
         if (tenantType != null)
         {
             if (mta.TenantType != tenantType)
-            {
                 return false;
-            }
         }
 
         return true;

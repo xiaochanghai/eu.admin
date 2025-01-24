@@ -22,7 +22,9 @@ public class AppSettings
             .SetBasePath(contentPath)
             .Add(new JsonConfigurationSource
             {
-                Path = Path, Optional = false, ReloadOnChange = true
+                Path = Path,
+                Optional = false,
+                ReloadOnChange = true
             }) //这样的话，可以直接读目录里的json文件，而不是 bin 文件夹下的，所以不用修改复制属性
             .Build();
     }
@@ -42,9 +44,7 @@ public class AppSettings
         try
         {
             if (sections.Any())
-            {
                 return Configuration[string.Join(":", sections)];
-            }
         }
         catch (Exception)
         {
@@ -61,7 +61,7 @@ public class AppSettings
     /// <returns></returns>
     public static List<T> app<T>(params string[] sections)
     {
-        List<T> list = new List<T>();
+        List<T> list = new();
         // 引用 Microsoft.Extensions.Configuration.Binder 包
         Configuration.Bind(string.Join(":", sections), list);
         return list;
