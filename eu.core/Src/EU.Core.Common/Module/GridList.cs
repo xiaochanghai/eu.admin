@@ -61,15 +61,15 @@ public class GridList
     /// <returns></returns>
     public string GetCountString()
     {
-        string queryString = SqlSelect + " where 1=1";
+        string queryString = SqlSelect + " WHERE 1=1";
         int fromIndex = queryString.ToUpper().LastIndexOf(" FROM ");
         queryString = "SELECT COUNT(1) " + queryString.Substring(fromIndex);
 
         if (!string.IsNullOrEmpty(SqlDefaultCondition))
-            queryString += " and " + SqlDefaultCondition;
+            queryString += " AND " + SqlDefaultCondition;
 
         if (!string.IsNullOrEmpty(SqlQueryCondition))
-            queryString += " and " + SqlQueryCondition;
+            queryString += " AND " + SqlQueryCondition;
 
         return queryString;
     }
@@ -90,7 +90,7 @@ public class GridList
                 sql = "SELECT COUNT(0) FROM ( " + FullSql + " ) A WHERE 1=1";
        
                 if (!string.IsNullOrEmpty(SqlQueryCondition))
-                    sql += " and " + SqlQueryCondition;
+                    sql += " AND " + SqlQueryCondition;
 
                 else if (ModuleInfo.GetIsExecQuery(ModuleCode) == false)
                     sql += " AND 1<>1";
@@ -111,20 +111,20 @@ public class GridList
 
     public string GetCountString(string moduleCode, string sqlSelect, string sqlDefaultCondition, string SqlQueryCondition)
     {
-        string queryString = sqlSelect + " where 1=1";
-        string queryString1 = sqlSelect + " where 1=1";
+        string queryString = sqlSelect + " WHERE 1=1";
+        string queryString1 = sqlSelect + " WHERE 1=1";
         int fromIndex = queryString.ToUpper().IndexOf("FROM ");
         queryString = "SELECT COUNT(1) " + queryString.Substring(fromIndex);
 
         if (!string.IsNullOrEmpty(sqlDefaultCondition))
         {
-            queryString += " and " + sqlDefaultCondition;
-            queryString1 += " and " + sqlDefaultCondition;
+            queryString += " AND " + sqlDefaultCondition;
+            queryString1 += " AND " + sqlDefaultCondition;
         }
         if (!string.IsNullOrEmpty(SqlQueryCondition))
         {
-            queryString += " and " + SqlQueryCondition;
-            queryString1 += " and " + SqlQueryCondition;
+            queryString += " AND " + SqlQueryCondition;
+            queryString1 += " AND " + SqlQueryCondition;
         }
         else if (ModuleInfo.GetIsExecQuery(moduleCode) == false)
         {
@@ -141,13 +141,13 @@ public class GridList
 
         if (!string.IsNullOrEmpty(sqlDefaultCondition))
         {
-            queryString += " and " + sqlDefaultCondition;
-            queryString1 += " and " + sqlDefaultCondition;
+            queryString += " AND " + sqlDefaultCondition;
+            queryString1 += " AND " + sqlDefaultCondition;
         }
         if (!string.IsNullOrEmpty(SqlQueryCondition))
         {
-            queryString += " and " + SqlQueryCondition;
-            queryString1 += " and " + SqlQueryCondition;
+            queryString += " AND " + SqlQueryCondition;
+            queryString1 += " AND " + SqlQueryCondition;
         }
         else if (ModuleInfo.GetIsExecQuery(moduleCode) == false)
         {

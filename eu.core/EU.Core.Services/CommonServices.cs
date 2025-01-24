@@ -273,32 +273,32 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         GridList grid = new();
         var tableName = moduleSql.GetTableName();
         var fullSql = moduleSql.GetFullSql();
-        var SqlSelectBrwAndTable = moduleSql.GetSqlSelectBrwAndTable();
-        var SqlSelectAndTable = moduleSql.GetSqlSelectAndTable();
+        var sqlSelectBrwAndTable = moduleSql.GetSqlSelectBrwAndTable();
+        var sqlSelectAndTable = moduleSql.GetSqlSelectAndTable();
         if (tableName.IsNotEmptyOrNull())
         {
-            SqlSelectBrwAndTable = string.Format(SqlSelectBrwAndTable, tableName);
-            SqlSelectAndTable = string.Format(SqlSelectAndTable, tableName);
+            sqlSelectBrwAndTable = string.Format(sqlSelectBrwAndTable, tableName);
+            sqlSelectAndTable = string.Format(sqlSelectAndTable, tableName);
         }
-        var SqlDefaultCondition = moduleSql.GetSqlDefaultCondition();
+        var sqlDefaultCondition = moduleSql.GetSqlDefaultCondition();
 
         #region 处理关键字搜索
         if (keyWordCondition.IsNotEmptyOrNull())
-            SqlDefaultCondition += " AND (" + keyWordCondition + ")";
+            sqlDefaultCondition += " AND (" + keyWordCondition + ")";
         #endregion
 
-        //SqlDefaultCondition = SqlDefaultCondition.Replace("[UserId]", userId);
-        var DefaultSortField = moduleSql.GetDefaultSortField();
-        var DefaultSortDirection = moduleSql.GetDefaultSortDirection();
-        if (DefaultSortDirection.IsNotEmptyOrNull())
-            DefaultSortDirection = "ASC";
+        //sqlDefaultCondition = SqlDefaultCondition.Replace("[UserId]", userId);
+        var defaultSortField = moduleSql.GetDefaultSortField();
+        var defaultSortDirection = moduleSql.GetDefaultSortDirection();
+        if (defaultSortDirection.IsNotEmptyOrNull())
+            defaultSortDirection = "ASC";
 
         grid.FullSql = fullSql;
-        grid.SqlSelect = SqlSelectBrwAndTable;
-        grid.SqlDefaultCondition = SqlDefaultCondition;
+        grid.SqlSelect = sqlSelectBrwAndTable;
+        grid.SqlDefaultCondition = sqlDefaultCondition;
         grid.SqlQueryCondition = queryCodition;
-        grid.SortField = DefaultSortField;
-        grid.SortDirection = DefaultSortDirection;
+        grid.SortField = defaultSortField;
+        grid.SortDirection = defaultSortDirection;
 
         #region 处理排序
         if (filter.sorter != null && filter.sorter.Count > 0)
@@ -407,8 +407,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         string excelSql = "SELECT " + moduleColumns + " FROM (" + sql + ") A";
         string tableName = module.ModuleName;
-        string fileName = tableName + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx";
-        string folder = DateTime.Now.ToString("yyyyMMdd");
+        string fileName = tableName + Utility.GetSysDate().ToString("yyyyMMddHHssmm") + ".xlsx";
+        string folder = Utility.GetSysDate().ToString("yyyyMMdd");
         string filePath = $"/Download/ExcelExport/{folder}/";
         string savePath = "wwwroot" + filePath;
         if (!Directory.Exists(savePath))
@@ -602,12 +602,19 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     #endregion
 
     #region 增删查改
+
+    /// <summary>
+    /// 查询数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <returns></returns>
     public async Task<ServiceResult<object>> Query(string moduleCode, Guid id)
     {
         #region 判断模块是否存在
         var module = ModuleInfo.GetModuleInfo(moduleCode);
         if (module.IsNull())
-            return ServiceResult<dynamic>.OprateFailed(ResponseText.INVALID_MODULE_CODE);
+            return ServiceResult<object>.OprateFailed(ResponseText.INVALID_MODULE_CODE);
         #endregion
 
         var moduleSql = new ModuleSql(moduleCode);
@@ -619,6 +626,12 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         return Success<object>(data, ResponseText.QUERY_SUCCESS);
     }
 
+    /// <summary>
+    /// 新增数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="entity">数据</param>
+    /// <returns></returns>
     public async Task<ServiceResult<Guid>> Add(string moduleCode, object entity)
     {
         #region 判断模块是否存在
@@ -643,7 +656,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         var id = Utility.GuidId;
         dict.Add("ID", id);
-        dict.Add("CreatedTime", DateTime.Now);
+        dict.Add("CreatedTime", Utility.GetSysDate());
         dict.Add("CreatedBy", App.User.ID);
         dict.Add("ModificationNum", 0);
         dict.Add("GroupId", Utility.GetGroupId());
@@ -653,6 +666,13 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         return Success(id, ResponseText.INSERT_SUCCESS);
     }
 
+    /// <summary>
+    /// 更新数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <param name="entity">数据</param>
+    /// <returns></returns>
     public async Task<ServiceResult<Guid>> Update(string moduleCode, Guid id, object entity)
     {
         #region 判断模块是否存在
@@ -675,7 +695,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         CheckForm(moduleCode, dict, OperateType.Update, id);
         #endregion
 
-        dict.Add("UpdateTime", DateTime.Now);
+        dict.Add("UpdateTime", Utility.GetSysDate());
         dict.Add("UpdateBy", App.User.ID);
 
         await Db.Updateable(dict).AS(tableName).Where($"IsDeleted='false' AND ID='{id}'").ExecuteCommandAsync();
@@ -688,8 +708,20 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         return Success(id, ResponseText.UPDATE_SUCCESS);
     }
 
+    /// <summary>
+    /// 删除数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <returns></returns>
     public async Task<ServiceResult> Delete(string moduleCode, Guid id) => await Delete(moduleCode, [id]);
 
+    /// <summary>
+    /// 批量删除数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="ids">主键ID集</param>
+    /// <returns></returns>
     public async Task<ServiceResult> Delete(string moduleCode, List<Guid> ids)
     {
         #region 判断模块是否存在
@@ -707,7 +739,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             {
                 dictList.Add(new Dictionary<string, object>
                 {
-                    { "UpdateTime", DateTime.Now },
+                    { "UpdateTime", Utility.GetSysDate() },
                     { "UpdateBy", App.User.ID },
                     { "IsDeleted", true },
                     { "ID", ids[i] }
@@ -739,7 +771,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     //    //} 
     //    //Dictionary<string, object> dict = JsonHelper.JsonToObj<Dictionary<string, object>>(json);
     //    //dict.Add("ID", Guid.NewGuid());
-    //    //dict.Add("CreatedTime", DateTime.Now);
+    //    //dict.Add("CreatedTime", Utility.GetSysDate());
     //    //Db.Insertable(dict).AS(tableName).ExecuteCommand();
 
     //    //var dic = JsonHelper.JsonToObj<Dictionary<string, object>>(json);

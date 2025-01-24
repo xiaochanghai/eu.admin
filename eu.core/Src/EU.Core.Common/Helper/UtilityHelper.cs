@@ -32,9 +32,9 @@ public static class Utility
         ModuleSqlColumn moduleColumnInfo = new(moduleCode);
         var dvModuleColumns = moduleColumnInfo.GetModuleSqlColumn();
 
-        var List = dvModuleColumns.Where(x => x.DataIndex == "ID").ToList();
+        var list = dvModuleColumns.Where(x => x.DataIndex == "ID").ToList();
 
-        if (List.Count == 0)
+        if (!list.Any())
         {
             var SmModuleColumn = new SmModuleColumnExtend();
             SmModuleColumn.DataIndex = "ID";
@@ -233,7 +233,6 @@ public static class Utility
         }
     }
     #endregion
-
 
     #region 获得当前公司ID
     /// <summary>

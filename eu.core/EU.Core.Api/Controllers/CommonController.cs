@@ -96,37 +96,70 @@ public class CommonController : Controller
     #endregion
 
     #region 增删查改
-
+    /// <summary>
+    /// 查询数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <returns></returns>
     [HttpGet("{moduleCode}/{id}")]
     public async Task<ServiceResult<object>> Query(string moduleCode, Guid id) => await _service.Query(moduleCode, id);
 
+    /// <summary>
+    /// 新增数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="entity">数据</param>
+    /// <returns></returns>
     [HttpPost("{moduleCode}")]
     public async Task<ServiceResult<Guid>> Add(string moduleCode, [FromBody] object entity) => await _service.Add(moduleCode, entity);
 
+    /// <summary>
+    /// 更新数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <param name="entity">数据</param>
+    /// <returns></returns>
     [HttpPut("{moduleCode}/{id}")]
     public async Task<ServiceResult<Guid>> Update(string moduleCode, Guid id, [FromBody] object entity) => await _service.Update(moduleCode, id, entity);
 
+    /// <summary>
+    /// 删除数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">主键ID</param>
+    /// <returns></returns>
     [HttpDelete("{moduleCode}/{id}")]
     public async Task<ServiceResult> Delete(string moduleCode, Guid id) => await _service.Delete(moduleCode, id);
 
-
+    /// <summary>
+    /// 批量删除数据
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="ids">主键ID集</param>
+    /// <returns></returns>
     [HttpDelete("{moduleCode}")]
     public async Task<ServiceResult> Delete(string moduleCode, [FromBody] List<Guid> ids) => await _service.Delete(moduleCode, ids);
     #endregion
 
     #region 测试
-    [HttpGet("Test")]
+    [HttpGet("Test"), AllowAnonymous]
     public ServiceResult Test()
     {
-        for (int i = 0; i < 100; i++)
-        {
-            TaskMsg msg = new TaskMsg();
+        //for (int i = 0; i < 100; i++)
+        //{
+        //    TaskMsg msg = new TaskMsg();
 
-            msg.MsgId = Guid.NewGuid();
-            msg.Time = DateTime.Now;
-            RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
-            Thread.Sleep(2000);
-        }
+        //    msg.MsgId = Guid.NewGuid();
+        //    msg.Time = DateTime.Now;
+        //    RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
+        //    Thread.Sleep(2000);
+        //}
+        //DBHelper.ExecuteDML("UPDATE  SmModules set UpdateTime=getdate() where ID='402d1606-286a-47ec-8e45-346a12450e9a'");
+
+        var aa = Guid.NewGuid().ToString("N");
+        var aa1 = Guid.NewGuid();
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 
     }
