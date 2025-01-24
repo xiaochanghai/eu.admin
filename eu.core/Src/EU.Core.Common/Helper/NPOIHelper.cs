@@ -326,7 +326,7 @@ public class NPOIHelper
             case CellType.Numeric: //NUMERIC:  
                 if (DateUtil.IsCellDateFormatted(cell))
                 {
-                    return DateTimeHelper.ConvertToSecondString(cell.DateCellValue);
+                    return cell.DateCellValue.ConvertToSecondString();
                 }
                 else
                 {

@@ -11,7 +11,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="date">日期</param>
     /// <returns></returns>
-    public static string FriendlyDate(DateTime? date)
+    public static string FriendlyDate(this DateTime? date)
     {
         if (!date.HasValue) return string.Empty;
 
@@ -52,7 +52,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime">时间</param>
     /// <returns></returns>
-    public static string ConvertToYearString(DateTime dateTime)
+    public static string ConvertToYearString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -65,7 +65,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToYearString(object dateTime)
+    public static string ConvertToYearString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -79,7 +79,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToMonthString(DateTime dateTime)
+    public static string ConvertToMonthString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -91,7 +91,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToMonthString(object dateTime)
+    public static string ConvertToMonthString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -105,7 +105,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToDayString(DateTime dateTime)
+    public static string ConvertToDayString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -117,7 +117,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static DateTime ConvertToDay(DateTime dateTime)
+    public static DateTime ConvertToDay(this DateTime dateTime)
     {
         string result = ConvertToDayString(dateTime);
         if (string.IsNullOrEmpty(result))
@@ -130,7 +130,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToDayString(object dateTime)
+    public static string ConvertToDayString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -145,7 +145,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToHourString(DateTime dateTime)
+    public static string ConvertToHourString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -156,7 +156,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToHourString(object dateTime)
+    public static string ConvertToHourString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -170,7 +170,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToMiniuteString(DateTime dateTime)
+    public static string ConvertToMiniuteString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -183,7 +183,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToMiniuteString(object dateTime)
+    public static string ConvertToMiniuteString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -198,7 +198,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToSecondString(DateTime dateTime)
+    public static string ConvertToSecondString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -211,7 +211,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToSecondString1(DateTime dateTime)
+    public static string ConvertToSecondString1(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
         {
@@ -224,7 +224,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToSecondString(object dateTime)
+    public static string ConvertToSecondString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -239,7 +239,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlyMonthDayString(DateTime dateTime)
+    public static string ConvertToOnlyMonthDayString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -251,7 +251,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlyMonthDayString(object dateTime)
+    public static string ConvertToOnlyMonthDayString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -267,7 +267,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlyHourMinuteString(DateTime dateTime)
+    public static string ConvertToOnlyHourMinuteString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -279,7 +279,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlyHourMinuteString(object dateTime)
+    public static string ConvertToOnlyHourMinuteString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -294,7 +294,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlySecondString(DateTime dateTime)
+    public static string ConvertToOnlySecondString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -306,7 +306,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToOnlySecondString(object dateTime)
+    public static string ConvertToOnlySecondString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -321,7 +321,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToYearMonthString(DateTime dateTime)
+    public static string ConvertToYearMonthString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -333,7 +333,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToYearMonthString(object dateTime)
+    public static string ConvertToYearMonthString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -346,7 +346,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToYearMonthString1(DateTime dateTime)
+    public static string ConvertToYearMonthString1(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -358,7 +358,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToYearMonthString1(object dateTime)
+    public static string ConvertToYearMonthString1(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
             return "";
@@ -373,7 +373,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="ms"></param>
     /// <returns></returns>
-    public static string FormatTime(long ms)
+    public static string FormatTime(this long ms)
     {
         int ss = 1000;
         int mi = ss * 60;
@@ -414,7 +414,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="time"></param>
     /// <returns></returns>
-    public static DateTime StampToDateTime(string time)
+    public static DateTime StampToDateTime(this string time)
     {
         time = time.Substring(0, 10);
         double timestamp = Convert.ToInt64(time);
@@ -442,7 +442,7 @@ public static class DateTimeHelper
     /// <summary>
     ///  时间戳转本地时间-时间戳精确到秒
     /// </summary> 
-    public static DateTime ToLocalTimeDateBySeconds(long unix)
+    public static DateTime ToLocalTimeDateBySeconds(this long unix)
     {
         var dto = DateTimeOffset.FromUnixTimeSeconds(unix);
         return dto.ToLocalTime().DateTime;
@@ -454,7 +454,7 @@ public static class DateTimeHelper
     /// <summary>
     ///  时间转时间戳Unix-时间戳精确到秒
     /// </summary> 
-    public static long ToUnixTimestampBySeconds(DateTime dt)
+    public static long ToUnixTimestampBySeconds(this DateTime dt)
     {
         var dto = new DateTimeOffset(dt);
         return dto.ToUnixTimeSeconds();
@@ -466,7 +466,7 @@ public static class DateTimeHelper
     /// <summary>
     ///  时间戳转本地时间-时间戳精确到毫秒
     /// </summary> 
-    public static DateTime ToLocalTimeDateByMilliseconds(long unix)
+    public static DateTime ToLocalTimeDateByMilliseconds(this long unix)
     {
         var dto = DateTimeOffset.FromUnixTimeMilliseconds(unix);
         return dto.ToLocalTime().DateTime;
@@ -478,7 +478,7 @@ public static class DateTimeHelper
     /// <summary>
     ///  时间转时间戳Unix-时间戳精确到毫秒
     /// </summary> 
-    public static long ToUnixTimestampByMilliseconds(DateTime dt)
+    public static long ToUnixTimestampByMilliseconds(this DateTime dt)
     {
         var dto = new DateTimeOffset(dt);
         return dto.ToUnixTimeMilliseconds();

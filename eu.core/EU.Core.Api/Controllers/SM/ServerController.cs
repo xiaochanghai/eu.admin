@@ -77,7 +77,7 @@ public class ServerController : BaseApiController
         var programStartTime = Process.GetCurrentProcess().StartTime;
         var totalMilliseconds = (DateTime.Now - programStartTime).TotalMilliseconds.ToString();
         var ts = totalMilliseconds.Contains('.') ? totalMilliseconds.Split('.')[0] : totalMilliseconds;
-        var programRunTime = DateTimeHelper.FormatTime(ParseToLong(ts));
+        var programRunTime = ParseToLong(ts).FormatTime();
 
         var memoryMetrics = ComputerHelper.GetComputerInfo();
         dynamic data = new

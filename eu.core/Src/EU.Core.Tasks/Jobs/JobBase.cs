@@ -69,7 +69,7 @@ public class JobBase
             expression.TimeZone = TimeZoneInfo.Utc;
             var m_NextTime = expression?.GetNextValidTimeAfter(curTime).Value.DateTime;
             //var m_Lefttime = (int)((m_NextTime ?? curTime.AddSeconds(-1)) - curTime).TotalSeconds;
-            jobHistory += $"，下次执行时间：{DateTimeHelper.ConvertToSecondString(m_NextTime)}";
+            jobHistory += $"，下次执行时间：{m_NextTime.ConvertToSecondString()}";
             tasksLog.Remark = jobHistory;
             if (_taskServices != null)
             {

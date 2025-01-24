@@ -530,7 +530,7 @@ public class SchedulerCenterServer : ISchedulerCenter
 
                     var result1 = AddScheduleJobAsync(item).Result;
                     if (result1.Success)
-                        Logger.WriteLog($"{item.Name} 启动成功！，下次执行时间：{DateTimeHelper.ConvertToSecondString(m_NextTime)}");
+                        Logger.WriteLog($"{item.Name} 启动成功！，下次执行时间：{m_NextTime.ConvertToSecondString()}");
                     else
                         Logger.WriteLog($"{item.Name}启动失败！错误信息：{result1.Message}");
                 }

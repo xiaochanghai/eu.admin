@@ -15,7 +15,7 @@ namespace EU.Core.Common.Helper;
 /// <summary>
 /// 方法类
 /// </summary>
-public partial class Utility
+public static class Utility
 {
 
     #region DataTable转Tree
@@ -81,25 +81,25 @@ public partial class Utility
                         switch (dateFormat)
                         {
                             case "Y/m":
-                                value = DateTimeHelper.ConvertToYearMonthString(value);
+                                value = value.ConvertToYearMonthString();
                                 break;
                             case "Y-m":
-                                value = DateTimeHelper.ConvertToYearMonthString1(value);
+                                value = value.ConvertToYearMonthString1();
                                 break;
                             case "Y/m/d":
-                                value = DateTimeHelper.ConvertToDayString(value);
+                                value = value.ConvertToDayString();
                                 break;
                             case "Y/m/d H":
-                                value = DateTimeHelper.ConvertToHourString(value);
+                                value = value.ConvertToHourString();
                                 break;
                             case "Y/m/d H:i":
-                                value = DateTimeHelper.ConvertToMiniuteString(value);
+                                value = value.ConvertToMiniuteString();
                                 break;
                             case "Y/m/d H:i:s":
-                                value = DateTimeHelper.ConvertToSecondString(value);
+                                value = value.ConvertToSecondString();
                                 break;
                             case "H:i":
-                                value = DateTimeHelper.ConvertToOnlyHourMinuteString(value);
+                                value = value.ConvertToOnlyHourMinuteString();
                                 break;
                             default:
                                 break;
@@ -1060,33 +1060,29 @@ public partial class Utility
     }
     #endregion
 
-    /// <summary>
-    /// 是否为空
-    /// </summary>
-    /// <param name="key">key</param>
-    /// <returns></returns>
-    public static void IsNullOrEmpty(string key, string message)
-    {
-        if (string.IsNullOrEmpty(key))
-            throw new Exception(message);
-    }
-    public static void IsNullOrEmpty(Guid key, string message)
-    {
-        if (string.IsNullOrEmpty(key.ToString()))
-            throw new Exception(message);
-    }
-
+    #region 去除后面多余的零
     /// <summary>
     /// 去除后面多余的零
     /// </summary>
     /// <param name="dValue"></param>
     /// <returns></returns>
-    public static string RemoveZero(decimal? dValue)
+    public static string RemoveZero(this decimal? dValue)
     {
         if (dValue.IsNullOrEmpty())
             return null;
         return RemoveZero(dValue.Value);
     }
+    ///// <summary>
+    ///// 去除后面多余的零
+    ///// </summary>
+    ///// <param name="dValue"></param>
+    ///// <returns></returns>
+    //public static string RemoveZero(decimal? dValue)
+    //{
+    //    if (dValue.IsNullOrEmpty())
+    //        return null;
+    //    return RemoveZero(dValue.Value);
+    //}
     /// <summary>
     /// 去除后面多余的零
     /// </summary>
@@ -1111,5 +1107,6 @@ public partial class Utility
             sResult = sResult.Substring(0, sResult.Length - 1);
         return sResult;
     }
+    #endregion
 
 }

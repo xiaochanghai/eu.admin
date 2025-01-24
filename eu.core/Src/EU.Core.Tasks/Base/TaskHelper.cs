@@ -125,7 +125,7 @@ public class TaskHelper
                             var expression = new CronExpression(msg.Args);
                             expression.TimeZone = TimeZoneInfo.Utc;
                             var m_NextTime = expression?.GetNextValidTimeAfter(curTime).Value.DateTime;
-                            AddQuartzLog(msg.TaskCode, $"任务ID：【{msg.TaskId}】,任务代码：【{msg.TaskCode}】，变更后参数：【{msg.Args}】，下次执行时间：{DateTimeHelper.ConvertToSecondString(m_NextTime)}");
+                            AddQuartzLog(msg.TaskCode, $"任务ID：【{msg.TaskId}】,任务代码：【{msg.TaskCode}】，变更后参数：【{msg.Args}】，下次执行时间：{m_NextTime.ConvertToSecondString()}");
                             AddQuartzLog(msg.TaskCode, "消息处理完毕，参数已修改");
                             AddQuartzLog(msg.TaskCode, "配置文件上报完毕");
                             break;
@@ -609,7 +609,7 @@ public class TaskHelper
             task.NextExecuteTime = m_NextTime;
             _context.SmQuartzJob.Update(task);
             _context.SaveChanges();
-            AddQuartzLog(msg.TaskCode, $"消息处理完毕，参数已修改，下次执行时间：{DateTimeHelper.ConvertToSecondString(m_NextTime)}");
+            AddQuartzLog(msg.TaskCode, $"消息处理完毕，参数已修改，下次执行时间：{m_NextTime.ConvertToSecondString()}");
         }
         else
             AddQuartzLog(msg.TaskCode, "无效的任务id");
