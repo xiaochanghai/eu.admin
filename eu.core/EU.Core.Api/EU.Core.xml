@@ -234,6 +234,47 @@
             <param name="key"></param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Controllers.CommonController.Query(System.String,System.Guid)">
+            <summary>
+            查询数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Add(System.String,System.Object)">
+            <summary>
+            新增数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="entity">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Update(System.String,System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <param name="entity">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Guid)">
+            <summary>
+            删除数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Collections.Generic.List{System.Guid})">
+            <summary>
+            批量删除数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="ids">主键ID集</param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
             <summary>
             构造函数
