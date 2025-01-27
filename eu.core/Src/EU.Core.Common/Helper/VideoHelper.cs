@@ -73,9 +73,9 @@ public class VideoHelper
             // convertVideoImage(vFileName, ExportName,ffmpegPath);
             #endregion
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            throw e;
+            throw;
         }
         return true;
     }
@@ -84,11 +84,11 @@ public class VideoHelper
     {
           inputVideoPath = @"E:\EU\EU.Core\Admin\EU.Core.Api\wwwroot\files\upload\diA74tZENm59rWP3rY5tRfj9fVpJLJKB\2405261413315635680043040733927.mp4";
         int Threads = 1; //线程数
-        string InputFile = "";//要切割的视频文件
+        //string InputFile = "";//要切割的视频文件
         string OutputRuler = @"E:\EU\EU.Core\Admin\EU.Core.Api\wwwroot\files\upload\diA74tZENm59rWP3rY5tRfj9fVpJLJKB\" + Utility.GetSysID() + ".mp4";//输出文件名
-        int TotalTime;//文件总时长(单位s)
+        //int TotalTime;//文件总时长(单位s)
         int SpiltTime = 20;//?时间切割一次(单位s)
-        bool IsFailed = false; //失败标识
+        //bool IsFailed = false; //失败标识
         object obj = new object();//线程锁
         int SpiltedTime = 0;//已切割时间
         int SpiltedFileCount = 0;//已切割文件数量 

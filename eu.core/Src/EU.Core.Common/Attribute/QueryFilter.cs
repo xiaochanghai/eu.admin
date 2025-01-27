@@ -75,7 +75,7 @@ public class QueryFilter
     public static QueryFilter Default => new QueryFilter
     {
         PageIndex = 1,
-        PageSize = 100000,
+        PageSize = 1000000,
         Sorting = string.Empty,
         Conditions = string.Empty
     };

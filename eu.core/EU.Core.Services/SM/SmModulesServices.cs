@@ -793,7 +793,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 sb.Append(temp.ToString() + "\n");
             }
 
-            string fileName = $"系统模块_{DateTime.Now.ConvertToSecondString1()}.sql";
+            string fileName = $"系统模块_{DateTime.Now.ToSecondString1()}.sql";
             string folder = DateTime.Now.ConvertToYearMonthString1();
             string savePath = $"/Download/SqlExport/{folder}/";
             FileHelper.CreateDirectory("wwwroot" + savePath);

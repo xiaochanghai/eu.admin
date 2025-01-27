@@ -462,8 +462,23 @@ public class ModuleSql
         return queryString;
     }
 
-    #region MyRegion
-    public string GetCurrentSql(string moduleCode, int pageIndex, string sort, string order, string defaultCondition, string queryCondition, int inPageSize, out int totalCount, out int pageSize, string database = "", params object[] innerCondition)
+    #region 获取当前查询SQL
+    /// <summary>
+    /// 获取当前查询SQL
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="pageIndex">起始位置</param>
+    /// <param name="inPageSize">每页数量</param>
+    /// <param name="sort">排序字段</param>
+    /// <param name="order">正序 or 倒序</param>
+    /// <param name="defaultCondition">默认条件</param>
+    /// <param name="queryCondition">查询条件</param>
+    /// <param name="totalCount">总数据条数</param>
+    /// <param name="pageSize">每页数量</param>
+    /// <param name="database">库</param>
+    /// <param name="innerCondition">内条件</param>
+    /// <returns></returns>
+    public string GetCurrentSql(string moduleCode, int pageIndex, int inPageSize, string sort, string order, string defaultCondition, string queryCondition, out int totalCount, out int pageSize, string database = "", params object[] innerCondition)
     {
         string sortField = string.Empty;
         if (!string.IsNullOrEmpty(sort))
@@ -667,9 +682,9 @@ public class ModuleSql
         countString = string.Format(countString, innerCondition);
         countString = string.Format(countString, innerCondition);
         if (database == "first")
-            totalCount = Convert.ToInt32(DBHelper.Instance.ExecuteScalar(countString, null));
+            totalCount = Convert.ToInt32(DBHelper.ExecuteScalar(countString));
         else
-            totalCount = Convert.ToInt32(DBHelper.Instance.ExecuteScalar(countString, null));
+            totalCount = Convert.ToInt32(DBHelper.ExecuteScalar(countString));
 
         pageSize = _pageSize;
         return queryString;

@@ -208,7 +208,7 @@ public class LogLock
                     var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
                     if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" && !requestInfo.RequestData.Contains("SM_SYSTEM_API_LOG_MNG") && !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
                     {
-                        DbInsert di = new DbInsert("SmApiLog");
+                        DbInsert di = new("SmApiLog");
                         di.Values("UserId", requestInfo.User);
                         di.Values("IP", requestInfo.IP);
                         di.Values("Path", requestInfo.API);
@@ -217,7 +217,7 @@ public class LogLock
                         di.Values("BeginTime", requestInfo.BeginTime);
                         di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
                         di.Values("Agent", requestInfo.Agent);
-                        DBHelper.Instance.ExcuteNonQuery(di.GetSql());
+                        DBHelper.ExcuteNonQuery(di.GetSql());
                     }
                 });
                 break;

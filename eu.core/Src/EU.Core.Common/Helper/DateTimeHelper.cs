@@ -211,7 +211,7 @@ public static class DateTimeHelper
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
-    public static string ConvertToSecondString1(this DateTime dateTime)
+    public static string ToSecondString1(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
         {
