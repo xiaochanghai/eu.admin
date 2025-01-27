@@ -54,8 +54,8 @@ public class CommonController : Controller
     /// Excel导出
     /// </summary>
     /// <returns></returns>
-    [HttpGet("ExportExcel")]
-    public ServiceResult<string> ExportExcel(string moduleCode, string paramData = "{}", string sorter = "{}", string exportExcelColumns = "") => _service.ExportExcel(moduleCode, paramData, sorter, exportExcelColumns);
+    [HttpGet("ExportExcel/{moduleCode}")]
+    public async Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode) => await _service.ExportExcel(filter, moduleCode);
     #endregion
 
     #region Excel导入

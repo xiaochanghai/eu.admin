@@ -22,6 +22,11 @@ export const queryByFilter = (moduleCode: string, params: any, filter: object) =
     filter
   });
 };
+export const exportExcel = (moduleCode: string, params: any, filter: object) => {
+  return http.get<any>(`/api/Common/ExportExcel/${moduleCode}`, params, {
+    filter
+  });
+};
 export const querySingle = (params: any) => {
   return http.get<any>(params.url + "/" + params.Id);
 };
@@ -52,7 +57,6 @@ export const getLovData = (code: any) => {
 export const getComboGridData = (params: any) => {
   return http.post<any>("/api/Common/GetComboGridData", params);
 };
-
 export const uploadFile = (url: string, params: any) => {
   return http.postForm<any>(url, params);
 };

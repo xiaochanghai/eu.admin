@@ -13,14 +13,14 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// </summary>
     /// <returns></returns>
     Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null);
-    
+
     /// <summary>
     /// 自定义列模块数据返回
     /// </summary>
     /// <param name="filter">filter</param>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    Task<GridListReturn> QueryByFilter(QueryFilter filter,  string moduleCode);
+    Task<GridListReturn> QueryByFilter(QueryFilter filter, string moduleCode);
 
     /// <summary>
     /// 清空缓存
@@ -36,7 +36,7 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// <param name="exportExcelColumns"></param>
     /// <returns></returns>
 
-    ServiceResult<string> ExportExcel(string moduleCode, string paramData = "{}", string sorter = "{}", string exportExcelColumns = "");
+    Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode);
 
 
     Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import);

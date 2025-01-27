@@ -6,6 +6,7 @@ import type { ActionType } from "@ant-design/pro-components";
 import { message } from "@/hooks/useMessage";
 import {
   queryByFilter,
+  exportExcel,
   getModuleLogInfo,
   singleDelete,
   batchDelete,
@@ -20,6 +21,7 @@ import { useDispatch, RootState, useSelector } from "@/redux";
 import ComboGrid from "@/components/ComBoGrid";
 import UploadExcel from "@/components/UploadExcel";
 import ModuleLog from "@/components/Common/ModuleLog";
+import { downloadFile } from "@/utils";
 
 const { confirm } = Modal;
 
@@ -238,15 +240,12 @@ const SmProTable: React.FC<any> = props => {
         action.reload();
         break;
       case "2":
-        message.success("后台处理中，处理完成将自动下载！");
-        // let response = await ExportExcel({ moduleCode });
-        // if (response.Success == true) {
-        //   // webUrl + response.data.filePath
-        //   let a = document.createElement("a");
-        //   a.setAttribute("download", "");
-        //   a.setAttribute("href", "/api/File/Download?id=" + response.data.fileId);
-        //   a.click();
-        // } else message.error(response.Message);
+        {
+          message.success("后台处理中，处理完成将自动下载！");
+          let filter = { aa: 1 };
+          let { Success, Data } = await exportExcel(moduleCode, {}, filter);
+          if (Success) downloadFile(Data, Data);
+        }
         break;
       default:
         break;
@@ -486,7 +485,7 @@ const SmProTable: React.FC<any> = props => {
           </>
         }
       >
-        <Button>
+        <Button type="text">
           更多 <Icon name="DownOutlined" />
         </Button>
       </Dropdown>

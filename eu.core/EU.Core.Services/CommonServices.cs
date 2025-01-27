@@ -336,7 +336,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <param name="sorter">排序</param>
     /// <param name="exportExcelColumns">导出栏位</param>
     /// <returns></returns>
-    public ServiceResult<string> ExportExcel(string moduleCode, string paramData = "{}", string sorter = "{}", string exportExcelColumns = "")
+    public async Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode)
     {
         int current = 1;
         string queryCondition = "1=1 ";
@@ -347,8 +347,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         string fileId = Utility.GuidId1;
 
 
-        var searchParam = ConvertToDic(paramData);
-        var sorterParam = JsonHelper.JsonToObj<Dictionary<string, string>>(sorter);
+        //var searchParam = ConvertToDic(paramData);
+        //var sorterParam = JsonHelper.JsonToObj<Dictionary<string, string>>(sorter);
 
         #region 处理模块信息
         SmModules module = ModuleInfo.GetModuleInfo(moduleCode);
@@ -369,68 +369,65 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         #region 处理查询条件
-        foreach (var item in searchParam)
-        {
-            if (item.Key == "current")
-                continue;
+        //foreach (var item in searchParam)
+        //{
+        //    if (item.Key == "current")
+        //        continue;
 
-            if (item.Key == "pageSize")
-                continue;
+        //    if (item.Key == "pageSize")
+        //        continue;
 
-            if (item.Key == "_timestamp")
-                continue;
-            if (!string.IsNullOrEmpty(item.Value.ToString()))
-                queryCondition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
+        //    if (item.Key == "_timestamp")
+        //        continue;
+        //    if (!string.IsNullOrEmpty(item.Value.ToString()))
+        //        queryCondition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
 
-        }
+        //}
         #endregion
 
         #region 处理排序
         string DefaultSortField = moduleSql.GetDefaultSortField();
         string DefaultSortDirection = moduleSql.GetDefaultSortDirection();
-        if (sorterParam.Count > 0)
-            foreach (var item in sorterParam)
-            {
-                DefaultSortField = item.Key;
-                if (item.Value == "ascend")
-                    DefaultSortDirection = "ASC";
-                else if (item.Value == "descend")
-                    DefaultSortDirection = "DESC";
+        //if (sorterParam.Count > 0)
+        //    foreach (var item in sorterParam)
+        //    {
+        //        DefaultSortField = item.Key;
+        //        if (item.Value == "ascend")
+        //            DefaultSortDirection = "ASC";
+        //        else if (item.Value == "descend")
+        //            DefaultSortDirection = "DESC";
 
-            }
+        //    }
         #endregion
 
-        string sql = moduleSql.GetCurrentSql(moduleCode, current, DefaultSortField, DefaultSortDirection, defaultCondition, queryCondition, pageCount, out totalCount, out outPageSize);
+        string sql = moduleSql.GetCurrentSql(moduleCode, current, pageCount, DefaultSortField, DefaultSortDirection, defaultCondition, queryCondition, out totalCount, out outPageSize);
         string moduleColumns = moduleSqlColumn.GetExportExcelColumns();
-        if (!string.IsNullOrEmpty(exportExcelColumns))
-            moduleColumns = exportExcelColumns;
+        //if (!string.IsNullOrEmpty(exportExcelColumns))
+        //    moduleColumns = exportExcelColumns;
 
         string excelSql = "SELECT " + moduleColumns + " FROM (" + sql + ") A";
         string tableName = module.ModuleName;
-        string fileName = tableName + Utility.GetSysDate().ToString("yyyyMMddHHssmm") + ".xlsx";
+        string fileName = $"{tableName}_{Utility.GetSysDate().ToSecondString1()}.xlsx";
         string folder = Utility.GetSysDate().ToString("yyyyMMdd");
         string filePath = $"/Download/ExcelExport/{folder}/";
         string savePath = "wwwroot" + filePath;
-        if (!Directory.Exists(savePath))
-            Directory.CreateDirectory(savePath);
+
+        FileHelper.CreateDirectory(savePath);
 
         var dt = DBHelper.GetDataTable(excelSql);
         foreach (DataColumn column in dt.Columns)
             column.Caption = moduleSqlColumn.GetExportExcelColumnRenderer(column.ColumnName);
-        NPOIHelper.ExportExcel(dt, "", savePath + fileName);
+        NPOIHelper.ExportExcel(dt, tableName, savePath + fileName);
 
-        #region 导入文件数据
-        var userId = App.User.ID;
+        #region 导入文件数据 
         var di = new DbInsert("FileAttachment");
-        di.IsInitDefaultValue = false;
+        di.IsInitRowId = false;
         di.Values("ID", fileId);
         di.Values("OriginalFileName", fileName);
-        di.Values("CreatedTime", Utility.GetSysDate());
-        di.Values("CreatedBy", userId != null ? userId.Value : null);
         di.Values("FileName", fileName);
         di.Values("FileExt", "xlsx");
         di.Values("Path", filePath);
-        DBHelper.ExcuteNonQuery(di.GetSql());
+        await Db.Ado.ExecuteCommandAsync(di.GetSql());
         #endregion
 
         #region 记录模块操作日志

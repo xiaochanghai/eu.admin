@@ -202,7 +202,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.ExportExcel(System.String,System.String,System.String,System.String)">
+        <member name="M:EU.Core.Controllers.CommonController.ExportExcel(EU.Core.Common.QueryFilter,System.String)">
             <summary>
             Excel导出
             </summary>
