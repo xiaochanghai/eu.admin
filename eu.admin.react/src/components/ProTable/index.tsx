@@ -242,7 +242,7 @@ const SmProTable: React.FC<any> = props => {
       case "2":
         {
           message.success("后台处理中，处理完成将自动下载！");
-          let filter = { aa: 1 };
+          let filter = tableParam.filter;
           let { Success, Data } = await exportExcel(moduleCode, {}, filter);
           if (Success) downloadFile(Data, Data);
         }
@@ -647,9 +647,9 @@ const SmProTable: React.FC<any> = props => {
           if (tableParam && tableParam.params && !params._timestamp) params = { ...tableParam.params, ...params };
           if (tableParam && tableParam.sorter) sorter = { ...tableParam.sorter, ...sorter };
           params1 = params;
-          dispatch(setTableParam({ params: params, sorter, moduleCode }));
-
           let filter = { PageIndex: params.current, PageSize: params.pageSize, sorter, params, Conditions: "" };
+          dispatch(setTableParam({ params: params, sorter, moduleCode, filter }));
+
           if (isDetail) {
             if (masterColumn && masterId) filter = { ...filter, Conditions: `A.${masterColumn} = '${masterId}'` };
             else filter = { ...filter, Conditions: "1 != 1" };

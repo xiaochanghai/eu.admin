@@ -347,6 +347,43 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         string fileId = Utility.GuidId1;
 
 
+         
+        string keyWord = string.Empty;
+
+        #region 处理查询条件
+        var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
+        var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
+
+        foreach (var item in filter.@params)
+        {
+            if (item.Key == "keyWord")
+            {
+                keyWord = item.Value.ObjToString();
+                continue;
+            }
+            else if (!string.IsNullOrEmpty(item.Value.ObjToString()))
+            {
+                if (moduleColumns.Any())
+                {
+                    var column = moduleColumns.Where(a => a.DataIndex == item.Key).FirstOrDefault();
+                    if (column != null)
+                        queryCondition += " AND " + column.TableAlias + "." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                }
+                else
+                    queryCondition += " AND A." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+            }
+            //if (string.IsNullOrEmpty(item.Value.ToString()))
+            //    queryCodition += " AND A." + item.Key + " =''";
+            //else
+            //    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
+        }
+        //if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(parentColumn))
+        //    queryCodition += " AND A." + parentColumn + " = '" + parentId + "'";
+        if (filter.Conditions.IsNotEmptyOrNull())
+            queryCondition += " AND " + filter.Conditions;
+
+        #endregion
+
         //var searchParam = ConvertToDic(paramData);
         //var sorterParam = JsonHelper.JsonToObj<Dictionary<string, string>>(sorter);
 
@@ -401,11 +438,12 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         string sql = moduleSql.GetCurrentSql(moduleCode, current, pageCount, DefaultSortField, DefaultSortDirection, defaultCondition, queryCondition, out totalCount, out outPageSize);
-        string moduleColumns = moduleSqlColumn.GetExportExcelColumns();
+ 
+        string moduleColumns1= moduleSqlColumn.GetExportExcelColumns();
         //if (!string.IsNullOrEmpty(exportExcelColumns))
         //    moduleColumns = exportExcelColumns;
 
-        string excelSql = "SELECT " + moduleColumns + " FROM (" + sql + ") A";
+        string excelSql = "SELECT " + moduleColumns1 + " FROM (" + sql + ") A";
         string tableName = module.ModuleName;
         string fileName = $"{tableName}_{Utility.GetSysDate().ToSecondString1()}.xlsx";
         string folder = Utility.GetSysDate().ToString("yyyyMMdd");
