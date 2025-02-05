@@ -444,7 +444,25 @@ public class FileHelper : IDisposable
     }
     #endregion
 
-    #region 创建文件夹目录
+    #region 获取文件根目录
+    /// <summary>
+    /// 获取文件根目录
+    /// </summary>
+    /// <returns></returns>
+    public static string GetPhysicsPath() => $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot";
+    #endregion
+
+    #region 创建文件夹
+    /// <summary>
+    /// 创建文件夹
+    /// </summary>
+    /// <param name="path"></param>
+    public static void CreateRootDirectory(string path)
+    {
+        var physicsPath = GetPhysicsPath();
+        if (!Directory.Exists(physicsPath + path))
+            CreateDirectory(physicsPath + path);
+    }
     /// <summary>
     /// 创建文件夹目录
     /// </summary>

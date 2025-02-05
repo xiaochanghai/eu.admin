@@ -1,4 +1,5 @@
-﻿using EU.Core.Model;
+﻿using EU.Core.Common.Helper;
+using EU.Core.Model;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -345,5 +346,19 @@ public class HttpPollyHelper : IHttpPollyHelper
             throw;
         }
 
+    }
+
+    public async Task DownLoad(string fileUrl, string destinationPath)
+    {
+        var client = _clientFactory.CreateClient();
+        destinationPath = FileHelper.GetPhysicsPath() + destinationPath;
+        HttpResponseMessage response = await client.GetAsync(fileUrl, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode(); // 确保请求成功
+
+        using (Stream contentStream = await response.Content.ReadAsStreamAsync(),
+                      fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+        {
+            await contentStream.CopyToAsync(fileStream);
+        }
     }
 }

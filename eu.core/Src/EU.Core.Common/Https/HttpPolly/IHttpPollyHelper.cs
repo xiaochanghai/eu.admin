@@ -13,4 +13,6 @@ public interface IHttpPollyHelper
     Task<T> PutAsync<T, R>(HttpEnum httpEnum, string url, R request, Dictionary<string, string> headers = null);
     Task<T> PutAsync<T>(HttpEnum httpEnum, string url, string request, Dictionary<string, string> headers = null);
     Task<T> DeleteAsync<T>(HttpEnum httpEnum, string url, Dictionary<string, string> headers = null);
+
+    Task DownLoad(string fileUrl, string destinationPath);
 }
