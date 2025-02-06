@@ -11,7 +11,7 @@ public class ImportExcelResult
     public List<string> ImportColumns { get; set; }
     public List<string> ImportColumnNames { get; set; }
     public DataTable ImportList { get; set; }
-    
+
 
 }
 public class ImportExcelForm
@@ -20,11 +20,6 @@ public class ImportExcelForm
     /// 文件
     /// </summary>
     public IFormFile file { get; set; }
-
-    /// <summary>
-    /// 模块代码
-    /// </summary>
-    public string moduleCode { get; set; }
 
     /// <summary>
     /// 文件名

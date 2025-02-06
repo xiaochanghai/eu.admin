@@ -210,6 +210,15 @@ public static class Utility
         return BitConverter.ToInt64(buffer, 0);
     }
 
+    /// <summary>  
+    /// 根据唯一数字序列  
+    /// </summary>  
+    /// <returns></returns>  
+    public static long GetLongID()
+    { 
+        return SnowFlakeSingle.Instance.NextId();
+    }
+
     /// <summary>
     /// 获取GUID字符串
     /// </summary>

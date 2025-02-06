@@ -40,7 +40,6 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
     }
     public async Task<ServiceResult<Guid>> UploadAsync(UploadForm upload)
     {
-        using var _context = ContextFactory.CreateContext();
         var file = upload.file;
         var filePath = upload.filePath;
         filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
@@ -52,11 +51,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
             var dotPos = file.FileName.LastIndexOf('.');
             ext = file.FileName.Substring(dotPos + 1);
         }
-        filePath += "/" + Utility.GetSysID() + "/";
+        filePath += "/" + Utility.GetLongID() + "/";
 
         string pathHeader = "wwwroot/" + filePath;
-        if (!Directory.Exists(pathHeader))
-            Directory.CreateDirectory(pathHeader);
+        FileHelper.CreateRootDirectory("/" + filePath);
 
         string fileName = file.FileName;
         var filepath = Path.Combine(pathHeader, fileName);
@@ -65,19 +63,15 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         {
             await file.CopyToAsync(stream);
         }
-        FileAttachment fileAttachment = new();
+        InsertFileAttachmentInput fileAttachment = new();
         fileAttachment.OriginalFileName = fileName;
-        fileAttachment.CreatedBy = App.User.ID;
-        fileAttachment.CreatedTime = Utility.GetSysDate();
-        fileAttachment.FileName = fileName.Replace("." + ext, null);
+        fileAttachment.FileName = fileName;
         fileAttachment.FileExt = ext;
         fileAttachment.MasterId = upload.masterId;
         fileAttachment.Length = file.Length;
         fileAttachment.Path = filePath;
         fileAttachment.ImageType = ImageType;
-        await _context.AddAsync(fileAttachment);
-
-        await _context.SaveChangesAsync();
+        var id = await base.Add(fileAttachment);
 
         if (upload.isUnique)
         {
@@ -87,10 +81,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
                                   AND ID ! = '{2}'
                                   AND IsDeleted = 'false'
                                   AND ImageType = '{1}'";
-            sql = string.Format(sql, upload.masterId, upload.imageType, fileAttachment.ID);
+            sql = string.Format(sql, upload.masterId, upload.imageType, id);
             DBHelper.ExcuteNonQuery(sql);
         }
-        return ServiceResult<Guid>.OprateSuccess(fileAttachment.ID);
+        return ServiceResult<Guid>.OprateSuccess(id);
     }
 
     public async Task<ServiceResult<Guid>> UploadImageAsync(UploadForm upload)

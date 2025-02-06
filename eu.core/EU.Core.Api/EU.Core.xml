@@ -202,17 +202,20 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.ExportExcel(EU.Core.Common.QueryFilter,System.String)">
+        <member name="M:EU.Core.Controllers.CommonController.ExportExcelAsync(EU.Core.Common.QueryFilter,System.String)">
             <summary>
             Excel导出
             </summary>
+            <param name="filter">filter</param>
+            <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.ImportExcelAsync(EU.Core.Model.ImportExcelForm)">
+        <member name="M:EU.Core.Controllers.CommonController.ImportExcelAsync(EU.Core.Model.ImportExcelForm,System.String)">
             <summary>
             Excel导入
             </summary>
-            <param name="import"></param>
+            <param name="import">导入数据</param>
+            <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">

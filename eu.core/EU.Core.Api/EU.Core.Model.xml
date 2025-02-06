@@ -2599,10 +2599,12 @@
             Path
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.FileAttachmentBase.ImageType">
+        <member name="P:EU.Core.Model.Models.FileAttachmentBase.Length">
             <summary>
             Length
             </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.FileAttachmentBase.ImageType">
             <summary>
             FileData
             </summary>
@@ -12135,11 +12137,6 @@
         <member name="P:EU.Core.Model.ImportExcelForm.file">
             <summary>
             文件
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.ImportExcelForm.moduleCode">
-            <summary>
-            模块代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.ImportExcelForm.fileName">

@@ -336,7 +336,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <param name="sorter">排序</param>
     /// <param name="exportExcelColumns">导出栏位</param>
     /// <returns></returns>
-    public async Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode)
+    public async Task<ServiceResult<string>> ExportExcelAsync(QueryFilter filter, string moduleCode)
     {
         int current = 1;
         string queryCondition = "1=1 ";
@@ -347,7 +347,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         string fileId = Utility.GuidId1;
 
 
-         
+
         string keyWord = string.Empty;
 
         #region 处理查询条件
@@ -438,8 +438,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         string sql = moduleSql.GetCurrentSql(moduleCode, current, pageCount, DefaultSortField, DefaultSortDirection, defaultCondition, queryCondition, out totalCount, out outPageSize);
- 
-        string moduleColumns1= moduleSqlColumn.GetExportExcelColumns();
+
+        string moduleColumns1 = moduleSqlColumn.GetExportExcelColumns();
         //if (!string.IsNullOrEmpty(exportExcelColumns))
         //    moduleColumns = exportExcelColumns;
 
@@ -465,6 +465,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         di.Values("FileName", fileName);
         di.Values("FileExt", "xlsx");
         di.Values("Path", filePath);
+        di.Values("ImageType", "ExcelExport");
         await Db.Ado.ExecuteCommandAsync(di.GetSql());
         #endregion
 
@@ -489,8 +490,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// Excel导入
     /// </summary>
     /// <param name="import"></param>
+    /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import)
+    public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import, string moduleCode)
     {
         string message = string.Empty;
         string importDataId = Utility.GuidId1;
@@ -500,46 +502,42 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         try
         {
             result.ImportDataId = importDataId;
-            SmModules Module = ModuleInfo.GetModuleInfo(import.moduleCode);
-            if (Module == null)
-                throw new Exception("模块代码【" + import.moduleCode + "】不存在！");
+            var module = ModuleInfo.GetModuleInfo(moduleCode);
+            if (module == null)
+                return ServiceResult<ImportExcelResult>.OprateFailed($"模块代码【{moduleCode}】不存在！");
 
             var ext = string.Empty;
-            if (string.IsNullOrEmpty(import.file.FileName) == false)
+            if (import.file.FileName.IsNotEmptyOrNull())
             {
                 var dotPos = import.file.FileName.LastIndexOf('.');
                 ext = import.file.FileName.Substring(dotPos + 1);
             }
 
-            string filePath = "wwwroot/importexcel/" + DateTime.Now.ToString("yyyyMMdd") + "/" + Utility.GetSysID();
-            if (!Directory.Exists(filePath))
-                Directory.CreateDirectory(filePath);
+            string filePath = $"/ImportExcel/{DateTime.Now.ToString("yyyyMMdd")}/{Utility.GetGuidToLongID()}";
 
-            var filepath = Path.Combine(filePath, $"{import.fileName}");
-            //var filepath = Path.Combine(pathHeader, file.FileName);
-            using (var stream = global::System.IO.File.Create(filepath))
+            FileHelper.CreateRootDirectory(filePath);
+
+            var filepath = Path.Combine(filePath, import.fileName);
+            using (var stream = File.Create(FileHelper.GetPhysicsPath() + filepath))
             {
                 await import.file.CopyToAsync(stream);
             }
-            //FileAttachment fileAttachment = new FileAttachment();
-            //fileAttachment.OriginalFileName = file.FileName;
-            //fileAttachment.CreatedBy = !string.IsNullOrEmpty(User.Identity.Name) ? new Guid(User.Identity.Name) : Guid.Empty;
-            //fileAttachment.CreatedTime = Utility.GetSysDate();
-            //fileAttachment.FileName = fileName;
-            //fileAttachment.FileExt = ext;
-            //fileAttachment.Length = file.Length;
-            //fileAttachment.Path = pathHeader;
+            var fileAttachment = new FileAttachment();
+            fileAttachment.OriginalFileName = import.file.FileName;
+            fileAttachment.FileName = import.file.FileName;
+            fileAttachment.FileExt = ext;
+            fileAttachment.Length = import.file.Length;
+            fileAttachment.Path = filePath;
+            fileAttachment.ImageType = "ImportExcel";
             //url = fileName + "." + ext;
+            await Db.Insertable(fileAttachment).ExecuteCommandAsync();
 
-            string sql = "SELECT * FROM SmImpTemplate WHERE ModuleId='{0}'";
-            sql = string.Format(sql, Module.ID);
-            var impTemplate = DBHelper.QueryFirst<SmImpTemplate>(sql);
-
+            var impTemplate = await Db.Queryable<SmImpTemplate>().Where(x => x.ID == module.ID).FirstAsync();
             if (impTemplate == null)
-                throw new Exception("请配置模块【" + Module.ModuleName + "】的导入模板，详情请联系客服！");
-            string SheetName = impTemplate.SheetName;
+                return ServiceResult<ImportExcelResult>.OprateFailed($"请配置模块【{module.ModuleName}】的导入模板，详情请联系客服！");
+            string sheetName = impTemplate.SheetName;
 
-            var dt = NPOIHelper.ImportExcel(filepath, SheetName);
+            var dt = NPOIHelper.ImportExcel(filepath, sheetName);
             if (dt.Rows.Count > 0)
                 ImportHelper.ImportData(impTemplate, importDataId, filePath, import.fileName, dt, UserId1);
 

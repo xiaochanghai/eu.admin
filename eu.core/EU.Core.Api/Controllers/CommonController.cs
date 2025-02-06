@@ -53,19 +53,22 @@ public class CommonController : Controller
     /// <summary>
     /// Excel导出
     /// </summary>
+    /// <param name="filter">filter</param>
+    /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
     [HttpGet("ExportExcel/{moduleCode}")]
-    public async Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode) => await _service.ExportExcel(filter, moduleCode);
+    public async Task<ServiceResult<string>> ExportExcelAsync([FromFilter] QueryFilter filter, string moduleCode) => await _service.ExportExcelAsync(filter, moduleCode);
     #endregion
 
     #region Excel导入
     /// <summary>
     /// Excel导入
     /// </summary>
-    /// <param name="import"></param>
+    /// <param name="import">导入数据</param>
+    /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpPost("ImportExcel")]
-    public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync([FromForm] ImportExcelForm import) => await _service.ImportExcelAsync(import);
+    [HttpPost("ImportExcel/{moduleCode}")]
+    public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync([FromForm] ImportExcelForm import, string moduleCode) => await _service.ImportExcelAsync(import, moduleCode);
     #endregion
 
     #region Excel导入数据转换

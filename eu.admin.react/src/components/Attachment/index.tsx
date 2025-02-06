@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Button, Upload, Space, Tag, Modal } from "antd";
-import { message } from "@/hooks/useMessage";
-import { useDispatch } from "@/redux";
-import { RootState, useSelector } from "@/redux";
+import { Button, Upload, Space } from "antd";
+import { message, modal } from "@/hooks/useMessage";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import SmProTable from "@/components/ProTable";
 import { ModuleInfo } from "@/api/interface";
-import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
 import { Icon } from "@/components/Icon";
-import { query, uploadFile } from "@/api/modules/module";
+import { query, uploadFile, getModuleInfo } from "@/api/modules/module";
 import { Loading } from "@/components/Loading/index";
 import { downloadFile } from "@/utils";
 import http from "@/api";
-const { confirm } = Modal;
+const { confirm } = modal;
 
 let flag = true;
 const Attachment: React.FC<any> = props => {
@@ -122,11 +120,9 @@ const Attachment: React.FC<any> = props => {
       valueType: "option",
       width: 150,
       render: (_: any, record: any, _index: number, action: any) => [
-        <Tag key={record.id} onClick={() => onOptionDelete(action, record)}>
-          <a title="删除">
-            <Icon name="DeleteOutlined" />
-          </a>
-        </Tag>
+        <a title="删除" key={record.id} onClick={() => onOptionDelete(action, record)}>
+          <Icon name="DeleteOutlined" />
+        </a>
       ]
     }
   ];

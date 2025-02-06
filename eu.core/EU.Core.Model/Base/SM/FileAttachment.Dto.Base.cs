@@ -55,7 +55,7 @@ public class FileAttachmentBase
     /// <summary>
     /// Length
     /// </summary>
-
+    public long? Length { get; set; }
     /// <summary>
     /// FileData
     /// </summary>

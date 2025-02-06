@@ -50,10 +50,10 @@ const UploadExcel = (props: any) => {
     message.loading("上传中..", 0);
     const formData = new FormData();
     formData.append("file", file.file);
-    formData.append("moduleCode", moduleCode);
+    // formData.append("moduleCode", moduleCode);
     formData.append("fileName", file.file.name);
 
-    let { Success, Data, Message } = await uploadFile("/api/Common/ImportExcel", formData);
+    let { Success, Data, Message } = await uploadFile("/api/Common/ImportExcel/" + moduleCode, formData);
 
     // let { Success, Message } = await http.post<any>("/api/File/" + record.ID);
 

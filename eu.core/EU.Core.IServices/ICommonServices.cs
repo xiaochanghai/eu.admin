@@ -36,10 +36,10 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// <param name="exportExcelColumns"></param>
     /// <returns></returns>
 
-    Task<ServiceResult<string>> ExportExcel([FromFilter] QueryFilter filter, string moduleCode);
+    Task<ServiceResult<string>> ExportExcelAsync(QueryFilter filter, string moduleCode);
 
 
-    Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import);
+    Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import, string moduleCode);
 
 
     ServiceResult TransferExcelData(TransferExcelRequest request);
