@@ -6,7 +6,7 @@ import SmProTable from "@/components/ProTable";
 import { ModuleInfo } from "@/api/interface";
 import { setModuleInfo } from "@/redux/modules/module";
 import { Icon } from "@/components/Icon";
-import { query, uploadFile, getModuleInfo } from "@/api/modules/module";
+import { queryByFilter, uploadFile, getModuleInfo } from "@/api/modules/module";
 import { Loading } from "@/components/Loading/index";
 import { downloadFile } from "@/utils";
 import http from "@/api";
@@ -170,20 +170,21 @@ const Attachment: React.FC<any> = props => {
           //   }
           // }}
           // pagination={tableParam && tableParam.params ? { current: tableParam.params.current } : {}}
-          request={async (params: any, sorter: any, filter: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          request={async (params: any, sorter: any, _filterCondition: any) => {
             // if (tableParam && tableParam.params && !params._timestamp) {
             //   params = tableParam.params;
             // }
+            let filter = {
+              PageIndex: params.current,
+              PageSize: params.pageSize,
+              sorter,
+              params,
+              Conditions: `A.ImageType = '${imageType ?? filePath}' AND A.MasterId = '${MasterId}'`
+            };
+
             if (MasterId) {
-              filter.MasterId = MasterId;
-              return await query({
-                paramData: JSON.stringify(params),
-                sorter: JSON.stringify(sorter),
-                filter: JSON.stringify(filter),
-                moduleCode,
-                parentColumn: "ImageType",
-                parentId: imageType ?? filePath
-              });
+              return await queryByFilter(moduleCode, {}, filter);
             } else
               return {
                 data: [],

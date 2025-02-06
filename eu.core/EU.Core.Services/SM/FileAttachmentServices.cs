@@ -74,16 +74,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         var id = await base.Add(fileAttachment);
 
         if (upload.isUnique)
-        {
-            string sql = @"UPDATE FileAttachment
-                            SET IsDeleted = 'true'
-                            WHERE     MasterId = '{0}'
-                                  AND ID ! = '{2}'
-                                  AND IsDeleted = 'false'
-                                  AND ImageType = '{1}'";
-            sql = string.Format(sql, upload.masterId, upload.imageType, id);
-            DBHelper.ExcuteNonQuery(sql);
-        }
+            await Db.Updateable<FileAttachment>()
+                    .SetColumns(it => new FileAttachment() { IsDeleted = true })
+                    .Where(it => it.MasterId == upload.masterId && it.ID != id && it.ImageType == upload.imageType)
+                    .ExecuteCommandAsync();
         return ServiceResult<Guid>.OprateSuccess(id);
     }
 
