@@ -1,22 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
-import { useDispatch } from "@/redux";
 import { Flex, Form, Card } from "antd";
-// import { Icon } from "@/components/Icon/index";
-import FormToolbar from "@/components/FormToolbar/index";
-import EditableProTable from "@/components/ProTableEditable/FormPage";
-import { Loading } from "@/components/Loading/index";
 import { querySingle, add, update } from "@/api/modules/module";
-import Layout from "@/components/Elements/Layout";
 import MaterialQuery from "./MaterialQuery";
 import Attachment from "@/components/Attachment";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setId } from "@/redux/modules/module";
 import http from "@/api";
 // import WaitShipSelect from "./WaitShipSelect";
 import { message } from "@/hooks/useMessage";
-// const { confirm } = Modal;
+import { Loading, Layout, FormToolbar, EditableProTable } from "@/components";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();

@@ -1,11 +1,11 @@
 import { useImperativeHandle, useState } from "react";
 import { Form, Input, Modal, Button, Row, Col, Drawer } from "antd";
-import ComboGrid from "@/components/ComBoGrid/index";
 import PermissionSet from "../../privilege/role/PermissionSet";
 import { exportModuleSqlScript } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
 import http from "@/api";
 import { message } from "@/hooks/useMessage";
+import { ComboGrid } from "@/components";
 
 const FormItem = Form.Item;
 let tempAction: any = {};

@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
 import { Button, Modal } from "antd";
-import { Icon } from "@/components/Icon/index";
 import { RootState, useSelector } from "@/redux";
 import WaitShipSelect from "./WaitShipSelect";
 import { message } from "@/hooks/useMessage";
 import http from "@/api";
 const { confirm } = Modal;
+import { Icon } from "@/components";
 
 let tableAction: any = {};
 const SalesOrder: React.FC<any> = () => {

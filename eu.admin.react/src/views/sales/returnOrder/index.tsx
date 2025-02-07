@@ -3,11 +3,11 @@ import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
 // import { Button } from "antd";
 import { message, modal } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon/index";
 // import { RootState, useSelector } from "@/redux";
 // import WaitShipSelect from "../salesOrder/WaitShipSelect";
 import http from "@/api";
 const { confirm } = modal;
+import { Icon } from "@/components";
 
 // let tableAction: any = {};
 const Index: React.FC<any> = () => {

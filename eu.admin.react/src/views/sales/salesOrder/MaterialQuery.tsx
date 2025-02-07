@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Badge, Tabs, Button, InputNumber, Input } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Icon } from "@/components/Icon";
 import { ProTable } from "@ant-design/pro-components";
 import { query } from "@/api/modules/module";
 import { RootState, useSelector } from "@/redux";
@@ -10,6 +9,7 @@ import { getModuleInfo as GetModuleInfo } from "@/api/modules/module";
 import { useDispatch } from "@/redux";
 import { setModuleInfo } from "@/redux/modules/module";
 import { useNavigate } from "react-router-dom";
+import { Icon } from "@/components";
 
 const { TabPane } = Tabs;
 const QueryMaterial: React.FC<any> = props => {

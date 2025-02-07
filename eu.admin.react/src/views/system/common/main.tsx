@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "@/redux";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { Loading } from "@/components/Loading/index";
 import FormIndex from "./components/FormIndex";
 

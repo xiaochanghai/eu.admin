@@ -4,7 +4,7 @@ import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
 import http from "@/api";
 // import styles from "../index.less";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 // import { useNavigate } from "react-router-dom";
 let flag = true;
 let baseURL = import.meta.env.VITE_API_URL as string;

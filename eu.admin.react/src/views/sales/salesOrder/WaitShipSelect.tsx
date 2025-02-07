@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Badge, Tabs, Button, InputNumber } from "antd";
 // import type { ProColumns } from "@ant-design/pro-components";
-import { Icon } from "@/components/Icon";
 import { ProTable } from "@ant-design/pro-components";
 import { query } from "@/api/modules/module";
 import { RootState, useSelector } from "@/redux";
@@ -9,6 +8,7 @@ import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { useDispatch } from "@/redux";
 import { setModuleInfo } from "@/redux/modules/module";
+import { Icon } from "@/components";
 
 const { TabPane } = Tabs;
 const moduleCode = "SD_SALES_ORDER_WAIT_SHIP_MNG";

@@ -1,10 +1,9 @@
 import { ReactNode, useCallback, useMemo } from "react";
 import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio, ColorPicker } from "antd";
-import { Icon } from "@/components/Icon";
 import FieldSetting from "./FieldSetting";
 import { FormComponents } from "./CompDatas";
 import { Mode } from "./dsl/base";
-import ComboGrid from "@/components/ComBoGrid/index";
+import { ComboGrid, Icon } from "@/components";
 
 const { TextArea } = Input;
 const { TabPane } = Tabs;

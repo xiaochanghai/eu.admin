@@ -5,9 +5,9 @@ import { Button } from "antd";
 import { RootState, useSelector } from "@/redux";
 import { message, modal } from "@/hooks/useMessage";
 const { confirm } = modal;
-import { Icon } from "@/components/Icon/index";
 import http from "@/api";
 import WaitSelect from "./WaitSelect";
+import { Icon } from "@/components";
 
 let tableAction: any = {};
 const Index: React.FC<any> = () => {

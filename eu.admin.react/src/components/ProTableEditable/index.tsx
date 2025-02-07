@@ -12,9 +12,7 @@ import http from "@/api";
 import { pagination1 } from "@/config/proTable";
 import { query } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon";
-import UploadExcel from "@/components/UploadExcel";
-import ModuleLog from "@/components/Common/ModuleLog";
+import { UploadExcel, ModuleLog, Icon } from "@/components";
 
 const Index: React.FC<any> = props => {
   let tableAction: any;

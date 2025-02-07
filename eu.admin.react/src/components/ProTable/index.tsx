@@ -15,12 +15,9 @@ import {
   batchRevocation
 } from "@/api/modules/module";
 import { ModuleInfoBeforeAction, RecordLogData } from "@/api/interface/index";
-import { Icon } from "@/components/Icon";
 import { setTableParam, setSearchVisible, setModuleInfo } from "@/redux/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
-import ComboGrid from "@/components/ComBoGrid";
-import UploadExcel from "@/components/UploadExcel";
-import ModuleLog from "@/components/Common/ModuleLog";
+import { UploadExcel, ModuleLog, ComboGrid, Icon } from "@/components";
 import { downloadFile } from "@/utils";
 
 const { confirm } = Modal;
@@ -419,11 +416,6 @@ const SmProTable: React.FC<any> = props => {
           Excel导入
         </Button>
       ) : null}
-      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0 }}>
-        <Tooltip placement="top" title="查询">
-          <Icon name="SearchOutlined" className="font-size16" />
-        </Tooltip>
-      </Button>
 
       {actionAuthButton.Audit && IsShowAudit && (
         <Button
@@ -463,6 +455,11 @@ const SmProTable: React.FC<any> = props => {
           })}
         </>
       ) : null}
+      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0 }}>
+        <Tooltip placement="top" title="查询">
+          <Icon name="SearchOutlined" className="font-size16" />
+        </Tooltip>
+      </Button>
     </Space>,
     moreToolBar.length > 0 && (
       <Dropdown

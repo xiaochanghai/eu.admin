@@ -1,6 +1,4 @@
 import { Tabs, Card, Form, Flex, Tag, Button } from "antd";
-import { Icon } from "@/components/Icon";
-import Layout from "@/components/Elements/Index";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -8,6 +6,7 @@ import { DndProvider } from "react-dnd";
 import http from "@/api";
 import { Mode } from "./dsl/base";
 const { TabPane } = Tabs;
+import { Layout, Icon } from "@/components";
 
 interface FieldSetCenterProps {
   moduleCode: any;

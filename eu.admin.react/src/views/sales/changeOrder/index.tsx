@@ -3,10 +3,10 @@ import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
 import { Button, Modal } from "antd";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon/index";
 import { RootState, useSelector } from "@/redux";
 import http from "@/api";
 const { confirm } = Modal;
+import { Icon } from "@/components";
 
 const Index: React.FC<any> = () => {
   let moduleCode = "SD_CHANGE_ORDER_MNG";

@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Modal, Tabs, Button, InputNumber } from "antd";
 import { ProTable } from "@ant-design/pro-components";
 import { query } from "@/api/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo as GetModuleInfo } from "@/api/modules/module";
-import { useDispatch } from "@/redux";
 import { setModuleInfo } from "@/redux/modules/module";
 
 const { TabPane } = Tabs;

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "@/redux";
 import { Popconfirm, Button, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
-import { Loading } from "@/components/Loading/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { RootState, useSelector } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
@@ -12,7 +11,7 @@ import http from "@/api";
 import { pagination1 } from "@/config/proTable";
 import { query } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon";
+import { Loading, Icon } from "@/components";
 
 const ProTableEditable: React.FC<any> = props => {
   const dispatch = useDispatch();

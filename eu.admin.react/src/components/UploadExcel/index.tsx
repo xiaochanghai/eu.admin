@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Upload, Form, Row, Col, Steps, Button, Space, Result, Table } from "antd";
 import { message } from "@/hooks/useMessage";
 import { downloadFile } from "@/utils";
-import { Icon } from "@/components/Icon";
 import http from "@/api";
 import { uploadFile } from "@/api/modules/module";
+import { Icon } from "@/components";
 
 const { Step } = Steps;
 const FormItem = Form.Item;

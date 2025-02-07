@@ -3,10 +3,10 @@ import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
 import { Modal } from "antd";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon/index";
 // import { RootState, useSelector } from "@/redux";
 import WaitSelect from "./WaitInSelect";
 import http from "@/api";
+import { Icon } from "@/components";
 const { confirm } = Modal;
 
 let tableAction: any = {};

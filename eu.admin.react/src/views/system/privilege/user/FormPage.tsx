@@ -1,13 +1,11 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
-import { useDispatch } from "@/redux";
 import { Flex, Tree, Skeleton, Card, Form, Tabs, message } from "antd";
-import { Loading } from "@/components/Loading/index";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
-import Layout from "@/components/Elements/Layout";
-import { RootState, useSelector } from "@/redux";
+import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import http from "@/api";
+import { Loading, Layout } from "@/components";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();

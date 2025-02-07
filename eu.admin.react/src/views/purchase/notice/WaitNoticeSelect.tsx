@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Badge, Tabs, Button, InputNumber } from "antd";
-import { Icon } from "@/components/Icon";
 import { ProTable } from "@ant-design/pro-components";
 import { query } from "@/api/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
-import { useDispatch } from "@/redux";
+import { Icon } from "@/components";
 import { setModuleInfo } from "@/redux/modules/module";
 
 const { TabPane } = Tabs;

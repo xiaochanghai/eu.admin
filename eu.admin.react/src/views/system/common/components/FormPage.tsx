@@ -1,14 +1,12 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 import { Card, Form, Flex, Tabs } from "antd";
-import { Loading } from "@/components/Loading/index";
 import TableList from "./TableList";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
-import Layout from "@/components/Elements/Layout";
-import FormToolbar from "@/components/FormToolbar/index";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
+import { Loading, FormToolbar, Layout } from "@/components";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();

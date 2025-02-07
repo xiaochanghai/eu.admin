@@ -5,8 +5,8 @@ import { Button } from "antd";
 import { RootState, useSelector } from "@/redux";
 import { message, modal } from "@/hooks/useMessage";
 const { confirm } = modal;
-import { Icon } from "@/components/Icon/index";
 import http from "@/api";
+import { Icon } from "@/components";
 
 const SalesOrder: React.FC<any> = () => {
   let moduleCode = "PO_REQUESTION_MNG";

@@ -1,15 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Loading } from "@/components/Loading/index";
-import SmProTable from "@/components/ProTable";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { Drawer, Modal, Button, Space } from "antd";
-import { Icon } from "@/components/Icon";
 import FormPage from "./FormPage";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import Extend from "./Extend";
 import type { ActionType } from "@ant-design/pro-components";
+import { Loading, SmProTable, Icon } from "@/components";
 
 const MenuMange: React.FC<any> = props => {
   const dispatch = useDispatch();
