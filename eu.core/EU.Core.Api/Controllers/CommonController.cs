@@ -80,7 +80,7 @@ public class CommonController : Controller
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
     [HttpPost("TransferExcelData/{moduleCode}")]
-    public ServiceResult TransferExcelData([FromBody] TransferExcelRequest request, string moduleCode) => _service.TransferExcelData(request, moduleCode);
+    public Task<ServiceResult> TransferExcelData([FromBody] TransferExcelRequest request, string moduleCode) => _service.TransferExcelData(request, moduleCode);
     #endregion
 
     #region 获取通用下拉数据

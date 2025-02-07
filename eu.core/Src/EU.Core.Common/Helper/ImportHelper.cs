@@ -944,13 +944,13 @@ public class ImportHelper
     /// <param name="importTemplateCode">模板代码</param>
     /// <param name="userId">用户ID</param>
     /// <param name="isImportLineNo">是否导入序号</param>
-    public static void TransferData(string importDataId, string importTemplateCode, string userId, bool isImportLineNo)
+    public static async Task TransferData(string importDataId, string importTemplateCode, string userId, bool isImportLineNo)
     {
         try
         {
             #region 变量定义
             string sql = $"SELECT * FROM SmImpTemplate WHERE TemplateCode='{importTemplateCode}'";
-            var impTemplate = DBHelper.QueryFirst<SmImpTemplate>(sql);
+            var impTemplate = await DBHelper.QueryFirstAsync<SmImpTemplate>(sql);
             if (impTemplate == null)
                 throw new Exception("Excel导入模板代码【" + importTemplateCode + "】不存在！");
 
@@ -974,19 +974,20 @@ public class ImportHelper
             dsImpTempDetail.Select("A.*");
             dsImpTempDetail.Where("A.ImpTemplateId", "=", impTemplate.ID);
             dsImpTempDetail.OrderBy("A.ColumnNo", "ASC");
-            var dtImpTempDetail = DBHelper.GetDataTable(dsImpTempDetail.GetSql());
+            var dtImpTempDetail = await DBHelper.GetDataTableAsync(dsImpTempDetail.GetSql());
             #endregion
 
             #region 把数据插入到另一个表
             sql = "DELETE FROM SmImportDataDetailTemp WHERE ImportDataId='{0}' AND SheetName='{1}'";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExecuteDML(sql);
+            await DBHelper.ExecuteDMLAsync(sql);
+
             sql = @"INSERT INTO SmImportDataDetailTemp
                         SELECT *
                           FROM SmImportDataDetail
                          WHERE ImportDataId = '{0}' AND SheetName='{1}' AND (IsError!='true' OR IsError IS NULL OR IsError='')";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExecuteDML(sql);
+            await DBHelper.ExecuteDMLAsync(sql);
             #endregion
 
             #region 更新另一个表
@@ -1018,7 +1019,7 @@ public class ImportHelper
                                       FROM SmImportDataDetailTemp A,{2} B
                                      WHERE B.{3}=A.{0} AND B.LovCode='{4}' AND A.ImportDataId='{5}' AND A.SheetName='{6}' AND B.IsDeleted='false'";
                         sql = string.Format(sql, columnName, transColumnCode, corresTableCode, corresColumnCode, lovCode, importDataId, sheetName);
-                        DBHelper.ExcuteNonQuery(sql);
+                        await DBHelper.ExecuteDMLAsync(sql);
                     }
                     else if (!string.IsNullOrEmpty(corresTableCode) && !string.IsNullOrEmpty(corresColumnCode) && !string.IsNullOrEmpty(transColumnCode))
                     {
@@ -1028,7 +1029,7 @@ public class ImportHelper
                                           FROM SmImportDataDetailTemp A,{2} B
                                          WHERE B.{3}=A.{0} AND A.ImportDataId='{4}' AND A.SheetName='{5}' AND B.IsDeleted='false'";
                         sql = string.Format(sql, columnName, transColumnCode, corresTableCode, corresColumnCode, importDataId, sheetName);
-                        DBHelper.ExcuteNonQuery(sql);
+                        await DBHelper.ExecuteDMLAsync(sql);
                     }
                     #endregion
                     else
@@ -1056,11 +1057,11 @@ public class ImportHelper
 
             sql = "INSERT INTO {0}({1}) SELECT {2} FROM SmImportDataDetailTemp WHERE ImportDataId='{3}' AND SheetName='{4}'";
             sql = string.Format(sql, tableCode, insertColumn, selectColumn, importDataId, sheetName);
-            DBHelper.ExecuteDML(sql);
+            await DBHelper.ExecuteDMLAsync(sql);
 
             sql = "DELETE FROM SmImportDataDetailTemp WHERE ImportDataId='{0}' AND SheetName='{1}'";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExecuteDML(sql);
+            await DBHelper.ExecuteDMLAsync(sql);
             #endregion
         }
         catch (Exception)
@@ -1228,7 +1229,7 @@ public class ImportHelper
     /// <param name="templateCode">模板代码</param>
     /// <param name="importDataId">导入数据ID</param>
     /// <param name="masterId">masterId</param>
-    public static void AfterImport(string templateCode, string importDataId, string masterId)
+    public static async Task AfterImport(string templateCode, string importDataId, string masterId)
     {
         try
         {
@@ -1256,7 +1257,7 @@ public class ImportHelper
                                                       AND A.IsActive = 'true') B) C
                                             ON A.ID = C.ID";
                         sql = string.Format(sql, importDataId, masterId);
-                        DBHelper.ExecuteDML(sql);
+                        await DBHelper.ExecuteDMLAsync(sql);
 
                         break;
                     }

@@ -569,15 +569,15 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     #endregion
 
     #region Excel导入数据转换
-    public ServiceResult TransferExcelData(TransferExcelRequest request, string moduleCode)
+    public async Task<ServiceResult> TransferExcelData(TransferExcelRequest request, string moduleCode)
     {
         string importDataId = request.ImportDataId;
         string importTemplateCode = request.ImportTemplateCode;
         string type = request.Type;
-        string masterId = request.MasterId; 
+        string masterId = request.MasterId;
 
-        ImportHelper.TransferData(importDataId, importTemplateCode, UserId1, false);
-        ImportHelper.AfterImport(importTemplateCode, importDataId, masterId);
+        await ImportHelper.TransferData(importDataId, importTemplateCode, UserId1, false);
+        await ImportHelper.AfterImport(importTemplateCode, importDataId, masterId);
 
         return Success("导入成功！");
     }
