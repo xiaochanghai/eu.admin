@@ -25,18 +25,22 @@ public class ImportHelper
             di.Values("ID", importDataId);
             di.Values("CreatedBy", userId);
             di.Values("CreatedTime", Utility.GetSysDate());
+            di.Values("GroupId", Utility.GetGroupId());
+            di.Values("CompanyId", Utility.GetCompanyId());
             di.Values("ImportFileName", filePath + fileName);
-            DBHelper.ExcuteNonQuery(di.GetSql());
+            DBHelper.ExecuteDML(di.GetSql());
 
             string sql = "SELECT * FROM SmImportDataDetail WHERE 1!=1";
             var dt1 = DBHelper.GetDataTable(sql);
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 var dr = dt1.NewRow();
-                dr["ID"] = Utility.GuidId1;
+                dr["ID"] = Utility.GuidId;
                 dr["CreatedBy"] = userId;
                 dr["CreatedTime"] = Utility.GetSysDate();
                 dr["ImportDataId"] = importDataId;
+                di.Values("GroupId", Utility.GetGroupId());
+                di.Values("CompanyId", Utility.GetCompanyId());
                 dr["SheetName"] = smImpTemplate.SheetName;
                 dr["LineNo"] = i + 2;
                 for (int j = 0; j < dt.Columns.Count; j++)
@@ -105,20 +109,20 @@ public class ImportHelper
             sql = "DELETE A FROM SmImportError A WHERE A.ImportDataId='{0}';" +
                   "DELETE A FROM SmImportDataErrorCol A WHERE A.ImportDataId='{0}'";
             sql = string.Format(sql, importDataId);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
             #endregion
 
             #region 更新错误标志
             sql = "UPDATE SmImportDataDetail SET IsError=NULL WHERE ImportDataId='" + importDataId + "'";
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
             #endregion
+
             sql = "SELECT * FROM SmImpTemplate WHERE TemplateCode='{0}'";
             sql = string.Format(sql, importTemplateCode);
             var impTemplate = DBHelper.QueryFirst<SmImpTemplate>(sql);
             if (impTemplate == null)
-            {
                 throw new Exception("Excel导入模板ID【" + importTemplateCode + "】不存在！");
-            }
+
             string label = impTemplate.Label;
             sheetName = impTemplate.SheetName;
 
@@ -221,8 +225,7 @@ public class ImportHelper
             //}
             #endregion
 
-            sql = "SELECT COUNT(0) FROM SmImportError WHERE ImportDataId='{0}'";
-            sql = string.Format(sql, importDataId);
+            sql = $"SELECT COUNT(0) FROM SmImportError WHERE ImportDataId='{importDataId}'";
             int count = Convert.ToInt32(DBHelper.ExecuteScalar(sql));
             return count;
         }
@@ -248,7 +251,7 @@ public class ImportHelper
             ds.Select("A.ColumnCode,A.DataType");
             ds.Where("A.TableCode", "=", tableCode);
             ds.Where("A.ColumnCode", "=", fieldName);
-            var dt = DBHelper.GetDataTable(ds.GetSql(), null);
+            var dt = DBHelper.GetDataTable(ds.GetSql());
             if (dt.Rows.Count > 0)
             {
                 fieldType = dt.Rows[0]["DataType"].ToString();
@@ -317,7 +320,7 @@ public class ImportHelper
                                 WHERE ImportDataId='{1}' AND SheetName='{2}'
                                   AND {0} IS NOT NULL";
             sql = string.Format(sql, columnName, importDataId, sheetName);
-            var dt = DBHelper.GetDataTable(sql, null);
+            var dt = DBHelper.GetDataTable(sql);
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 //isDateFormat = Utility.IsDateTimeFormat(dt.Rows[0][columnName].ToString(), fieldFormat);
@@ -349,7 +352,7 @@ public class ImportHelper
                                  FROM SmImportDataDetail A
                                 WHERE LEN({0}) > {1} AND ImportDataId='{2}' AND SheetName='{3}'";
             sql = string.Format(sql, columnName, fieldLength.ToString(), importDataId, sheetName);
-            var dt = DBHelper.GetDataTable(sql, null);
+            var dt = DBHelper.GetDataTable(sql);
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 //UpdateImportDataErrorFlag(importDataId1, Convert.ToInt32(dt.Rows[i]["LineNo"]), columnIndex, Resource.GetOnlyMessage("CC-00300", fieldLength.ToString()), sheetName, "E", null);
@@ -375,7 +378,7 @@ public class ImportHelper
                                  FROM SmImportDataDetail A
                                 WHERE ({0} IS NULL OR {0}='') AND ImportDataId='{1}' AND SheetName='{2}'";
             sql = string.Format(sql, columnName, importDataId, sheetName);
-            var dt = DBHelper.GetDataTable(sql, null);
+            var dt = DBHelper.GetDataTable(sql);
 
             #region 准备表结构
             DbSelect dsImportDataDetail = new("SmImportDataDetail A", "A");
@@ -938,21 +941,19 @@ public class ImportHelper
     /// 直接转换进入正式表
     /// </summary>
     /// <param name="importDataId">导入数据ID</param>
-    /// <param name="ImportTemplateCode">模板代码</param>
+    /// <param name="importTemplateCode">模板代码</param>
     /// <param name="userId">用户ID</param>
-    /// <param name="isImportLineNo"></param>
-    public static void TransferData(string importDataId, string ImportTemplateCode, string userId, bool isImportLineNo)
+    /// <param name="isImportLineNo">是否导入序号</param>
+    public static void TransferData(string importDataId, string importTemplateCode, string userId, bool isImportLineNo)
     {
         try
         {
             #region 变量定义
-            string sql = "SELECT * FROM SmImpTemplate WHERE TemplateCode='{0}'";
-            sql = string.Format(sql, ImportTemplateCode);
-            var impTemplate = DBHelper.QueryFirst<SmImpTemplate>(sql, null);
+            string sql = $"SELECT * FROM SmImpTemplate WHERE TemplateCode='{importTemplateCode}'";
+            var impTemplate = DBHelper.QueryFirst<SmImpTemplate>(sql);
             if (impTemplate == null)
-            {
-                throw new Exception("Excel导入模板代码【" + ImportTemplateCode + "】不存在！");
-            }
+                throw new Exception("Excel导入模板代码【" + importTemplateCode + "】不存在！");
+
             string fieldName = string.Empty;
             string isUnique = string.Empty;
             string columnName = string.Empty;
@@ -979,13 +980,13 @@ public class ImportHelper
             #region 把数据插入到另一个表
             sql = "DELETE FROM SmImportDataDetailTemp WHERE ImportDataId='{0}' AND SheetName='{1}'";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
             sql = @"INSERT INTO SmImportDataDetailTemp
                         SELECT *
                           FROM SmImportDataDetail
                          WHERE ImportDataId = '{0}' AND SheetName='{1}' AND (IsError!='true' OR IsError IS NULL OR IsError='')";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
             #endregion
 
             #region 更新另一个表
@@ -1055,11 +1056,11 @@ public class ImportHelper
 
             sql = "INSERT INTO {0}({1}) SELECT {2} FROM SmImportDataDetailTemp WHERE ImportDataId='{3}' AND SheetName='{4}'";
             sql = string.Format(sql, tableCode, insertColumn, selectColumn, importDataId, sheetName);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
 
             sql = "DELETE FROM SmImportDataDetailTemp WHERE ImportDataId='{0}' AND SheetName='{1}'";
             sql = string.Format(sql, importDataId, sheetName);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteDML(sql);
             #endregion
         }
         catch (Exception)
@@ -1112,9 +1113,9 @@ public class ImportHelper
     {
         try
         {
-            string sql = "SELECT * FROM SmImportError where ImportDataId='{0}'";
+            string sql = "SELECT * FROM SmImportError WHERE ImportDataId='{0}'";
             sql = string.Format(sql, importDataId);
-            var list = DBHelper.QueryList<SmImportError>(sql, null);
+            var list = DBHelper.QueryList<SmImportError>(sql);
             return list;
         }
         catch (Exception)
@@ -1226,6 +1227,7 @@ public class ImportHelper
     /// </summary>
     /// <param name="templateCode">模板代码</param>
     /// <param name="importDataId">导入数据ID</param>
+    /// <param name="masterId">masterId</param>
     public static void AfterImport(string templateCode, string importDataId, string masterId)
     {
         try
@@ -1254,7 +1256,7 @@ public class ImportHelper
                                                       AND A.IsActive = 'true') B) C
                                             ON A.ID = C.ID";
                         sql = string.Format(sql, importDataId, masterId);
-                        DBHelper.ExcuteNonQuery(sql);
+                        DBHelper.ExecuteDML(sql);
 
                         break;
                     }

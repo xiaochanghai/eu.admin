@@ -82,7 +82,7 @@ const Attachment: React.FC<any> = props => {
         message.loading("数据提交中...", 0);
         if (props.delete) props.delete(record);
         else {
-          let { Success, Message } = await http.delete<any>("/api/File/" + record.ID);
+          let { Success, Message } = await http.delete<any>(`/api/File/${record.ID}`);
           message.destroy();
           if (Success) {
             action.reload();

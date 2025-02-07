@@ -1,4 +1,5 @@
-﻿using EU.Core.Common.Const;
+﻿using Castle.DynamicProxy;
+using EU.Core.Common.Const;
 using EU.Core.Tasks;
 
 namespace EU.Core.Controllers;
@@ -75,9 +76,11 @@ public class CommonController : Controller
     /// <summary>
     /// Excel导入数据转换
     /// </summary>
+    /// <param name="request">请求数据</param>
+    /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpPost("TransferExcelData")]
-    public ServiceResult TransferExcelData([FromBody] TransferExcelRequest request) => _service.TransferExcelData(request);
+    [HttpPost("TransferExcelData/{moduleCode}")]
+    public ServiceResult TransferExcelData([FromBody] TransferExcelRequest request, string moduleCode) => _service.TransferExcelData(request, moduleCode);
     #endregion
 
     #region 获取通用下拉数据

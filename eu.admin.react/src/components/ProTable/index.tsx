@@ -689,23 +689,14 @@ const SmProTable: React.FC<any> = props => {
       {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") ? (
         <Modal
           destroyOnClose
-          title={moduleInfo.moduleName + "-导入"}
+          title={`${moduleInfo.moduleName}-导入`}
           open={uploadExcelVisible}
           maskClosable={false}
           width={1000}
           onCancel={() => {
             setUploadExcelVisible(false);
           }}
-          footer={[
-            <Button
-              key="back"
-              onClick={() => {
-                setUploadExcelVisible(false);
-              }}
-            >
-              关闭
-            </Button>
-          ]}
+          footer={null}
         >
           <UploadExcel
             moduleInfo={moduleInfo}

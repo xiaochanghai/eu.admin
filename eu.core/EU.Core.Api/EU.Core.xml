@@ -218,10 +218,12 @@
             <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">
+        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest,System.String)">
             <summary>
             Excel导入数据转换
             </summary>
+            <param name="request">请求数据</param>
+            <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">

@@ -230,7 +230,7 @@ public class NPOIHelper
         //HSSFWorkbook hssfworkbook;
         IWorkbook hssfworkbook;
         ISheet sheet;
-        using (FileStream file = new FileStream(strFileName, FileMode.Open, FileAccess.Read))
+        using (FileStream file = new FileStream(FileHelper.GetPhysicsPath() + strFileName, FileMode.Open, FileAccess.Read))
         {
             //hssfworkbook = new HSSFWorkbook(file);
             //hssfworkbook = new XSSFWorkbook(file);

@@ -24,12 +24,11 @@ const UploadExcel = (props: any) => {
     onReload,
     moduleInfo: { masterId, moduleCode, moduleId }
   } = props;
-
+  const querySingleData = async () => {
+    let { Success, Data } = await http.get<any>(`/api/SmImpTemplate/QueryByModuleId/${moduleId}`);
+    if (Success) setImportTemplateInfo(Data);
+  };
   useEffect(() => {
-    const querySingleData = async () => {
-      let { Success, Data } = await http.get<any>("/api/SmImpTemplate/QueryByModuleId/" + moduleId);
-      if (Success) setImportTemplateInfo(Data);
-    };
     querySingleData();
   }, []);
 
@@ -53,7 +52,7 @@ const UploadExcel = (props: any) => {
     // formData.append("moduleCode", moduleCode);
     formData.append("fileName", file.file.name);
 
-    let { Success, Data, Message } = await uploadFile("/api/Common/ImportExcel/" + moduleCode, formData);
+    let { Success, Data, Message } = await uploadFile(`/api/Common/ImportExcel/${moduleCode}`, formData);
 
     // let { Success, Message } = await http.post<any>("/api/File/" + record.ID);
 
@@ -70,11 +69,11 @@ const UploadExcel = (props: any) => {
         }
       ];
       let importColumns1 = Data.ImportColumns;
-      let ImportColumnNames = Data.ImportColumnNames;
+      let importColumnNames = Data.ImportColumnNames;
       if (importColumns1 && importColumns1.length > 0) {
         for (let j = 0; j < importColumns1.length; j++)
           importColumns.push({
-            title: ImportColumnNames[j],
+            title: importColumnNames[j],
             dataIndex: importColumns1[j],
             key: "Key_" + j
           });
@@ -99,12 +98,11 @@ const UploadExcel = (props: any) => {
   };
   const okTransferData = async (type: any) => {
     message.loading("数据转换中..", 0);
-    let { Success, Message } = await http.post<any>("/api/Common/TransferExcelData", {
+    let { Success, Message } = await http.post<any>(`/api/Common/TransferExcelData/${moduleCode}`, {
       type,
       importDataId,
       importTemplateCode: importTemplateInfo.TemplateCode,
-      masterId: masterId ?? null,
-      moduleCode: moduleCode ?? null
+      masterId: masterId ?? null
     });
     message.destroy();
     if (Success) {
@@ -148,8 +146,8 @@ const UploadExcel = (props: any) => {
                     // fileList={fileList}
                     onChange={handleChange}
                   >
-                    <Button type="primary">
-                      <Icon name="UploadOutlined" /> 点击上传Excel文件
+                    <Button type="primary" icon={<Icon name="UploadOutlined" />}>
+                      点击上传Excel文件
                     </Button>
                   </Upload>
                 </Space>
@@ -169,7 +167,7 @@ const UploadExcel = (props: any) => {
                 }}
                 label="导入步骤："
               >
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: 5 }}>
                   1、下载导入模板：
                   <a onClick={() => onDownload(importTemplateInfo.FileId, importTemplateInfo.TemplateName)} key="link">
                     {moduleInfo.moduleName} 导入模板
@@ -193,7 +191,7 @@ const UploadExcel = (props: any) => {
                 }}
                 label="注意事项："
               >
-                <div style={{ marginTop: 10 }}>1、后缀名必须为xlsx或xls。</div>
+                <div style={{ marginTop: 5 }}>1、后缀名必须为xlsx或xls。</div>
                 <div style={{ marginTop: 10 }}>2、数据请勿放在合并的单元格中。</div>
                 <div style={{ marginTop: 10 }}>
                   3、第一行红色字体的为必填栏位，同时注意特殊字段的格式是否正确，例如：日期类型，数字类型等。
@@ -219,6 +217,7 @@ const UploadExcel = (props: any) => {
               <Button
                 type="primary"
                 key="console"
+                icon={<Icon name="ArrowUpOutlined" />}
                 onClick={() => {
                   setStepsCurrent(0);
                   setErrorList([]);
@@ -250,9 +249,7 @@ const UploadExcel = (props: any) => {
             dataSource={errorList}
           />
         </>
-      ) : (
-        ""
-      )}
+      ) : null}
       {stepsCurrent == 1 && importList.length > 0 ? (
         <>
           <Result
@@ -264,28 +261,31 @@ const UploadExcel = (props: any) => {
               <Button
                 type="primary"
                 key="append"
+                icon={<Icon name="PlusOutlined" />}
                 onClick={() => {
                   okTransferData("append");
                 }}
               >
-                <Icon name="PlusOutlined" /> 追加导入
+                追加导入
               </Button>,
               <>
                 {importTemplateInfo && importTemplateInfo.IsAllowOverride ? (
                   <Button
                     key="override"
                     danger
+                    icon={<Icon name="ImportOutlined" />}
                     onClick={() => {
                       okTransferData("override");
                     }}
                   >
-                    <Icon name="RollbackOutlined" /> 覆盖导入
+                    覆盖导入
                   </Button>
                 ) : null}
               </>,
               <Button
                 type="primary"
                 key="console"
+                icon={<Icon name="ArrowUpOutlined" />}
                 onClick={() => {
                   setStepsCurrent(0);
                   setImportDataId(null);
@@ -299,9 +299,7 @@ const UploadExcel = (props: any) => {
           ></Result>
           <Table columns={importColumns} dataSource={importList} />
         </>
-      ) : (
-        ""
-      )}
+      ) : null}
       {stepsCurrent == 2 ? (
         <>
           <Result
@@ -313,6 +311,7 @@ const UploadExcel = (props: any) => {
               <Button
                 type="primary"
                 key="console"
+                icon={<Icon name="RollbackOutlined" />}
                 onClick={() => {
                   setStepsCurrent(0);
                   setImportDataId(null);

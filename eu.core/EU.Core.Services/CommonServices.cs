@@ -513,7 +513,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
                 ext = import.file.FileName.Substring(dotPos + 1);
             }
 
-            string filePath = $"/ImportExcel/{DateTime.Now.ToString("yyyyMMdd")}/{Utility.GetGuidToLongID()}";
+            string filePath = $"/ImportExcel/{DateTime.Now.ToString("yyyyMMdd")}/{Utility.GetLongID()}";
 
             FileHelper.CreateRootDirectory(filePath);
 
@@ -532,7 +532,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             //url = fileName + "." + ext;
             await Db.Insertable(fileAttachment).ExecuteCommandAsync();
 
-            var impTemplate = await Db.Queryable<SmImpTemplate>().Where(x => x.ID == module.ID).FirstAsync();
+            var impTemplate = await Db.Queryable<SmImpTemplate>().Where(x => x.ModuleId == module.ID).FirstAsync();
             if (impTemplate == null)
                 return ServiceResult<ImportExcelResult>.OprateFailed($"请配置模块【{module.ModuleName}】的导入模板，详情请联系客服！");
             string sheetName = impTemplate.SheetName;
@@ -569,18 +569,17 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     #endregion
 
     #region Excel导入数据转换
-    public ServiceResult TransferExcelData(TransferExcelRequest request)
+    public ServiceResult TransferExcelData(TransferExcelRequest request, string moduleCode)
     {
         string importDataId = request.ImportDataId;
         string importTemplateCode = request.ImportTemplateCode;
         string type = request.Type;
-        string masterId = request.MasterId;
-        string moduleCode = request.ModuleCode;
+        string masterId = request.MasterId; 
 
         ImportHelper.TransferData(importDataId, importTemplateCode, UserId1, false);
         ImportHelper.AfterImport(importTemplateCode, importDataId, masterId);
 
-        return ServiceResult.OprateSuccess("导入成功！");
+        return Success("导入成功！");
     }
 
     #endregion

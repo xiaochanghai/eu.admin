@@ -42,7 +42,7 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import, string moduleCode);
 
 
-    ServiceResult TransferExcelData(TransferExcelRequest request);
+    ServiceResult TransferExcelData(TransferExcelRequest request, string moduleCode);
 
     Task<ServiceResult<List<ComboGridData>>> ComboGridData(string parentColumn, string parentId, int? current, int? pageSize, string code, string[] items, string key);
     Task<ServiceResult<List<ComboGridData>>> GetComboGridData([FromBody] ComboGridDataBody body);
