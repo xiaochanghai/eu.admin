@@ -100,6 +100,10 @@ const createVitePwa = (viteEnv: ViteEnv): PluginOption | PluginOption[] => {
           purpose: "any maskable"
         }
       ]
+    },
+    workbox: {
+      // 添加此项配置，增加需要缓存的最大文件大小
+      maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
     }
   });
 };
