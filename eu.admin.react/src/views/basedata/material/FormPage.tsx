@@ -1,16 +1,13 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
-import { useDispatch } from "@/redux";
+import {} from "@/redux";
 import { Flex, Form, TreeSelect, Tabs } from "antd";
 import { message } from "@/hooks/useMessage";
-import { Loading } from "@/components/Loading/index";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
-import Layout from "@/components/Elements/Layout";
-import UploadImage from "@/components/UploadImage";
-import Attachment from "@/components/Attachment";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import http from "@/api";
+import { Layout, UploadImage, Attachment, Loading } from "@/components";
 const FormItem = Form.Item;
 
 const FormPage: React.FC<any> = props => {

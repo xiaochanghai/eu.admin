@@ -1,10 +1,10 @@
-import { Button, Space } from "antd";
-import { message, modal } from "@/hooks/useMessage";
+import { Button, Space, Modal } from "antd";
+import { message } from "@/hooks/useMessage";
 import { ModifyType } from "@/api/interface/index";
 import { batchAudit, batchRevocation } from "@/api/modules/module";
 import { Icon } from "@/components";
 
-const { confirm } = modal;
+const { confirm } = Modal;
 const FormToolbar: React.FC<any> = props => {
   const { onFinishAdd, onBack, disabled, expendAction, moduleInfo, modifyType, auditStatus, masterId, onReload } = props;
   let { actions, moduleCode, url } = moduleInfo;

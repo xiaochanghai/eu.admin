@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button, Upload, Space } from "antd";
-import { message, modal } from "@/hooks/useMessage";
+import { Button, Upload, Space, Modal } from "antd";
+import { message } from "@/hooks/useMessage";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { SmProTable, Loading, Icon } from "@/components";
 import { ModuleInfo } from "@/api/interface";
@@ -8,7 +8,7 @@ import { setModuleInfo } from "@/redux/modules/module";
 import { queryByFilter, uploadFile, getModuleInfo } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
 import http from "@/api";
-const { confirm } = modal;
+const { confirm } = Modal;
 
 let flag = true;
 const Attachment: React.FC<any> = props => {

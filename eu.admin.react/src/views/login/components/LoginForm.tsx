@@ -10,10 +10,12 @@ import { ReqLogin } from "@/api/interface";
 import { useNavigate } from "react-router-dom";
 import { message, notification } from "@/hooks/useMessage";
 import type { FormInstance, FormProps } from "antd/es/form";
-import { LockOutlined, UserOutlined, CloseCircleOutlined, CheckCircleFilled } from "@ant-design/icons";
+// import {  CheckCircleFilled } from "@ant-design/icons";
 import usePermissions from "@/hooks/usePermissions";
 // import md5 from "md5";
 const APP_TITLE = import.meta.env.VITE_GLOB_APP_TITLE;
+import NProgress from "@/config/nprogress";
+import { Icon } from "@/components";
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ const LoginForm: React.FC = () => {
     try {
       // loading
       setLoading(true);
+      NProgress.start();
       message.open({ key, type: "loading", content: "登录中..." });
 
       // user login
@@ -43,12 +46,14 @@ const LoginForm: React.FC = () => {
 
       // init permissions
       await initPermissions(Data.Token);
+      NProgress.done();
 
       // prompt for successful login and redirect
       notification.success({
         message: getTimeState(),
         description: "欢迎登录 " + APP_TITLE,
-        icon: <CheckCircleFilled style={{ color: "#73d13d" }} />
+        // icon: <CheckCircleFilled style={{ color: "#73d13d" }} />
+        icon: <Icon name="CheckCircleFilled" style={{ color: "#73d13d" }} />
       });
 
       // navigate to home
@@ -83,16 +88,16 @@ const LoginForm: React.FC = () => {
     <div className="login-form-content">
       <Form name="login" size="large" autoComplete="off" ref={formRef} onFinish={onFinish} onFinishFailed={onFinishFailed}>
         <Form.Item name="UserAccount" rules={[{ required: true, message: "请输入用户名!" }]}>
-          <Input prefix={<UserOutlined />} placeholder="用户名" />
+          <Input prefix={<Icon name="UserOutlined" />} placeholder="用户名" />
         </Form.Item>
         <Form.Item name="PassWord" rules={[{ required: true, message: "请输入密码!" }]}>
-          <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+          <Input.Password prefix={<Icon name="LockOutlined" />} placeholder="密码" />
         </Form.Item>
         <Form.Item className="login-form-button">
-          <Button shape="round" icon={<CloseCircleOutlined />} onClick={onReset}>
+          <Button shape="round" icon={<Icon name="CloseCircleOutlined" />} onClick={onReset}>
             重置
           </Button>
-          <Button type="primary" shape="round" icon={<UserOutlined />} loading={loading} htmlType="submit">
+          <Button type="primary" shape="round" icon={<Icon name="UserOutlined" />} loading={loading} htmlType="submit">
             登录
           </Button>
         </Form.Item>

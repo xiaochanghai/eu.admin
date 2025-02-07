@@ -37,18 +37,18 @@ const FormPage: React.FC<any> = props => {
 
   // let Id = !openType ? props.Id : ids[moduleCode];
 
+  const querySingleData = async () => {
+    let { Data, Success } = await querySingle({ Id, moduleCode, url });
+    if (Success) {
+      dispatch(setId({ moduleCode, id: Id }));
+      setIsLoading(false);
+      form.setFieldsValue(Data);
+    }
+  };
   useEffect(() => {
-    if (dispatch && Id) {
+    if (Id) {
       setViewId(Id);
       setModifyType(ModifyType.Edit);
-      const querySingleData = async () => {
-        let { Data, Success } = await querySingle({ Id, moduleCode, url });
-        if (Success) {
-          dispatch(setId({ moduleCode, id: Id }));
-          setIsLoading(false);
-          form.setFieldsValue(Data);
-        }
-      };
       querySingleData();
       setDisabled(false);
 

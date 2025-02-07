@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch } from "@/redux";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
-import { RootState, useSelector } from "@/redux";
-import { Loading } from "@/components/Loading/index";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import FormIndex from "./components/FormIndex";
+import { Loading } from "@/components";
 
 // const RouterGuard: React.FC<RouterGuardProps> = props => {
 const Index: React.FC = () => {
@@ -16,11 +15,11 @@ const Index: React.FC = () => {
   const moduleCode = arr[arr.length - 1];
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let moduleInfo = moduleInfos[moduleCode];
+  const getModuleInfo1 = async () => {
+    let { Data } = await getModuleInfo(moduleCode);
+    dispatch(setModuleInfo(Data));
+  };
   useEffect(() => {
-    const getModuleInfo1 = async () => {
-      let { Data } = await getModuleInfo(moduleCode);
-      dispatch(setModuleInfo(Data));
-    };
     if (!moduleInfo) getModuleInfo1();
   }, []);
 

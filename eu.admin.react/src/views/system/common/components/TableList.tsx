@@ -1,13 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useDispatch, RootState, useSelector } from "@/redux";
-import { ModuleInfo } from "@/api/interface/index";
 import { Drawer, Modal, Button, Space } from "antd";
-import FormPage from "./FormPage";
+import type { ActionType } from "@ant-design/pro-components";
+import { useDispatch, RootState, useSelector } from "@/redux";
+import { Loading, SmProTable, Icon } from "@/components";
+import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import Extend from "./Extend";
-import type { ActionType } from "@ant-design/pro-components";
-import { Loading, SmProTable, Icon } from "@/components";
+import FormPage from "./FormPage";
 
 const MenuMange: React.FC<any> = props => {
   const dispatch = useDispatch();
@@ -78,97 +78,97 @@ const MenuMange: React.FC<any> = props => {
     );
   };
   let action = {};
-  if (moduleInfo && moduleInfo.menuData.length > 0)
-    moduleInfo.menuData.map((item: any) => {
-      if (item.FunctionJs) eval(item.FunctionJs);
-    });
+  if (moduleInfo && moduleInfo.menuData.length > 0) moduleInfo.menuData.map((item: any) => eval(item.FunctionJs));
 
-  if (moduleInfo && moduleInfo.actionData.length > 0)
-    moduleInfo.actionData.map((item: any) => {
-      if (item.FunctionJs) eval(item.FunctionJs);
-    });
+  if (moduleInfo && moduleInfo.actionData.length > 0) moduleInfo.actionData.map((item: any) => eval(item.FunctionJs));
 
-  if (moduleInfo && moduleInfo.hideMenu.length > 0)
-    moduleInfo.hideMenu.map((item: any) => {
-      if (item.FunctionJs) eval(item.FunctionJs);
-    });
+  if (moduleInfo && moduleInfo.hideMenu.length > 0) moduleInfo.hideMenu.map((item: any) => eval(item.FunctionJs));
   //#endregion
   return (
     <>
       {moduleInfo && moduleInfo.Success === true ? (
-        <SmProTable
-          moduleCode={moduleCode}
-          moduleInfo={moduleInfo}
-          actionRef={tableRef}
-          formRef={formRef}
-          IsView={IsView}
-          masterId={masterId}
-          onEdit={(id: any, isVIew: any) => {
-            dispatch(setId({ moduleCode, id }));
+        <>
+          <SmProTable
+            moduleCode={moduleCode}
+            moduleInfo={moduleInfo}
+            actionRef={tableRef}
+            formRef={formRef}
+            IsView={IsView}
+            masterId={masterId}
+            onEdit={(id: any, isVIew: any) => {
+              dispatch(setId({ moduleCode, id }));
 
-            if (moduleInfo.openType === "Modal") {
-              setModalVisible(true);
-              setIsView(isVIew);
-            } else if (moduleInfo.openType === "Drawer") {
-              setDrawerOpen(true);
-              setIsView(isVIew);
-            } else changePage("FormPage", id, isVIew);
-          }}
-          {...action}
-          {...props}
-        />
+              if (moduleInfo.openType === "Modal") {
+                setModalVisible(true);
+                setIsView(isVIew);
+              } else if (moduleInfo.openType === "Drawer") {
+                setDrawerOpen(true);
+                setIsView(isVIew);
+              } else changePage("FormPage", id, isVIew);
+            }}
+            {...action}
+            {...props}
+          />
+          {moduleInfo.openType === "Modal" ? (
+            <Modal
+              destroyOnClose
+              title={moduleInfo.moduleName + (id ? "->编辑" : "->新增")}
+              open={modalVisible}
+              //  maskClosable={false}
+              width={moduleInfo.formPageWidth}
+              footer={null}
+              // onCancel={() => {
+              //   setModalVisible(false);
+              //   // dispatch({
+              //   //   type: "smcommon/setId",
+              //   //   payload: { moduleCode, id: null }
+              //   // });
+              // }}
+              onCancel={() => setModalVisible(false)}
+            >
+              {modalVisible ? component() : null}
+            </Modal>
+          ) : null}
+          {moduleInfo.openType === "Drawer" ? (
+            <Drawer
+              title={moduleInfo.moduleName + (id ? "->编辑" : "->新增")}
+              width={moduleInfo.formPageWidth}
+              onClose={onClose}
+              open={drawerOpen}
+              extra={
+                <Space>
+                  <Button
+                    key="submit"
+                    disabled={isVIew ?? disabled}
+                    type="primary"
+                    block={true}
+                    onClick={() => formPageRef.current.onSave()}
+                  >
+                    <a title="保存">保存</a>
+                  </Button>
+                  <Button
+                    key="submit1"
+                    disabled={isVIew ?? disabled}
+                    block={true}
+                    onClick={() => formPageRef.current.onSaveAdd()}
+                  >
+                    保存并新建
+                  </Button>
+
+                  <Button key="back" type="text" block={true} onClick={() => onClose()}>
+                    <Icon name="RollbackOutlined" />
+                  </Button>
+                </Space>
+              }
+            >
+              {drawerOpen ? component() : null}
+            </Drawer>
+          ) : null}
+        </>
       ) : (
         <Loading />
       )}
-      {moduleInfo && moduleInfo.Success === true && moduleInfo.openType === "Modal" ? (
-        <Modal
-          destroyOnClose
-          title={moduleInfo.moduleName + (id ? "->编辑" : "->新增")}
-          open={modalVisible}
-          //  maskClosable={false}
-          width={moduleInfo.formPageWidth}
-          footer={null}
-          onCancel={() => {
-            setModalVisible(false);
-            // dispatch({
-            //   type: "smcommon/setId",
-            //   payload: { moduleCode, id: null }
-            // });
-          }}
-        >
-          {modalVisible ? component() : null}
-        </Modal>
-      ) : null}
-      {moduleInfo && moduleInfo.Success === true && moduleInfo.openType === "Drawer" ? (
-        <Drawer
-          title={moduleInfo.moduleName + (id ? "->编辑" : "->新增")}
-          width={moduleInfo.formPageWidth}
-          onClose={onClose}
-          open={drawerOpen}
-          extra={
-            <Space>
-              <Button
-                key="submit"
-                disabled={isVIew ?? disabled}
-                type="primary"
-                block={true}
-                onClick={() => formPageRef.current.onSave()}
-              >
-                <a title="保存">保存</a>
-              </Button>
-              <Button key="submit1" disabled={isVIew ?? disabled} block={true} onClick={() => formPageRef.current.onSaveAdd()}>
-                保存并新建
-              </Button>
 
-              <Button key="back" type="text" block={true} onClick={() => onClose()}>
-                <Icon name="RollbackOutlined" />
-              </Button>
-            </Space>
-          }
-        >
-          {drawerOpen ? component() : null}
-        </Drawer>
-      ) : null}
       <Extend moduleCode={moduleCode} extendPageRef={extendPageRef} />
     </>
   );

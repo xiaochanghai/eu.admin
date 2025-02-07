@@ -4,7 +4,7 @@ import { Card, Form } from "antd";
 import { message } from "@/hooks/useMessage";
 import { Button, Input, Row, Col, Space, InputNumber } from "antd";
 import { querySingle, add, update } from "@/api/modules/module";
-import { Loading } from "@/components/Loading/index";
+import { Loading } from "@/components";
 // import { RootState, useSelector } from "@/redux";
 // // import { ModuleInfo } from "@/api/interface/index";
 // import { getModuleInfo } from "@/api/modules/module";

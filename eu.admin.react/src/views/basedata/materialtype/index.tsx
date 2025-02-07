@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Tree, Tabs, Space, Button, Card, Popconfirm } from "antd";
-import { Icon } from "@/components/Icon";
-import { useDispatch } from "@/redux";
-import { RootState, useSelector } from "@/redux";
-// import TableList from "../../system/common/components/TableList";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
-import SmProTable from "@/components/ProTable";
 import FormPage from "./FormPage";
 import http from "@/api";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
+import { Icon, SmProTable } from "@/components";
 
 const { TabPane } = Tabs;
 let moduleCode = "BD_MATERIAL_TYPE_MNG";

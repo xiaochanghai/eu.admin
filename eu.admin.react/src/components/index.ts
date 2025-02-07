@@ -7,3 +7,5 @@ export { Loading, PageLoader } from "@/components/Loading/index";
 export { Icon } from "@/components/Icon";
 export { default as FormToolbar } from "@/components/FormToolbar/index";
 export { default as Layout } from "@/components/Elements/Layout";
+export { default as UploadImage } from "@/components/UploadImage";
+export { default as Attachment } from "@/components/Attachment";
