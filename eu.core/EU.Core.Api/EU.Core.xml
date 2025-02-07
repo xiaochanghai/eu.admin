@@ -1133,10 +1133,18 @@
             文件服务(Controller)
             </summary>
         </member>
-        <member name="F:EU.Core.Api.Controllers.FileController._configuration">
+        <member name="F:EU.Core.Api.Controllers.FileController._hostingEnvironment">
             <summary>
             配置信息
             </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.GetFileList(System.Guid,System.String)">
+            <summary>
+            获取文件列表
+            </summary>
+            <param name="masterId">masterId</param>
+            <param name="imageType">类型</param>
+            <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.FileController.UploadAsync(EU.Core.Model.UploadForm)">
             <summary>
@@ -1161,7 +1169,7 @@
         </member>
         <member name="M:EU.Core.Api.Controllers.FileController.GetByUrl(System.String)">
             <summary>
-            
+            获取图片
             </summary>
             <param name="url"></param>
             <returns></returns>

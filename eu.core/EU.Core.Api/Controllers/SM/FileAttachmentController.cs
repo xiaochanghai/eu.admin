@@ -27,16 +27,22 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// <summary>
     /// 配置信息
     /// </summary>
-    private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _hostingEnvironment;
     public FileController(IFileAttachmentServices service, IConfiguration configuration, IWebHostEnvironment hostingEnvironment) : base(service)
     {
-        _configuration = configuration;
         _hostingEnvironment = hostingEnvironment;
     }
 
+    #region 获取文件列表
+    /// <summary>
+    /// 获取文件列表
+    /// </summary>
+    /// <param name="masterId">masterId</param>
+    /// <param name="imageType">类型</param>
+    /// <returns></returns>
     [HttpGet("GetFileList")]
     public async Task<ServiceResult<List<FileAttachment>>> GetFileList(Guid masterId, string imageType = null) => await _service.GetFileListAsync(masterId, imageType);
+    #endregion
 
     #region 上传附件接口
     /// <summary>
@@ -44,11 +50,8 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// </summary>
     /// <param name="upload"></param>
     /// <returns></returns>
-    [HttpPost, Route("Upload")]
-    public async Task<ServiceResult<Guid>> UploadAsync([FromForm] UploadForm upload)
-    {
-        return await _service.UploadAsync(upload);
-    }
+    [HttpPost("Upload")]
+    public async Task<ServiceResult<Guid>> UploadAsync([FromForm] UploadForm upload) => await _service.UploadAsync(upload);
     #endregion
 
     #region 上传图片
@@ -57,11 +60,8 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// </summary>
     /// <param name="upload"></param>
     /// <returns></returns>
-    [HttpPost, Route("UploadImage")]
-    public async Task<ServiceResult<Guid>> UploadImageAsync([FromForm] UploadForm upload)
-    {
-        return await _service.UploadImageAsync(upload);
-    }
+    [HttpPost("UploadImage")]
+    public async Task<ServiceResult<Guid>> UploadImageAsync([FromForm] UploadForm upload) => await _service.UploadImageAsync(upload);
     #endregion
 
     #region 上传视频
@@ -70,102 +70,17 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// </summary>
     /// <param name="upload"></param> 
     /// <returns></returns>
-    [HttpPost, Route("UploadVideo")]
-    public async Task<ServiceResult<string>> UploadVideoAsync([FromForm] ChunkUpload upload)
-    {
-        return await _service.UploadVideoAsync(upload);
-    }
-    #endregion
-
-    #region 上传Excel导入模板
-    [HttpPost, Route("UploadImport")]
-    public async Task<IActionResult> UploadImportAsync(IFormFileCollection fileList, Guid? masterId, bool isUnique = false, string filePath = null)
-    {
-        dynamic obj = new ExpandoObject();
-        string status = "error";
-        string message = string.Empty;
-        string pathHeader = string.Empty;
-        string url = string.Empty;
-
-        try
-        {
-            using var _context = ContextFactory.CreateContext();
-            filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
-            if (fileList.Count > 0)
-            {
-                foreach (var file in fileList)
-                {
-
-                    var ext = string.Empty;
-                    if (string.IsNullOrEmpty(file.FileName) == false)
-                    {
-                        var dotPos = file.FileName.LastIndexOf('.');
-                        ext = file.FileName.Substring(dotPos + 1);
-                    }
-
-                    pathHeader = "wwwroot/" + filePath;
-                    if (!Directory.Exists(pathHeader))
-                    {
-                        Directory.CreateDirectory(pathHeader);
-                    }
-
-                    string fileName = Guid.NewGuid().ToString();
-                    var filepath = Path.Combine(pathHeader, $"{fileName}.{ext}");
-                    //var filepath = Path.Combine(pathHeader, file.FileName);
-                    using (var stream = global::System.IO.File.Create(filepath))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    FileAttachment fileAttachment = new FileAttachment();
-                    fileAttachment.OriginalFileName = file.FileName;
-                    fileAttachment.CreatedBy = App.User.ID;
-                    fileAttachment.CreatedTime = Utility.GetSysDate();
-                    fileAttachment.FileName = fileName;
-                    fileAttachment.FileExt = ext;
-                    fileAttachment.MasterId = masterId;
-                    fileAttachment.Length = file.Length;
-                    fileAttachment.Path = filePath;
-                    url = fileName + "." + ext;
-                    _context.Add(fileAttachment);
-                }
-
-                _context.SaveChanges();
-
-                if (isUnique)
-                {
-                    string sql = @"UPDATE FileAttachment
-                                SET IsDeleted = 'true'
-                                WHERE MasterId = '57ec49b5-1a49-4538-9278-4fa7ad86cbc5'
-                                      AND ID NOT IN(SELECT TOP (1) ID
-                                                    FROM FileAttachment
-                                                    WHERE MasterId = '57ec49b5-1a49-4538-9278-4fa7ad86cbc5'
-                                                     ORDER BY CreatedTime DESC)
-                                      AND IsDeleted = 'false'";
-                    sql = string.Format(sql, masterId);
-                    DBHelper.ExcuteNonQuery(sql, null);
-                }
-            }
-
-            status = "ok";
-        }
-        catch (Exception E)
-        {
-            message = E.Message;
-        }
-        obj.url = url;
-        obj.status = status;
-        obj.message = message;
-        return Ok(obj);
-    }
+    [HttpPost("UploadVideo")]
+    public async Task<ServiceResult<string>> UploadVideoAsync([FromForm] ChunkUpload upload) => await _service.UploadVideoAsync(upload);
     #endregion
 
     #region 获取图片
     /// <summary>
-    /// 
+    /// 获取图片
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
-    [HttpGet, AllowAnonymous, Route("GetByUrl")]
+    [AllowAnonymous, HttpGet("GetByUrl")]
     public async Task<IActionResult> GetByUrl(string url)
     {
         try
@@ -225,8 +140,6 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     {
         var webRootPath = _hostingEnvironment.WebRootPath;
 
-        using var _context = ContextFactory.CreateContext();
-
         var file = await _service.Query(id);
         if (file == null)
             return Ok($"无效的图片ID");
@@ -273,26 +186,26 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet, AllowAnonymous, Route("Download/{id}")]
+    [AllowAnonymous, HttpGet("Download/{id}")]
     public IActionResult Download(Guid id)
     {
-        string sql = "SELECT * FROM FileAttachment where ID='{0}' and IsDeleted='false'";
-        sql = string.Format(sql, id);
-        FileAttachment attachment = DBHelper.Instance.QueryFirst<FileAttachment>(sql);
+        string sql = $"SELECT * FROM FileAttachment where ID='{id}' and IsDeleted='false'";
+        var attachment = DBHelper.QueryFirst<FileAttachment>(sql);
 
         if (attachment != null)
         {
             var fileName = attachment.FileName;
             string path = "wwwroot/" + attachment.Path + fileName;
+
+            if (!Directory.Exists(path))
+                return Ok("文件不存在！");
+
             FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
             fs.Close();
             return File(new FileStream(path, FileMode.Open), "application/octet-stream", fileName);
         }
         else
-        {
             return Ok("无效ID");
-        }
-
     }
     #endregion
 }
