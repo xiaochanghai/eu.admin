@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { RefreshContext } from "@/context/Refresh";
 import { setGlobalState } from "@/redux/modules/global";
 import { removeTab, closeMultipleTab, closeTabsOnSide } from "@/redux/modules/tabs";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 interface MoreButtonProps {
   path: string;

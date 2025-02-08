@@ -1,24 +1,18 @@
 import React, { useEffect } from "react";
 import { Spin } from "antd";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { setUserInfo } from "@/redux/modules/user";
 import http from "@/api";
-import { useDispatch } from "@/redux";
 
 const UserName: React.FC = () => {
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
-
+  const querySingleData = async () => {
+    let { Data, Success } = await http.get<any>("/api/Authorize/CurrentUser");
+    if (Success) dispatch(setUserInfo(Data));
+  };
   useEffect(() => {
-    if (dispatch) {
-      const querySingleData = async () => {
-        let { Data, Success } = await http.get<any>("/api/Authorize/CurrentUser");
-        if (Success) {
-          dispatch(setUserInfo(Data));
-        }
-      };
-      if (!userInfo.UserName) querySingleData();
-    }
+    if (!userInfo.UserName) querySingleData();
   }, []);
 
   return userInfo && userInfo.UserName ? (

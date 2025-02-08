@@ -5,7 +5,7 @@ import { MetaProps, RouteObjectType } from "@/routers/interface";
 import { Link, useMatches } from "react-router-dom";
 import { RootState, useSelector } from "@/redux";
 import { getAllBreadcrumbList } from "@/utils";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import { HOME_URL } from "@/config";
 
 const BreadcrumbNav: React.FC = () => {

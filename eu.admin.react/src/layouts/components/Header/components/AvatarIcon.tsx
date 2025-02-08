@@ -1,17 +1,16 @@
 import React, { useRef } from "react";
 import { type MenuProps, Dropdown, Avatar } from "antd";
+import { Icon } from "@/components";
 import { HOME_URL, LOGIN_URL } from "@/config";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { useNavigate } from "react-router-dom";
 import { logoutApi } from "@/api/modules/login";
-import { useDispatch } from "@/redux";
 import { setToken } from "@/redux/modules/user";
 import { setAuthMenuList } from "@/redux/modules/auth";
 import { modal, message } from "@/hooks/useMessage";
-import { RootState, useSelector } from "@/redux";
 import InfoModal, { InfoModalRef } from "./InfoModal";
 import PasswordModal, { PasswordModalRef } from "./PasswordModal";
 import avatar from "@/assets/images/avatar.png";
-import { Icon } from "@/components/Icon";
 
 let baseURL = import.meta.env.VITE_API_URL as string;
 let VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
