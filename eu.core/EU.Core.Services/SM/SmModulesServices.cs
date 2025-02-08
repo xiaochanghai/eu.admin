@@ -301,7 +301,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     element= "/system/config/form/index",
                     meta = new TreeAuthMenuMeta
                     {
-                        key = "account_setting",
+                        key = "form_setting",
                         icon = "UserOutlined",
                         title = "表单配置",
                         isHide = true,
@@ -316,11 +316,25 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     element= "/system/workflow/index",
                     meta = new TreeAuthMenuMeta
                     {
-                        key = "account_setting",
+                        key = "workflow_setting",
                         icon = "UserOutlined",
                         title = "工作流",
                         isHide = true,
                         isFull = true
+                    },
+                    children = default
+                },
+                new ()
+                {
+                    id = "39576ba6-45ad-4e88-9867-9699cc8d080f",
+                    path = "/about",
+                    element= "/about/index",
+                    meta = new TreeAuthMenuMeta
+                    {
+                        key = "about_setting",
+                        icon = "InfoCircleOutlined",
+                        title = "关于系统",
+                        isHide = true
                     },
                     children = default
                 }

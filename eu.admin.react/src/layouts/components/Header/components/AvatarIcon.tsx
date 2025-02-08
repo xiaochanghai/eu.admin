@@ -78,6 +78,12 @@ const AvatarIcon: React.FC = () => {
     },
     {
       key: "4",
+      label: <span className="dropdown-item">关于系统</span>,
+      icon: getIcon("InfoCircleOutlined"),
+      onClick: () => navigate("/about")
+    },
+    {
+      key: "5",
       label: <span className="dropdown-item">退出登录</span>,
       icon: getIcon("LoginOutlined"),
       onClick: logout
