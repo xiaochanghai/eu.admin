@@ -51,7 +51,7 @@ const About: React.FC = () => {
             </Link>
           </Descriptions.Item>
           <Descriptions.Item label="预览地址">
-            <Link href="https://gitee.com/link?target=http%3A%2F%2Feu-keji.com%2F" target="_blank">
+            <Link href="http://eu-keji.com/" target="_blank">
               预览地址
             </Link>
           </Descriptions.Item>
