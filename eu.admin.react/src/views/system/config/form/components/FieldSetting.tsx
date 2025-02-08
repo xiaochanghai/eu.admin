@@ -1,5 +1,5 @@
 import { Select, Form } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const FormItem = Form.Item;
 const Option = Select.Option;

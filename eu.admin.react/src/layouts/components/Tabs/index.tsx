@@ -9,7 +9,7 @@ import { RootState, useDispatch, useSelector } from "@/redux";
 import { addTab, removeTab, setTabsList, closeMultipleTab, closeTabsOnSide } from "@/redux/modules/tabs";
 import { TabsListProp } from "@/redux/interface";
 import { MetaProps } from "@/routers/interface";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 // import MoreButton from "./components/MoreButton";
 import { useTranslation } from "react-i18next";
 import { setGlobalState } from "@/redux/modules/global";

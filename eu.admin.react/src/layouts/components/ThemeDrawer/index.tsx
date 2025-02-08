@@ -3,7 +3,7 @@ import { setGlobalState } from "@/redux/modules/global";
 import { RootState, useDispatch, useSelector } from "@/redux";
 import ColorPicker from "./components/ColorPicker";
 import "./index.less";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const ThemeDrawer: React.FC = () => {
   const dispatch = useDispatch();

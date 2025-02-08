@@ -4,7 +4,7 @@ import { Button, Space } from "antd";
 import { memo } from "react";
 import { styled } from "styled-components";
 import { canvasColor } from "../../utils/canvasColor";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 export const MiniFloatContainer = styled.div`
   display: flex;

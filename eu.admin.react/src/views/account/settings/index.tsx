@@ -1,13 +1,11 @@
 import { Button, Input, Upload, Form, Space, Card, Col, Row } from "antd";
 import { message } from "@/hooks/useMessage";
 import React, { useState } from "react";
-import { RootState, useSelector } from "@/redux";
-import { Icon } from "@/components/Icon";
+import { RootState, useSelector, useDispatch } from "@/redux";
+import { Icon } from "@/components";
 import ImgCrop from "antd-img-crop";
 import { uploadFile } from "@/api/modules/module";
 import { setUserInfo } from "@/redux/modules/user";
-
-import { useDispatch } from "@/redux";
 import http from "@/api";
 let baseURL = import.meta.env.VITE_API_URL as string;
 let VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;

@@ -6,7 +6,7 @@ import { Mode } from "./dsl/base";
 import { FormSetDiv } from "./style";
 import { Button, Card, Row, Col, Space, Skeleton, Descriptions } from "antd";
 import http from "@/api";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import { message } from "@/hooks/useMessage";
 import { getModuleSqlInfo } from "@/api/modules/module";
 

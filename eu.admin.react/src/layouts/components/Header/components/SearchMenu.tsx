@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RouteObjectType } from "@/routers/interface";
 import { RootState, useSelector } from "@/redux";
 import { useDebounce } from "ahooks";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const SearchMenu: React.FC = () => {
   const navigate = useNavigate();

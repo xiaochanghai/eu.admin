@@ -5,7 +5,7 @@ import { VfBaseProps } from "@/dsl/component";
 import classNames from "classnames";
 import { ReactNode } from "react";
 // import SelectIcon from "../SelectIcon";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 export interface SwitchCardProps extends VfBaseProps<boolean> {
   divider?: boolean; //分割线

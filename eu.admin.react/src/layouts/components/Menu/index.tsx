@@ -5,7 +5,7 @@ import { RouteObjectType, MetaProps } from "@/routers/interface";
 import { RootState, useSelector } from "@/redux";
 import { shallowEqual } from "react-redux";
 import { getOpenKeys } from "@/utils";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import "./index.less";
 
 interface LayoutMenuProps {

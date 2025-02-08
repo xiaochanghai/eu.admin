@@ -1,7 +1,7 @@
 import { memo } from "react";
 import React from "react";
 // import { Avatar, Space } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import MemberSelect from "@/workflow-editor/components/MemberSelect";
 // import { useTranslate } from "../../workflow-editor/react-locales";
 // import { VF } from "@src/dsl/VF";

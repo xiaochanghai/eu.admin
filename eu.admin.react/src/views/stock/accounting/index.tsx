@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
-// import { Modal } from "antd";
-// import { message } from "@/hooks/useMessage";
-// import { Icon } from "@/components/Icon/index";
-// import http from "@/api";
-// const { confirm } = Modal;
 
 const Index: React.FC<any> = () => {
   let moduleCode = "IV_ACCOUNTING_MNG";

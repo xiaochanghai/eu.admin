@@ -1,6 +1,5 @@
 import React from "react";
-import { useDispatch } from "@/redux";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { setGlobalState } from "@/redux/modules/global";
 
 const Maximize: React.FC = () => {

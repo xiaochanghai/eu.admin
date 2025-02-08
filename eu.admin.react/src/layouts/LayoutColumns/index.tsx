@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Layout } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import { RootState, useSelector } from "@/redux";
 import { RouteObjectType } from "@/routers/interface";
 import { useLocation, useNavigate } from "react-router-dom";

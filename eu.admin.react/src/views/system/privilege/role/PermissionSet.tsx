@@ -6,7 +6,7 @@ import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
 import http from "@/api";
 import type { CollapseProps, CheckboxProps } from "antd";
-import { PageLoader } from "@/components/Loading/index";
+import { PageLoader } from "@/components";
 import { message } from "@/hooks/useMessage";
 import NProgress from "@/config/nprogress";
 import { some } from "@/utils";

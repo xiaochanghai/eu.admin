@@ -1,6 +1,5 @@
 // import { useEffect } from "react";
-import { useDispatch } from "@/redux";
-import { store } from "@/redux";
+import { useDispatch, store } from "@/redux";
 import {
   SET_ERRORS,
   SET_VALIDATED,

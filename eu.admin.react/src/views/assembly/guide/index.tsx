@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { type TourProps, Button, Divider, Space, Tour, Alert, Typography, Card } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import illustration01 from "@/assets/images/illustration01.svg";
 import illustration02 from "@/assets/images/illustration02.svg";
 import illustration03 from "@/assets/images/illustration03.svg";

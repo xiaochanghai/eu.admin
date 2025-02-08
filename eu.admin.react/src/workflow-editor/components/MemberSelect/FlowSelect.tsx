@@ -6,7 +6,7 @@ import { ISelect, VfBaseProps } from "@/dsl/component";
 import { NodeUserInfo } from "../../classes/vlife";
 import Scrollbars from "react-custom-scrollbars";
 import DynamicNodeSelect from "./DynamicNodeSelect";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const TabPane = Tabs.TabPane;
 

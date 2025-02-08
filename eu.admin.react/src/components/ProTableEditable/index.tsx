@@ -1,18 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "@/redux";
 import { Popconfirm, Button, Modal, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
-import { Loading } from "@/components/Loading/index";
 import { getModuleLogInfo, getModuleInfo } from "@/api/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType, RecordLogData } from "@/api/interface/index";
 import { setModuleInfo } from "@/redux/modules/module";
 import http from "@/api";
 import { pagination1 } from "@/config/proTable";
 import { query } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
-import { UploadExcel, ModuleLog, Icon } from "@/components";
+import { UploadExcel, ModuleLog, Icon, Loading } from "@/components";
 
 const Index: React.FC<any> = props => {
   let tableAction: any;

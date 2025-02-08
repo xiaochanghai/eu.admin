@@ -3,7 +3,7 @@ import { Button, Tabs, Input, Card, Form, Row, Col, Space, Modal, Skeleton } fro
 import { getModuleFullSql, add, update, getModuleSqlInfo } from "@/api/modules/module";
 import TableList from "../../common/components/TableList";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import ColumnFormPage from "./ColumnFormPage";
 
 const { TextArea } = Input;

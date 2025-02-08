@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "@/redux";
 import { Popconfirm, Button, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
 import { getModuleInfo } from "@/api/modules/module";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setModuleInfo } from "@/redux/modules/module";
 import http from "@/api";

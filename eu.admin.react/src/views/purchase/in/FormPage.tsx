@@ -2,7 +2,7 @@
 import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card, Popconfirm } from "antd";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
-import Layout from "@/components/Elements/Layout";
+import { Layout } from "@/components";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";

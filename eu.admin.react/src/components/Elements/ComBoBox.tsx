@@ -1,5 +1,5 @@
 import { Form } from "antd";
-import ComBoBox from "@/components/ComBoBox/index";
+import { ComBoBox } from "@/components";
 import FieldTitle from "./FieldTitle";
 
 const FormItem = Form.Item;

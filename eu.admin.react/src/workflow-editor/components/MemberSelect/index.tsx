@@ -6,7 +6,7 @@ import { list } from "@/api/SysDept";
 import { list as userList } from "@/api/SysUser";
 // import { listAll as groupList } from "@/api/SysGroup";
 import { useEffect, useState } from "react";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 interface MemberSelectProps extends FlowSelectProps {
   label?: string;

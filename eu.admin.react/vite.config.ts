@@ -56,7 +56,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       // Disable gzip compressed size reporting, which slightly reduces pack time
       reportCompressedSize: false,
       // Determine the chunk size that triggers the warning
-      chunkSizeWarningLimit: 2000,
+      chunkSizeWarningLimit: 5000,
       rollupOptions: {
         output: {
           // Static resource classification and packaging

@@ -4,7 +4,7 @@ import { Popover } from "antd";
 import { memo, useCallback, useState } from "react";
 import { styled } from "styled-components";
 import { ContentPanel } from "./ContentPanel";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const AddButtonBox = styled.div`
   width: 240px;

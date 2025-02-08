@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { styled } from "styled-components";
 import { Button } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import { useWorkFlow } from "@/workflow-editor/hooks";
 
 const CloseStyledButton = styled(Button)`

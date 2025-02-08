@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
 import { message, modal } from "@/hooks/useMessage";
-import { Icon } from "@/components/Icon/index";
+import { Icon } from "@/components";
 import http from "@/api";
 const { confirm } = modal;
 

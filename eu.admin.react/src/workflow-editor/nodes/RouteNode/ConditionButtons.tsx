@@ -3,7 +3,7 @@ import { styled } from "styled-components";
 import { useTranslate } from "../../react-locales";
 import { IRouteNode, IBranchNode } from "../../interfaces";
 import { Tooltip } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 import { useWorkFlow } from "../../hooks";
 
 const Container = styled.div`

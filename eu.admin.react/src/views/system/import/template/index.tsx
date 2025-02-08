@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TableList from "../../common/components/TableList";
 import FormPage from "../../common/components/FormPage";
-import Attachment from "@/components/Attachment";
+import { Attachment } from "@/components";
 
 // import { useDispatch } from "@/redux";
 

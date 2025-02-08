@@ -1,13 +1,9 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
-import { useDispatch } from "@/redux";
 import { Form, Flex } from "antd";
-import { Loading } from "@/components/Loading/index";
-// import TableList from "../../common/components/TableList";
+import { Loading, Layout } from "@/components";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
-import Layout from "@/components/Elements/Layout";
-// import FormToolbar from "@/components/FormToolbar/index";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
 

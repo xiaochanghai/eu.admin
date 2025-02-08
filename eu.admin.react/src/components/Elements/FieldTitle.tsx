@@ -1,5 +1,5 @@
 import { Tooltip } from "antd";
-import { Icon } from "@/components/Icon";
+import { Icon } from "@/components";
 
 const FieldTitle: React.FC<any> = props => {
   const { FormTitle, IsTooltip, TooltipContent } = props;

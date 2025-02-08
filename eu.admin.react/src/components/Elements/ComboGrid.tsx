@@ -1,5 +1,5 @@
 import { Form } from "antd";
-import ComboGrid from "@/components/ComBoGrid/index";
+import { ComboGrid } from "@/components";
 import { ModifyType } from "@/api/interface/index";
 import FieldTitle from "./FieldTitle";
 

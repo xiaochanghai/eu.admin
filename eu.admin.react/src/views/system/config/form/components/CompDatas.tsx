@@ -1,11 +1,7 @@
 /**
  * 表单组件资产配置定义
  */
-import Input from "@/components/Elements/Input";
-import InputNumber from "@/components/Elements/InputNumber";
-import ComBoBox from "@/components/Elements/ComBoBox";
-import ComboGrid from "@/components/Elements/ComboGrid";
-import Switch from "@/components/Elements/Switch";
+import { Switch, ComboGrid, ComBoBox, InputNumber, Input } from "@/components";
 
 export const FormComponents = [
   {
