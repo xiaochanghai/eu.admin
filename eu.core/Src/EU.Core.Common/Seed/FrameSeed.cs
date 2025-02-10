@@ -551,12 +551,12 @@ namespace " + strNameSpace + @"
         build.Append("/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。\r\n");
         build.Append("* " + tableName + ".cs\r\n");
         build.Append("*\r\n");
-        build.Append("*功 能： N / A\r\n");
+        build.Append("* 功 能： N / A\r\n");
         build.Append("* 类 名： " + tableName + "\r\n");
         build.Append("*\r\n");
         build.Append("* Ver    变更日期 负责人  变更内容\r\n");
         build.Append("* ───────────────────────────────────\r\n");
-        build.Append("*V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
+        build.Append("* V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
         build.Append("*\r\n");
         build.Append("* Copyright(c) " + DateTime.Now.Year + " EU Corporation. All Rights Reserved.\r\n");
         build.Append("*┌──────────────────────────────────┐\r\n");
@@ -658,6 +658,13 @@ namespace " + strNameSpace + @"
             }
         }
         #endregion
+        build.Append("\r\n");
+        build.Append("    /// <summary>\r\n");
+        build.Append("    /// 审核状态\r\n");
+        build.Append("    /// </summary>\r\n");
+        build.Append("    [Display(Name = \"AuditStatus\"), Description(\"审核状态\")]\r\n");
+        build.Append("    public string AuditStatus { get; set; } = \"Add\";\r\n");
+
         #endregion
 
 
@@ -675,12 +682,12 @@ namespace " + strNameSpace + @"
         build.Append("/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。\r\n");
         build.Append("* " + tableName + ".cs\r\n");
         build.Append("*\r\n");
-        build.Append("*功 能： N / A\r\n");
+        build.Append("* 功 能： N / A\r\n");
         build.Append("* 类 名： " + tableName + "\r\n");
         build.Append("*\r\n");
         build.Append("* Ver    变更日期 负责人  变更内容\r\n");
         build.Append("* ───────────────────────────────────\r\n");
-        build.Append("*V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
+        build.Append("* V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
         build.Append("*\r\n");
         build.Append("* Copyright(c) " + DateTime.Now.Year + " EU Corporation. All Rights Reserved.\r\n");
         build.Append("*┌──────────────────────────────────┐\r\n");
@@ -718,12 +725,12 @@ namespace " + strNameSpace + @"
         build.Append("/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。\r\n");
         build.Append("* " + tableName + ".cs\r\n");
         build.Append("*\r\n");
-        build.Append("*功 能： N / A\r\n");
+        build.Append("* 功 能： N / A\r\n");
         build.Append("* 类 名： " + tableName + "\r\n");
         build.Append("*\r\n");
         build.Append("* Ver    变更日期 负责人  变更内容\r\n");
         build.Append("* ───────────────────────────────────\r\n");
-        build.Append("*V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
+        build.Append("* V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
         build.Append("*\r\n");
         build.Append("* Copyright(c) " + DateTime.Now.Year + " EU Corporation. All Rights Reserved.\r\n");
         build.Append("*┌──────────────────────────────────┐\r\n");
@@ -761,12 +768,12 @@ namespace " + strNameSpace + @"
         build.Append("/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。\r\n");
         build.Append("* " + tableName + ".cs\r\n");
         build.Append("*\r\n");
-        build.Append("*功 能： N / A\r\n");
+        build.Append("* 功 能： N / A\r\n");
         build.Append("* 类 名： " + tableName + "\r\n");
         build.Append("*\r\n");
         build.Append("* Ver    变更日期 负责人  变更内容\r\n");
         build.Append("* ───────────────────────────────────\r\n");
-        build.Append("*V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
+        build.Append("* V0.01  " + DateTime.Now.ToString() + "  SimonHsiao   初版\r\n");
         build.Append("*\r\n");
         build.Append("* Copyright(c) " + DateTime.Now.Year + " EU Corporation. All Rights Reserved.\r\n");
         build.Append("*┌──────────────────────────────────┐\r\n");
