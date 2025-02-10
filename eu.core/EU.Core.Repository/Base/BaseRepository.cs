@@ -83,6 +83,15 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     public bool Any(object objId) => _db.Queryable<TEntity>().In(objId).Any();
 
     /// <summary>
+    /// 查询实体数据是否存在
+    /// </summary>
+    /// <param name="whereExpression">条件表达式</param>
+    /// <returns></returns>
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression)
+    {
+        return await _db.Queryable<TEntity>().WhereIF(whereExpression != null, whereExpression).AnyAsync();
+    }
+    /// <summary>
     /// 根据ID查询一条数据
     /// </summary>
     /// <param name="objId">id（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
@@ -242,7 +251,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <summary>
     /// 根据表达式，删除实体
     /// </summary>
-    /// <param name="id">主键ID</param>
+    /// <param name="whereExpression">条件表达式</param>
     /// <returns></returns>
     public async Task<bool> Delete(Expression<Func<TEntity, bool>> whereExpression) => await _db.Deleteable<TEntity>().Where(whereExpression).ExecuteCommandHasChangeAsync();
 
@@ -276,7 +285,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <summary>
     /// 查询数据列表
     /// </summary>
-    /// <param name="whereExpression">whereExpression</param>
+    /// <param name="whereExpression">条件表达式</param>
     /// <returns>数据列表</returns>
     public async Task<List<TEntity>> Query(Expression<Func<TEntity, bool>> whereExpression) => await _db.Queryable<TEntity>().WhereIF(whereExpression != null, whereExpression).ToListAsync();
 

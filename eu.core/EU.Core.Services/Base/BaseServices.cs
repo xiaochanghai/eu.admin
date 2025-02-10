@@ -316,7 +316,11 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>true or false</returns>
     public async Task<bool> AnyAsync(object objId) => await BaseDal.AnyAsync(objId);
 
-
+    /// <summary>
+    /// 查询实体数据是否存在
+    /// </summary>
+    /// <param name="whereExpression">条件表达式</param>
+    /// <returns></returns>
     public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression)
     {
         return await BaseDal.AnyAsync(whereExpression);

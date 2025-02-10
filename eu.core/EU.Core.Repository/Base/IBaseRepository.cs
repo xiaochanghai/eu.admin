@@ -27,6 +27,8 @@ public interface IBaseRepository<TEntity> where TEntity : class
     /// <returns></returns>
     bool Any(object objId);
 
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression);
+
     /// <summary>
     /// 根据Id查询实体
     /// </summary>
