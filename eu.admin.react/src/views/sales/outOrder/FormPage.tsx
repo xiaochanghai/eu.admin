@@ -53,7 +53,7 @@ const FormPage: React.FC<any> = props => {
       setOrderStatus(Data.OrderStatus);
       setOrderSource(Data.OrderSource);
       // debugger;
-      if (Data.AuditStatus != "Add") {
+      if (Data.AuditStatus != ModifyType.Add) {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
       }

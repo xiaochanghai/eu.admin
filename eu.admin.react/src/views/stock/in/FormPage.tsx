@@ -59,7 +59,7 @@ const FormPage: React.FC<any> = props => {
       setStockId1(Data.StockId);
       setMasterStockId(Data.StockId);
       setMasterGoodsLocationId(Data.GoodsLocationId);
-      if (Data.AuditStatus != "Add") {
+      if (Data.AuditStatus != ModifyType.Add) {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
       }
@@ -123,7 +123,7 @@ const FormPage: React.FC<any> = props => {
                     >
                       <Layout
                         field={item}
-                        disabled={stockId ? disabled ?? IsView : true}
+                        disabled={stockId ? (disabled ?? IsView) : true}
                         modifyType={modifyType}
                         parentColumn="StockId"
                         parentId={stockId}
