@@ -10,13 +10,14 @@ const APP_COMPANY = import.meta.env.VITE_GLOB_APP_COMPANY;
 
 const LayoutFooter: React.FC = () => {
   const footer = useSelector((state: RootState) => state.global.footer);
+  const currentYear = new Date().getFullYear();
 
   return (
     <React.Fragment>
       {footer && (
         <Footer className="ant-footer">
           <a>
-            2020-2024 © {APP_TITLE} {APP_COMPANY ? APP_COMPANY + " 技术支持" : null}
+            {currentYear} © {APP_TITLE} {APP_COMPANY ? APP_COMPANY + " 技术支持" : null}
           </a>
         </Footer>
       )}
