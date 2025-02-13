@@ -24,10 +24,8 @@ namespace EU.Core.Services;
 /// </summary>
 public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, EditIvOutInput>, IIvOutServices
 {
-    private readonly IBaseRepository<IvOut> _dal;
     public IvOutServices(IBaseRepository<IvOut> dal)
     {
-        this._dal = dal;
         base.BaseDal = dal;
     }
 
@@ -54,12 +52,7 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
             entities.Add(entity);
 
             await Db.Updateable<IvOutDetail>()
-                .SetColumns(x => new IvOutDetail()
-                {
-                    IsDeleted = true,
-                    UpdateTime = DateTime.Now,
-                    UpdateBy = UserId
-                })
+                .SetColumns(x => new IvOutDetail() { IsDeleted = true }, true)
                 .Where(x => x.OrderId == id && x.IsDeleted == false)
                 .ExecuteCommandAsync();
         }

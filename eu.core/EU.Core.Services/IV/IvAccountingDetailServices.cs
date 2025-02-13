@@ -34,39 +34,32 @@ public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAcc
     #region 更新
     public override async Task<IvAccountingDetailDto> UpdateReturn(Guid Id, object entity1)
     {
-        try
-        {
-            var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
-            var orderId = dict["masterId"].ObjToGuid();
-            var entity = await Query(Id);
-            var model = ConvertToEntity(entity1);
+        var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+        var orderId = dict["masterId"].ObjToGuid();
+        var entity = await Query(Id);
+        var model = ConvertToEntity(entity1);
 
-            if (entity is null)
-                await base.Add(new InsertIvAccountingDetailInput() { OrderId = orderId }, Id);
+        if (entity is null)
+            await base.Add(new InsertIvAccountingDetailInput() { OrderId = orderId }, Id);
 
-            var lstColumns = new ModuleSqlColumn("IV_STOCK_ACCOUNTING_DETAIL_MNG").GetModuleTableEditableColumns();
+        var lstColumns = new ModuleSqlColumn("IV_STOCK_ACCOUNTING_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
+        await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
 
-            var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();
+        var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();
 
-            var material = await _materialServices.QueryDto(model.MaterialId);
-            model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
-            model1.Specifications = material.Specifications;
-            model1.UnitName = material.UnitName;
-            if (model.StockId != null)
-                model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
-            if (model.GoodsLocationId != null)
-                model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
+        var material = await _materialServices.QueryDto(model.MaterialId);
+        model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
+        model1.Specifications = material.Specifications;
+        model1.UnitName = material.UnitName;
+        if (model.StockId != null)
+            model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
+        if (model.GoodsLocationId != null)
+            model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
 
-            await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvAccountingDetail", orderId);
+        await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvAccountingDetail", orderId);
 
-            return model1;
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        return model1;
     }
     #endregion
 }

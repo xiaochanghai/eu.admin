@@ -1064,11 +1064,9 @@ namespace " + strNameSpace + @";
 /// </summary>
 public class {ClassName}Services : BaseServices<{ClassName}, {ClassName}Dto, Insert{ClassName}Input, Edit{ClassName}Input>, I{ClassName}Services" + (string.IsNullOrEmpty(strInterface) ? "" : (" , " + strInterface)) + @"
 {
-    private readonly IBaseRepository<{ClassName}> _dal;
     public {ClassName}Services(IBaseRepository<{ClassName}> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        BaseDal = dal;
     }
 }")
               .ToClassStringList(strNameSpace);
