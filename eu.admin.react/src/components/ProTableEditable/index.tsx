@@ -29,21 +29,16 @@ const Index: React.FC<any> = props => {
   const [uploadExcelVisible, setUploadExcelVisible] = useState(false);
 
   useEffect(() => {
-    const getModuleInfo1 = async () => {
-      let { Data } = await getModuleInfo(moduleCode);
-      dispatch(setModuleInfo(Data));
-    };
     if (!moduleInfo) getModuleInfo1();
-
     setIsLoading(false);
   }, []);
-
+  const getModuleInfo1 = async () => {
+    let { Data } = await getModuleInfo(moduleCode);
+    dispatch(setModuleInfo(Data));
+  };
   // 定义选择行的变化时的回调函数
   // const onSelectChange = (keys: any, rows: any) => {
-  const onSelectChange = (keys: any) => {
-    setSelectedRowKeys(keys);
-    // 可以在这里处理选中行的数据，例如执行某些操作
-  };
+  const onSelectChange = (keys: any) => setSelectedRowKeys(keys);
 
   let actionAuthButton: { [key: string]: boolean } = {};
   actions?.forEach((item: any) => {
@@ -70,15 +65,15 @@ const Index: React.FC<any> = props => {
         title="提醒"
         description="是否确定删除记录?"
         onConfirm={async () => {
-          let { Success, Message } = await http.delete<any>(url + "/" + record.ID);
+          let { Success, Message } = await http.delete<any>(`${url}/${record.ID}`);
           if (Success) message.success(Message);
           if (tableRef.current) tableRef.current.reload();
         }}
         okType="danger"
-        okText="确定"
-        cancelText="取消"
+        okText="确定1"
+        cancelText="取消2"
       >
-        <a key="delete">删除</a>
+        <a key="delete">删除1</a>
       </Popconfirm>
     ]
   };
@@ -286,7 +281,7 @@ const Index: React.FC<any> = props => {
                   editableKeys,
                   onSave: async (rowKey, data: any, _row) => {
                     let params = { ...data, ModuleCode: moduleCode, masterId };
-                    let { Success, Data } = await http.put<any>(url + "/UpdateReturn/" + rowKey, params);
+                    let { Success, Data } = await http.put<any>(`${url}/UpdateReturn/${rowKey}`, params);
                     if (Success) {
                       if (successCallBack) data = successCallBack(data, Data);
                     } else if (failCallBack) data = failCallBack();

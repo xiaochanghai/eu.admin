@@ -99,13 +99,44 @@ export interface SmLovData {
   value: string;
 }
 /**
- * ts数据类型
+ * 数据修改模式
  */
 export enum ModifyType {
-  Add = "Add", //新增模式
-  Edit = "Edit", //修改模式。
-  View = "View", //修改模式。
-  Delete = "Delete", //删除模式
-  Insert = "Insert", //插入模式
-  AuditPass = "AuditPass" //审核通过模式
+  /**
+   * 新增模式
+   */
+  Add = "Add",
+  /**
+   * 修改模式
+   */
+  Edit = "Edit",
+  /**
+   * 修改模式
+   */
+  View = "View",
+  /**
+   * 删除模式
+   */
+  Delete = "Delete",
+  /**
+   * 插入模式
+   */
+  Insert = "Insert",
+  /**
+   * 审核通过模式
+   */
+  AuditPass = "AuditPass"
+}
+/**
+ * 页面打开方式
+ */
+export enum OpenType {
+  /**
+   * 对话框
+   */
+  Modal = "Modal",
+  /**
+   * 对话框
+   */
+  Drawer = "Drawer"
 }

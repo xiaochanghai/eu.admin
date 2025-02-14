@@ -168,7 +168,7 @@ const SmProTable: React.FC<any> = props => {
                       size="small"
                       icon={<Icon name="EditOutlined" />}
                       onClick={() => onOptionEdit(record)}
-                      style={{ border: 0, background: "transparent" }}
+                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
                     ></Button>
                   )}
                   {optionAuthButton.View && (
@@ -178,7 +178,7 @@ const SmProTable: React.FC<any> = props => {
                       size="small"
                       icon={<Icon name="EyeOutlined" />}
                       onClick={() => onOptionView(record)}
-                      style={{ border: 0, background: "transparent" }}
+                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
                     ></Button>
                   )}
                   {optionAuthButton.Delete && !IsView && (
@@ -188,12 +188,12 @@ const SmProTable: React.FC<any> = props => {
                       size="small"
                       icon={<Icon name="DeleteOutlined" />}
                       onClick={() => onOptionDelete(action, record)}
-                      style={{ border: 0, background: "transparent" }}
+                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
                     ></Button>
                   )}
                 </>
               ) : null}
-              {moduleInfo && moduleInfo.Success == true && dropActions.length > 0 && record.ID != "SumRowID" ? (
+              {dropActions.length > 0 && record.ID != "SumRowID" ? (
                 <Dropdown
                   placement="bottom"
                   arrow
