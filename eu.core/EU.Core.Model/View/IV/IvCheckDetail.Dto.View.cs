@@ -46,4 +46,8 @@ public class IvCheckDetailDto : IvCheckDetailBase
     /// 货位
     /// </summary>
     public string GoodsLocationName { get; set; }
+
+    public decimal InitQTY { get; set; }
+    public decimal SurplusQTY { get; set; }
+    public decimal ShortageQTY { get; set; }
 }

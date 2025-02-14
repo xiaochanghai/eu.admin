@@ -49,6 +49,12 @@ public class IvCheck : BasePoco
     public Guid? GoodsLocationId { get; set; }
 
     /// <summary>
+    /// 订单状态
+    /// </summary>
+    [Display(Name = "OrderStatus"), Description("订单状态"), MaxLength(32, ErrorMessage = "订单状态 不能超过 32 个字符")]
+    public string OrderStatus { get; set; }
+
+    /// <summary>
     /// 备注
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]

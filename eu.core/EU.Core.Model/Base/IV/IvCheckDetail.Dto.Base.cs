@@ -60,6 +60,12 @@ public class IvCheckDetailBase
     public Guid? GoodsLocationId { get; set; }
 
     /// <summary>
+    /// 批号/炉号
+    /// </summary>
+    [Display(Name = "BatchNo"), Description("批号/炉号"), MaxLength(32, ErrorMessage = "批号/炉号 不能超过 32 个字符")]
+    public string BatchNo { get; set; }
+
+    /// <summary>
     /// 备注
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]

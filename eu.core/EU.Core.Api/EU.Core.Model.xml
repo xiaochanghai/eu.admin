@@ -704,9 +704,19 @@
             盘点货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheckBase.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.AuditStatus">
+            <summary>
+            审核状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvCheckDetailBase">
@@ -742,6 +752,11 @@
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.Remark">
@@ -6307,6 +6322,11 @@
             盘点货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheck.Remark">
             <summary>
             备注
@@ -6345,6 +6365,11 @@
         <member name="P:EU.Core.Model.Models.IvCheckDetail.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.Remark">
@@ -11554,6 +11579,21 @@
         <member name="F:EU.Core.Model.Consts.DIC_IV_OUT_STATUS.OutComplete">
             <summary>
             出库完成
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS">
+            <summary>
+            库存盘点单-订单状态
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS.WaitCheck">
+            <summary>
+            待盘点
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS.CheckComplete">
+            <summary>
+            盘点完成
             </summary>
         </member>
         <member name="T:EU.Core.Model.Consts.DIC_SYSTEM_AUDIT_STATUS">

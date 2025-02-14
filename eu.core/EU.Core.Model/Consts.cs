@@ -343,6 +343,22 @@ public class Consts
         /// </summary>
         public const string OutComplete = "OutComplete";
     }
+
+    /// <summary>
+    /// 库存盘点单-订单状态
+    /// </summary>
+    public static class DIC_IV_CHECK_STATUS
+    {
+        /// <summary>
+        /// 待盘点
+        /// </summary>
+        public const string WaitCheck = "WaitCheck";
+
+        /// <summary>
+        /// 盘点完成
+        /// </summary>
+        public const string CheckComplete = "CheckComplete";
+    }
     #endregion
 
     #region 系统
@@ -356,7 +372,6 @@ public class Consts
         /// 审核通过
         /// </summary>
         public const string CompleteAudit = "CompleteAudit";
-
 
         /// <summary>
         /// 草稿

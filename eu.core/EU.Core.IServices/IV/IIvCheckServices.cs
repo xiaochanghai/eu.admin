@@ -21,4 +21,5 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface IIvCheckServices : IBaseServices<IvCheck, IvCheckDto, InsertIvCheckInput, EditIvCheckInput>
 {
+    Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids);
 }

@@ -22,46 +22,76 @@ namespace EU.Core.Services;
 /// </summary>
 public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDto, InsertIvCheckDetailInput, EditIvCheckDetailInput>, IIvCheckDetailServices
 {
-    private readonly IBaseRepository<IvCheckDetail> _dal;
     private readonly IBdMaterialServices _materialServices;
-    public IvCheckDetailServices(IBaseRepository<IvCheckDetail> dal, IBdMaterialServices materialServices)
+    private readonly ICommonServices _commonServices;
+    public IvCheckDetailServices(IBaseRepository<IvCheckDetail> dal, IBdMaterialServices materialServices, ICommonServices commonServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        BaseDal = dal;
         _materialServices = materialServices;
+        _commonServices = commonServices;
     }
 
     #region 更新
     public override async Task<IvCheckDetailDto> UpdateReturn(Guid Id, object entity1)
     {
-        try
+        var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+        var orderId = dict["masterId"].ObjToGuid();
+        var entity = await Query(Id);
+        var model = ConvertToEntity(entity1);
+
+        if (entity is null)
         {
-            var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
-            var orderId = dict["masterId"].ObjToGuid();
-            var entity = await Query(Id);
-            var model = ConvertToEntity(entity1);
-
-            if (entity is null)
-                await base.Add(new InsertIvCheckDetailInput() { OrderId = orderId }, Id);
-
-            var lstColumns = new ModuleSqlColumn("IV_OUT_DETAIL_MNG").GetModuleTableEditableColumns();
-
-            await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
-
-            var model1 = Mapper.Map(model).ToANew<IvCheckDetailDto>();
-
-            var material = await _materialServices.QueryDto(model.MaterialId);
-            model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
-            model1.Specifications = material.Specifications;
-            model1.UnitName = material.UnitName;
-            await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvCheckDetail", orderId);
-
-            return model1;
+            if (await Db.Queryable<IvCheckDetail>()
+                .WhereIF(model.BatchNo.IsNotEmptyOrNull(), x => x.BatchNo == model.BatchNo)
+                .WhereIF(model.BatchNo.IsNullOrEmpty(), x => string.IsNullOrWhiteSpace(x.BatchNo))
+                .Where(x =>
+                x.OrderId == orderId &&
+                x.MaterialId == model.MaterialId &&
+                x.StockId == model.StockId &&
+                x.GoodsLocationId == model.GoodsLocationId).AnyAsync())
+                throw new Exception("该单子已存在相同的物料，请在原数据上修改！");
+            await base.Add(new InsertIvCheckDetailInput() { OrderId = orderId }, Id);
         }
-        catch (Exception)
+
+        var lstColumns = new ModuleSqlColumn("IV_CHECK_DETAIL_MNG").GetModuleTableEditableColumns();
+
+        await Update(model, lstColumns, ["OrderId"]);
+
+        var model1 = Mapper.Map(model).ToANew<IvCheckDetailDto>();
+
+        //var material = await _materialServices.QueryDto(model.MaterialId);
+        //model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
+        //model1.Specifications = material.Specifications;
+        //model1.UnitName = material.UnitName;
+        //if (model.StockId != null)
+        //    model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
+        //if (model.GoodsLocationId != null)
+        //    model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
+        await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvCheckDetail", orderId);
+        //entity = await Query(Id);
+
+        var filter = new QueryFilter()
         {
-            throw;
+            Conditions = $"A.ID='{Id}'",
+            PageIndex = 1,
+            PageSize = 100
+        };
+
+        //model1.SerialNumber = entity.SerialNumber;
+        var result = await _commonServices.QueryByFilter(filter, "IV_CHECK_DETAIL_MNG");
+        if (result.data.Rows.Count > 0)
+        {
+            model1.MaterialName = result.data.Rows[0]["MaterialName"].ToString();
+            model1.Specifications = result.data.Rows[0]["Specifications"].ToString();
+            model1.UnitName = result.data.Rows[0]["UnitName"].ToString();
+            model1.StockName = result.data.Rows[0]["StockName"].ToString();
+            model1.GoodsLocationName = result.data.Rows[0]["GoodsLocationName"].ToString();
+            model1.SerialNumber = result.data.Rows[0]["SerialNumber"].ObjToInt();
+            model1.InitQTY = result.data.Rows[0]["InitQTY"].ObjToDecimal();
+            model1.SurplusQTY = result.data.Rows[0]["SurplusQTY"].ObjToDecimal();
+            model1.ShortageQTY = result.data.Rows[0]["SerialNumber"].ObjToDecimal();
         }
+        return model1;
     }
     #endregion
 }

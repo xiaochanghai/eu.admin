@@ -3,7 +3,7 @@ import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card, Popconfirm } from "antd";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo, ModifyType, OpenType } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import http from "@/api";
 import { message } from "@/hooks/useMessage";
@@ -153,16 +153,13 @@ const FormPage: React.FC<any> = props => {
     let { Data, Success, Message } = id ? await update(data) : await add(data);
 
     message.destroy();
-    if (modifyType == ModifyType.View) {
-      // modifyType = "1";
-    }
+
     if (Success) {
       message.success(Message);
       setDisabledToolbar(true);
-
-      if (tableRef.current) tableRef.current.reload();
+      tableRef?.current?.reload();
       if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
+      if (openType === OpenType.Modal || openType === OpenType.Drawer) onReload();
       if (type === "SaveAdd") {
         setViewId(null);
         setDisabled(true);
@@ -171,7 +168,7 @@ const FormPage: React.FC<any> = props => {
         setViewId(Data);
         setModifyType(ModifyType.Edit);
         setOrderStatus("WaitShip");
-        setAuditStatus("Add");
+        setAuditStatus(ModifyType.Add);
       }
     }
   };
@@ -199,9 +196,6 @@ const FormPage: React.FC<any> = props => {
       <a
         key="editable"
         onClick={() => {
-          setStockId1(null);
-
-          // if (editableKeys.length > 0) action?.saveEditable?.(editableKeys[0]);
           setGoodsLocationId(record.GoodsLocationId);
           setStockId1(record.StockId);
           action?.startEditable?.(record.ID);
@@ -213,9 +207,9 @@ const FormPage: React.FC<any> = props => {
         title="提醒"
         description="是否确定删除记录?"
         onConfirm={async () => {
-          let { Success, Message } = await http.delete<any>(moduleInfo1.url + record.ID);
+          let { Success, Message } = await http.delete<any>(`${moduleInfo1.url}/${record.ID}`);
           if (Success) message.success(Message);
-          if (tableRef.current) tableRef.current.reload();
+          tableRef?.current?.reload();
         }}
         okType="danger"
         okText="确定"
@@ -236,6 +230,7 @@ const FormPage: React.FC<any> = props => {
       let column = columns[index];
       let formItemProps = () => {
         return {
+          // rules: JSON.parse(ruleString)
           rules: [{ required: true, message: "此项为必填项" }]
         };
       };
@@ -386,6 +381,10 @@ const FormPage: React.FC<any> = props => {
                     originData.StockName = data.StockName;
                     originData.QTY = data.QTY;
                     originData.Amount = data.Amount;
+                    originData.SerialNumber = data.SerialNumber;
+                    originData.InitQTY = data.InitQTY;
+                    originData.SurplusQTY = data.SurplusQTY;
+                    originData.ShortageQTY = data.ShortageQTY;
                     return originData;
                   }}
                   failCallBack={() => {
