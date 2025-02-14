@@ -2,6 +2,7 @@
 using EU.Core.Common.Enums;
 using EU.Core.Common.Helper;
 using EU.Core.Model;
+using NPOI.Util.ArrayExtensions;
 
 namespace EU.Core.Common.Module;
 
@@ -167,7 +168,7 @@ public class ModuleSql
             string result = string.Empty;
             string tableNames = GetTableName();
             string tableAliasNames = GetTableAliasName();
-            char[] separator = new char[] { ',' };
+            char[] separator = [','];
             string[] tableName = tableNames.Split(separator);
             string[] tableAliasName = tableAliasNames.Split(separator);
             for (int i = 0; i < tableName.Length; i++)
@@ -301,7 +302,7 @@ public class ModuleSql
         try
         {
             string[] result = null;
-            string joinType = string.Empty;
+            var joinType = string.Empty;
 
             var ModuleSql = GetModuleSql();
             if (ModuleSql != null)
@@ -309,8 +310,9 @@ public class ModuleSql
 
             if (!string.IsNullOrEmpty(joinType))
             {
-                char[] separator = [','];
-                result = joinType.Split(separator);
+                result = joinType.Split([',']);
+                for (int i = 0; i < result.Length; i++)
+                    result[i] = result[i].Replace("，", ",");
             }
 
             return result;

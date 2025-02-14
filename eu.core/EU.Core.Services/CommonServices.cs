@@ -201,30 +201,30 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #region 处理查询条件
         var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
         var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
-
-        foreach (var item in filter.@params)
-        {
-            if (item.Key == "keyWord")
+        if (filter.@params != null)
+            foreach (var item in filter.@params)
             {
-                keyWord = item.Value.ObjToString();
-                continue;
-            }
-            else if (!string.IsNullOrEmpty(item.Value.ObjToString()))
-            {
-                if (moduleColumns.Any())
+                if (item.Key == "keyWord")
                 {
-                    var column = moduleColumns.Where(a => a.DataIndex == item.Key).FirstOrDefault();
-                    if (column != null)
-                        queryCodition += " AND " + column.TableAlias + "." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                    keyWord = item.Value.ObjToString();
+                    continue;
                 }
-                else
-                    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                else if (!string.IsNullOrEmpty(item.Value.ObjToString()))
+                {
+                    if (moduleColumns.Any())
+                    {
+                        var column = moduleColumns.Where(a => a.DataIndex == item.Key).FirstOrDefault();
+                        if (column != null)
+                            queryCodition += " AND " + column.TableAlias + "." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                    }
+                    else
+                        queryCodition += " AND A." + item.Key + " like '%" + item.Value.ObjToString() + "%'";
+                }
+                //if (string.IsNullOrEmpty(item.Value.ToString()))
+                //    queryCodition += " AND A." + item.Key + " =''";
+                //else
+                //    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
             }
-            //if (string.IsNullOrEmpty(item.Value.ToString()))
-            //    queryCodition += " AND A." + item.Key + " =''";
-            //else
-            //    queryCodition += " AND A." + item.Key + " like '%" + item.Value.ToString() + "%'";
-        }
         //if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(parentColumn))
         //    queryCodition += " AND A." + parentColumn + " = '" + parentId + "'";
         if (filter.Conditions.IsNotEmptyOrNull())
