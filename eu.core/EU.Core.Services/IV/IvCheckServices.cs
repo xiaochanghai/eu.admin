@@ -15,6 +15,7 @@
 *└──────────────────────────────────┘
 */
 
+using MySqlX.XDevAPI.Common;
 using static EU.Core.Common.Helper.IVChangeHelper;
 
 namespace EU.Core.Services;
@@ -29,6 +30,30 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
         BaseDal = dal;
     }
 
+    #region 新增
+    public override async Task<Guid> Add(object entity)
+    {
+        var model = ConvertToEntity(entity);
+        var result = await base.Add(entity);
+
+        var inventorys = await Db.Queryable<BdMaterialInventory>().Where(x => x.StockId == model.StockId && x.GoodsLocationId == model.GoodsLocationId).ToListAsync();
+        if (inventorys.Any())
+        {
+            var details = inventorys.Select((x, i) => new IvCheckDetail()
+            {
+                MaterialId = x.MaterialId,
+                StockId = x.StockId,
+                GoodsLocationId = x.GoodsLocationId,
+                BatchNo = x.BatchNo,
+                QTY = x.QTY,
+                SerialNumber = i++,
+                OrderId = result
+            }).ToList();
+            await Db.Insertable(details).ExecuteCommandAsync();
+        }
+        return result;
+    }
+    #endregion
     #region 更新
     public override async Task<bool> Update(Guid Id, object entity)
     {
@@ -36,10 +61,30 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
         var model = ConvertToEntity(entity);
 
         if (data.StockId != model.StockId || data.GoodsLocationId != model.GoodsLocationId)
+        {
             await Db.Updateable<IvCheckDetail>()
                 .SetColumns(it => new IvCheckDetail() { IsDeleted = true }, true)
                 .Where(it => it.OrderId == Id)
                 .ExecuteCommandAsync();
+
+            var inventorys = await Db.Queryable<BdMaterialInventory>().Where(x => x.StockId == model.StockId && x.GoodsLocationId == model.GoodsLocationId).ToListAsync();
+            if (inventorys.Any())
+            {
+                var details = inventorys
+                    .OrderBy(x => x.MaterialId)
+                    .Select((x, i) => new IvCheckDetail()
+                    {
+                        MaterialId = x.MaterialId,
+                        StockId = x.StockId,
+                        GoodsLocationId = x.GoodsLocationId,
+                        BatchNo = x.BatchNo,
+                        QTY = x.QTY,
+                        SerialNumber = i + 1,
+                        OrderId = Id
+                    }).ToList();
+                await Db.Insertable(details).ExecuteCommandAsync();
+            }
+        }
 
         return await base.Update(Id, entity);
     }

@@ -54,21 +54,11 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
         }
 
         var lstColumns = new ModuleSqlColumn("IV_CHECK_DETAIL_MNG").GetModuleTableEditableColumns();
-
         await Update(model, lstColumns, ["OrderId"]);
 
         var model1 = Mapper.Map(model).ToANew<IvCheckDetailDto>();
 
-        //var material = await _materialServices.QueryDto(model.MaterialId);
-        //model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
-        //model1.Specifications = material.Specifications;
-        //model1.UnitName = material.UnitName;
-        //if (model.StockId != null)
-        //    model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
-        //if (model.GoodsLocationId != null)
-        //    model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
         await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvCheckDetail", orderId);
-        //entity = await Query(Id);
 
         var filter = new QueryFilter()
         {
@@ -77,7 +67,6 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
             PageSize = 100
         };
 
-        //model1.SerialNumber = entity.SerialNumber;
         var result = await _commonServices.QueryByFilter(filter, "IV_CHECK_DETAIL_MNG");
         if (result.data.Rows.Count > 0)
         {
@@ -89,7 +78,7 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
             model1.SerialNumber = result.data.Rows[0]["SerialNumber"].ObjToInt();
             model1.InitQTY = result.data.Rows[0]["InitQTY"].ObjToDecimal();
             model1.SurplusQTY = result.data.Rows[0]["SurplusQTY"].ObjToDecimal();
-            model1.ShortageQTY = result.data.Rows[0]["SerialNumber"].ObjToDecimal();
+            model1.ShortageQTY = result.data.Rows[0]["ShortageQTY"].ObjToDecimal();
         }
         return model1;
     }
