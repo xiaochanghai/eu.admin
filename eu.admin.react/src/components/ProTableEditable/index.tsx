@@ -5,22 +5,26 @@ import { EditableProTable } from "@ant-design/pro-components";
 import { getModuleLogInfo, getModuleInfo } from "@/api/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType, RecordLogData } from "@/api/interface/index";
-import { setModuleInfo } from "@/redux/modules/module";
 import http from "@/api";
 import { pagination1 } from "@/config/proTable";
-import { query } from "@/api/modules/module";
+import { queryByFilter } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { UploadExcel, ModuleLog, Icon, Loading } from "@/components";
+import { setTableParam, setModuleInfo } from "@/redux/modules/module";
 
 const Index: React.FC<any> = props => {
   let tableAction: any;
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  let { moduleCode, IsView, modifyType, masterId, tableRef, addCallBack, editCallBack, successCallBack, failCallBack } = props;
+  let { moduleCode, IsView, modifyType, masterId, tableRef, addCallBack, editCallBack, successCallBack, failCallBack, formRef } =
+    props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
   let { masterColumn, isDetail, url, actions } = moduleInfo || {};
 
+  let tableParams = useSelector((state: RootState) => state.module.tableParams);
+  let tableParam = tableParams[moduleCode] as any;
+  let params1: any = null;
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any>([]);
   const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
@@ -91,7 +95,9 @@ const Index: React.FC<any> = props => {
     setRecordLogVisible(false);
     setRecordLogData(null);
   };
-
+  const onReset = () => {
+    dispatch(setTableParam({ moduleCode }));
+  };
   const toolBarRender = (action: any, { selectedRows, selectedRowKeys }: any) => [
     <Space style={{ display: "flex", justifyContent: "center" }}>
       {addCallBack ? (
@@ -241,30 +247,31 @@ const Index: React.FC<any> = props => {
                 tableAlertRender={false}
                 tableAlertOptionRender={false}
                 columns={columns}
-                request={async (_params, sorter, filterCondition) => {
+                onReset={onReset}
+                onLoad={() => {
+                  if (params1 && formRef.current) formRef.current.setFieldsValue(params1);
+                  else if (tableParam && tableParam.params && formRef.current)
+                    formRef.current.setFieldsValue({ ...tableParam.params });
+                }}
+                request={async (params, sorter, _filterCondition) => {
+                  if (tableParam && tableParam.params && !params._timestamp) params = { ...tableParam.params, ...params };
+                  if (tableParam && tableParam.sorter) sorter = { ...tableParam.sorter, ...sorter };
+                  params1 = params;
+                  let filter = { PageIndex: params.current, PageSize: params.pageSize, sorter, params, Conditions: "" };
+                  dispatch(setTableParam({ params: params, sorter, moduleCode, filter }));
+
                   if (isDetail) {
-                    if (masterId) {
-                      if (masterColumn) filterCondition = { ...filterCondition, [masterColumn]: masterId };
-                      return await query({
-                        paramData: JSON.stringify(_params),
-                        sorter: JSON.stringify(sorter),
-                        filter: JSON.stringify(filterCondition),
-                        moduleCode
-                      });
-                    } else
+                    if (masterColumn && masterId) filter = { ...filter, Conditions: `A.${masterColumn} = '${masterId}'` };
+                    else filter = { ...filter, Conditions: "1 != 1" };
+                    // filterCondition[masterColumn] = masterId;
+                    if (masterId) return await queryByFilter(moduleCode, {}, filter);
+                    else
                       return {
                         data: [],
                         success: true,
                         total: 0
                       };
-                  } else {
-                    return await query({
-                      paramData: JSON.stringify(_params),
-                      sorter: JSON.stringify(sorter),
-                      filter: JSON.stringify(filterCondition),
-                      moduleCode
-                    });
-                  }
+                  } else return await queryByFilter(moduleCode, {}, filter);
                 }}
                 pagination={pagination1}
                 options={{
