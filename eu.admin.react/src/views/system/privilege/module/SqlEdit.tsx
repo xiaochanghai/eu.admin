@@ -76,7 +76,7 @@ const SqlEdit: React.FC<any> = props => {
   return (
     <>
       <Modal title="完整SQL" open={iShowFullSql} width={800} footer={null} onCancel={showLogRecordCancel}>
-        {iShowFullSql ? <TextArea rows={4} value={fullSql} disabled={true} /> : <Skeleton active />}
+        {iShowFullSql ? <TextArea rows={8} value={fullSql} disabled={true} /> : <Skeleton active />}
       </Modal>
       <div style={{ height: 10 }}></div>
       <Form labelCol={{ span: 4 }} wrapperCol={{ span: 16 }} onFinish={onFinish} form={form}>

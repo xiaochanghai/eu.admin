@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/1/5 21:53:22  SimonHsiao   初版
+* V0.01  2025/2/20 11:51:36  SimonHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -47,6 +47,18 @@ public class IvCheckDetail : BasePoco
     /// </summary>
     [Display(Name = "QTY"), Description("盘点数量"), Column(TypeName = "decimal(20,8)")]
     public decimal? QTY { get; set; }
+
+    /// <summary>
+    /// 盘点前数量
+    /// </summary>
+    [Display(Name = "BeforeQTY"), Description("盘点前数量"), Column(TypeName = "decimal(20,8)")]
+    public decimal? BeforeQTY { get; set; }
+
+    /// <summary>
+    /// 盘点后数量
+    /// </summary>
+    [Display(Name = "AfterQTY"), Description("盘点后数量"), Column(TypeName = "decimal(20,8)")]
+    public decimal? AfterQTY { get; set; }
 
     /// <summary>
     /// 仓库ID

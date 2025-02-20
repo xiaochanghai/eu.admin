@@ -744,6 +744,16 @@
             盘点数量
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BeforeQTY">
+            <summary>
+            盘点前数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.AfterQTY">
+            <summary>
+            盘点后数量
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.StockId">
             <summary>
             仓库ID
@@ -6355,6 +6365,16 @@
         <member name="P:EU.Core.Model.Models.IvCheckDetail.QTY">
             <summary>
             盘点数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.BeforeQTY">
+            <summary>
+            盘点前数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.AfterQTY">
+            <summary>
+            盘点后数量
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.StockId">

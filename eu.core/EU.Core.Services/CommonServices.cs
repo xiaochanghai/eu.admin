@@ -290,7 +290,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         //sqlDefaultCondition = SqlDefaultCondition.Replace("[UserId]", userId);
         var defaultSortField = moduleSql.GetDefaultSortField();
         var defaultSortDirection = moduleSql.GetDefaultSortDirection();
-        if (defaultSortDirection.IsNotEmptyOrNull())
+        if (defaultSortDirection.IsNullOrEmpty())
             defaultSortDirection = "ASC";
 
         grid.FullSql = fullSql;

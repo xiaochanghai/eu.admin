@@ -571,7 +571,7 @@ namespace " + strNameSpace + @"
         build.Append("/// <summary>\r\n");
         build.Append("/// " + TableCnName + " (Dto.Base)\r\n");
         build.Append("/// </summary>\r\n");
-        build.Append("public class " + tableName + "Base\r\n");
+        build.Append("public class " + tableName + "Base : BasePoco\r\n");
         build.Append("{\r\n");
 
         #region 属性
@@ -657,13 +657,7 @@ namespace " + strNameSpace + @"
                     #endregion
             }
         }
-        #endregion
-        build.Append("\r\n");
-        build.Append("    /// <summary>\r\n");
-        build.Append("    /// 审核状态\r\n");
-        build.Append("    /// </summary>\r\n");
-        build.Append("    [Display(Name = \"AuditStatus\"), Description(\"审核状态\")]\r\n");
-        build.Append("    public string AuditStatus { get; set; } = \"Add\";\r\n");
+        #endregion 
 
         #endregion
 

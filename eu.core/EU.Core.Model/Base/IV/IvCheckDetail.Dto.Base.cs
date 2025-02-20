@@ -1,12 +1,12 @@
 ﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * IvCheckDetail.cs
 *
-*功 能： N / A
+* 功 能： N / A
 * 类 名： IvCheckDetail
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-*V0.01  2025/1/5 21:53:22  SimonHsiao   初版
+* V0.01  2025/2/20 11:51:36  SimonHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -46,6 +46,18 @@ public class IvCheckDetailBase : BasePoco
     /// </summary>
     [Display(Name = "QTY"), Description("盘点数量"), Column(TypeName = "decimal(20,8)")]
     public decimal? QTY { get; set; }
+
+    /// <summary>
+    /// 盘点前数量
+    /// </summary>
+    [Display(Name = "BeforeQTY"), Description("盘点前数量"), Column(TypeName = "decimal(20,8)")]
+    public decimal? BeforeQTY { get; set; }
+
+    /// <summary>
+    /// 盘点后数量
+    /// </summary>
+    [Display(Name = "AfterQTY"), Description("盘点后数量"), Column(TypeName = "decimal(20,8)")]
+    public decimal? AfterQTY { get; set; }
 
     /// <summary>
     /// 仓库ID
