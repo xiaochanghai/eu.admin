@@ -44,40 +44,40 @@ const ProTableEditable: React.FC<any> = props => {
     setSelectedRowKeys(keys);
     // 可以在这里处理选中行的数据，例如执行某些操作
   };
-  const actionColumn = {
-    title: "操作",
-    dataIndex: "option",
-    fixed: "right",
-    valueType: "option",
-    width: 150,
-    render: (_text: any, record: any, _: any, action: any) => [
-      <a
-        key="editable"
-        onClick={() => {
-          if (editableKeys.length > 0) action?.saveEditable?.(editableKeys[0]);
-          action?.startEditable?.(record.ID);
-        }}
-      >
-        编辑
-      </a>,
-      <Popconfirm
-        title="提醒"
-        description="是否确定删除记录?"
-        onConfirm={async () => {
-          let { Success, Message } = await http.delete<any>(url + "/" + record.ID);
-          if (Success) message.success(Message);
-          if (tableRef.current) tableRef.current.reload();
-        }}
-        okType="danger"
-        okText="确定"
-        cancelText="取消"
-      >
-        <a key="delete">删除</a>
-      </Popconfirm>
-    ]
-  };
   let columns: any = [];
   if (modifyType == ModifyType.Edit) {
+    const actionColumn = {
+      title: "操作",
+      dataIndex: "option",
+      fixed: "right",
+      valueType: "option",
+      width: 150,
+      render: (_text: any, record: any, _: any, action: any) => [
+        <a
+          key="editable"
+          onClick={() => {
+            if (editableKeys.length > 0) action?.saveEditable?.(editableKeys[0]);
+            action?.startEditable?.(record.ID);
+          }}
+        >
+          编辑
+        </a>,
+        <Popconfirm
+          title="提醒"
+          description="是否确定删除记录?"
+          onConfirm={async () => {
+            let { Success, Message } = await http.delete<any>(url + "/" + record.ID);
+            if (Success) message.success(Message);
+            if (tableRef.current) tableRef.current.reload();
+          }}
+          okType="danger"
+          okText="确定"
+          cancelText="取消"
+        >
+          <a key="delete">删除</a>
+        </Popconfirm>
+      ]
+    };
     if (moduleInfo && moduleInfo.columns) columns = [...moduleInfo.columns, actionColumn];
   } else if (moduleInfo && moduleInfo.columns) columns = [...moduleInfo.columns];
   return (
