@@ -35,23 +35,20 @@ const FormPage: React.FC<any> = props => {
   let { formColumns, openType, url, isDetail, masterColumn } = moduleInfo;
 
   // let Id = !openType ? props.Id : ids[moduleCode];
-
+  const querySingleData = async () => {
+    let { Data, Success } = await querySingle({ Id, moduleCode, url });
+    if (Success) {
+      dispatch(setId({ moduleCode, id: Id }));
+      form.setFieldsValue(Data);
+      if (Data.MaterialClassId) getAllMaterialType(Data.MaterialClassId);
+    }
+  };
   useEffect(() => {
-    if (dispatch && Id) {
+    if (Id) {
       setModifyType(ModifyType.Edit);
       setViewId(Id);
-      const querySingleData = async () => {
-        let { Data, Success } = await querySingle({ Id, moduleCode, url });
-        if (Success) {
-          dispatch(setId({ moduleCode, id: Id }));
-          form.setFieldsValue(Data);
-          getAllMaterialType(Data.MaterialTypeId);
-        }
-      };
       querySingleData();
-
       setIsLoading(false);
-
       setDisabled(false);
     } else {
       // getAllMaterialType();

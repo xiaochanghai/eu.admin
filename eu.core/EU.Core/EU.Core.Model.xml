@@ -704,9 +704,19 @@
             盘点货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheckBase.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckBase.AuditStatus">
+            <summary>
+            审核状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvCheckDetailBase">
@@ -734,6 +744,16 @@
             盘点数量
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BeforeQTY">
+            <summary>
+            盘点前数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.AfterQTY">
+            <summary>
+            盘点后数量
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.StockId">
             <summary>
             仓库ID
@@ -742,6 +762,11 @@
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailBase.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetailBase.Remark">
@@ -6307,6 +6332,11 @@
             盘点货位ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.OrderStatus">
+            <summary>
+            订单状态
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheck.Remark">
             <summary>
             备注
@@ -6337,6 +6367,16 @@
             盘点数量
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.BeforeQTY">
+            <summary>
+            盘点前数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.AfterQTY">
+            <summary>
+            盘点后数量
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.StockId">
             <summary>
             仓库ID
@@ -6345,6 +6385,11 @@
         <member name="P:EU.Core.Model.Models.IvCheckDetail.GoodsLocationId">
             <summary>
             货位ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetail.BatchNo">
+            <summary>
+            批号/炉号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.IvCheckDetail.Remark">
@@ -10876,6 +10921,21 @@
             货位
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.InitQTY">
+            <summary>
+            库存数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.SurplusQTY">
+            <summary>
+            盘点数量大于当前库存 就是盘盈
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.ShortageQTY">
+            <summary>
+            盘点数量小于当前库存 就是盘亏
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.IvInDto">
             <summary>
             库存入库单(Dto.View)
@@ -11554,6 +11614,21 @@
         <member name="F:EU.Core.Model.Consts.DIC_IV_OUT_STATUS.OutComplete">
             <summary>
             出库完成
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS">
+            <summary>
+            库存盘点单-订单状态
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS.WaitCheck">
+            <summary>
+            待盘点
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_IV_CHECK_STATUS.CheckComplete">
+            <summary>
+            盘点完成
             </summary>
         </member>
         <member name="T:EU.Core.Model.Consts.DIC_SYSTEM_AUDIT_STATUS">

@@ -32,14 +32,8 @@ public static class Utility
         ModuleSqlColumn moduleColumnInfo = new(moduleCode);
         var dvModuleColumns = moduleColumnInfo.GetModuleSqlColumn();
 
-        var list = dvModuleColumns.Where(x => x.DataIndex == "ID").ToList();
-
-        if (!list.Any())
-        {
-            var SmModuleColumn = new SmModuleColumnExtend();
-            SmModuleColumn.DataIndex = "ID";
-            dvModuleColumns.Add(SmModuleColumn);
-        }
+        if (!dvModuleColumns.Where(x => x.DataIndex == "ID").Any())
+            dvModuleColumns.Add(new SmModuleColumnExtend() { DataIndex = "ID" });
 
         string columnName = string.Empty;
         string valueType = string.Empty;
@@ -215,7 +209,7 @@ public static class Utility
     /// </summary>  
     /// <returns></returns>  
     public static long GetLongID()
-    { 
+    {
         return SnowFlakeSingle.Instance.NextId();
     }
 

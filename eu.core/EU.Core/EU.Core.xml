@@ -627,6 +627,13 @@
             库存盘点单(Controller)
             </summary>
         </member>
+        <member name="M:EU.Core.Api.Controllers.IvCheckController.BulkOrderPosting(System.Guid[])">
+            <summary>
+            过账
+            </summary>
+            <param name="ids"></param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.IvCheckDetailController">
             <summary>
             库存盘点单明细(Controller)

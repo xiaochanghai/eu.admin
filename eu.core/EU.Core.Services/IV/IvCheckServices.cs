@@ -187,7 +187,7 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
             {
                 ID = Utility.GuidId,
                 OrderDate = Utility.GetSysDate().Date,
-                OrderNo = "",
+                OrderNo = Utility.GenerateContinuousSequence("IvOutNo"),
                 OrderStatus = DIC_IV_OUT_STATUS.OutComplete,
                 StockId = checkOrder.StockId,
                 GoodsLocationId = checkOrder.GoodsLocationId,
@@ -204,7 +204,7 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
             {
                 ID = Utility.GuidId,
                 OrderDate = Utility.GetSysDate().Date,
-                OrderNo = "",
+                OrderNo = Utility.GenerateContinuousSequence("IvnNo"),
                 OrderStatus = DIC_IV_IN_STATUS.InComplete,
                 StockId = checkOrder.StockId,
                 GoodsLocationId = checkOrder.GoodsLocationId,
