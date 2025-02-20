@@ -22,12 +22,10 @@ namespace EU.Core.Services;
 /// </summary>
 public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDto, InsertIvCheckDetailInput, EditIvCheckDetailInput>, IIvCheckDetailServices
 {
-    private readonly IBdMaterialServices _materialServices;
     private readonly ICommonServices _commonServices;
     public IvCheckDetailServices(IBaseRepository<IvCheckDetail> dal, IBdMaterialServices materialServices, ICommonServices commonServices)
     {
         BaseDal = dal;
-        _materialServices = materialServices;
         _commonServices = commonServices;
     }
 

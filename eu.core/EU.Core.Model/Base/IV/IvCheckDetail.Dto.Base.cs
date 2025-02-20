@@ -20,7 +20,7 @@ namespace EU.Core.Model.Models;
 /// <summary>
 /// 库存盘点单明细 (Dto.Base)
 /// </summary>
-public class IvCheckDetailBase
+public class IvCheckDetailBase : BasePoco
 {
 
     /// <summary>

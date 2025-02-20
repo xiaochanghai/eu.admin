@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import TableList from "../../system/common/components/TableList";
 import FormPage from "./FormPage";
+import { message, modal } from "@/hooks/useMessage";
+import { Icon } from "@/components";
+import http from "@/api";
+const { confirm } = modal;
 
 const Index: React.FC<any> = () => {
   let moduleCode = "IV_CHECK_MNG";
@@ -19,8 +23,36 @@ const Index: React.FC<any> = () => {
       setFormPageIsView("");
     }
   };
+  const InventoryCheckOrderCarryTo = async (_action: any, _selectedRows: any, selectedRowKeys: any) => {
+    if (selectedRowKeys.length == 0) {
+      message.error("至少选中一条数据！");
+      return;
+    }
 
-  const action = {};
+    confirm({
+      title: selectedRowKeys.length == 1 ? "你确定需要过账该订单吗？" : "你确定需要批量过账订单吗？",
+      icon: <Icon name="ExclamationCircleOutlined" />,
+      okText: "确定",
+      okType: "danger",
+      cancelText: "取消",
+      async onOk() {
+        message.loading("数据提交中...", 0);
+        let { Success } = await http.post<any>("/api/IvCheck/Posting", selectedRowKeys);
+        message.destroy();
+        if (Success) {
+          message.success("提交成功！");
+          _action?.clearSelected();
+          _action?.reload();
+          // if (tableRef.current) tableRef.current.reload();
+        }
+      },
+      onCancel() {
+        // console.log('Cancel');
+      }
+    });
+  };
+
+  const action = { InventoryCheckOrderCarryTo };
 
   return (
     <>

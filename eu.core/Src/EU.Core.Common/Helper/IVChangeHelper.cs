@@ -1,6 +1,7 @@
 ﻿using EU.Core.Model.Models;
 using SqlSugar;
 using System.Data;
+using static EU.Core.Model.Consts;
 
 namespace EU.Core.Common.Helper;
 
@@ -27,8 +28,9 @@ public class IVChangeHelper
             x.GoodsLocationId == locationId &&
             x.MaterialId == materialId)
             .WhereIF(batchNo.IsNotEmptyOrNull(), x => x.BatchNo == batchNo)
+            .WhereIF(batchNo.IsNullOrEmpty(), x => (x.BatchNo == null || x.BatchNo == ""))
             .FirstAsync();
-
+        if (batchNo.IsNullOrEmpty()) batchNo = null;
         if (inventory is null)
         {
             BdMaterialInventory inventoryInsert = new()
@@ -42,8 +44,11 @@ public class IVChangeHelper
             await Db.Insertable(inventoryInsert).ExecuteCommandAsync();
 
             inventory = await Db.Queryable<BdMaterialInventory>()
-                .Where(x => x.StockId == stockId && x.GoodsLocationId == locationId)
+                .Where(x => x.StockId == stockId &&
+                x.GoodsLocationId == locationId &&
+                x.MaterialId == materialId)
                 .WhereIF(batchNo.IsNotEmptyOrNull(), x => x.BatchNo == batchNo)
+                .WhereIF(batchNo.IsNullOrEmpty(), x => (x.BatchNo == null || x.BatchNo == ""))
                 .FirstAsync();
         }
 
@@ -64,6 +69,7 @@ public class IVChangeHelper
 
         switch (changeType)
         {
+            case ChangeType.InventoryCheckIn:
             case ChangeType.InventoryIn:
                 inventory.QTY += qty;
                 break;
@@ -76,7 +82,9 @@ public class IVChangeHelper
 
                 inventory.QTY -= qty;
                 break;
-
+            case ChangeType.InventoryCheckOut:
+                inventory.QTY -= qty;
+                break;
                 //default:
                 //    {
                 //        return ExpressionType.Equal;
@@ -157,9 +165,13 @@ public class IVChangeHelper
         /// </summary>
         InventoryTransfers,
         /// <summary>
-        /// 库存盘点
+        /// 库存盘点出库
         /// </summary>
-        InventoryCheck,
+        InventoryCheckOut,
+        /// <summary>
+        /// 库存盘点入库
+        /// </summary>
+        InventoryCheckIn,
         /// <summary>
         /// 库存入库单
         /// </summary>

@@ -10901,6 +10901,21 @@
             货位
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.InitQTY">
+            <summary>
+            库存数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.SurplusQTY">
+            <summary>
+            盘点数量大于当前库存 就是盘盈
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheckDetailDto.ShortageQTY">
+            <summary>
+            盘点数量小于当前库存 就是盘亏
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.IvInDto">
             <summary>
             库存入库单(Dto.View)

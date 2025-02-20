@@ -15,7 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using MySqlX.XDevAPI.Common;
 using static EU.Core.Common.Helper.IVChangeHelper;
 
 namespace EU.Core.Services;
@@ -25,9 +24,11 @@ namespace EU.Core.Services;
 /// </summary>
 public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckInput, EditIvCheckInput>, IIvCheckServices
 {
-    public IvCheckServices(IBaseRepository<IvCheck> dal)
+    private readonly ICommonServices _commonServices;
+    public IvCheckServices(IBaseRepository<IvCheck> dal, ICommonServices commonServices)
     {
         BaseDal = dal;
+        _commonServices = commonServices;
     }
 
     #region 新增
@@ -44,7 +45,7 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
                 MaterialId = x.MaterialId,
                 StockId = x.StockId,
                 GoodsLocationId = x.GoodsLocationId,
-                BatchNo = x.BatchNo,
+                BatchNo = x.BatchNo.IsNotEmptyOrNull() ? null : x.BatchNo,
                 QTY = x.QTY,
                 SerialNumber = i++,
                 OrderId = result
@@ -54,6 +55,7 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
         return result;
     }
     #endregion
+
     #region 更新
     public override async Task<bool> Update(Guid Id, object entity)
     {
@@ -77,7 +79,7 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
                         MaterialId = x.MaterialId,
                         StockId = x.StockId,
                         GoodsLocationId = x.GoodsLocationId,
-                        BatchNo = x.BatchNo,
+                        BatchNo = x.BatchNo.IsNotEmptyOrNull() ? null : x.BatchNo,
                         QTY = x.QTY,
                         SerialNumber = i + 1,
                         OrderId = Id
@@ -89,8 +91,6 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
         return await base.Update(Id, entity);
     }
     #endregion
-
-
 
     #region 删除数据 
     /// <summary>
@@ -176,32 +176,124 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
             for (int i = 0; i < ids.Length; i++)
             {
                 var id = ids[i];
-                if (await Db.Queryable<IvCheck>().AnyAsync(x => x.ID == id && (x.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.Add || x.OrderStatus == DIC_IV_CHECK_STATUS.CheckComplete)))
-                    continue;
-                var details = await Db.Queryable<IvCheckDetail>().Where(x => x.OrderId == id).ToListAsync();
-
-                for (int j = 0; j < details.Count; j++)
+                var filter = new QueryFilter()
                 {
-                    var detail = details[j];
+                    Conditions = $"A.OrderId='{id}'",
+                    PageIndex = 1,
+                    PageSize = 100
+                };
 
-                    await IVChangeHelper.Add(Db,
-                         detail.MaterialId,
-                         detail.StockId,
-                         detail.GoodsLocationId,
-                         detail.QTY,
-                         ChangeType.InventoryOut, id, detail.ID, detail.BatchNo
-                         );
+                var result = await _commonServices.QueryByFilter(filter, "IV_CHECK_DETAIL_MNG");
+
+                var list = Db.Utilities.DataTableToList<IvCheckDetailDto>(result.data);
+                var checkOrder = await base.QueryById(id);
+                var remark = "库存盘点" + "," + checkOrder.OrderNo;
+
+                #region 生成关联出库单
+                var outOrder = new IvOut()
+                {
+                    ID = Utility.GuidId,
+                    OrderDate = Utility.GetSysDate().Date,
+                    OrderNo = "",
+                    OrderStatus = DIC_IV_OUT_STATUS.OutComplete,
+                    StockId = checkOrder.StockId,
+                    GoodsLocationId = checkOrder.GoodsLocationId,
+                    Remark = remark
+                };
+                var outDetail = new List<IvOutDetail>();
+
+                if (list.Where(x => x.ShortageQTY > 0).Any())
+                    await Db.Insertable(outOrder).ExecuteCommandAsync();
+                #endregion
+
+                #region 生成关联入库单
+                var inOrder = new IvIn()
+                {
+                    ID = Utility.GuidId,
+                    OrderDate = Utility.GetSysDate().Date,
+                    OrderNo = "",
+                    OrderStatus = DIC_IV_IN_STATUS.InComplete,
+                    StockId = checkOrder.StockId,
+                    GoodsLocationId = checkOrder.GoodsLocationId,
+                    Remark = remark
+                };
+                var inDetail = new List<IvInDetail>();
+
+                if (list.Where(x => x.SurplusQTY > 0).Any())
+                    await Db.Insertable(inOrder).ExecuteCommandAsync();
+                #endregion
+
+
+                int SerialNumber1 = 1;
+                int SerialNumber2 = 1;
+                for (int j = 0; j < list.Count; j++)
+                {
+                    if (list[j].QTY != list[j].InitQTY)
+                    {
+                        var material = await Db.Queryable<BdMaterial>().Where(x => x.ID == list[j].MaterialId).FirstAsync();
+                        if (list[j].ShortageQTY > 0)
+                        {
+                            await IVChangeHelper.Add(Db,
+                                 list[j].MaterialId,
+                                 list[j].StockId,
+                                 list[j].GoodsLocationId,
+                                 list[j].ShortageQTY,
+                                 ChangeType.InventoryCheckOut, id, list[j].ID, list[j].BatchNo, remark);
+                            outDetail.Add(new IvOutDetail()
+                            {
+                                OrderId = outOrder.ID,
+                                SerialNumber = SerialNumber1,
+                                QTY = list[j].ShortageQTY,
+                                Price = material?.PurchasePrice,
+                                MaterialId = list[j].MaterialId,
+                                StockId = list[j].StockId,
+                                GoodsLocationId = list[j].GoodsLocationId,
+                                BatchNo = list[j].BatchNo,
+                                Remark = remark
+                            });
+                            SerialNumber1++;
+                        }
+                        if (list[j].SurplusQTY > 0)
+                        {
+                            await IVChangeHelper.Add(Db,
+                                 list[j].MaterialId,
+                                 list[j].StockId,
+                                 list[j].GoodsLocationId,
+                                 list[j].SurplusQTY,
+                                 ChangeType.InventoryCheckIn, id, list[j].ID, list[j].BatchNo, remark);
+
+                            inDetail.Add(new IvInDetail()
+                            {
+                                OrderId = inOrder.ID,
+                                SerialNumber = SerialNumber2,
+                                QTY = list[j].SurplusQTY,
+                                Price = material?.PurchasePrice,
+                                MaterialId = list[j].MaterialId,
+                                StockId = list[j].StockId,
+                                GoodsLocationId = list[j].GoodsLocationId,
+                                BatchNo = list[j].BatchNo,
+                                Remark = remark
+                            });
+                            SerialNumber2++;
+                        }
+                    }
                 }
+
+                if (inDetail.Any())
+                    await Db.Insertable(inDetail).ExecuteCommandAsync();
+
+                if (outDetail.Any())
+                    await Db.Insertable(outDetail).ExecuteCommandAsync();
             }
             await Db.Updateable<IvCheck>()
-                  .SetColumns(it => new IvCheck()
-                  {
-                      OrderStatus = DIC_IV_CHECK_STATUS.CheckComplete
-                  }, true)
-                  .Where(it => ids.Contains(it.ID) &&
-                  it.OrderStatus == DIC_IV_CHECK_STATUS.WaitCheck &&
-                  it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
-                  .ExecuteCommandAsync();
+                .SetColumns(it => new IvCheck()
+                {
+                    OrderStatus = DIC_IV_CHECK_STATUS.CheckComplete
+                }, true)
+                .Where(it => ids.Contains(it.ID) &&
+                it.OrderStatus == DIC_IV_CHECK_STATUS.WaitCheck &&
+                it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
+                .ExecuteCommandAsync();
 
             return Success(ResponseText.EXECUTE_SUCCESS);
         }

@@ -47,7 +47,18 @@ public class IvCheckDetailDto : IvCheckDetailBase
     /// </summary>
     public string GoodsLocationName { get; set; }
 
+    /// <summary>
+    /// 库存数量
+    /// </summary>
     public decimal InitQTY { get; set; }
+
+    /// <summary>
+    /// 盘点数量大于当前库存 就是盘盈
+    /// </summary>
     public decimal SurplusQTY { get; set; }
+
+    /// <summary>
+    /// 盘点数量小于当前库存 就是盘亏
+    /// </summary>
     public decimal ShortageQTY { get; set; }
 }

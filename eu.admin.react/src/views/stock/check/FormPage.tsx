@@ -361,15 +361,19 @@ const FormPage: React.FC<any> = props => {
                   //   });
                   //   // setWaitSelectVisible(true);
                   // }}
-                  recordCreatorProps={{
-                    position: "end",
-                    // newRecordType: "dataSource",
-                    record: () => ({
-                      ID: createUuid(),
-                      StockId: masterStockId,
-                      GoodsLocationId: masterGoodsLocationId
-                    })
-                  }}
+                  recordCreatorProps={
+                    disabled
+                      ? false
+                      : {
+                          position: "end",
+                          // newRecordType: "dataSource",
+                          record: () => ({
+                            ID: createUuid(),
+                            StockId: masterStockId,
+                            GoodsLocationId: masterGoodsLocationId
+                          })
+                        }
+                  }
                   value={dataSource}
                   onChange={setDataSource}
                   successCallBack={(originData: any, data: any) => {
