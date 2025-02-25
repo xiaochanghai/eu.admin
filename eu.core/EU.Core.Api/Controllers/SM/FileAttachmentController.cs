@@ -195,10 +195,10 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
         if (attachment != null)
         {
             var fileName = attachment.FileName;
-            string path = "wwwroot/" + attachment.Path + fileName;
+            string path = FileHelper.GetPhysicsPath() + attachment.Path + fileName;
 
-            if (!Directory.Exists(path))
-                return Ok("文件不存在！");
+            //if (!Directory.Exists(path))
+            //    return Ok("文件不存在！");
 
             FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
             fs.Close();
