@@ -476,7 +476,7 @@
         </member>
         <member name="P:EU.Core.Model.Models.BdSettlementWayBase.SettlementAccountType">
             <summary>
-            账款类型 
+            账款类型, 现付-ImmediatePay;月结-MonthlyPay;次月结-NextMonthlyPay;   货到付款-PayOnDelivery;其他-Other
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSettlementWayBase.Days">
@@ -559,19 +559,34 @@
             供应商名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.Contact">
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.SupplierLevelId">
             <summary>
-            联系人
+            供应商等级ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.Phone">
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.SupplierClassId">
             <summary>
-            电话
+            供应商分类ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.EmployeeId">
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.DistrictId">
             <summary>
-            采购员
+            地区ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.SettlementWayId">
+            <summary>
+            结算方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.DeliveryWayId">
+            <summary>
+            送货方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.CurrencyId">
+            <summary>
+            币别ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSupplierBase.TaxType">
@@ -584,24 +599,14 @@
             税率
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.SettlementWayId">
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.Contact">
             <summary>
-            结算方式
+            联系人
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.DeliveryWayId">
+        <member name="P:EU.Core.Model.Models.BdSupplierBase.Phone">
             <summary>
-            送货方式
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.CurrencyId">
-            <summary>
-            币别
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdSupplierBase.Address">
-            <summary>
-            地址
+            电话
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSupplierBase.Remark">
@@ -6104,7 +6109,7 @@
         </member>
         <member name="P:EU.Core.Model.Models.BdSettlementWay.SettlementAccountType">
             <summary>
-            账款类型,  
+            账款类型, 现付-ImmediatePay;月结-MonthlyPay;次月结-NextMonthlyPay; 货到付款-PayOnDelivery;其他-Other
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSettlementWay.Days">
@@ -6187,19 +6192,34 @@
             供应商名称
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.Contact">
+        <member name="P:EU.Core.Model.Models.BdSupplier.SupplierLevelId">
             <summary>
-            联系人
+            供应商等级ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.Phone">
+        <member name="P:EU.Core.Model.Models.BdSupplier.SupplierClassId">
             <summary>
-            电话
+            供应商分类ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.EmployeeId">
+        <member name="P:EU.Core.Model.Models.BdSupplier.DistrictId">
             <summary>
-            采购员
+            地区ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplier.SettlementWayId">
+            <summary>
+            结算方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplier.DeliveryWayId">
+            <summary>
+            送货方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.BdSupplier.CurrencyId">
+            <summary>
+            币别ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSupplier.TaxType">
@@ -6212,24 +6232,14 @@
             税率
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.SettlementWayId">
+        <member name="P:EU.Core.Model.Models.BdSupplier.Contact">
             <summary>
-            结算方式
+            联系人
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.DeliveryWayId">
+        <member name="P:EU.Core.Model.Models.BdSupplier.Phone">
             <summary>
-            送货方式
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.CurrencyId">
-            <summary>
-            币别
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdSupplier.Address">
-            <summary>
-            地址
+            电话
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.BdSupplier.Remark">
@@ -8296,45 +8306,42 @@
         </member>
         <member name="T:EU.Core.Model.Models.FileAttachment">
             <summary>
-            FileAttachment (Model)
+            附件 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.MasterId">
             <summary>
-            MasterId
+            主键ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.OriginalFileName">
             <summary>
-            OriginalFileName
+            原文件名
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.FileName">
             <summary>
-            FileName
+            文件名
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.FileExt">
             <summary>
-            FileExt
+            扩展名
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.Path">
             <summary>
-            Path
+            路径
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.Length">
             <summary>
-            Length
+            大小
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.FileAttachment.ImageType">
             <summary>
-            FileData
-            </summary>
-            <summary>
-            ImageType
+            文件类型
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmAutoCode">

@@ -18,53 +18,52 @@ namespace EU.Core.Model.Models;
 
 
 /// <summary>
-/// FileAttachment (Model)
+/// 附件 (Model)
 /// </summary>
-[SugarTable("FileAttachment", "FileAttachment"), Entity(TableCnName = "FileAttachment", TableName = "FileAttachment")]
+[SugarTable("FileAttachment", "附件"), Entity(TableCnName = "附件", TableName = "FileAttachment")]
 public class FileAttachment : BasePoco
 {
 
     /// <summary>
-    /// MasterId
+    /// 主键ID
     /// </summary>
+    [Display(Name = "MasterId"), Description("主键ID"), MaxLength(-1, ErrorMessage = "主键ID 不能超过 -1 个字符")]
     public Guid? MasterId { get; set; }
 
     /// <summary>
-    /// OriginalFileName
+    /// 原文件名
     /// </summary>
-    [Display(Name = "OriginalFileName"), Description("OriginalFileName"), MaxLength(-1, ErrorMessage = "OriginalFileName 不能超过 -1 个字符")]
+    [Display(Name = "OriginalFileName"), Description("原文件名"), MaxLength(-1, ErrorMessage = "原文件名 不能超过 -1 个字符"), SugarColumn(IsNullable = true)]
     public string OriginalFileName { get; set; }
 
     /// <summary>
-    /// FileName
+    /// 文件名
     /// </summary>
-    [Display(Name = "FileName"), Description("FileName"), MaxLength(-1, ErrorMessage = "FileName 不能超过 -1 个字符")]
+    [Display(Name = "FileName"), Description("文件名"), MaxLength(-1, ErrorMessage = "文件名 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
     public string FileName { get; set; }
 
     /// <summary>
-    /// FileExt
+    /// 扩展名
     /// </summary>
-    [Display(Name = "FileExt"), Description("FileExt"), MaxLength(10, ErrorMessage = "FileExt 不能超过 10 个字符")]
+    [Display(Name = "FileExt"), Description("扩展名"), MaxLength(10, ErrorMessage = "FileExt 不能超过 10 个字符"), SugarColumn(IsNullable = true)]
     public string FileExt { get; set; }
 
     /// <summary>
-    /// Path
+    /// 路径
     /// </summary>
-    [Display(Name = "Path"), Description("Path"), MaxLength(-1, ErrorMessage = "Path 不能超过 -1 个字符")]
+    [Display(Name = "Path"), Description("路径"), MaxLength(-1, ErrorMessage = "Path 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
     public string Path { get; set; }
 
     /// <summary>
-    /// Length
+    /// 大小
     /// </summary>
+    [Display(Name = "Length"), Description("大小"), SugarColumn(IsNullable = true)]
     public long? Length { get; set; }
+ 
 
     /// <summary>
-    /// FileData
+    /// 文件类型
     /// </summary>
-
-    /// <summary>
-    /// ImageType
-    /// </summary>
-    [Display(Name = "ImageType"), Description("ImageType"), MaxLength(50, ErrorMessage = "ImageType 不能超过 50 个字符")]
+    [Display(Name = "ImageType"), Description("文件类型"), MaxLength(50, ErrorMessage = "ImageType 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
     public string ImageType { get; set; }
 }
