@@ -72,6 +72,7 @@ public class IVChangeHelper
             case ChangeType.InventoryCheckIn:
             case ChangeType.InventoryIn:
                 inventory.QTY += qty;
+                inventory.LastInTime = Utility.GetSysDate();
                 break;
             case ChangeType.InventoryOut:
                 if ((inventory.QTY - qty) < 0)
@@ -81,9 +82,11 @@ public class IVChangeHelper
                 }
 
                 inventory.QTY -= qty;
+                inventory.LastOutTime = Utility.GetSysDate();
                 break;
             case ChangeType.InventoryCheckOut:
                 inventory.QTY -= qty;
+                inventory.LastOutTime = Utility.GetSysDate();
                 break;
                 //default:
                 //    {
@@ -92,12 +95,9 @@ public class IVChangeHelper
         }
 
         change.AfterQTY = inventory.QTY;
-        await Db.Updateable<BdMaterialInventory>()
-            .SetColumns(it => new BdMaterialInventory()
-            {
-                QTY = inventory.QTY
-            }, true)
-            .Where(it => it.ID == inventory.ID)
+
+        await Db.Updateable(inventory)
+            .UpdateColumns(it => new { it.QTY, it.LastOutTime, it.LastInTime }, true)
             .ExecuteCommandAsync();
         await Db.Insertable(change).ExecuteCommandAsync();
     }
