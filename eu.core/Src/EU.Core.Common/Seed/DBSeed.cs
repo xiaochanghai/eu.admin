@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using EU.Core.Common.Const;
+using EU.Core.Model.Models.RootTkey;
 
 namespace EU.Core.Common.Seed;
 
@@ -426,5 +427,84 @@ public class DBSeed
         }
     }
 
+    #endregion
+
+    #region 数据表结构迁移到Mysql
+    /// <summary>
+    /// 数据表结构迁移到Mysql
+    /// </summary>
+    /// <param name="myContext"></param>
+    /// <exception cref="ApplicationException"></exception>
+    public static void MigrationLogs1(MyContext myContext)
+    {
+        // 创建数据库表，遍历指定命名空间下的class，
+        // 注意不要把其他命名空间下的也添加进来。
+        Console.WriteLine("Create Log Tables...");
+
+        var configID = "WMEU_MYSQL".ToLower();
+        if (!myContext.Db.IsAnyConnection(configID))
+        {
+            throw new ApplicationException("未配置日志数据库，请在appsettings.json中DBS节点中配置");
+        }
+
+        var logDb = myContext.Db.GetConnection(configID);
+        Console.WriteLine($"Create log Database(The Db Id:{configID})...");
+        logDb.DbMaintenance.CreateDatabase();
+        ConsoleHelper.WriteSuccessLine($"Log Database created successfully!");
+        var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
+        var referencedAssemblies = System.IO.Directory.GetFiles(path, "EU.Core.Model.dll")
+            .Select(Assembly.LoadFrom).ToArray();
+        var modelTypes = referencedAssemblies
+            .SelectMany(a => a.DefinedTypes)
+            .Select(type => type.AsType())
+            .Where(x => x.IsClass && x.Namespace != null && 
+            x.Namespace.StartsWith("EU.Core.Model.Models") && 
+            !x.Name.EndsWith("Base") && 
+            !x.Name.EndsWith("BaseEntity") &&
+            !x.Name.EndsWith("BusinessTable") &&
+            !x.Name.EndsWith("MultiBusinessTable") &&
+            !x.Name.EndsWith("SubLibraryBusinessTable") &&
+            !x.Name.EndsWith("SysTenant") &&
+            !x.Name.EndsWith("TasksQz") &&
+            !x.Name.EndsWith("SplitDemo") &&
+            !x.Name.EndsWith("SplitDemo") &&
+            !x.Name.EndsWith("Input") &&
+            !x.Name.EndsWith("Dto"))
+            .ToList();
+        Stopwatch sw = Stopwatch.StartNew();
+
+        var tables = logDb.DbMaintenance.GetTableInfoList();
+
+        modelTypes.ForEach(t =>
+        {
+            // 这里只支持添加修改表，不支持删除
+            // 如果想要删除，数据库直接右键删除，或者联系SqlSugar作者；
+            if (!tables.Any(s => s.Name.Contains(t.Name)))
+            {
+                try
+                {
+
+                    Console.WriteLine(t.Name);
+                    if (t.GetCustomAttribute<SplitTableAttribute>() != null)
+                    {
+                        logDb.CodeFirst.SplitTables().InitTables(t);
+                    }
+                    else
+                    {
+                        logDb.CodeFirst.InitTables(t);
+                    }
+                }
+                catch (Exception E)
+                {
+                     
+                }
+            }
+        });
+
+        sw.Stop();
+
+        $"Log Tables created successfully! {sw.ElapsedMilliseconds}ms".WriteSuccessLine();
+        Console.WriteLine();
+    }
     #endregion
 }

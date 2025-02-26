@@ -112,7 +112,7 @@ public static class SqlsugarSetup
                     // 配置实体假删除过滤器
                     RepositorySetting.SetDeletedEntityFilter(dbProvider);
                     // 配置实体数据权限
-                    RepositorySetting.SetTenantEntityFilter(dbProvider);
+                    //RepositorySetting.SetTenantEntityFilter(dbProvider);
                 });
                 //故障转移,检查主库链接自动切换备用连接
                 SqlSugarReuse.AutoChangeAvailableConnect(db);

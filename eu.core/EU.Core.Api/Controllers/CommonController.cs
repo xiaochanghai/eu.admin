@@ -1,5 +1,6 @@
 ﻿using Castle.DynamicProxy;
 using EU.Core.Common.Const;
+using EU.Core.Common.Seed;
 using EU.Core.Tasks;
 
 namespace EU.Core.Controllers;
@@ -13,9 +14,15 @@ namespace EU.Core.Controllers;
 public class CommonController : Controller
 {
     ICommonServices _service;
-    public CommonController(ICommonServices service)
+    private readonly MyContext _myContext;
+
+    private readonly string _webRootPath;
+
+    public CommonController(ICommonServices service, IWebHostEnvironment webHostEnvironment, MyContext myContext)
     {
+        _myContext = myContext;
         _service = service;
+        _webRootPath = webHostEnvironment.WebRootPath;
     }
     #region 自定义列模块数据返回
     /// <summary>
@@ -151,7 +158,7 @@ public class CommonController : Controller
 
     #region 测试
     [HttpGet("Test"), AllowAnonymous]
-    public ServiceResult Test()
+    public async Task<ServiceResult> Test()
     {
         //for (int i = 0; i < 100; i++)
         //{
@@ -164,8 +171,10 @@ public class CommonController : Controller
         //}
         //DBHelper.ExecuteDML("UPDATE  SmModules set UpdateTime=getdate() where ID='402d1606-286a-47ec-8e45-346a12450e9a'");
 
-        var aa = Guid.NewGuid().ToString("N");
-        var aa1 = Guid.NewGuid();
+        //var aa = Guid.NewGuid().ToString("N");
+        //var aa1 = Guid.NewGuid();
+        DBSeed.MigrationLogs1(_myContext);
+
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 
     }
