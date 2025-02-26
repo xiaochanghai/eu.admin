@@ -20,7 +20,7 @@ namespace EU.Core.Model.Models;
 /// <summary>
 /// 系统通用下拉 (Model)
 /// </summary>
-[SugarTable("SmCommonListSql", "系统通用下拉ssss"), Entity(TableCnName = "系统通用下拉", TableName = "SmCommonListSql")]
+[SugarTable("SmCommonListSql", "系统通用下拉"), Entity(TableCnName = "系统通用下拉", TableName = "SmCommonListSql")]
 public class SmCommonListSql : BasePoco
 {
 

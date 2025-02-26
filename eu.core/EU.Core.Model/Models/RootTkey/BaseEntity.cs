@@ -13,55 +13,55 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// 逻辑上的删除，非物理删除  <br/>
     /// 例如：单据删除并非直接删除
     /// </summary>
-    [Display(Name = "删除标记")]
+    [Display(Name = "删除标记"), SugarColumn(IsNullable = true)]
     public bool IsDeleted { get; set; }
 
     /// <summary>
     /// 导入模板ID
     /// </summary>
-    [Display(Name = "导入模板ID")]
+    [Display(Name = "导入模板ID"), SugarColumn(IsNullable = true)]
     public Guid? ImportDataId { get; set; }
 
     /// <summary>
     /// 修改次数
     /// </summary>
-    [Display(Name = "修改次数")]
+    [Display(Name = "修改次数"), SugarColumn(IsNullable = true)]
     public int? ModificationNum { get; set; }
 
     /// <summary>
     /// 修改标志
     /// </summary>
-    [Display(Name = "修改标志")]
+    [Display(Name = "修改标志"), SugarColumn(IsNullable = true)]
     public int? Tag { get; set; }
 
     /// <summary>
     /// 集团ID
     /// </summary>
-    [Display(Name = "集团ID"), SugarColumn(IsOnlyIgnoreUpdate = true)]
+    [Display(Name = "集团ID"), SugarColumn(IsOnlyIgnoreUpdate = true, IsNullable = true)]
     public Guid? GroupId { get; set; }
 
     /// <summary>
     /// 公司ID
     /// </summary>
-    [Display(Name = "公司ID"), SugarColumn(IsOnlyIgnoreUpdate = true)]
+    [Display(Name = "公司ID"), SugarColumn(IsOnlyIgnoreUpdate = true, IsNullable = true)]
     public Guid? CompanyId { get; set; }
 
     /// <summary>
     /// 审核状态
     /// </summary>
-    [Display(Name = "审核状态"), Column(TypeName = "varchar(32)")]
+    [Display(Name = "审核状态"), Column(TypeName = "varchar(32)"), SugarColumn(IsNullable = true)]
     public string AuditStatus { get; set; } = "Add";
 
     /// <summary>
     /// 当前流程节点
     /// </summary>
-    [Display(Name = "当前流程节点"), Column(TypeName = "nvarchar(50)")]
+    [Display(Name = "当前流程节点"), Column(TypeName = "nvarchar(50)"), SugarColumn(IsNullable = true)]
     public string CurrentNode { get; set; }
 
     /// <summary>
     /// 有效标志'true':有效,'false':未生效
     /// </summary>
-    [Display(Name = "'true':有效,'false':未生效")]
+    [Display(Name = "'true':有效,'false':未生效"), SugarColumn(IsNullable = true)]
     public bool? IsActive { get; set; } = true;
 
     #endregion
