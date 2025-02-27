@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Entity;
 
 /// <summary>
 /// 采购退货单明细 (Model)

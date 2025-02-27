@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Entity;
 
 /// <summary>
 /// 物料库存变化 (Model)

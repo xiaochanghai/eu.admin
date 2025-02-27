@@ -1,6 +1,6 @@
 ﻿using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
-using EU.Core.Model.Models;
+using EU.Core.Model.Entity;
 
 namespace EU.Core.Common.Helper;
 

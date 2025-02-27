@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Entity;
 
 /// <summary>
 /// 库存建帐明细 (Model)

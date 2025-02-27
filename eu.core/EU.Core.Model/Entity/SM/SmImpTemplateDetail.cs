@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Entity;
 
 /// <summary>
 /// 导入模板定义明细 (Model)

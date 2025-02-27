@@ -1,7 +1,6 @@
-﻿using EU.Core.Model.Models;
+﻿using EU.Core.Model.Entity;
 using SqlSugar;
 using System.Data;
-using static EU.Core.Model.Consts;
 
 namespace EU.Core.Common.Helper;
 

@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using EU.Core.Model.Models;
+using EU.Core.Model.Entity;
 
 namespace EU.Core.Common.Helper;
 

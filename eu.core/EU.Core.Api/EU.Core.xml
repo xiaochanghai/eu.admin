@@ -973,7 +973,7 @@
             退库单(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkInsertDetail(System.Collections.Generic.List{EU.Core.Model.Models.SdReturnOrderDetail},System.Guid)">
+        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkInsertDetail(System.Collections.Generic.List{EU.Core.Model.Entity.SdReturnOrderDetail},System.Guid)">
             <summary>
             批量导入出库明细
             </summary>
@@ -1379,7 +1379,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn},System.String)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Entity.SmModuleColumn},System.String)">
             <summary>
             更新模块表单列排序号
             </summary>
@@ -1405,7 +1405,7 @@
             <param name="param">columns</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.CopyAsync(System.Guid,EU.Core.Model.Models.SmModules)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.CopyAsync(System.Guid,EU.Core.Model.Entity.SmModules)">
             <summary>
             复制模块
             </summary>
@@ -1442,7 +1442,7 @@
             任务调度(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmQuartzJobController.Operate(System.Guid,System.String,EU.Core.Model.Models.SmQuartzJob)">
+        <member name="M:EU.Core.Api.Controllers.SmQuartzJobController.Operate(System.Guid,System.String,EU.Core.Model.Entity.SmQuartzJob)">
             <summary>
             远程操作
             </summary>

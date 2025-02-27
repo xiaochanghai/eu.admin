@@ -14,8 +14,8 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
 
+namespace EU.Core.Model.Entity; 
 
 /// <summary>
 /// 附件 (Model)

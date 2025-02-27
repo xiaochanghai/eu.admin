@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using EU.Core.Model.Models;
 using Microsoft.AspNetCore.Http;
 
 namespace EU.Core.Model;
