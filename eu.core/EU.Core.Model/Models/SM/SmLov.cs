@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2024/12/10 9:21:46  SimonHsiao   初版
+* V0.01  2025/2/27 9:26:08  SimonHsiao   初版
 *
-* Copyright(c) 2024 EU Corporation. All Rights Reserved.
+* Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SimonHsiao                                                  │
@@ -27,36 +27,36 @@ public class SmLov : BasePoco
     /// <summary>
     /// 字典代码
     /// </summary>
-    [Display(Name = "LovCode"), Description("字典代码"), MaxLength(32, ErrorMessage = "字典代码 不能超过 32 个字符")]
+    [Display(Name = "LovCode"), Description("字典代码"), MaxLength(32, ErrorMessage = "字典代码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
     public string LovCode { get; set; }
 
     /// <summary>
     /// 字典名称
     /// </summary>
-    [Display(Name = "LovName"), Description("字典名称"), MaxLength(32, ErrorMessage = "字典名称 不能超过 32 个字符")]
+    [Display(Name = "LovName"), Description("字典名称"), MaxLength(32, ErrorMessage = "字典名称 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
     public string LovName { get; set; }
 
     /// <summary>
     /// 生效时间
     /// </summary>
-    [Display(Name = "InureTime"), Description("生效时间")]
+    [Display(Name = "InureTime"), Description("生效时间"), SugarColumn(IsNullable = true)]
     public DateTime? InureTime { get; set; }
 
     /// <summary>
     /// 失效时间
     /// </summary>
-    [Display(Name = "AbateTime"), Description("失效时间")]
+    [Display(Name = "AbateTime"), Description("失效时间"), SugarColumn(IsNullable = true)]
     public DateTime? AbateTime { get; set; }
 
     /// <summary>
     /// 是否标签显示
     /// </summary>
-    [Display(Name = "IsTagDisplay"), Description("是否标签显示")]
+    [Display(Name = "IsTagDisplay"), Description("是否标签显示"), SugarColumn(IsNullable = true)]
     public bool? IsTagDisplay { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
     public string Remark { get; set; }
 }

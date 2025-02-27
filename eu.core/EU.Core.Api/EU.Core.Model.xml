@@ -709,19 +709,14 @@
             盘点货位ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderStatus">
-            <summary>
-            订单状态
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.IvCheckBase.Remark">
             <summary>
             备注
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.IvCheckBase.AuditStatus">
+        <member name="P:EU.Core.Model.Models.IvCheckBase.OrderStatus">
             <summary>
-            审核状态
+            订单状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvCheckDetailBase">
@@ -2214,14 +2209,14 @@
             出库日期
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SdOutOrderBase.OrderStatus">
-            <summary>
-            订单状态
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SdOutOrderBase.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SdOutOrderBase.OrderStatus">
+            <summary>
+            订单状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SdOutOrderDetailBase">
@@ -2649,37 +2644,37 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.NumberCode">
             <summary>
-            NumberCode
+            编号代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.Prefix">
             <summary>
-            Prefix
+            前缀
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.DateFormatType">
             <summary>
-            DateFormatType
+            时间类型
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.NumberLength">
             <summary>
-            NumberLength
+            编号长度
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.TableName">
             <summary>
-            TableName
+            关联表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.ColumnName">
             <summary>
-            ColumnName
+            关联栏位名
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCodeBase.Remark">
             <summary>
-            Remark
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmCityBase">
@@ -2759,22 +2754,22 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmCompanyBase.CompanyCode">
             <summary>
-            CompanyCode
+            代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmCompanyBase.CompanyShortName">
             <summary>
-            CompanyShortName
+            简称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmCompanyBase.CompanyName">
             <summary>
-            CompanyName
+            名称
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmComponentBase">
             <summary>
-            SmComponent (Dto.Base)
+            组件测试 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmComponentBase.UserName">
@@ -2939,17 +2934,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartmentBase.DepartmentId">
             <summary>
-            DepartmentId
+            上级部门ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartmentBase.DepartmentCode">
             <summary>
-            DepartmentCode
+            部门代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartmentBase.DepartmentName">
             <summary>
-            DepartmentName
+            部门名称
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmEmployeeBase">
@@ -3024,7 +3019,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmFieldCatalogBase">
             <summary>
-            映射表字段 (Dto.Base)
+            系统表栏位 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFieldCatalogBase.TableCatalogId">
@@ -3057,6 +3052,11 @@
             数据长度
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmFieldCatalogBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmFunctionPrivilegeBase">
             <summary>
             功能权限 (Dto.Base)
@@ -3064,27 +3064,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.FunctionCode">
             <summary>
-            FunctionCode
+            功能代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.FunctionName">
             <summary>
-            FunctionName
+            功能名称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.SmModuleId">
             <summary>
-            SmModuleId
+            模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.TaxisNo">
             <summary>
-            TaxisNo
+            排序号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.DisplayPosition">
             <summary>
-            DisplayPosition
+            显示位置
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilegeBase.Color">
@@ -3622,6 +3622,11 @@
             是否错误
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmImportDataDetailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmImportErrorBase">
             <summary>
             系统导入模板异常信息 (Dto.Base)
@@ -3650,6 +3655,11 @@
         <member name="P:EU.Core.Model.Models.SmImportErrorBase.SheetName">
             <summary>
             Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmImportErrorBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmImpTemplateBase">
@@ -3725,6 +3735,11 @@
         <member name="P:EU.Core.Model.Models.SmImpTemplateBase.ExcludeLastRow">
             <summary>
             排除最后行数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmImpTemplateBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmImpTemplateDetailBase">
@@ -4312,6 +4327,11 @@
             路由文件地址
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModulesBase.ID1">
+            <summary>
+            ID1
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -4417,6 +4437,11 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModuleSqlBase.ID1">
+            <summary>
+            ID1
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmProvinceBase">
             <summary>
             省份 (Dto.Base)
@@ -4490,7 +4515,7 @@
         <member name="P:EU.Core.Model.Models.SmQuartzJobBase.LastCost">
             <summary>
             上次执行耗时
-            </summary> 
+            </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmQuartzJobBase.NextExecuteTime">
             <summary>
@@ -4564,17 +4589,17 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmRoleFunctionBase">
             <summary>
-            SmRoleFunction (Dto.Base)
+            用户功能权限 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunctionBase.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunctionBase.SmFunctionId">
             <summary>
-            SmFunctionId
+            功能权限定义ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunctionBase.NoActionCode">
@@ -4599,12 +4624,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleModuleBase.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleModuleBase.SmModuleId">
             <summary>
-            SmModuleId
+            模块ID
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmRolesBase">
@@ -4614,12 +4639,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmRolesBase.RoleCode">
             <summary>
-            RoleCode
+            角色代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRolesBase.RoleName">
             <summary>
-            RoleName
+            角色
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmTableCatalogBase">
@@ -4645,6 +4670,11 @@
         <member name="P:EU.Core.Model.Models.SmTableCatalogBase.TaxisNo">
             <summary>
             排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmTableCatalogBase.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmUserModuleColumnBase">
@@ -4694,12 +4724,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmUserRoleBase.SmUserId">
             <summary>
-            SmUserId
+            用户ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmUserRoleBase.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmUsersBase">
@@ -4730,6 +4760,11 @@
         <member name="P:EU.Core.Model.Models.SmUsersBase.UserType">
             <summary>
             用户类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmUsersBase.Remark">
+            <summary>
+            Remark
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmUsersBase.AvatarFileId">
@@ -4839,7 +4874,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.WxConfigBase">
             <summary>
-            WxConfig (Dto.Base)
+            微信账号配置 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.WxConfigBase.InterfaceType">
@@ -6342,14 +6377,14 @@
             盘点货位ID
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.IvCheck.OrderStatus">
-            <summary>
-            订单状态
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.IvCheck.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.IvCheck.OrderStatus">
+            <summary>
+            订单状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.IvCheckDetail">
@@ -7919,14 +7954,14 @@
             出库日期
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Models.SdOutOrder.OrderStatus">
-            <summary>
-            订单状态
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Models.SdOutOrder.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SdOutOrder.OrderStatus">
+            <summary>
+            订单状态
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SdOutOrderDetail">
@@ -8351,37 +8386,37 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.NumberCode">
             <summary>
-            NumberCode
+            编号代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.Prefix">
             <summary>
-            Prefix
+            前缀
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.DateFormatType">
             <summary>
-            DateFormatType
+            时间类型
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.NumberLength">
             <summary>
-            NumberLength
+            编号长度
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.TableName">
             <summary>
-            TableName
+            关联表
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.ColumnName">
             <summary>
-            ColumnName
+            关联栏位名
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmAutoCode.Remark">
             <summary>
-            Remark
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmCity">
@@ -8461,22 +8496,22 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmCompany.CompanyCode">
             <summary>
-            CompanyCode
+            代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmCompany.CompanyShortName">
             <summary>
-            CompanyShortName
+            简称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmCompany.CompanyName">
             <summary>
-            CompanyName
+            名称
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmComponent">
             <summary>
-            SmComponent (Model)
+            组件测试 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmComponent.UserName">
@@ -8641,17 +8676,17 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartment.DepartmentId">
             <summary>
-            DepartmentId
+            上级部门ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartment.DepartmentCode">
             <summary>
-            DepartmentCode
+            部门代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmDepartment.DepartmentName">
             <summary>
-            DepartmentName
+            部门名称
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmEmployee">
@@ -8726,7 +8761,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmFieldCatalog">
             <summary>
-            映射表字段 (Model)
+            系统表栏位 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFieldCatalog.TableCatalogId">
@@ -8759,6 +8794,11 @@
             数据长度
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmFieldCatalog.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmFunctionPrivilege">
             <summary>
             功能权限 (Model)
@@ -8766,27 +8806,27 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.FunctionCode">
             <summary>
-            FunctionCode
+            功能代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.FunctionName">
             <summary>
-            FunctionName
+            功能名称
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.SmModuleId">
             <summary>
-            SmModuleId
+            模块ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.TaxisNo">
             <summary>
-            TaxisNo
+            排序号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.DisplayPosition">
             <summary>
-            DisplayPosition
+            显示位置
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmFunctionPrivilege.Color">
@@ -9324,6 +9364,11 @@
             是否错误
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmImportDataDetail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmImportError">
             <summary>
             系统导入模板异常信息 (Model)
@@ -9352,6 +9397,11 @@
         <member name="P:EU.Core.Model.Models.SmImportError.SheetName">
             <summary>
             Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmImportError.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmImpTemplate">
@@ -9427,6 +9477,11 @@
         <member name="P:EU.Core.Model.Models.SmImpTemplate.ExcludeLastRow">
             <summary>
             排除最后行数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmImpTemplate.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmImpTemplateDetail">
@@ -10014,6 +10069,11 @@
             路由文件地址
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.SmModules.ID1">
+            <summary>
+            ID1
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModuleSql">
             <summary>
             系统模块SQL (Model)
@@ -10117,6 +10177,11 @@
         <member name="P:EU.Core.Model.Models.SmModuleSql.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmModuleSql.ID1">
+            <summary>
+            ID1
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmProvince">
@@ -10266,17 +10331,17 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmRoleFunction">
             <summary>
-            SmRoleFunction (Model)
+            用户功能权限 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunction.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunction.SmFunctionId">
             <summary>
-            SmFunctionId
+            功能权限定义ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleFunction.NoActionCode">
@@ -10301,12 +10366,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleModule.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoleModule.SmModuleId">
             <summary>
-            SmModuleId
+            模块ID
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmRoles">
@@ -10316,12 +10381,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmRoles.RoleCode">
             <summary>
-            RoleCode
+            角色代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmRoles.RoleName">
             <summary>
-            RoleName
+            角色
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmTableCatalog">
@@ -10347,6 +10412,11 @@
         <member name="P:EU.Core.Model.Models.SmTableCatalog.TaxisNo">
             <summary>
             排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmTableCatalog.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmUserModuleColumn">
@@ -10396,12 +10466,12 @@
         </member>
         <member name="P:EU.Core.Model.Models.SmUserRole.SmUserId">
             <summary>
-            SmUserId
+            用户ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmUserRole.SmRoleId">
             <summary>
-            SmRoleId
+            角色ID
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmUsers">
@@ -10432,6 +10502,11 @@
         <member name="P:EU.Core.Model.Models.SmUsers.UserType">
             <summary>
             用户类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.SmUsers.Remark">
+            <summary>
+            Remark
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.SmUsers.AvatarFileId">
@@ -10740,7 +10815,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.WxConfig">
             <summary>
-            WxConfig (Model)
+            微信账号配置 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.WxConfig.InterfaceType">
