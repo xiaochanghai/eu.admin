@@ -1,6 +1,4 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace EU.Core.Model;
+﻿namespace EU.Core.Model;
 
 /// <summary>
 /// 服务层响应实体(泛型)

@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Edit;
 
 /// <summary>
 /// 安全库存设置 (Dto.EditInput)

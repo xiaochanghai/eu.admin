@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Insert;
 
 /// <summary>
 /// 采购退货单明细 (Dto.InsertInput)

@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Insert;
 
 /// <summary>
 /// SmRoleFunction (Dto.InsertInput)

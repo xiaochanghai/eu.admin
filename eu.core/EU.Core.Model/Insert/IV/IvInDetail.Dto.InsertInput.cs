@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Insert;
 
 /// <summary>
 /// 库存入库单明细 (Dto.InsertInput)

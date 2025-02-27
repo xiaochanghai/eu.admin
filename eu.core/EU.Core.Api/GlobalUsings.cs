@@ -17,6 +17,8 @@ global using EU.Core.Domain;
 global using EU.Core.IServices;
 global using EU.Core.Model;
 global using EU.Core.Model.Models;
+global using EU.Core.Model.Edit;
+global using EU.Core.Model.Insert;
 global using EU.Core.Model.ViewModels;
 global using EU.Core.Repository.UnitOfWorks;
 global using EU.Core.SwaggerHelper;

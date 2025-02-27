@@ -11,6 +11,8 @@ global using EU.Core.IServices;
 global using EU.Core.Model;
 global using EU.Core.Model.Models;
 global using EU.Core.Model.Entity;
+global using EU.Core.Model.Insert;
+global using EU.Core.Model.Edit;
 global using EU.Core.Model.ViewModels.Extend;
 global using EU.Core.Module;
 global using EU.Core.Services.BASE;

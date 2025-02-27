@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */ 
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Edit;
 
 /// <summary>
 /// 库存建帐 (Dto.EditInput)
