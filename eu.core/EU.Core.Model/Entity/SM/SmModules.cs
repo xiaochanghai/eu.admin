@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:26:12  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:59  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -27,13 +27,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// 模块代码
     /// </summary>
-    [Display(Name = "ModuleCode"), Description("模块代码"), MaxLength(50, ErrorMessage = "模块代码 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ModuleCode"), Description("模块代码"), SugarColumn(IsNullable = true, Length = 50)]
     public string ModuleCode { get; set; }
 
     /// <summary>
     /// 模块名称
     /// </summary>
-    [Display(Name = "ModuleName"), Description("模块名称"), MaxLength(50, ErrorMessage = "模块名称 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ModuleName"), Description("模块名称"), SugarColumn(IsNullable = true, Length = 50)]
     public string ModuleName { get; set; }
 
     /// <summary>
@@ -45,13 +45,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// 图标
     /// </summary>
-    [Display(Name = "Icon"), Description("图标"), MaxLength(-1, ErrorMessage = "图标 不能超过 -1 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Icon"), Description("图标"), SugarColumn(IsNullable = true, Length = -1)]
     public string Icon { get; set; }
 
     /// <summary>
     /// 路由
     /// </summary>
-    [Display(Name = "RoutePath"), Description("路由"), MaxLength(50, ErrorMessage = "路由 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "RoutePath"), Description("路由"), SugarColumn(IsNullable = true, Length = 50)]
     public string RoutePath { get; set; }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class SmModules : BasePoco
     /// <summary>
     /// 请求地址
     /// </summary>
-    [Display(Name = "ApiUrl"), Description("请求地址"), MaxLength(64, ErrorMessage = "请求地址 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ApiUrl"), Description("请求地址"), SugarColumn(IsNullable = true, Length = 64)]
     public string ApiUrl { get; set; }
 
     /// <summary>
@@ -123,13 +123,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// DefaultSort
     /// </summary>
-    [Display(Name = "DefaultSort"), Description("DefaultSort"), MaxLength(50, ErrorMessage = "DefaultSort 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DefaultSort"), Description("DefaultSort"), SugarColumn(IsNullable = true, Length = 50)]
     public string DefaultSort { get; set; }
 
     /// <summary>
     /// DefaultSortOrder
     /// </summary>
-    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), MaxLength(50, ErrorMessage = "DefaultSortOrder 不能超过 50 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), SugarColumn(IsNullable = true, Length = 50)]
     public string DefaultSortOrder { get; set; }
 
     /// <summary>
@@ -159,19 +159,19 @@ public class SmModules : BasePoco
     /// <summary>
     /// 打开方式
     /// </summary>
-    [Display(Name = "OpenType"), Description("打开方式"), MaxLength(32, ErrorMessage = "打开方式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OpenType"), Description("打开方式"), SugarColumn(IsNullable = true, Length = 32)]
     public string OpenType { get; set; }
 
     /// <summary>
     /// 编辑页路径
     /// </summary>
-    [Display(Name = "FormPage"), Description("编辑页路径"), MaxLength(128, ErrorMessage = "编辑页路径 不能超过 128 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FormPage"), Description("编辑页路径"), SugarColumn(IsNullable = true, Length = 128)]
     public string FormPage { get; set; }
 
     /// <summary>
     /// 模块类型，Form表单/FormGroup表单集
     /// </summary>
-    [Display(Name = "ModuleType"), Description("模块类型，Form表单/FormGroup表单集"), MaxLength(32, ErrorMessage = "模块类型，Form表单/FormGroup表单集 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ModuleType"), Description("模块类型，Form表单/FormGroup表单集"), SugarColumn(IsNullable = true, Length = 32)]
     public string ModuleType { get; set; }
 
     /// <summary>
@@ -183,7 +183,7 @@ public class SmModules : BasePoco
     /// <summary>
     /// 路由文件地址
     /// </summary>
-    [Display(Name = "Element"), Description("路由文件地址"), MaxLength(64, ErrorMessage = "路由文件地址 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Element"), Description("路由文件地址"), SugarColumn(IsNullable = true, Length = 64)]
     public string Element { get; set; }
 
     /// <summary>

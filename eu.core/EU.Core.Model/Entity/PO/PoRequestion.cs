@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:09:23  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:11  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -27,13 +27,13 @@ public class PoRequestion : BasePoco
     /// <summary>
     /// 请购单号
     /// </summary>
-    [Display(Name = "OrderNo"), Description("请购单号"), MaxLength(32, ErrorMessage = "请购单号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderNo"), Description("请购单号"), SugarColumn(IsNullable = true, Length = 32)]
     public string OrderNo { get; set; }
 
     /// <summary>
     /// 请购类型
     /// </summary>
-    [Display(Name = "RequestionType"), Description("请购类型"), MaxLength(32, ErrorMessage = "请购类型 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "RequestionType"), Description("请购类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string RequestionType { get; set; }
 
     /// <summary>
@@ -63,12 +63,12 @@ public class PoRequestion : BasePoco
     /// <summary>
     /// 订单状态
     /// </summary>
-    [Display(Name = "OrderStatus"), Description("订单状态"), MaxLength(32, ErrorMessage = "订单状态 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderStatus"), Description("订单状态"), SugarColumn(IsNullable = true, Length = 32)]
     public string OrderStatus { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 }

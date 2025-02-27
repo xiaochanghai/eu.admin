@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:33:40  SimonHsiao   初版
+* V0.01  2025/2/27 18:31:06  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -39,7 +39,7 @@ public class SmRoleFunction : BasePoco
     /// <summary>
     /// NoActionCode
     /// </summary>
-    [Display(Name = "NoActionCode"), Description("NoActionCode"), MaxLength(-1, ErrorMessage = "NoActionCode 不能超过 -1 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "NoActionCode"), Description("NoActionCode"), SugarColumn(IsNullable = true, Length = -1)]
     public string NoActionCode { get; set; }
 
     /// <summary>
@@ -51,6 +51,6 @@ public class SmRoleFunction : BasePoco
     /// <summary>
     /// 操作代码
     /// </summary>
-    [Display(Name = "ActionCode"), Description("操作代码"), MaxLength(32, ErrorMessage = "操作代码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ActionCode"), Description("操作代码"), SugarColumn(IsNullable = true, Length = 32)]
     public string ActionCode { get; set; }
 }

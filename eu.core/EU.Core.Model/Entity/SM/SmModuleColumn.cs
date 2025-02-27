@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:26:10  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:58  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -33,25 +33,25 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 列名称
     /// </summary>
-    [Display(Name = "Title"), Description("列名称"), MaxLength(32, ErrorMessage = "列名称 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Title"), Description("列名称"), SugarColumn(IsNullable = true, Length = 32)]
     public string Title { get; set; }
 
     /// <summary>
     /// 栏位名
     /// </summary>
-    [Display(Name = "DataIndex"), Description("栏位名"), MaxLength(32, ErrorMessage = "栏位名 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DataIndex"), Description("栏位名"), SugarColumn(IsNullable = true, Length = 32)]
     public string DataIndex { get; set; }
 
     /// <summary>
     /// 列表数据类型
     /// </summary>
-    [Display(Name = "ValueType"), Description("列表数据类型"), MaxLength(32, ErrorMessage = "列表数据类型 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ValueType"), Description("列表数据类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string ValueType { get; set; }
 
     /// <summary>
     /// 宽度
     /// </summary>
-    [Display(Name = "Width"), Description("宽度"), Column(TypeName = "decimal(20,2)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Width"), Description("宽度"), Column(TypeName = "decimal(20,2)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 2)]
     public decimal? Width { get; set; }
 
     /// <summary>
@@ -105,13 +105,13 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// QueryValue
     /// </summary>
-    [Display(Name = "QueryValue"), Description("QueryValue"), MaxLength(2000, ErrorMessage = "QueryValue 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "QueryValue"), Description("QueryValue"), SugarColumn(IsNullable = true, Length = 2000)]
     public string QueryValue { get; set; }
 
     /// <summary>
     /// QueryValueType
     /// </summary>
-    [Display(Name = "QueryValueType"), Description("QueryValueType"), MaxLength(2000, ErrorMessage = "QueryValueType 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "QueryValueType"), Description("QueryValueType"), SugarColumn(IsNullable = true, Length = 2000)]
     public string QueryValueType { get; set; }
 
     /// <summary>
@@ -123,19 +123,19 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 数据格式
     /// </summary>
-    [Display(Name = "DataFormate"), Description("数据格式"), MaxLength(32, ErrorMessage = "数据格式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DataFormate"), Description("数据格式"), SugarColumn(IsNullable = true, Length = 32)]
     public string DataFormate { get; set; }
 
     /// <summary>
     /// 对齐方式
     /// </summary>
-    [Display(Name = "Align"), Description("对齐方式"), MaxLength(32, ErrorMessage = "对齐方式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Align"), Description("对齐方式"), SugarColumn(IsNullable = true, Length = 32)]
     public string Align { get; set; }
 
     /// <summary>
     /// 表別名
     /// </summary>
-    [Display(Name = "TableAlias"), Description("表別名"), MaxLength(32, ErrorMessage = "表別名 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TableAlias"), Description("表別名"), SugarColumn(IsNullable = true, Length = 32)]
     public string TableAlias { get; set; }
 
     /// <summary>
@@ -153,7 +153,7 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 默认值
     /// </summary>
-    [Display(Name = "DefaultValue"), Description("默认值"), MaxLength(32, ErrorMessage = "默认值 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DefaultValue"), Description("默认值"), SugarColumn(IsNullable = true, Length = 32)]
     public string DefaultValue { get; set; }
 
     /// <summary>
@@ -177,13 +177,13 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 限定输入格式
     /// </summary>
-    [Display(Name = "Validator"), Description("限定输入格式"), MaxLength(32, ErrorMessage = "限定输入格式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Validator"), Description("限定输入格式"), SugarColumn(IsNullable = true, Length = 32)]
     public string Validator { get; set; }
 
     /// <summary>
     /// 正则表达式
     /// </summary>
-    [Display(Name = "ValidPattern"), Description("正则表达式"), MaxLength(32, ErrorMessage = "正则表达式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ValidPattern"), Description("正则表达式"), SugarColumn(IsNullable = true, Length = 32)]
     public string ValidPattern { get; set; }
 
     /// <summary>
@@ -207,13 +207,13 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 最大值
     /// </summary>
-    [Display(Name = "Maximum"), Description("最大值"), Column(TypeName = "decimal(20,4)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Maximum"), Description("最大值"), Column(TypeName = "decimal(20,4)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 4)]
     public decimal? Maximum { get; set; }
 
     /// <summary>
     /// 最小值
     /// </summary>
-    [Display(Name = "Minimum"), Description("最小值"), Column(TypeName = "decimal(20,4)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Minimum"), Description("最小值"), Column(TypeName = "decimal(20,4)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 4)]
     public decimal? Minimum { get; set; }
 
     /// <summary>
@@ -237,31 +237,31 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 表单项标题
     /// </summary>
-    [Display(Name = "FormTitle"), Description("表单项标题"), MaxLength(32, ErrorMessage = "表单项标题 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FormTitle"), Description("表单项标题"), SugarColumn(IsNullable = true, Length = 32)]
     public string FormTitle { get; set; }
 
     /// <summary>
     /// 字段控件类型
     /// </summary>
-    [Display(Name = "FieldType"), Description("字段控件类型"), MaxLength(32, ErrorMessage = "字段控件类型 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FieldType"), Description("字段控件类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string FieldType { get; set; }
 
     /// <summary>
     /// 占位符
     /// </summary>
-    [Display(Name = "Placeholder"), Description("占位符"), MaxLength(32, ErrorMessage = "占位符 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Placeholder"), Description("占位符"), SugarColumn(IsNullable = true, Length = 32)]
     public string Placeholder { get; set; }
 
     /// <summary>
     /// 数据来源方式
     /// </summary>
-    [Display(Name = "DataSourceType"), Description("数据来源方式"), MaxLength(32, ErrorMessage = "数据来源方式 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DataSourceType"), Description("数据来源方式"), SugarColumn(IsNullable = true, Length = 32)]
     public string DataSourceType { get; set; }
 
     /// <summary>
     /// 数据来源
     /// </summary>
-    [Display(Name = "DataSource"), Description("数据来源"), MaxLength(32, ErrorMessage = "数据来源 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DataSource"), Description("数据来源"), SugarColumn(IsNullable = true, Length = 32)]
     public string DataSource { get; set; }
 
     /// <summary>
@@ -291,7 +291,7 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 
     /// <summary>
@@ -315,7 +315,7 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 栏位模式,通用/列表/表单
     /// </summary>
-    [Display(Name = "ColumnMode"), Description("栏位模式,通用/列表/表单"), MaxLength(32, ErrorMessage = "栏位模式,通用/列表/表单 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ColumnMode"), Description("栏位模式,通用/列表/表单"), SugarColumn(IsNullable = true, Length = 32)]
     public string ColumnMode { get; set; }
 
     /// <summary>
@@ -333,13 +333,13 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 提示内容
     /// </summary>
-    [Display(Name = "TooltipContent"), Description("提示内容"), MaxLength(64, ErrorMessage = "提示内容 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TooltipContent"), Description("提示内容"), SugarColumn(IsNullable = true, Length = 64)]
     public string TooltipContent { get; set; }
 
     /// <summary>
     /// 字段颜色
     /// </summary>
-    [Display(Name = "Color"), Description("字段颜色"), MaxLength(32, ErrorMessage = "字段颜色 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Color"), Description("字段颜色"), SugarColumn(IsNullable = true, Length = 32)]
     public string Color { get; set; }
 
     /// <summary>

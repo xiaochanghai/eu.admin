@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:14:58  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:27  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -69,13 +69,13 @@ public class SdReturnOrderDetail : BasePoco
     /// <summary>
     /// 退货数量
     /// </summary>
-    [Display(Name = "ReturnQTY"), Description("退货数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ReturnQTY"), Description("退货数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? ReturnQTY { get; set; }
 
     /// <summary>
     /// 客户物料编码
     /// </summary>
-    [Display(Name = "CustomerMaterialCode"), Description("客户物料编码"), MaxLength(64, ErrorMessage = "客户物料编码 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "CustomerMaterialCode"), Description("客户物料编码"), SugarColumn(IsNullable = true, Length = 64)]
     public string CustomerMaterialCode { get; set; }
 
     /// <summary>
@@ -105,7 +105,7 @@ public class SdReturnOrderDetail : BasePoco
     /// <summary>
     /// 退货状态--待退回、已退回
     /// </summary>
-    [Display(Name = "ReturnStatus"), Description("退货状态--待退回、已退回"), MaxLength(32, ErrorMessage = "退货状态--待退回、已退回 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ReturnStatus"), Description("退货状态--待退回、已退回"), SugarColumn(IsNullable = true, Length = 32)]
     public string ReturnStatus { get; set; }
 
     /// <summary>
@@ -117,30 +117,30 @@ public class SdReturnOrderDetail : BasePoco
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark1"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark1"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string ExtRemark1 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark2"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark2"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string ExtRemark2 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark3"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark3"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string ExtRemark3 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark4"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string ExtRemark4 { get; set; }
 }

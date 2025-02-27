@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:14:57  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:26  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -26,84 +26,84 @@ public class SdReturnOrderBase : BasePoco
     /// <summary>
     /// 订单号
     /// </summary>
-    [Display(Name = "OrderNo"), Description("订单号"), MaxLength(32, ErrorMessage = "订单号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderNo"), Description("订单号"), MaxLength(32, ErrorMessage = "订单号 不能超过 32 个字符")]
     public string OrderNo { get; set; }
 
     /// <summary>
     /// 订单类型 正式订单、样品订单、其他订单（默认正式订单）
     /// </summary>
-    [Display(Name = "OrderCategory"), Description("订单类型 正式订单、样品订单、其他订单（默认正式订单）"), MaxLength(32, ErrorMessage = "订单类型 正式订单、样品订单、其他订单（默认正式订单） 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderCategory"), Description("订单类型 正式订单、样品订单、其他订单（默认正式订单）"), MaxLength(32, ErrorMessage = "订单类型 正式订单、样品订单、其他订单（默认正式订单） 不能超过 32 个字符")]
     public string OrderCategory { get; set; }
 
     /// <summary>
     /// 作业日期
     /// </summary>
-    [Display(Name = "OrderDate"), Description("作业日期"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderDate"), Description("作业日期")]
     public DateTime? OrderDate { get; set; }
 
     /// <summary>
     /// 客户单号
     /// </summary>
-    [Display(Name = "CustomerOrderNo"), Description("客户单号"), MaxLength(64, ErrorMessage = "客户单号 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "CustomerOrderNo"), Description("客户单号"), MaxLength(64, ErrorMessage = "客户单号 不能超过 64 个字符")]
     public string CustomerOrderNo { get; set; }
 
     /// <summary>
     /// 预定交期
     /// </summary>
-    [Display(Name = "DeliveryDate"), Description("预定交期"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DeliveryDate"), Description("预定交期")]
     public DateTime? DeliveryDate { get; set; }
 
     /// <summary>
     /// 订单等级
     /// </summary>
-    [Display(Name = "OrderLevel"), Description("订单等级"), MaxLength(32, ErrorMessage = "订单等级 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderLevel"), Description("订单等级"), MaxLength(32, ErrorMessage = "订单等级 不能超过 32 个字符")]
     public string OrderLevel { get; set; }
 
     /// <summary>
     /// 业务员ID
     /// </summary>
-    [Display(Name = "SalesmanId"), Description("业务员ID"), SugarColumn(IsNullable = true)]
+    [Display(Name = "SalesmanId"), Description("业务员ID")]
     public Guid? SalesmanId { get; set; }
 
     /// <summary>
     /// 客户ID
     /// </summary>
-    [Display(Name = "CustomerId"), Description("客户ID"), SugarColumn(IsNullable = true)]
+    [Display(Name = "CustomerId"), Description("客户ID")]
     public Guid? CustomerId { get; set; }
 
     /// <summary>
     /// 仓库ID
     /// </summary>
-    [Display(Name = "StockId"), Description("仓库ID"), SugarColumn(IsNullable = true)]
+    [Display(Name = "StockId"), Description("仓库ID")]
     public Guid? StockId { get; set; }
 
     /// <summary>
     /// 货位ID
     /// </summary>
-    [Display(Name = "GoodsLocationId"), Description("货位ID"), SugarColumn(IsNullable = true)]
+    [Display(Name = "GoodsLocationId"), Description("货位ID")]
     public Guid? GoodsLocationId { get; set; }
 
     /// <summary>
     /// 退回原因
     /// </summary>
-    [Display(Name = "ReturnReason"), Description("退回原因"), MaxLength(32, ErrorMessage = "退回原因 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ReturnReason"), Description("退回原因"), MaxLength(32, ErrorMessage = "退回原因 不能超过 32 个字符")]
     public string ReturnReason { get; set; }
 
     /// <summary>
     /// 退货日期
     /// </summary>
-    [Display(Name = "ReturnDate"), Description("退货日期"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ReturnDate"), Description("退货日期")]
     public DateTime? ReturnDate { get; set; }
 
     /// <summary>
     /// 退货状态--待退回、已退回（保存后，单据状态为待退回，增加退回入库按钮，点击确认后，单据状态为已退回）
     /// </summary>
-    [Display(Name = "OrderStatus"), Description("退货状态--待退回、已退回（保存后，单据状态为待退回，增加退回入库按钮，点击确认后，单据状态为已退回）"), MaxLength(32, ErrorMessage = "退货状态--待退回、已退回（保存后，单据状态为待退回，增加退回入库按钮，点击确认后，单据状态为已退回） 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderStatus"), Description("退货状态--待退回、已退回（保存后，单据状态为待退回，增加退回入库按钮，点击确认后，单据状态为已退回）"), MaxLength(32, ErrorMessage = "退货状态--待退回、已退回（保存后，单据状态为待退回，增加退回入库按钮，点击确认后，单据状态为已退回） 不能超过 32 个字符")]
     public string OrderStatus { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
 }

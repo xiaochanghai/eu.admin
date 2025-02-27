@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:26:21  SimonHsiao   初版
+* V0.01  2025/2/27 18:31:10  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -26,30 +26,30 @@ public class SmTableCatalogBase : BasePoco
     /// <summary>
     /// 表代码
     /// </summary>
-    [Display(Name = "TableCode"), Description("表代码"), MaxLength(32, ErrorMessage = "表代码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TableCode"), Description("表代码"), MaxLength(32, ErrorMessage = "表代码 不能超过 32 个字符")]
     public string TableCode { get; set; }
 
     /// <summary>
     /// 表名
     /// </summary>
-    [Display(Name = "TableName"), Description("表名"), MaxLength(32, ErrorMessage = "表名 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TableName"), Description("表名"), MaxLength(32, ErrorMessage = "表名 不能超过 32 个字符")]
     public string TableName { get; set; }
 
     /// <summary>
     /// 表类型
     /// </summary>
-    [Display(Name = "TypeCode"), Description("表类型"), MaxLength(32, ErrorMessage = "表类型 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TypeCode"), Description("表类型"), MaxLength(32, ErrorMessage = "表类型 不能超过 32 个字符")]
     public string TypeCode { get; set; }
 
     /// <summary>
     /// 排序号
     /// </summary>
-    [Display(Name = "TaxisNo"), Description("排序号"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TaxisNo"), Description("排序号")]
     public int? TaxisNo { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
 }

@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:08:24  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:03  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -27,7 +27,7 @@ public class PoArrivalOrder : BasePoco
     /// <summary>
     /// 单号
     /// </summary>
-    [Display(Name = "OrderNo"), Description("单号"), MaxLength(32, ErrorMessage = "单号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderNo"), Description("单号"), SugarColumn(IsNullable = true, Length = 32)]
     public string OrderNo { get; set; }
 
     /// <summary>
@@ -63,30 +63,30 @@ public class PoArrivalOrder : BasePoco
     /// <summary>
     /// 采购合同号
     /// </summary>
-    [Display(Name = "ContractNo"), Description("采购合同号"), MaxLength(32, ErrorMessage = "采购合同号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ContractNo"), Description("采购合同号"), SugarColumn(IsNullable = true, Length = 32)]
     public string ContractNo { get; set; }
 
     /// <summary>
     /// 送货单号
     /// </summary>
-    [Display(Name = "DeliveryOrderNo"), Description("送货单号"), MaxLength(32, ErrorMessage = "送货单号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "DeliveryOrderNo"), Description("送货单号"), SugarColumn(IsNullable = true, Length = 32)]
     public string DeliveryOrderNo { get; set; }
 
     /// <summary>
     /// 条码
     /// </summary>
-    [Display(Name = "BarCode"), Description("条码"), MaxLength(32, ErrorMessage = "条码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "BarCode"), Description("条码"), SugarColumn(IsNullable = true, Length = 32)]
     public string BarCode { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 
     /// <summary>
     /// 订单状态
     /// </summary>
-    [Display(Name = "OrderStatus"), Description("订单状态"), MaxLength(32, ErrorMessage = "订单状态 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderStatus"), Description("订单状态"), SugarColumn(IsNullable = true, Length = 32)]
     public string OrderStatus { get; set; }
 }

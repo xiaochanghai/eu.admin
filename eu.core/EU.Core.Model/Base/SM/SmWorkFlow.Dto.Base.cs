@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:26:26  SimonHsiao   初版
+* V0.01  2025/2/27 18:31:16  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -26,48 +26,48 @@ public class SmWorkFlowBase : BasePoco
     /// <summary>
     /// 模块ID
     /// </summary>
-    [Display(Name = "SmModuleId"), Description("模块ID"), SugarColumn(IsNullable = true)]
+    [Display(Name = "SmModuleId"), Description("模块ID")]
     public Guid? SmModuleId { get; set; }
 
     /// <summary>
     /// 流程代码
     /// </summary>
-    [Display(Name = "FlowCode"), Description("流程代码"), MaxLength(10, ErrorMessage = "流程代码 不能超过 10 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FlowCode"), Description("流程代码"), MaxLength(10, ErrorMessage = "流程代码 不能超过 10 个字符")]
     public string FlowCode { get; set; }
 
     /// <summary>
     /// 流程名
     /// </summary>
-    [Display(Name = "FlowName"), Description("流程名"), MaxLength(10, ErrorMessage = "流程名 不能超过 10 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FlowName"), Description("流程名"), MaxLength(10, ErrorMessage = "流程名 不能超过 10 个字符")]
     public string FlowName { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark1"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark1"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark1 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark2"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark2"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark2 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark3"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark3"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark3 { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark4 { get; set; }
 }

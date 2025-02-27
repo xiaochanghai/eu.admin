@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/26 21:52:24  SimonHsiao   初版
+* V0.01  2025/2/27 18:29:44  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -45,31 +45,31 @@ public class BdMaterialIVChange : BasePoco
     /// <summary>
     /// 批号/炉号
     /// </summary>
-    [Display(Name = "BatchNo"), Description("批号/炉号"), MaxLength(32, ErrorMessage = "批号/炉号 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "BatchNo"), Description("批号/炉号"), SugarColumn(IsNullable = true, Length = 32)]
     public string BatchNo { get; set; }
 
     /// <summary>
     /// 变更数量
     /// </summary>
-    [Display(Name = "QTY"), Description("变更数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "QTY"), Description("变更数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? QTY { get; set; }
 
     /// <summary>
     /// 变前数量
     /// </summary>
-    [Display(Name = "BeforeQTY"), Description("变前数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "BeforeQTY"), Description("变前数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? BeforeQTY { get; set; }
 
     /// <summary>
     /// 变后数量
     /// </summary>
-    [Display(Name = "AfterQTY"), Description("变后数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "AfterQTY"), Description("变后数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? AfterQTY { get; set; }
 
     /// <summary>
     /// 变化类型
     /// </summary>
-    [Display(Name = "ChangeType"), Description("变化类型"), MaxLength(32, ErrorMessage = "变化类型 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ChangeType"), Description("变化类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string ChangeType { get; set; }
 
     /// <summary>
@@ -87,6 +87,6 @@ public class BdMaterialIVChange : BasePoco
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 }

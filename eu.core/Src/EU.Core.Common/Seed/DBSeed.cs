@@ -11,6 +11,8 @@ using System.Reflection;
 using System.Text;
 using EU.Core.Common.Const;
 using EU.Core.Model.Models.RootTkey;
+using EU.Core.Model;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EU.Core.Common.Seed;
 
@@ -429,6 +431,8 @@ public class DBSeed
 
     #endregion
 
+
+
     #region 数据表结构迁移到Mysql
     /// <summary>
     /// 数据表结构迁移到Mysql
@@ -457,19 +461,20 @@ public class DBSeed
         var modelTypes = referencedAssemblies
             .SelectMany(a => a.DefinedTypes)
             .Select(type => type.AsType())
-            .Where(x => x.IsClass && x.Namespace != null && 
-            x.Namespace.StartsWith("EU.Core.Model.Models") && 
-            !x.Name.EndsWith("Base") && 
-            !x.Name.EndsWith("BaseEntity") &&
-            !x.Name.EndsWith("BusinessTable") &&
-            !x.Name.EndsWith("MultiBusinessTable") &&
-            !x.Name.EndsWith("SubLibraryBusinessTable") &&
-            !x.Name.EndsWith("SysTenant") &&
-            !x.Name.EndsWith("TasksQz") &&
-            !x.Name.EndsWith("SplitDemo") &&
-            !x.Name.EndsWith("SplitDemo") &&
-            !x.Name.EndsWith("Input") &&
-            !x.Name.EndsWith("Dto"))
+            .Where(x => x.IsClass && x.Namespace != null &&
+            x.Namespace.StartsWith("EU.Core.Model.Entity")
+            //x.Name == "SmImportDataDetail"
+            //!x.Name.EndsWith("BaseEntity") &&
+            //!x.Name.EndsWith("BusinessTable") &&
+            //!x.Name.EndsWith("MultiBusinessTable") &&
+            //!x.Name.EndsWith("SubLibraryBusinessTable") &&
+            //!x.Name.EndsWith("SysTenant") &&
+            //!x.Name.EndsWith("TasksQz") &&
+            //!x.Name.EndsWith("SplitDemo") &&
+            //!x.Name.EndsWith("SplitDemo") &&
+            //!x.Name.EndsWith("Input") &&
+            //!x.Name.EndsWith("Dto")
+            )
             .ToList();
         Stopwatch sw = Stopwatch.StartNew();
 
@@ -496,9 +501,65 @@ public class DBSeed
                 }
                 catch (Exception E)
                 {
-                     
+
                 }
             }
+        });
+
+        sw.Stop();
+
+        $"Log Tables created successfully! {sw.ElapsedMilliseconds}ms".WriteSuccessLine();
+        Console.WriteLine();
+    }
+    #endregion
+
+    #region 数据表结构迁移到Mysql
+    /// <summary>
+    /// 数据表结构迁移到Mysql
+    /// </summary>
+    /// <param name="myContext"></param>
+    /// <exception cref="ApplicationException"></exception>
+    public static void GenerateAllEntity(MyContext myContext)
+    {
+        var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
+        var referencedAssemblies = System.IO.Directory.GetFiles(path, "EU.Core.Model.dll")
+            .Select(Assembly.LoadFrom).ToArray();
+        var modelTypes = referencedAssemblies
+            .SelectMany(a => a.DefinedTypes)
+            .Select(type => type.AsType())
+            .Where(x => x.IsClass && x.Namespace != null &&
+            x.Namespace.StartsWith("EU.Core.Model.Entity")  
+             //x.Name == "IvAccounting"
+            //!x.Name.EndsWith("BaseEntity") &&
+            //!x.Name.EndsWith("BusinessTable") &&
+            //!x.Name.EndsWith("MultiBusinessTable") &&
+            //!x.Name.EndsWith("SubLibraryBusinessTable") &&
+            //!x.Name.EndsWith("SysTenant") &&
+            //!x.Name.EndsWith("TasksQz") &&
+            //!x.Name.EndsWith("SplitDemo") &&
+            //!x.Name.EndsWith("SplitDemo") &&
+            //!x.Name.EndsWith("Input") &&
+            //!x.Name.EndsWith("Dto")
+            )
+            .ToList();
+        Stopwatch sw = Stopwatch.StartNew();
+
+        string? ConnID = null;
+
+        ConnID = ConnID == null ? MainDb.CurrentDbConnId.ToLower() : ConnID;
+        //myContext.Db?.ChangeDatabase(ConnID.ToLower());
+         
+        var isMuti = false;
+        var data = new ServiceResult<string>() { Success = true, Message = "" };
+        modelTypes.ForEach(t =>
+        {
+            string[] tableNames = [t.Name];
+            data.Data += $"Controller层生成：{FrameSeed.CreateControllers(myContext.Db, ConnID, isMuti, tableNames)} || ";
+            data.Data += $"库{ConnID}-Model层生成：{FrameSeed.CreateModels(myContext.Db, ConnID, isMuti, tableNames)} || ";
+            //data.response += $"库{ConnID}-IRepositorys层生成：{FrameSeed.CreateIRepositorys(_sqlSugarClient, ConnID, isMuti, tableNames)} || ";
+            data.Data += $"库{ConnID}-IServices层生成：{FrameSeed.CreateIServices(myContext.Db, ConnID, isMuti, tableNames)} || ";
+            //data.response += $"库{ConnID}-Repository层生成：{FrameSeed.CreateRepository(_sqlSugarClient, ConnID, isMuti, tableNames)} || ";
+            data.Data += $"库{ConnID}-Services层生成：{FrameSeed.CreateServices(myContext.Db, ConnID, isMuti, tableNames)} || ";
         });
 
         sw.Stop();

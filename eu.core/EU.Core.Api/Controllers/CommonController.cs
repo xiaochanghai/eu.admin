@@ -156,6 +156,18 @@ public class CommonController : Controller
     public async Task<ServiceResult> Delete(string moduleCode, [FromBody] List<Guid> ids) => await _service.Delete(moduleCode, ids);
     #endregion
 
+    #region 生成所有表实体
+    [HttpGet("GenerateAllEntity"), AllowAnonymous]
+    public ServiceResult GenerateAllEntity()
+    {
+ 
+        DBSeed.GenerateAllEntity(_myContext);
+
+        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
+
+    }
+    #endregion
+
     #region 测试
     [HttpGet("Test"), AllowAnonymous]
     public async Task<ServiceResult> Test()

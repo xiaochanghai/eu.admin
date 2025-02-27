@@ -39,7 +39,7 @@ public class FileAttachment : BasePoco
     /// <summary>
     /// 文件名
     /// </summary>
-    [Display(Name = "FileName"), Description("文件名"), MaxLength(-1, ErrorMessage = "文件名 不能超过 64 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "FileName"), Description("文件名"), MaxLength(-1, ErrorMessage = "文件名 不能超过 64 个字符"), SugarColumn(IsNullable = true, Length = 64)]
     public string FileName { get; set; }
 
     /// <summary>

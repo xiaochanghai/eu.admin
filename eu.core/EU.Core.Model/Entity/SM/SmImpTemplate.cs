@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:26:05  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:52  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -27,19 +27,19 @@ public class SmImpTemplate : BasePoco
     /// <summary>
     /// 模板代码
     /// </summary>
-    [Display(Name = "TemplateCode"), Description("模板代码"), MaxLength(32, ErrorMessage = "模板代码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TemplateCode"), Description("模板代码"), SugarColumn(IsNullable = true, Length = 32)]
     public string TemplateCode { get; set; }
 
     /// <summary>
     /// 模板名称
     /// </summary>
-    [Display(Name = "TemplateName"), Description("模板名称"), MaxLength(32, ErrorMessage = "模板名称 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TemplateName"), Description("模板名称"), SugarColumn(IsNullable = true, Length = 32)]
     public string TemplateName { get; set; }
 
     /// <summary>
     /// 表代码
     /// </summary>
-    [Display(Name = "TableCode"), Description("表代码"), MaxLength(32, ErrorMessage = "表代码 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TableCode"), Description("表代码"), SugarColumn(IsNullable = true, Length = 32)]
     public string TableCode { get; set; }
 
     /// <summary>
@@ -51,7 +51,7 @@ public class SmImpTemplate : BasePoco
     /// <summary>
     /// Sheet名
     /// </summary>
-    [Display(Name = "SheetName"), Description("Sheet名"), MaxLength(32, ErrorMessage = "Sheet名 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "SheetName"), Description("Sheet名"), SugarColumn(IsNullable = true, Length = 32)]
     public string SheetName { get; set; }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class SmImpTemplate : BasePoco
     /// <summary>
     /// 标签名
     /// </summary>
-    [Display(Name = "Label"), Description("标签名"), MaxLength(32, ErrorMessage = "标签名 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Label"), Description("标签名"), SugarColumn(IsNullable = true, Length = 32)]
     public string Label { get; set; }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class SmImpTemplate : BasePoco
     /// <summary>
     /// 转验证完全正确，允许存在错误
     /// </summary>
-    [Display(Name = "TransferMode"), Description("转验证完全正确，允许存在错误"), MaxLength(32, ErrorMessage = "转验证完全正确，允许存在错误 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "TransferMode"), Description("转验证完全正确，允许存在错误"), SugarColumn(IsNullable = true, Length = 32)]
     public string TransferMode { get; set; }
 
     /// <summary>
@@ -111,6 +111,6 @@ public class SmImpTemplate : BasePoco
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 }

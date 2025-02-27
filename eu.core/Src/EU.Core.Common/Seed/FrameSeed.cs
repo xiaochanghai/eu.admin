@@ -469,9 +469,11 @@ namespace " + strNameSpace + @"
             build.Append("    /// " + column_description + "\r\n");
             build.Append("    /// </summary>\r\n");
             if (dataType == "decimal")
-                build.Append($"    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), Column(TypeName = \"decimal(" + NUMERIC_PRECISION + "," + NUMERIC_SCALE + ")\"), SugarColumn(IsNullable = true)]\r\n");
+                build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
+                //build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
             else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
-                build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true)]\r\n");
+                build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH})]\r\n");
+                //build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true, Length = 256)]\r\n");
             else
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), SugarColumn(IsNullable = true)]\r\n");
 
@@ -599,11 +601,11 @@ namespace " + strNameSpace + @"
             build.Append("    /// " + column_description + "\r\n");
             build.Append("    /// </summary>\r\n");
             if (dataType == "decimal")
-                build.Append($"    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), Column(TypeName = \"decimal(" + NUMERIC_PRECISION + "," + NUMERIC_SCALE + ")\"), SugarColumn(IsNullable = true)]\r\n");
+                build.Append($"    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), Column(TypeName = \"decimal(" + NUMERIC_PRECISION + "," + NUMERIC_SCALE + ")\")]\r\n");
             else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
-                build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true)]\r\n");
+                build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\")]\r\n");
             else
-                build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), SugarColumn(IsNullable = true)]\r\n");
+                build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\")]\r\n");
             switch (dataType)
             {
                 #region 字符串

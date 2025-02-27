@@ -6,12 +6,12 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 9:14:56  SimonHsiao   初版
+* V0.01  2025/2/27 18:30:25  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　作者：SimonHsiao                                                  │
+*│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
 */
 
@@ -39,7 +39,7 @@ public class SdOutOrderDetail : BasePoco
     /// <summary>
     /// 出货来源
     /// </summary>
-    [Display(Name = "OrderSource"), Description("出货来源"), MaxLength(32, ErrorMessage = "出货来源 不能超过 32 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OrderSource"), Description("出货来源"), SugarColumn(IsNullable = true, Length = 32)]
     public string OrderSource { get; set; }
 
     /// <summary>
@@ -75,13 +75,13 @@ public class SdOutOrderDetail : BasePoco
     /// <summary>
     /// 出库数量
     /// </summary>
-    [Display(Name = "OutQTY"), Description("出库数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "OutQTY"), Description("出库数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? OutQTY { get; set; }
 
     /// <summary>
     /// 退货数量
     /// </summary>
-    [Display(Name = "ReturnQTY"), Description("退货数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "ReturnQTY"), Description("退货数量"), Column(TypeName = "decimal(20,8)"), SugarColumn(IsNullable = true, Length = 20, DecimalDigits = 8)]
     public decimal? ReturnQTY { get; set; }
 
     /// <summary>
@@ -105,6 +105,6 @@ public class SdOutOrderDetail : BasePoco
     /// <summary>
     /// 备注
     /// </summary>
-    [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符"), SugarColumn(IsNullable = true)]
+    [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
 }

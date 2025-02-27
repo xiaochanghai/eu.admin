@@ -49,13 +49,13 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// <summary>
     /// 审核状态
     /// </summary>
-    [Display(Name = "审核状态"), Column(TypeName = "varchar(32)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "审核状态"), Column(TypeName = "varchar(32)"), SugarColumn(IsNullable = true, Length = 32)]
     public string AuditStatus { get; set; } = "Add";
 
     /// <summary>
     /// 当前流程节点
     /// </summary>
-    [Display(Name = "当前流程节点"), Column(TypeName = "nvarchar(50)"), SugarColumn(IsNullable = true)]
+    [Display(Name = "当前流程节点"), Column(TypeName = "nvarchar(32)"), SugarColumn(IsNullable = true, Length = 32)]
     public string CurrentNode { get; set; }
 
     /// <summary>
