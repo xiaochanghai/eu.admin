@@ -4,6 +4,16 @@
         <name>EU.Core.Model</name>
     </assembly>
     <members>
+        <member name="P:EU.Core.Model.EntityAttribute.TableName">
+            <summary>
+            真实表名(数据库表名，若没有填写默认实体为表名)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.EntityAttribute.TableCnName">
+            <summary>
+            表中文名
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdCustomerBase">
             <summary>
             客户 (Dto.Base)
@@ -5302,461 +5312,6 @@
             WxConfig (Dto.EditInput)
             </summary>
         </member>
-        <member name="T:EU.Core.Model.Models.InsertBdCustomerInput">
-            <summary>
-            客户 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdCustomerDeliveryAddressInput">
-            <summary>
-            客户地址 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdGoodsLocationInput">
-            <summary>
-            货位 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdMaterialInput">
-            <summary>
-            物料管理 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdMaterialInventoryInput">
-            <summary>
-            物料库存 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdMaterialIVChangeInput">
-            <summary>
-            BdMaterialIVChange (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdMaterialTypeInput">
-            <summary>
-            物料类型 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdSettlementWayInput">
-            <summary>
-            结算方式 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdStockInput">
-            <summary>
-            仓库 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertBdSupplierInput">
-            <summary>
-            供应商 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvAccountingInput">
-            <summary>
-            库存建帐 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvAccountingDetailInput">
-            <summary>
-            库存建帐明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvCheckInput">
-            <summary>
-            库存盘点单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvCheckDetailInput">
-            <summary>
-            库存盘点单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvInInput">
-            <summary>
-            库存入库单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvInDetailInput">
-            <summary>
-            库存入库单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvOutInput">
-            <summary>
-            库存出库单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvOutDetailInput">
-            <summary>
-            库存出库单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertIvSafeConfigInput">
-            <summary>
-            安全库存设置 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoArrivalOrderInput">
-            <summary>
-            采购到货通知单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoArrivalOrderDetailInput">
-            <summary>
-            采购到货通知单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoInOrderInput">
-            <summary>
-            采购入库单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoInOrderDetailInput">
-            <summary>
-            采购入库单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoOrderInput">
-            <summary>
-            采购单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoOrderDetailInput">
-            <summary>
-            采购单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoRequestionInput">
-            <summary>
-            请购单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoRequestionDetailInput">
-            <summary>
-            请购单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoReturnOrderInput">
-            <summary>
-            采购退货单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertPoReturnOrderDetailInput">
-            <summary>
-            采购退货单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdChangeOrderInput">
-            <summary>
-            销售变更单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdChangeOrderDetailInput">
-            <summary>
-            销售变更单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdOrderInput">
-            <summary>
-            销售单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdOrderDetailInput">
-            <summary>
-            销售订单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdOutOrderInput">
-            <summary>
-            出库单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdOutOrderDetailInput">
-            <summary>
-            出库单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdReturnOrderInput">
-            <summary>
-            退库单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdReturnOrderDetailInput">
-            <summary>
-            退货单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdShipOrderInput">
-            <summary>
-            发货单 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSdShipOrderDetailInput">
-            <summary>
-            发货单明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertFileAttachmentInput">
-            <summary>
-            FileAttachment (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmAutoCodeInput">
-            <summary>
-            自动编号 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmCityInput">
-            <summary>
-            城市 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmCommonListSqlInput">
-            <summary>
-            系统通用下拉 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmCompanyInput">
-            <summary>
-            组织 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmComponentInput">
-            <summary>
-            SmComponent (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmConfigInput">
-            <summary>
-            系统配置 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmConfigGroupInput">
-            <summary>
-            系统配置组 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmCountyInput">
-            <summary>
-            区县 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmDepartmentInput">
-            <summary>
-            部门 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmEmployeeInput">
-            <summary>
-            员工管理 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmFieldCatalogInput">
-            <summary>
-            映射表字段 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmFunctionPrivilegeInput">
-            <summary>
-            功能权限 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmImportDataDetailInput">
-            <summary>
-            系统导入数据明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmImportErrorInput">
-            <summary>
-            系统导入模板异常信息 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmImpTemplateInput">
-            <summary>
-            系统导入模板 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmImpTemplateDetailInput">
-            <summary>
-            导入模板定义明细 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmLovInput">
-            <summary>
-            SmLov (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmLovDetailInput">
-            <summary>
-            SmLovDetail (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmModuleColumnInput">
-            <summary>
-            模块列 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmModulesInput">
-            <summary>
-            系统模板 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmModuleSqlInput">
-            <summary>
-            系统模块SQL (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmProvinceInput">
-            <summary>
-            省份 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmQuartzJobInput">
-            <summary>
-            任务调度 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmQuartzJobLogInput">
-            <summary>
-            执行任务日志 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmRoleFunctionInput">
-            <summary>
-            SmRoleFunction (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmRoleModuleInput">
-            <summary>
-            角色模块权限 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmRolesInput">
-            <summary>
-            系统角色 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmTableCatalogInput">
-            <summary>
-            映射表 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmUserModuleColumnInput">
-            <summary>
-            用户模块列 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmUserRoleInput">
-            <summary>
-            用户角色 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmUsersInput">
-            <summary>
-            系统用户 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowInput">
-            <summary>
-            SmWorkFlow (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowNodeInput">
-            <summary>
-            工作流节点 (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.InsertWxConfigInput">
-            <summary>
-            WxConfig (Dto.InsertInput)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.Models.BdCustomer">
-            <summary>
-            客户 (Model)
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CustomerNo">
-            <summary>
-            客户编号
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CustomerName">
-            <summary>
-            客户名称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CustomerShortName">
-            <summary>
-            客户简称
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CustomerLevelId">
-            <summary>
-            客户等级ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CustomerClassId">
-            <summary>
-            客户分类ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.DistrictId">
-            <summary>
-            地区ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.SettlementWayId">
-            <summary>
-            结算方式ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.DeliveryWayId">
-            <summary>
-            送货方式ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.EmployeeId">
-            <summary>
-            业务员ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.CurrencyId">
-            <summary>
-            币别ID
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.TaxType">
-            <summary>
-            税别，参数值：TaxType
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.TaxRate">
-            <summary>
-            税率
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.Consignee">
-            <summary>
-            收货人
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.ConsigneePhone">
-            <summary>
-            收货电话
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.ConsigneeAddress">
-            <summary>
-            收货地址
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.BdCustomer.Remark">
-            <summary>
-            备注
-            </summary>
-        </member>
         <member name="T:EU.Core.Model.Models.BdCustomerDeliveryAddress">
             <summary>
             客户地址 (Model)
@@ -10873,6 +10428,376 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.InsertBdCustomerInput">
+            <summary>
+            客户 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdCustomerDeliveryAddressInput">
+            <summary>
+            客户地址 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdGoodsLocationInput">
+            <summary>
+            货位 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdMaterialInput">
+            <summary>
+            物料管理 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdMaterialInventoryInput">
+            <summary>
+            物料库存 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdMaterialIVChangeInput">
+            <summary>
+            BdMaterialIVChange (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdMaterialTypeInput">
+            <summary>
+            物料类型 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdSettlementWayInput">
+            <summary>
+            结算方式 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdStockInput">
+            <summary>
+            仓库 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertBdSupplierInput">
+            <summary>
+            供应商 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvAccountingInput">
+            <summary>
+            库存建帐 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvAccountingDetailInput">
+            <summary>
+            库存建帐明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvCheckInput">
+            <summary>
+            库存盘点单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvCheckDetailInput">
+            <summary>
+            库存盘点单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvInInput">
+            <summary>
+            库存入库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvInDetailInput">
+            <summary>
+            库存入库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvOutInput">
+            <summary>
+            库存出库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvOutDetailInput">
+            <summary>
+            库存出库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertIvSafeConfigInput">
+            <summary>
+            安全库存设置 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoArrivalOrderInput">
+            <summary>
+            采购到货通知单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoArrivalOrderDetailInput">
+            <summary>
+            采购到货通知单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoInOrderInput">
+            <summary>
+            采购入库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoInOrderDetailInput">
+            <summary>
+            采购入库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoOrderInput">
+            <summary>
+            采购单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoOrderDetailInput">
+            <summary>
+            采购单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoRequestionInput">
+            <summary>
+            请购单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoRequestionDetailInput">
+            <summary>
+            请购单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoReturnOrderInput">
+            <summary>
+            采购退货单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertPoReturnOrderDetailInput">
+            <summary>
+            采购退货单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdChangeOrderInput">
+            <summary>
+            销售变更单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdChangeOrderDetailInput">
+            <summary>
+            销售变更单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdOrderInput">
+            <summary>
+            销售单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdOrderDetailInput">
+            <summary>
+            销售订单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdOutOrderInput">
+            <summary>
+            出库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdOutOrderDetailInput">
+            <summary>
+            出库单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdReturnOrderInput">
+            <summary>
+            退库单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdReturnOrderDetailInput">
+            <summary>
+            退货单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdShipOrderInput">
+            <summary>
+            发货单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSdShipOrderDetailInput">
+            <summary>
+            发货单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertFileAttachmentInput">
+            <summary>
+            FileAttachment (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmAutoCodeInput">
+            <summary>
+            自动编号 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmCityInput">
+            <summary>
+            城市 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmCommonListSqlInput">
+            <summary>
+            系统通用下拉 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmCompanyInput">
+            <summary>
+            组织 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmComponentInput">
+            <summary>
+            SmComponent (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmConfigInput">
+            <summary>
+            系统配置 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmConfigGroupInput">
+            <summary>
+            系统配置组 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmCountyInput">
+            <summary>
+            区县 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmDepartmentInput">
+            <summary>
+            部门 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmEmployeeInput">
+            <summary>
+            员工管理 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmFieldCatalogInput">
+            <summary>
+            映射表字段 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmFunctionPrivilegeInput">
+            <summary>
+            功能权限 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmImportDataDetailInput">
+            <summary>
+            系统导入数据明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmImportErrorInput">
+            <summary>
+            系统导入模板异常信息 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmImpTemplateInput">
+            <summary>
+            系统导入模板 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmImpTemplateDetailInput">
+            <summary>
+            导入模板定义明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmLovInput">
+            <summary>
+            SmLov (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmLovDetailInput">
+            <summary>
+            SmLovDetail (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmModuleColumnInput">
+            <summary>
+            模块列 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmModulesInput">
+            <summary>
+            系统模板 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmModuleSqlInput">
+            <summary>
+            系统模块SQL (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmProvinceInput">
+            <summary>
+            省份 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmQuartzJobInput">
+            <summary>
+            任务调度 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmQuartzJobLogInput">
+            <summary>
+            执行任务日志 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmRoleFunctionInput">
+            <summary>
+            SmRoleFunction (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmRoleModuleInput">
+            <summary>
+            角色模块权限 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmRolesInput">
+            <summary>
+            系统角色 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmTableCatalogInput">
+            <summary>
+            映射表 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmUserModuleColumnInput">
+            <summary>
+            用户模块列 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmUserRoleInput">
+            <summary>
+            用户角色 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmUsersInput">
+            <summary>
+            系统用户 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowInput">
+            <summary>
+            SmWorkFlow (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertSmWorkFlowNodeInput">
+            <summary>
+            工作流节点 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.InsertWxConfigInput">
+            <summary>
+            WxConfig (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdCustomerDto">
             <summary>
             客户(Dto.View)
@@ -11728,14 +11653,95 @@
             草稿
             </summary>
         </member>
-        <member name="P:EU.Core.Model.EntityAttribute.TableName">
+        <member name="T:EU.Core.Model.Entity.BdCustomer">
             <summary>
-            真实表名(数据库表名，若没有填写默认实体为表名)
+            客户 (Model)
             </summary>
         </member>
-        <member name="P:EU.Core.Model.EntityAttribute.TableCnName">
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CustomerNo">
             <summary>
-            表中文名
+            客户编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CustomerName">
+            <summary>
+            客户名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CustomerShortName">
+            <summary>
+            客户简称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CustomerLevelId">
+            <summary>
+            客户等级ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CustomerClassId">
+            <summary>
+            客户分类ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.DistrictId">
+            <summary>
+            地区ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.SettlementWayId">
+            <summary>
+            结算方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.DeliveryWayId">
+            <summary>
+            送货方式ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.EmployeeId">
+            <summary>
+            业务员ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.CurrencyId">
+            <summary>
+            币别ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.TaxType">
+            <summary>
+            税别，参数值：TaxType
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.TaxRate">
+            <summary>
+            税率
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.Consignee">
+            <summary>
+            收货人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.ConsigneePhone">
+            <summary>
+            收货电话
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.ConsigneeAddress">
+            <summary>
+            收货地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomer.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.RootEntityTkey`1.ID">
+            <summary>
+            ID
+            泛型主键Tkey
             </summary>
         </member>
         <member name="T:EU.Core.Model.IDS4DbModels.ApplicationRole">
@@ -11802,12 +11808,6 @@
         <member name="P:EU.Core.Model.Love.Age">
             <summary>
             年龄
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.RootEntityTkey`1.ID">
-            <summary>
-            ID
-            泛型主键Tkey
             </summary>
         </member>
         <member name="T:EU.Core.Model.PageModel`1">

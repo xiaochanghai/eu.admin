@@ -10,6 +10,7 @@ global using EU.Core.IRepository.Base;
 global using EU.Core.IServices;
 global using EU.Core.Model;
 global using EU.Core.Model.Models;
+global using EU.Core.Model.Entity;
 global using EU.Core.Model.ViewModels.Extend;
 global using EU.Core.Module;
 global using EU.Core.Services.BASE;

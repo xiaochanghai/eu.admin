@@ -10,6 +10,7 @@ global using EU.Core.Common.Helper;
 global using EU.Core.Common.HttpContextUser;
 global using EU.Core.Common.LogHelper;
 global using EU.Core.Common.Module;
+global using EU.Core.Model.Entity;
 global using EU.Core.Controllers;
 global using EU.Core.DataAccess;
 global using EU.Core.Domain;

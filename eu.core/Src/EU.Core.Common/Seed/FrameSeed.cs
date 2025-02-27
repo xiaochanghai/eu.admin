@@ -34,7 +34,7 @@ public class FrameSeed
     /// <returns></returns>
     public static bool CreateModels(SqlSugarScope sqlSugarClient, string ConnId, bool isMuti = false, string[] tableNames = null)
     {
-        Create_Model_ClassFileByDBTalbe(sqlSugarClient, ConnId, path + $@"EU.Core.Model", "EU.Core.Model.Models", tableNames, "", isMuti);
+        Create_Model_ClassFileByDBTalbe(sqlSugarClient, ConnId, path + $@"EU.Core.Model", "EU.Core.Model.Entity", tableNames, "", isMuti);
         return true;
     }
 
@@ -422,7 +422,7 @@ namespace " + strNameSpace + @"
         build.Append("*└──────────────────────────────────┘\r\n");
         build.Append("*/\r\n");
         build.Append("\r\n");
-        build.Append("namespace EU.Core.Model.Models;\r\n");
+        build.Append($"namespace {strNameSpace};\r\n");
         //build.Append("{\r\n");
         build.Append("\r\n");
         build.Append("/// <summary>\r\n");
@@ -543,7 +543,7 @@ namespace " + strNameSpace + @"
         build.Append("}\r\n");
 
         ls[tableName] = build.ToString();
-        CreateFilesByClassStringList(ls, strPath + @"\Models\" + groupName, "{0}");
+        CreateFilesByClassStringList(ls, strPath + @"\Entity\" + groupName, "{0}");
 
         #region Base
         build = new StringBuilder();

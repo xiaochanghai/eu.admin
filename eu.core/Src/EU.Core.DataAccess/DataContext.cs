@@ -5,7 +5,7 @@ using EU.Core.Model.Models;
 using Microsoft.EntityFrameworkCore;
 using EU.Core.Model.Models.RootTkey;
 using EU.Core.Common.Helper;
-
+using EU.Core.Model.Entity;
 namespace EU.Core.DataAccess;
 
 public class DataContext : DbContext
