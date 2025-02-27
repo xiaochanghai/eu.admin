@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Base;
 
 /// <summary>
 /// 库存出库单 (Dto.Base)

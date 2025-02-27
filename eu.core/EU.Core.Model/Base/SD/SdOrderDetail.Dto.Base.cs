@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Base;
 
 /// <summary>
 /// 销售订单明细 (Dto.Base)

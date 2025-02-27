@@ -565,7 +565,7 @@ namespace " + strNameSpace + @"
         build.Append("*└──────────────────────────────────┘\r\n");
         build.Append("*/\r\n");
         build.Append("\r\n");
-        build.Append("namespace EU.Core.Model.Models;\r\n");
+        build.Append("namespace EU.Core.Model.Base;\r\n");
         //build.Append("{\r\n");
         build.Append("\r\n");
         build.Append("/// <summary>\r\n");

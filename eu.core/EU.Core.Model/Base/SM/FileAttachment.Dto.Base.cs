@@ -14,7 +14,7 @@
 *│　作者：SimonHsiao                                                  │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.Model.Models;
+namespace EU.Core.Model.Base;
 
 
 /// <summary>
