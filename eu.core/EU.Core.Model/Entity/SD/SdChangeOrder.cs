@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:17  SahHsiao   初版
+* V0.01  2025/2/28 13:43:43  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -147,8 +147,8 @@ public class SdChangeOrder : BasePoco
     /// <summary>
     /// 订单状态（作废）
     /// </summary>
-    [Display(Name = "OrderStatus"), Description("订单状态（作废）"), SugarColumn(IsNullable = true, Length = 32)]
-    public string OrderStatus { get; set; }
+    [Display(Name = "OrderStatus"), Description("订单状态（作废）"), SugarColumn(IsNullable = true, Length = 32, DefaultValue = "WaitShip")]
+    public string OrderStatus { get; set; } = "WaitShip";
 
     /// <summary>
     /// 备注

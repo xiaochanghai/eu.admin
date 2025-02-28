@@ -10229,6 +10229,11 @@
             例如：单据删除并非直接删除
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.IsActive">
+            <summary>
+            有效标志'true':有效,'false':未生效
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.ImportDataId">
             <summary>
             导入模板ID
@@ -10262,11 +10267,6 @@
         <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.CurrentNode">
             <summary>
             当前流程节点
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.IsActive">
-            <summary>
-            有效标志'true':有效,'false':未生效
             </summary>
         </member>
         <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.CreatedBy">

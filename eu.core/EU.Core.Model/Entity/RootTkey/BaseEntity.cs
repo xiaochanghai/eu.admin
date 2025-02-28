@@ -14,7 +14,13 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// 例如：单据删除并非直接删除
     /// </summary>
     [Display(Name = "删除标记"), SugarColumn(IsNullable = true)]
-    public bool IsDeleted { get; set; }
+    public bool IsDeleted { get; set; } = false;
+
+    /// <summary>
+    /// 有效标志'true':有效,'false':未生效
+    /// </summary>
+    [Display(Name = "'true':有效,'false':未生效"), SugarColumn(IsNullable = true)]
+    public bool? IsActive { get; set; } = true;
 
     /// <summary>
     /// 导入模板ID
@@ -25,14 +31,14 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// <summary>
     /// 修改次数
     /// </summary>
-    [Display(Name = "修改次数"), SugarColumn(IsNullable = true)]
-    public int? ModificationNum { get; set; }
+    [Display(Name = "修改次数"), SugarColumn(IsNullable = true, DefaultValue = "0")]
+    public int? ModificationNum { get; set; } = 0;
 
     /// <summary>
     /// 修改标志
     /// </summary>
-    [Display(Name = "修改标志"), SugarColumn(IsNullable = true)]
-    public int? Tag { get; set; }
+    [Display(Name = "修改标志"), SugarColumn(IsNullable = true, DefaultValue = "1")]
+    public int? Tag { get; set; } = 1;
 
     /// <summary>
     /// 集团ID
@@ -57,12 +63,6 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// </summary>
     [Display(Name = "当前流程节点"), Column(TypeName = "nvarchar(32)"), SugarColumn(IsNullable = true, Length = 32)]
     public string CurrentNode { get; set; }
-
-    /// <summary>
-    /// 有效标志'true':有效,'false':未生效
-    /// </summary>
-    [Display(Name = "'true':有效,'false':未生效"), SugarColumn(IsNullable = true)]
-    public bool? IsActive { get; set; } = true;
 
     #endregion
 

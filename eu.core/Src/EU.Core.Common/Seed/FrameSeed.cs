@@ -383,7 +383,7 @@ namespace " + strNameSpace + @"
                                        B.name AS column_name,
                                        D.data_type,
                                        C.value AS column_description,
-                                       D.NUMERIC_PRECISION, D.NUMERIC_SCALE,D.CHARACTER_MAXIMUM_LENGTH
+                                       D.NUMERIC_PRECISION, D.NUMERIC_SCALE,D.CHARACTER_MAXIMUM_LENGTH, D.COLUMN_DEFAULT
                                 FROM sys.tables A
                                      INNER JOIN sys.columns B ON B.object_id = A.object_id
                                      LEFT JOIN sys.extended_properties C
@@ -442,6 +442,7 @@ namespace " + strNameSpace + @"
         string NUMERIC_PRECISION = string.Empty;
         string NUMERIC_SCALE = string.Empty;
         string CHARACTER_MAXIMUM_LENGTH = string.Empty;
+        string COLUMN_DEFAULT = string.Empty;
 
         string[] a = {
                     "ID", "CreatedBy", "CreatedTime", "UpdateBy", "UpdateTime", "ImportDataId", "ModificationNum",
@@ -457,6 +458,9 @@ namespace " + strNameSpace + @"
             NUMERIC_PRECISION = dtColumn.Rows[i]["NUMERIC_PRECISION"].ToString();
             NUMERIC_SCALE = dtColumn.Rows[i]["NUMERIC_SCALE"].ToString();
             CHARACTER_MAXIMUM_LENGTH = dtColumn.Rows[i]["CHARACTER_MAXIMUM_LENGTH"].ToString();
+            COLUMN_DEFAULT = dtColumn.Rows[i]["COLUMN_DEFAULT"].ToString();
+            if (COLUMN_DEFAULT.IsNotEmptyOrNull())
+                COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
 
             if (string.IsNullOrWhiteSpace(column_description))
                 column_description = columnCode;
@@ -470,10 +474,16 @@ namespace " + strNameSpace + @"
             build.Append("    /// </summary>\r\n");
             if (dataType == "decimal")
                 build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
-                //build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
+            //build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
             else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
-                build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH})]\r\n");
-                //build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true, Length = 256)]\r\n");
+            {
+                if (COLUMN_DEFAULT.IsNullOrEmpty())
+                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH})]\r\n");
+                else
+                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH}, DefaultValue = \"{COLUMN_DEFAULT}\")]\r\n");
+
+            }
+            //build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true, Length = 256)]\r\n");
             else
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), SugarColumn(IsNullable = true)]\r\n");
 
@@ -485,7 +495,10 @@ namespace " + strNameSpace + @"
                 case "char":
                 case "text":
                     {
-                        build.Append("    public string " + columnCode + " { get; set; }\r\n");
+                        if (COLUMN_DEFAULT.IsNullOrEmpty())
+                            build.Append("    public string " + columnCode + " { get; set; }\r\n");
+                        else
+                            build.Append($"    public string " + columnCode + " { get; set; } = \"" + COLUMN_DEFAULT + "\";\r\n");
                         break;
                     }
                 #endregion
@@ -590,6 +603,10 @@ namespace " + strNameSpace + @"
             NUMERIC_SCALE = dtColumn.Rows[i]["NUMERIC_SCALE"].ToString();
             CHARACTER_MAXIMUM_LENGTH = dtColumn.Rows[i]["CHARACTER_MAXIMUM_LENGTH"].ToString();
 
+            COLUMN_DEFAULT = dtColumn.Rows[i]["COLUMN_DEFAULT"].ToString();
+            if (COLUMN_DEFAULT.IsNotEmptyOrNull())
+                COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
+
             if (string.IsNullOrWhiteSpace(column_description))
                 column_description = columnCode;
 
@@ -614,7 +631,10 @@ namespace " + strNameSpace + @"
                 case "char":
                 case "text":
                     {
-                        build.Append("    public string " + columnCode + " { get; set; }\r\n");
+                        if (COLUMN_DEFAULT.IsNullOrEmpty())
+                            build.Append("    public string " + columnCode + " { get; set; }\r\n");
+                        else
+                            build.Append($"    public string " + columnCode + " { get; set; } = \"" + COLUMN_DEFAULT + "\";\r\n");
                         break;
                     }
                 #endregion
