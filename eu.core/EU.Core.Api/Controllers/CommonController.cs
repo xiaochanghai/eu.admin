@@ -157,11 +157,31 @@ public class CommonController : Controller
     #endregion
 
     #region 生成所有表实体
+    /// <summary>
+    /// 生成所有表实体
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("GenerateAllEntity"), AllowAnonymous]
     public ServiceResult GenerateAllEntity()
     {
  
         DBSeed.GenerateAllEntity(_myContext);
+
+        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
+
+    }
+    #endregion
+
+    #region 生成所有表实体
+    /// <summary>
+    /// 生成所有表实体
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("SyncData"), AllowAnonymous]
+    public ServiceResult SyncData()
+    {
+
+        DBSeed.SyncData(_myContext);
 
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 

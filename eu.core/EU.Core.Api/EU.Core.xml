@@ -280,6 +280,18 @@
             <param name="ids">主键ID集</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Controllers.CommonController.GenerateAllEntity">
+            <summary>
+            生成所有表实体
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.SyncData">
+            <summary>
+            生成所有表实体
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
             <summary>
             构造函数
@@ -536,6 +548,16 @@
             通过此处的key格式为 xx:xx:x
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.BdCurrencyController">
+            <summary>
+            币别(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdCustomerClassController">
+            <summary>
+            客户分类(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.CustomerController">
             <summary>
             客户(Controller)
@@ -553,6 +575,11 @@
             </summary>
             <param name="customerId">客户ID</param>
             <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdCustomerLevelController">
+            <summary>
+            客户等级(Controller)
+            </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.GoodsLocationController">
             <summary>

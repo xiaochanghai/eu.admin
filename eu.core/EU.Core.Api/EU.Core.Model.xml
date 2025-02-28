@@ -14,6 +14,26 @@
             表中文名
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.BdCurrencyBase">
+            <summary>
+            币别 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCurrencyBase.CurrencyNo">
+            <summary>
+            币别编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCurrencyBase.CurrencyName">
+            <summary>
+            币别名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCurrencyBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.BdCustomerBase">
             <summary>
             客户 (Dto.Base)
@@ -99,6 +119,26 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.BdCustomerClassBase">
+            <summary>
+            客户分类 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerClassBase.ClassNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerClassBase.ClassName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerClassBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.BdCustomerDeliveryAddressBase">
             <summary>
             客户地址 (Dto.Base)
@@ -135,6 +175,26 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.BdCustomerDeliveryAddressBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdCustomerLevelBase">
+            <summary>
+            客户等级 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerLevelBase.LevelNo">
+            <summary>
+            等级编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerLevelBase.LevelName">
+            <summary>
+            等级名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdCustomerLevelBase.Remark">
             <summary>
             备注
             </summary>
@@ -5042,14 +5102,29 @@
             草稿
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditBdCurrencyInput">
+            <summary>
+            币别 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditBdCustomerInput">
             <summary>
             客户 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditBdCustomerClassInput">
+            <summary>
+            客户分类 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditBdCustomerDeliveryAddressInput">
             <summary>
             客户地址 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdCustomerLevelInput">
+            <summary>
+            客户等级 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditBdGoodsLocationInput">
@@ -5412,6 +5487,26 @@
             WxConfig (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.BdCurrency">
+            <summary>
+            币别 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCurrency.CurrencyNo">
+            <summary>
+            币别编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCurrency.CurrencyName">
+            <summary>
+            币别名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCurrency.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.BdCustomer">
             <summary>
             客户 (Model)
@@ -5497,6 +5592,26 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.BdCustomerClass">
+            <summary>
+            客户分类 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerClass.ClassNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerClass.ClassName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerClass.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.BdCustomerDeliveryAddress">
             <summary>
             客户地址 (Model)
@@ -5533,6 +5648,26 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.BdCustomerDeliveryAddress.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdCustomerLevel">
+            <summary>
+            客户等级 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerLevel.LevelNo">
+            <summary>
+            等级编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerLevel.LevelName">
+            <summary>
+            等级名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdCustomerLevel.Remark">
             <summary>
             备注
             </summary>
@@ -10363,14 +10498,29 @@
             金额
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.BdCurrencyDto">
+            <summary>
+            币别(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdCustomerDto">
             <summary>
             客户(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.BdCustomerClassDto">
+            <summary>
+            客户分类(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdCustomerDeliveryAddressDto">
             <summary>
             客户地址(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdCustomerLevelDto">
+            <summary>
+            客户等级(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.BdGoodsLocationDto">
@@ -10920,14 +11070,29 @@
             修改时间
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdCurrencyInput">
+            <summary>
+            币别 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertBdCustomerInput">
             <summary>
             客户 (Dto.InsertInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdCustomerClassInput">
+            <summary>
+            客户分类 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertBdCustomerDeliveryAddressInput">
             <summary>
             客户地址 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdCustomerLevelInput">
+            <summary>
+            客户等级 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertBdGoodsLocationInput">
