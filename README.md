@@ -26,7 +26,7 @@
 
 后端：基于 .NET8 、SqlSugar、 EF Core、Dapper，集成常用组件。
 
-> 数据库文件：[https://pan.quark.cn/s/f302bcb7c7aa](https://pan.quark.cn/s/f302bcb7c7aa "https://pan.quark.cn/s/f302bcb7c7aa")
+> 数据库文件：[https://pan.quark.cn/s/6076d8898646](https://pan.quark.cn/s/6076d8898646 "https://pan.quark.cn/s/6076d8898646")
 下载后SQL SERVER手动部署，版本2014（含）以上
 
 
