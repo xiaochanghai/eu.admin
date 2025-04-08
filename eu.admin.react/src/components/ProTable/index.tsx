@@ -22,8 +22,35 @@ import { downloadFile } from "@/utils";
 
 const { confirm } = Modal;
 
-let tableAction: any;
-const SmProTable: React.FC<any> = props => {
+interface ActionButtonProps {
+  icon: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tooltip?: string;
+}
+
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, onClick, disabled = false, tooltip }) => {
+  const button = (
+    <Button
+      type="dashed"
+      size="small"
+      icon={<Icon name={icon} />}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        border: 0,
+        background: "transparent",
+        boxShadow: "0 0px 0 rgb(255 255 255 / 2%)",
+        marginRight: 8
+      }}
+    />
+  );
+
+  return tooltip ? <Tooltip title={tooltip}>{button}</Tooltip> : button;
+};
+
+const SmProTable: React.FC<any> = React.memo(props => {
+  let tableAction = useRef<ActionType | null>(null);
   const dispatch = useDispatch();
   const [moreToolBarVisible, setMoreToolBarVisible] = useState(false);
   const [recordLogVisible, setRecordLogVisible] = useState(false);
@@ -162,14 +189,15 @@ const SmProTable: React.FC<any> = props => {
               {record.ID != "SumRowID" ? (
                 <>
                   {optionAuthButton.Update && !IsView && (
-                    <Button
-                      type="dashed"
-                      key={"Update" + index}
-                      size="small"
-                      icon={<Icon name="EditOutlined" />}
-                      onClick={() => onOptionEdit(record)}
-                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                    ></Button>
+                    // <Button
+                    //   type="dashed"
+                    //   key={"Update" + index}
+                    //   size="small"
+                    //   icon={<Icon name="EditOutlined" />}
+                    //   onClick={() => onOptionEdit(record)}
+                    //   style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                    // ></Button>
+                    <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
                   )}
                   {optionAuthButton.View && (
                     <Button
@@ -201,9 +229,12 @@ const SmProTable: React.FC<any> = props => {
                     items: getDropActions(record, action)
                   }}
                 >
-                  <span className="cursor-pointer">
-                    <Icon name="EllipsisOutlined" />
-                  </span>
+                  <Button
+                    type="dashed"
+                    size="small"
+                    icon={<Icon name="MoreOutlined" />}
+                    style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                  ></Button>
                 </Dropdown>
               ) : null}
             </>
@@ -220,12 +251,14 @@ const SmProTable: React.FC<any> = props => {
     }
   }
 
-  const submitAudit = async (action: any, selectedRows: any) => {
-    let response = await props.submitAudit(moduleInfo.moduleId, selectedRows);
-    if (response.Success == true) {
+  const submitAudit = async (action: ActionType, selectedRows: any[]) => {
+    const response = await props.submitAudit(moduleInfo.moduleId, selectedRows);
+    if (response.Success) {
       message.success(response.message);
       action.reload();
-    } else message.error(response.message);
+    } else {
+      message.error(response.message);
+    }
   };
 
   const moreToolBarMenuClick = async (e: any, action: any) => {
@@ -265,15 +298,19 @@ const SmProTable: React.FC<any> = props => {
       okType: "danger",
       cancelText: "取消",
       async onOk() {
-        message.loading("数据提交中...", 0);
-        if (props.delete) props.delete(record);
-        else {
-          let { Success, Message } = await singleDelete({ moduleCode, Id: record.ID, url });
-          message.destroy();
-          if (Success) {
-            action.reload();
-            message.success(Message);
+        const hideLoading = message.loading("数据提交中...", 0);
+        try {
+          if (props.delete) {
+            props.delete(record);
+          } else {
+            const { Success, Message } = await singleDelete({ moduleCode, Id: record.ID, url });
+            if (Success) {
+              action.reload();
+              message.success(Message);
+            }
           }
+        } finally {
+          hideLoading();
         }
       },
       onCancel() {
@@ -294,16 +331,20 @@ const SmProTable: React.FC<any> = props => {
           ids.push(item.ID);
         });
 
-        message.loading("数据提交中...", 0);
-        if (props.batchDelete) props.batchDelete(ids);
-        else {
-          let { Success, Message } = await batchDelete({ moduleCode, Ids: ids, url });
-          message.destroy();
-          if (Success) {
-            action.clearSelected();
-            action.reload();
-            message.success(Message);
+        const hideLoading = message.loading("数据提交中...", 0);
+        try {
+          if (props.batchDelete) {
+            props.batchDelete(ids);
+          } else {
+            const { Success, Message } = await batchDelete({ moduleCode, Ids: ids, url });
+            if (Success) {
+              action.clearSelected();
+              action.reload();
+              message.success(Message);
+            }
           }
+        } finally {
+          hideLoading();
         }
       },
       onCancel() {
@@ -336,13 +377,16 @@ const SmProTable: React.FC<any> = props => {
         //   ids.push(item.ID);
         // });
 
-        message.loading("数据提交中...", 0);
-        let { Success, Message } = await batchAudit({ moduleCode, Ids: selectedRowKeys, url });
-        message.destroy();
-        if (Success) {
-          action.clearSelected();
-          action.reload();
-          message.success(Message);
+        const hideLoading = message.loading("数据提交中...", 0);
+        try {
+          const { Success, Message } = await batchAudit({ moduleCode, Ids: selectedRowKeys, url });
+          if (Success) {
+            action.clearSelected();
+            action.reload();
+            message.success(Message);
+          }
+        } finally {
+          hideLoading();
         }
       },
       onCancel() {
@@ -367,13 +411,16 @@ const SmProTable: React.FC<any> = props => {
         //   ids.push(item.ID);
         // });
 
-        message.loading("数据提交中...", 0);
-        let { Success, Message } = await batchRevocation({ moduleCode, Ids: selectedRowKeys, url });
-        message.destroy();
-        if (Success) {
-          action.clearSelected();
-          action.reload();
-          message.success(Message);
+        const hideLoading = message.loading("数据提交中...", 0);
+        try {
+          const { Success, Message } = await batchRevocation({ moduleCode, Ids: selectedRowKeys, url });
+          if (Success) {
+            action.clearSelected();
+            action.reload();
+            message.success(Message);
+          }
+        } finally {
+          hideLoading();
         }
       },
       onCancel() {
@@ -699,13 +746,13 @@ const SmProTable: React.FC<any> = props => {
             moduleInfo={moduleInfo}
             onCancel={() => setUploadExcelVisible(false)}
             onReload={() => {
-              tableAction.reload();
+              tableAction.current?.reload();
             }}
           />
         </Modal>
       ) : null}
     </>
   );
-};
+});
 
 export default SmProTable;
