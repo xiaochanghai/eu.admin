@@ -85,8 +85,8 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var model = ConvertToEntity(entity);
 
         var dic = ConvertToDic(entity);
-        var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
-        lstColumns.Add("AuditStatus");
+        var lstColumns = dic.Keys.Where(x => x != nameof(BasePoco.ID) && x != "Id").ToList();
+        lstColumns.Add(nameof(BasePoco.AuditStatus));
 
         CheckForm(model, OperateType.Add);
 
@@ -162,10 +162,9 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         CheckOnly(model, Id);
         var dic = ConvertToDic(entity);
         var columns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
-        if (lstColumns != null && lstColumns.Any())
-            columns = lstColumns;
-        var result = await Update(model, columns, null);
-        Type entityType = typeof(TEntity);
+        columns = lstColumns?.Any() == true ? lstColumns : columns;
+        var result = await Update(model, columns, null).ConfigureAwait(false);
+
 
         //#region 回写修改次数
         //string sql = $"UPDATE {entityType.GetEntityTableName()} SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{Id}'";
@@ -261,9 +260,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns></returns>
     public virtual async Task<bool> Delete(object id)
     {
-        var ids = new Guid[1];
-        ids[0] = Guid.Parse(id.ToString());
-        return await Delete(ids);
+        return await Delete([Guid.Parse(id.ToString())]);
     }
 
     /// <summary>

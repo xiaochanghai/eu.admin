@@ -206,19 +206,20 @@ public class LogLock
                 Task.Factory.StartNew(() =>
                 {
                     var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
-                    if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" && !requestInfo.RequestData.Contains("SM_SYSTEM_API_LOG_MNG") && !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
-                    {
-                        DbInsert di = new("SmApiLog");
-                        di.Values("UserId", requestInfo.User);
-                        di.Values("IP", requestInfo.IP);
-                        di.Values("Path", requestInfo.API);
-                        di.Values("Method", requestInfo.RequestMethod);
-                        di.Values("RequestData", requestInfo.RequestData);
-                        di.Values("BeginTime", requestInfo.BeginTime);
-                        di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
-                        di.Values("Agent", requestInfo.Agent);
-                        DBHelper.ExcuteNonQuery(di.GetSql());
-                    }
+                    if (requestInfo.RequestData != null)
+                        if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" && !requestInfo.RequestData.Contains("SM_SYSTEM_API_LOG_MNG") && !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
+                        {
+                            DbInsert di = new("SmApiLog");
+                            di.Values("UserId", requestInfo.User);
+                            di.Values("IP", requestInfo.IP);
+                            di.Values("Path", requestInfo.API);
+                            di.Values("Method", requestInfo.RequestMethod);
+                            di.Values("RequestData", requestInfo.RequestData);
+                            di.Values("BeginTime", requestInfo.BeginTime);
+                            di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
+                            di.Values("Agent", requestInfo.Agent);
+                            DBHelper.ExcuteNonQuery(di.GetSql());
+                        }
                 });
                 break;
             case "SqlLog":

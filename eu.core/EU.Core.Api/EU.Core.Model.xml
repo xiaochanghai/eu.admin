@@ -11990,24 +11990,34 @@
             模板列表
             </summary>
         </member>
+        <member name="T:EU.Core.Model.CurrentUser">
+            <summary>
+            用户信息
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.CurrentUser.Role">
             <summary>
-            
+            角色
             </summary>
         </member>
         <member name="P:EU.Core.Model.CurrentUser.UserName">
             <summary>
-            
+            用户名
             </summary>
         </member>
         <member name="P:EU.Core.Model.CurrentUser.UserId">
             <summary>
-            
+            当前用户ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.CurrentUser.AvatarFileId">
             <summary>
-            
+            头像ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.CurrentUser.WeekName">
+            <summary>
+            当前周几
             </summary>
         </member>
         <member name="P:EU.Core.Model.RestPassword.oldPassword">
