@@ -29,6 +29,7 @@
 > 数据库文件：[https://pan.quark.cn/s/6076d8898646](https://pan.quark.cn/s/6076d8898646 "https://pan.quark.cn/s/6076d8898646")
 下载后SQL SERVER手动部署，版本2014（含）以上
 
+> APP链接：[eu.admin.reactnative](https://gitee.com/xiaochanghai520/eu.admin.reactnative "https://gitee.com/xiaochanghai520/eu.admin.reactnative")
 
 ### 在线预览地址 👀
 
