@@ -21,6 +21,7 @@ using System.Security.Claims;
 using EU.Core.AuthHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using EU.Core.Common.Helper;
 
 namespace EU.Core.Services;
 
@@ -178,6 +179,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             result.UserName = user.UserName;
             result.UserId = user.ID;
             result.AvatarFileId = user.AvatarFileId;
+            result.WeekName = DateTime.Now.GetWeekNameOfDay();
             return Success(result, ResponseText.QUERY_SUCCESS);
         }
         else

@@ -280,6 +280,18 @@
             <param name="ids">主键ID集</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Controllers.CommonController.GenerateAllEntity">
+            <summary>
+            生成所有表实体
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.SyncData">
+            <summary>
+            生成所有表实体
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
             <summary>
             构造函数
@@ -536,6 +548,16 @@
             通过此处的key格式为 xx:xx:x
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.BdCurrencyController">
+            <summary>
+            币别(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdCustomerClassController">
+            <summary>
+            客户分类(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.CustomerController">
             <summary>
             客户(Controller)
@@ -553,6 +575,11 @@
             </summary>
             <param name="customerId">客户ID</param>
             <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdCustomerLevelController">
+            <summary>
+            客户等级(Controller)
+            </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.GoodsLocationController">
             <summary>
@@ -973,7 +1000,7 @@
             退库单(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkInsertDetail(System.Collections.Generic.List{EU.Core.Model.Models.SdReturnOrderDetail},System.Guid)">
+        <member name="M:EU.Core.Api.Controllers.SdReturnOrderController.BulkInsertDetail(System.Collections.Generic.List{EU.Core.Model.Entity.SdReturnOrderDetail},System.Guid)">
             <summary>
             批量导入出库明细
             </summary>
@@ -1379,7 +1406,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Models.SmModuleColumn},System.String)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Entity.SmModuleColumn},System.String)">
             <summary>
             更新模块表单列排序号
             </summary>
@@ -1405,7 +1432,7 @@
             <param name="param">columns</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.CopyAsync(System.Guid,EU.Core.Model.Models.SmModules)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.CopyAsync(System.Guid,EU.Core.Model.Entity.SmModules)">
             <summary>
             复制模块
             </summary>
@@ -1442,7 +1469,7 @@
             任务调度(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmQuartzJobController.Operate(System.Guid,System.String,EU.Core.Model.Models.SmQuartzJob)">
+        <member name="M:EU.Core.Api.Controllers.SmQuartzJobController.Operate(System.Guid,System.String,EU.Core.Model.Entity.SmQuartzJob)">
             <summary>
             远程操作
             </summary>

@@ -35,25 +35,35 @@ public class LoginReturn
     public List<SmModules> Modules { get; set; }
 }
 
+/// <summary>
+/// 用户信息
+/// </summary>
 public class CurrentUser
 {
     /// <summary>
-    /// 
+    /// 角色
     /// </summary>
     public string Role { get; set; }
 
     /// <summary>
-    /// 
+    /// 用户名
     /// </summary>
     public string UserName { get; set; }
+
     /// <summary>
-    /// 
+    /// 当前用户ID
     /// </summary>
     public Guid UserId { get; set; }
+
     /// <summary>
-    /// 
+    /// 头像ID
     /// </summary>
     public Guid? AvatarFileId { get; set; }
+
+    /// <summary>
+    /// 当前周几
+    /// </summary>
+    public string WeekName { get; set; }
 }
 public class RestPassword
 {
