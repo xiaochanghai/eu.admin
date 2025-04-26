@@ -147,6 +147,14 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             //var roleModule = DBHelper.Instance.QueryList<SmModule>(sql);
             result.Modules = new List<SmModules>();
 
+            result.UserInfo = new CurrentUser()
+            {
+                UserName = user.UserName,
+                UserId = user.ID,
+                AvatarFileId = user.AvatarFileId,
+                WeekName = DateTime.Now.GetWeekNameOfDay()
+            };
+
             #region 记录用户登录日志
             var isDevelopment = _hostingEnvironment.IsDevelopment();
             if (!isDevelopment)

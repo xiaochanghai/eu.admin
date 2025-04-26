@@ -33,6 +33,8 @@ public class LoginReturn
     /// 模板列表
     /// </summary>
     public List<SmModules> Modules { get; set; }
+
+    public CurrentUser UserInfo { get; set; } = new CurrentUser();
 }
 
 /// <summary>
