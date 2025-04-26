@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */
 
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using EU.Core.AuthHelper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using EU.Core.Common.Helper;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace EU.Core.Services;
 

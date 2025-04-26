@@ -160,10 +160,14 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     {
         var model = ConvertToEntity(entity);
         CheckOnly(model, Id);
+
+        if (model is RootEntityTkey<Guid> rootEntity1)
+            rootEntity1.ID = Id;
         var dic = ConvertToDic(entity);
         var columns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
         columns = lstColumns?.Any() == true ? lstColumns : columns;
-        var result = await Update(model, columns, null).ConfigureAwait(false);
+        //var result = await Update(model, columns, null).ConfigureAwait(false);
+        var result = await Update(model, columns, null);
 
 
         //#region 回写修改次数
