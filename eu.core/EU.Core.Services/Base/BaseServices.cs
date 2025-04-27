@@ -140,6 +140,8 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var entity = await Query(Id);
         ConvertTEditDto2TEntity(editModel, entity);
 
+        if (entity is RootEntityTkey<Guid> rootEntity1)
+            rootEntity1.ID = Id;
         CheckOnly(entity, Id);
         return await BaseDal.Update(entity);
     }
