@@ -1,12 +1,12 @@
 ﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
-* SmApplicationDevice.cs
+* SmApplicationRecord.cs
 *
 * 功 能： N / A
-* 类 名： SmApplicationDevice
+* 类 名： SmApplicationRecord
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V1.0  2025/4/27 16:04:04  SahHsiao   初版
+* V1.0  2025/4/29 22:59:36  SahHsiao   初版
 *
 * Copyright(c) 2025 SUZHOU EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -21,19 +21,9 @@ namespace EU.Core.Api.Controllers;
 /// </summary>
 [ApiController, GlobalActionFilter]
 [Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_SM)]
-public class SmApplicationDeviceController : BaseController<ISmApplicationDeviceServices, SmApplicationDevice, SmApplicationDeviceDto, InsertSmApplicationDeviceInput, EditSmApplicationDeviceInput>
+public class SmApplicationRecordController : BaseController<ISmApplicationRecordServices, SmApplicationRecord, SmApplicationRecordDto, InsertSmApplicationRecordInput, EditSmApplicationRecordInput>
 {
-    public SmApplicationDeviceController(ISmApplicationDeviceServices service) : base(service)
+    public SmApplicationRecordController(ISmApplicationRecordServices service) : base(service)
     {
     }
-
-    #region 记录设备信息
-    /// <summary>
-    /// 记录设备信息
-    /// </summary>
-    /// <param name="device">设备信息</param>
-    /// <returns></returns>
-    [HttpPost("Record"), AllowAnonymous]
-    public ServiceResult Record([FromBody] SmApplicationDevice device) => _service.Record(device);
-    #endregion
 }

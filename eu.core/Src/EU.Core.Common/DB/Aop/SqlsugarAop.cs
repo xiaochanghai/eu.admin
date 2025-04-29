@@ -62,33 +62,33 @@ public static class SqlSugarAop
                 if (entityInfo.OperationType == DataFilterType.UpdateByObject)
                     baseEntity.UpdateTime = Utility.GetSysDate();
 
-                if (App.User?.ID != null)
-                {
-                    if (baseEntity is ITenantEntity tenant && App.User.TenantId > 0)
-                    {
-                        if (tenant.TenantId == 0)
-                            tenant.TenantId = App.User.TenantId;
-                    }
+                var userId = App.User?.ID;
+                if (userId == Guid.Empty) userId = null;
 
-                    switch (entityInfo.OperationType)
-                    {
-                        case DataFilterType.UpdateByObject:
-                            baseEntity.UpdateBy = App.User.ID;
-                            baseEntity.ModificationNum = baseEntity.ModificationNum is null ? 0 : baseEntity.ModificationNum + 1;
-                            break;
-                        case DataFilterType.InsertByObject:
-                            if (baseEntity.CreatedBy.IsNullOrEmpty())
-                                baseEntity.CreatedBy = App.User.ID;
-                            if (baseEntity.GroupId.IsNullOrEmpty())
-                                baseEntity.GroupId = Utility.GetGroupGuidId();
-                            if (baseEntity.CompanyId.IsNullOrEmpty())
-                                baseEntity.CompanyId = Utility.GetCompanyGuidId();
-                            if (baseEntity.ModificationNum.IsNullOrEmpty())
-                                baseEntity.ModificationNum = 0;
-                            if (baseEntity.Tag.IsNullOrEmpty())
-                                baseEntity.Tag = 0;
-                            break;
-                    }
+                if (baseEntity is ITenantEntity tenant && App.User.TenantId > 0)
+                {
+                    if (tenant.TenantId == 0)
+                        tenant.TenantId = App.User.TenantId;
+                }
+
+                switch (entityInfo.OperationType)
+                {
+                    case DataFilterType.UpdateByObject:
+                        baseEntity.UpdateBy = userId;
+                        baseEntity.ModificationNum = baseEntity.ModificationNum is null ? 0 : baseEntity.ModificationNum + 1;
+                        break;
+                    case DataFilterType.InsertByObject:
+                        if (baseEntity.CreatedBy.IsNullOrEmpty())
+                            baseEntity.CreatedBy = userId;
+                        if (baseEntity.GroupId.IsNullOrEmpty())
+                            baseEntity.GroupId = Utility.GetGroupGuidId();
+                        if (baseEntity.CompanyId.IsNullOrEmpty())
+                            baseEntity.CompanyId = Utility.GetCompanyGuidId();
+                        if (baseEntity.ModificationNum.IsNullOrEmpty())
+                            baseEntity.ModificationNum = 0;
+                        if (baseEntity.Tag.IsNullOrEmpty())
+                            baseEntity.Tag = 0;
+                        break;
                 }
             }
             else

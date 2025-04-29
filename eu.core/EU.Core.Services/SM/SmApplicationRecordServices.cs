@@ -1,12 +1,12 @@
 ﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
-* SmApplicationDevice.cs
+* SmApplicationRecord.cs
 *
 * 功 能： N / A
-* 类 名： SmApplicationDevice
+* 类 名： SmApplicationRecord
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V1.0  2025/4/27 16:04:05  SahHsiao   初版
+* V1.0  2025/4/29 22:59:37  SahHsiao   初版
 *
 * Copyright(c) 2025 SUZHOU EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -14,13 +14,16 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
-namespace EU.Core.IServices;
+
+namespace EU.Core.Services;
 
 /// <summary>
-/// APP客户端记录(自定义服务接口)
-/// </summary>	
-public interface ISmApplicationDeviceServices : IBaseServices<SmApplicationDevice, SmApplicationDeviceDto, InsertSmApplicationDeviceInput, EditSmApplicationDeviceInput>
+/// APP客户端记录 (服务)
+/// </summary>
+public class SmApplicationRecordServices : BaseServices<SmApplicationRecord, SmApplicationRecordDto, InsertSmApplicationRecordInput, EditSmApplicationRecordInput>, ISmApplicationRecordServices
 {
-
-    ServiceResult Record(SmApplicationDevice device);
+    public SmApplicationRecordServices(IBaseRepository<SmApplicationRecord> dal)
+    {
+        BaseDal = dal;
+    }
 }

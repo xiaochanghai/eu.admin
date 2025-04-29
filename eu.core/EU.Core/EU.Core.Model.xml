@@ -2707,6 +2707,76 @@
             ImageType
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmApplicationDeviceBase">
+            <summary>
+            APP客户端记录 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.UUID">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.Platform">
+            <summary>
+            平台
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.Version">
+            <summary>
+            版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.Brand">
+            <summary>
+            品牌
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.Model">
+            <summary>
+            型号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.BundleId">
+            <summary>
+            应用包名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.BundleVersion">
+            <summary>
+            应用包版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.SmApplicationRecordBase">
+            <summary>
+            SmApplicationRecord (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationRecordBase.UUID">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationRecordBase.LaunchTime">
+            <summary>
+            登录时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationRecordBase.IP">
+            <summary>
+            IP
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationRecordBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmAutoCodeBase">
             <summary>
             自动编号 (Dto.Base)
@@ -5315,6 +5385,16 @@
         <member name="T:EU.Core.Model.Edit.EditFileAttachmentInput">
             <summary>
             FileAttachment (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmApplicationDeviceInput">
+            <summary>
+            APP客户端记录 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmApplicationRecordInput">
+            <summary>
+            APP客户端记录 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmAutoCodeInput">
@@ -8177,6 +8257,76 @@
             文件类型
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmApplicationDevice">
+            <summary>
+            APP客户端记录 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.UUID">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Platform">
+            <summary>
+            平台
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Version">
+            <summary>
+            版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Brand">
+            <summary>
+            品牌
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Model">
+            <summary>
+            型号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.BundleId">
+            <summary>
+            应用包名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.BundleVersion">
+            <summary>
+            应用包版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.SmApplicationRecord">
+            <summary>
+            SmApplicationRecord (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationRecord.UUID">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationRecord.LaunchTime">
+            <summary>
+            登录时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationRecord.IP">
+            <summary>
+            IP
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationRecord.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmAutoCode">
             <summary>
             自动编号 (Model)
@@ -10848,6 +10998,16 @@
             FileAttachment(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmApplicationDeviceDto">
+            <summary>
+            APP客户端记录(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmApplicationRecordDto">
+            <summary>
+            APP客户端记录(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmAutoCodeDto">
             <summary>
             自动编号(Dto.View)
@@ -11283,6 +11443,16 @@
         <member name="T:EU.Core.Model.Insert.InsertFileAttachmentInput">
             <summary>
             FileAttachment (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmApplicationDeviceInput">
+            <summary>
+            APP客户端记录 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmApplicationRecordInput">
+            <summary>
+            APP客户端记录 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmAutoCodeInput">

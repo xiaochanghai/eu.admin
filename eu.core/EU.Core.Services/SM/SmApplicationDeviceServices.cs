@@ -15,6 +15,12 @@
 *└──────────────────────────────────┘
 */
 
+using Google.Protobuf.WellKnownTypes;
+using SqlSugar;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
+using System.Net.Mail;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -35,19 +41,36 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
     /// </summary>
     /// <param name="device">设备信息</param>
     /// <returns></returns>
-    public async Task<ServiceResult> Record(InsertSmApplicationDeviceInput device)
+    public ServiceResult Record(SmApplicationDevice device)
     {
-        if (await AnyAsync(x => x.UUID == device.UUID))
-        {
-            var id = await QuerySingle(x => x.UUID == device.UUID);
+        Task.Factory.StartNew(() => DealData(Db, device));
+        return Success(ResponseText.EXECUTE_SUCCESS);
+    }
 
-            var update = Mapper.Map(device).ToANew<EditSmApplicationDeviceInput>();
-            var result = await Update(id.ID, update);
+    public void DealData(ISqlSugarClient _Db, SmApplicationDevice input)
+    {
+
+        var device = _Db.Queryable<SmApplicationDevice>().Where(x => x.UUID == input.UUID).First();
+
+        if (device != null)
+        {
+
+            input.ID = device.ID;
+            _Db.Updateable(input).UpdateColumns(x => new { x.UUID, x.Platform, x.Version, x.Brand, x.Model, x.BundleId, x.BundleVersion, x.UpdateBy, x.UpdateTime }).ExecuteCommand();
+
         }
         else
-            await Add(device);
+            _Db.Insertable(input).ExecuteCommand();
 
-        return Success(ResponseText.EXECUTE_SUCCESS);
+        var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+
+        var record = new SmApplicationRecord()
+        {
+            UUID = device?.UUID ?? input?.UUID,
+            LaunchTime = DateTime.Now,
+            IP = ipAddress,
+        };
+        Db.Insertable(record).ExecuteCommand();
     }
     #endregion
 }

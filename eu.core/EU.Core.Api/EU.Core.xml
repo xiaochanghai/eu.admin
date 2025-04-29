@@ -1227,12 +1227,17 @@
             APP客户端记录(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmApplicationDeviceController.Record(EU.Core.Model.Insert.InsertSmApplicationDeviceInput)">
+        <member name="M:EU.Core.Api.Controllers.SmApplicationDeviceController.Record(EU.Core.Model.Entity.SmApplicationDevice)">
             <summary>
             记录设备信息
             </summary>
             <param name="device">设备信息</param>
             <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmApplicationRecordController">
+            <summary>
+            APP客户端记录(Controller)
+            </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmAutoCodeController">
             <summary>
