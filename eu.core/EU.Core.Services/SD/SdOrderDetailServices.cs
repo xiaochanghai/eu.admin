@@ -123,7 +123,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         lstColumns.Add("NoTaxAmount");
         lstColumns.Add("TaxAmount");
         lstColumns.Add("TaxIncludedAmount");
-        return await Update(model, lstColumns, null, $"ID='{Id}'");
+        return await Update(model, lstColumns);
     }
 
     public override async Task<SdOrderDetailDto> UpdateReturn(Guid Id, object entity)
@@ -148,7 +148,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         lstColumns.Add("NoTaxAmount");
         lstColumns.Add("TaxAmount");
         lstColumns.Add("TaxIncludedAmount");
-        await Update(model, lstColumns, null, $"ID='{Id}'");
+        await Update(model, lstColumns);
         return Mapper.Map(model).ToANew<SdOrderDetailDto>();
     }
     #endregion

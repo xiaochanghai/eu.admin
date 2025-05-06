@@ -52,7 +52,7 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
 
             var lstColumns = new ModuleSqlColumn("SD_RETURN_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             var model1 = Mapper.Map(model).ToANew<SdReturnOrderDetailDto>();
 

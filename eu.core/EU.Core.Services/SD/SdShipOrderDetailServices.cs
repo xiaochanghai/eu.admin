@@ -54,7 +54,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
             orderDetail.ShipQTY = orderDetail.ShipQTY - entity.ShipQTY + model.ShipQTY;
             var lstColumns = new ModuleSqlColumn("SD_SHIP_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             var model1 = Mapper.Map(model).ToANew<SdShipOrderDetailDto>();
             model1.SalesOrderQTY = orderDetail.QTY - orderDetail.ShipQTY;

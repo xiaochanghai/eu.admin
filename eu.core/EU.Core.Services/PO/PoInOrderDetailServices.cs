@@ -90,7 +90,7 @@ public class PoInOrderDetailServices : BaseServices<PoInOrderDetail, PoInOrderDe
             var lstColumns = new ModuleSqlColumn("PO_IN_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
 
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             var model1 = Mapper.Map(model).ToANew<PoInOrderDetailDto>();
 

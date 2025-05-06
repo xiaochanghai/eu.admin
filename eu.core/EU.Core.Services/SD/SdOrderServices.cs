@@ -60,7 +60,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
 
         var order = await QueryDto(Id);
-        var result = await Update(model, lstColumns, new List<string> { "OrderNo" }, $"ID='{Id}'");
+        var result = await Update(model, lstColumns, new List<string> { "OrderNo" } );
 
         #region 批量更新銷售單明細稅額、含稅交割、未稅金額
 

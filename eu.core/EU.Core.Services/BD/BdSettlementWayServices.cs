@@ -84,7 +84,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         var dic = ConvertToDic(entity);
         var lstColumns = dic.Keys.ToList();
         lstColumns.Add("SettlementName");
-        return await Update(model, lstColumns, ["ID"], $"ID='{Id}'");
+        return await Update(model, lstColumns, ["ID"]);
     }
     #endregion
 

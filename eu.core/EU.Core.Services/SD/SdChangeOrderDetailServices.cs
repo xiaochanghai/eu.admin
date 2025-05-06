@@ -46,7 +46,7 @@ public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdC
         var dic = ConvertToDic(entity);
         var lstColumns = new ModuleSqlColumn("SD_SALES_CHANGE_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-        await Update(model, lstColumns, null, $"ID='{Id}'");
+        await Update(model, lstColumns);
         return Mapper.Map(model).ToANew<SdChangeOrderDetailDto>();
     }
     #endregion 

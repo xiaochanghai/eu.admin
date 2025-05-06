@@ -184,7 +184,7 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
             lstColumns.Add("NoTaxAmount");
             lstColumns.Add("TaxAmount");
             lstColumns.Add("TaxIncludedAmount");
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             var model1 = Mapper.Map(model).ToANew<PoOrderDetailDto>();
             await Db.Ado.CommitTranAsync();

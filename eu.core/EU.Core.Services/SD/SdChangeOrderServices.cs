@@ -73,7 +73,7 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
 
         var order = await QueryDto(Id);
-        var result = await Update(model, lstColumns, new List<string> { "OrderNo", "CustomerId" }, $"ID='{Id}'");
+        var result = await Update(model, lstColumns, new List<string> { "OrderNo", "CustomerId" });
 
         #region 批量更新銷售單明細稅額、含稅交割、未稅金額
         if (order.TaxRate != model.TaxRate || order.TaxType != model.TaxType)

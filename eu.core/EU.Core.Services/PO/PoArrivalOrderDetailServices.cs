@@ -54,7 +54,7 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
             var dic = ConvertToDic(entity1);
             var lstColumns = new ModuleSqlColumn("PO_ARRIVAL_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             var model1 = Mapper.Map(model).ToANew<PoArrivalOrderDetailDto>();
             await Db.Updateable<PoOrderDetail>()

@@ -53,7 +53,7 @@ public class IvInDetailServices : BaseServices<IvInDetail, IvInDetailDto, Insert
 
             var lstColumns = new ModuleSqlColumn("IV_IN_DETAIL_MNG").GetModuleTableEditableColumns();
              
-            await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
+            await Update(model, lstColumns, ["OrderId"]);
 
             var model1 = Mapper.Map(model).ToANew<IvInDetailDto>();
 

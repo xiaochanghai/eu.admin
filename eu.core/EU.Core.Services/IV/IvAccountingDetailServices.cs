@@ -44,7 +44,7 @@ public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAcc
 
         var lstColumns = new ModuleSqlColumn("IV_STOCK_ACCOUNTING_DETAIL_MNG").GetModuleTableEditableColumns();
 
-        await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
+        await Update(model, lstColumns, ["OrderId"]);
 
         var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();
 

@@ -53,7 +53,7 @@ public class IvOutDetailServices : BaseServices<IvOutDetail, IvOutDetailDto, Ins
 
             var lstColumns = new ModuleSqlColumn("IV_OUT_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, ["OrderId"], $"ID='{Id}'");
+            await Update(model, lstColumns, ["OrderId"]);
 
             var model1 = Mapper.Map(model).ToANew<IvOutDetailDto>();
 

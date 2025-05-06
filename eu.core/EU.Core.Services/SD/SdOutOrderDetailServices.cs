@@ -85,7 +85,7 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
 
             var lstColumns = new ModuleSqlColumn("SD_OUT_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
-            await Update(model, lstColumns, null, $"ID='{Id}'");
+            await Update(model, lstColumns);
 
             model1 = Mapper.Map(model).ToANew<SdOutOrderDetailDto>();
 
