@@ -550,7 +550,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
             >
               {/* <Menu.Item key="1" icon={global.utility.getIcon('RedoOutlined')}>刷新</Menu.Item> */}
               {moreToolBar.includes("ExportExcel") ? (
-                <Menu.Item key="2" icon={<Icon name="excel-export" />}>
+                <Menu.Item key="2" icon={<Icon name="excel-export" />} style={{ gap: 5 }}>
                   导出Excel
                 </Menu.Item>
               ) : null}

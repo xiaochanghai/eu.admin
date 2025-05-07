@@ -54,7 +54,8 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         filePath += "/" + Utility.GetLongID() + "/";
 
         string pathHeader = "wwwroot/" + filePath;
-        FileHelper.CreateRootDirectory("/" + filePath);
+        filePath = "/" + filePath;
+        FileHelper.CreateRootDirectory(filePath);
 
         string fileName = file.FileName;
         var filepath = Path.Combine(pathHeader, fileName);
