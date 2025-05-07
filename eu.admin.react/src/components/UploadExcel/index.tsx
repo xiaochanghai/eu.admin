@@ -9,113 +9,161 @@ import { Icon } from "@/components";
 const { Step } = Steps;
 const FormItem = Form.Item;
 
-let flag = true;
-const UploadExcel = (props: any) => {
-  // const [Id, setId] = useState(null);
-  const [stepsCurrent, setStepsCurrent] = useState(0);
-  const [errorList, setErrorList] = useState([]);
-  const [importColumns, setImportColumns] = useState<any>([]);
-  const [importList, setImportList] = useState([]);
-  const [importTemplateInfo, setImportTemplateInfo] = useState<any>({});
-  const [importDataId, setImportDataId] = useState(null);
-  const {
-    moduleInfo,
-    // onCancel,
-    onReload,
-    moduleInfo: { masterId, moduleCode, moduleId }
-  } = props;
-  const querySingleData = async () => {
-    let { Success, Data } = await http.get<any>(`/api/SmImpTemplate/QueryByModuleId/${moduleId}`);
-    if (Success) setImportTemplateInfo(Data);
+/**
+ * Excel上传组件
+ * 功能：支持Excel文件上传、数据预览和导入
+ * @param {Object} props - 组件属性
+ * @param {Object} props.moduleInfo - 模块信息
+ * @param {Function} props.onReload - 数据重新加载回调
+ */
+const UploadExcel = (props: {
+  moduleInfo: {
+    masterId?: string;
+    moduleCode: string;
+    moduleId: string;
+    moduleName: string;
   };
+  onReload: () => void;
+  onCancel: () => void;
+}) => {
+  const [stepsCurrent, setStepsCurrent] = useState(0);
+  const [errorList, setErrorList] = useState<Array<{ Key: number; SheetName: string; ErrorName: string }>>([]);
+  const [importColumns, setImportColumns] = useState<any[]>([]);
+  const [importList, setImportList] = useState<any[]>([]);
+  const [importTemplateInfo, setImportTemplateInfo] = useState<{
+    TemplateCode: string;
+    FileId: string;
+    TemplateName: string;
+    IsAllowOverride: boolean;
+  }>({ TemplateCode: "", FileId: "", TemplateName: "", IsAllowOverride: true });
+  const [importDataId, setImportDataId] = useState<string | null>(null);
+
+  // 防抖标志
+  let uploadFlag = true;
+  const { moduleInfo } = props;
+
+  /**
+   * 查询导入模板信息
+   */
+  const querySingleData = async () => {
+    try {
+      const { Success, Data } = await http.get<any>(`/api/SmImpTemplate/QueryByModuleId/${props.moduleInfo.moduleId}`);
+      if (Success) setImportTemplateInfo(Data);
+    } catch (error) {
+      console.error("查询模板失败:", error);
+      message.error("获取模板信息失败");
+    }
+  };
+
   useEffect(() => {
     querySingleData();
   }, []);
 
-  const beforeUpload = () => {
-    return false;
-  };
-  const handleChange = async (file: any) => {
-    if (flag) flag = false;
-    else return false;
+  /**
+   * 上传前校验
+   */
+  const beforeUpload = () => false;
 
-    const isJpgOrPng = file.file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    if (!isJpgOrPng) {
+  /**
+   * 处理文件上传
+   * @param {Object} file - 上传的文件对象
+   */
+  const handleChange = async (file: any) => {
+    if (!uploadFlag) return false;
+    uploadFlag = false;
+
+    // 文件类型校验
+    const isExcel = file.file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (!isExcel) {
       message.error("请选择正确的Excel文件!");
+      uploadFlag = true;
       return;
     }
 
-    //附件上传
-    message.loading("上传中..", 0);
-    const formData = new FormData();
-    formData.append("file", file.file);
-    // formData.append("moduleCode", moduleCode);
-    formData.append("fileName", file.file.name);
+    try {
+      message.loading("上传中..", 0);
+      const formData = new FormData();
+      formData.append("file", file.file);
+      formData.append("fileName", file.file.name);
 
-    let { Success, Data, Message } = await uploadFile(`/api/Common/ImportExcel/${moduleCode}`, formData);
+      const { Success, Data, Message } = await uploadFile(`/api/Common/ImportExcel/${props.moduleInfo.moduleCode}`, formData);
 
-    // let { Success, Message } = await http.post<any>("/api/File/" + record.ID);
+      if (Success) {
+        // 处理成功数据
+        const processedList = Data.ImportList.map((item: any, index: number) => ({
+          ...item,
+          Key: index + 1
+        }));
 
-    message.destroy();
-    flag = true;
-    if (Success) {
-      let importList = Data.ImportList;
-      for (let index = 0; index < importList.length; index++) importList[index].Key = index + 1;
-      let importColumns = [
-        {
-          title: "序号",
-          dataIndex: "Key",
-          key: "Key"
-        }
-      ];
-      let importColumns1 = Data.ImportColumns;
-      let importColumnNames = Data.ImportColumnNames;
-      if (importColumns1 && importColumns1.length > 0) {
-        for (let j = 0; j < importColumns1.length; j++)
-          importColumns.push({
-            title: importColumnNames[j],
-            dataIndex: importColumns1[j],
-            key: "Key_" + j
-          });
-      }
-      setStepsCurrent(1);
-      setImportList(importList);
-      setImportColumns(importColumns);
-      setImportDataId(Data.ImportDataId);
-      // onCancel();
-      message.success("上传成功！", 3);
-    } else {
-      let errorList = Data.errorList;
-      for (let index = 0; index < errorList.length; index++) errorList[index].Key = index + 1;
-      if (errorList.length > 0) {
+        const columns = [
+          { title: "序号", dataIndex: "Key", key: "Key" },
+          ...Data.ImportColumns.map((col: string, j: number) => ({
+            title: Data.ImportColumnNames[j],
+            dataIndex: col,
+            key: `Key_${j}`
+          }))
+        ];
+
         setStepsCurrent(1);
-        setErrorList(errorList);
+        setImportList(processedList);
+        setImportColumns(columns);
+        setImportDataId(Data.ImportDataId);
+        message.success("上传成功！", 3);
+      } else {
+        // 处理错误数据
+        const processedErrors = Data.errorList.map((item: any, index: number) => ({
+          ...item,
+          Key: index + 1
+        }));
+
+        if (processedErrors.length > 0) {
+          setStepsCurrent(1);
+          setErrorList(processedErrors);
+        }
+        message.error(Message, 3);
       }
-
-      message.error(Message, 3);
+    } catch (error) {
+      console.error("上传失败:", error);
+      message.error("上传过程中发生错误");
+    } finally {
+      message.destroy();
+      uploadFlag = true;
     }
-    // }
-  };
-  const okTransferData = async (type: any) => {
-    message.loading("数据转换中..", 0);
-    let { Success, Message } = await http.post<any>(`/api/Common/TransferExcelData/${moduleCode}`, {
-      type,
-      importDataId,
-      importTemplateCode: importTemplateInfo.TemplateCode,
-      masterId: masterId ?? null
-    });
-    message.destroy();
-    if (Success) {
-      onReload();
-      setStepsCurrent(2);
-      message.success(Message, 3);
-    }
-    // else {
-    //   message.error(result.message, 3);
-    // }
   };
 
-  const onDownload = (fileId: any, templateName: string) => {
+  /**
+   * 数据转换处理
+   * @param {string} type - 处理类型 (append/override)
+   */
+  const okTransferData = async (type: string) => {
+    try {
+      message.loading("数据转换中..", 0);
+      const { Success, Message } = await http.post<any>(`/api/Common/TransferExcelData/${props.moduleInfo.moduleCode}`, {
+        type,
+        importDataId,
+        importTemplateCode: importTemplateInfo?.TemplateCode,
+        masterId: props.moduleInfo.masterId ?? null
+      });
+
+      if (Success) {
+        props.onReload();
+        setStepsCurrent(2);
+        message.success(Message, 3);
+      }
+    } catch (error) {
+      console.error("数据转换失败:", error);
+      message.error("数据转换过程中发生错误");
+    } finally {
+      message.destroy();
+    }
+  };
+
+  /**
+   * 下载模板文件
+   * @param {string} fileId - 文件ID
+   * @param {string} templateName - 模板名称
+   */
+  const onDownload = (fileId: string, templateName: string) => {
     if (!fileId) {
       message.error("请先在【导入管理】维护导入模板！", 3);
       return;
