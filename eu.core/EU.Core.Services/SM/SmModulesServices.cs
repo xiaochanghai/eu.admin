@@ -370,8 +370,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
 
             var moduleColumnInfo = new ModuleSqlColumn(module.ModuleCode);
-            var moduleId = module.ID.ToString().ToLower();
-            obj.columns = GetModuleColumn(Guid.Parse(moduleId), module);
+            var moduleId = module.ID;
+            obj.columns = GetModuleColumn(moduleId, module);
 
             var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
 
@@ -388,15 +388,27 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             var functions = RedisCacheService.Get<List<SmRoleFunctionExtend>>(userId, "UserFunction." + moduleCode);
             if (functions == null)
             {
-                functions = await _context.SmUserRole.Where(x => x.IsDeleted == false && x.SmUserId == Guid.Parse(userId))
-                    .Join(_context.SmRoleFunction, a => a.SmRoleId, b => b.SmRoleId, (a, b) => new { a, b }).Where(y => y.b.IsDeleted == false && (module.ID == y.b.SmModuleId || (y.b.SmFunctionId != null && ids.Contains(y.b.SmFunctionId.Value))))
-                    .Select(z => new SmRoleFunctionExtend
-                    {
-                        SmFunctionId = z.b.SmFunctionId,
-                        NoActionCode = z.b.NoActionCode,
-                        SmModuleId = z.b.SmModuleId,
-                        ActionCode = z.b.ActionCode
-                    }).Distinct().ToListAsync();
+                //functions = await _context.SmUserRole.Where(x => x.IsDeleted == false && x.SmUserId == Guid.Parse(userId))
+                //    .Join(_context.SmRoleFunction, a => a.SmRoleId, b => b.SmRoleId, (a, b) => new { a, b })
+                //    .Where(y => y.b.IsDeleted == false && (moduleId == y.b.SmModuleId || (y.b.SmFunctionId != null && ids.Contains(y.b.SmFunctionId.Value))))
+                //    .Select(z => new SmRoleFunctionExtend
+                //    {
+                //        SmFunctionId = z.b.SmFunctionId,
+                //        NoActionCode = z.b.NoActionCode,
+                //        SmModuleId = z.b.SmModuleId,
+                //        ActionCode = z.b.ActionCode
+                //    }).Distinct().ToListAsync();
+
+                functions = await Db.Queryable<SmRoleFunction>()
+                  .LeftJoin<SmUserRole>((x, y) => x.SmRoleId == y.SmRoleId)//多个条件用&& 
+                  .Where((x, y) => (moduleId == x.SmModuleId || (x.SmFunctionId != null && ids.Contains(x.SmFunctionId.Value))))
+                  .Select(x => new SmRoleFunctionExtend
+                  {
+                      SmFunctionId = x.SmFunctionId,
+                      NoActionCode = x.NoActionCode,
+                      SmModuleId = x.SmModuleId,
+                      ActionCode = x.ActionCode
+                  }).Distinct().ToListAsync();
 
                 RedisCacheService.AddObject(userId, "UserFunction." + moduleCode, functions);
             }
@@ -407,28 +419,28 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             //获取操作栏按钮
             var actionData = functions
                  .Join(privileges, a => a.SmFunctionId, b => b.ID, (a, b) => new { a, b })
-                 .Where(z => z.b.SmModuleId == module.ID && z.b.DisplayPosition == "Action")
+                 .Where(z => z.b.SmModuleId == moduleId && z.b.DisplayPosition == "Action")
                  .Select(y => y.b)
                  .OrderBy(y => y.TaxisNo).Distinct().ToList();
 
             //获取菜单栏按钮
             var menuData = functions
                 .Join(privileges, a => a.SmFunctionId, b => b.ID, (a, b) => new { a, b })
-                .Where(z => z.b.SmModuleId == module.ID && z.b.DisplayPosition == "Menu")
+                .Where(z => z.b.SmModuleId == moduleId && z.b.DisplayPosition == "Menu")
                 .Select(y => y.b)
                 .OrderBy(y => y.TaxisNo).ToList();
 
             //获取隐藏菜单栏按钮
             var hideMenu = functions
                 .Join(privileges, a => a.SmFunctionId, b => b.ID, (a, b) => new { a, b })
-                .Where(z => z.b.SmModuleId == module.ID && z.b.DisplayPosition == "HideMenu")
+                .Where(z => z.b.SmModuleId == moduleId && z.b.DisplayPosition == "HideMenu")
                 .Select(y => y.b)
                 .OrderBy(y => y.TaxisNo).ToList();
 
             //获取自定义操作按钮
             var customActionData = functions
                  .Join(privileges, a => a.SmFunctionId, b => b.ID, (a, b) => new { a, b })
-                 .Where(z => z.b.SmModuleId == module.ID && z.b.DisplayPosition == "Custom")
+                 .Where(z => z.b.SmModuleId == moduleId && z.b.DisplayPosition == "Custom")
                  .Select(y => y.b)
                  .OrderBy(y => y.TaxisNo).Distinct().ToList();
 

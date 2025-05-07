@@ -14,8 +14,6 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
-using System.Collections.Generic;
-
 namespace EU.Core.Services;
 
 /// <summary>
@@ -125,7 +123,8 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             }
             else
             {
-                await Db.Ado.ExecuteCommandAsync(@"DELETE FROM SmRoleModule WHERE SmRoleId='" + RoleId + "';DELETE FROM SmRoleFunction WHERE SmRoleId = '" + RoleId + "'; ");
+                await Delete(x => x.SmRoleId == RoleId);
+                await Db.Deleteable<SmRoleFunction>().Where(it => it.SmRoleId == RoleId).ExecuteCommandAsync();
 
                 roleFunctions = keyList.Where(x => x.Contains("functionPrivileges_"))
                     .Select(x => new SmRoleFunction()
@@ -174,6 +173,8 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             await Db.Ado.RollbackTranAsync();
             throw;
         }
+        Utility.ReInitCache();
+
         return Success("角色模块保存成功！");
     }
 
