@@ -22,6 +22,13 @@ import { downloadFile } from "@/utils";
 
 const { confirm } = Modal;
 
+/**
+ * 操作按钮组件
+ * @param icon 图标名称
+ * @param onClick 点击事件
+ * @param disabled 是否禁用
+ * @param tooltip 提示文字
+ */
 interface ActionButtonProps {
   icon: string;
   onClick: () => void;
@@ -29,7 +36,7 @@ interface ActionButtonProps {
   tooltip?: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ icon, onClick, disabled = false, tooltip }) => {
+const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, disabled = false, tooltip }) => {
   const button = (
     <Button
       type="dashed"
@@ -47,7 +54,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, onClick, disabled = f
   );
 
   return tooltip ? <Tooltip title={tooltip}>{button}</Tooltip> : button;
-};
+});
 
 const SmProTable: React.FC<any> = React.memo(props => {
   let tableAction = useRef<ActionType | null>(null);
@@ -314,29 +321,41 @@ const SmProTable: React.FC<any> = React.memo(props => {
         }
       },
       onCancel() {
-        // console.log('Cancel');
+        //
       }
     });
   };
-  const batchDeleteConfirm = (action: any, selectedRows: any) => {
+  const handleBatchOperation = async ({
+    action,
+    selectedRows,
+    operationType,
+    confirmTitle,
+    apiFunc
+  }: {
+    action: any;
+    selectedRows: any[];
+    operationType: "delete" | "audit" | "revocation";
+    confirmTitle: string;
+    apiFunc: (params: any) => Promise<any>;
+  }) => {
     confirm({
-      title: "你确定需要批量删除所选数据吗？",
+      title: confirmTitle,
       icon: <Icon name="ExclamationCircleOutlined" />,
       okText: "确定",
       okType: "danger",
       cancelText: "取消",
       async onOk() {
-        let ids: string[] = [];
-        selectedRows.map((item: any) => {
-          ids.push(item.ID);
-        });
-
         const hideLoading = message.loading("数据提交中...", 0);
         try {
-          if (props.batchDelete) {
-            props.batchDelete(ids);
+          if (operationType === "delete" && props.batchDelete) {
+            const ids = selectedRows.map((item: any) => item.ID);
+            await props.batchDelete(ids);
           } else {
-            const { Success, Message } = await batchDelete({ moduleCode, Ids: ids, url });
+            const { Success, Message } = await apiFunc({
+              moduleCode,
+              Ids: selectedRows.map((item: any) => item.ID),
+              url
+            });
             if (Success) {
               action.clearSelected();
               action.reload();
@@ -348,8 +367,18 @@ const SmProTable: React.FC<any> = React.memo(props => {
         }
       },
       onCancel() {
-        // console.log('Cancel');
+        //
       }
+    });
+  };
+
+  const batchDeleteConfirm = (action: any, selectedRows: any) => {
+    handleBatchOperation({
+      action,
+      selectedRows,
+      operationType: "delete",
+      confirmTitle: "你确定需要批量删除所选数据吗？",
+      apiFunc: batchDelete
     });
   };
   const handlerToolBarVisibleChange = (flag: any) => {
@@ -390,7 +419,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
         }
       },
       onCancel() {
-        // console.log('Cancel');
+        //
       }
     });
   };
@@ -424,7 +453,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
         }
       },
       onCancel() {
-        // console.log('Cancel');
+        //
       }
     });
   };
