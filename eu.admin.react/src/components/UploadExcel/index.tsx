@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Upload, Form, Row, Col, Steps, Button, Space, Result, Table } from "antd";
 import { message } from "@/hooks/useMessage";
 import { downloadFile } from "@/utils";
 import http from "@/api";
 import { uploadFile } from "@/api/modules/module";
 import { Icon } from "@/components";
-
+import { Skeleton } from "antd";
 const { Step } = Steps;
 const FormItem = Form.Item;
 
@@ -27,6 +27,7 @@ const UploadExcel = (props: {
   onCancel: () => void;
 }) => {
   const [stepsCurrent, setStepsCurrent] = useState(0);
+  const [pageLoading, setPageLoading] = useState(true);
   const [errorList, setErrorList] = useState<Array<{ Key: number; SheetName: string; ErrorName: string }>>([]);
   const [importColumns, setImportColumns] = useState<any[]>([]);
   const [importList, setImportList] = useState<any[]>([]);
@@ -49,6 +50,7 @@ const UploadExcel = (props: {
     try {
       const { Success, Data } = await http.get<any>(`/api/SmImpTemplate/QueryByModuleId/${props.moduleInfo.moduleId}`);
       if (Success) setImportTemplateInfo(Data);
+      setPageLoading(false);
     } catch (error) {
       console.error("查询模板失败:", error);
       message.error("获取模板信息失败");
@@ -173,208 +175,217 @@ const UploadExcel = (props: {
 
   return (
     <>
-      <Steps type="navigation" current={stepsCurrent} size="small" className="site-navigation-steps">
-        <Step status="process" title="上传Excel" />
-        <Step status="process" title="数据预览" />
-        <Step status="process" title="导入数据" />
-      </Steps>
-      {stepsCurrent == 0 ? (
-        <Form labelCol={{ span: 8 }} wrapperCol={{ span: 18 }} style={{ marginTop: 20 }}>
-          <Row gutter={24} justify={"center"}>
-            <Col span={24}>
-              <FormItem label="Excel文件：">
-                <Space>
-                  <Upload
-                    accept=".xlsx,.xls"
-                    // listType="picture-card"
-                    // className={styles.uploader}
-                    action={""}
-                    showUploadList={false}
-                    beforeUpload={beforeUpload}
-                    // fileList={fileList}
-                    onChange={handleChange}
+      {!pageLoading ? (
+        <>
+          <Steps type="navigation" current={stepsCurrent} size="small" className="site-navigation-steps">
+            <Step status="process" title="上传Excel" />
+            <Step status="process" title="数据预览" />
+            <Step status="process" title="导入数据" />
+          </Steps>
+          {stepsCurrent == 0 ? (
+            <Form labelCol={{ span: 8 }} wrapperCol={{ span: 18 }} style={{ marginTop: 20 }}>
+              <Row gutter={24} justify={"center"}>
+                <Col span={24}>
+                  <FormItem label="Excel文件：">
+                    <Space>
+                      <Upload
+                        accept=".xlsx,.xls"
+                        // listType="picture-card"
+                        // className={styles.uploader}
+                        action={""}
+                        showUploadList={false}
+                        beforeUpload={beforeUpload}
+                        // fileList={fileList}
+                        onChange={handleChange}
+                      >
+                        <Button type="primary" icon={<Icon name="UploadOutlined" />}>
+                          点击上传Excel文件
+                        </Button>
+                      </Upload>
+                    </Space>
+                  </FormItem>
+                </Col>
+                <Col span={24}>
+                  <FormItem
+                    labelCol={{
+                      xs: { span: 6 },
+                      sm: { span: 6 },
+                      md: { span: 6 }
+                    }}
+                    wrapperCol={{
+                      xs: { span: 16 },
+                      sm: { span: 16 },
+                      md: { span: 16 }
+                    }}
+                    label="导入步骤："
                   >
-                    <Button type="primary" icon={<Icon name="UploadOutlined" />}>
-                      点击上传Excel文件
-                    </Button>
-                  </Upload>
-                </Space>
-              </FormItem>
-            </Col>
-            <Col span={24}>
-              <FormItem
-                labelCol={{
-                  xs: { span: 6 },
-                  sm: { span: 6 },
-                  md: { span: 6 }
-                }}
-                wrapperCol={{
-                  xs: { span: 16 },
-                  sm: { span: 16 },
-                  md: { span: 16 }
-                }}
-                label="导入步骤："
-              >
-                <div style={{ marginTop: 5 }}>
-                  1、下载导入模板：
-                  <a onClick={() => onDownload(importTemplateInfo.FileId, importTemplateInfo.TemplateName)} key="link">
-                    {moduleInfo.moduleName} 导入模板
-                  </a>
-                </div>
-                <div style={{ marginTop: 10 }}>2、根据模板中的格式填写内容，不可以调整列的先后顺序。</div>
-                <div style={{ marginTop: 10 }}>3、点击“选择Excel文件”执行上传操作。</div>
-              </FormItem>
-            </Col>
-            <Col span={24}>
-              <FormItem
-                labelCol={{
-                  xs: { span: 6 },
-                  sm: { span: 6 },
-                  md: { span: 6 }
-                }}
-                wrapperCol={{
-                  xs: { span: 16 },
-                  sm: { span: 16 },
-                  md: { span: 16 }
-                }}
-                label="注意事项："
-              >
-                <div style={{ marginTop: 5 }}>1、后缀名必须为xlsx或xls。</div>
-                <div style={{ marginTop: 10 }}>2、数据请勿放在合并的单元格中。</div>
-                <div style={{ marginTop: 10 }}>
-                  3、第一行红色字体的为必填栏位，同时注意特殊字段的格式是否正确，例如：日期类型，数字类型等。
-                </div>
-                <div style={{ marginTop: 10 }}>4、不可以调整Excel模板中列的顺序。</div>
-                <div style={{ marginTop: 10 }}>5、不可以修改导入模板中的工作簿(Sheet)名称。</div>
-                <div style={{ marginTop: 10 }}>
-                  6、导入数据时，系统会将第一行的内容作为标题行，因此导入的内容请从第2行开始填写。
-                </div>
-              </FormItem>
-            </Col>
-          </Row>
-        </Form>
-      ) : null}
-      {stepsCurrent == 1 && errorList.length > 0 ? (
-        <>
-          <Result
-            style={{ padding: 20 }}
-            status="error"
-            title="读取失败"
-            subTitle={errorList.length + "条错误信息"}
-            extra={[
-              <Button
-                type="primary"
-                key="console"
-                icon={<Icon name="ArrowUpOutlined" />}
-                onClick={() => {
-                  setStepsCurrent(0);
-                  setErrorList([]);
-                  setImportList([]);
-                }}
-              >
-                返回上一页
-              </Button>
-            ]}
-          ></Result>
-          <Table
-            columns={[
-              {
-                title: "序号",
-                dataIndex: "Key",
-                key: "Key"
-              },
-              {
-                title: "Sheet名",
-                dataIndex: "SheetName",
-                key: "SheetName"
-              },
-              {
-                title: "错误信息",
-                dataIndex: "ErrorName",
-                key: "ErrorName"
-              }
-            ]}
-            dataSource={errorList}
-          />
-        </>
-      ) : null}
-      {stepsCurrent == 1 && importList.length > 0 ? (
-        <>
-          <Result
-            style={{ padding: 20 }}
-            status="success"
-            title="读取成功"
-            subTitle={"本次从Excel共读取数据：" + importList.length + "笔，以下只显示了部分数据供用户预览"}
-            extra={[
-              <Button
-                type="primary"
-                key="append"
-                icon={<Icon name="PlusOutlined" />}
-                onClick={() => {
-                  okTransferData("append");
-                }}
-              >
-                追加导入
-              </Button>,
-              <>
-                {importTemplateInfo && importTemplateInfo.IsAllowOverride ? (
+                    <div style={{ marginTop: 5 }}>
+                      1、下载导入模板：
+                      <a onClick={() => onDownload(importTemplateInfo.FileId, importTemplateInfo.TemplateName)} key="link">
+                        {moduleInfo.moduleName} 导入模板
+                      </a>
+                    </div>
+                    <div style={{ marginTop: 10 }}>2、根据模板中的格式填写内容，不可以调整列的先后顺序。</div>
+                    <div style={{ marginTop: 10 }}>3、点击“选择Excel文件”执行上传操作。</div>
+                  </FormItem>
+                </Col>
+                <Col span={24}>
+                  <FormItem
+                    labelCol={{
+                      xs: { span: 6 },
+                      sm: { span: 6 },
+                      md: { span: 6 }
+                    }}
+                    wrapperCol={{
+                      xs: { span: 16 },
+                      sm: { span: 16 },
+                      md: { span: 16 }
+                    }}
+                    label="注意事项："
+                  >
+                    <div style={{ marginTop: 5 }}>1、后缀名必须为xlsx或xls。</div>
+                    <div style={{ marginTop: 10 }}>2、数据请勿放在合并的单元格中。</div>
+                    <div style={{ marginTop: 10 }}>
+                      3、第一行红色字体的为必填栏位，同时注意特殊字段的格式是否正确，例如：日期类型，数字类型等。
+                    </div>
+                    <div style={{ marginTop: 10 }}>4、不可以调整Excel模板中列的顺序。</div>
+                    <div style={{ marginTop: 10 }}>5、不可以修改导入模板中的工作簿(Sheet)名称。</div>
+                    <div style={{ marginTop: 10 }}>
+                      6、导入数据时，系统会将第一行的内容作为标题行，因此导入的内容请从第2行开始填写。
+                    </div>
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          ) : null}
+          {stepsCurrent == 1 && errorList.length > 0 ? (
+            <>
+              <Result
+                style={{ padding: 20 }}
+                status="error"
+                title="读取失败"
+                subTitle={errorList.length + "条错误信息"}
+                extra={[
                   <Button
-                    key="override"
-                    danger
-                    icon={<Icon name="ImportOutlined" />}
+                    type="primary"
+                    key="console"
+                    icon={<Icon name="ArrowUpOutlined" />}
                     onClick={() => {
-                      okTransferData("override");
+                      setStepsCurrent(0);
+                      setErrorList([]);
+                      setImportList([]);
                     }}
                   >
-                    覆盖导入
+                    返回上一页
                   </Button>
-                ) : null}
-              </>,
-              <Button
-                type="primary"
-                key="console"
-                icon={<Icon name="ArrowUpOutlined" />}
-                onClick={() => {
-                  setStepsCurrent(0);
-                  setImportDataId(null);
-                  setErrorList([]);
-                  setImportList([]);
-                }}
-              >
-                返回上一页
-              </Button>
-            ]}
-          ></Result>
-          <Table columns={importColumns} dataSource={importList} />
+                ]}
+              ></Result>
+              <Table
+                columns={[
+                  {
+                    title: "序号",
+                    dataIndex: "Key",
+                    key: "Key"
+                  },
+                  {
+                    title: "Sheet名",
+                    dataIndex: "SheetName",
+                    key: "SheetName"
+                  },
+                  {
+                    title: "错误信息",
+                    dataIndex: "ErrorName",
+                    key: "ErrorName"
+                  }
+                ]}
+                dataSource={errorList}
+              />
+            </>
+          ) : null}
+          {stepsCurrent == 1 && importList.length > 0 ? (
+            <>
+              <Result
+                style={{ padding: 20 }}
+                status="success"
+                title="读取成功"
+                subTitle={"本次从Excel共读取数据：" + importList.length + "笔，以下只显示了部分数据供用户预览"}
+                extra={[
+                  <Button
+                    type="primary"
+                    key="append"
+                    icon={<Icon name="PlusOutlined" />}
+                    onClick={() => {
+                      okTransferData("append");
+                    }}
+                  >
+                    追加导入
+                  </Button>,
+                  <>
+                    {importTemplateInfo && importTemplateInfo.IsAllowOverride ? (
+                      <Button
+                        key="override"
+                        danger
+                        icon={<Icon name="ImportOutlined" />}
+                        onClick={() => {
+                          okTransferData("override");
+                        }}
+                      >
+                        覆盖导入
+                      </Button>
+                    ) : null}
+                  </>,
+                  <Button
+                    type="primary"
+                    key="console"
+                    icon={<Icon name="ArrowUpOutlined" />}
+                    onClick={() => {
+                      setStepsCurrent(0);
+                      setImportDataId(null);
+                      setErrorList([]);
+                      setImportList([]);
+                    }}
+                  >
+                    返回上一页
+                  </Button>
+                ]}
+              ></Result>
+              <Table columns={importColumns} dataSource={importList} />
+            </>
+          ) : null}
+          {stepsCurrent == 2 ? (
+            <>
+              <Result
+                style={{ padding: 20 }}
+                status="success"
+                title="导入成功"
+                // subTitle={'本次从Excel共读取数据：' + importList.length + '笔，以下只显示了部分数据供用户预览'}
+                extra={[
+                  <Button
+                    type="primary"
+                    key="console"
+                    icon={<Icon name="RollbackOutlined" />}
+                    onClick={() => {
+                      setStepsCurrent(0);
+                      setImportDataId(null);
+                      setErrorList([]);
+                      setImportList([]);
+                    }}
+                  >
+                    返回
+                  </Button>
+                ]}
+              ></Result>
+            </>
+          ) : null}
         </>
-      ) : null}
-      {stepsCurrent == 2 ? (
+      ) : (
         <>
-          <Result
-            style={{ padding: 20 }}
-            status="success"
-            title="导入成功"
-            // subTitle={'本次从Excel共读取数据：' + importList.length + '笔，以下只显示了部分数据供用户预览'}
-            extra={[
-              <Button
-                type="primary"
-                key="console"
-                icon={<Icon name="RollbackOutlined" />}
-                onClick={() => {
-                  setStepsCurrent(0);
-                  setImportDataId(null);
-                  setErrorList([]);
-                  setImportList([]);
-                }}
-              >
-                返回
-              </Button>
-            ]}
-          ></Result>
+          <Skeleton />
+          <Skeleton />
         </>
-      ) : null}
+      )}
     </>
   );
 };
 
-export default UploadExcel;
+export default React.memo(UploadExcel);
