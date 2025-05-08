@@ -1,53 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import TableList from "./TableList";
 import FormPage from "./FormPage";
-// import { useDispatch } from "@/redux";
 
-const FormIndex: React.FC<any> = props => {
-  const [viewType, setViewType] = useState("FormIndex");
+// 定义页面类型枚举
+enum ViewType {
+  INDEX = "FormIndex",
+  PAGE = "FormPage"
+}
+
+/**
+ * 定义组件props类型
+ * @property {string} moduleCode - 模块代码
+ */
+interface FormIndexProps {
+  /**
+   * 模块代码
+   */
+  moduleCode: string;
+}
+
+const FormIndex: React.FC<FormIndexProps> = ({ moduleCode }) => {
+  const [viewType, setViewType] = useState(ViewType.INDEX);
   const [formPageId, setFormPageId] = useState<string>("");
   const [formPageIsView, setFormPageIsView] = useState("Index");
-  const { moduleCode } = props;
-  // const dispatch = useDispatch();
-  // dispatch({
-  //   type: 'smcommon/setTableStatus',
-  //   payload: { moduleCode }
-  // });
-  // let current = <TableList moduleCode={moduleCode} />;
-  // dispatch({
-  //   type: 'smcommon/setCurrent',
-  //   payload: { current, moduleCode }
-  // })
-  // dispatch({
-  //   type: 'smcommon/setModalVisible',
-  //   payload: { moduleCode, visible: false }
-  // });
-  // dispatch({
-  //   type: 'smcommon/setId',
-  //   payload: { moduleCode, id: null }
-  // });
 
-  useEffect(() => {
-    // dispatch(setAuthMenuList(Data));
-  }, []);
-
-  const changePage = (value: any, id: string, isVIew: any) => {
-    if (value == "FormPage") {
-      setViewType(value);
-      setFormPageId(id);
-      setFormPageIsView(isVIew);
-    } else if (value == "FormIndex") {
-      setViewType(value);
-      setFormPageId("");
+  //切换页面处理函数
+  const handlePageChange = (type: ViewType, id: string = "", isView: any) => {
+    setViewType(type);
+    setFormPageId(id);
+    if (type == ViewType.PAGE) {
+      setFormPageIsView(isView);
+    } else if (type == ViewType.INDEX) {
       setFormPageIsView("");
     }
   };
   return (
     <>
-      {viewType == "FormIndex" ? <TableList moduleCode={moduleCode} changePage={changePage} /> : null}
-      {viewType == "FormPage" ? (
-        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={changePage} />
-      ) : null}
+      {viewType === ViewType.INDEX && <TableList moduleCode={moduleCode} changePage={handlePageChange} />}
+      {viewType === ViewType.PAGE && (
+        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={handlePageChange} />
+      )}
     </>
   );
 };
