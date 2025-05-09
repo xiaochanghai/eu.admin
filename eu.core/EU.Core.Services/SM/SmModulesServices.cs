@@ -15,6 +15,9 @@
 *└──────────────────────────────────┘
 */
 
+using MathNet.Numerics.Distributions;
+using SqlSugar;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -803,20 +806,36 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (ids.Any())
         {
             var sb = new StringBuilder();
-            StringBuilder temp;
             DBHelper dBHelper = new();
             foreach (var id in ids)
             {
-                sb.Append($"DELETE FROM SmModuleColumn WHERE SmModuleId='{id}';\n");
-                sb.Append($"DELETE FROM SmModuleSql WHERE ModuleId='{id}';\n");
-                sb.Append($"DELETE FROM SmModules WHERE ID='{id}0';\n");
+                var sql = Db.Deleteable<SmModuleColumn>().Where(it => it.SmModuleId == id).ToSqlString();
+                sb.Append($"{sql};\n");
 
-                temp = dBHelper.GetInsertSql("SmModules", "ID", id);
-                sb.Append(temp.ToString());
-                temp = dBHelper.GetInsertSql("SmModuleColumn", "SmModuleId", id);
-                sb.Append(temp.ToString());
-                temp = dBHelper.GetInsertSql("SmModuleSql", "ModuleId", id);
-                sb.Append(temp.ToString() + "\n");
+                sql = Db.Deleteable<SmModuleSql>().Where(it => it.ModuleId == id).ToSqlString();
+                sb.Append($"{sql};\n");
+
+                sql = Db.Deleteable<SmModules>().Where(it => it.ID == id).ToSqlString();
+                sb.Append($"{sql};\n");
+
+                var module = await Query(id);
+
+                sql = Db.Insertable(module).ToSqlString();
+                sb.Append(sql + "\n");
+
+                var moduleSql = await Db.Queryable<SmModuleSql>().Where(it => it.ModuleId == id).FirstAsync();
+                if (moduleSql != null)
+                {
+                    sql = Db.Insertable(moduleSql).ToSqlString();
+                    sb.Append(sql + "\n");
+                }
+
+                var moduleColumns = await Db.Queryable<SmModuleColumn>().Where(it => it.SmModuleId == id).ToListAsync();
+                if (moduleColumns.Any())
+                {
+                    sql = Db.Insertable(moduleColumns).ToSqlString();
+                    sb.Append(sql + "\n");
+                }
             }
 
             string fileName = $"系统模块_{DateTime.Now.ToSecondString1()}.sql";
@@ -827,17 +846,16 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             FileHelper.WriteFile("wwwroot" + savePath, fileName, sb.ToString());
 
             #region 导入文件数据
-            var di = new DbInsert("FileAttachment");
-            di.IsInitRowId = false;
-            di.Values("ID", fileId);
-            di.Values("OriginalFileName", fileName);
-            di.Values("FileName", fileName);
-            di.Values("FileExt", "sql");
-            di.Values("Path", savePath);
-            await Db.Ado.ExecuteCommandAsync(di.GetSql());
+            var fileAttachment = new FileAttachment()
+            {
+                ID = fileId,
+                OriginalFileName = fileName,
+                FileName = fileName,
+                FileExt = "sql",
+                Path = savePath
+            };
+            await Db.Insertable(fileAttachment).ExecuteCommandAsync();
             #endregion
-
-            //return responseContent.OK("导出成功！", (savePath + "/" + fileName).EncryptDES(AppSetting.Secret.ExportFile));
         }
         return Success(fileId, "导出成功！");
 
