@@ -868,11 +868,11 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     }
 
 
-    public ServiceResult<T> Success<T>(string message = "查询成功")
+    public ServiceResult<T> Success<T>(string message = ResponseText.QUERY_SUCCESS)
     {
         return new ServiceResult<T>() { Success = true, Message = message, Data = default };
     }
-    public ServiceResult<T> Success<T>(T data, string message = "查询成功")
+    public ServiceResult<T> Success<T>(T data, string message = ResponseText.QUERY_SUCCESS)
     {
         return new ServiceResult<T>() { Success = true, Message = message, Data = data };
     }
@@ -881,7 +881,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         return new ServiceResult() { Success = true, Message = message, Data = null };
     }
 
-    public ServiceResult<T> Failed<T>(T data, string message = "查询成功")
+    public ServiceResult<T> Failed<T>(T data, string message = ResponseText.QUERY_SUCCESS)
     {
         return new ServiceResult<T>() { Success = false, Message = message, Data = data };
     }

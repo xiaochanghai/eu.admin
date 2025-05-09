@@ -15,6 +15,7 @@
 *└──────────────────────────────────┘
 */
 using System.Dynamic;
+using EU.Core.Common.Const;
 using EU.Core.DataAccess;
 using ExpressionType = EU.Core.DataAccess.ExpressionType;
 
@@ -78,7 +79,7 @@ public class SmEmployeeController : BaseController<ISmEmployeeServices, SmEmploy
             total = query.Count();
 
             success = true;
-            message = "查询成功！";
+            message = ResponseText.QUERY_SUCCESS;
         }
         catch (Exception E)
         {

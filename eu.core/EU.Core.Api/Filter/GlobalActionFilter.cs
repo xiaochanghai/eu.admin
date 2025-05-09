@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using EU.Core.Common.Const;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace EU.Core.Api.Filter;
 
@@ -242,7 +243,7 @@ public class GlobalActionFilter : ActionFilterAttribute
         }
         if (filterContext.Result is ObjectResult objectResult && objectResult.Value == null)
         {
-            filterContext.Result = new JsonResult(ServiceResult.OprateSuccess("查询成功"));
+            filterContext.Result = new JsonResult(ServiceResult.OprateSuccess(ResponseText.QUERY_SUCCESS));
         }
 
         base.OnResultExecuting(filterContext);

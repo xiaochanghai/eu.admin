@@ -16,6 +16,7 @@
 */
 
 using MathNet.Numerics.Distributions;
+using Org.BouncyCastle.Crypto;
 using SqlSugar;
 
 namespace EU.Core.Services;
@@ -565,7 +566,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             obj.url = module.ApiUrl;//模块名称
             obj.IsShowAudit = module.IsShowAudit;//是否显示审核
-            obj.UserModuleColumn = GetUserModuleColumn(moduleCode, userId);//用户模块列
+            obj.UserModuleColumn = await GetUserModuleColumn(moduleCode);//用户模块列
 
             message = "获取成功！";
         }
@@ -709,19 +710,18 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <param name="moduleCode">模块代码</param>
     /// <param name="userId">用户ID</param>
     /// <returns></returns>
-    public JObject GetUserModuleColumn(string moduleCode, string userId)
+    public async Task<JObject> GetUserModuleColumn(string moduleCode)
     {
+
+        var key = "UserModuleColumn." + moduleCode;
         JObject item = [];
-        var cache = RedisCacheService.Get<List<SmUserModuleColumn>>(userId.ToString(), "UserModuleColumn." + moduleCode);
+        var cache = RedisCacheService.Get<List<SmUserModuleColumn>>(userId, key);
         if (cache == null || (cache != null && !cache.Any()))
         {
-            string sql = @$"SELECT A.* 
-                    FROM SmUserModuleColumn A
-                         JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
-                    WHERE A.IsDeleted = 'false' AND A.UserId = '{userId}' AND B.ModuleCode = '{moduleCode}'";
-            cache = DBHelper.QueryList<SmUserModuleColumn>(sql);
+            cache = await QueryUserModuleColumn(moduleCode);
 
-            RedisCacheService.AddObject(userId.ToString(), "UserModuleColumn." + moduleCode, cache);
+
+            RedisCacheService.AddObject(userId.ToString(), key, cache);
         }
 
         if (cache.Any())
@@ -1154,15 +1154,31 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         }
         await _smUserModuleColumnServices.Add(inserts);
-        string sql = @$"SELECT A.* 
-                    FROM SmUserModuleColumn A
-                         JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
-                    WHERE A.IsDeleted = 'false' AND A.UserId = '{userId}' AND B.ModuleCode = '{module.ModuleCode}'";
-        var cache = DBHelper.QueryList<SmUserModuleColumn>(sql, null);
 
+        var cache = await QueryUserModuleColumn(module.ModuleCode);
         RedisCacheService.AddObject(userId.ToString(), "UserModuleColumn." + module.ModuleCode, cache);
-        return Success("保存成功！");
+        return Success(ResponseText.SAVE_SUCCESS);
     }
+    /// <summary>
+    /// 获取用户模块列数据
+    /// </summary>
+    /// <param name="ModuleCode">模块代码</param>
+    /// <returns></returns>
+    public async Task<List<SmUserModuleColumn>> QueryUserModuleColumn(string moduleCode)
+    {
+        //string sql = @$"SELECT A.* 
+        //            FROM SmUserModuleColumn A
+        //                 JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
+        //            WHERE A.IsDeleted = 'false' AND A.UserId = '{userId}' AND B.ModuleCode = '{moduleCode}'";
+        //var list = DBHelper.QueryList<SmUserModuleColumn>(sql, null);
+
+        var list = await Db.Queryable<SmUserModuleColumn>()
+            .LeftJoin<SmModules>((x, y) => x.SmModuleId == y.ID)
+            .Where((x, y) => UserId == x.UserId && y.ModuleCode == moduleCode)
+            .ToListAsync();
+        return list;
+    }
+
     #endregion
 
     #region 复制模块

@@ -9,62 +9,62 @@ public static class ResponseText
     /// <summary>
     /// 保存成功
     /// </summary>
-    public const string SAVE_SUCCESS = "保存成功";
+    public const string SAVE_SUCCESS = "保存成功！";
 
     /// <summary>
     /// 新增成功
     /// </summary>
-    public const string INSERT_SUCCESS = "新增成功";
+    public const string INSERT_SUCCESS = "新增成功！";
 
 
     /// <summary>
     /// 新增失败
     /// </summary>
-    public const string INSERT_FAIL = "新增失败";
+    public const string INSERT_FAIL = "新增失败！";
 
     /// <summary>
     /// 更新成功
     /// </summary>
-    public const string UPDATE_SUCCESS = "更新成功";
+    public const string UPDATE_SUCCESS = "更新成功！";
     /// <summary>
     /// 更新失败
     /// </summary>
-    public const string UPDATE_FAIL = "更新失败";
+    public const string UPDATE_FAIL = "更新失败！";
 
     /// <summary>
     /// 删除成功
     /// </summary>
-    public const string DELETE_SUCCESS = "删除成功";
+    public const string DELETE_SUCCESS = "删除成功！";
 
     /// <summary>
     /// 删除失败
     /// </summary>
-    public const string DELETE_FAIL = "删除失败";
+    public const string DELETE_FAIL = "删除失败！";
      
     /// <summary>
     /// 审核成功
     /// </summary>
-    public const string AUDIT_SUCCESS = "审核成功";
+    public const string AUDIT_SUCCESS = "审核成功！";
 
     /// <summary>
     /// 审核失败
     /// </summary>
-    public const string AUDIT_FAIL = "审核失败";
+    public const string AUDIT_FAIL = "审核失败！";
 
     /// <summary>
     /// 撤销成功
     /// </summary>
-    public const string REVOCATION_SUCCESS = "撤销成功";
+    public const string REVOCATION_SUCCESS = "撤销成功！";
 
     /// <summary>
     /// 撤销失败
     /// </summary>
-    public const string REVOCATION_FAIL = "撤销失败";
+    public const string REVOCATION_FAIL = "撤销失败！";
 
     /// <summary>
     /// 查询成功
     /// </summary>
-    public const string QUERY_SUCCESS = "查询成功";
+    public const string QUERY_SUCCESS = "查询成功！";
 
     /// <summary>
     /// 查询失败

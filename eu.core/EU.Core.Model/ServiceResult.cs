@@ -58,7 +58,7 @@ public class ServiceResult<T>
     /// <param name="message"></param>
     /// <param name="success"></param>
     /// <returns></returns>
-    public static ServiceResult<T> QuerySuccess(T data = default, string message = "查询成功", bool success = true) => new ServiceResult<T>
+    public static ServiceResult<T> QuerySuccess(T data = default, string message = "查询成功！", bool success = true) => new ServiceResult<T>
     {
         Message = message,
         Success = success,

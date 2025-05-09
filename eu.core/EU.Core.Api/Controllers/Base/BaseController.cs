@@ -100,13 +100,13 @@ public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEdit
     [HttpPost, Route("BulkInsert")]
     public virtual async Task<ServiceResult<List<Guid>>> BulkInsert([FromBody] List<TInsertDto> insertModels)
     {
-        var data = Success<List<Guid>>(null, "新增成功");
+        var data = Success<List<Guid>>(null, ResponseText.INSERT_SUCCESS);
         var ids = await InvokeServiceAsync("Add", [insertModels]) as List<Guid>;
         data.Success = ids.Any();
         if (data.Success)
             data.Data = ids;
         else
-            return Failed<List<Guid>>("新增失败");
+            return Failed<List<Guid>>(ResponseText.INSERT_FAIL);
 
         return data;
     }
