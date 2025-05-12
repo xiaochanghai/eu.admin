@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:31:14  SahHsiao   初版
+* V0.01  2025/5/12 18:20:18  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -65,4 +65,10 @@ public class SmUsers : BasePoco
     /// </summary>
     [Display(Name = "AvatarFileId"), Description("用户头像ID"), SugarColumn(IsNullable = true)]
     public Guid? AvatarFileId { get; set; }
+
+    /// <summary>
+    /// 最近登录时间
+    /// </summary>
+    [Display(Name = "LastLoginTime"), Description("最近登录时间"), SugarColumn(IsNullable = true)]
+    public DateTime? LastLoginTime { get; set; }
 }

@@ -4662,6 +4662,11 @@
             用户头像ID
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmUsersBase.LastLoginTime">
+            <summary>
+            最近登录时间
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmWorkFlowBase">
             <summary>
             工作流 (Dto.Base)
@@ -10210,6 +10215,11 @@
         <member name="P:EU.Core.Model.Entity.SmUsers.AvatarFileId">
             <summary>
             用户头像ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmUsers.LastLoginTime">
+            <summary>
+            最近登录时间
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmWorkFlow">

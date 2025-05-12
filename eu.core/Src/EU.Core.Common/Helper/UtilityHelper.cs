@@ -949,67 +949,61 @@ public static class Utility
         try
         {
 
-            Task.Factory.StartNew(() =>
-            {
+            string ipAddress = string.Empty;
+            string countryName = string.Empty;
+            string cityName = string.Empty;
+            string clientType = string.Empty;
+            string os = string.Empty;
+            if (string.IsNullOrEmpty(companyId))
+                companyId = GetCompanyId();
 
-                string ipAddress = string.Empty;
-                string countryName = string.Empty;
-                string cityName = string.Empty;
-                string clientType = string.Empty;
-                string os = string.Empty;
-                if (string.IsNullOrEmpty(companyId))
-                    companyId = GetCompanyId();
+            ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
 
-                ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+            #region 求IP地址归属地
+            // 定义解析结果信息对象
+            ClientInfo clientInfo = null;
 
-                #region 求IP地址归属地
-                // 定义解析结果信息对象
-                ClientInfo clientInfo = null;
-
-                // 尝试从头部里面获取User-Agent字符串
-                if (HttpUseContext.Current != null)
-                    if (HttpUseContext.Current.Request.Headers.TryGetValue("User-Agent", out var requestUserAgent) && !string.IsNullOrEmpty(requestUserAgent))
-                    {
-                        // 获取UaParser实例
-                        var uaParser = Parser.GetDefault();
-
-                        // 解析User-Agent字符串
-                        clientInfo = uaParser.Parse(requestUserAgent);
-                    }
-
-                if (clientInfo != null)
+            // 尝试从头部里面获取User-Agent字符串
+            if (HttpUseContext.Current != null)
+                if (HttpUseContext.Current.Request.Headers.TryGetValue("User-Agent", out var requestUserAgent) && !string.IsNullOrEmpty(requestUserAgent))
                 {
-                    os = clientInfo.OS.Family + clientInfo.OS.Major;
-                    clientType = clientInfo.UA.Family + clientInfo.UA.Major;
-                    //if (clientType == "Web")
-                    //{
+                    // 获取UaParser实例
+                    var uaParser = Parser.GetDefault();
 
-                    //}
-
+                    // 解析User-Agent字符串
+                    clientInfo = uaParser.Parse(requestUserAgent);
                 }
-                #endregion
 
-                if (ipAddress.IsNotEmptyOrNull())
-                    ipAddress = ipAddress.Replace("::ffff:", null);
+            if (clientInfo != null)
+            {
+                os = clientInfo.OS.Family + clientInfo.OS.Major;
+                clientType = clientInfo.UA.Family + clientInfo.UA.Major;
+                //if (clientType == "Web")
+                //{
 
-                DbInsert di = new("SmEntryLog");
-                di.Values("LoginUserId", userId.ToString());
-                di.Values("IpAddress", ipAddress);
-                di.Values("IpAddressName1", countryName);
-                di.Values("IpAddressName2", cityName);
-                di.Values("LoginDate", GetSysDate());
-                di.Values("LoginClass", loginClass);
-                di.Values("OSName", os);
-                di.Values("ClientType", clientType);
-                di.Values("Remark", remark);
-                DBHelper.ExcuteNonQuery(di.GetSql());
+                //}
 
-            });
+            }
+            #endregion
 
-            //DbUpdate du = new DbUpdate("SM_USER", "ROW_ID", userId);
-            //du.IsInitDefaultValue = false;
-            //du.SetCompute("LOGIN_TIMES_STAT", "LOGIN_TIMES_STAT+1");
-            //DBHelper.Instance.ExcuteNonQuery(du.GetSql());
+            if (ipAddress.IsNotEmptyOrNull())
+                ipAddress = ipAddress.Replace("::ffff:", null);
+
+            DbInsert di = new("SmEntryLog");
+            di.Values("LoginUserId", userId.ToString());
+            di.Values("IpAddress", ipAddress);
+            di.Values("IpAddressName1", countryName);
+            di.Values("IpAddressName2", cityName);
+            di.Values("LoginDate", GetSysDate());
+            di.Values("LoginClass", loginClass);
+            di.Values("OSName", os);
+            di.Values("ClientType", clientType);
+            di.Values("Remark", remark);
+            DBHelper.ExecuteDML(di.GetSql());
+
+            var du = new DbUpdate("SmUsers", "ID", userId);
+            du.Set("LastLoginTime", GetSysDate());
+            DBHelper.ExecuteDML(du.GetSql());
         }
         catch (Exception)
         {
