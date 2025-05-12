@@ -14,9 +14,6 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
-
-using SqlSugar;
-
 namespace EU.Core.Services;
 
 /// <summary>
@@ -35,12 +32,10 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         ISmRoleFunctionServices smRoleFunctionServices,
         ISmUserModuleColumnServices smUserModuleColumnServices,
         ISmRolesServices smRolesServices,
-        DataContext context,
         ISmModuleColumnServices smModuleColumnServices)
     {
         this._dal = dal;
         base.BaseDal = dal;
-        base._context = context;
         _smRoleFunctionServices = smRoleFunctionServices;
         _smUserModuleColumnServices = smUserModuleColumnServices;
         _smRolesServices = smRolesServices;
@@ -52,8 +47,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     {
 
         var entity1 = ConvertToEntity(entity);
-        if (entity1.OpenType is null)
-            entity1.OpenType = "Drawer";
+        entity1.OpenType = entity1.OpenType ?? "Drawer";
         var id = await base.Add(ConvertToString(entity1));
 
         ModuleInfo.Init();
@@ -249,15 +243,31 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             //    .ToList();
 
             var roleModule = new List<SmModules>();
-            string sql = @"SELECT DISTINCT C.*
-                                    FROM SmRoleModule A
-                                         JOIN SmUserRole_V B
-                                            ON     A.SmRoleId = B.SmRoleId
-                                               AND B.SmUserId = '{0}'
-                                         JOIN SmModules C ON A.SmModuleId = C.ID AND C.IsDeleted = 'false' AND C.BelongModuleId IS NULL
-                                    WHERE A.IsDeleted = 'false'";
-            sql = string.Format(sql, userId);
-            roleModule = await Db.Ado.SqlQueryAsync<SmModules>(sql);
+
+            var roleIds = await Db.Queryable<SmUserRole>()
+                .Where(x => x.SmUserId != null && x.SmRoleId != null && x.SmUserId == UserId)
+                .Select(x => x.SmRoleId)
+                .Distinct()
+                .ToListAsync();
+            var moduleIds = await Db.Queryable<SmRoleModule>()
+                .Where(x => x.SmRoleId != null && roleIds.Contains(x.SmRoleId))
+                .Select(x => x.SmModuleId)
+                .Distinct()
+                .ToListAsync();
+
+            roleModule = await Db.Queryable<SmModules>()
+             .Where(x => moduleIds.Contains(x.ID) && x.BelongModuleId == null)
+             .ToListAsync();
+
+            //string sql = @"SELECT DISTINCT C.*
+            //                        FROM SmRoleModule A
+            //                             JOIN SmUserRole_V B
+            //                                ON     A.SmRoleId = B.SmRoleId
+            //                                   AND B.SmUserId = '{0}'
+            //                             JOIN SmModules C ON A.SmModuleId = C.ID AND C.IsDeleted = 'false' AND C.BelongModuleId IS NULL
+            //                        WHERE A.IsDeleted = 'false'";
+            //sql = string.Format(sql, userId);
+            //roleModule = await Db.Ado.SqlQueryAsync<SmModules>(sql);
 
             var smRoleList = new List<Guid?>();
             LoopGetRoleModule(roleModule, smRoleList);//递归获取有权限的子模块的上级目录
@@ -599,7 +609,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         var data = moduleColumns;
         if ((moduleColumns != null && !moduleColumns.Any()) || moduleColumns == null)
         {
-            var data1 = _context.SmModuleColumn.AsNoTracking().Where(x => x.SmModuleId == moduleId && x.IsDeleted == false).OrderBy(x => x.TaxisNo).ToList();
+            var data1 = Db.Queryable<SmModuleColumn>()
+                .Where(x => x.SmModuleId == moduleId && x.IsDeleted == false)
+                .OrderBy(x => x.TaxisNo).ToList();
             data = Mapper.Map(data1).ToANew<List<SmModuleColumnExtend>>();
         }
 
@@ -717,7 +729,6 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (cache == null || (cache != null && !cache.Any()))
         {
             cache = await QueryUserModuleColumn(moduleCode);
-
 
             RedisCacheService.AddObject(userId.ToString(), key, cache);
         }
@@ -857,77 +868,6 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
         return Success(fileId, "导出成功！");
 
-    }
-    #endregion
-
-    #region App.js动态加载路由
-    /// <summary>
-    /// App.js动态加载路由
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    public async Task<ServiceResult<List<TreeMenuData>>> GetPatchRoutes()
-    {
-        var _menus = RedisCacheService.Get<List<TreeMenuData>>(App.User.ID.ToString(), "UserPatchRoutes");
-        if ((_menus != null && !_menus.Any()) || _menus is null)
-        {
-            var moduleIds = new List<Guid>();
-            var modules = new List<SmModules>();
-            string sql = @"SELECT DISTINCT C.ID
-                                    FROM SmRoleModule A
-                                         JOIN SmUserRole_V B
-                                            ON     A.SmRoleId = B.SmRoleId
-                                               AND B.SmUserId = '{0}'
-                                         JOIN SmModules C ON A.SmModuleId = C.ID AND C.IsDeleted = 'false' AND C.BelongModuleId IS NULL
-                                    WHERE A.IsDeleted = 'false'";
-            sql = string.Format(sql, App.User.ID);
-            modules = await Db.Ado.SqlQueryAsync<SmModules>(sql);
-            moduleIds = modules.Select(o => o.ID).ToList();
-
-            var moduleList = ModuleInfo.GetModuleList();
-            var TreeMenuData = moduleList.Where(x => x.IsActive == true && x.IsParent == false && x.IsDetail != true && moduleIds.Contains(x.ID) && !string.IsNullOrEmpty(x.RoutePath))
-                .Select(x => new TreeMenuData
-                {
-                    id = x.ID.ToString(),
-                    path = x.RoutePath,
-                    name = x.ModuleName,
-                    icon = x.Icon,
-                    component = x.RoutePath,
-                    moduleCode = x.ModuleCode
-                }).ToList();
-            TreeMenuData.Add(new TreeMenuData
-            {
-                id = Guid.NewGuid().ToString(),
-                path = "/account/settings",
-                name = "个人设置",
-                component = "/account/settings"
-            });
-            TreeMenuData.Add(new TreeMenuData
-            {
-                id = Guid.NewGuid().ToString(),
-                path = "/",
-                name = "首页",
-                redirect = "/welcome"
-            });
-            TreeMenuData.Add(new TreeMenuData
-            {
-                id = Guid.NewGuid().ToString(),
-                path = "/404",
-                name = "404",
-                component = "/404"
-            });
-            TreeMenuData.Add(new TreeMenuData
-            {
-                id = Guid.NewGuid().ToString(),
-                path = "/welcome",
-                name = "首页",
-                component = "/dashboard/analysis"
-            });
-            RedisCacheService.AddObject(App.User.ID.ToString(), "UserPatchRoutes", TreeMenuData);
-            _menus = TreeMenuData; ;
-        }
-
-        return Success<List<TreeMenuData>>(_menus);
     }
     #endregion
 
