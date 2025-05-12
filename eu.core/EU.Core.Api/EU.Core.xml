@@ -1417,12 +1417,6 @@
             <param name="ids">模块ID列表</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetPatchRoutes">
-            <summary>
-            App.js动态加载路由
-            </summary>
-            <returns></returns>
-        </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.UpdateTaxisNoAsync(System.String,System.Collections.Generic.List{EU.Core.Model.Entity.SmModuleColumn},System.String)">
             <summary>
             更新模块表单列排序号
@@ -1502,7 +1496,7 @@
         </member>
         <member name="T:EU.Core.Api.Controllers.SmRoleFunctionController">
             <summary>
-            功能定义 (Controller)
+            角色功能权限 (Controller)
             </summary>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetModuleFunction(System.Guid,System.Guid)">

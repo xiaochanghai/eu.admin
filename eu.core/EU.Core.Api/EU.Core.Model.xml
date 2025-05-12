@@ -4479,7 +4479,7 @@
         </member>
         <member name="T:EU.Core.Model.Base.SmRoleFunctionBase">
             <summary>
-            用户功能权限 (Dto.Base)
+            角色功能权限 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmRoleFunctionBase.SmRoleId">
@@ -5519,7 +5519,7 @@
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmRoleFunctionInput">
             <summary>
-            SmRoleFunction (Dto.EditInput)
+            角色功能权限 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmRoleModuleInput">
@@ -10029,7 +10029,7 @@
         </member>
         <member name="T:EU.Core.Model.Entity.SmRoleFunction">
             <summary>
-            用户功能权限 (Model)
+            角色功能权限 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmRoleFunction.SmRoleId">
@@ -11577,7 +11577,7 @@
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmRoleFunctionInput">
             <summary>
-            SmRoleFunction (Dto.InsertInput)
+            角色功能权限 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmRoleModuleInput">
@@ -12020,9 +12020,14 @@
             Type Description balabala
             </summary>
         </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.SmRoleFunctionExtend">
+            <summary>
+            角色功能权限
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.ViewModels.Extend.SmRoleFunctionExtend.SmFunctionId">
             <summary>
-            SmFunctionId
+            功能权限ID
             </summary>
         </member>
         <member name="P:EU.Core.Model.ViewModels.Extend.SmRoleFunctionExtend.NoActionCode">

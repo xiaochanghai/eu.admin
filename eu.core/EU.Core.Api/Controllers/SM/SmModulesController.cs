@@ -97,15 +97,6 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     public async Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids) => await _service.ExportModuleSqlScript(ids);
     #endregion
 
-    #region App.js动态加载路由
-    /// <summary>
-    /// App.js动态加载路由
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet, Route("GetPatchRoutes")]
-    public async Task<ServiceResult<List<TreeMenuData>>> GetPatchRoutes() => await _service.GetPatchRoutes();
-    #endregion
-
     #region 更新模块表单列排序号
     /// <summary>
     /// 更新模块表单列排序号

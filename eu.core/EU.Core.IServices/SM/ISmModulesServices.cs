@@ -32,7 +32,6 @@ public interface ISmModulesServices : IBaseServices<SmModules, SmModulesDto, Ins
 
     Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids);
 
-    Task<ServiceResult<List<TreeMenuData>>> GetPatchRoutes();
     Task<ServiceResult> RecordUserModuleColumn(Guid smModuleId, JObject param);
 
     Task<ServiceResult<List<TreeAuthMenu>>> GetAuthMenu();

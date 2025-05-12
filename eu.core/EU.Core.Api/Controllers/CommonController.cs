@@ -206,6 +206,7 @@ public class CommonController : Controller
         //var aa = Guid.NewGuid().ToString("N");
         //var aa1 = Guid.NewGuid();
         DBSeed.MigrationLogs1(_myContext);
+ 
 
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 
