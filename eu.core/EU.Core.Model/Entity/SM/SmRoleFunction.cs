@@ -18,9 +18,9 @@
 namespace EU.Core.Model.Entity;
 
 /// <summary>
-/// 用户功能权限 (Model)
+/// 角色功能权限 (Model)
 /// </summary>
-[SugarTable("SmRoleFunction", "用户功能权限"), Entity(TableCnName = "用户功能权限", TableName = "SmRoleFunction")]
+[SugarTable("SmRoleFunction", "角色功能权限"), Entity(TableCnName = "角色功能权限", TableName = "SmRoleFunction")]
 public class SmRoleFunction : BasePoco
 {
 

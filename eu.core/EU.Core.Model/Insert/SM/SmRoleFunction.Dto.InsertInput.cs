@@ -18,7 +18,7 @@
 namespace EU.Core.Model.Insert;
 
 /// <summary>
-/// SmRoleFunction (Dto.InsertInput)
+/// 角色功能权限 (Dto.InsertInput)
 /// </summary>
 public class InsertSmRoleFunctionInput : SmRoleFunctionBase
 {

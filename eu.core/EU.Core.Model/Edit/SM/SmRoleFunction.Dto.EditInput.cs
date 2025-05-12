@@ -19,7 +19,7 @@ namespace EU.Core.Model.Edit;
 
 
 /// <summary>
-/// SmRoleFunction (Dto.EditInput)
+/// 角色功能权限 (Dto.EditInput)
 /// </summary>
 public class EditSmRoleFunctionInput : SmRoleFunctionBase
 {

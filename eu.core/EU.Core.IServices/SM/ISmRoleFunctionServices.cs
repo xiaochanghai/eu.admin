@@ -17,7 +17,7 @@
 namespace EU.Core.IServices;
 
 /// <summary>
-/// SmRoleFunction(自定义服务接口)
+/// 角色功能权限 (自定义服务接口)
 /// </summary>	
 public interface ISmRoleFunctionServices : IBaseServices<SmRoleFunction, SmRoleFunctionDto, InsertSmRoleFunctionInput, EditSmRoleFunctionInput>
 {

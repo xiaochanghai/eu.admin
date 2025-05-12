@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
+﻿namespace EU.Core.Model.ViewModels.Extend;
 
-namespace EU.Core.Model.ViewModels.Extend;
-
+/// <summary>
+/// 角色功能权限
+/// </summary>
 public class SmRoleFunctionExtend
 {
     /// <summary>
-    /// SmFunctionId
+    /// 功能权限ID
     /// </summary>
     public Guid? SmFunctionId { get; set; }
 
@@ -24,7 +24,7 @@ public class SmRoleFunctionExtend
     /// <summary>
     /// 操作代码
     /// </summary>
-    [Display(Name = "ActionCode"), Description("操作代码"), MaxLength(-1, ErrorMessage = "操作代码 不能超过 32 个字符")]
+    [Display(Name = "ActionCode"), Description("操作代码"), MaxLength(32, ErrorMessage = "操作代码 不能超过 32 个字符")]
     public string ActionCode { get; set; }
 
 

@@ -18,7 +18,7 @@
 namespace EU.Core.Services;
 
 /// <summary>
-/// SmRoleFunction (服务)
+/// 角色功能权限 (服务)
 /// </summary>
 public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctionDto, InsertSmRoleFunctionInput, EditSmRoleFunctionInput>, ISmRoleFunctionServices
 {
@@ -29,7 +29,12 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
         base.BaseDal = dal;
         base._context = context;
     }
-
+    #region 获取模块功能权限
+    /// 获取模块功能权限
+    /// </summary>
+    /// <param name="roleId">角色ID</param>
+    /// <param name="moduleId">模块ID</param>
+    /// <returns></returns>
     public async Task<ServiceResult<dynamic>> GetModuleFunction(Guid roleId, Guid moduleId)
     {
         dynamic data = new ExpandoObject();
@@ -54,7 +59,14 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
         return ServiceResult<dynamic>.OprateSuccess(data, ResponseText.QUERY_SUCCESS);
 
     }
+    #endregion
 
+    #region 保存
+    /// <summary>
+    /// 保存
+    /// </summary>
+    /// <param name="roleFuncVm"></param>
+    /// <returns></returns>
     public async Task<ServiceResult> SaveModuleFunction(RoleFuncVM roleFuncVm)
     {
         var adds = new List<InsertSmRoleFunctionInput>();
@@ -82,6 +94,7 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
         return Success(ResponseText.UPDATE_SUCCESS);
 
     }
+    #endregion
 
     public async Task<ServiceResult<List<Guid?>>> GetRoleFuncPriv(Guid RoleId)
     {
@@ -89,8 +102,13 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
                 .Where(x => x.IsDeleted == false && x.SmRoleId == RoleId && x.SmFunctionId != null)
                 .Select(y => y.SmFunctionId).ToListAsync();
         return ServiceResult<List<Guid?>>.OprateSuccess(ids, ResponseText.QUERY_SUCCESS, ids.Count);
-    }
+    } 
 
+    #region 获取
+    /// <summary>
+    /// 获取
+    /// </summary>
+    /// <returns></returns>
     public async Task<ServiceResult<DataTree>> GetAllFuncPriv()
     {
         var roleTree = new DataTree();
@@ -119,6 +137,7 @@ public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctio
 
         return Success(roleTree, ResponseText.QUERY_SUCCESS);
     }
+    #endregion
 
     public async Task<ServiceResult> SaveRoleFuncPriv(RoleFuncPric roleFuncPric)
     {

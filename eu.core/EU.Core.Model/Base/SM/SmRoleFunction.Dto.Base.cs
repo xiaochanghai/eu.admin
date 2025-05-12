@@ -18,7 +18,7 @@
 namespace EU.Core.Model.Base;
 
 /// <summary>
-/// 用户功能权限 (Dto.Base)
+/// 角色功能权限 (Dto.Base)
 /// </summary>
 public class SmRoleFunctionBase : BasePoco
 {

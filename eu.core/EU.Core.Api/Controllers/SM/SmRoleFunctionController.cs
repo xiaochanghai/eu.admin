@@ -19,7 +19,7 @@ using EU.Core.Common.Caches;
 namespace EU.Core.Api.Controllers;
 
 /// <summary>
-/// 功能定义 (Controller)
+/// 角色功能权限 (Controller)
 /// </summary>
 [Route("api/[controller]")]
 [ApiController, GlobalActionFilter]
