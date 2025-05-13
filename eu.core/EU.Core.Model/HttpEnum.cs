@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace EU.Core.Model;
 
-namespace EU.Core.Model
+public enum HttpEnum
 {
-    public enum HttpEnum
-    {
-        Common,
-        LocalHost
-    }
+    Common,
+    LocalHost
 }

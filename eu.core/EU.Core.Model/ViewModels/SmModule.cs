@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using EU.Core.Model.Models;
 
 namespace EU.Core.Model;
 

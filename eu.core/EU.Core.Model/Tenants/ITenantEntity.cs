@@ -1,6 +1,4 @@
-﻿using SqlSugar;
-
-namespace EU.Core.Model.Tenants;
+﻿namespace EU.Core.Model.Tenants;
 
 /// <summary>
 /// 租户模型接口

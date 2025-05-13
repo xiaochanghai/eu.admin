@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace EU.Core.Model.Tenants;
+﻿namespace EU.Core.Model.Tenants;
 
 /// <summary>
 /// 标识 多租户 的业务表 <br/>

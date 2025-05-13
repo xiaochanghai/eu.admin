@@ -21,6 +21,10 @@ public class ServiceResult<T>
     /// 开发者信息
     /// </summary>
     public string MessageDev { get; set; }
+
+    /// <summary>
+    /// 数量
+    /// </summary>
     public int Count { get; set; }
     /// <summary>
     /// 返回数据集合

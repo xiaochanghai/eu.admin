@@ -1,6 +1,4 @@
-﻿using EU.Core.Model.Models;
-
-namespace EU.Core.Model;
+﻿namespace EU.Core.Model;
 
 
 public class LoginRequest

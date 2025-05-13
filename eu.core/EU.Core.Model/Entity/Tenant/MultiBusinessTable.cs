@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using EU.Core.Model.Models.RootTkey;
+﻿using EU.Core.Model.Models.RootTkey;
 using EU.Core.Model.Tenants;
-using SqlSugar;
 
 namespace EU.Core.Model.Models;
 

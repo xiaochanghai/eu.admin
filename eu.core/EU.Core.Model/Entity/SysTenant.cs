@@ -1,5 +1,4 @@
 ﻿using EU.Core.Model.Tenants;
-using SqlSugar;
 
 namespace EU.Core.Model.Models;
 

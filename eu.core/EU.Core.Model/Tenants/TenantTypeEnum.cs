@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace EU.Core.Model.Tenants;
+﻿namespace EU.Core.Model.Tenants;
 
 /// <summary>
 /// 租户隔离方案

@@ -1,6 +1,4 @@
-﻿using SqlSugar;
-
-namespace EU.Core.Model.Systems.DataBase;
+﻿namespace EU.Core.Model.Systems.DataBase;
 
 public class DatabaseOutput
 {
