@@ -3,9 +3,11 @@ using System.Text;
 using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
+using EU.Core.Common.Https;
 using EU.Core.Common.Module;
 using EU.Core.Model;
 using EU.Core.Model.Models;
+using EU.Core.Model.ViewModels;
 using EU.Core.Module;
 using Newtonsoft.Json;
 using SqlSugar;
@@ -944,7 +946,7 @@ public static class Utility
     /// <param name="loginClass">登录类型</param>
     /// <param name="remark">备注</param>
     /// <param name="companyId">公司id</param>
-    public static void RecordEntryLog(Guid userId, string loginClass, string remark = null, string companyId = null)
+    public static async void RecordEntryLog(Guid userId, string loginClass, string remark = null, string companyId = null)
     {
         try
         {
@@ -990,6 +992,18 @@ public static class Utility
                 ipAddress = ipAddress.Replace("::ffff:", null);
 
             DbInsert di = new("SmEntryLog");
+            if (ipAddress.IsNotEmptyOrNull() && ipAddress != "127.0.0.1")
+            {
+                var request = new RequestUtility();
+                var result = await request.Get<IPLocation>("https://ip9.com.cn/get?ip=114.216.248.84");
+
+                if (result.Success)
+                {
+                    di.Values("IpAddressName1", result.Data.data.country + result.Data.data.prov + result.Data.data.city);
+                }
+            }
+
+
             di.Values("LoginUserId", userId.ToString());
             di.Values("IpAddress", ipAddress);
             di.Values("IpAddressName1", countryName);
@@ -1000,6 +1014,7 @@ public static class Utility
             di.Values("ClientType", clientType);
             di.Values("Remark", remark);
             DBHelper.ExecuteDML(di.GetSql());
+
 
             var du = new DbUpdate("SmUsers", "ID", userId);
             du.Set("LastLoginTime", GetSysDate());
