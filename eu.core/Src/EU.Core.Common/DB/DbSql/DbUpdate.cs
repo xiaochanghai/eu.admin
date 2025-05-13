@@ -59,6 +59,12 @@ public class DbUpdate
         sqlTag = "SELECT TAG FROM {0} WHERE {1} = N'{2}'";
         sqlTag = string.Format(sqlTag, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
     }
+    public DbUpdate(string tableName, string fieldName, Guid fieldValue)
+    {
+        sql = $"UPDATE {tableName.ToUpper()} SET WHERE {fieldName.ToUpper()} = N'{fieldValue}'";
+        sqlTag = "SELECT TAG FROM {0} WHERE {1} = N'{2}'";
+        sqlTag = string.Format(sqlTag, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+    }
     public DbUpdate(string tableName, string fieldName, string fieldValue, string updateProgram)
     {
         sql = "UPDATE {0} SET WHERE {1} = N'{2}'";
@@ -164,6 +170,7 @@ public class DbUpdate
 
         inset(fieldName.ToUpper(), s);
     }
+   
     /// <summary>
     /// 设置计算类型的更新，如SetCompute("TAG","TAG+1")
     /// </summary>
