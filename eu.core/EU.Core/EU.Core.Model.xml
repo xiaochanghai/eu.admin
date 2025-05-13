@@ -11736,6 +11736,11 @@
             开发者信息
             </summary>
         </member>
+        <member name="P:EU.Core.Model.ServiceResult`1.Count">
+            <summary>
+            数量
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.ServiceResult`1.Data">
             <summary>
             返回数据集合
@@ -12018,11 +12023,6 @@
         <member name="P:EU.Core.Model.ViewModels.ServerViewModel.WorkingTime">
             <summary>
             启动时间
-            </summary>
-        </member>
-        <member name="T:EU.Core.Model.ViewModels.SidebarMenuViewModel">
-            <summary>
-            菜单展示model
             </summary>
         </member>
         <member name="T:EU.Core.Model.ViewModels.TaskInfoDto">

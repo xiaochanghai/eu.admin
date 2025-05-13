@@ -995,7 +995,7 @@ public static class Utility
             if (ipAddress.IsNotEmptyOrNull() && ipAddress != "127.0.0.1")
             {
                 var request = new RequestUtility();
-                var result = await request.Get<IPLocation>("https://ip9.com.cn/get?ip=114.216.248.84");
+                var result = await request.Get<IPLocation>("https://ip9.com.cn/get?ip=" + ipAddress);
 
                 if (result.Success)
                 {
