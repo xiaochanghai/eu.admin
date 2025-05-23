@@ -156,9 +156,11 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
             #region 记录用户登录日志
             var isDevelopment = _hostingEnvironment.IsDevelopment();
+
+            var platform = App.User.GetPlatform();
             if (!isDevelopment)
             {
-                Task task = new Task(() => Utility.RecordEntryLog(User.ID, "UserLogin"));
+                Task task = new Task(() => Utility.RecordEntryLog(User.ID, platform ?? "Web"));
                 task.Start();
             }
             #endregion

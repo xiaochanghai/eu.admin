@@ -76,6 +76,15 @@ public class AspNetUser : IUser
         return token;
     }
 
+    public string GetPlatform()
+    {
+        var platform = _accessor.HttpContext?.Request?.Headers["Platform"].ObjToString();
+        if (!platform.IsNullOrEmpty())
+            return platform;
+
+        return null;
+    }
+
     public List<string> GetUserInfoFromToken(string ClaimType)
     {
         var jwtHandler = new JwtSecurityTokenHandler();
@@ -88,8 +97,8 @@ public class AspNetUser : IUser
             JwtSecurityToken jwtToken = jwtHandler.ReadJwtToken(token);
 
             return (from item in jwtToken.Claims
-                where item.Type == ClaimType
-                select item.Value).ToList();
+                    where item.Type == ClaimType
+                    select item.Value).ToList();
         }
 
         return new List<string>() { };
@@ -131,7 +140,7 @@ public class AspNetUser : IUser
     public List<string> GetClaimValueByType(string ClaimType)
     {
         return (from item in GetClaimsIdentity()
-            where item.Type == ClaimType
-            select item.Value).ToList();
+                where item.Type == ClaimType
+                select item.Value).ToList();
     }
 }

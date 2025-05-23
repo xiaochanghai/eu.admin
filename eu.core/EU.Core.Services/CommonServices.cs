@@ -146,7 +146,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         #region 处理关键字搜索
         if (!string.IsNullOrEmpty(keyWordCondition))
-            SqlDefaultCondition += " AND (" + keyWordCondition + ")";
+            SqlDefaultCondition += $" AND ({keyWordCondition})";
         #endregion
 
         //SqlDefaultCondition = SqlDefaultCondition.Replace("[UserId]", userId);
@@ -305,13 +305,12 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             foreach (var item in filter.sorter)
             {
                 grid.SortField = item.Key;
-                grid.SortDirection = item.Value == "ascend" ? "ASC" : "DESC";
-                //grid.SortDirection = item.Value switch
-                //{
-                //    "ascend" => "ASC",
-                //    "descend" => "DESC",
-                //    _ => "ASC"
-                //};
+                //grid.SortDirection = item.Value == "ascend" ? "ASC" : "DESC";
+                grid.SortDirection = item.Value switch
+                {
+                    "ascend" => "ASC",
+                    _ => "DESC"
+                };
             }
         #endregion
 

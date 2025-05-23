@@ -13,6 +13,7 @@ public interface IUser
     List<string> GetClaimValueByType(string ClaimType);
 
     string GetToken();
+    string GetPlatform();
     List<string> GetUserInfoFromToken(string ClaimType);
 
     ServiceResult<string> MessageModel { get; set; }
