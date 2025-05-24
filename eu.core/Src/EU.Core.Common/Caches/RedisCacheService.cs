@@ -148,6 +148,19 @@ public class RedisCacheService
         key = _redisKeyPrefix + key;
         return _cache.KeyDelete(key);
     }
+
+    /// <summary>
+    /// 删除缓存
+    /// </summary>
+    /// <param name="key">缓存Key</param>
+    /// <returns></returns>
+    public bool Remove(Guid? key)
+    {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key));
+        var key1 = key.ObjToString();
+        return Remove(key1);
+    }
     /// <summary>
     /// 批量删除缓存
     /// </summary>
@@ -177,6 +190,9 @@ public class RedisCacheService
     }
     public T Get<T>(Guid? key) where T : class
     {
+        if (key is null)
+            return null;
+
         return Get<T>(key.ObjToString());
     }
     /// <summary>
@@ -278,7 +294,13 @@ public class RedisCacheService
     public bool AddObject(string key, object value, TimeSpan? expiresIn = null, bool isSliding = false)
     {
         return _cache.StringSet(_redisKeyPrefix + key, JsonConvert.SerializeObject(value), expiresIn);
+    }
 
+    public bool AddObject(Guid? key, object value, TimeSpan? expiresIn = null, bool isSliding = false)
+    {
+        if (key is null)
+            return false;
+        return AddObject(key.ObjToString(), value, expiresIn, isSliding);
     }
 
     /// <summary>
@@ -292,7 +314,6 @@ public class RedisCacheService
     public bool Add(string key, string value, TimeSpan? expiresIn = null, bool isSliding = false)
     {
         return _cache.StringSet(_redisKeyPrefix + key, value, expiresIn);
-
     }
 
     /// <summary>
@@ -326,7 +347,6 @@ public class RedisCacheService
     public async Task<bool> AddAsync(string key, string hashField, string value)
     {
         return await _cache.HashSetAsync(_redisKeyPrefix + key, hashField, value);
-
     }
 
     /// <summary>

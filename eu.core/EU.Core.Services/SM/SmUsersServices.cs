@@ -104,8 +104,8 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     {
         var result = await base.Update(Id, entity);
         var user = await Query(Id);
-        Redis.Remove(Id.ObjToString());
-        Redis.AddObject(Id.ObjToString(), user, new(1, 0, 0));
+        Redis.Remove(Id);
+        Redis.AddObject(Id, user, new(1, 0, 0));
         return result;
     }
     #endregion
@@ -119,8 +119,8 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         if (user != null)
         {
             var User = user;
-            Redis.Remove(User.ID.ToString());
-            Redis.AddObject(User.ID.ToString(), User, new(1, 0, 0));
+            Redis.Remove(User.ID);
+            Redis.AddObject(User.ID, User, new(1, 0, 0));
 
             var claims = new List<Claim>
             {
@@ -182,11 +182,11 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         if (UserId != null && UserId != Guid.Empty)
         {
             var result = new CurrentUser();
-            var user = Redis.Get<SmUsers>(UserId.ToString());
+            var user = Redis.Get<SmUsers>(UserId);
             if (user == null)
             {
                 user = await QueryDto(UserId);
-                Redis.AddObject(UserId.ToString(), user, new(1, 0, 0));
+                Redis.AddObject(UserId, user, new(1, 0, 0));
             }
             result.UserName = user.UserName;
             result.UserId = user.ID;
