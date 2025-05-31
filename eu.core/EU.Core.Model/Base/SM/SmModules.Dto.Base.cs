@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:59  SahHsiao   初版
+* V0.01  2025/5/31 22:55:40  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -186,8 +186,8 @@ public class SmModulesBase : BasePoco
     public string Element { get; set; }
 
     /// <summary>
-    /// ID1
+    /// 是否全屏
     /// </summary>
-    [Display(Name = "ID1"), Description("ID1")]
-    public Guid? ID1 { get; set; }
+    [Display(Name = "IsFull"), Description("是否全屏")]
+    public bool? IsFull { get; set; }
 }

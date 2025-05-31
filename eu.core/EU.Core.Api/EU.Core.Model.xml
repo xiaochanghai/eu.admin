@@ -4217,9 +4217,9 @@
             路由文件地址
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Base.SmModulesBase.ID1">
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsFull">
             <summary>
-            ID1
+            是否全屏
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
@@ -9772,9 +9772,9 @@
             路由文件地址
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Entity.SmModules.ID1">
+        <member name="P:EU.Core.Model.Entity.SmModules.IsFull">
             <summary>
-            ID1
+            是否全屏
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">

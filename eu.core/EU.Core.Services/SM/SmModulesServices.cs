@@ -119,6 +119,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = y.ModuleCode,
                     icon = y.Icon,
                     title = y.ModuleName,
+                    isFull = y.IsFull == true ? true : false,
                     isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                 }
             }).ToList();
@@ -135,6 +136,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = y.ModuleCode,
                     icon = y.Icon,
                     title = y.ModuleName,
+                    isFull = y.IsFull == true ? true : false,
                     isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                 }
             }).ToList();

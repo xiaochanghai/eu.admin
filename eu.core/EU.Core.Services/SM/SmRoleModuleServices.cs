@@ -266,13 +266,25 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         }
         if (moduleTree.isLeaf == true)
         {
-            var functionData = dict.ToList().Select(x =>
-                    new ModuleTree
-                    {
-                        key = "CommonOption_" + x.Key + "_" + moduleTree.key,
-                        title = x.Value,
-                        isLeaf = true
-                    }).ToList();
+            var actions = dict.ToList();
+            var module = smModules.Where(x => x.ID == Guid.Parse(moduleTree.key)).First();
+            if (module.IsShowAdd != true)
+                actions = actions.Where(x => x.Key != "Add").ToList();
+            if (module.IsShowUpdate != true)
+                actions = actions.Where(x => x.Key != "Update").ToList();
+            if (module.IsShowDelete != true)
+                actions = actions.Where(x => x.Key != "Delete").ToList();
+            if (module.IsShowBatchDelete != true)
+                actions = actions.Where(x => x.Key != "BatchDelete").ToList();
+
+            var functionData = actions.Select(x =>
+                new ModuleTree
+                {
+                    key = "CommonOption_" + x.Key + "_" + moduleTree.key,
+                    title = x.Value,
+                    isLeaf = true
+                }).ToList();
+
             moduleTree.children = functionData;
             if (functionPrivileges.Any(o => o.SmModuleId != null && o.SmModuleId.ToString() == moduleTree.key))
             {
