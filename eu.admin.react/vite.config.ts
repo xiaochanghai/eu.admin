@@ -39,8 +39,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     plugins: createVitePlugins(viteEnv, __APP_INFO__.lastBuildTime),
     esbuild: {
-      // pure: viteEnv.VITE_DROP_CONSOLE ? ["console.log", "debugger"] : []
-      drop: ["console", "debugger"]
+      drop: viteEnv.VITE_DROP_CONSOLE ? ["console", "debugger"] : []
     },
     build: {
       outDir: "dist",
