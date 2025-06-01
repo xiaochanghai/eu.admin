@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import TableList from "./TableList";
 import FormPage from "./FormPage";
-
-// 定义页面类型枚举
-enum ViewType {
-  INDEX = "FormIndex",
-  PAGE = "FormPage"
-}
+import { ViewType } from "@/typings";
 
 /**
  * 定义组件props类型
@@ -25,12 +20,12 @@ const FormIndex: React.FC<FormIndexProps> = ({ moduleCode }) => {
   const [formPageIsView, setFormPageIsView] = useState("Index");
 
   //切换页面处理函数
-  const handlePageChange = (type: ViewType, id: string = "", isView: any) => {
-    setViewType(type);
+  const handlePageChange = (page: ViewType, id: string = "", isView: any) => {
+    setViewType(page);
     setFormPageId(id);
-    if (type == ViewType.PAGE) {
+    if (page == ViewType.PAGE) {
       setFormPageIsView(isView);
-    } else if (type == ViewType.INDEX) {
+    } else if (page == ViewType.INDEX) {
       setFormPageIsView("");
     }
   };

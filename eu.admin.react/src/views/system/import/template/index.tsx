@@ -8,7 +8,7 @@ import { Attachment } from "@/components";
 const ImportTemplate: React.FC<any> = () => {
   const [viewType, setViewType] = useState("FormIndex");
   const [formPageId, setFormPageId] = useState<string>("");
-  const [formPageIsView, setFormPageIsView] = useState("Index");
+  const [formPageIsView, setFormPageIsView] = useState(false);
 
   const changePage = (value: any, id: string, isView: any) => {
     if (value == "FormPage") {
@@ -18,7 +18,7 @@ const ImportTemplate: React.FC<any> = () => {
     } else if (value == "FormIndex") {
       setViewType(value);
       setFormPageId("");
-      setFormPageIsView("");
+      setFormPageIsView(false);
     }
   };
 
