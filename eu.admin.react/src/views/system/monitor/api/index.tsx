@@ -5,4 +5,4 @@ const Index: React.FC = () => {
   return <Main moduleCode="SM_SYSTEM_API_LOG_MNG" />;
 };
 
-export default Index;
+export default React.memo(Index);
