@@ -7,7 +7,7 @@ const BreadcrumbFlat: React.FC = () => {
 
   return (
     <Card>
-      <Button type="primary" icon={<SmileOutlined />} onClick={() => navigate("/feat/breadcrumb/flatDetail")}>
+      <Button type="primary" icon={<SmileOutlined />} onClick={() => navigate("/example/feat/breadcrumb/flatDetail")}>
         打开详情页
       </Button>
     </Card>

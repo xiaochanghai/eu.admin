@@ -94,8 +94,10 @@ public class ModuleInfo
     /// </summary>
     public static void Init()
     {
+        var code = CacheKeys.SmModule.ToString();
+
         Redis.Remove("SM_MODULE");
-        Redis.Remove("SmModules");
+        Redis.Remove(code);
         GetModuleList();
         GetModuleInfo("");
     }

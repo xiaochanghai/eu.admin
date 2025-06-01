@@ -60,8 +60,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
     public override async Task<bool> Update(Guid Id, object entity)
     {
+        var result = await base.Update(Id, entity);
         ModuleInfo.Init();
-        return await base.Update(Id, entity);
+        return result;
     }
     #endregion
 

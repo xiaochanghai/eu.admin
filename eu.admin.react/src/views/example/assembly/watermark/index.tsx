@@ -18,7 +18,7 @@ interface WatermarkConfig {
 const WatermarkPage: React.FC = () => {
   const [form] = Form.useForm();
   const [config, setConfig] = useState<WatermarkConfig>({
-    content: "Hooks Admin",
+    content: "EU Admin",
     color: "rgba(0, 0, 0, 0.15)",
     fontSize: 16,
     zIndex: 11,

@@ -39,7 +39,7 @@ const Tabs: React.FC = () => {
   };
 
   const handleToDetail = (id: string, query: string = "") => {
-    navigate(`/feat/tabs/detail/${id}${query}`);
+    navigate(`/example/feat/tabs/detail/${id}${query}`);
   };
 
   return (
