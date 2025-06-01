@@ -108,6 +108,7 @@ public class AspNetUser : IUser
 
     public IEnumerable<Claim> GetClaimsIdentity()
     {
+        if (_accessor == null) return ArraySegment<Claim>.Empty;
         if (_accessor.HttpContext == null) return ArraySegment<Claim>.Empty;
 
         if (!IsAuthenticated()) return GetClaimsIdentity(GetToken());
