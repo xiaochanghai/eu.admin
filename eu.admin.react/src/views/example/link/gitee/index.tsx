@@ -5,8 +5,8 @@ const Gitee: React.FC = () => {
     <Card>
       <span className="text">
         Gitee 仓库：
-        <a href="https://gitee.com/HalseySpicy/Geeker-Admin" target="_blank">
-          https://gitee.com/HalseySpicy/Geeker-Admin
+        <a href="https://gitee.com/xiaochanghai520/eu-admin" target="_blank">
+          https://gitee.com/xiaochanghai520/eu-admin
         </a>
       </span>
     </Card>

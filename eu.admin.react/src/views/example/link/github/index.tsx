@@ -5,8 +5,8 @@ const GitHub: React.FC = () => {
     <Card>
       <span className="text">
         GitHub 仓库：
-        <a href="https://github.com/HalseySpicy/Geeker-Admin" target="_blank">
-          https://github.com/HalseySpicy/Geeker-Admin
+        <a href="https://github.com/xiaochanghai/eu.admin" target="_blank">
+          https://github.com/xiaochanghai/eu.admin
         </a>
       </span>
     </Card>
