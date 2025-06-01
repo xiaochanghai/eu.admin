@@ -9,13 +9,13 @@ import FormPage from "./FormPage";
 const SystemModule: React.FC<any> = () => {
   const [viewType, setViewType] = useState("FormIndex");
   const [formPageId, setFormPageId] = useState<string>("");
-  const [formPageIsView, setFormPageIsView] = useState("Index");
+  const [formPageIsView, setFormPageIsView] = useState<boolean | null | undefined>(false);
 
-  const changePage = (value: any, id: string, isView: any) => {
+  const changePage = (value: any, id: string, isView?: boolean) => {
     if (value == "FormIndex") {
       setViewType(value);
       setFormPageId("");
-      setFormPageIsView("");
+      setFormPageIsView(isView);
     } else {
       setViewType(value);
       setFormPageId(id);
