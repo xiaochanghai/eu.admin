@@ -223,7 +223,7 @@ const FieldSetCenter = ({
               event.stopPropagation();
               onPlus({
                 ...field,
-                HideInForm: false
+                HideInTable: !field.HideInTable
               });
             }}
           >

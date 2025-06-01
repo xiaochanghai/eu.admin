@@ -112,7 +112,6 @@ const Index: React.FC<any> = props => {
                           return f;
                         });
                         setColumns(columns);
-                        setCurrentField(field);
                       }}
                       onSelect={field => {
                         setCurrentField(field);
