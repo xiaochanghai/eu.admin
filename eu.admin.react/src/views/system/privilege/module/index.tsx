@@ -35,11 +35,11 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
    * @param id - 表单页面ID
    * @param isView - 是否为查看模式
    */
-  const changePage = useCallback((value: ViewType, id: string, isView: boolean = false) => {
+  const changePage = useCallback((value: ViewType, id?: string | null, isView: boolean = false) => {
     setViewType(value);
 
     if (value === ViewType.INDEX) setFormPageId("");
-    else setFormPageId(id);
+    else setFormPageId(id ?? "");
 
     setFormPageIsView(isView);
   }, []);
@@ -52,9 +52,7 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
       case ViewType.INDEX:
         return <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} DynamicFormPage={FormPage} />;
       case ViewType.SQL_EDIT:
-        return (
-          <SqlEdit moduleCode="SM_IMPORT_TEMPLATE_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />
-        );
+        return <SqlEdit ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />;
       case ViewType.FORM_COLLOCATE:
         return (
           <FormDesign moduleCode="SD_SALES_ORDER_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />

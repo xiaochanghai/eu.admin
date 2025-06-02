@@ -11,3 +11,10 @@ export enum ViewType {
   /** 表单配置视图 */
   FORM_COLLOCATE = "FormCollocate"
 }
+/**
+ * 编辑页打开方式
+ */
+export enum EditOpenType {
+  Modal = "Modal",
+  Drawer = "Drawer"
+}

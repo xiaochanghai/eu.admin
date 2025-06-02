@@ -6,129 +6,162 @@ import { setId } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
+import { EditOpenType } from "@/typings";
 
-const FormPage: React.FC<any> = props => {
+// 定义组件props类型
+interface FormPageProps {
+  Id?: string | null;
+  moduleCode: string;
+  formPageRef?: React.Ref<any>;
+  onClose?: () => void;
+  IsView?: boolean;
+  onDisabled?: (disabled: boolean) => void;
+  masterId?: string;
+  onReload?: () => void;
+  setFormPageId?: (id: string) => void;
+}
+
+/**
+ * 表单页面组件
+ * 功能：处理表单的展示、编辑和提交
+ */
+const FormPage: React.FC<FormPageProps> = props => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [disabled, setDisabled] = useState(true);
-  // const [disabledToolbar, setDisabledToolbar] = useState(true);
-  const [id, setViewId] = useState(null);
+  const [id, setViewId] = useState<string | null>(null);
   const [modifyType, setModifyType] = useState(ModifyType.Add);
   const [form] = Form.useForm();
+
+  // 从redux获取模块信息
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  const {
-    Id,
-    // changePage,
-    moduleCode,
-    formPageRef,
-    onClose,
-    IsView,
-    onDisabled,
-    masterId,
-    onReload,
-    // childrenItems,
-    setFormPageId
-  } = props;
-  let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
+  const moduleInfo = moduleInfos[props.moduleCode] as ModuleInfo;
+  const { formColumns, openType, url, isDetail, masterColumn } = moduleInfo;
 
-  let { formColumns, openType, url, isDetail, masterColumn } = moduleInfo;
-
+  /**
+   * 初始化表单数据
+   */
   useEffect(() => {
-    if (dispatch && Id) {
-      setViewId(Id);
-      setModifyType(ModifyType.Edit);
-      const querySingleData = async () => {
-        let { Data, Success } = await querySingle({ Id, moduleCode, url });
+    const initFormData = async () => {
+      if (props.Id) {
+        setViewId(props.Id);
+        setModifyType(ModifyType.Edit);
+
+        // 查询单条数据
+        const { Data, Success } = await querySingle({
+          Id: props.Id,
+          moduleCode: props.moduleCode,
+          url
+        });
+
         if (Success) {
-          dispatch(setId({ moduleCode, id: Id }));
-          setIsLoading(false);
+          dispatch(setId({ moduleCode: props.moduleCode, id: props.Id }));
           form.setFieldsValue(Data);
         }
-      };
-      querySingleData();
-      setDisabled(false);
+      }
 
-      if (IsView) setDisabled(true);
-    } else {
-      setDisabled(false);
       setIsLoading(false);
+      setDisabled(props.IsView || false);
+    };
+
+    initFormData();
+  }, [props.Id, props.moduleCode, props.IsView]);
+
+  /**
+   * 渲染表单字段组件
+   */
+  const renderFormFields = () => {
+    const visibleColumns = formColumns?.filter((f: any) => f.HideInForm === false);
+
+    if (!visibleColumns?.length) {
+      return <div className="main-tooltip">请选择进行系统表单配置</div>;
     }
-  }, []);
-  const component = () => {
+
     return (
       <Flex wrap="wrap">
-        {formColumns.filter((f: { HideInForm: boolean }) => f.HideInForm === false)?.length === 0 ? (
-          <div className="main-tooltip">请选择进行系统表单配置</div>
-        ) : (
-          formColumns
-            .filter((f: any) => f.HideInForm === false)
-            .map((item: any, index: any) => {
-              return (
-                <div
-                  style={{
-                    width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
-                  }}
-                  key={index}
-                >
-                  <Layout field={item} disabled={disabled} modifyType={modifyType} />
-                </div>
-              );
-            })
-        )}
+        {visibleColumns.map((item: any, index: number) => (
+          <div style={{ width: `${item.GridSpan ?? 50}%` }} key={`${item.DataIndex}_${index}`}>
+            <Layout field={item} disabled={disabled} modifyType={modifyType} />
+          </div>
+        ))}
       </Flex>
     );
   };
-  const onFinish = async (data: any, type = "Save") => {
-    if (id) data = { ...data, url, Id: id ?? null };
-    else data = { ...data, url };
-    if (isDetail) data[masterColumn] = masterId;
-    if (moduleCode != "SM_MODULE_MNG") data["ModuleCode"] = moduleCode;
 
-    for (let key in data) data[key] = data[key] ?? null;
-    let { Data, Success, Message } = id ? await update(data) : await add(data);
+  /**
+   * 表单提交处理
+   * @param data 表单数据
+   * @param type 提交类型 (Save/SaveAdd)
+   */
+  const handleSubmit = async (data: any, type = "Save") => {
+    const payload = {
+      ...data,
+      url,
+      ...(id && { Id: id }),
+      //  ...(isDetail && { [masterColumn]: props.masterId }),
+      ...(props.moduleCode !== "SM_MODULE_MNG" && { ModuleCode: props.moduleCode })
+    };
+    if (isDetail) payload[masterColumn] = props.masterId;
+
+    // 处理空值
+    Object.keys(payload).forEach(key => {
+      payload[key] = payload[key] ?? null;
+    });
+
+    const { Data, Success, Message } = id ? await update(payload) : await add(payload);
+
     if (Success) {
       message.success(Message);
-      if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
 
-      if (type != "SaveAdd" && onClose) onClose();
-      if (type === "SaveAdd") {
+      // 处理不同提交类型的回调
+      if (props.onDisabled) props.onDisabled(true);
+      if (openType === EditOpenType.Modal || openType === EditOpenType.Drawer) props.onReload?.();
+
+      if (type !== "SaveAdd") {
+        props.onClose?.();
+      } else {
         setViewId(null);
         setDisabled(true);
         form.resetFields();
-      } else if (!id) {
-        if (setFormPageId) setFormPageId(Data);
+      }
+
+      if (!id && props.setFormPageId) {
+        props.setFormPageId(Data);
         setViewId(Data);
       }
     }
   };
-  const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
-  const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
-    // setDisabledToolbar(false);
+
+  // 暴露方法给父组件
+  useImperativeHandle(props.formPageRef, () => ({
+    onSave: () => form.validateFields().then(handleSubmit),
+    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, "SaveAdd"))
+  }));
+
+  /**
+   * 表单值变化处理
+   */
+  const handleValuesChange = () => {
+    props.onDisabled?.(false);
     setDisabled(false);
   };
-  useImperativeHandle(formPageRef, function () {
-    return { onSave, onSaveAdd };
-  });
+
+  // 仅当打开类型为Modal或Drawer时渲染表单
+  if (openType !== EditOpenType.Modal && openType !== EditOpenType.Drawer) return null;
+
   return (
-    <>
-      {openType === "Modal" || openType === "Drawer" ? (
-        <div style={{ marginTop: 20, marginBottom: 20 }}>
-          <Form
-            labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
-            labelWrap
-            wrapperCol={{ span: 16 }}
-            onFinish={onFinish}
-            onValuesChange={onValuesChange}
-            form={form}
-          >
-            {isLoading ? <Loading /> : component()}
-          </Form>
-        </div>
-      ) : null}
-    </>
+    <div style={{ margin: "20px 0" }}>
+      <Form
+        labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
+        labelWrap
+        wrapperCol={{ span: 16 }}
+        onFinish={handleSubmit}
+        onValuesChange={handleValuesChange}
+        form={form}
+      >
+        {isLoading ? <Loading /> : renderFormFields()}
+      </Form>
+    </div>
   );
 };
 
