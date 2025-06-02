@@ -5,5 +5,9 @@
  */
 export enum ViewType {
   INDEX = "FormIndex",
-  PAGE = "FormPage"
+  PAGE = "FormPage",
+  /** SQL编辑视图 */
+  SQL_EDIT = "SqlEdit",
+  /** 表单配置视图 */
+  FORM_COLLOCATE = "FormCollocate"
 }
