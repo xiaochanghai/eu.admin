@@ -5,4 +5,4 @@ const Index: React.FC<any> = () => {
   return <TableList moduleCode="SM_ROLE_MNG" />;
 };
 
-export default Index;
+export default React.memo(Index);
