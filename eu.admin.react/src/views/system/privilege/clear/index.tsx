@@ -4,7 +4,7 @@ import { clearCache } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import NProgress from "@/config/nprogress";
 
-const ClearCacheView: React.FC = () => {
+const Index: React.FC = () => {
   // 加载状态管理
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -52,4 +52,4 @@ const ClearCacheView: React.FC = () => {
   );
 };
 
-export default ClearCacheView;
+export default React.memo(Index);
