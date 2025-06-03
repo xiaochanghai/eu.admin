@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button, Upload, Space, Modal } from "antd";
 import { message } from "@/hooks/useMessage";
 import { RootState, useSelector, useDispatch } from "@/redux";
@@ -8,91 +8,202 @@ import { setModuleInfo } from "@/redux/modules/module";
 import { queryByFilter, uploadFile, getModuleInfo } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
 import http from "@/api";
+import type { UploadFile } from "antd/es/upload/interface";
+
 const { confirm } = Modal;
 
-let flag = true;
-const Attachment: React.FC<any> = props => {
-  let { accept, filePath, IsView, Id: MasterId, isUnique, imageType } = props;
-  const [file1, setFile1] = useState<any>();
+/**
+ * 附件项接口
+ */
+interface AttachmentItem {
+  ID: string;
+  OriginalFileName: string;
+  CreatedTime: string;
+  [key: string]: any;
+}
+
+/**
+ * 附件组件属性接口
+ */
+interface AttachmentProps {
+  /** 接受的文件类型 */
+  accept?: string;
+  /** 文件存储路径 */
+  filePath?: string;
+  /** 是否为查看模式 */
+  IsView?: boolean;
+  /** 主表ID */
+  Id?: string | null;
+  /** 是否唯一附件 */
+  isUnique?: boolean;
+  /** 图片类型 */
+  imageType?: string;
+  /** 自定义删除方法 */
+  delete?: (record: AttachmentItem) => void;
+}
+
+/**
+ * 表格操作接口
+ */
+interface TableAction {
+  reload: () => void;
+}
+
+// 防止重复上传标志
+let uploadFlag = true;
+
+/**
+ * 附件管理组件
+ *
+ * 用于处理文件上传、下载和管理功能
+ *
+ * @param props 组件属性
+ */
+const Attachment: React.FC<AttachmentProps> = React.memo(props => {
+  // 解构属性，设置默认值
+  const {
+    accept = ".png,.jpeg",
+    filePath = "material",
+    IsView,
+    Id: MasterId,
+    isUnique = false,
+    imageType,
+    delete: customDelete
+  } = props;
+
+  // 状态管理
+  const [file, setFile] = useState<UploadFile>();
   const dispatch = useDispatch();
   const moduleCode = "SM_FILE_ATTACHMENT";
-  const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  // let VITE_API_URL = import.meta.env.VITE_API_URL as string;
   const formRef = React.createRef<any>();
 
+  // 从Redux获取模块信息
+  const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
+  const moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
+
+  /**
+   * 获取模块信息
+   */
+  const fetchModuleInfo = useCallback(async () => {
+    try {
+      const { Data } = await getModuleInfo(moduleCode);
+      if (Data) dispatch(setModuleInfo(Data));
+    } catch (error) {
+      console.error("获取模块信息失败:", error);
+      message.error("获取模块信息失败");
+    }
+  }, [dispatch, moduleCode]);
+
+  /**
+   * 初始化模块信息
+   */
   useEffect(() => {
-    const getModuleInfo1 = async () => {
-      let { Data } = await getModuleInfo(moduleCode);
-      dispatch(setModuleInfo(Data));
-    };
-    if (!moduleInfo) getModuleInfo1();
+    if (!moduleInfo) fetchModuleInfo();
+  }, [moduleInfo, fetchModuleInfo]);
+
+  /**
+   * 下载文件
+   * @param item 附件项
+   */
+  const onDownload = useCallback((item: AttachmentItem) => {
+    downloadFile(item.ID, item.OriginalFileName);
   }, []);
 
-  if (!accept) accept = ".png,.jpeg";
-  if (!filePath) filePath = "material";
+  /**
+   * 上传前处理
+   * @param file 上传的文件
+   */
+  const beforeUpload = useCallback((file: UploadFile) => {
+    setFile(file);
+    return false; // 阻止自动上传
+  }, []);
 
-  //#region 操作栏按钮方法
-  const action = {};
-  //#endregion
+  /**
+   * 上传附件
+   * @param action 表格操作对象
+   */
+  const uploadFileAttachment = useCallback(
+    async (action: TableAction) => {
+      // 检查必要条件
+      if (!file || !MasterId) return false;
 
-  // const onDownload = (item: any) => {
-  const onDownload = (item: any) => {
-    downloadFile(item.ID, item.OriginalFileName);
-  };
+      // 防止重复上传
+      if (!uploadFlag) return false;
 
-  const beforeUpload = (file: any) => {
-    // setFileList([...fileList, file]);
-    setFile1(file);
-    return false;
-  };
-  const uploadFileAttachment = async (action: any) => {
-    if (!filePath) filePath = "material";
-    if (!isUnique) isUnique = false;
-    if (flag) flag = false;
-    else return false;
+      uploadFlag = false;
 
-    //附件上传
-    message.loading("附件上传中..", 0);
-    const formData = new FormData();
-    formData.append("file", file1);
-    formData.append("masterId", MasterId);
-    formData.append("filePath", filePath);
-    formData.append("imageType", imageType ?? filePath);
-    formData.append("isUnique", isUnique);
-    let { Success } = await uploadFile("/api/File/Upload", formData);
+      try {
+        // 准备表单数据
+        const formData = new FormData();
+        formData.append("file", file as any);
+        formData.append("masterId", MasterId);
+        formData.append("filePath", filePath);
+        formData.append("imageType", imageType ?? filePath);
+        formData.append("isUnique", String(isUnique));
 
-    message.destroy();
-    flag = true;
-    if (Success) {
-      action.reload();
-      message.success("附件上传成功！");
-    }
-  };
-  const onOptionDelete = (action: { reload: any }, record: any) => {
-    confirm({
-      title: "是否确定删除该附件?",
-      icon: <Icon name="ExclamationCircleOutlined" />,
-      okText: "确定",
-      okType: "danger",
-      cancelText: "取消",
-      async onOk() {
-        message.loading("数据提交中...", 0);
-        if (props.delete) props.delete(record);
-        else {
-          let { Success, Message } = await http.delete<any>(`/api/File/${record.ID}`);
-          message.destroy();
-          if (Success) {
-            action.reload();
-            message.success(Message);
+        // 显示上传中提示
+        message.loading("附件上传中..", 0);
+
+        // 上传文件
+        const { Success } = await uploadFile("/api/File/Upload", formData);
+
+        // 关闭加载提示
+        message.destroy();
+
+        if (Success) {
+          action.reload();
+          message.success("附件上传成功！");
+        }
+      } catch (error) {
+        console.error("上传附件失败:", error);
+        message.error("上传附件失败");
+      } finally {
+        uploadFlag = true; // 重置上传标志
+      }
+    },
+    [file, MasterId, filePath, imageType, isUnique]
+  );
+
+  /**
+   * 删除附件
+   * @param action 表格操作对象
+   * @param record 附件记录
+   */
+  const onOptionDelete = useCallback(
+    (action: TableAction, record: AttachmentItem) => {
+      confirm({
+        title: "是否确定删除该附件?",
+        icon: <Icon name="ExclamationCircleOutlined" />,
+        okText: "确定",
+        okType: "danger",
+        cancelText: "取消",
+        async onOk() {
+          try {
+            message.loading("数据提交中...", 0);
+
+            // 使用自定义删除方法或默认删除方法
+            if (customDelete) customDelete(record);
+            else {
+              const { Success, Message } = await http.delete<any>(`/api/File/${record.ID}`);
+
+              if (Success) {
+                action.reload();
+                message.success(Message);
+              }
+            }
+          } catch (error) {
+            console.error("删除附件失败:", error);
+            message.error("删除附件失败");
+          } finally {
+            message.destroy();
           }
         }
-      },
-      onCancel() {
-        // console.log('Cancel');
-      }
-    });
-  };
+      });
+    },
+    [customDelete]
+  );
+
+  // 定义表格列
   const columns = [
     {
       title: "创建时间",
@@ -105,9 +216,9 @@ const Attachment: React.FC<any> = props => {
       width: 180,
       hideInSearch: true,
       dataIndex: "OriginalFileName",
-      render: (reload: any, item: any) => [
-        <a onClick={() => onDownload(item)} target="_blank" key="link">
-          {reload}
+      render: (_: string, item: AttachmentItem) => [
+        <a onClick={() => onDownload(item)} key="link">
+          {item.OriginalFileName}
         </a>
       ]
     },
@@ -117,79 +228,65 @@ const Attachment: React.FC<any> = props => {
       fixed: "left",
       valueType: "option",
       width: 150,
-      render: (_: any, record: any, _index: number, action: any) => [
-        <a title="删除" key={record.id} onClick={() => onOptionDelete(action, record)}>
+      render: (_: any, record: AttachmentItem, _index: number, action: TableAction) => [
+        <a title="删除" key={record.ID} onClick={() => onOptionDelete(action, record)}>
           <Icon name="DeleteOutlined" />
         </a>
       ]
     }
   ];
 
+  /**
+   * 查询附件列表
+   */
+  const requestAttachments = useCallback(
+    async (params: any, sorter: any) => {
+      if (!MasterId)
+        return {
+          data: [],
+          success: true,
+          total: 0
+        };
+
+      const filter = {
+        PageIndex: params.current,
+        PageSize: params.pageSize,
+        sorter,
+        params,
+        Conditions: `A.ImageType = '${imageType ?? filePath}' AND A.MasterId = '${MasterId}'`
+      };
+
+      return await queryByFilter(moduleCode, {}, filter);
+    },
+    [MasterId, imageType, filePath, moduleCode]
+  );
+
   return (
     <>
       {moduleInfo ? (
         <SmProTable
           columns={columns}
-          // delete={Delete}
-          // batchDelete={selectedRows => BatchDelete(selectedRows)}
           moduleInfo={moduleInfo}
-          {...action}
           search={false}
-          toolBarRender={(action: any) => [
-            <Space style={{ display: "flex", justifyContent: "center" }}>
+          toolBarRender={(action: TableAction) => [
+            <Space key="upload" style={{ display: "flex", justifyContent: "center" }}>
               <Upload
                 accept={accept}
-                action={""}
+                action=""
                 showUploadList={false}
                 beforeUpload={beforeUpload}
                 onChange={() => uploadFileAttachment(action)}
-                disabled={MasterId && IsView != true ? false : true}
+                disabled={!MasterId || IsView === true}
               >
-                <Button type="primary" disabled={MasterId && IsView != true ? false : true}>
+                <Button type="primary" disabled={!MasterId || IsView === true}>
                   <Icon name="UploadOutlined" /> 上传附件
                 </Button>
               </Upload>
             </Space>
           ]}
-          // addPage={() => this.setState({ detailVisible: true, DetailId: "", detailView: false })}
-          // changePage={Index.changePage}
-          // formPage={FormPage}
           formRef={formRef}
           form={{ labelCol: { span: 6 } }}
-          // onReset={() => {
-          //   dispatch({
-          //     type: "attachment/setTableStatus",
-          //     payload: {}
-          //   });
-          // }}
-          // onLoad={() => {
-          //   if (tableParam && tableParam.params && this.formRef.current) {
-          //     this.formRef.current.setFieldsValue({ ...tableParam.params });
-          //   }
-          // }}
-          // pagination={tableParam && tableParam.params ? { current: tableParam.params.current } : {}}
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          request={async (params: any, sorter: any, _filterCondition: any) => {
-            // if (tableParam && tableParam.params && !params._timestamp) {
-            //   params = tableParam.params;
-            // }
-            let filter = {
-              PageIndex: params.current,
-              PageSize: params.pageSize,
-              sorter,
-              params,
-              Conditions: `A.ImageType = '${imageType ?? filePath}' AND A.MasterId = '${MasterId}'`
-            };
-
-            if (MasterId) {
-              return await queryByFilter(moduleCode, {}, filter);
-            } else
-              return {
-                data: [],
-                success: true,
-                total: 0
-              };
-          }}
+          request={requestAttachments}
         />
       ) : (
         <div style={{ marginTop: 20 }}>
@@ -198,6 +295,6 @@ const Attachment: React.FC<any> = props => {
       )}
     </>
   );
-};
+});
 
 export default Attachment;
