@@ -8,7 +8,7 @@ import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setId } from "@/redux/modules/module";
 import http from "@/api";
 import { message } from "@/hooks/useMessage";
-import { EditableProTable, FormToolbar, Loading, Layout } from "@/components";
+import { EditableProTable, FormToolbar, Loading, Element } from "@/components";
 
 // type DataSourceType = {
 //   id: React.Key;
@@ -102,7 +102,7 @@ const FormPage: React.FC<any> = props => {
                     }}
                     key={index}
                   >
-                    <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                    <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                   </div>
                 );
               })}

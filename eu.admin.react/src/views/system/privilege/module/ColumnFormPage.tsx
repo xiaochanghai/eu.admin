@@ -1,21 +1,12 @@
 import React, { useEffect, useImperativeHandle, useState, useCallback } from "react";
 import { Form, Flex } from "antd";
-import { Loading, Layout } from "@/components";
+import { Loading, Element } from "@/components";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { EditOpenType } from "@/typings";
-
-/**
- * 表单列定义接口
- */
-interface FormColumn {
-  HideInForm: boolean;
-  GridSpan?: number;
-  [key: string]: any;
-}
 
 /**
  * 表单页面属性接口
@@ -114,12 +105,12 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
   const renderFormContent = useCallback(() => {
     return (
       <Flex wrap="wrap">
-        {formColumns.filter((f: FormColumn) => f.HideInForm === false)?.length === 0 ? (
+        {formColumns.filter((f: any) => f.HideInForm === false)?.length === 0 ? (
           <div className="main-tooltip">请选择进行系统表单配置</div>
         ) : (
           formColumns
-            .filter((f: FormColumn) => f.HideInForm === false)
-            .map((item: FormColumn, index: number) => {
+            .filter((f: any) => f.HideInForm === false)
+            .map((item: any, index: number) => {
               return (
                 <div
                   style={{
@@ -127,7 +118,7 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
                   }}
                   key={index}
                 >
-                  <Layout field={item} disabled={disabled} modifyType={modifyType} />
+                  <Element field={item} disabled={disabled} modifyType={modifyType} />
                 </div>
               );
             })

@@ -8,7 +8,7 @@ import { setId } from "@/redux/modules/module";
 import http from "@/api";
 import WaitShipSelect from "../salesOrder/WaitShipSelect";
 import { message } from "@/hooks/useMessage";
-import { Loading, Layout, FormToolbar, EditableProTable } from "@/components";
+import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();
@@ -88,7 +88,7 @@ const FormPage: React.FC<any> = props => {
                     }}
                     key={index}
                   >
-                    <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                    <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                   </div>
                 );
               })}

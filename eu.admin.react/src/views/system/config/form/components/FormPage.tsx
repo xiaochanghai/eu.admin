@@ -6,7 +6,7 @@ import { DndProvider } from "react-dnd";
 import http from "@/api";
 import { Mode } from "./dsl/base";
 const { TabPane } = Tabs;
-import { Layout, Icon } from "@/components";
+import { Element, Icon } from "@/components";
 
 interface FieldSetCenterProps {
   moduleCode: any;
@@ -144,7 +144,7 @@ const FieldSetCenter = ({
         key={index}
         onClick={() => onSelect(field)}
       >
-        <Layout field={field} />
+        <Element field={field} />
       </div>
     );
   };

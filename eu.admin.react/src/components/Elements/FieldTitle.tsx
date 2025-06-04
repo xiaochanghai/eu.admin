@@ -1,3 +1,4 @@
+import React from "react";
 import { Tooltip } from "antd";
 import { Icon } from "@/components";
 
@@ -6,15 +7,15 @@ const FieldTitle: React.FC<any> = props => {
   return (
     <>
       {FormTitle}
-      {IsTooltip ? (
+      {IsTooltip && (
         <Tooltip title={TooltipContent}>
           <span>
             <Icon name="InfoCircleOutlined" className="ml-5" />
           </span>
         </Tooltip>
-      ) : null}
+      )}
     </>
   );
 };
 
-export default FieldTitle;
+export default React.memo(FieldTitle);

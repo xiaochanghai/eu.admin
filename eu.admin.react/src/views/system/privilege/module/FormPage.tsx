@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 import { Form, Flex } from "antd";
-import { Loading, Layout } from "@/components";
+import { Loading, Element } from "@/components";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
@@ -81,7 +81,7 @@ const FormPage: React.FC<FormPageProps> = props => {
       <Flex wrap="wrap">
         {visibleColumns.map((item: any, index: number) => (
           <div style={{ width: `${item.GridSpan ?? 50}%` }} key={`${item.DataIndex}_${index}`}>
-            <Layout field={item} disabled={disabled} modifyType={modifyType} />
+            <Element field={item} disabled={disabled} modifyType={modifyType} />
           </div>
         ))}
       </Flex>

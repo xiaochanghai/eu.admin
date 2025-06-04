@@ -7,7 +7,7 @@ export { default as EditableProTable } from "@/components/ProTableEditable/index
 export { Loading, PageLoader } from "@/components/Loading/index";
 export { Icon } from "@/components/Icon";
 export { default as FormToolbar } from "@/components/FormToolbar/index";
-export { default as Layout } from "@/components/Elements/Layout";
+export { default as Element } from "@/components/Elements/Index";
 export { default as UploadImage } from "@/components/UploadImage";
 export { default as Attachment } from "@/components/Attachment";
 export { default as Switch } from "@/components/Elements/Switch";

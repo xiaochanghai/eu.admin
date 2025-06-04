@@ -6,7 +6,7 @@ import { setId } from "@/redux/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
-import { Loading, FormToolbar, Layout } from "@/components";
+import { Loading, FormToolbar, Element } from "@/components";
 
 /**
  * 表单页面组件
@@ -100,7 +100,7 @@ const FormPage: React.FC<any> = props => {
                   }}
                   key={index}
                 >
-                  <Layout field={item} disabled={disabled} modifyType={modifyType} />
+                  <Element field={item} disabled={disabled} modifyType={modifyType} />
                 </div>
               );
             })

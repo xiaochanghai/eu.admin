@@ -7,7 +7,7 @@ import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import http from "@/api";
-import { Loading, Layout, FormToolbar, EditableProTable } from "@/components";
+import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
 
 // type DataSourceType = {
 //   id: React.Key;
@@ -106,7 +106,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={disabled ?? IsView}
                         modifyType={modifyType}
@@ -141,7 +141,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={disabled ?? IsView}
                         modifyType={modifyType}
@@ -164,7 +164,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={disabled ?? IsView}
                         modifyType={taxType == "ZeroTax" ? ModifyType.Add : modifyType}
@@ -179,7 +179,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                      <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                     </div>
                   );
               })}

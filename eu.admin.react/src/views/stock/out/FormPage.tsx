@@ -7,7 +7,7 @@ import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import http from "@/api";
 import { message } from "@/hooks/useMessage";
-import { Loading, EditableProTable, ComboGrid, FormToolbar, Layout } from "@/components";
+import { Loading, EditableProTable, ComboGrid, FormToolbar, Element } from "@/components";
 import { createUuid } from "@/utils";
 
 const FormPage: React.FC<any> = props => {
@@ -99,7 +99,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={disabled ?? IsView}
                         modifyType={modifyType}
@@ -118,7 +118,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={stockId ? (disabled ?? IsView) : true}
                         modifyType={modifyType}
@@ -135,7 +135,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                      <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                     </div>
                   );
               })}

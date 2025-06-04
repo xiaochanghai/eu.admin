@@ -6,7 +6,7 @@ import { setId } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import http from "@/api";
-import { Layout, UploadImage, Attachment, Loading } from "@/components";
+import { Element, UploadImage, Attachment, Loading } from "@/components";
 const FormItem = Form.Item;
 
 const FormPage: React.FC<any> = props => {
@@ -122,9 +122,9 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
-                        IsView={disabled ?? IsView}
+                        disabled={disabled ?? IsView}
                         modifyType={modifyType}
                         onChange={(value: any) => {
                           form.setFieldsValue({
@@ -144,7 +144,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout field={item} IsView={disabled ?? IsView} modifyType={modifyType} />
+                      <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                     </div>
                   );
               })}

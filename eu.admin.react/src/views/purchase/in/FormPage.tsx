@@ -2,7 +2,7 @@
 import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card, Popconfirm } from "antd";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
-import { Layout } from "@/components";
+import { Element } from "@/components";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
@@ -103,7 +103,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={disabled ?? IsView}
                         modifyType={modifyType}
@@ -122,7 +122,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout
+                      <Element
                         field={item}
                         disabled={stockId ? (disabled ?? IsView) : true}
                         modifyType={modifyType}
@@ -139,7 +139,7 @@ const FormPage: React.FC<any> = props => {
                       }}
                       key={index}
                     >
-                      <Layout field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                      <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
                     </div>
                   );
               })}
