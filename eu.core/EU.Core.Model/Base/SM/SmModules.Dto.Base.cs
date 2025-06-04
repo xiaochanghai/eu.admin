@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/5/31 22:55:40  SahHsiao   初版
+* V0.01  2025/6/4 11:12:45  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -132,9 +132,9 @@ public class SmModulesBase : BasePoco
     public string DefaultSortOrder { get; set; }
 
     /// <summary>
-    /// IsShowAudit
+    /// 是否允许审核
     /// </summary>
-    [Display(Name = "IsShowAudit"), Description("IsShowAudit")]
+    [Display(Name = "IsShowAudit"), Description("是否允许审核")]
     public bool? IsShowAudit { get; set; }
 
     /// <summary>
@@ -190,4 +190,16 @@ public class SmModulesBase : BasePoco
     /// </summary>
     [Display(Name = "IsFull"), Description("是否全屏")]
     public bool? IsFull { get; set; }
+
+    /// <summary>
+    /// 是否导出Excel
+    /// </summary>
+    [Display(Name = "IsExportExcel"), Description("是否导出Excel")]
+    public bool? IsExportExcel { get; set; }
+
+    /// <summary>
+    /// 是否导入Excel
+    /// </summary>
+    [Display(Name = "IsImportExcel"), Description("是否导入Excel")]
+    public bool? IsImportExcel { get; set; }
 }

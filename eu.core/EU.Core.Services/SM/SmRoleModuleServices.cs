@@ -29,7 +29,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         { "Query", "查询" },
         { "Add", "新建" },
         { "Update", "修改" },
-        { "View", "查看" },
+        { "View", "查看明细" },
         { "Delete", "删除" },
         { "BatchDelete", "批量删除" },
         { "Audit", "审核" },
@@ -276,6 +276,14 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                 actions = actions.Where(x => x.Key != "Delete").ToList();
             if (module.IsShowBatchDelete != true)
                 actions = actions.Where(x => x.Key != "BatchDelete").ToList();
+            if (module.IsShowView != true)
+                actions = actions.Where(x => x.Key != "View").ToList();
+            if (module.IsShowAudit != true)
+                actions = actions.Where(x => x.Key != "Audit" && x.Key != "Revocation").ToList();
+            if (module.IsExportExcel != true)
+                actions = actions.Where(x => x.Key != "ExportExcel").ToList();
+            if (module.IsImportExcel != true)
+                actions = actions.Where(x => x.Key != "ImportExcel").ToList();
 
             var functionData = actions.Select(x =>
                 new ModuleTree

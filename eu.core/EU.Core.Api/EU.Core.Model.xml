@@ -4174,7 +4174,7 @@
         </member>
         <member name="P:EU.Core.Model.Base.SmModulesBase.IsShowAudit">
             <summary>
-            IsShowAudit
+            是否允许审核
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmModulesBase.IsShowGoBack">
@@ -4220,6 +4220,16 @@
         <member name="P:EU.Core.Model.Base.SmModulesBase.IsFull">
             <summary>
             是否全屏
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsExportExcel">
+            <summary>
+            是否导出Excel
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsImportExcel">
+            <summary>
+            是否导入Excel
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
@@ -9729,7 +9739,7 @@
         </member>
         <member name="P:EU.Core.Model.Entity.SmModules.IsShowAudit">
             <summary>
-            IsShowAudit
+            是否允许审核
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmModules.IsShowGoBack">
@@ -9775,6 +9785,16 @@
         <member name="P:EU.Core.Model.Entity.SmModules.IsFull">
             <summary>
             是否全屏
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsExportExcel">
+            <summary>
+            是否导出Excel
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsImportExcel">
+            <summary>
+            是否导入Excel
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
