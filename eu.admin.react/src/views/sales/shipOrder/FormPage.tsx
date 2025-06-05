@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card } from "antd";
 import { querySingle, add, update } from "@/api/modules/module";
@@ -9,111 +8,136 @@ import http from "@/api";
 import WaitShipSelect from "../salesOrder/WaitShipSelect";
 import { message } from "@/hooks/useMessage";
 import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
+import { ViewType } from "@/typings";
 
-const FormPage: React.FC<any> = props => {
+/**
+ * 发货单表单页面组件
+ * 功能：处理发货单的创建、编辑、查看和审核
+ * 特性：
+ * 1. 支持多种操作模式（新增/编辑/查看/审核）
+ * 2. 包含物料信息表格
+ * 3. 支持从待发货订单选择物料
+ * 4. 内置表单验证和提交逻辑
+ */
+const FormPage: React.FC<{
+  Id?: string | null; // 表单ID
+  moduleCode: string; // 模块代码
+  formPageRef?: React.Ref<any>; // 表单ref
+  IsView?: boolean; // 是否查看模式
+  onDisabled?: (disabled: boolean) => void; // 禁用状态回调
+  masterId?: string; // 主表ID
+  onReload?: () => void; // 重新加载回调
+  changePage?: (page: ViewType) => void; // 页面切换回调
+}> = props => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [disabled, setDisabled] = useState(true);
-  const [id, setViewId] = useState(null);
+  const [id, setViewId] = useState<string | null>(null);
   const [modifyType, setModifyType] = useState(ModifyType.Add);
   const [disabledToolbar, setDisabledToolbar] = useState(true);
   const [auditStatus, setAuditStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [waitShipSelectVisible, setWaitShipSelectVisible] = useState(false);
   const [waitShipSelectType, setWaitShipSelectType] = useState("Ship");
-  // const [materialTotal, setMaterialTotal] = useState(0);
 
   const [form] = Form.useForm();
-  // const tableRef = React.createRef<any>();
   const tableRef = useRef<any>();
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
-  let {
-    Id,
-    moduleCode,
-    formPageRef,
-    // onReload,
-    IsView,
-    onDisabled,
-    masterId,
-    onReload,
-    changePage
-  } = props;
-  let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
+  const moduleInfo = moduleInfos[props.moduleCode] as ModuleInfo;
+  const { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
 
-  let { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
-  let actionAuthButton: { [key: string]: boolean } = {};
+  // 初始化操作权限
+  const actionAuthButton: Record<string, boolean> = {};
   menuData?.forEach((item: any) => {
     actionAuthButton[item.FunctionCode] = true;
   });
+
+  /**
+   * 查询单条数据
+   */
   const querySingleData = async () => {
-    let { Data, Success } = await querySingle({ Id: Id ?? id, moduleCode, url });
+    const { Data, Success } = await querySingle({
+      Id: props.Id ?? id,
+      moduleCode: props.moduleCode,
+      url
+    });
+
     if (Success) {
-      dispatch(setId({ moduleCode, id: Id ?? id }));
+      dispatch(setId({ moduleCode: props.moduleCode, id: props.Id ?? id }));
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.OrderStatus);
-      // debugger;
-      if (Data.AuditStatus != ModifyType.Add) {
+
+      if (Data.AuditStatus !== ModifyType.Add) {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
       }
-      if (IsView) setModifyType(ModifyType.View);
+
+      if (props.IsView) setModifyType(ModifyType.View);
       form.setFieldsValue(Data);
     }
   };
+
+  // 初始化数据
   useEffect(() => {
-    if (Id) {
+    if (props.Id) {
       setModifyType(ModifyType.Edit);
-      setViewId(Id);
+      setViewId(props.Id);
       querySingleData();
     }
     setIsLoading(false);
-
     setDisabled(false);
-  }, []);
+  }, [props.Id]);
 
-  const component = () => {
-    return (
-      <Flex wrap="wrap">
-        {formColumns.filter((f: { HideInForm: boolean; FromFieldGroup: any }) => f.HideInForm === false)?.length === 0
-          ? null
-          : formColumns
-              .filter((f: any) => f.HideInForm === false)
-              .map((item: any, index: any) => {
-                const width = (item.GridSpan != null ? item?.GridSpan : 50) + "%";
+  /**
+   * 渲染表单字段
+   */
+  const renderFormFields = () => (
+    <Flex wrap="wrap">
+      {formColumns
+        .filter((f: any) => f.HideInForm === false)
+        .map((item: any, index: number) => (
+          <div style={{ width: `${item.GridSpan ?? 50}%` }} key={index}>
+            <Element field={item} disabled={disabled ?? props.IsView} modifyType={modifyType} />
+          </div>
+        ))}
+    </Flex>
+  );
 
-                return (
-                  <div
-                    style={{
-                      width
-                    }}
-                    key={index}
-                  >
-                    <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
-                  </div>
-                );
-              })}
-      </Flex>
-    );
-  };
-  const onFinish = async (data: any, type = "Save") => {
+  /**
+   * 表单提交处理
+   * @param data 表单数据
+   * @param type 提交类型 (Save/SaveAdd)
+   */
+  const handleSubmit = async (data: any, type = "Save") => {
     message.loading("数据提交中...", 0);
-    if (id) data = { ...data, url, Id: id ?? null };
-    else data = { ...data, url };
-    if (isDetail) data[masterColumn] = masterId;
-    data["ModuleCode"] = moduleCode;
 
-    for (let key in data) data[key] = data[key] ?? null;
-    let { Data, Success, Message } = id ? await update(data) : await add(data);
+    const payload = {
+      ...data,
+      url,
+      ...(id && { Id: id }),
+      // ...(isDetail && { [masterColumn]: props.masterId }),
+      ModuleCode: props.moduleCode
+    };
+    if (isDetail) data[masterColumn] = props.masterId;
+
+    // 处理空值
+    Object.keys(payload).forEach(key => {
+      payload[key] = payload[key] ?? null;
+    });
+
+    const { Data, Success, Message } = id ? await update(payload) : await add(payload);
 
     message.destroy();
-    if (modifyType == ModifyType.View) {
-      // modifyType = "1";
-    }
+
     if (Success) {
       message.success(Message);
       setDisabledToolbar(true);
-      if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
+      props.onDisabled?.(true);
+
+      if (openType === "Modal" || openType === "Drawer") {
+        props.onReload?.();
+      }
+
       if (type === "SaveAdd") {
         setViewId(null);
         setDisabled(true);
@@ -126,55 +150,35 @@ const FormPage: React.FC<any> = props => {
       }
     }
   };
-  const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
-  const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
-    setDisabledToolbar(false);
-    setDisabled(false);
-  };
 
-  useImperativeHandle(formPageRef, function () {
-    return { onSave, onSaveAdd };
-  });
+  // 暴露方法给父组件
+  useImperativeHandle(props.formPageRef, () => ({
+    onSave: () => form.validateFields().then(handleSubmit),
+    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, "SaveAdd"))
+  }));
 
   return (
     <>
-      <Form
-        labelCol={{
-          xs: { span: 8 },
-          sm: { span: 8 },
-          md: { span: 8 }
-        }}
-        wrapperCol={{
-          xs: { span: 16 },
-          sm: { span: 16 },
-          md: { span: 16 }
-        }}
-        labelWrap
-        onFinish={onFinish}
-        onValuesChange={onValuesChange}
-        form={form}
-      >
+      <Form labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} labelWrap onFinish={handleSubmit} form={form}>
         <FormToolbar
           moduleInfo={moduleInfo}
-          disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
-          onFinishAdd={onSaveAdd}
-          modifyType={orderStatus == "WaitShip" ? modifyType : ModifyType.View}
+          disabled={props.IsView || disabled || disabledToolbar}
+          modifyType={orderStatus === "WaitShip" ? modifyType : ModifyType.View}
           auditStatus={auditStatus}
           masterId={id}
-          onBack={() => changePage("FormIndex")}
-          onReload={() => querySingleData()}
+          onBack={() => props.changePage?.(ViewType.INDEX)}
+          onReload={querySingleData}
         />
+
         {isLoading ? (
           <Loading />
         ) : (
           <>
             <Card size="small" bordered={false}>
-              {component()}
+              {renderFormFields()}
             </Card>
 
-            <div style={{ height: 20 }}></div>
+            <div style={{ height: 20 }} />
 
             <Card title="物料信息" bordered={false} className="card-small">
               <EditableProTable
@@ -186,17 +190,12 @@ const FormPage: React.FC<any> = props => {
                   setWaitShipSelectVisible(true);
                   setWaitShipSelectType("Ship");
                 }}
-                editableCallBack={(originData: any, data: any) => {
-                  originData.TaxIncludedAmount = data.TaxIncludedAmount;
-                  originData.NoOutQTY = data.NoOutQTY;
-                  originData.QTY = data.SalesOrderQTY;
-                  return originData;
-                }}
               />
             </Card>
           </>
         )}
       </Form>
+
       <WaitShipSelect
         modalVisible={waitShipSelectVisible}
         waitShipSelectType={waitShipSelectType}
@@ -204,15 +203,13 @@ const FormPage: React.FC<any> = props => {
         onCancel={() => setWaitShipSelectVisible(false)}
         onSubmit={async (values: any) => {
           message.loading("数据提交中...", 0);
-          let { Success } = await http.post<any>("/api/SdShipOrder/BulkInsertDetail/" + id, values);
+          const { Success } = await http.post<any>(`/api/SdShipOrder/BulkInsertDetail/${id}`, values);
           message.destroy();
+
           if (Success) {
             message.success("提交成功！");
             querySingleData();
-            if (tableRef.current) tableRef.current.reload();
-            // tableAction?.clearSelected();
-            // tableAction?.reload();
-            // if (tableRef.current) tableRef.current.reload();
+            tableRef.current?.reload();
           }
         }}
       />

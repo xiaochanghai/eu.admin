@@ -522,11 +522,6 @@ const SmProTable: React.FC<any> = React.memo(props => {
           })}
         </>
       ) : null}
-      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0, boxShadow: "none" }}>
-        <Tooltip placement="top" title="查询">
-          <Icon name="SearchOutlined" className="font-size16" />
-        </Tooltip>
-      </Button>
     </Space>,
     moreToolBar.length > 0 && (
       <Dropdown
@@ -593,7 +588,12 @@ const SmProTable: React.FC<any> = React.memo(props => {
         ) : null}
       </Space>
     ),
-    expendAction ? expendAction(action, selectedRows, selectedRowKeys) : null
+    expendAction ? expendAction(action, selectedRows, selectedRowKeys) : null,
+    <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0, boxShadow: "none" }}>
+      <Tooltip placement="top" title="查询">
+        <Icon name="SearchOutlined" className="font-size16" />
+      </Tooltip>
+    </Button>
   ];
 
   const actionRef = useRef<ActionType>();

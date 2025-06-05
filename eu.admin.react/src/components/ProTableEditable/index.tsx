@@ -74,10 +74,10 @@ const Index: React.FC<any> = props => {
           if (tableRef.current) tableRef.current.reload();
         }}
         okType="danger"
-        okText="确定1"
-        cancelText="取消2"
+        okText="确定"
+        cancelText="取消"
       >
-        <a key="delete">删除1</a>
+        <a key="delete">删除</a>
       </Popconfirm>
     ]
   };
