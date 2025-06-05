@@ -263,9 +263,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
     if (response.Success) {
       message.success(response.message);
       action.reload();
-    } else {
-      message.error(response.message);
-    }
+    } else message.error(response.message);
   };
 
   const moreToolBarMenuClick = async (e: any, action: any) => {
@@ -307,9 +305,8 @@ const SmProTable: React.FC<any> = React.memo(props => {
       async onOk() {
         const hideLoading = message.loading("数据提交中...", 0);
         try {
-          if (props.delete) {
-            props.delete(record);
-          } else {
+          if (props.delete) props.delete(record);
+          else {
             const { Success, Message } = await singleDelete({ moduleCode, Id: record.ID, url });
             if (Success) {
               action.reload();
@@ -372,7 +369,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
     });
   };
 
-  const batchDeleteConfirm = (action: any, selectedRows: any) => {
+  const batchDeleteConfirm = (action: any, selectedRows: any) =>
     handleBatchOperation({
       action,
       selectedRows,
@@ -380,10 +377,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
       confirmTitle: "你确定需要批量删除所选数据吗？",
       apiFunc: batchDelete
     });
-  };
-  const handlerToolBarVisibleChange = (flag: any) => {
-    setMoreToolBarVisible(flag);
-  };
+  const handlerToolBarVisibleChange = (flag: any) => setMoreToolBarVisible(flag);
   const onSearchVisible = () => {
     searchVisible = searchVisible ?? false;
     dispatch(setSearchVisible({ value: !searchVisible, moduleCode }));
@@ -466,9 +460,8 @@ const SmProTable: React.FC<any> = React.memo(props => {
   };
   const onOptionAdd = () => onEdit(null);
 
-  const onReset = () => {
-    dispatch(setTableParam({ moduleCode }));
-  };
+  const onReset = () => dispatch(setTableParam({ moduleCode }));
+
   const toolBarRender = (action: any, { selectedRows, selectedRowKeys }: any) => [
     <Space style={{ display: "flex", justifyContent: "center" }}>
       {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("Add") && !IsView ? (
@@ -521,9 +514,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
               <Button
                 key={item.ID}
                 icon={item.Icon ? <Icon name={item.Icon} /> : null}
-                onClick={() => {
-                  props[item.FunctionCode](action, selectedRows, selectedRowKeys);
-                }}
+                onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}
               >
                 {item.FunctionName}
               </Button>
@@ -531,7 +522,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
           })}
         </>
       ) : null}
-      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0 }}>
+      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0, boxShadow: "none" }}>
         <Tooltip placement="top" title="查询">
           <Icon name="SearchOutlined" className="font-size16" />
         </Tooltip>
@@ -558,7 +549,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
           </>
         }
       >
-        <Button type="text">
+        <Button type="text" style={{ paddingLeft: 5, paddingRight: 5 }}>
           更多 <Icon name="DownOutlined" />
         </Button>
       </Dropdown>
@@ -583,12 +574,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
           <>
             {moduleInfo.hideMenu.map((item: any) => {
               return (
-                <Button
-                  key={item.ID}
-                  onClick={() => {
-                    props[item.FunctionCode](action, selectedRows, selectedRowKeys);
-                  }}
-                >
+                <Button key={item.ID} onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}>
                   {item.Icon ? <Icon name={item.Icon} /> : null}
                   {item.FunctionName}
                 </Button>
@@ -754,12 +740,12 @@ const SmProTable: React.FC<any> = React.memo(props => {
         {...props}
         // headerTitle="使用 ProTable"
       />
-      {moduleInfo && moduleInfo.Success == true ? (
+      {moduleInfo && moduleInfo.Success == true && (
         <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
           <ModuleLog log={recordLogData} />
         </Modal>
-      ) : null}
-      {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") ? (
+      )}
+      {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") && (
         <Modal
           destroyOnClose
           title={`${moduleInfo.moduleName}-导入`}
@@ -779,9 +765,9 @@ const SmProTable: React.FC<any> = React.memo(props => {
             }}
           />
         </Modal>
-      ) : null}
+      )}
     </>
   );
 });
 
-export default SmProTable;
+export default React.memo(SmProTable);
