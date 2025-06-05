@@ -1,8 +1,9 @@
-﻿using EU.Core.Common.Helper;
-using Newtonsoft.Json;
-using System.Text;
-using Serilog;
+﻿using EU.Core.Common.Extensions;
+using EU.Core.Common.Helper;
 using EU.Core.Model;
+using Newtonsoft.Json;
+using Serilog;
+using System.Text;
 
 namespace EU.Core.Common.LogHelper;
 
@@ -203,15 +204,18 @@ public class LogLock
             case "RecordAccessLogs":
                 //TODO 是否需要Debug输出？
                 Log.Information(logContent);
-                Task.Factory.StartNew(() =>
+
+                Task task = new Task(() =>
                 {
+                    var IP = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+
                     var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
                     if (requestInfo.RequestData != null)
                         if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" && !requestInfo.RequestData.Contains("SM_SYSTEM_API_LOG_MNG") && !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
                         {
                             DbInsert di = new("SmApiLog");
                             di.Values("UserId", requestInfo.User);
-                            di.Values("IP", requestInfo.IP);
+                            di.Values("IP", IP);
                             di.Values("Path", requestInfo.API);
                             di.Values("Method", requestInfo.RequestMethod);
                             di.Values("RequestData", requestInfo.RequestData);
@@ -221,6 +225,7 @@ public class LogLock
                             DBHelper.ExcuteNonQuery(di.GetSql());
                         }
                 });
+                task.Start();
                 break;
             case "SqlLog":
                 Log.Information(logContent);
