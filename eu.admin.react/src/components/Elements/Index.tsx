@@ -20,7 +20,7 @@ import { FieldProps } from "@/typings";
 interface FieldLayoutProps {
   field: FieldProps; // 字段配置
   disabled?: boolean; // 是否禁用
-  onChange?: (value: any) => void; // 值变更回调
+  onChange?: (value: any, option?: any) => void; // 值变更回调
   parentColumn?: string; // 父列名
   parentId?: string | number | null; // 父ID
   modifyType?: ModifyType; // 修改类型

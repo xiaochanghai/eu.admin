@@ -32,7 +32,7 @@ const FormToolbar: React.FC<any> = props => {
         message.destroy();
         if (Success) {
           message.success(Message);
-          if (onReload) onReload();
+          onReload?.();
         }
       },
       onCancel() {
@@ -58,7 +58,7 @@ const FormToolbar: React.FC<any> = props => {
         message.destroy();
         if (Success) {
           message.success(Message);
-          if (onReload) onReload();
+          onReload?.();
         }
       },
       onCancel() {

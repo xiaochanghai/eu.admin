@@ -81,6 +81,7 @@ export interface ModuleInfo {
   moduleType: string;
   openType: string;
   url: string;
+  customActionData: [];
 }
 export interface ModuleInfoBeforeAction {
   id: string;

@@ -3,11 +3,12 @@ import { Button, Upload, Space, Modal } from "antd";
 import { message } from "@/hooks/useMessage";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { SmProTable, Loading, Icon } from "@/components";
-import { ModuleInfo } from "@/api/interface";
+import { ModuleInfo, ModifyType } from "@/api/interface";
 import { setModuleInfo } from "@/redux/modules/module";
 import { queryByFilter, uploadFile, getModuleInfo } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
 import http from "@/api";
+
 import type { UploadFile } from "antd/es/upload/interface";
 
 const { confirm } = Modal;
@@ -26,6 +27,8 @@ interface AttachmentItem {
  * 附件组件属性接口
  */
 interface AttachmentProps {
+  /** 是否禁用 */
+  disabled?: boolean;
   /** 接受的文件类型 */
   accept?: string;
   /** 文件存储路径 */
@@ -40,6 +43,7 @@ interface AttachmentProps {
   imageType?: string;
   /** 自定义删除方法 */
   delete?: (record: AttachmentItem) => void;
+  modifyType?: ModifyType;
 }
 
 /**
