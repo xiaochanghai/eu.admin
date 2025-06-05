@@ -24,19 +24,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
     private readonly IBaseRepository<SmRoleModule> _dal;
     private List<InsertSmRoleModuleInput> inserts = new List<InsertSmRoleModuleInput>();
 
-    private Dictionary<string, string> dict = new Dictionary<string, string>
-    {
-        { "Query", "查询" },
-        { "Add", "新建" },
-        { "Update", "修改" },
-        { "View", "查看明细" },
-        { "Delete", "删除" },
-        { "BatchDelete", "批量删除" },
-        { "Audit", "审核" },
-        { "Revocation", "撤销" },
-        { "ExportExcel", "导出Excel" },
-        { "ImportExcel", "导入Excel" },
-    };
+
     ISmModulesServices _smModulesServices;
     public SmRoleModuleServices(IBaseRepository<SmRoleModule> dal, ISmModulesServices smModulesServices, DataContext context)
     {
@@ -266,24 +254,38 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         }
         if (moduleTree.isLeaf == true)
         {
-            var actions = dict.ToList();
             var module = smModules.Where(x => x.ID == Guid.Parse(moduleTree.key)).First();
-            if (module.IsShowAdd != true)
-                actions = actions.Where(x => x.Key != "Add").ToList();
-            if (module.IsShowUpdate != true)
-                actions = actions.Where(x => x.Key != "Update").ToList();
-            if (module.IsShowDelete != true)
-                actions = actions.Where(x => x.Key != "Delete").ToList();
-            if (module.IsShowBatchDelete != true)
-                actions = actions.Where(x => x.Key != "BatchDelete").ToList();
-            if (module.IsShowView != true)
-                actions = actions.Where(x => x.Key != "View").ToList();
-            if (module.IsShowAudit != true)
-                actions = actions.Where(x => x.Key != "Audit" && x.Key != "Revocation").ToList();
-            if (module.IsExportExcel != true)
-                actions = actions.Where(x => x.Key != "ExportExcel").ToList();
-            if (module.IsImportExcel != true)
-                actions = actions.Where(x => x.Key != "ImportExcel").ToList();
+            // 定义所有操作
+            Dictionary<string, string> dict = new Dictionary<string, string>
+            {
+                { "Query", "查询" },
+                { "Add", "新建" },
+                { "Update", "修改" },
+                { "View", "查看明细" },
+                { "Delete", "删除" },
+                { "BatchDelete", "批量删除" },
+                { "Audit", "审核" },
+                { "Revocation", "撤销" },
+                { "ExportExcel", "导出Excel" },
+                { "ImportExcel", "导入Excel" },
+            };
+
+            var filters = new List<Func<string, bool>>
+            {
+                key => module.IsShowAdd != true && key == "Add",
+                key => module.IsShowUpdate != true && key == "Update",
+                key => module.IsShowDelete != true && key == "Delete",
+                key => module.IsShowBatchDelete != true && key == "BatchDelete",
+                key => module.IsShowView != true && key == "View",
+                key => module.IsShowAudit != true && (key == "Audit" || key == "Revocation"),
+                key => module.IsExportExcel != true && key == "ExportExcel",
+                key => module.IsImportExcel != true && key == "ImportExcel",
+            };
+
+            // 最终结果
+            var actions = dict
+                .Where(kvp => !filters.Any(f => f(kvp.Key)))
+                .ToList();
 
             var functionData = actions.Select(x =>
                 new ModuleTree
