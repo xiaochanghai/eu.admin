@@ -134,9 +134,7 @@ const FormPage: React.FC<{
       setDisabledToolbar(true);
       props.onDisabled?.(true);
 
-      if (openType === "Modal" || openType === "Drawer") {
-        props.onReload?.();
-      }
+      if (openType === "Modal" || openType === "Drawer") props.onReload?.();
 
       if (type === "SaveAdd") {
         setViewId(null);
