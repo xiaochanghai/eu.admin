@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using System.Web;
+using Consul.Filtering;
 using EU.Core.Common;
 using EU.Core.Common.Helper;
 using EU.Core.Common.HttpContextUser;
@@ -63,6 +64,7 @@ public class RecordAccessLogsMiddleware
                 userAccessModel.BeginTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 userAccessModel.RequestMethod = request.Method;
                 userAccessModel.Agent = request.Headers["User-Agent"].ObjToString();
+                userAccessModel.Filter = request.Headers["filter"].ObjToString();
 
 
                 // 获取请求body内容

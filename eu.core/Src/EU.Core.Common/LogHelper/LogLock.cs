@@ -3,6 +3,7 @@ using EU.Core.Common.Helper;
 using EU.Core.Model;
 using Newtonsoft.Json;
 using Serilog;
+using System.Net;
 using System.Text;
 
 namespace EU.Core.Common.LogHelper;
@@ -211,14 +212,18 @@ public class LogLock
 
                     var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
                     if (requestInfo.RequestData != null)
-                        if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" && !requestInfo.RequestData.Contains("SM_SYSTEM_API_LOG_MNG") && !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
+                        if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" &&
+                        !requestInfo.API.Contains("SM_SYSTEM_API_LOG_MNG") &&
+                        !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
                         {
+                            if (requestInfo.Filter.IsNotEmptyOrNull())
+                                requestInfo.Filter = WebUtility.UrlDecode(requestInfo.Filter);
                             DbInsert di = new("SmApiLog");
                             di.Values("UserId", requestInfo.User);
-                            di.Values("IP", IP);
+                            di.Values("IP", IP == "::1" ? "localhost" : IP);
                             di.Values("Path", requestInfo.API);
                             di.Values("Method", requestInfo.RequestMethod);
-                            di.Values("RequestData", requestInfo.RequestData);
+                            di.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);
                             di.Values("BeginTime", requestInfo.BeginTime);
                             di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
                             di.Values("Agent", requestInfo.Agent);

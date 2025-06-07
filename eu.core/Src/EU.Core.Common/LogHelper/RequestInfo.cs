@@ -103,4 +103,9 @@ public class RequestLogInfo
     /// Body参数
     /// </summary>
     public string BodyData { get; set; }
+
+    /// <summary>
+    /// 过滤条件
+    /// </summary>
+    public string filter { get; set; }
 }

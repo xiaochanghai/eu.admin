@@ -10,4 +10,5 @@ public class UserAccessModel
     public string RequestMethod { get; set; }
     public string RequestData { get; set; }
     public string Agent { get; set; }
+    public string Filter { get; set; }
 }
