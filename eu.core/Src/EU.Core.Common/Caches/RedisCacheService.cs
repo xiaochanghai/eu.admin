@@ -133,7 +133,18 @@ public class RedisCacheService : IDisposable
 
         key = _redisKeyPrefix + key;
         return _cache.KeyExists(key);
+
     }
+
+    //public List<string> Exists1(string key)
+    //{
+    //    if (string.IsNullOrEmpty(key))
+    //        throw new ArgumentNullException(nameof(key));
+         
+    //    var keys = _cache.keyex
+    //    return keys.Select(x => x.ObjToString()).ToList();
+
+    //}
 
     /// <summary>
     /// 向列表左侧添加值
@@ -417,6 +428,8 @@ public class RedisCacheService : IDisposable
     {
         return _cache.StringSet(_redisKeyPrefix + key, value, expiresIn);
     }
+
+    public bool Add(Guid key, string value, TimeSpan? expiresIn = null, bool isSliding = false) => Add(key.ObjToString(), value, expiresIn, isSliding);
 
     /// <summary>
     /// 在哈希表中设置字段值

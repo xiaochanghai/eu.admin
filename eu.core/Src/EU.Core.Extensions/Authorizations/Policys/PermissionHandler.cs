@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 using EU.Core.Common.Swagger;
 using EU.Core.Model.Models;
+using EU.Core.Common.Caches;
 
 namespace EU.Core.AuthHelper;
 
@@ -26,6 +27,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
     private readonly IHttpContextAccessor _accessor;
     private readonly ISmUsersServices _smUsersServices;
     private readonly IUser _user;
+    private static RedisCacheService Redis = new();
 
     /// <summary>
     /// 构造函数注入
@@ -128,6 +130,23 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                     SmUsersDto user = new SmUsersDto();
                     if (!Permissions.IsUseIds4)
                     {
+
+                        var sessionId = _user.SessionId;
+
+                        if (sessionId is null)
+                        {
+                            _user.MessageModel = new ApiResponse(StatusCode.CODE401).MessageModel;
+                            context.Fail(new AuthorizationFailureReason(this, _user.MessageModel.Message));
+                            return;
+                        }
+                        else
+                        if (!Redis.Exists(sessionId.ObjToString()))
+                        {
+                            _user.MessageModel = new ApiResponse(StatusCode.CODE401).MessageModel;
+                            context.Fail(new AuthorizationFailureReason(this, _user.MessageModel.Message));
+                            return;
+                        }
+
                         //校验用户
                         user = await _smUsersServices.QueryDto(_user.ID, true);
                         if (user == null)

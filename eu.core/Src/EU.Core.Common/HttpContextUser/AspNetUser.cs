@@ -42,6 +42,7 @@ public class AspNetUser : IUser
 
     public Guid? ID => GetClaimValueByType("jti").FirstOrDefault().ObjToGuid();
     public long TenantId => GetClaimValueByType("TenantId").FirstOrDefault().ObjToLong();
+    public long? SessionId => GetClaimValueByType("SessionId").FirstOrDefault().ObjToLong();
 
     public bool IsAuthenticated()
     {

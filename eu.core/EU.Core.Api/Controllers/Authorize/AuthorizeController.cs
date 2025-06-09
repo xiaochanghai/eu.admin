@@ -63,7 +63,7 @@ public class AuthorizeController : BaseApiController
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ServiceResult> LogOut() => await _smUsersServices.LogOutAsync();
+    public ServiceResult LogOut() => _smUsersServices.LogOutAsync();
 
     ///// <summary>
     ///// 获取token

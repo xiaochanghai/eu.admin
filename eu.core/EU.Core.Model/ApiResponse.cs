@@ -13,7 +13,7 @@ public class ApiResponse
             case StatusCode.CODE401:
                 {
                     Status = 401;
-                    Value = msg ?? "很抱歉，您无权访问该接口，请确保已经登录!";
+                    Value = msg ?? "很抱歉，您无权访问该接口，用户验证已失效!";
                 }
                 break;
             case StatusCode.CODE403:

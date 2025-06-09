@@ -26,7 +26,7 @@ public interface ISmUsersServices : IBaseServices<SmUsers, SmUsersDto, InsertSmU
     Task<ServiceResult<Guid>> UploadAvatarAsync(IFormFile file);
     Task<ServiceResult> RestPasswordAsync(RestPassword password);
 
-    Task<ServiceResult> LogOutAsync();
+    ServiceResult LogOutAsync();
 
     Task<ServiceResult<LoginReturn>> LoginAsync(LoginRequest request);
     Task<ServiceResult<CurrentUser>> CurrentUserAsync();

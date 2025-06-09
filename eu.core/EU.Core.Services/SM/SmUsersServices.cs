@@ -29,7 +29,8 @@ namespace EU.Core.Services;
 /// </summary>
 public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersInput, EditSmUsersInput>, ISmUsersServices
 {
-    private RedisCacheService Redis = new(4);
+    private static RedisCacheService TokenRedis = new();
+    private static RedisCacheService Redis = new(4);
     private readonly IBaseRepository<SmUsers> _dal;
     private readonly PermissionRequirement _requirement;
     private readonly IWebHostEnvironment _hostingEnvironment;
@@ -122,16 +123,17 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             Redis.Remove(User.ID);
             Redis.AddObject(User.ID, User, new(1, 0, 0));
 
+            var sessionId = Utility.GetLongID().ObjToString();
             var claims = new List<Claim>
             {
-                new (ClaimTypes.Name,  user.ID.ToString()),
-                new(JwtRegisteredClaimNames.Jti, user.ID.ToString()),
+                //new (ClaimTypes.Name,  user.ID.ToString()),
+                new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
                 //new Claim("TenantId", user.FirstOrDefault().Id.ToString()),
-                new ("TenantId", "0"),
+                new ("SessionId",  sessionId),
                 new (JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
                 new (ClaimTypes.Expiration, DateTime.Now.AddSeconds(_requirement.Expiration.TotalSeconds).ToString())
             };
-            var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement);
+            var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
             result.Token = token.token;
             result.UserId = user.ID;
 
@@ -224,9 +226,10 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// 退出登录
     /// </summary>
     /// <returns></returns>
-    public async Task<ServiceResult> LogOutAsync()
+    public ServiceResult LogOutAsync()
     {
-        await Query(UserId);
+        //await Query(UserId);
+        TokenRedis.Remove(App.User.SessionId.ObjToString());
         return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion

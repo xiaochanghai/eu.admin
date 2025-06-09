@@ -8,6 +8,7 @@ public interface IUser
     string Name { get; }
     Guid? ID { get; }
     long TenantId { get; }
+    long? SessionId { get; }
     bool IsAuthenticated();
     IEnumerable<Claim> GetClaimsIdentity();
     List<string> GetClaimValueByType(string ClaimType);
