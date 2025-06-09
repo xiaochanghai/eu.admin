@@ -14,6 +14,9 @@
 *│　版权所有：苏州一优信息技术有限公司                                │
 *└──────────────────────────────────┘
 */
+using MathNet.Numerics.Distributions;
+using StackExchange.Redis;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -54,7 +57,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
             }
             else
             {
-                await Db.Ado.ExecuteCommandAsync("DELETE FROM SmRoleModule WHERE SmRoleId='" + roleId + "'");
+                await Db.Deleteable<SmRoleModule>().Where(it => it.SmRoleId == roleId).ExecuteCommandAsync();
                 inserts = moduleList.Select(x => new InsertSmRoleModuleInput()
                 {
                     SmModuleId = Guid.Parse(x),
@@ -257,8 +260,9 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         if (moduleTree.isLeaf == true)
         {
             var module = smModules.Where(x => x.ID == Guid.Parse(moduleTree.key)).First();
+
             // 定义所有操作
-            Dictionary<string, string> dict = new Dictionary<string, string>
+            var dict = new Dictionary<string, string>
             {
                 { "Query", "查询" },
                 { "Add", "新建" },

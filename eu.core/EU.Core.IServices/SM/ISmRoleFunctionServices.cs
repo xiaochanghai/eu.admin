@@ -21,12 +21,5 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface ISmRoleFunctionServices : IBaseServices<SmRoleFunction, SmRoleFunctionDto, InsertSmRoleFunctionInput, EditSmRoleFunctionInput>
 {
-    Task<ServiceResult<dynamic>> GetModuleFunction(Guid roleId, Guid moduleId);
 
-    Task<ServiceResult> SaveModuleFunction(RoleFuncVM roleFuncVm);
-
-    Task<ServiceResult<List<Guid?>>> GetRoleFuncPriv(Guid RoleId);
-    Task<ServiceResult<DataTree>> GetAllFuncPriv();
-
-    Task<ServiceResult> SaveRoleFuncPriv(RoleFuncPric roleFuncPric);
 }

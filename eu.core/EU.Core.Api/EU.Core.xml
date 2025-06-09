@@ -1499,41 +1499,6 @@
             角色功能权限 (Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetModuleFunction(System.Guid,System.Guid)">
-            <summary>
-            获取模块按钮权限
-            </summary>
-            <param name="roleId">角色ID</param>
-            <param name="moduleId">模块ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.SaveModuleFunction(EU.Core.Model.RoleFuncVM)">
-            <summary>
-            保存模块按钮权限
-            </summary>
-            <param name="roleFuncVm"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetAllFuncPriv">
-            <summary>
-            获取功能权限定义
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.SaveRoleFuncPriv(EU.Core.Model.RoleFuncPric)">
-            <summary>
-            保存功能权限定义
-            </summary>
-            <param name="roleFuncPric"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmRoleFunctionController.GetRoleFuncPriv(System.Guid)">
-            <summary>
-            获取角色功能定义
-            </summary>
-            <param name="RoleId">角色ID</param>
-            <returns></returns>
-        </member>
         <member name="T:EU.Core.Api.Controllers.SmRoleModuleController">
             <summary>
             角色模块权限(Controller)
