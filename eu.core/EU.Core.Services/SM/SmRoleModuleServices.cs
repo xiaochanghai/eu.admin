@@ -180,14 +180,16 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
     #region 获取角色模块数据
     public async Task<ServiceResult<List<string>>> GetRoleModule(Guid roleId)
     {
-        string sql = @$"SELECT A.*
-                        FROM SmRoleFunction A
-                             JOIN SmModules B ON A.SmModuleId = B.ID AND B.IsDeleted = 'false'
-                        WHERE     A.SmRoleId = '{roleId}'
-                              AND A.IsDeleted = 'false'";
-        var roleFunctions = await Db.Ado.SqlQueryAsync<SmRoleFunction>(sql);
+        var roleFunctions = await Db.Queryable<SmRoleFunction>()
+            .LeftJoin<SmModules>((a, b) => a.SmModuleId == b.ID && b.IsDeleted == false)
+            .Where((a, b) => a.SmRoleId == roleId)
+            .Select((a, b) => new { a.SmModuleId, a.ActionCode, a.SmFunctionId })
+            .ToListAsync();
 
-        var ids = roleFunctions.Where(x => x.SmModuleId != null && x.ActionCode != null).Select(x => "CommonOption_" + x.ActionCode + "_" + x.SmModuleId).ToList();
+        var ids = roleFunctions
+            .Where(x => x.SmModuleId != null && x.ActionCode != null)
+            .Select(x => "CommonOption_" + x.ActionCode + "_" + x.SmModuleId)
+            .ToList();
 
         ids.AddRange(roleFunctions.Where(x => x.SmFunctionId != null).Select(x => "functionPrivileges_" + x.SmFunctionId).Distinct());
         var ids1 = await Db.Queryable<SmRoleModule>().Where(x => x.SmRoleId == roleId).Select(x => x.SmModuleId).Distinct().ToListAsync();
