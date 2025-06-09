@@ -32,8 +32,6 @@ const Index: React.FC = () => {
       console.error("清除缓存时发生错误:", error);
       message.error("清除缓存失败，请稍后重试");
     } finally {
-      // 无论成功失败，都需要重置状态
-      message.destroy();
       NProgress.done();
       setLoading(false);
     }

@@ -9,9 +9,7 @@ import authButtonList from "@/assets/json/authButtonList.json";
  * @name AuthModule
  */
 // User login
-export const loginApi = (params: ReqLogin) => {
-  return http.post<ResLogin>(`api/Authorize/Login`, params);
-};
+export const loginApi = (params: ReqLogin) => http.post<ResLogin>(`api/Authorize/Login`, params);
 
 // Get menu list
 export const getAuthMenuListApi = () => {
@@ -26,6 +24,4 @@ export const getAuthButtonListApi = () => {
 };
 
 // User logout
-export const logoutApi = () => {
-  return http.get(`api/Authorize/LogOut`, {}, { loading: true });
-};
+export const logoutApi = () => http.get(`api/Authorize/LogOut`, {}, { loading: true });
