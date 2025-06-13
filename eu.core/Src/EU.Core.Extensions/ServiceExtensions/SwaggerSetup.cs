@@ -411,8 +411,10 @@ public static class SwaggerSetup
         /// </summary>
         public const string GroupName_WX = " wechat";
 
-
-
+        /// <summary>
+        /// 招聘
+        /// </summary>
+        public const string GroupName_RM = " recruit";
     }
 }
 

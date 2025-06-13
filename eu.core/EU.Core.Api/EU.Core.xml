@@ -923,6 +923,16 @@
             采购退货单明细(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.RmEmailController">
+            <summary>
+            邮件账号(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.RmReumeController">
+            <summary>
+            简历(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SdChangeOrderController">
             <summary>
             销售变更单(Controller)

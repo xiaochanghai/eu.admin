@@ -1759,6 +1759,76 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.RmEmailBase">
+            <summary>
+            邮件账号 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmEmailBase.ImapHost">
+            <summary>
+            IMAP服务地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmEmailBase.ImapPort">
+            <summary>
+            IMAP端口
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmEmailBase.UserName">
+            <summary>
+            账号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmEmailBase.Password">
+            <summary>
+            密码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmEmailBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.RmReumeBase">
+            <summary>
+            简历 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.StaffName">
+            <summary>
+            应聘者
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Phone">
+            <summary>
+            电话
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Email">
+            <summary>
+            邮箱
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Age">
+            <summary>
+            年龄
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Distinct">
+            <summary>
+            地区
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Uid">
+            <summary>
+            Uid
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SdChangeOrderBase">
             <summary>
             销售变更单 (Dto.Base)
@@ -5347,6 +5417,16 @@
             采购退货单明细 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditRmEmailInput">
+            <summary>
+            邮件账号 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditRmReumeInput">
+            <summary>
+            简历 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditSdChangeOrderInput">
             <summary>
             销售变更单 (Dto.EditInput)
@@ -7325,6 +7405,76 @@
         <member name="P:EU.Core.Model.Entity.PoReturnOrderDetail.ExtRemark4">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.RmEmail">
+            <summary>
+            邮件账号 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmEmail.ImapHost">
+            <summary>
+            IMAP服务地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmEmail.ImapPort">
+            <summary>
+            IMAP端口
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmEmail.UserName">
+            <summary>
+            账号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmEmail.Password">
+            <summary>
+            密码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmEmail.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.RmReume">
+            <summary>
+            简历 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.StaffName">
+            <summary>
+            应聘者
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Phone">
+            <summary>
+            电话
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Email">
+            <summary>
+            邮箱
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Age">
+            <summary>
+            年龄
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Distinct">
+            <summary>
+            地区
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Uid">
+            <summary>
+            Uid
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SdChangeOrder">
@@ -10973,6 +11123,16 @@
             采购退货单明细(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.RmEmailDto">
+            <summary>
+            邮件账号(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.RmReumeDto">
+            <summary>
+            简历(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SdChangeOrderDto">
             <summary>
             销售变更单(Dto.View)
@@ -11418,6 +11578,16 @@
         <member name="T:EU.Core.Model.Insert.InsertPoReturnOrderDetailInput">
             <summary>
             采购退货单明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertRmEmailInput">
+            <summary>
+            邮件账号 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertRmReumeInput">
+            <summary>
+            简历 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSdChangeOrderInput">

@@ -19,6 +19,8 @@
 	
 	<ItemGroup>
 	  <PackageReference Include="AgileObjects.AgileMapper" Version="1.8.1" />
+	  <PackageReference Include="itext7" Version="9.2.0" />
+	  <PackageReference Include="MailKit" Version="4.12.1" />
 	</ItemGroup>
 	 
 
