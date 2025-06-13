@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/6/13 10:08:30  SahHsiao   初版
+* V0.01  2025/6/13 10:28:03  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -33,8 +33,8 @@ public class RmEmail : BasePoco
     /// <summary>
     /// IMAP端口
     /// </summary>
-    [Display(Name = "ImapPort"), Description("IMAP端口"), SugarColumn(IsNullable = true, Length = 10)]
-    public string ImapPort { get; set; }
+    [Display(Name = "ImapPort"), Description("IMAP端口"), SugarColumn(IsNullable = true)]
+    public int? ImapPort { get; set; }
 
     /// <summary>
     /// 账号

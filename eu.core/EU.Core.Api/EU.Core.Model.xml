@@ -1829,6 +1829,31 @@
             Uid
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.EmailSubject">
+            <summary>
+            邮件标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.FromEmail">
+            <summary>
+            来源邮件
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Experience">
+            <summary>
+            工作年限
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Position">
+            <summary>
+            应聘岗位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.RmReumeBase.Salary">
+            <summary>
+            期望收入
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SdChangeOrderBase">
             <summary>
             销售变更单 (Dto.Base)
@@ -7475,6 +7500,31 @@
         <member name="P:EU.Core.Model.Entity.RmReume.Uid">
             <summary>
             Uid
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.EmailSubject">
+            <summary>
+            邮件标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.FromEmail">
+            <summary>
+            来源邮件
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Experience">
+            <summary>
+            工作年限
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Position">
+            <summary>
+            应聘岗位
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.RmReume.Salary">
+            <summary>
+            期望收入
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SdChangeOrder">

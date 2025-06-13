@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/6/12 17:53:45  SahHsiao   初版
+* V0.01  2025/6/13 13:08:47  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -64,4 +64,34 @@ public class RmReumeBase : BasePoco
     /// </summary>
     [Display(Name = "Uid"), Description("Uid"), MaxLength(32, ErrorMessage = "Uid 不能超过 32 个字符")]
     public string Uid { get; set; }
+
+    /// <summary>
+    /// 邮件标题
+    /// </summary>
+    [Display(Name = "EmailSubject"), Description("邮件标题"), MaxLength(256, ErrorMessage = "邮件标题 不能超过 256 个字符")]
+    public string EmailSubject { get; set; }
+
+    /// <summary>
+    /// 来源邮件
+    /// </summary>
+    [Display(Name = "FromEmail"), Description("来源邮件"), MaxLength(64, ErrorMessage = "来源邮件 不能超过 64 个字符")]
+    public string FromEmail { get; set; }
+
+    /// <summary>
+    /// 工作年限
+    /// </summary>
+    [Display(Name = "Experience"), Description("工作年限"), MaxLength(64, ErrorMessage = "工作年限 不能超过 64 个字符")]
+    public string Experience { get; set; }
+
+    /// <summary>
+    /// 应聘岗位
+    /// </summary>
+    [Display(Name = "Position"), Description("应聘岗位"), MaxLength(64, ErrorMessage = "应聘岗位 不能超过 64 个字符")]
+    public string Position { get; set; }
+
+    /// <summary>
+    /// 期望收入
+    /// </summary>
+    [Display(Name = "Salary"), Description("期望收入"), MaxLength(64, ErrorMessage = "期望收入 不能超过 64 个字符")]
+    public string Salary { get; set; }
 }
