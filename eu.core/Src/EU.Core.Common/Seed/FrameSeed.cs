@@ -123,7 +123,7 @@ public class FrameSeed
         build.Append("* Copyright(c) " + DateTime.Now.Year + " SUZHOU EU Corporation. All Rights Reserved.\r\n");
         build.Append("*┌──────────────────────────────────┐\r\n");
         build.Append("*│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│\r\n");
-        build.Append("*│　版权所有：苏州一优信息技术有限公司                                │\r\n");
+        build.Append("*│　版权所有：SahHsiao                                │\r\n");
         build.Append("*└──────────────────────────────────┘\r\n");
         build.Append("*/\r\n");
         return build.ToString();

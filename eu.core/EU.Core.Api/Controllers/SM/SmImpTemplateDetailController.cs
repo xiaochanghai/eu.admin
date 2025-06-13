@@ -11,7 +11,7 @@
 * Copyright(c) 2024 SUZHOU EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　版权所有：苏州一优信息技术有限公司                                │
+*│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */ 
 namespace EU.Core.Api.Controllers;

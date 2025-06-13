@@ -11,7 +11,7 @@
 * Copyright(c) 2025 SUZHOU EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
-*│　版权所有：苏州一优信息技术有限公司                                │
+*│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
 
@@ -22,7 +22,7 @@ using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
-using System.Text.RegularExpressions;
+using System.Text.RegularExpressions; 
 
 namespace EU.Core.Services;
 
@@ -55,7 +55,8 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                 await client.ConnectAsync(imap, port.Value, true);
                 await client.AuthenticateAsync(userName, password);
 
-
+                if(imap== "imap.163.com")
+                    client.Identify(new ImapImplementation { Name = "MailKit", Version = "1.0.0" });
                 // 打开收件箱
                 var inbox = client.Inbox;
                 await inbox.OpenAsync(FolderAccess.ReadOnly);
@@ -72,17 +73,18 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                     Console.WriteLine($"处理邮件: {message.Subject}");
 
                     if (await Db.Queryable<RmReume>().Where(x => x.Uid == uid.ObjToString()).AnyAsync())
-                        Console.WriteLine($"邮件: {message.Subject},已同步近系统");
+                    {
+                        Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，已同步进系统");
+                        continue;
+                    }
 
                     if (message.Subject.IndexOf("BOSS直聘") < 0)
                         continue;
                     message.Subject = message.Subject.Replace("转发: ", "");
                     message.Subject = message.Subject.Replace("【BOSS直聘】", "");
 
-                    if (message.Subject.IndexOf("lily") > -1)
-                    {
+                    Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，开始同步");
 
-                    }
 
                     var array = message.Subject.Replace("转发: ", "").Split('|');
 
@@ -111,14 +113,14 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                                     continue;
                                 var info = ExtractResumeInfo(pdfText);
 
-                                Console.WriteLine("\n提取的信息：");
-                                Console.WriteLine($"姓名: {info.Name ?? array[0]}");
-                                Console.WriteLine($"电话: {info.Phone}");
-                                Console.WriteLine($"邮箱: {info.Email}");
-                                Console.WriteLine($"年龄: {info.Age}");
-                                Console.WriteLine($"学历: {info.Education}");
-                                Console.WriteLine($"工作经历: {info.WorkExperience}");
-                                Console.WriteLine($"教育经历: {info.EducationBackground}");
+                                //Console.WriteLine("\n提取的信息：");
+                                //Console.WriteLine($"姓名: {info.Name ?? array[0]}");
+                                //Console.WriteLine($"电话: {info.Phone}");
+                                //Console.WriteLine($"邮箱: {info.Email}");
+                                //Console.WriteLine($"年龄: {info.Age}");
+                                //Console.WriteLine($"学历: {info.Education}");
+                                //Console.WriteLine($"工作经历: {info.WorkExperience}");
+                                //Console.WriteLine($"教育经历: {info.EducationBackground}");
 
                                 var resume = new RmReume()
                                 {
@@ -129,7 +131,7 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                                     Age = info.Age,
                                     EmailSubject = message.Subject,
                                     FromEmail = userName,
-                                    Experience= match.Groups["experience"].Value,
+                                    Experience = match.Groups["experience"].Value,
                                     Distinct = match.Groups["location"].Value,
                                     Position = match.Groups["position"].Value,
                                     Salary = match.Groups["salary"].Value
@@ -138,6 +140,7 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                             }
                         }
                     }
+                    Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，完成同步");
 
                 }
 
