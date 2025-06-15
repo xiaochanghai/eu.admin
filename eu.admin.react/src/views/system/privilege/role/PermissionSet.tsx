@@ -89,10 +89,9 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
         `${API_URL}/UpdateRoleModule/${id}`,
         checkedModuleKeys
       );
-
       if (Success) message.success(Message);
     } finally {
-      message.destroy();
+      // message.destroy();
       setLoading(false);
       NProgress.done();
     }

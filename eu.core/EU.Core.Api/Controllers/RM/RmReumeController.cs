@@ -14,6 +14,8 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
+using EU.Core.Tasks;
+
 namespace EU.Core.Api.Controllers;
 
 /// <summary>
@@ -23,12 +25,33 @@ namespace EU.Core.Api.Controllers;
 [Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_RM)]
 public class RmReumeController : BaseController<IRmReumeServices, RmReume, RmReumeDto, InsertRmReumeInput, EditRmReumeInput>
 {
-    public RmReumeController(IRmReumeServices service) : base(service)
+    ISchedulerCenter _schedulerCenter;
+    public RmReumeController(IRmReumeServices service, ISchedulerCenter schedulerCenter) : base(service)
     {
+        _schedulerCenter = schedulerCenter;
     }
 
 
     [HttpGet("ReadPdfAttachments"), AllowAnonymous]
     public async Task ReadPdfAttachmentsAsync() => await _service.ReadPdfAttachmentsAsync();
+
+
+
+    [HttpPost("Refresh"), AllowAnonymous]
+    public async Task<ServiceResult> Refresh()
+    {
+        var qz = new TasksQz()
+        {
+            Id = Guid.Parse("cbdb1c20-e6ce-4f26-813e-0457f4d93659"),
+            Name = "抓取简历邮件",
+            JobGroup = "JOB",
+            AssemblyName = "EU.Core.Tasks",
+            ClassName = "Job_ReumeEmail_Quartz",
+            Cron = "0 0/30 * * * ?",
+            TriggerType = 1
+        };
+        await _schedulerCenter.ExecuteJobAsync(qz);
+        return ServiceResult.OprateSuccess();
+    }
 
 }

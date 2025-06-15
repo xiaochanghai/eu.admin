@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/6/13 13:08:47  SahHsiao   初版
+* V0.01  2025/6/14 1:54:37  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -45,8 +45,8 @@ public class RmReume : BasePoco
     /// <summary>
     /// 年龄
     /// </summary>
-    [Display(Name = "Age"), Description("年龄"), SugarColumn(IsNullable = true, Length = 32)]
-    public string Age { get; set; }
+    [Display(Name = "Age"), Description("年龄"), SugarColumn(IsNullable = true)]
+    public int? Age { get; set; }
 
     /// <summary>
     /// 地区

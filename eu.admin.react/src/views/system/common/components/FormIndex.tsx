@@ -12,9 +12,10 @@ interface FormIndexProps {
    * 模块代码
    */
   moduleCode: string;
+  extendAction?: any;
 }
 
-const FormIndex: React.FC<FormIndexProps> = ({ moduleCode }) => {
+const FormIndex: React.FC<FormIndexProps> = ({ moduleCode, extendAction }) => {
   const [viewType, setViewType] = useState(ViewType.INDEX);
   const [formPageId, setFormPageId] = useState<string>("");
   const [formPageIsView, setFormPageIsView] = useState("Index");
@@ -31,7 +32,9 @@ const FormIndex: React.FC<FormIndexProps> = ({ moduleCode }) => {
   };
   return (
     <>
-      {viewType === ViewType.INDEX && <TableList moduleCode={moduleCode} changePage={handlePageChange} />}
+      {viewType === ViewType.INDEX && (
+        <TableList moduleCode={moduleCode} changePage={handlePageChange} extendAction={extendAction} />
+      )}
       {viewType === ViewType.PAGE && (
         <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={handlePageChange} />
       )}

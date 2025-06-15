@@ -22,7 +22,7 @@ using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
-using System.Text.RegularExpressions; 
+using System.Text.RegularExpressions;
 
 namespace EU.Core.Services;
 
@@ -55,93 +55,119 @@ public class RmReumeServices : BaseServices<RmReume, RmReumeDto, InsertRmReumeIn
                 await client.ConnectAsync(imap, port.Value, true);
                 await client.AuthenticateAsync(userName, password);
 
-                if(imap== "imap.163.com")
+                if (imap == "imap.163.com")
                     client.Identify(new ImapImplementation { Name = "MailKit", Version = "1.0.0" });
                 // 打开收件箱
                 var inbox = client.Inbox;
                 await inbox.OpenAsync(FolderAccess.ReadOnly);
 
                 // 搜索最近30天的邮件
-                var startDate = DateTime.Now.AddDays(-30);
+                var startDate = DateTime.Now.AddDays(-2);
                 var query = SearchQuery.DeliveredAfter(startDate);
                 var uids = await inbox.SearchAsync(query);
 
                 for (int i = 0; i < uids.Count; i++)
                 {
-                    var uid = uids[i];
-                    var message = await inbox.GetMessageAsync(uid);
-                    Console.WriteLine($"处理邮件: {message.Subject}");
-
-                    if (await Db.Queryable<RmReume>().Where(x => x.Uid == uid.ObjToString()).AnyAsync())
+                    try
                     {
-                        Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，已同步进系统");
-                        continue;
-                    }
+                        var uid = uids[i];
+                        var message = await inbox.GetMessageAsync(uid);
+                        Console.WriteLine($"处理邮件: {message.Subject}");
 
-                    if (message.Subject.IndexOf("BOSS直聘") < 0)
-                        continue;
-                    message.Subject = message.Subject.Replace("转发: ", "");
-                    message.Subject = message.Subject.Replace("【BOSS直聘】", "");
-
-                    Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，开始同步");
-
-
-                    var array = message.Subject.Replace("转发: ", "").Split('|');
-
-                    string pattern = @"(?<name>[\u4e00-\u9fa5]+)\s*\|\s*(?<experience>[^，]+)，应聘\s+(?<position>[^|]+)\s*\|\s*(?<location>[\u4e00-\u9fa5]+)(?<salary>\d+-\d+K)";
-
-                    Regex regex = new Regex(pattern);
-                    Match match = regex.Match(message.Subject);
-
-                    for (int j = 0; j < message.Attachments.ToList().Count; j++)
-                    {
-                        var attachment = message.Attachments.ToList()[j];
-
-                        if (attachment is MimePart mimePart &&
-                           mimePart.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                        if (await Db.Queryable<RmReume>().Where(x => x.Uid == uid.ObjToString()).AnyAsync())
                         {
-                            using (var memoryStream = new MemoryStream())
+                            Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，已同步进系统");
+                            continue;
+                        }
+
+                        if (message.Subject.IndexOf("BOSS直聘") < 0)
+                            continue;
+                        message.Subject = message.Subject.Replace("转发: ", "");
+                        message.Subject = message.Subject.Replace("【BOSS直聘】", "");
+
+                        var TextBody = message.TextBody?? message.HtmlBody;
+                        int? age = null;
+
+                        if (TextBody.IsNotEmptyOrNull())
+                        {
+
+                            var match1 = Regex.Match(TextBody, @"(?<age>\d+)岁");
+                            age = match1.Groups["age"].Value.ObjToInt();
+                        }
+
+                        Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，开始同步");
+
+
+                        var array = message.Subject.Replace("转发: ", "").Split('|');
+
+                        string pattern = @"(?<name>[\u4e00-\u9fa5]+)\s*\|\s*(?<experience>[^，]+)，应聘\s+(?<position>[^|]+)\s*\|\s*(?<location>[\u4e00-\u9fa5]+)(?<salary>\d+-\d+K)";
+
+                        Regex regex = new Regex(pattern);
+                       var match = regex.Match(message.Subject);
+
+                        for (int j = 0; j < message.Attachments.ToList().Count; j++)
+                        {
+                            var attachment = message.Attachments.ToList()[j];
+
+                            if (attachment is MimePart mimePart &&
+                               mimePart.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                             {
-                                // 将附件内容保存到内存流
-                                await mimePart.Content.DecodeToAsync(memoryStream);
-                                memoryStream.Position = 0;
-
-                                // 读取PDF内容
-                                var pdfText = ExtractTextFromPdf(message.Subject, memoryStream);
-                                //Console.WriteLine($"PDF内容: {pdfText}");
-                                if (pdfText.IsNullOrEmpty())
-                                    continue;
-                                var info = ExtractResumeInfo(pdfText);
-
-                                //Console.WriteLine("\n提取的信息：");
-                                //Console.WriteLine($"姓名: {info.Name ?? array[0]}");
-                                //Console.WriteLine($"电话: {info.Phone}");
-                                //Console.WriteLine($"邮箱: {info.Email}");
-                                //Console.WriteLine($"年龄: {info.Age}");
-                                //Console.WriteLine($"学历: {info.Education}");
-                                //Console.WriteLine($"工作经历: {info.WorkExperience}");
-                                //Console.WriteLine($"教育经历: {info.EducationBackground}");
-
-                                var resume = new RmReume()
+                                using (var memoryStream = new MemoryStream())
                                 {
-                                    Uid = uid.ObjToString(),
-                                    StaffName = array[0],
-                                    Phone = info.Phone,
-                                    Email = info.Email,
-                                    Age = info.Age,
-                                    EmailSubject = message.Subject,
-                                    FromEmail = userName,
-                                    Experience = match.Groups["experience"].Value,
-                                    Distinct = match.Groups["location"].Value,
-                                    Position = match.Groups["position"].Value,
-                                    Salary = match.Groups["salary"].Value
-                                };
-                                await Db.Insertable(resume).ExecuteCommandAsync();
+                                    // 将附件内容保存到内存流
+                                    await mimePart.Content.DecodeToAsync(memoryStream);
+                                    memoryStream.Position = 0;
+
+                                    // 读取PDF内容
+                                    var pdfText = ExtractTextFromPdf(message.Subject, memoryStream);
+                                    //Console.WriteLine($"PDF内容: {pdfText}");
+                                    if (pdfText.IsNullOrEmpty())
+                                        continue;
+                                    var info = ExtractResumeInfo(pdfText);
+
+                                    //Console.WriteLine("\n提取的信息：");
+                                    //Console.WriteLine($"姓名: {info.Name ?? array[0]}");
+                                    //Console.WriteLine($"电话: {info.Phone}");
+                                    //Console.WriteLine($"邮箱: {info.Email}");
+                                    //Console.WriteLine($"年龄: {info.Age}");
+                                    //Console.WriteLine($"学历: {info.Education}");
+                                    //Console.WriteLine($"工作经历: {info.WorkExperience}");
+                                    //Console.WriteLine($"教育经历: {info.EducationBackground}");
+
+
+                                    try
+                                    {
+                                        if (info.Age.IsNotEmptyOrNull())
+                                            age = Convert.ToInt32(info.Age);
+                                    }
+                                    catch (Exception)
+                                    {
+
+                                    }
+
+                                    var resume = new RmReume()
+                                    {
+                                        Uid = uid.ObjToString(),
+                                        StaffName = array[0],
+                                        Phone = info.Phone,
+                                        Email = info.Email,
+                                        Age = age,
+                                        EmailSubject = message.Subject,
+                                        FromEmail = userName,
+                                        Experience = match.Groups["experience"].Value,
+                                        Distinct = match.Groups["location"].Value,
+                                        Position = match.Groups["position"].Value,
+                                        Salary = match.Groups["salary"].Value
+                                    };
+                                    await Db.Insertable(resume).ExecuteCommandAsync();
+                                }
                             }
                         }
+                        Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，完成同步");
                     }
-                    Common.LogHelper.Logger.WriteLog($"邮件: {message.Subject}，完成同步");
-
+                    catch (Exception)
+                    {
+                    }
                 }
 
                 await client.DisconnectAsync(true);

@@ -11,6 +11,7 @@ import { Loading } from "@/components";
 interface ModuleIndexProps {
   /** 模块代码，用于获取模块信息和渲染对应表单 */
   moduleCode: string;
+  extendAction?: any;
 }
 
 /**
@@ -23,7 +24,7 @@ interface ModuleIndexProps {
  */
 const Main: React.FC<ModuleIndexProps> = React.memo(props => {
   const dispatch = useDispatch();
-  const { moduleCode } = props;
+  const { moduleCode, extendAction } = props;
 
   // 从Redux获取模块信息
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
@@ -47,7 +48,11 @@ const Main: React.FC<ModuleIndexProps> = React.memo(props => {
     if (!moduleInfo) fetchModuleInfo();
   }, [moduleInfo, fetchModuleInfo]);
 
-  return <React.Fragment>{moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} /> : <Loading />}</React.Fragment>;
+  return (
+    <React.Fragment>
+      {moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} extendAction={extendAction} /> : <Loading />}
+    </React.Fragment>
+  );
 });
 
 export default Main;

@@ -172,11 +172,12 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
     public void LoopToAppendParentModuleId(List<SmModules> modules, Guid? moduleId, List<Guid?> moduleIds)
     {
         var module = modules.FirstOrDefault(x => x.ID == moduleId);
-        if (module.ParentId != null && module.IsDetail != true)
-        {
-            moduleIds.Add(module.ParentId);
-            LoopToAppendParentModuleId(modules, module.ParentId, moduleIds);
-        }
+        if (module != null)
+            if (module.ParentId != null && module.IsDetail != true)
+            {
+                moduleIds.Add(module.ParentId);
+                LoopToAppendParentModuleId(modules, module.ParentId, moduleIds);
+            }
     }
     #endregion
 

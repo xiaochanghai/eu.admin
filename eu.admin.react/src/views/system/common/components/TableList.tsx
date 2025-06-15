@@ -20,6 +20,8 @@ interface TableListProps {
   IsView?: boolean | null; // 是否为查看模式
   DynamicFormPage?: React.ComponentType<any>; // 动态表单页面组件
   [key: string]: any; // 其他属性
+
+  extendAction?: any;
 }
 
 /**
@@ -36,7 +38,7 @@ const TableList: React.FC<TableListProps> = props => {
   const [disabled, setDisabled] = useState(true); // 表单是否禁用
 
   // 从props中解构属性
-  const { moduleCode, masterId, changePage, IsView, DynamicFormPage } = props;
+  const { moduleCode, masterId, changePage, IsView, DynamicFormPage, extendAction } = props;
 
   // 从Redux获取模块信息和ID
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
@@ -114,6 +116,7 @@ const TableList: React.FC<TableListProps> = props => {
 
   // 动态操作对象，用于存储模块配置的操作函数
   let action = {};
+  if (extendAction) action = { ...action, ...extendAction };
 
   // 处理模块菜单、操作和隐藏菜单的JavaScript函数
   if (moduleInfo) {
