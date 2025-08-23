@@ -1,6 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using EU.Core;
 using EU.Core.Common.Core;
@@ -9,6 +7,7 @@ using EU.Core.Extensions.Apollo;
 using EU.Core.Extensions.Middlewares;
 using EU.Core.Filter;
 using EU.Core.Hubs;
+using EU.Core.MCP;
 using EU.Core.Serilog.Utility;
 using EU.Core.Tasks;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -18,6 +17,8 @@ using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,6 +127,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// 添加 MCP 服务
+builder.Services.AddMcpServices();
 
 // 3、配置中间件
 var app = builder.Build();

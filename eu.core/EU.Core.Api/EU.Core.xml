@@ -705,6 +705,81 @@
             安全库存设置(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpController">
+            <summary>
+            MCP 服务控制器 - 支持流式 HTTP 请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.GetTools">
+            <summary>
+            获取可用工具列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.GetResources">
+            <summary>
+            获取可用资源列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallToolStream(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            执行工具调用 - 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallTool(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            执行工具调用 - 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.ReadResourceStream(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            获取资源内容 - 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.ReadResource(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            获取资源内容 - 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.HandleRpcRequestStream(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 请求（兼容 JSON-RPC 2.0）- 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.HandleRpcRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 请求（兼容 JSON-RPC 2.0）- 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallToolLongPolling(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            长轮询工具调用 - 支持长时间运行的工具
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.SendServerSentEvent(System.String,System.String)">
+            <summary>
+            发送服务器发送事件
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpStreamController">
+            <summary>
+            MCP 流式控制器 - 专门处理流式请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.CallToolStream(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            流式工具调用 - 使用 Server-Sent Events
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.ReadResourceStream(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            流式资源读取
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.SendServerSentEvent(System.String,System.String)">
+            <summary>
+            发送服务器发送事件
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.NacosController">
             <summary>
             服务管理 
@@ -921,16 +996,6 @@
         <member name="T:EU.Core.Api.Controllers.PoReturnOrderDetailController">
             <summary>
             采购退货单明细(Controller)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.RmEmailController">
-            <summary>
-            邮件账号(Controller)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.RmReumeController">
-            <summary>
-            简历(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SdChangeOrderController">
