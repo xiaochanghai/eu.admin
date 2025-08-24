@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP 流式服务客户端</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .tool-section {
+            margin-bottom: 30px;
+        }
+        
+        .tool-section h3 {
+            color: #555;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #007acc;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #005a9e;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .stream-events {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .event-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .event-start { border-left-color: #28a745; }
+        .event-progress { border-left-color: #ffc107; }
+        .event-complete { border-left-color: #28a745; }
+        .event-error { border-left-color: #dc3545; }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.connecting { background-color: #fff3cd; color: #856404; }
+        .status.connected { background-color: #d4edda; color: #155724; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>MCP 流式服务客户端</h1>
+    
+    <!-- 工具列表 -->
+    <div class="container">
+        <h3>可用工具</h3>
+        <div id="toolsList"></div>
+        <button onclick="loadTools()">刷新工具列表</button>
+    </div>
+    
+    <!-- 数据库查询工具 -->
+    <div class="container tool-section">
+        <h3>数据库查询工具</h3>
+        <div class="form-group">
+            <label for="dbTable">表名:</label>
+            <input type="text" id="dbTable" value="users" placeholder="输入表名">
+        </div>
+        <div class="form-group">
+            <label for="dbFields">字段:</label>
+            <input type="text" id="dbFields" value="id,name,email" placeholder="输入字段，用逗号分隔">
+        </div>
+        <div class="form-group">
+            <label for="dbWhere">查询条件:</label>
+            <input type="text" id="dbWhere" value="id > 0" placeholder="输入查询条件">
+        </div>
+        <div class="form-group">
+            <label for="dbLimit">限制条数:</label>
+            <input type="number" id="dbLimit" value="10" min="1" max="1000">
+        </div>
+        <button onclick="callDatabaseTool()">执行查询</button>
+        <button onclick="callDatabaseToolStream()">流式查询</button>
+        <div class="result-area" id="dbResult"></div>
+    </div>
+    
+    <!-- 文件操作工具 -->
+    <div class="container tool-section">
+        <h3>文件操作工具</h3>
+        <div class="form-group">
+            <label for="fileOperation">操作类型:</label>
+            <select id="fileOperation">
+                <option value="read">读取</option>
+                <option value="write">写入</option>
+                <option value="delete">删除</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="filePath">文件路径:</label>
+            <input type="text" id="filePath" value="/tmp/test.txt" placeholder="输入文件路径">
+        </div>
+        <div class="form-group">
+            <label for="fileContent">文件内容 (写入时):</label>
+            <textarea id="fileContent" placeholder="输入文件内容"></textarea>
+        </div>
+        <button onclick="callFileTool()">执行操作</button>
+        <button onclick="callFileToolStream()">流式操作</button>
+        <div class="result-area" id="fileResult"></div>
+    </div>
+    
+    <!-- 数据分析工具 -->
+    <div class="container tool-section">
+        <h3>数据分析工具</h3>
+        <div class="form-group">
+            <label for="dataSource">数据源:</label>
+            <input type="text" id="dataSource" value="sales_data.csv" placeholder="输入数据源">
+        </div>
+        <div class="form-group">
+            <label for="analysisType">分析类型:</label>
+            <select id="analysisType">
+                <option value="statistics">统计分析</option>
+                <option value="visualization">数据可视化</option>
+                <option value="prediction">预测分析</option>
+            </select>
+        </div>
+        <button onclick="callDataAnalysisTool()">执行分析</button>
+        <button onclick="callDataAnalysisToolStream()">流式分析</button>
+        <div class="result-area" id="analysisResult"></div>
+    </div>
+    
+    <!-- 流式事件显示 -->
+    <div class="container">
+        <h3>流式事件</h3>
+        <div class="status" id="streamStatus">未连接</div>
+        <div class="stream-events" id="streamEvents"></div>
+        <button onclick="clearStreamEvents()">清空事件</button>
+    </div>
+
+    <script>
+        const API_BASE = '/api/mcp';
+        
+        // 加载工具列表
+        async function loadTools() {
+            try {
+                const response = await fetch(`${API_BASE}/GetTools`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const toolsList = document.getElementById('toolsList');
+                    toolsList.innerHTML = result.data.map(tool => 
+                        `<div><strong>${tool.name}</strong>: ${tool.description}</div>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('加载工具列表失败:', error);
+            }
+        }
+        
+        // 数据库查询工具
+        async function callDatabaseTool() {
+            const params = {
+                table: document.getElementById('dbTable').value,
+                fields: document.getElementById('dbFields').value.split(','),
+                where: document.getElementById('dbWhere').value,
+                limit: parseInt(document.getElementById('dbLimit').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/CallTool`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toolName: 'query_database', parameters: params })
+                });
+                
+                const result = await response.json();
+                document.getElementById('dbResult').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('dbResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 流式数据库查询
+        async function callDatabaseToolStream() {
+            const params = {
+                table: document.getElementById('dbTable').value,
+                fields: document.getElementById('dbFields').value.split(','),
+                where: document.getElementById('dbWhere').value,
+                limit: parseInt(document.getElementById('dbLimit').value)
+            };
+            
+            callToolStream('query_database', params, 'dbResult');
+        }
+        
+        // 文件操作工具
+        async function callFileTool() {
+            const params = {
+                operation: document.getElementById('fileOperation').value,
+                path: document.getElementById('filePath').value,
+                content: document.getElementById('fileContent').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/CallTool`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toolName: 'file_operations', parameters: params })
+                });
+                
+                const result = await response.json();
+                document.getElementById('fileResult').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('fileResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 流式文件操作
+        async function callFileToolStream() {
+            const params = {
+                operation: document.getElementById('fileOperation').value,
+                path: document.getElementById('filePath').value,
+                content: document.getElementById('fileContent').value
+            };
+            
+            callToolStream('file_operations', params, 'fileResult');
+        }
+        
+        // 数据分析工具
+        async function callDataAnalysisTool() {
+            const params = {
+                dataSource: document.getElementById('dataSource').value,
+                analysisType: document.getElementById('analysisType').value,
+                parameters: {}
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/CallTool`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toolName: 'data_analysis', parameters: params })
+                });
+                
+                const result = await response.json();
+                document.getElementById('analysisResult').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('analysisResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // 流式数据分析
+        async function callDataAnalysisToolStream() {
+            const params = {
+                dataSource: document.getElementById('dataSource').value,
+                analysisType: document.getElementById('analysisType').value,
+                parameters: {}
+            };
+            
+            callToolStream('data_analysis', params, 'analysisResult');
+        }
+        
+        // 通用流式工具调用
+        async function callToolStream(toolName, parameters, resultElementId) {
+            const statusElement = document.getElementById('streamStatus');
+            const eventsElement = document.getElementById('streamEvents');
+            
+            statusElement.textContent = '连接中...';
+            statusElement.className = 'status connecting';
+            
+            try {
+                const response = await fetch(`${API_BASE}/CallToolStream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toolName, parameters })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                statusElement.textContent = '已连接 - 接收流式数据';
+                statusElement.className = 'status connected';
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const eventData = JSON.parse(line.substring(6));
+                                addStreamEvent(eventData);
+                                
+                                // 如果是完成事件，更新结果区域
+                                if (eventData.eventType === 'tool_complete') {
+                                    document.getElementById(resultElementId).textContent = 
+                                        JSON.stringify(eventData.data, null, 2);
+                                }
+                            } catch (e) {
+                                console.warn('解析事件数据失败:', e);
+                            }
+                        }
+                    }
+                }
+                
+                statusElement.textContent = '流式传输完成';
+                statusElement.className = 'status connected';
+                
+            } catch (error) {
+                statusElement.textContent = `错误: ${error.message}`;
+                statusElement.className = 'status error';
+                console.error('流式调用失败:', error);
+            }
+        }
+        
+        // 添加流式事件
+        function addStreamEvent(event) {
+            const eventsElement = document.getElementById('streamEvents');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event-item event-${event.eventType.replace('tool_', '')}`;
+            
+            const timestamp = new Date(event.timestamp).toLocaleTimeString();
+            eventDiv.innerHTML = `
+                <strong>[${timestamp}] ${event.eventType}</strong><br>
+                <small>ID: ${event.id}</small><br>
+                <pre>${JSON.stringify(event.data, null, 2)}</pre>
+            `;
+            
+            eventsElement.appendChild(eventDiv);
+            eventsElement.scrollTop = eventsElement.scrollHeight;
+        }
+        
+        // 清空流式事件
+        function clearStreamEvents() {
+            document.getElementById('streamEvents').innerHTML = '';
+        }
+        
+        // 页面加载时自动加载工具列表
+        document.addEventListener('DOMContentLoaded', loadTools);
+    </script>
+</body>
+</html> 

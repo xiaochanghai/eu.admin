@@ -43,6 +43,11 @@ public interface IMcpService
     /// </summary>
     IAsyncEnumerable<McpStreamEvent> CallToolStreamAsync(string toolName, object parameters, 
         CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// 通知事件
+    /// </summary>
+    //event Func<McpNotification, Task>? OnNotification;
 }
 
 /// <summary>

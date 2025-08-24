@@ -176,27 +176,27 @@ public class McpService : IMcpService
             {
                 case "tools/list":
                     var tools = await GetToolsAsync();
-                    return new McpResponse { Id = request.Id, Result = tools };
+                    return new McpResponse { Id = request.Id, result = tools };
 
                 case "tools/call":
                     var callParams = JsonSerializer.Deserialize<ToolCallParams>(JsonSerializer.Serialize(request.Params));
                     if (callParams != null)
                     {
                         var result = await CallToolAsync(callParams.Name, callParams.Arguments);
-                        return new McpResponse { Id = request.Id, Result = result };
+                        return new McpResponse { Id = request.Id, result = result };
                     }
                     break;
 
                 case "resources/list":
                     var resources = await GetResourcesAsync();
-                    return new McpResponse { Id = request.Id, Result = resources };
+                    return new McpResponse { Id = request.Id, result = resources };
 
                 case "resources/read":
                     var readParams = JsonSerializer.Deserialize<ResourceReadParams>(JsonSerializer.Serialize(request.Params));
                     if (readParams != null)
                     {
                         var resourceData = await GetResourceAsync(readParams.Uri);
-                        return new McpResponse { Id = request.Id, Result = resourceData };
+                        return new McpResponse { Id = request.Id, result = resourceData };
                     }
                     break;
 

@@ -32,7 +32,7 @@ public class McpResponse
     public string Id { get; set; } = string.Empty;
     
     [JsonPropertyName("result")]
-    public object? Result { get; set; }
+    public object? result { get; set; }
     
     [JsonPropertyName("error")]
     public McpError? Error { get; set; }

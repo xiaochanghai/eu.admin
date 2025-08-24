@@ -705,6 +705,51 @@
             安全库存设置(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.FastMcpController">
+            <summary>
+            FastMCP 风格控制器 - 支持装饰器和流式传输
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetTools">
+            <summary>
+            获取可用工具列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetResources">
+            <summary>
+            获取可用资源列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.CallTool(EU.Core.Api.Controllers.MCP.McpToolCallRequest)">
+            <summary>
+            执行工具调用（同步）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.CallToolStream(EU.Core.Api.Controllers.MCP.McpToolCallRequest)">
+            <summary>
+            执行工具调用（流式响应）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetResource(System.String)">
+            <summary>
+            获取资源内容
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.HandleRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理通用MCP请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.Health">
+            <summary>
+            健康检查
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpToolCallRequest">
+            <summary>
+            MCP 工具调用请求模型
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.MCP.McpController">
             <summary>
             MCP 服务控制器 - 支持流式 HTTP 请求
@@ -758,6 +803,26 @@
         <member name="M:EU.Core.Api.Controllers.MCP.McpController.SendServerSentEvent(System.String,System.String)">
             <summary>
             发送服务器发送事件
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpProtocolController">
+            <summary>
+            MCP 协议控制器 - 处理标准的 MCP 协议请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.HandleRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 协议请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.HandleStreamRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 流式请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.Health">
+            <summary>
+            健康检查
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.MCP.McpStreamController">

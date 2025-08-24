@@ -50,6 +50,7 @@
     <None Remove="wwwroot\ui\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Controllers\MCP\McpStreamController - 复制.cs" />
     <Compile Remove="Controllers\SD\SdOrderController111.cs" />
   </ItemGroup>
   <ItemGroup>

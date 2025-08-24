@@ -20,6 +20,7 @@ namespace EU.Core.MCP
         public static IServiceCollection AddMcpServices(this IServiceCollection services)
         {
             services.AddScoped<IMcpService, McpService>();
+            services.AddScoped<IMcpService, FastMcpService>();
 
             return services;
         }
