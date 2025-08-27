@@ -45,7 +45,7 @@ public class UserContext
             try
             {
 
-                return App.User.ID;
+                return App.User?.ID;
                 //if (Context == null)
                 //    return null;
                 ////string aa = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
