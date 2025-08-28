@@ -3,9 +3,9 @@ using EU.Core.MCP.Models;
 namespace EU.Core.MCP.Interfaces;
 
 /// <summary>
-/// MCP 服务接口
+/// McpStream 服务接口
 /// </summary>
-public interface IMcpService
+public interface IMcpStreamService
 {
     /// <summary>
     /// 获取可用工具列表
@@ -49,4 +49,4 @@ public interface IMcpService
     /// </summary>
     //event Func<McpNotification, Task>? OnNotification;
 }
-
+ 

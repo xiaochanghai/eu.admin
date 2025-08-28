@@ -5,15 +5,14 @@ namespace EU.Core.Api.Controllers.MCP;
 /// <summary>
 /// MCP 流式控制器 - 专门处理流式请求
 /// </summary>
-[ApiController]
-[Route("api/[controller]")]
-[Authorize]
+[ApiController,Route("api/[controller]")]
+//[Authorize]
 public class McpStreamController : ControllerBase
 {
-    private readonly IMcpService _mcpService;
+    private readonly IMcpStreamService _mcpService;
     private readonly ILogger<McpStreamController> _logger;
 
-    public McpStreamController(IMcpService mcpService, ILogger<McpStreamController> logger)
+    public McpStreamController(IMcpStreamService mcpService, ILogger<McpStreamController> logger)
     {
         _mcpService = mcpService;
         _logger = logger;
