@@ -99,10 +99,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EU.Core.MCP\EU.Core.MCP.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
     <ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Extensions\EU.Core.Extensions.csproj" />
-    <ProjectReference Include="..\Src\EU.Core.MCP\EU.Core.MCP.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Tasks\EU.Core.Tasks.csproj" />
   </ItemGroup>
 

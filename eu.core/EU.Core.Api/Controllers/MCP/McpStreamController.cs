@@ -1,8 +1,4 @@
 using EU.Core.MCP.Interfaces;
-using EU.Core.MCP.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Text; 
 
 namespace EU.Core.Api.Controllers.MCP;
 
