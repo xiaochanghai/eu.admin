@@ -45,6 +45,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\EU.Core.Repository\EU.Core.Repository.csproj" />
+    <ProjectReference Include="..\..\EU.Core.Services\EU.Core.Services.csproj" />
     <ProjectReference Include="..\EU.Core.Common\EU.Core.Common.csproj" />
     <ProjectReference Include="..\EU.Core.Extensions\EU.Core.Extensions.csproj" />
   </ItemGroup>
