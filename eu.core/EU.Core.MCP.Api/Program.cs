@@ -1,10 +1,48 @@
-using ClaudeMCP.API.Services.Interfaces;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using ClaudeMCP.API.Services.Implementations;
+using ClaudeMCP.API.Services.Interfaces;
+using EU.Core.Common;
+using EU.Core.Common.Core;
+using EU.Core.DataAccess;
+using EU.Core.Domain;
+using EU.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure URLs explicitly
 //builder.WebHost.UseUrls("http://localhost:5196");
+
+
+// 1、配置host与容器
+builder.Host
+    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(builder =>
+    {
+        builder.RegisterModule(new AutofacModuleRegister());
+        //builder.RegisterModule<AutofacPropertityModuleReg>();
+
+        //注册仓储，所有IRepository接口到Repository的映射
+        builder.RegisterGeneric(typeof(BaseCRUDVM<>))
+            //InstancePerDependency：默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+            .As(typeof(IBaseCRUDVM<>)).InstancePerDependency();
+        //builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>()
+        //               .AsImplementedInterfaces()
+        //               .InstancePerLifetimeScope()
+        //               .PropertiesAutowired();
+    })
+    .ConfigureAppConfiguration((hostingContext, config) =>
+    {
+        hostingContext.Configuration.ConfigureApplication();
+        config.Sources.Clear();
+        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+        //config.AddConfigurationApollo("appsettings.apollo.json");
+    });
+builder.ConfigureApplication();
+
+// 2、配置服务
+builder.Services.AddSingleton(new AppSettings(builder.Configuration));
+builder.Services.AddAllOptionRegister(); 
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -16,6 +54,13 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddCacheSetup();
+builder.Services.AddSqlsugarSetup();
+builder.Services.AddDataContextSetup();
+builder.Services.AddDbSetup();
+builder.Services.AddAuthorizationSetup();
+builder.Services.AddAuthentication_JWTSetup();
 
 // Register our services
 builder.Services.AddScoped<IMcpService, McpService>();
