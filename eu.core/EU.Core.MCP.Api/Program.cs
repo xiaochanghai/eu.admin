@@ -7,6 +7,7 @@ using EU.Core.Common.Core;
 using EU.Core.DataAccess;
 using EU.Core.Domain;
 using EU.Core.Extensions;
+using EU.Core.MCP.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,8 +64,7 @@ builder.Services.AddAuthorizationSetup();
 builder.Services.AddAuthentication_JWTSetup();
 
 // Register our services
-builder.Services.AddScoped<IMcpService, McpService>();
-builder.Services.AddScoped<IToolService, TestToolService>();
+builder.Services.AddMcpServices(); 
 
 var app = builder.Build();
 
