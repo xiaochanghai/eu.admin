@@ -1,7 +1,5 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using ClaudeMCP.API.Services.Implementations;
-using ClaudeMCP.API.Services.Interfaces;
 using EU.Core.Common;
 using EU.Core.Common.Core;
 using EU.Core.DataAccess;

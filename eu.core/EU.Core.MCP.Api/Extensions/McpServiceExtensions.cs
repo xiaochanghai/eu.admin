@@ -1,5 +1,5 @@
-﻿using ClaudeMCP.API.Services.Implementations;
-using ClaudeMCP.API.Services.Interfaces;
+﻿using ClaudeMCP.API.Interfaces;
+using ClaudeMCP.API.Services.Implementations;
 
 namespace EU.Core.MCP.Api.Extensions;
 

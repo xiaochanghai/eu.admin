@@ -1,5 +1,5 @@
 using ClaudeMCP.API.Models.Mcp;
-using ClaudeMCP.API.Services.Interfaces;
+using ClaudeMCP.API.Interfaces;
 using System.Text.Json;
 
 namespace ClaudeMCP.API.Services.Implementations;

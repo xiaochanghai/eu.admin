@@ -1,7 +1,7 @@
 using ClaudeMCP.API.Models.Mcp;
 using System.Text.Json;
 
-namespace ClaudeMCP.API.Services.Interfaces;
+namespace ClaudeMCP.API.Interfaces;
 
 public interface IToolService
 {

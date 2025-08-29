@@ -1,5 +1,5 @@
+using ClaudeMCP.API.Interfaces;
 using ClaudeMCP.API.Models.Mcp;
-using ClaudeMCP.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClaudeMCP.API.Controllers;
