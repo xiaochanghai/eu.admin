@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ClaudeMCP.API.Interfaces;
 
-public interface IService
+public interface IBaseService
 {
     /// <summary>
     /// Handle MCP initialization
