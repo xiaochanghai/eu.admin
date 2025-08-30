@@ -5,13 +5,11 @@ using System.Text.Json;
 namespace ClaudeMCP.API.Services.Implementations;
 
 public class SupplierService : ISupplierService
-{
-    private readonly IEnumerable<ISupplierToolService> _toolServices;
+{ 
     private readonly ILogger<McpService> _logger;
 
-    public SupplierService(IEnumerable<ISupplierToolService> toolServices, ILogger<McpService> logger)
-    {
-        _toolServices = toolServices;
+    public SupplierService( ILogger<McpService> logger)
+    { 
         _logger = logger;
     }
 
@@ -36,9 +34,7 @@ public class SupplierService : ISupplierService
 
     public object GetAvailableTools()
     {
-        var allTools = _toolServices
-            .SelectMany(service => service.GetTools())
-            .ToArray();
+        var allTools = GetTools().ToArray();
 
         _logger.LogInformation($"Returning {allTools.Length} available tools");
         return new { tools = allTools };
@@ -58,11 +54,73 @@ public class SupplierService : ISupplierService
         _logger.LogInformation($"Executing tool: {toolName}");
 
         // Find the service that can handle this tool
-        var toolService = _toolServices.FirstOrDefault(tool => tool.CanHandle(toolName));
+        var isExist = CanHandle(toolName);
 
-        if (toolService == null)
+        if (!isExist)
             throw new ArgumentException($"No service found for tool: {toolName}");
 
-        return await toolService.ExecuteToolAsync(toolName, arguments);
+        return await ExecuteToolAsync(toolName, arguments);
+    }
+
+    public IEnumerable<McpTool> GetTools()
+    {
+        return
+        [
+            new McpTool
+            {
+                Name = "test_hello_Supplier",
+                Description = "A simple test tool that says hello",
+                InputSchema = new
+                {
+                    type = "object",
+                    properties = new
+                    {
+                        name = new { type = "string", description = "Name to greet" }
+                    }
+                }
+            }
+        ];
+    }
+
+    public bool CanHandle(string toolName)
+    {
+        var tools = GetTools();
+        return tools.Any(x => x.Name == toolName); ;
+    }
+
+
+    public async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments)
+    {
+        _logger.LogInformation($"Executing test tool: {toolName}");
+
+        return toolName switch
+        {
+            "test_hello_Supplier" => await HandleTestHello(arguments),
+            _ => throw new ArgumentException($"Unknown tool: {toolName}")
+        };
+    }
+
+    private async Task<McpToolResult> HandleTestHello(JsonElement arguments)
+    {
+        await Task.Delay(10); // Simulate async work
+
+        var name = "World";
+        if (arguments.ValueKind != JsonValueKind.Undefined &&
+            arguments.TryGetProperty("name", out var nameProperty))
+        {
+            name = nameProperty.GetString() ?? "World";
+        }
+
+        return new McpToolResult
+        {
+            Content = new[]
+            {
+                new McpContent
+                {
+                    Type = "text",
+                    Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
+                }
+            }
+        };
     }
 }

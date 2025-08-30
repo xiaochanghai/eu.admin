@@ -1,7 +1,6 @@
 ﻿using ClaudeMCP.API.Models.Mcp;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
-using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace EU.Core.MCP.Controllers;
 
