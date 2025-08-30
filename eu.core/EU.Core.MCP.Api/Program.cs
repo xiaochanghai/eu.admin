@@ -19,6 +19,7 @@ builder.Host
     .ConfigureContainer<ContainerBuilder>(builder =>
     {
         builder.RegisterModule(new AutofacModuleRegister());
+        builder.RegisterModule(new AutofacMCPModuleRegister());
         //builder.RegisterModule<AutofacPropertityModuleReg>();
 
         //注册仓储，所有IRepository接口到Repository的映射

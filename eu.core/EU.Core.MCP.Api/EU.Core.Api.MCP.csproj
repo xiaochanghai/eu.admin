@@ -17,8 +17,4 @@
     <ProjectReference Include="..\Src\EU.Core.Extensions\EU.Core.Extensions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Base\" />
-  </ItemGroup>
-
 </Project>

@@ -1,22 +1,5 @@
-using ClaudeMCP.API.Models.Mcp;
-using System.Text.Json;
-
 namespace ClaudeMCP.API.Interfaces;
 
-public interface ISupplierService
+public interface ISupplierService : IService
 {
-    /// <summary>
-    /// Handle MCP initialization
-    /// </summary>
-    object HandleInitialize(JsonElement? parameters);
-    
-    /// <summary>
-    /// Get all available tools
-    /// </summary>
-    object GetAvailableTools();
-    
-    /// <summary>
-    /// Execute a tool call
-    /// </summary>
-    Task<McpToolResult> HandleToolCallAsync(JsonElement? parameters);
 }
