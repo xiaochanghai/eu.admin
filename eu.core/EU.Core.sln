@@ -69,7 +69,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EU.Core.Jobs", "EU.Core.Job
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.MCP", "EU.Core.MCP\EU.Core.MCP.csproj", "{26C6E95F-D049-5A7C-8037-E9344E11037E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.MCP.Api", "EU.Core.MCP.Api\EU.Core.MCP.Api.csproj", "{81D5A432-3E87-E3E9-2B97-D9B13B8AB68A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Api.MCP", "EU.Core.MCP.Api\EU.Core.Api.MCP.csproj", "{81D5A432-3E87-E3E9-2B97-D9B13B8AB68A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
