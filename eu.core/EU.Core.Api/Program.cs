@@ -7,7 +7,6 @@ using EU.Core.Extensions.Apollo;
 using EU.Core.Extensions.Middlewares;
 using EU.Core.Filter;
 using EU.Core.Hubs;
-using EU.Core.MCP;
 using EU.Core.Serilog.Utility;
 using EU.Core.Tasks;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -102,11 +101,11 @@ builder.Services.Configure<KestrelServerOptions>(x => x.AllowSynchronousIO = tru
 
 builder.Services.AddSession();
 builder.Services.AddControllers(o =>
-    {
-        o.Filters.Add(typeof(GlobalExceptionsFilter));
-        //o.Conventions.Insert(0, new GlobalRouteAuthorizeConvention());
-        o.Conventions.Insert(0, new GlobalRoutePrefixFilter(new RouteAttribute(RoutePrefix.Name)));
-    })
+{
+    o.Filters.Add(typeof(GlobalExceptionsFilter));
+    //o.Conventions.Insert(0, new GlobalRouteAuthorizeConvention());
+    o.Conventions.Insert(0, new GlobalRoutePrefixFilter(new RouteAttribute(RoutePrefix.Name)));
+})
     .AddNewtonsoftJson(options =>
     {
         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -127,8 +126,6 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-// 添加 MCP 服务
-builder.Services.AddMcpServices();
 
 // 3、配置中间件
 var app = builder.Build();
