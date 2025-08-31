@@ -11,13 +11,20 @@ public class BaseService<IServiceBase> : IBaseService
 {
     private readonly ILogger<BaseService<IServiceBase>> _logger;
     private readonly Dictionary<string, MethodInfo> _toolMethods;
+    private IServiceBase? _serviceInstance; // 移除 readonly
 
     public BaseService(ILogger<BaseService<IServiceBase>> logger)
     {
         _logger = logger;
         _toolMethods = new Dictionary<string, MethodInfo>();
+    }
 
-        // �Զ����ֹ��ߡ���Դ����ʾ
+    // 添加一个受保护的方法来设置服务实例
+    protected void InitializeService(IServiceBase serviceInstance)
+    {
+        _serviceInstance = serviceInstance;
+       
+        // 自动发现工具、资源和提示
         DiscoverMcpMethods();
     }
 
@@ -26,7 +33,7 @@ public class BaseService<IServiceBase> : IBaseService
     {
         var type = typeof(IServiceBase);
 
-        // ���ֹ��߷���
+        // 发现工具方法
         foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
         {
             var toolAttr = method.GetCustomAttribute<McpToolAttribute>();
@@ -34,7 +41,7 @@ public class BaseService<IServiceBase> : IBaseService
             {
                 var name = string.IsNullOrEmpty(toolAttr.Name) ? method.Name : toolAttr.Name;
                 _toolMethods[name] = method;
-                _logger.LogInformation("���ֹ���: {ToolName}", name);
+                _logger.LogInformation("发现工具: {ToolName}", name);
             }
         }
     }
@@ -57,6 +64,7 @@ public class BaseService<IServiceBase> : IBaseService
             }
         };
     }
+
     public virtual object GetAvailableTools()
     {
         var allTools = GetTools().ToArray();
@@ -64,6 +72,7 @@ public class BaseService<IServiceBase> : IBaseService
         _logger.LogInformation($"Returning {allTools.Length} available tools");
         return new { tools = allTools };
     }
+
     public virtual async Task<McpToolResult> HandleToolCallAsync(JsonElement? parameters)
     {
         if (parameters == null)
@@ -88,12 +97,18 @@ public class BaseService<IServiceBase> : IBaseService
 
     public virtual IEnumerable<McpTool> GetTools()
     {
-        return
-        [
-            new McpTool
+        var tools = new List<McpTool>();
+
+        // 动态生成工具列表
+        foreach (var kvp in _toolMethods)
+        {
+            var method = kvp.Value;
+            var toolAttr = method.GetCustomAttribute<McpToolAttribute>();
+
+            tools.Add(new McpTool
             {
-                Name = "test_hello_Supplier",
-                Description = "A simple test tool that says hello",
+                Name = kvp.Key,
+                Description = toolAttr?.Description ?? $"Tool: {method.Name}",
                 InputSchema = new
                 {
                     type = "object",
@@ -102,73 +117,47 @@ public class BaseService<IServiceBase> : IBaseService
                         name = new { type = "string", description = "Name to greet" }
                     }
                 }
-            }
-        ];
+            });
+        }
+
+        return tools;
     }
 
-
-    public bool CanHandle(string toolName)
-    {
-        var tools = GetTools();
-        return tools.Any(x => x.Name == toolName); ;
-    }
-
+    public bool CanHandle(string toolName)=> _toolMethods.ContainsKey(toolName);
 
     public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments)
     {
-        _logger.LogInformation($"Executing test tool: {toolName}");
+        _logger.LogInformation($"Executing tool: {toolName}");
 
-        return toolName switch
+        if (!_toolMethods.TryGetValue(toolName, out var method))
         {
-            "test_hello_Supplier" => await HandleTestHello(arguments),
-            _ => throw new ArgumentException($"Unknown tool: {toolName}")
-        };
-    }
-
-    [McpTool("test_hello_Supplier", "A simple test supplier tool that says hello")]
-    public async Task<McpToolResult> HandleTestHello(JsonElement arguments)
-    {
-        await Task.Delay(10); // Simulate async work
-
-        var name = "World";
-        if (arguments.ValueKind != JsonValueKind.Undefined &&
-            arguments.TryGetProperty("name", out var nameProperty))
-        {
-            name = nameProperty.GetString() ?? "World";
+            throw new ArgumentException($"Unknown tool: {toolName}");
         }
 
-        return new McpToolResult
+        try
         {
-            Content = new[]
+            // 动态调用服务方法
+            var result = method.Invoke(_serviceInstance, [arguments]);
+
+            // 如果方法是异步的，等待完成
+            if (result is Task task)
             {
-                new McpContent
+                await task;
+
+                // 获取Task的结果
+                var resultProperty = task.GetType().GetProperty("Result");
+                if (resultProperty != null)
                 {
-                    Type = "text",
-                    Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
+                    result = resultProperty.GetValue(task);
                 }
             }
-        };
+
+            return result as McpToolResult ?? throw new InvalidOperationException($"Method {toolName} did not return McpToolResult");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error executing tool {toolName}");
+            throw new InvalidOperationException($"Error executing tool {toolName}: {ex.Message}", ex);
+        }
     }
-
-    ///// <summary>
-    ///// �������service����
-    ///// </summary>
-    ///// <param name="methodName"></param>
-    ///// <param name="parameters"></param>
-    ///// <returns></returns>
-    //[NonAction]
-    //private object InvokeService(string methodName, object[] parameters)
-    //{
-    //    return _service.GetType().GetMethod(methodName).Invoke(_service, parameters);
-    //}
-
-
-    //[NonAction]
-    //private async Task<object> InvokeServiceAsync(string methodName, object[] parameters)
-    //{
-    //    var task = _service.GetType().InvokeMember(methodName, BindingFlags.InvokeMethod, null, _service, parameters) as Task;
-    //    if (task != null) await task;
-    //    var result = task?.GetType().GetProperty("Result")?.GetValue(task);
-    //    return result;
-    //}
 }
