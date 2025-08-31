@@ -1,7 +1,5 @@
 using EU.Core.MCP.Interfaces;
 using EU.Core.MCP.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace EU.Core.Api.Controllers.MCP;
 
