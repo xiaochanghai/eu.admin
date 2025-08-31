@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ClaudeMCP.API.Models.Mcp;
+namespace EU.Core.Api.MCP.Models.Mcp;
 
 public class JsonRpcError
 {

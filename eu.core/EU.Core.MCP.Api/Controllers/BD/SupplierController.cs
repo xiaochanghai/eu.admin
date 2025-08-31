@@ -1,7 +1,7 @@
-using ClaudeMCP.API.Interfaces;
+using EU.Core.Api.MCP.Interfaces;
 using EU.Core.MCP.Controllers;
 
-namespace ClaudeMCP.API.Controllers;
+namespace EU.Core.Api.MCP.Controllers;
 
 /// <summary>
 /// π©”¶…Ã

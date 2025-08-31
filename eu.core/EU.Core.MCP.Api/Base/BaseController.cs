@@ -1,4 +1,4 @@
-﻿using ClaudeMCP.API.Models.Mcp;
+﻿using EU.Core.Api.MCP.Models.Mcp;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 

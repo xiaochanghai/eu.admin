@@ -1,6 +1,6 @@
 ﻿using Autofac;
-using ClaudeMCP.API.Interfaces;
-using ClaudeMCP.API.Services.Implementations; 
+using EU.Core.Api.MCP.Interfaces;
+using EU.Core.Api.MCP.Services.Implementations; 
 
 namespace EU.Core.MCP.Api.Extensions;
 

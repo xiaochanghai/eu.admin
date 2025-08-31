@@ -1,8 +1,8 @@
-using ClaudeMCP.API.Models.Mcp;
-using ClaudeMCP.API.Interfaces;
+using EU.Core.Api.MCP.Models.Mcp;
+using EU.Core.Api.MCP.Interfaces;
 using System.Text.Json;
 
-namespace ClaudeMCP.API.Services.Implementations;
+namespace EU.Core.Api.MCP.Services.Implementations;
 
 public class TestToolService : IToolService
 {

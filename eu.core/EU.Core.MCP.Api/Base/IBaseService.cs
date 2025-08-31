@@ -1,7 +1,7 @@
-using ClaudeMCP.API.Models.Mcp;
+using EU.Core.Api.MCP.Models.Mcp;
 using System.Text.Json;
 
-namespace ClaudeMCP.API.Interfaces;
+namespace EU.Core.Api.MCP.Interfaces;
 
 public interface IBaseService
 {

@@ -1,8 +1,8 @@
-using ClaudeMCP.API.Interfaces;
-using ClaudeMCP.API.Models.Mcp;
+using EU.Core.Api.MCP.Interfaces;
+using EU.Core.Api.MCP.Models.Mcp;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ClaudeMCP.API.Controllers;
+namespace EU.Core.Api.MCP.Controllers;
 
 [ApiController]
 [Route("/")]
