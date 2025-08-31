@@ -1,14 +1,40 @@
 using EU.Core.Api.MCP.Models.Mcp;
 using EU.Core.Api.MCP.Interfaces;
 using System.Text.Json;
+using EU.Core.Api.MCP.Attributes;
 
 namespace EU.Core.Api.MCP.Services.Implementations;
 
 public class SupplierService : BaseService<SupplierService>, ISupplierService
 {  
 
-    public SupplierService( ILogger<SupplierService> logger) : base(logger)
+    public SupplierService(ILogger<SupplierService> logger) : base( logger)
     {  
+    }
+
+    [McpTool("test_hello_Supplier2", "A simple test supplier tool that says hello")]
+    public async Task<McpToolResult> HandleTestHello1(JsonElement arguments)
+    {
+        await Task.Delay(10); // Simulate async work
+
+        var name = "World";
+        if (arguments.ValueKind != JsonValueKind.Undefined &&
+            arguments.TryGetProperty("name", out var nameProperty))
+        {
+            name = nameProperty.GetString() ?? "World";
+        }
+
+        return new McpToolResult
+        {
+            Content = new[]
+            {
+                new McpContent
+                {
+                    Type = "text",
+                    Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
+                }
+            }
+        };
     }
 
     //public object GetAvailableTools()

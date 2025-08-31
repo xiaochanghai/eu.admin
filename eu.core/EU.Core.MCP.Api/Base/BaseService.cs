@@ -1,15 +1,42 @@
+using EU.Core.Api.MCP.Attributes;
 using EU.Core.Api.MCP.Models.Mcp;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.MCP.Interfaces;
 
 public class BaseService<IServiceBase> : IBaseService
 {
     private readonly ILogger<BaseService<IServiceBase>> _logger;
+    private readonly Dictionary<string, MethodInfo> _toolMethods;
 
     public BaseService(ILogger<BaseService<IServiceBase>> logger)
     {
         _logger = logger;
+        _toolMethods = new Dictionary<string, MethodInfo>();
+
+        // 自动发现工具、资源和提示
+        DiscoverMcpMethods();
+    }
+
+
+    private void DiscoverMcpMethods()
+    {
+        var type = typeof(IServiceBase);
+
+        // 发现工具方法
+        foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+        {
+            var toolAttr = method.GetCustomAttribute<McpToolAttribute>();
+            if (toolAttr != null)
+            {
+                var name = string.IsNullOrEmpty(toolAttr.Name) ? method.Name : toolAttr.Name;
+                _toolMethods[name] = method;
+                _logger.LogInformation("发现工具: {ToolName}", name);
+            }
+        }
     }
 
     public virtual object HandleInitialize(JsonElement? parameters)
@@ -48,7 +75,7 @@ public class BaseService<IServiceBase> : IBaseService
         if (string.IsNullOrEmpty(toolName))
             throw new ArgumentException("Tool name is required");
 
-       _logger.LogInformation($"Executing tool: {toolName}");
+        _logger.LogInformation($"Executing tool: {toolName}");
 
         // Find the service that can handle this tool
         var isExist = CanHandle(toolName);
@@ -98,7 +125,8 @@ public class BaseService<IServiceBase> : IBaseService
         };
     }
 
-    public virtual async Task<McpToolResult> HandleTestHello(JsonElement arguments)
+    [McpTool("test_hello_Supplier", "A simple test supplier tool that says hello")]
+    public async Task<McpToolResult> HandleTestHello(JsonElement arguments)
     {
         await Task.Delay(10); // Simulate async work
 
@@ -121,4 +149,26 @@ public class BaseService<IServiceBase> : IBaseService
             }
         };
     }
+
+    ///// <summary>
+    ///// 反射调用service方法
+    ///// </summary>
+    ///// <param name="methodName"></param>
+    ///// <param name="parameters"></param>
+    ///// <returns></returns>
+    //[NonAction]
+    //private object InvokeService(string methodName, object[] parameters)
+    //{
+    //    return _service.GetType().GetMethod(methodName).Invoke(_service, parameters);
+    //}
+
+
+    //[NonAction]
+    //private async Task<object> InvokeServiceAsync(string methodName, object[] parameters)
+    //{
+    //    var task = _service.GetType().InvokeMember(methodName, BindingFlags.InvokeMethod, null, _service, parameters) as Task;
+    //    if (task != null) await task;
+    //    var result = task?.GetType().GetProperty("Result")?.GetValue(task);
+    //    return result;
+    //}
 }
