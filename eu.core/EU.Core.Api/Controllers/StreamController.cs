@@ -1,9 +1,7 @@
-using EU.Core.MCP.Interfaces;
 using EU.Core.MCP.Models;
 using MCPClient;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol.Transport;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace EU.Core.Api.Controllers.MCP;
 
