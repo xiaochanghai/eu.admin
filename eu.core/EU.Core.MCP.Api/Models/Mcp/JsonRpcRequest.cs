@@ -15,5 +15,5 @@ public class JsonRpcRequest
     public JsonElement? Params { get; set; }
     
     [JsonPropertyName("id")]
-    public JsonElement Id { get; set; }
+    public object? Id { get; set; }
 }

@@ -45,6 +45,7 @@ public class BaseController<IServiceBase> : ControllerBase
     {
         _logger.LogInformation($"Received MCP request: {request.Method}");
 
+
         try
         {
             var result = await ProcessMcpMethod(request);
@@ -75,6 +76,14 @@ public class BaseController<IServiceBase> : ControllerBase
     private async Task<object> ProcessMcpMethod(JsonRpcRequest request)
     {
         _logger.LogInformation($"Received MCP request.Method: {request.Method}");
+
+        if (request.Method == "notifications/initialized")
+        {
+            return new
+            {
+
+            };
+        }
         switch (request.Method)
         {
             case "initialize":

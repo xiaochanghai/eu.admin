@@ -17,7 +17,7 @@ public class JsonRpcResponse
     public JsonRpcError? Error { get; set; }
 
     [JsonPropertyName("id")]
-    public JsonElement Id { get; set; }
+    public object? Id { get; set; }
 }
 
 /// <summary>
