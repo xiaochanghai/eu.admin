@@ -1,7 +1,7 @@
 using EU.Core.MCP.Models;
 using MCPClient;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol.Transport;
+//using ModelContextProtocol.Protocol.Transport;
 
 namespace EU.Core.Api.Controllers.MCP;
 
@@ -40,7 +40,7 @@ public class StreamController : ControllerBase
                 {
                     // 设置远程服务器的 URI 地址 (记得替换真实的地址，从魔搭MCP广场获取)
                     Endpoint = new Uri("http://localhost:8016/Supplier/mcp"),
-                    UseStreamableHttp = true
+                    //UseStreamableHttp = true
                 });
 
             // 使用配置创建 MCP 客户端实例
