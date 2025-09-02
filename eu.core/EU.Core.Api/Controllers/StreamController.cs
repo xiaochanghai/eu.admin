@@ -1,5 +1,9 @@
 using EU.Core.MCP.Interfaces;
 using EU.Core.MCP.Models;
+using MCPClient;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol.Transport;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace EU.Core.Api.Controllers.MCP;
 
@@ -9,11 +13,11 @@ namespace EU.Core.Api.Controllers.MCP;
 [ApiController]
 [Route("api/Stream")]
 public class StreamController : ControllerBase
-{ 
+{
     private readonly ILogger<McpProtocolController> _logger;
 
-    public StreamController( ILogger<McpProtocolController> logger)
-    { 
+    public StreamController(ILogger<McpProtocolController> logger)
+    {
         _logger = logger;
     }
     /// <summary>
@@ -33,8 +37,27 @@ public class StreamController : ControllerBase
             Response.Headers.Append("Access-Control-Allow-Origin", "*");
             Response.Headers.Append("Access-Control-Allow-Headers", "Cache-Control");
 
+            var config = new SseClientTransport(
+                new SseClientTransportOptions()
+                {
+                    // 设置远程服务器的 URI 地址 (记得替换真实的地址，从魔搭MCP广场获取)
+                    Endpoint = new Uri("http://localhost:8016/Supplier/mcp"),
+                    UseStreamableHttp = true
+                });
+
+            // 使用配置创建 MCP 客户端实例
+            var client = await McpClientFactory.CreateAsync(config);
+
+            // 调用客户端的 ListToolsAsync 方法，获取可用工具列表
+            var listToolsResult = await client.ListToolsAsync();
+
+            // 创建聊天客户端实例
+            ChatAIClient chatAIClient = new ChatAIClient();
+
+            //await chatAIClient.ProcessQueryAsync("测试", listToolsResult);
+
             var cancellationToken = HttpContext.RequestAborted;
-            await foreach (var streamEvent in CallToolStreamAsync(cancellationToken))
+            await foreach (var streamEvent in chatAIClient.CallStreamAsync("测试", listToolsResult, cancellationToken))
             {
                 //var eventData = System.Text.Json.JsonSerializer.Serialize(streamEvent);
                 //var sseMessage = $"data: {eventData}\n\n";
