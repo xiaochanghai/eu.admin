@@ -15,7 +15,11 @@ import avatar from "@/assets/images/avatar.png";
 let baseURL = import.meta.env.VITE_API_URL as string;
 let VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
 
-const AvatarIcon: React.FC = () => {
+interface AvatarIconProps {
+  height?: number;
+}
+
+const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
@@ -94,7 +98,7 @@ const AvatarIcon: React.FC = () => {
       <Dropdown menu={{ items }} trigger={["click"]} placement="bottom" arrow>
         <Avatar
           className="avatar"
-          size={42}
+          size={height}
           src={
             userInfo.AvatarFileId
               ? (VITE_USER_NODE_ENV == "development" ? baseURL : "") + `/api/File/Img/${userInfo.AvatarFileId}`
@@ -106,6 +110,5 @@ const AvatarIcon: React.FC = () => {
       <PasswordModal ref={passRef} />
     </React.Fragment>
   );
-};
-
-export default AvatarIcon;
+});
+export default React.memo(AvatarIcon);
