@@ -26,6 +26,9 @@ import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
 import AvatarIcon from "./components/Header/AvatarIcon";
 import RouterGuard from "@/routers/helper/RouterGuard";
+import { useNavigate } from "react-router-dom";
+import { RootState, useSelector } from "@/redux";
+import { LOGIN_URL } from "@/config";
 
 type BubbleDataType = {
   role: string;
@@ -250,6 +253,8 @@ const useStyle = createStyles(({ token, css }) => {
 const Independent: React.FC = () => {
   const { styles } = useStyle();
   const abortController = useRef<AbortController | null>(null);
+  const navigate = useNavigate();
+  const token = useSelector((state: RootState) => state.user.token);
 
   // ==================== State ====================
   const [messageHistory, setMessageHistory] = useState<Record<string, any>>({});
@@ -594,6 +599,13 @@ const Independent: React.FC = () => {
       }));
     }
   }, [messages]);
+
+  // Redirect to login immediately when token becomes empty (after logout)
+  useEffect(() => {
+    if (!token) {
+      navigate(LOGIN_URL, { replace: true });
+    }
+  }, [token]);
 
   // ==================== Render =================
   return (
