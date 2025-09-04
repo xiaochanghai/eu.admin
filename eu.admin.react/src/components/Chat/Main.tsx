@@ -9,7 +9,8 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  UserOutlined
 } from "@ant-design/icons";
 import { Attachments, Bubble, Conversations, Prompts, Sender, useXAgent, useXChat } from "@ant-design/x";
 import { Button, Flex, type GetProp, Space, Spin, message } from "antd";
@@ -50,7 +51,7 @@ export const ChatMain: React.FC = () => {
 
   // ==================== Runtime ====================
   const [agent] = useXAgent<BubbleDataType>({
-    baseURL: "https://api.x.ant.design/api/llm_siliconflow_deepseekr1",
+    baseURL: "http://localhost:9291/api/Stream/chat",
     model: "deepseek-ai/DeepSeek-R1",
     dangerouslyApiKey: "Bearer sk-xxxxxxxxxxxxxxxxxxxx"
   });
@@ -59,6 +60,7 @@ export const ChatMain: React.FC = () => {
   const { onRequest, messages, setMessages } = useXChat({
     agent,
     requestFallback: (_, { error }) => {
+      // debugger;
       if (error.name === "AbortError") {
         return {
           content: "Request is aborted",
@@ -77,8 +79,9 @@ export const ChatMain: React.FC = () => {
       try {
         if (chunk?.data && !chunk?.data.includes("DONE")) {
           const message = JSON.parse(chunk?.data);
-          currentThink = message?.choices?.[0]?.delta?.reasoning_content || "";
-          currentContent = message?.choices?.[0]?.delta?.content || "";
+          // const message = JSON.parse(chunk?.data);
+          // currentThink = "1212";
+          currentContent = message?.content || "";
         }
       } catch (error) {
         console.error(error);
@@ -197,22 +200,54 @@ export const ChatMain: React.FC = () => {
       </div>
     </div>
   );
+
+  // const rolesAsObject: GetProp<typeof Bubble.List, "roles"> = {
+  //   ai: {
+  //     placement: "start",
+  //     avatar: { icon: <UserOutlined />, style: { background: "#fde3cf" } },
+  //     typing: { step: 5, interval: 20 },
+  //     style: {
+  //       maxWidth: 600
+  //     }
+  //   },
+  //   user: {
+  //     placement: "end",
+  //     avatar: { icon: <UserOutlined />, style: { background: "#87d068" } }
+  //   }
+  // };
   const chatList = (
     <div className={styles.chatList}>
       {messages?.length ? (
         /* 🌟 消息列表 */
         <Bubble.List
-          items={messages?.map(i => ({
-            ...i.message,
-            classNames: {
-              content: i.status === "loading" ? styles.loadingMessage : ""
-            },
-            typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
-          }))}
+          // roles={rolesAsObject}
+          items={messages?.map((i, index) => {
+            const isAI = !!(index % 2);
+
+            return {
+              ...i.message,
+              key: index,
+              role: isAI ? "assistant" : "user",
+              classNames: {
+                content: i.status === "loading" ? styles.loadingMessage : ""
+              },
+
+              typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
+            };
+          })}
+          // items={messages?.map(i => ({
+          //   ...i.message,
+          //   classNames: {
+          //     content: i.status === "loading" ? styles.loadingMessage : ""
+          //   },
+
+          //   typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
+          // }))}
           style={{ height: "100%", paddingInline: "calc(calc(100% - 700px) /2)" }}
           roles={{
             assistant: {
               placement: "start",
+              avatar: { icon: <UserOutlined />, style: { background: "#fde3cf" } },
               footer: (
                 <div style={{ display: "flex" }}>
                   <Button type="text" size="small" icon={<ReloadOutlined />} />
@@ -221,9 +256,16 @@ export const ChatMain: React.FC = () => {
                   <Button type="text" size="small" icon={<DislikeOutlined />} />
                 </div>
               ),
-              loadingRender: () => <Spin size="small" />
+              // loadingRender: () => <Spin size="small" />,
+              loadingRender: () => (
+                <Space>
+                  <Spin size="small" />
+                  Custom loading...
+                </Space>
+              )
             },
-            user: { placement: "end" }
+
+            user: { placement: "end", avatar: { icon: <UserOutlined />, style: { background: "#87d068" } } }
           }}
         />
       ) : (

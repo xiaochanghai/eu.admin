@@ -4,6 +4,64 @@
         <name>EU.Core.Api</name>
     </assembly>
     <members>
+        <member name="T:MCPClient.ChatAIClient">
+            <summary>
+            表示一个用于与 AI 聊天模型交互的客户端封装类。
+            负责初始化聊天客户端并维护对话上下文。
+            </summary>
+        </member>
+        <member name="F:MCPClient.ChatAIClient.ChatClient">
+            <summary>
+            封装后的 AI 聊天客户端接口，支持函数调用等功能。
+            </summary>
+        </member>
+        <member name="F:MCPClient.ChatAIClient.Messages">
+            <summary>
+            存储当前会话中的所有聊天消息记录。
+            </summary>
+        </member>
+        <member name="F:MCPClient.ChatAIClient._apiKey">
+            <summary>
+            API 访问密钥，用于身份认证。【记得替换为自己的】
+            </summary>
+        </member>
+        <member name="F:MCPClient.ChatAIClient._baseURL">
+            <summary>
+            AI 服务的基础请求地址。【记得替换为自己的】
+            </summary>
+        </member>
+        <member name="F:MCPClient.ChatAIClient._modelID">
+            <summary>
+            使用的 AI 模型标识符。【记得替换为自己的】
+            </summary>
+        </member>
+        <member name="M:MCPClient.ChatAIClient.#ctor">
+            <summary>
+            初始化一个新的 <see cref="T:MCPClient.ChatAIClient"/> 实例。
+            构造函数中自动完成聊天客户端的初始化配置。
+            </summary>
+        </member>
+        <member name="M:MCPClient.ChatAIClient.InitIChatClient">
+            <summary>
+            初始化内部使用的 AI 聊天客户端实例。
+            配置 API 凭证、服务端点，并构建具备函数调用能力的客户端。
+            同时初始化系统消息作为对话起点。
+            </summary>
+        </member>
+        <member name="M:MCPClient.ChatAIClient.ProcessQueryAsync(System.String,System.Collections.Generic.IList{ModelContextProtocol.Client.McpClientTool})">
+            <summary>
+            异步处理用户的自然语言查询，并与 AI 模型进行交互，支持 MCP 工具调用。
+            </summary>
+            <param name="query">用户的自然语言查询内容</param>
+            <param name="tools">可用的 MCP 工具列表，用于扩展 AI 的外部能力</param>
+            <returns>AI 返回的最终文本响应结果</returns>
+        </member>
+        <member name="M:MCPClient.ChatAIClient.OutputToolUsageInfo(Microsoft.Extensions.AI.ChatResponse)">
+            <summary>
+            辅助方法：输出 AI 在响应中调用的工具信息到控制台。
+            </summary>
+            <param name="response">来自 AI 的完整响应对象</param>
+        </member>
         <member name="T:EU.Core.Controllers.AuthorizeController">
             <summary>
             登录管理【无权限】
@@ -705,6 +763,156 @@
             安全库存设置(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.FastMcpController">
+            <summary>
+            FastMCP 风格控制器 - 支持装饰器和流式传输
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetTools">
+            <summary>
+            获取可用工具列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetResources">
+            <summary>
+            获取可用资源列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.CallTool(EU.Core.Api.Controllers.MCP.McpToolCallRequest)">
+            <summary>
+            执行工具调用（同步）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.CallToolStream(EU.Core.Api.Controllers.MCP.McpToolCallRequest)">
+            <summary>
+            执行工具调用（流式响应）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.GetResource(System.String)">
+            <summary>
+            获取资源内容
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.HandleRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理通用MCP请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.FastMcpController.Health">
+            <summary>
+            健康检查
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpToolCallRequest">
+            <summary>
+            MCP 工具调用请求模型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpController">
+            <summary>
+            MCP 服务控制器 - 支持流式 HTTP 请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.GetTools">
+            <summary>
+            获取可用工具列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.GetResources">
+            <summary>
+            获取可用资源列表
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallToolStream(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            执行工具调用 - 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallTool(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            执行工具调用 - 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.ReadResourceStream(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            获取资源内容 - 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.ReadResource(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            获取资源内容 - 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.HandleRpcRequestStream(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 请求（兼容 JSON-RPC 2.0）- 支持流式响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.HandleRpcRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 请求（兼容 JSON-RPC 2.0）- 传统响应
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.CallToolLongPolling(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            长轮询工具调用 - 支持长时间运行的工具
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpController.SendServerSentEvent(System.String,System.String)">
+            <summary>
+            发送服务器发送事件
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpProtocolController">
+            <summary>
+            MCP 协议控制器 - 处理标准的 MCP 协议请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.HandleRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 协议请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.HandleStreamRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 流式请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpProtocolController.Health">
+            <summary>
+            健康检查
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.McpStreamController">
+            <summary>
+            MCP 流式控制器 - 专门处理流式请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.CallToolStream(EU.Core.Api.Controllers.MCP.ToolCallRequest)">
+            <summary>
+            流式工具调用 - 使用 Server-Sent Events
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.ReadResourceStream(EU.Core.Api.Controllers.MCP.ResourceReadRequest)">
+            <summary>
+            流式资源读取
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.McpStreamController.SendServerSentEvent(System.String,System.String)">
+            <summary>
+            发送服务器发送事件
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.MCP.StreamController">
+            <summary>
+            MCP 协议控制器 - 处理标准的 MCP 协议请求
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.StreamController.HandleStreamRequest(EU.Core.MCP.Models.McpRequest)">
+            <summary>
+            处理 MCP 流式请求
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.NacosController">
             <summary>
             服务管理 
@@ -921,16 +1129,6 @@
         <member name="T:EU.Core.Api.Controllers.PoReturnOrderDetailController">
             <summary>
             采购退货单明细(Controller)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.RmEmailController">
-            <summary>
-            邮件账号(Controller)
-            </summary>
-        </member>
-        <member name="T:EU.Core.Api.Controllers.RmReumeController">
-            <summary>
-            简历(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SdChangeOrderController">

@@ -63,7 +63,14 @@ public class StreamController : ControllerBase
                 //await Response.WriteAsync("开始执行工具", HttpContext.RequestAborted);
                 //await Response.Body.FlushAsync(HttpContext.RequestAborted);
 
-                var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(streamEvent.Data)}\nid: {streamEvent.Id}\n\n";
+                //var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(streamEvent.Data)}\nid: {streamEvent.Id}\n\n";
+
+                var obj = new
+                {
+                    content = streamEvent.Data
+                };
+
+                var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(obj)}\nid: {streamEvent.Id}\n\n";
                 var bytes = Encoding.UTF8.GetBytes(eventData);
                 await Response.Body.WriteAsync(bytes, 0, bytes.Length);
                 await Response.Body.FlushAsync(HttpContext.RequestAborted);

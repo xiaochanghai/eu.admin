@@ -1,4 +1,5 @@
-﻿using EU.Core.MCP.Models;
+﻿using EU.Core;
+using EU.Core.MCP.Models;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using OpenAI;
@@ -172,6 +173,9 @@ namespace MCPClient
                     };
             }
             Console.ForegroundColor = ConsoleColor.Yellow;
+
+            var content = string.Join("", updates.Where(x => x.Text.IsNotEmptyOrNull()).Select(x => x.Text).ToList());
+            Messages.Add(new(ChatRole.System, content));
 
             //var response = await ChatClient.GetResponseAsync(Messages, options);
 
