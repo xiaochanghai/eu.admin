@@ -24,7 +24,8 @@ import { Button, Flex, type GetProp, Space, Spin, message } from "antd";
 import { createStyles } from "antd-style";
 import dayjs from "dayjs";
 import React, { useEffect, useRef, useState } from "react";
-import AvatarIcon from "../components/Header/components/AvatarIcon";
+import AvatarIcon from "./components/Header/AvatarIcon";
+import RouterGuard from "@/routers/helper/RouterGuard";
 
 type BubbleDataType = {
   role: string;
@@ -596,14 +597,16 @@ const Independent: React.FC = () => {
 
   // ==================== Render =================
   return (
-    <div className={styles.layout}>
-      {chatSider}
+    <RouterGuard>
+      <div className={styles.layout}>
+        {chatSider}
 
-      <div className={styles.chat}>
-        {chatList}
-        {chatSender}
+        <div className={styles.chat}>
+          {chatList}
+          {chatSender}
+        </div>
       </div>
-    </div>
+    </RouterGuard>
   );
 };
 

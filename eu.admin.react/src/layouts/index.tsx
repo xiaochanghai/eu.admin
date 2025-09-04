@@ -11,7 +11,7 @@ import ThemeDrawer from "@/layouts/components/ThemeDrawer";
 import signalr from "@/utils/signalr";
 
 const LayoutIndex: React.FC = () => {
-  const chatlayout = "chat";
+  const chatlayout = null;
   const layout = useSelector((state: RootState) => state.global.layout);
   const watermark = useSelector((state: RootState) => state.global.watermark);
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
