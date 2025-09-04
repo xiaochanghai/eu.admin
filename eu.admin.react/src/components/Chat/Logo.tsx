@@ -3,7 +3,7 @@ import logo from "@/assets/images/logo.png";
 const APP_TITLE = import.meta.env.VITE_GLOB_APP_TITLE;
 import { useStyle } from "./Styles";
 
-export const AvatarIcon: React.FC<any> = React.memo(() => {
+export const Logo: React.FC<any> = React.memo(() => {
   const { styles } = useStyle();
   return (
     <React.Fragment>
