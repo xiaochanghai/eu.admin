@@ -95,7 +95,7 @@ export const useStyle = createStyles(({ token, css }) => {
     // sender 样式
     sender: css`
       width: 100%;
-      max-width: 700px;
+      max-width: 900px;
       margin: 0 auto;
     `,
     speechButton: css`
@@ -104,7 +104,7 @@ export const useStyle = createStyles(({ token, css }) => {
     `,
     senderPrompt: css`
       width: 100%;
-      max-width: 700px;
+      max-width: 900px;
       margin: 0 auto;
       color: ${token.colorText};
     `

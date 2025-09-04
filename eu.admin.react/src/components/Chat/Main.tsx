@@ -106,6 +106,17 @@ export const ChatMain: React.FC = () => {
     }
   });
 
+  useEffect(() => {
+    if (messages.length > 2) {
+      const lastMessage = messages[messages.length - 1];
+      const lastMessage1 = messages[messages.length - 2];
+      if (lastMessage.id !== "loading" && lastMessage1.id === "loading") {
+        let newList = messages.filter(message => message.id !== "loading");
+        setMessages(newList);
+      }
+    }
+  }, [messages]);
+
   // ==================== Event ====================
   const onSubmit = (val: string) => {
     if (!val) return;
@@ -119,6 +130,25 @@ export const ChatMain: React.FC = () => {
       stream: true,
       message: { role: "user", content: val }
     });
+    setMessages(
+      prev =>
+        [
+          ...prev,
+          {
+            id: "loading",
+            message: {
+              role: "assistant",
+              content: (
+                <Space>
+                  <Spin size="small" />
+                </Space>
+              )
+            },
+            status: "loading",
+            loading: true
+          }
+        ] as any
+    );
   };
 
   // ==================== Nodes ====================
@@ -201,26 +231,11 @@ export const ChatMain: React.FC = () => {
     </div>
   );
 
-  // const rolesAsObject: GetProp<typeof Bubble.List, "roles"> = {
-  //   ai: {
-  //     placement: "start",
-  //     avatar: { icon: <UserOutlined />, style: { background: "#fde3cf" } },
-  //     typing: { step: 5, interval: 20 },
-  //     style: {
-  //       maxWidth: 600
-  //     }
-  //   },
-  //   user: {
-  //     placement: "end",
-  //     avatar: { icon: <UserOutlined />, style: { background: "#87d068" } }
-  //   }
-  // };
   const chatList = (
     <div className={styles.chatList}>
       {messages?.length ? (
         /* 🌟 消息列表 */
         <Bubble.List
-          // roles={rolesAsObject}
           items={messages?.map((i, index) => {
             const isAI = !!(index % 2);
 
@@ -235,15 +250,7 @@ export const ChatMain: React.FC = () => {
               typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
             };
           })}
-          // items={messages?.map(i => ({
-          //   ...i.message,
-          //   classNames: {
-          //     content: i.status === "loading" ? styles.loadingMessage : ""
-          //   },
-
-          //   typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
-          // }))}
-          style={{ height: "100%", paddingInline: "calc(calc(100% - 700px) /2)" }}
+          style={{ height: "100%", paddingInline: "calc(calc(100% - 900px) /2)" }}
           roles={{
             assistant: {
               placement: "start",
@@ -256,7 +263,6 @@ export const ChatMain: React.FC = () => {
                   <Button type="text" size="small" icon={<DislikeOutlined />} />
                 </div>
               ),
-              // loadingRender: () => <Spin size="small" />,
               loadingRender: () => (
                 <Space>
                   <Spin size="small" />
@@ -272,7 +278,7 @@ export const ChatMain: React.FC = () => {
         <Space
           direction="vertical"
           size={16}
-          style={{ paddingInline: "calc(calc(100% - 700px) /2)" }}
+          style={{ paddingInline: "calc(calc(100% - 900px) /2)" }}
           className={styles.placeholder}
         >
           <Welcome />
@@ -339,6 +345,7 @@ export const ChatMain: React.FC = () => {
       />
     </Sender.Header>
   );
+
   const chatSender = (
     <>
       {/* 🌟 提示词 */}
