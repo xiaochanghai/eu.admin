@@ -23,6 +23,7 @@ import { RootState, useSelector } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
 let baseURL = import.meta.env.VITE_API_URL as string;
+import { store } from "@/redux";
 
 type BubbleDataType = {
   role: string;
@@ -49,12 +50,13 @@ export const ChatMain: React.FC = () => {
   /**
    * 🔔 Please replace the BASE_URL, PATH, MODEL, API_KEY with your own values.
    */
-
+  let baseURL1 = (baseURL == "/" ? "" : baseURL) + "/api/Stream/chat";
+  console.log("baseURL:" + baseURL1);
   // ==================== Runtime ====================
   const [agent] = useXAgent<BubbleDataType>({
-    baseURL: baseURL + "api/Stream/chat",
-    model: "deepseek-ai/DeepSeek-R1",
-    dangerouslyApiKey: "Bearer sk-xxxxxxxxxxxxxxxxxxxx"
+    baseURL: baseURL1,
+    // model: "deepseek-ai/DeepSeek-R1",
+    dangerouslyApiKey: `Bearer ${store.getState().user.token}`
   });
   const loading = agent.isRequesting();
 
