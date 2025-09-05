@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { RootState, useSelector } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
+let baseURL = import.meta.env.VITE_API_URL as string;
 
 type BubbleDataType = {
   role: string;
@@ -51,7 +52,7 @@ export const ChatMain: React.FC = () => {
 
   // ==================== Runtime ====================
   const [agent] = useXAgent<BubbleDataType>({
-    baseURL: "http://localhost:9291/api/Stream/chat",
+    baseURL: baseURL + "api/Stream/chat",
     model: "deepseek-ai/DeepSeek-R1",
     dangerouslyApiKey: "Bearer sk-xxxxxxxxxxxxxxxxxxxx"
   });
