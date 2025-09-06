@@ -8,6 +8,13 @@ const md = markdownit({ html: true, breaks: true });
 export type BubbleDataType = {
   role: string;
   content: string;
+  parentMessageId?: string;
+};
+
+export type BubbleDataTypeContent = {
+  key?: string;
+  content?: string;
+  parentMessageId?: string;
 };
 
 interface BubbleViewProps {

@@ -22,16 +22,17 @@ import { useNavigate } from "react-router-dom";
 import { RootState, useSelector } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
-import { BubbleDataType, ChatBubble } from "./Bubble";
+import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 import { store } from "@/redux";
+import { createUuid } from "@/utils";
 
 export const ChatMain: React.FC = () => {
   const { styles } = useStyle();
   const abortController = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.user.token);
-
+  let parentMessageId: string = "";
   // ==================== State ====================
   const [messageHistory, setMessageHistory] = useState<Record<string, any>>({});
 
@@ -40,6 +41,7 @@ export const ChatMain: React.FC = () => {
 
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<GetProp<typeof Attachments, "items">>([]);
+  const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
 
   const [inputValue, setInputValue] = useState("");
 
@@ -95,8 +97,28 @@ export const ChatMain: React.FC = () => {
       } else {
         content = `${originMessage?.content || ""}${currentThink}${currentContent}`;
       }
+      // debugger;
+      if (chunk?.id) {
+        let contents = [...bubbleContents];
+        const index = contents.findIndex(u => u.key === chunk?.id);
+        if (index !== -1) {
+          contents[index] = {
+            ...contents[index],
+            content: content
+          };
+          // 或者直接修改字段
+          // userList[index].age = 31;
+        } else contents.push({ key: chunk?.id, content, parentMessageId });
+        // let contents = [...bubbleContents];
+        // const content1 = contents.find(u => u.key === chunk?.id);
+        // if (content1) {
+        // }
+        setBubbleContents(contents);
+      }
       return {
         content: content,
+        parentMessageId,
+        // contents: [{ key: chunk?.id, content: content }],
         role: "assistant"
       };
     },
@@ -119,7 +141,7 @@ export const ChatMain: React.FC = () => {
   // ==================== Event ====================
   const onSubmit = (val: string) => {
     if (!val) return;
-
+    parentMessageId = createUuid();
     if (loading) {
       message.error("Request is in progress, please wait for the request to complete.");
       return;
@@ -230,8 +252,17 @@ export const ChatMain: React.FC = () => {
         <Bubble.List
           items={messages?.map((i, index) => {
             const isAI = !!(index % 2);
+            let contents = [...bubbleContents];
+            const lists = contents.filter(item => item.parentMessageId === i.message.parentMessageId);
             let message1 = {
-              ...i.message
+              ...i.message,
+              content:
+                lists && lists.length > 0
+                  ? lists.map(list => {
+                      return { key: list.key, description: <span>{list.content}</span> };
+                    })
+                  : i.message.content
+
               // content: [
               //   {
               //     key: "6",
@@ -259,7 +290,7 @@ export const ChatMain: React.FC = () => {
                 content: i.status === "loading" ? styles.loadingMessage : ""
               },
 
-              typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false,
+              // typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false,
               // loadingRender: () => {
               //   return (
               //     <Space>
@@ -268,8 +299,15 @@ export const ChatMain: React.FC = () => {
               //   );
               // },
               messageRender: content => {
-                return <ChatBubble message={i} content={content} />;
+                if (i.message.role === "user" || i.id === "loading") return <ChatBubble message={i} content={content} />;
+                return <Prompts items={content} className="chat-bubble-prompt" vertical />;
+                // content.map((list: any) => {
+                //   return <ChatBubble message={i} content={list.description} />;
+                // });
               }
+              // messageRender: content => {
+              //   return <ChatBubble message={i} content={content} />;
+              // }
             };
           })}
           style={{ height: "100%", paddingInline: "calc(calc(100% - 900px) /2)" }}
