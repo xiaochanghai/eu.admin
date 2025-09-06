@@ -22,13 +22,9 @@ import { useNavigate } from "react-router-dom";
 import { RootState, useSelector } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
+import { BubbleDataType, ChatBubble } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 import { store } from "@/redux";
-
-type BubbleDataType = {
-  role: string;
-  content: string;
-};
 
 export const ChatMain: React.FC = () => {
   const { styles } = useStyle();
@@ -139,14 +135,7 @@ export const ChatMain: React.FC = () => {
           ...prev,
           {
             id: "loading",
-            message: {
-              role: "assistant",
-              content: (
-                <Space>
-                  <Spin size="small" />
-                </Space>
-              )
-            },
+            message: loading,
             status: "loading",
             loading: true
           }
@@ -241,9 +230,12 @@ export const ChatMain: React.FC = () => {
         <Bubble.List
           items={messages?.map((i, index) => {
             const isAI = !!(index % 2);
-
-            return {
+            let message1 = {
               ...i.message,
+              content: <ChatBubble message={i} />
+            };
+            return {
+              ...message1,
               key: index,
               role: isAI ? "assistant" : "user",
               classNames: {
