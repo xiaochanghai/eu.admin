@@ -231,8 +231,25 @@ export const ChatMain: React.FC = () => {
           items={messages?.map((i, index) => {
             const isAI = !!(index % 2);
             let message1 = {
-              ...i.message,
-              content: <ChatBubble message={i} />
+              ...i.message
+              // content: [
+              //   {
+              //     key: "6",
+              //     icon: <UserOutlined style={{ color: "#964B00" }} />,
+              //     description: "How to rest effectively after long hours of work?"
+              //   },
+              //   {
+              //     key: "7",
+              //     icon: <UserOutlined style={{ color: "#FAAD14" }} />,
+              //     description: "What are the secrets to maintaining a positive mindset?"
+              //   },
+              //   {
+              //     key: "8",
+              //     icon: <UserOutlined style={{ color: "#FF4D4F" }} />,
+              //     description: "How to stay calm under immense pressure?"
+              //   }
+              // ]
+              // content: <ChatBubble message={i} />
             };
             return {
               ...message1,
@@ -242,7 +259,17 @@ export const ChatMain: React.FC = () => {
                 content: i.status === "loading" ? styles.loadingMessage : ""
               },
 
-              typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false
+              typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false,
+              // loadingRender: () => {
+              //   return (
+              //     <Space>
+              //       <Spin size="small" />
+              //     </Space>
+              //   );
+              // },
+              messageRender: content => {
+                return <ChatBubble message={i} content={content} />;
+              }
             };
           })}
           style={{ height: "100%", paddingInline: "calc(calc(100% - 900px) /2)" }}

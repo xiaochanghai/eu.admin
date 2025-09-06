@@ -12,19 +12,20 @@ export type BubbleDataType = {
 
 interface BubbleViewProps {
   message: MessageInfo<BubbleDataType>;
+  content: string;
 }
 
-export const ChatBubble: React.FC<BubbleViewProps> = React.memo(({ message }) => {
+export const ChatBubble: React.FC<BubbleViewProps> = React.memo(({ message, content }) => {
   return (
     <>
       {message.id === "loading" ? (
         <Space>
           <Spin size="small" />
         </Space>
-      ) : message.message.role == "user" ? (
-        message.message.content
+      ) : message.message.role === "user" ? (
+        content
       ) : (
-        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: md.render(message.message.content) }} />
+        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: md.render(content) }} />
       )}
     </>
   );
