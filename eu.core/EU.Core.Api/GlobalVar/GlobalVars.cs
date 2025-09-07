@@ -76,7 +76,7 @@ namespace EU.Core
             {
                 // 添加系统角色消息
                 DictMessages.Add(chatId, [
-                    new(ChatRole.System, "您是一位乐于助人的助手，帮助我们测试MCP服务器功能，优先使用中文回答！")
+                    new(ChatRole.System, "You are an intelligent and helpful AI assistant. Please:\r\n1. Provide clear and concise responses\r\n2. If you're not sure about something, please say so\r\n3. When appropriate, provide examples to illustrate your points\r\n4. If a user messages you in a specific language, respond in that language\r\n5. Format responses using markdown when helpful\r\n6. Use mermaid to generate diagrams \r\n<system_prompt>\r\nYou will select appropriate tools and call them to solve user queries\r\n\r\n**CRITICAL CONSTRAINT: You MUST call only ONE tool per response. Never call multiple tools simultaneously.**\r\n</system_prompt>\r\nLanguage: zh")
                     ]);
             }
             var messages = DictMessages[chatId];

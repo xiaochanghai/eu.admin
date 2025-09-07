@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { RootState, useSelector, store } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
-import { getCache, addCache } from "@/utils";
+import { getCache, setCache } from "@/utils";
 import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 
@@ -50,7 +50,7 @@ export const ChatMain: React.FC = () => {
     getCache("chatId") ||
     (() => {
       const newId = createUuid();
-      addCache("chatId", newId);
+      setCache("chatId", newId);
       return newId;
     })();
   /**
@@ -187,6 +187,7 @@ export const ChatMain: React.FC = () => {
           ]);
           setCurConversation(now);
           setMessages([]);
+          setCache("chatId", "");
         }}
         type="link"
         className={styles.addBtn}

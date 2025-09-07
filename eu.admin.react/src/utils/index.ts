@@ -72,7 +72,7 @@ export function getFlatMenuList(menuList: RouteObjectType[]): RouteObjectType[] 
   return newMenuList.flatMap(item => [item, ...(item.children ? getFlatMenuList(item.children) : [])]);
 }
 
-export function addCache(key: string, value: string) {
+export function setCache(key: string, value: string) {
   localStorage.setItem(key, value);
 }
 export function getCache(key: string) {
