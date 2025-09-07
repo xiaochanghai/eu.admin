@@ -72,6 +72,13 @@ export function getFlatMenuList(menuList: RouteObjectType[]): RouteObjectType[] 
   return newMenuList.flatMap(item => [item, ...(item.children ? getFlatMenuList(item.children) : [])]);
 }
 
+export function addCache(key: string, value: string) {
+  localStorage.setItem(key, value);
+}
+export function getCache(key: string) {
+  return localStorage.getItem(key);
+}
+
 /**
  * @description Use recursion to filter out the menu items that need to be rendered in the left menu (excluding menus with isHide == true).
  * @param {Array} menuList - The menu list.

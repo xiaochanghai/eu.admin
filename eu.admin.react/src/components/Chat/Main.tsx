@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { RootState, useSelector, store } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
+import { getCache, addCache } from "@/utils";
 import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 
@@ -45,10 +46,17 @@ export const ChatMain: React.FC = () => {
   // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
   let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
+  const chatId =
+    getCache("chatId") ||
+    (() => {
+      const newId = createUuid();
+      addCache("chatId", newId);
+      return newId;
+    })();
   /**
    * 🔔 Please replace the BASE_URL, PATH, MODEL, API_KEY with your own values.
    */
-  let baseURL1 = (baseURL == "/" ? "" : baseURL) + `/api/Stream/chat/${createUuid()}`;
+  let baseURL1 = `${baseURL == "/" ? "" : baseURL}/api/Stream/chat/${chatId}`;
   console.log("baseURL:" + baseURL1);
   // ==================== Runtime ====================
   const [agent] = useXAgent<BubbleDataType>({

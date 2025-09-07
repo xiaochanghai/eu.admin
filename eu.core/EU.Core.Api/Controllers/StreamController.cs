@@ -25,7 +25,7 @@ public class StreamController : ControllerBase
     /// 处理 MCP 流式请求
     /// </summary>
     [HttpPost("chat/{chatId}")]
-    public async Task<IActionResult> HandleStreamRequest([FromBody] StreamRequest request,Guid chatId)
+    public async Task<IActionResult> HandleStreamRequest([FromBody] StreamRequest request, Guid chatId)
     {
         try
         {
@@ -51,12 +51,12 @@ public class StreamController : ControllerBase
 
             // 调用客户端的 ListToolsAsync 方法，获取可用工具列表
             var listToolsResult = await client.ListToolsAsync();
-             
+
 
             //await chatAIClient.ProcessQueryAsync("测试", listToolsResult);
 
             var cancellationToken = HttpContext.RequestAborted;
-            await foreach (var streamEvent in ChatHelper.CallStreamAsync(request.message.content, listToolsResult, cancellationToken))
+            await foreach (var streamEvent in ChatHelper.CallStreamAsync(chatId, request.message.content, listToolsResult, cancellationToken))
             {
                 //var eventData = System.Text.Json.JsonSerializer.Serialize(streamEvent);
                 //var sseMessage = $"data: {eventData}\n\n";
@@ -71,8 +71,8 @@ public class StreamController : ControllerBase
                     content = streamEvent.Data
                 };
 
-               var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(obj)}\nid: {streamEvent.Id}\n\n";
-               var bytes = Encoding.UTF8.GetBytes(eventData);
+                var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(obj)}\nid: {streamEvent.Id}\n\n";
+                var bytes = Encoding.UTF8.GetBytes(eventData);
                 await Response.Body.WriteAsync(bytes, 0, bytes.Length);
                 await Response.Body.FlushAsync(HttpContext.RequestAborted);
 

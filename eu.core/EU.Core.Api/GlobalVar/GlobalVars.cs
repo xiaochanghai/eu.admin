@@ -17,6 +17,9 @@ namespace EU.Core
         /// 存储当前会话中的所有聊天消息记录。
         /// </summary>
         private static IList<ChatMessage> Messages;
+
+        private static Dictionary<Guid, IList<ChatMessage>> DictMessages;
+
         public static IChatClient chatClient = null;    // socket服务
         /// <summary>
         /// API 访问密钥，用于身份认证。【记得替换为自己的】
@@ -60,24 +63,26 @@ namespace EU.Core
                     // 添加系统角色消息
                     new(ChatRole.System, "您是一位乐于助人的助手，帮助我们测试MCP服务器功能，优先使用中文回答！")
                     ];
+                DictMessages = new Dictionary<Guid, IList<ChatMessage>>();
             }
         }
 
-        public static async IAsyncEnumerable<McpStreamEvent> CallStreamAsync(string query, IList<McpClientTool> tools,
+        public static async IAsyncEnumerable<McpStreamEvent> CallStreamAsync(Guid chatId, string query, IList<McpClientTool> tools,
  [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var id = Utility.GetGUID();
-            // 如果消息历史为空，则初始化系统提示消息
-            if (Messages.Count == 0)
+
+            if (!DictMessages.ContainsKey(chatId))
             {
-                Messages =
-                [
+                // 添加系统角色消息
+                DictMessages.Add(chatId, [
                     new(ChatRole.System, "您是一位乐于助人的助手，帮助我们测试MCP服务器功能，优先使用中文回答！")
-                ];
+                    ]);
             }
+            var messages = DictMessages[chatId];
 
             // 添加用户输入的消息到对话历史
-            Messages.Add(new(ChatRole.User, query));
+            messages.Add(new(ChatRole.User, query));
 
             // 设置请求选项，注入可用工具
             var options = new ChatOptions
@@ -89,7 +94,7 @@ namespace EU.Core
             Console.ForegroundColor = ConsoleColor.Green;
 
             List<ChatResponseUpdate> updates = [];
-            await foreach (ChatResponseUpdate update in chatClient.GetStreamingResponseAsync(Messages, options))
+            await foreach (ChatResponseUpdate update in chatClient.GetStreamingResponseAsync(messages, options))
             {
                 updates.Add(update);
                 if (!string.IsNullOrEmpty(update.Text))
@@ -103,7 +108,8 @@ namespace EU.Core
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             var content = string.Join("", updates.Where(x => x.Text.IsNotEmptyOrNull()).Select(x => x.Text).ToList());
-            Messages.Add(new(ChatRole.System, content));
+            messages.Add(new(ChatRole.System, content));
+            DictMessages[chatId] = messages;
 
             //var response = await ChatClient.GetResponseAsync(Messages, options);
 
