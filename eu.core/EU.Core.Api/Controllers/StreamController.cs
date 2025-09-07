@@ -1,5 +1,4 @@
 using EU.Core.MCP.Models;
-using MCPClient;
 using ModelContextProtocol.Client;
 //using ModelContextProtocol.Protocol.Transport;
 
@@ -13,20 +12,24 @@ namespace EU.Core.Api.Controllers.MCP;
 public class StreamController : ControllerBase
 {
     private readonly ILogger<McpProtocolController> _logger;
+    //private readonly ChatAIClient chatAIClient;
 
     public StreamController(ILogger<McpProtocolController> logger)
     {
+
+        // 创建聊天客户端实例
+        //chatAIClient = new ChatAIClient();
         _logger = logger;
     }
     /// <summary>
     /// 处理 MCP 流式请求
     /// </summary>
-    [HttpPost("chat")]
-    public async Task<IActionResult> HandleStreamRequest([FromBody] McpRequest request)
+    [HttpPost("chat/{chatId}")]
+    public async Task<IActionResult> HandleStreamRequest([FromBody] StreamRequest request,Guid chatId)
     {
         try
         {
-            _logger.LogInformation("收到 MCP 流式请求: {Method} {Id}", request.Method, request.Id);
+            _logger.LogInformation("收到 MCP 流式请求: {Method}", request.message);
 
             // 设置响应头以支持流式传输
             Response.Headers.Append("Content-Type", "text/event-stream");
@@ -39,7 +42,7 @@ public class StreamController : ControllerBase
                 new SseClientTransportOptions()
                 {
                     // 设置远程服务器的 URI 地址 (记得替换真实的地址，从魔搭MCP广场获取)
-                    Endpoint = new Uri("http://localhost:8016/Supplier/mcp"),
+                    Endpoint = new Uri("http://localhost:8020/Supplier/mcp"),
                     //UseStreamableHttp = true
                 });
 
@@ -48,14 +51,12 @@ public class StreamController : ControllerBase
 
             // 调用客户端的 ListToolsAsync 方法，获取可用工具列表
             var listToolsResult = await client.ListToolsAsync();
-
-            // 创建聊天客户端实例
-            ChatAIClient chatAIClient = new ChatAIClient();
+             
 
             //await chatAIClient.ProcessQueryAsync("测试", listToolsResult);
 
             var cancellationToken = HttpContext.RequestAborted;
-            await foreach (var streamEvent in chatAIClient.CallStreamAsync("测试", listToolsResult, cancellationToken))
+            await foreach (var streamEvent in ChatHelper.CallStreamAsync(request.message.content, listToolsResult, cancellationToken))
             {
                 //var eventData = System.Text.Json.JsonSerializer.Serialize(streamEvent);
                 //var sseMessage = $"data: {eventData}\n\n";
@@ -70,8 +71,8 @@ public class StreamController : ControllerBase
                     content = streamEvent.Data
                 };
 
-                var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(obj)}\nid: {streamEvent.Id}\n\n";
-                var bytes = Encoding.UTF8.GetBytes(eventData);
+               var eventData = $"event: {streamEvent.EventType}\ndata: {JsonHelper.ObjToJson(obj)}\nid: {streamEvent.Id}\n\n";
+               var bytes = Encoding.UTF8.GetBytes(eventData);
                 await Response.Body.WriteAsync(bytes, 0, bytes.Length);
                 await Response.Body.FlushAsync(HttpContext.RequestAborted);
 
@@ -79,6 +80,7 @@ public class StreamController : ControllerBase
                 if (cancellationToken.IsCancellationRequested)
                     break;
             }
+
             return new EmptyResult();
         }
         catch (OperationCanceledException)
@@ -88,11 +90,11 @@ public class StreamController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "处理 MCP 流式请求失败: {Method} {Id}", request.Method, request.Id);
+            _logger.LogError(ex, "处理 MCP 流式请求失败: {Method}", request.message);
 
             var errorResponse = new McpResponse
             {
-                Id = request.Id,
+                Id = Guid.NewGuid().ToString(),
                 Error = new McpError
                 {
                     Code = -32603,
@@ -109,6 +111,7 @@ public class StreamController : ControllerBase
     public async IAsyncEnumerable<McpStreamEvent> CallToolStreamAsync(
      [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        var name1 = RoutePrefix.Name;
         yield return new McpStreamEvent
         {
             EventType = "tool_started",
@@ -156,5 +159,18 @@ public class StreamController : ControllerBase
             await Task.Delay(300, cancellationToken); // 模拟数据生成延迟
         }
     }
+
+}
+
+public class StreamRequest
+{
+    public StreamRequestMessage message { get; set; }
+
+}
+
+public class StreamRequestMessage
+{
+    public string role { get; set; }
+    public string content { get; set; }
 
 }

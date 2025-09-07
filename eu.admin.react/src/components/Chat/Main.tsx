@@ -45,11 +45,10 @@ export const ChatMain: React.FC = () => {
   // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
   let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
-
   /**
    * 🔔 Please replace the BASE_URL, PATH, MODEL, API_KEY with your own values.
    */
-  let baseURL1 = (baseURL == "/" ? "" : baseURL) + "/api/Stream/chat";
+  let baseURL1 = (baseURL == "/" ? "" : baseURL) + `/api/Stream/chat/${createUuid()}`;
   console.log("baseURL:" + baseURL1);
   // ==================== Runtime ====================
   const [agent] = useXAgent<BubbleDataType>({
@@ -107,13 +106,7 @@ export const ChatMain: React.FC = () => {
             ...contents[index],
             content: content
           };
-          // 或者直接修改字段
-          // userList[index].age = 31;
         } else contents.push({ key: chunk?.id, content, parentMessageId });
-        // let contents = [...bubbleContents];
-        // const content1 = contents.find(u => u.key === chunk?.id);
-        // if (content1) {
-        // }
         bubbleContents = contents;
       }
       return {

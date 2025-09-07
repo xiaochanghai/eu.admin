@@ -908,7 +908,7 @@
             MCP 协议控制器 - 处理标准的 MCP 协议请求
             </summary>
         </member>
-        <member name="M:EU.Core.Api.Controllers.MCP.StreamController.HandleStreamRequest(EU.Core.MCP.Models.McpRequest)">
+        <member name="M:EU.Core.Api.Controllers.MCP.StreamController.HandleStreamRequest(EU.Core.Api.Controllers.MCP.StreamRequest)">
             <summary>
             处理 MCP 流式请求
             </summary>
@@ -2001,6 +2001,31 @@
             </summary>
             <param name="actionName"></param>
             <param name="version"></param>
+        </member>
+        <member name="T:EU.Core.ChatHelper">
+            <summary>
+            路由变量前缀配置
+            </summary>
+        </member>
+        <member name="F:EU.Core.ChatHelper.Messages">
+            <summary>
+            存储当前会话中的所有聊天消息记录。
+            </summary>
+        </member>
+        <member name="F:EU.Core.ChatHelper._apiKey">
+            <summary>
+            API 访问密钥，用于身份认证。【记得替换为自己的】
+            </summary>
+        </member>
+        <member name="F:EU.Core.ChatHelper._baseURL">
+            <summary>
+            AI 服务的基础请求地址。【记得替换为自己的】
+            </summary>
+        </member>
+        <member name="F:EU.Core.ChatHelper._modelID">
+            <summary>
+            使用的 AI 模型标识符。【记得替换为自己的】
+            </summary>
         </member>
         <member name="T:EU.Web.Controllers.Server.ServerController">
             <summary>
