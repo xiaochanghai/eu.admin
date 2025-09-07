@@ -8,6 +8,7 @@ export type BubbleDataType = {
   role: string;
   content: string;
   parentMessageId?: string;
+  contents?: BubbleDataTypeContent[];
 };
 
 export type BubbleDataTypeContent = {

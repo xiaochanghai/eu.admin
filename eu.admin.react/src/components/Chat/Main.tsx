@@ -42,8 +42,8 @@ export const ChatMain: React.FC = () => {
 
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<GetProp<typeof Attachments, "items">>([]);
-  const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
-
+  // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
+  let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
 
   /**
@@ -114,10 +114,11 @@ export const ChatMain: React.FC = () => {
         // const content1 = contents.find(u => u.key === chunk?.id);
         // if (content1) {
         // }
-        setBubbleContents(contents);
+        bubbleContents = contents;
       }
       return {
         content: content,
+        contents: bubbleContents,
         parentMessageId,
         // contents: [{ key: chunk?.id, content: content }],
         role: "assistant"
@@ -253,13 +254,13 @@ export const ChatMain: React.FC = () => {
         <Bubble.List
           items={messages?.map((i, index) => {
             const isAI = !!(index % 2);
-            let contents = [...bubbleContents];
-            const lists = contents.filter(item => item.parentMessageId === i.message.parentMessageId);
+            // let contents = [...bubbleContents];
+            // const lists = contents.filter(item => item.parentMessageId === i.message.parentMessageId);
             let message1 = {
               ...i.message,
               content:
-                lists && lists.length > 0
-                  ? lists.map(list => {
+                i.message.contents && i.message.contents.length > 0
+                  ? i.message.contents.map(list => {
                       return {
                         key: list.key,
                         description: <Markdown content={list.content!} />
