@@ -7,8 +7,7 @@ namespace EU.Core.Api.Controllers.MCP;
 /// <summary>
 /// MCP 协议控制器 - 处理标准的 MCP 协议请求
 /// </summary>
-[ApiController]
-[Route("api/Stream")]
+[ApiController,Route("api/Stream"),Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_Other), GlobalActionFilter]
 public class StreamController : ControllerBase
 {
     private readonly ILogger<McpProtocolController> _logger;
