@@ -19,13 +19,14 @@ import { Logo, AvatarIcon, Welcome, DEFAULT_CONVERSATIONS_ITEMS, HOT_TOPICS, DES
 
 import RouterGuard from "@/routers/helper/RouterGuard";
 import { useNavigate } from "react-router-dom";
-import { RootState, useSelector } from "@/redux";
+import { RootState, useSelector, store } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
 import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
-import { store } from "@/redux";
+
 import { createUuid } from "@/utils";
+import Markdown from "./Markdown";
 
 export const ChatMain: React.FC = () => {
   const { styles } = useStyle();
@@ -259,7 +260,10 @@ export const ChatMain: React.FC = () => {
               content:
                 lists && lists.length > 0
                   ? lists.map(list => {
-                      return { key: list.key, description: <span>{list.content}</span> };
+                      return {
+                        key: list.key,
+                        description: <Markdown content={list.content!} />
+                      };
                     })
                   : i.message.content
 
@@ -306,7 +310,16 @@ export const ChatMain: React.FC = () => {
                 // });
               }
               // messageRender: content => {
+              //   debugger;
               //   return <ChatBubble message={i} content={content} />;
+              // }
+              // messageRender: content => {
+              //   if (i.message.role === "user" || i.id === "loading") return <ChatBubble message={i} content={content} />;
+
+              //   debugger;
+              //   return content.map((list: any) => {
+              //     return <ChatBubble message={i} content={list.description} />;
+              //   });
               // }
             };
           })}
