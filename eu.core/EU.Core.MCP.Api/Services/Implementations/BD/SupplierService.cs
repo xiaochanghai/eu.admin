@@ -1,29 +1,45 @@
 using EU.Core.Api.MCP.Attributes;
 using EU.Core.Api.MCP.Interfaces;
 using EU.Core.Api.MCP.Models.Mcp;
-using System.Text.Json;
+using EU.Core.Common.Helper;
+using System.ComponentModel;
+
 
 namespace EU.Core.Api.MCP.Services.Implementations;
 
+public class InputSchemaArguments()
+{
+    /// <summary>
+    /// 供应商名称
+    /// </summary>
+    [Description("供应商名称")]
+    public string? name { get; set; }
+
+}
+
 public class SupplierService : BaseService<SupplierService>, ISupplierService
-{  
+{
     public SupplierService(ILogger<SupplierService> logger) : base(logger)
-    {  
+    {
         // 在构造函数末尾初始化服务
         InitializeService(this);
     }
 
-    [McpTool("test_hello_Supplier", "A simple test supplier tool that says hello")]
-    public async Task<McpToolResult> HandleTestHello1(JsonElement arguments)
+    [McpTool(
+         "get_gupplier_list",
+         "获取符合条件的供应商列表。可用于回答用户关于供应商信息的查询，如活跃供应商、某类供应商、地区供应商等。",
+        typeof(InputSchemaArguments)
+         )]
+    public async Task<McpToolResult> HandleTestHello1(object arguments)
     {
-        await Task.Delay(10); // Simulate async work
+        var aaqq = JsonHelper.JsonToObj<InputSchemaArguments>(JsonHelper.ObjToJson(arguments));
 
         var name = "World";
-        if (arguments.ValueKind != JsonValueKind.Undefined &&
-            arguments.TryGetProperty("name", out var nameProperty))
-        {
-            name = nameProperty.GetString() ?? "World";
-        }
+        //if (arguments.ValueKind != JsonValueKind.Undefined &&
+        //    arguments.TryGetProperty("name", out var nameProperty))
+        //{
+        //    name = nameProperty.GetString() ?? "World";
+        //}
 
         return new McpToolResult
         {
@@ -41,16 +57,16 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
 
 
     [McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello")]
-    public async Task<McpToolResult> HandleTestHello2(JsonElement arguments)
+    public async Task<McpToolResult> HandleTestHello2(object arguments)
     {
         await Task.Delay(10); // Simulate async work
 
         var name = "World";
-        if (arguments.ValueKind != JsonValueKind.Undefined &&
-            arguments.TryGetProperty("name", out var nameProperty))
-        {
-            name = nameProperty.GetString() ?? "World";
-        }
+        //if (arguments.ValueKind != JsonValueKind.Undefined &&
+        //    arguments.TryGetProperty("name", out var nameProperty))
+        //{
+        //    name = nameProperty.GetString() ?? "World";
+        //}
 
         return new McpToolResult
         {

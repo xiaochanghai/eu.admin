@@ -1,6 +1,7 @@
 using EU.Core.Api.MCP.Attributes;
 using EU.Core.Api.MCP.Models.Mcp;
 using Microsoft.AspNetCore.Mvc;
+using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -23,7 +24,7 @@ public class BaseService<IServiceBase> : IBaseService
     protected void InitializeService(IServiceBase serviceInstance)
     {
         _serviceInstance = serviceInstance;
-       
+
         // 自动发现工具、资源和提示
         DiscoverMcpMethods();
     }
@@ -91,8 +92,59 @@ public class BaseService<IServiceBase> : IBaseService
 
         if (!isExist)
             throw new ArgumentException($"No service found for tool: {toolName}");
+        var dynamicObject = ConvertToDynamic(arguments);
+        return await ExecuteToolAsync(toolName, arguments, dynamicObject);
+    }
 
-        return await ExecuteToolAsync(toolName, arguments);
+    public static dynamic? ConvertToDynamic(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                // 对于对象，创建一个 ExpandoObject
+                dynamic expando = new ExpandoObject();
+                var expandoDict = (IDictionary<string, object?>)expando;
+                foreach (var property in element.EnumerateObject())
+                {
+                    // 递归转换属性值并添加到字典中
+                    expandoDict[property.Name] = ConvertToDynamic(property.Value);
+                }
+                return expando;
+
+            case JsonValueKind.Array:
+                // 对于数组，创建一个 List<dynamic>
+                var list = new List<dynamic?>();
+                foreach (var item in element.EnumerateArray())
+                {
+                    // 递归转换数组项并添加到列表中
+                    list.Add(ConvertToDynamic(item));
+                }
+                return list;
+
+            // 对于基础类型，直接返回对应的 C# 值
+            case JsonValueKind.String:
+                return element.GetString();
+
+            case JsonValueKind.Number:
+                // 尝试获取不同精度的数字
+                if (element.TryGetInt32(out int intValue)) return intValue;
+                if (element.TryGetInt64(out long longValue)) return longValue;
+                return element.GetDouble(); // 默认为 double
+
+            case JsonValueKind.True:
+                return true;
+
+            case JsonValueKind.False:
+                return false;
+
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                return null;
+
+            default:
+                // 对于任何其他类型，返回其原始文本
+                return element.GetRawText();
+        }
     }
 
     public virtual IEnumerable<McpTool> GetTools()
@@ -109,23 +161,31 @@ public class BaseService<IServiceBase> : IBaseService
             {
                 Name = kvp.Key,
                 Description = toolAttr?.Description ?? $"Tool: {method.Name}",
-                InputSchema = new
+                InputSchema = toolAttr?.InputSchema ?? new
                 {
                     type = "object",
                     properties = new
                     {
-                        name = new { type = "string", description = "Name to greet" }
                     }
                 }
+                //InputSchema = new
+                //{
+                //    type = "object",
+                //    properties = new
+                //    {
+                //        name = new { type = "string", description = "Name to greet" },
+                //        name1 = new { type = "string", description = "Name to greet" }
+                //    }
+                //}
             });
         }
 
         return tools;
     }
 
-    public bool CanHandle(string toolName)=> _toolMethods.ContainsKey(toolName);
+    public bool CanHandle(string toolName) => _toolMethods.ContainsKey(toolName);
 
-    public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments)
+    public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments, dynamic? dynamicObject)
     {
         _logger.LogInformation($"Executing tool: {toolName}");
 
@@ -137,7 +197,7 @@ public class BaseService<IServiceBase> : IBaseService
         try
         {
             // 动态调用服务方法
-            var result = method.Invoke(_serviceInstance, [arguments]);
+            var result = method.Invoke(_serviceInstance, [dynamicObject]);
 
             // 如果方法是异步的，等待完成
             if (result is Task task)
