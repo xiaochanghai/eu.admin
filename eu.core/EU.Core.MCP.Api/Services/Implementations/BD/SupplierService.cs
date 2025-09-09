@@ -25,16 +25,38 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
         InitializeService(this);
     }
 
+    #region 获取供应商列表 
+    /// <summary>
+    /// 获取供应商管理模块的页面代码，用于加载供应商列表界面
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
     [McpTool(
-         "get_gupplier_list",
-         "获取符合条件的供应商列表。可用于回答用户关于供应商信息的查询，如活跃供应商、某类供应商、地区供应商等。",
-        typeof(InputSchemaArguments)
-         )]
-    public async Task<McpToolResult> HandleTestHello1(object arguments)
+    "query_supplier_list",
+    "用于打开供应商列表页面。当用户希望浏览、查看或管理供应商信息时使用。" +
+    "此工具会返回前端模块标识 'BD_SUPPLIER_MNG'，客户端应据此加载对应的表格组件或跳转至管理界面。" +
+    "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
+    public McpToolResult QuerySupplierList(object arguments)
+    {
+        return new McpToolResult
+        {
+            Content = new[]
+            {
+            new McpContent
+            {
+                Type = "text",
+                Text = $"BD_SUPPLIER_MNG"
+            }
+        }
+        };
+    }
+    #endregion
+
+    [McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello", typeof(InputSchemaArguments))]
+    public async Task<McpToolResult> HandleTestHello2(object arguments)
     {
         var aaqq = JsonHelper.JsonToObj<InputSchemaArguments>(JsonHelper.ObjToJson(arguments));
 
-        var name = "World";
         //if (arguments.ValueKind != JsonValueKind.Undefined &&
         //    arguments.TryGetProperty("name", out var nameProperty))
         //{
@@ -48,34 +70,7 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
                 new McpContent
                 {
                     Type = "text",
-                    Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
-                }
-            }
-        };
-    }
-
-
-
-    [McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello")]
-    public async Task<McpToolResult> HandleTestHello2(object arguments)
-    {
-        await Task.Delay(10); // Simulate async work
-
-        var name = "World";
-        //if (arguments.ValueKind != JsonValueKind.Undefined &&
-        //    arguments.TryGetProperty("name", out var nameProperty))
-        //{
-        //    name = nameProperty.GetString() ?? "World";
-        //}
-
-        return new McpToolResult
-        {
-            Content = new[]
-            {
-                new McpContent
-                {
-                    Type = "text",
-                    Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
+                    Text = $"Hello, {aaqq.name},{DateTime.Now}! Supplier MCP server is working! "
                 }
             }
         };

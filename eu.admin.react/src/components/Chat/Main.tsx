@@ -97,24 +97,27 @@ export const ChatMain: React.FC = () => {
       }
 
       let content = "";
+      let contents = [...bubbleContents];
 
-      if (!originMessage?.content && currentThink) {
-        content = `<think>${currentThink}`;
-      } else if (originMessage?.content?.includes("<think>") && !originMessage?.content.includes("</think>") && currentContent) {
-        content = `${originMessage?.content}</think>${currentContent}`;
-      } else {
-        content = `${originMessage?.content || ""}${currentThink}${currentContent}`;
-      }
-      // debugger;
-      if (chunk?.id) {
-        let contents = [...bubbleContents];
+      // if (!originMessage?.content && currentThink) {
+      //   content = `<think>${currentThink}`;
+      // } else if (originMessage?.content?.includes("<think>") && !originMessage?.content.includes("</think>") && currentContent) {
+      //   content = `${originMessage?.content}</think>${currentContent}`;
+      // } else {
+      //   content = `${originMessage?.content || ""}${currentThink}${currentContent}`;
+      // }
+
+      if (chunk?.id && !chunk?.data.includes("DONE")) {
         const index = contents.findIndex(u => u.key === chunk?.id);
         if (index !== -1) {
+          content = `${originMessage?.content || ""}${currentThink}${currentContent}`;
           contents[index] = {
             ...contents[index],
             content: content
           };
-        } else contents.push({ key: chunk?.id, content, parentMessageId });
+        } else {
+          contents.push({ key: chunk?.id, content: currentContent, parentMessageId });
+        }
         bubbleContents = contents;
       }
       return {
