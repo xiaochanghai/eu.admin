@@ -27,13 +27,14 @@ import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 
 import { createUuid } from "@/utils";
-import Markdown from "./Markdown";
+import ChatContent from "./Content";
 
 export const ChatMain: React.FC = () => {
   const { styles } = useStyle();
   const abortController = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.user.token);
+
   let parentMessageId: string = "";
   // ==================== State ====================
   const [messageHistory, setMessageHistory] = useState<Record<string, any>>({});
@@ -268,7 +269,7 @@ export const ChatMain: React.FC = () => {
                   ? i.message.contents.map(list => {
                       return {
                         key: list.key,
-                        description: <Markdown content={list.content!} />
+                        description: <ChatContent content={list.content!} />
                       };
                     })
                   : i.message.content
@@ -310,7 +311,7 @@ export const ChatMain: React.FC = () => {
               // },
               messageRender: content => {
                 if (i.message.role === "user" || i.id === "loading") return <ChatBubble message={i} content={content} />;
-                return <Prompts items={content} className="chat-bubble-prompt" vertical />;
+                return <Prompts items={content ?? []} className="chat-bubble-prompt" vertical />;
                 // content.map((list: any) => {
                 //   return <ChatBubble message={i} content={list.description} />;
                 // });
@@ -329,7 +330,10 @@ export const ChatMain: React.FC = () => {
               // }
             };
           })}
-          style={{ height: "100%", paddingInline: "calc(calc(100% - 900px) /2)" }}
+          style={{
+            height: "100%",
+            paddingInline: "calc(calc(100% - 1100px) /2)"
+          }}
           roles={{
             assistant: {
               placement: "start",
@@ -350,7 +354,7 @@ export const ChatMain: React.FC = () => {
               )
             },
 
-            user: { placement: "end", avatar: { icon: <UserOutlined />, style: { background: "#87d068" } } }
+            user: { placement: "end", avatar: { icon: <AvatarIcon />, style: { background: "transparent " } } }
           }}
         />
       ) : (
