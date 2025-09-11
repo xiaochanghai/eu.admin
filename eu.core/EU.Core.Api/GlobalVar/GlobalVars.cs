@@ -36,7 +36,7 @@ public class ChatHelper
     /// <summary>
     /// 使用的 AI 模型标识符。【记得替换为自己的】
     /// </summary>
-    private const string _modelID = "moonshotai/Kimi-K2-Instruct";
+    private const string _modelID = "Qwen/Qwen2.5-32B-Instruct";
 
     public static void InitChat()
     {
@@ -72,10 +72,10 @@ public class ChatHelper
 
         var id = Utility.GetGUID();
 
-        bool isHistory = Messages
-            .Where(x => x.ChatId == chatId && x.Content == query && x.Role == ChatRole.User.ObjToString())
-            .Any();
-
+        //bool isHistory = Messages
+        //    .Where(x => x.ChatId == chatId && x.Content == query && x.Role == ChatRole.User.ObjToString())
+        //    .Any();
+        var isHistory = false;
         if (isHistory)
         {
             int chunkSize = 2;
@@ -128,31 +128,44 @@ public class ChatHelper
             if (!DictMessages.ContainsKey(chatId))
             {
                 // 添加系统角色消息
-                DictMessages.Add(chatId, [
-                    new(ChatRole.System, @"You are an intelligent and helpful AI assistant. Please:
+                //                DictMessages.Add(chatId, [
+                //                    new(ChatRole.System, @"You are an intelligent and helpful AI assistant. Please:
+                //1. Provide clear and concise responses
+                //2. If you're not sure about something, please say so
+                //3. When appropriate, provide examples to illustrate your points
+                //4. If a user messages you in a specific language, respond in that language
+                //5. Format responses using markdown when helpful
+                //6. Use mermaid to generate diagrams when helpful
+
+                //<system_prompt>
+                //You will select appropriate tools and call them to solve user queries.
+
+                //**CRITICAL CONSTRAINTS:**
+                //- You MUST call only ONE tool per response. Never call multiple tools simultaneously.
+                //- You MUST NEVER mention, describe, or hint at tool invocation, tool availability, or internal limitations in your responses.
+                //- For EVERY user query, you MUST make a fresh decision about whether to call a tool.  
+                //- Repeated or identical queries MUST be treated as NEW independent requests. You MUST NOT skip or reuse previous answers.  
+                //- If a tool is the correct way to answer, you MUST call it AGAIN, even if you have already used it for the same query earlier in the conversation.  
+                //- You MUST NOT fabricate structured outputs (e.g., JSON, tables) when a tool is appropriate. Always prefer the tool over generating data yourself.  
+                //- If you answer without a tool, respond naturally with your own knowledge, as if no tools exist.  
+                //- If you call an MCP tool, you MUST return the tool’s output exactly as provided, in a single complete response, without splitting, adding, removing, or reformatting anything.
+                //</system_prompt>
+
+                //Language: zh")
+                //                    ]);
+                DictMessages.Add(chatId, [new(ChatRole.System, @"You are an intelligent and helpful AI assistant. Please:
 1. Provide clear and concise responses
 2. If you're not sure about something, please say so
 3. When appropriate, provide examples to illustrate your points
 4. If a user messages you in a specific language, respond in that language
 5. Format responses using markdown when helpful
-6. Use mermaid to generate diagrams when helpful
+6. Use mermaid to generate diagrams
 
 <system_prompt>
-You will select appropriate tools and call them to solve user queries.
+You will select appropriate tools and call them to solve user queries
 
-**CRITICAL CONSTRAINTS:**
-- You MUST call only ONE tool per response. Never call multiple tools simultaneously.
-- You MUST NEVER mention, describe, or hint at tool invocation, tool availability, or internal limitations in your responses.
-- For EVERY user query, you MUST make a fresh decision about whether to call a tool.  
-- Repeated or identical queries MUST be treated as NEW independent requests. You MUST NOT skip or reuse previous answers.  
-- If a tool is the correct way to answer, you MUST call it AGAIN, even if you have already used it for the same query earlier in the conversation.  
-- You MUST NOT fabricate structured outputs (e.g., JSON, tables) when a tool is appropriate. Always prefer the tool over generating data yourself.  
-- If you answer without a tool, respond naturally with your own knowledge, as if no tools exist.  
-- If you call an MCP tool, you MUST return the tool’s output exactly as provided, in a single complete response, without splitting, adding, removing, or reformatting anything.
-</system_prompt>
-
-Language: zh")
-                    ]);
+**CRITICAL CONSTRAINT: You MUST call only ONE tool per response. Never call multiple tools simultaneously.**
+</system_prompt>")]);
             }
             var messages = DictMessages[chatId];
 
