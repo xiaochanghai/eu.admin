@@ -8,7 +8,17 @@ interface MarkdownProps {
 }
 
 const Markdown: React.FC<MarkdownProps> = React.memo(({ content }) => {
-  return <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: md.render(content) }} />;
+  return (
+    <>
+      {content != "\n" && (
+        <div
+          className="chat-bubble"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.06)", padding: "12px 16px", borderRadius: 8 }}
+          dangerouslySetInnerHTML={{ __html: md.render(content) }}
+        />
+      )}
+    </>
+  );
 });
 
 export default Markdown;
