@@ -37,7 +37,8 @@ const FormPage: React.FC<any> = props => {
     masterId, // 主表ID
     onReload, // 重新加载回调
     childrenItems, // 子项目
-    setFormPageId // 设置表单页面ID
+    setFormPageId, // 设置表单页面ID
+    displayToolBar = false
   } = props;
 
   // 获取当前模块信息
@@ -257,7 +258,7 @@ const FormPage: React.FC<any> = props => {
 
       {/* 模态框/抽屉表单 */}
       {(openType === "Modal" || openType === "Drawer") && (
-        <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <div style={{ marginTop: displayToolBar === true ? 0 : 20, marginBottom: displayToolBar === true ? 0 : 20 }}>
           <Form
             labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
             labelWrap
@@ -266,6 +267,17 @@ const FormPage: React.FC<any> = props => {
             onValuesChange={onValuesChange}
             form={form}
           >
+            {displayToolBar == true && (
+              <div style={{ paddingBottom: 10 }}>
+                <FormToolbar
+                  moduleInfo={moduleInfo}
+                  disabled={IsView === true || disabled === true || disabledToolbar}
+                  onFinishAdd={onSaveAdd}
+                  modifyType={modifyType}
+                  // onBack={() => changePage("FormIndex")}
+                />
+              </div>
+            )}
             {isLoading ? <Loading /> : renderFormComponent()}
           </Form>
         </div>
