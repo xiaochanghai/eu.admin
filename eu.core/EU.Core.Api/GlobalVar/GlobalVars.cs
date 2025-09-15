@@ -100,9 +100,6 @@ public class ChatHelper
                             Data = chunk,
                             Id = id
                         };
-
-                        // 等待 100ms
-                        await Task.Delay(100);
                     }
                 }
                 else if (historyMessges[j].Role == ChatRole.Tool.ToString())
