@@ -19,6 +19,8 @@ public class InputSchemaArguments()
 
 public class SupplierService : BaseService<SupplierService>, ISupplierService
 {
+    private readonly string moudleCode = "BD_SUPPLIER_MNG";
+
     public SupplierService(ILogger<SupplierService> logger) : base(logger)
     {
         // 在构造函数末尾初始化服务
@@ -42,12 +44,47 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
         {
             Content = new[]
             {
-            new McpContent
-            {
-                Type = "text",
-                Text = $"BD_SUPPLIER_MNG"
+                new McpContent
+                {
+                    Type = "text",
+                    Text = JsonHelper.ObjToJson(new
+                    {
+                        type = "module_list",
+                        moudleCode
+                    })
+                }
             }
-        }
+        };
+    }
+    #endregion
+
+    #region 创建供应商 
+    /// <summary>
+    /// 创建供应商管理模块的页面代码，用于加载供应商列表界面
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "create_supplier",
+    "用于打开创建供应商表单页面。当用户希望创建供应商信息时使用。" +
+    "此工具会返回前端模块标识 'BD_SUPPLIER_MNG'，客户端应据此加载对应的表单界面。" +
+    "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
+    public McpToolResult CreateSupplierList(object arguments)
+    {
+        return new McpToolResult
+        {
+            Content = new[]
+            {
+                new McpContent
+                {
+                    Type = "text",
+                    Text = JsonHelper.ObjToJson(new
+                    {
+                        type = "module_edit",
+                        moudleCode
+                    })
+                }
+            }
         };
     }
     #endregion
