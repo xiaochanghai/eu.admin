@@ -84,11 +84,12 @@ const FormToolbar: React.FC<any> = props => {
             撤销
           </Button>
         )}
-        {expendAction ? expendAction() : null}
-
-        <Button type="default" onClick={onBack}>
-          <Icon name="ArrowLeftOutlined" /> 返回
-        </Button>
+        {expendAction && expendAction()}
+        {onBack && (
+          <Button type="default" onClick={onBack}>
+            <Icon name="ArrowLeftOutlined" /> 返回
+          </Button>
+        )}
       </Space>
       <div style={{ height: 10 }}></div>
     </>
