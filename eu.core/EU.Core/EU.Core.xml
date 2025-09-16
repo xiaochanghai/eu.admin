@@ -2007,7 +2007,7 @@
             路由变量前缀配置
             </summary>
         </member>
-        <member name="F:EU.Core.ChatHelper.Messages">
+        <member name="F:EU.Core.ChatHelper.DictMessages">
             <summary>
             存储当前会话中的所有聊天消息记录。
             </summary>
