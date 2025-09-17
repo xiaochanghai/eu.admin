@@ -310,7 +310,8 @@ export const ChatMain: React.FC = () => {
               //   );
               // },
               messageRender: content => {
-                if (i.message.role === "user" || i.id === "loading") return <ChatBubble message={i} content={content} />;
+                if (i.message.role === "user" || i.id === "loading" || i.status === "loading")
+                  return <ChatBubble message={i} content={content} />;
                 return <Prompts items={content ?? []} className="chat-bubble-prompt" vertical />;
                 // content.map((list: any) => {
                 //   return <ChatBubble message={i} content={list.description} />;
