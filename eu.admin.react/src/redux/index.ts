@@ -1,7 +1,6 @@
 import { TypedUseSelectorHook, useDispatch as useReduxDispatch, useSelector as useReduxSelector } from "react-redux";
-import { configureStore, combineReducers, Middleware } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import { thunk } from "redux-thunk";
 import storage from "redux-persist/lib/storage";
 import global from "./modules/global";
 import tabs from "./modules/tabs";
@@ -22,13 +21,14 @@ const persistConfig = {
 };
 const persistReducerConfig = persistReducer(persistConfig, reducer);
 
-// redux middleWares(self configuration)
-const middleWares: Middleware[] = [thunk];
-
 // store
 export const store = configureStore({
   reducer: persistReducerConfig,
-  middleware: getDefaultMiddleware => getDefaultMiddleware({ serializableCheck: false }).concat(middleWares),
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: false
+      // thunk 中间件已经默认包含在 getDefaultMiddleware 中，无需手动添加
+    }),
   devTools: true
 });
 

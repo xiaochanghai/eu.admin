@@ -12,7 +12,7 @@ import Maximize from "./components/Maximize";
 import LayoutTabs from "@/layouts/components/Tabs";
 import LayoutFooter from "@/layouts/components/Footer";
 import "./index.less";
-import KeepAlive, { useKeepaliveRef } from "keepalive-for-react";
+import { KeepAlive, useKeepAliveRef } from "keepalive-for-react";
 
 type RouteTypeWithNodeRef = {
   nodeRef?: React.Ref<HTMLElement> | undefined;
@@ -26,7 +26,7 @@ const LayoutMain: React.FC = () => {
   const { pathname, search } = useLocation();
   // const { pathname } = useLocation();
   const { outletShow, reload } = useContext(RefreshContext);
-  const aliveRef = useKeepaliveRef();
+  const aliveRef = useKeepAliveRef();
 
   const maximize = useSelector((state: RootState) => state.global.maximize);
   const isCollapse = useSelector((state: RootState) => state.global.isCollapse);
@@ -58,25 +58,20 @@ const LayoutMain: React.FC = () => {
   // Solve the transition animation that causes useEffect to execute multiple times
   // @see: http://reactcommunity.org/react-transition-group/with-react-router
   const menuList: RouteTypeWithNodeRef[] = flatMenuList.map(item => ({ ...item, nodeRef: createRef() }));
-  const { nodeRef, element } = menuList.find(route => route.path === pathname) ?? {};
+  // const { nodeRef, element } = menuList.find(route => route.path === pathname) ?? {};
+  const { nodeRef } = menuList.find(route => route.path === pathname) ?? {};
   const cacheKey = (pathname + search).slice(1).split("/").join("_");
   // let cacheDivClassName = !outletShow ? "fade-slide" : "";
-  let cache = element == "/system/common/index" ? false : true;
+  // let cache = element == "/system/common/index" ? false : true;
   // if (reload) cache = false;
+
   return (
     <React.Fragment>
       <Maximize />
       <LayoutTabs />
 
-      <KeepAlive
-        aliveRef={aliveRef}
-        activeName={cacheKey}
-        // cacheDivClassName={"fade"}
-        // cacheDivClassName={cacheDivClassName}
-        max={20}
-        cache={cache}
-        strategy={"LRU"}
-      >
+      {/* <KeepAlive aliveRef={aliveRef} transition activeCacheKey={cacheKey} max={20}> */}
+      <KeepAlive transition={true} aliveRef={aliveRef} activeCacheKey={cacheKey} max={18}>
         {/* <SwitchTransition>
           <CSSTransition classNames="fade" key={pathname} nodeRef={nodeRef} timeout={30000} exit={false} unmountOnExit>
             <Content ref={nodeRef}>{outletShow && outlet}</Content>
