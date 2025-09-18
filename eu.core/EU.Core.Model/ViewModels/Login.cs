@@ -64,6 +64,11 @@ public class CurrentUser
     /// 当前周几
     /// </summary>
     public string WeekName { get; set; }
+
+    /// <summary>
+    /// 用户类型
+    /// </summary>
+    public string UserType { get; set; }
 }
 public class RestPassword
 {
