@@ -153,6 +153,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                 UserName = user.UserName,
                 UserId = user.ID,
                 AvatarFileId = user.AvatarFileId,
+                UserType = user.UserType,
                 WeekName = DateTime.Now.GetWeekNameOfDay()
             };
 
@@ -190,6 +191,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                 user = await QueryDto(UserId);
                 Redis.AddObject(UserId, user, new(1, 0, 0));
             }
+            result.UserType = user.UserType;
             result.UserName = user.UserName;
             result.UserId = user.ID;
             result.AvatarFileId = user.AvatarFileId;
