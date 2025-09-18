@@ -5,7 +5,7 @@ import { HOME_URL, LOGIN_URL } from "@/config";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { useNavigate } from "react-router-dom";
 import { logoutApi } from "@/api/modules/login";
-import { setToken } from "@/redux/modules/user";
+import { setToken, clearUserInfo } from "@/redux/modules/user";
 import { setAuthMenuList } from "@/redux/modules/auth";
 import { modal, message } from "@/hooks/useMessage";
 import InfoModal, { InfoModalRef } from "./InfoModal";
@@ -38,6 +38,7 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
       onOk: async () => {
         // Execute the logout interface
         await logoutApi();
+        dispatch(clearUserInfo());
 
         // Set token to empty
         dispatch(setToken(""));

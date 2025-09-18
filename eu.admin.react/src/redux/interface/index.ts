@@ -49,7 +49,7 @@ export interface TabsState {
 /* UserState */
 export interface UserState {
   token: string;
-  userInfo: { UserName: string; UserId: string; AvatarFileId: string };
+  userInfo: { UserName: string; UserId: string; AvatarFileId: string; UserType: string };
 }
 
 /* AuthState */

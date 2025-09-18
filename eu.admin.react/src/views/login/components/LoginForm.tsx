@@ -3,7 +3,7 @@ import { Button, Form, Input } from "antd";
 import { HOME_URL } from "@/config";
 import { getTimeState } from "@/utils";
 import { useDispatch } from "@/redux";
-import { setToken } from "@/redux/modules/user";
+import { setToken, setUserInfo } from "@/redux/modules/user";
 import { setTabsList } from "@/redux/modules/tabs";
 import { loginApi } from "@/api/modules/login";
 import { ReqLogin } from "@/api/interface";
@@ -57,7 +57,7 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(() => {
 
         // 发送登录请求
         const { Data } = await loginApi(values);
-
+        dispatch(setUserInfo(Data.UserInfo));
         // 存储token
         dispatch(setToken(Data.Token));
 

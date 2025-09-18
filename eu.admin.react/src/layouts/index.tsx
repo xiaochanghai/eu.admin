@@ -11,11 +11,10 @@ import ThemeDrawer from "@/layouts/components/ThemeDrawer";
 import signalr from "@/utils/signalr";
 
 const LayoutIndex: React.FC = () => {
-  const chatlayout = "chat";
   const layout = useSelector((state: RootState) => state.global.layout);
   const watermark = useSelector((state: RootState) => state.global.watermark);
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
-  let { UserId } = userInfo;
+  let { UserId, UserType } = userInfo;
   const LayoutComponents = {
     vertical: <LayoutVertical />,
     classic: <LayoutClassic />,
@@ -78,7 +77,7 @@ const LayoutIndex: React.FC = () => {
 
   return (
     <Watermark className="watermark-content" zIndex={1001} content={watermark ? ["SuZhou", "EU Cloud"] : []}>
-      {LayoutComponents[chatlayout ?? layout]}
+      {LayoutComponents[UserType === "Admin" ? layout : "chat"]}
       <ThemeDrawer />
     </Watermark>
   );

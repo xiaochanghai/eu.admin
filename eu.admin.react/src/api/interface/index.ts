@@ -43,6 +43,7 @@ export interface ReqLogin {
 export interface ResLogin {
   Token: string;
   UserId: string;
+  UserInfo: { UserName: ""; UserId: ""; AvatarFileId: ""; UserType: "" };
 }
 
 export interface UserList {
