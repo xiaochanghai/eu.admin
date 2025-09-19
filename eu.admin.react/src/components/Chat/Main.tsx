@@ -47,6 +47,9 @@ export const ChatMain: React.FC = () => {
   // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
   let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
+
+  // 移除 isWaitingForResponse 状态，直接使用 useXChat 提供的 loading 状态
+
   const chatId =
     getCache("chatId") ||
     (() => {
@@ -134,47 +137,55 @@ export const ChatMain: React.FC = () => {
     }
   });
 
+  // 自动移除 loading 气泡：当最后一条不是 loading 时，删掉 loading
   useEffect(() => {
-    if (messages.length > 2) {
-      const lastMessage = messages[messages.length - 1];
-      const lastMessage1 = messages[messages.length - 2];
-      if (lastMessage.id !== "loading" && lastMessage1.id === "loading") {
-        let newList = messages.filter(message => message.id !== "loading");
-        setMessages(newList);
-      }
+    if (!messages?.length) return;
+    const hasLoading = messages.some(m => m.id === "loading");
+    const last = messages[messages.length - 1];
+    if (hasLoading && last.id !== "loading") {
+      setMessages(prev => prev.filter(m => m.id !== "loading"));
     }
-  }, [messages]);
+  }, [messages, setMessages]);
 
   // ==================== Event ====================
   const onSubmit = (val: string) => {
     if (!val) return;
     parentMessageId = createUuid();
     if (loading) {
-      message.error("Request is in progress, please wait for the request to complete.");
+      message.error("请求正在进行中，请等待请求完成");
       return;
     }
+
+    // 提交后立即插入一条 loading 气泡（避免重复显示）
+    setMessages(prev => [
+      ...prev,
+      {
+        id: "loading",
+        message: { role: "assistant", content: "" },
+        status: "loading",
+        loading: true
+      } as any
+    ]);
 
     onRequest({
       stream: true,
       message: { role: "user", content: val }
     });
-    setMessages(
-      prev =>
-        [
-          ...prev,
-          {
-            id: "loading",
-            message: loading,
-            status: "loading",
-            loading: true
-          }
-        ] as any
-    );
   };
+
+  // 移除监听消息变化的 useEffect
+  // useEffect(() => {
+  //   if (messages.length > 0) {
+  //     const lastMessage = messages[messages.length - 1];
+  //     if (lastMessage.message?.role === "assistant" && !loading && isWaitingForResponse) {
+  //       setIsWaitingForResponse(false);
+  //     }
+  //   }
+  // }, [messages, loading, isWaitingForResponse]);
 
   // ==================== Nodes ====================
   const chatSider = (
-    <div className={styles.sider}>
+    <div className={styles.sider} style={{ display: "none" }}>
       <Logo />
 
       {/* 🌟 添加会话 */}
@@ -258,82 +269,54 @@ export const ChatMain: React.FC = () => {
       {messages?.length ? (
         /* 🌟 消息列表 */
         <Bubble.List
-          items={messages?.map((i, index) => {
-            const isAI = !!(index % 2);
-            // let contents = [...bubbleContents];
-            // const lists = contents.filter(item => item.parentMessageId === i.message.parentMessageId);
-            let message1 = {
-              ...i.message,
-              content:
-                i.message.contents && i.message.contents.length > 0
-                  ? i.message.contents.map(list => {
-                      return {
-                        key: list.key,
-                        description: <ChatContent content={list.content!} />
-                      };
-                    })
-                  : i.message.content
-
-              // content: [
-              //   {
-              //     key: "6",
-              //     icon: <UserOutlined style={{ color: "#964B00" }} />,
-              //     description: "How to rest effectively after long hours of work?"
-              //   },
-              //   {
-              //     key: "7",
-              //     icon: <UserOutlined style={{ color: "#FAAD14" }} />,
-              //     description: "What are the secrets to maintaining a positive mindset?"
-              //   },
-              //   {
-              //     key: "8",
-              //     icon: <UserOutlined style={{ color: "#FF4D4F" }} />,
-              //     description: "How to stay calm under immense pressure?"
-              //   }
-              // ]
-              // content: <ChatBubble message={i} />
-            };
-            return {
-              ...message1,
-              key: index,
-              role: isAI ? "assistant" : "user",
-              classNames: {
-                content: i.status === "loading" ? styles.loadingMessage : ""
-              },
-
-              // typing: i.status === "loading" ? { step: 5, interval: 20, suffix: <>💗</> } : false,
-              // loadingRender: () => {
-              //   return (
-              //     <Space>
-              //       <Spin size="small" />
-              //     </Space>
-              //   );
-              // },
-              messageRender: content => {
-                if (i.message.role === "user" || i.id === "loading" || i.status === "loading")
-                  return <ChatBubble message={i} content={content} />;
-                return <Prompts items={content ?? []} className="chat-bubble-prompt" vertical />;
-                // content.map((list: any) => {
-                //   return <ChatBubble message={i} content={list.description} />;
-                // });
-              }
-              // messageRender: content => {
-              //   debugger;
-              //   return <ChatBubble message={i} content={content} />;
-              // }
-              // messageRender: content => {
-              //   if (i.message.role === "user" || i.id === "loading") return <ChatBubble message={i} content={content} />;
-
-              //   debugger;
-              //   return content.map((list: any) => {
-              //     return <ChatBubble message={i} content={list.description} />;
-              //   });
-              // }
-            };
-          })}
+          items={[
+            ...(messages?.map((i, index) => {
+              const isAI = !!(index % 2);
+              let message1 = {
+                ...i.message,
+                content:
+                  i.message.contents && i.message.contents.length > 0
+                    ? i.message.contents.map(list => {
+                        return {
+                          key: list.key,
+                          description: <ChatContent content={list.content!} />
+                        };
+                      })
+                    : i.message.content
+              };
+              return {
+                ...message1,
+                key: index,
+                role: isAI ? "assistant" : "user",
+                // loading 气泡不显示 footer
+                footer: i.id === "loading" ? null : undefined,
+                messageRender: (content: any) => {
+                  // 统一在这里渲染 loading
+                  if (i.id === "loading" || i.status === "loading") {
+                    return (
+                      <Space>
+                        <Spin size="small" />
+                        <span style={{ color: "#666" }}>正在思考中...</span>
+                      </Space>
+                    );
+                  }
+                  if (i.message.role === "user") {
+                    return <ChatBubble message={i} content={content} />;
+                  }
+                  return Array.isArray(content) ? (
+                    <Prompts items={content} className="chat-bubble-prompt" vertical />
+                  ) : (
+                    <ChatBubble message={i} content={content} />
+                  );
+                }
+              };
+            }) ?? [])
+          ]}
           style={{
-            height: "100%",
-            paddingInline: "calc(calc(100% - 1100px) /2)"
+            flex: 1,
+            overflow: "auto",
+            paddingInline: "calc(calc(100% - 1100px) /2)",
+            minHeight: 0
           }}
           roles={{
             assistant: {
@@ -346,16 +329,12 @@ export const ChatMain: React.FC = () => {
                   <Button type="text" size="small" icon={<LikeOutlined />} />
                   <Button type="text" size="small" icon={<DislikeOutlined />} />
                 </div>
-              ),
-              loadingRender: () => (
-                <Space>
-                  <Spin size="small" />
-                  Custom loading...
-                </Space>
               )
             },
-
-            user: { placement: "end", avatar: { icon: <AvatarIcon />, style: { background: "transparent " } } }
+            user: {
+              placement: "end",
+              avatar: { icon: <AvatarIcon />, style: { background: "transparent " } }
+            }
           }}
         />
       ) : (
@@ -365,6 +344,7 @@ export const ChatMain: React.FC = () => {
           style={{ paddingInline: "calc(calc(100% - 900px) /2)" }}
           className={styles.placeholder}
         >
+          {/* ... 其余保持不变 ... */}
           <Welcome />
           <Flex gap={16}>
             <Prompts

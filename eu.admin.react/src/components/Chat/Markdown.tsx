@@ -10,7 +10,7 @@ interface MarkdownProps {
 const Markdown: React.FC<MarkdownProps> = React.memo(({ content }) => {
   return (
     <>
-      {content != "\n" && (
+      {content != "\n" && content && (
         <div
           className="chat-bubble"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.06)", padding: "12px 16px", borderRadius: 8 }}

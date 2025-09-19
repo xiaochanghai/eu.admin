@@ -5,10 +5,11 @@ export const useStyle = createStyles(({ token, css }) => {
     layout: css`
       width: 100%;
       min-width: 1000px;
-      height: 100vh;
+      height: 100%;
       display: flex;
       background: ${token.colorBgContainer};
       font-family: AlibabaPuHuiTi, ${token.fontFamily}, sans-serif;
+      overflow: hidden;
     `,
     // sider 样式
     sider: css`
@@ -16,6 +17,7 @@ export const useStyle = createStyles(({ token, css }) => {
       width: 280px;
       height: 100%;
       display: flex;
+      // display: none;
       flex-direction: column;
       padding: 0 12px;
       box-sizing: border-box;
@@ -66,6 +68,8 @@ export const useStyle = createStyles(({ token, css }) => {
       flex-direction: column;
       padding-block: ${token.paddingLG}px;
       gap: 16px;
+      overflow: hidden;
+      flex: 1;
     `,
     chatPrompt: css`
       .ant-prompts-label {
@@ -81,13 +85,32 @@ export const useStyle = createStyles(({ token, css }) => {
     `,
     chatList: css`
       flex: 1;
-      overflow: auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     `,
     loadingMessage: css`
       background-image: linear-gradient(90deg, #ff6b23 0%, #af3cb8 31%, #53b6ff 89%);
       background-size: 100% 2px;
       background-repeat: no-repeat;
       background-position: bottom;
+      animation: loadingPulse 1.5s ease-in-out infinite;
+
+      @keyframes loadingPulse {
+        0%,
+        100% {
+          opacity: 0.6;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      /* 隐藏loading消息的footer */
+      &.loading-message .ant-bubble-footer {
+        display: none !important;
+      }
     `,
     placeholder: css`
       padding-top: 32px;
