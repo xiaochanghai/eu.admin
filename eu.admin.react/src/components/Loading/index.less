@@ -21,3 +21,72 @@
   justify-content: center;
   background-color: rgb(0 0 0 / 45%);
 }
+.skeleton-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: fit-content; /* 改为自适应宽度 */
+  min-width: 300px; /* 设置最小宽度避免过窄 */
+  max-width: 100%; /* 设置最大宽度避免超出容器 */
+  height: 100%;
+
+  /* 为骨架屏添加最小高度 */
+  min-height: 200px;
+  padding: 24px;
+
+  /* 骨架屏容器样式 */
+  .ant-skeleton {
+    width: 100%;
+    max-width: 100%;
+    .ant-skeleton-content {
+      .ant-skeleton-title,
+      .ant-skeleton-paragraph > li {
+        background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 37%, #f2f2f2 63%);
+        background-size: 400% 100%;
+        animation: skeleton-loading 1.4s ease infinite;
+      }
+    }
+  }
+
+  /* 骨架屏加载动画 */
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* 适配暗色主题 */
+  [data-theme="dark"] & {
+    .ant-skeleton-content {
+      .ant-skeleton-title,
+      .ant-skeleton-paragraph > li {
+        background: linear-gradient(90deg, #2a2a2a 25%, #404040 37%, #2a2a2a 63%);
+        background-size: 400% 100%;
+      }
+    }
+  }
+}
+
+/* Loading Mask - 保持原有的全屏遮罩样式 */
+// #loading {
+//   position: fixed;
+//   inset: 0;
+//   z-index: 1000;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   background-color: rgb(0 0 0 / 45%);
+//   .loading-box {
+//     width: 90%;
+//     max-width: 600px;
+//     min-height: auto;
+//     padding: 48px;
+//     background: var(--ant-color-bg-container);
+//     border-radius: 8px;
+//     box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+//   }
+// }
