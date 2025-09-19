@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Drawer, Modal, Button, Space } from "antd";
 import type { ActionType } from "@ant-design/pro-components";
 import { useDispatch, RootState, useSelector } from "@/redux";
-import { Loading, SmProTable, Icon } from "@/components";
+import { Skeleton, SmProTable, Icon } from "@/components";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
@@ -239,7 +239,7 @@ const TableList: React.FC<TableListProps> = props => {
           )}
         </>
       ) : (
-        <Loading />
+        <Skeleton type="table" />
       )}
 
       {/* 扩展功能组件 */}
