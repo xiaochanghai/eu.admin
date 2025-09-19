@@ -1,10 +1,10 @@
-// import React, { useEffect } from "react";
+//
 // import { ChatMain } from "@/components/Chat";
 // import { useNavigate } from "react-router-dom";
 // import { RootState, useSelector } from "@/redux";
 // import { LOGIN_URL } from "@/config";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Layout } from "antd";
 import ToolBarRight from "@/layouts/components/Header/ToolBarRight";
 import { ChatMain } from "@/components/Chat";
@@ -22,6 +22,9 @@ const ToolBarLeft: React.FC = () => {
   );
 };
 const LayoutChat: React.FC = () => {
+  useEffect(() => {
+    document.title = `AI助手 - ${APP_TITLE}`;
+  }, []);
   // const navigate = useNavigate();
   // const token = useSelector((state: RootState) => state.user.token);
   // const isCollapse = useSelector((state: RootState) => state.global.isCollapse);
