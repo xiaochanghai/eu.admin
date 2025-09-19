@@ -19,5 +19,13 @@ export default {
     updateConfirm: "立即刷新",
     updateContent: "检测到系统有新版本发布，是否立即刷新页面？",
     updateTitle: "系统版本更新通知"
+  },
+  chat: {
+    senderHeaderTitle: "上传文件",
+    senderHeaderAttachmentTitle: "上传文件",
+    senderHeaderAttachmentDesc: "点击或将文件拖拽到此区域进行上传",
+    senderHeaderAttachmentDropTitle: "将文件拖至此处",
+    senderPlaceholder: "提问或输入 / 使用技能",
+    loadingMessage: "正在思考中..."
   }
 };

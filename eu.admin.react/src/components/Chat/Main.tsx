@@ -16,17 +16,17 @@ import { Attachments, Bubble, Conversations, Prompts, Sender, useXAgent, useXCha
 import { Button, Flex, type GetProp, Space, Spin, message } from "antd";
 import dayjs from "dayjs";
 import { Logo, AvatarIcon, Welcome, DEFAULT_CONVERSATIONS_ITEMS, HOT_TOPICS, DESIGN_GUIDE, SENDER_PROMPTS } from "./index";
+import { useTranslation } from "react-i18next";
 
 import RouterGuard from "@/routers/helper/RouterGuard";
 import { useNavigate } from "react-router-dom";
 import { RootState, useSelector, store } from "@/redux";
 import { LOGIN_URL } from "@/config";
 import { useStyle } from "./Styles";
-import { getCache, setCache } from "@/utils";
+import { getCache, setCache, createUuid } from "@/utils";
 import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
 
-import { createUuid } from "@/utils";
 import ChatContent from "./Content";
 
 export const ChatMain: React.FC = () => {
@@ -47,6 +47,7 @@ export const ChatMain: React.FC = () => {
   // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
   let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
+  const { t } = useTranslation();
 
   // 移除 isWaitingForResponse 状态，直接使用 useXChat 提供的 loading 状态
 
@@ -296,7 +297,7 @@ export const ChatMain: React.FC = () => {
                     return (
                       <Space>
                         <Spin size="small" />
-                        <span style={{ color: "#666" }}>正在思考中...</span>
+                        <span style={{ color: "#666" }}>{t("chat.loadingMessage")}</span>
                       </Space>
                     );
                   }
@@ -388,7 +389,7 @@ export const ChatMain: React.FC = () => {
   );
   const senderHeader = (
     <Sender.Header
-      title="Upload File"
+      title={t("chat.senderHeaderTitle")}
       open={attachmentsOpen}
       onOpenChange={setAttachmentsOpen}
       styles={{ content: { padding: 0 } }}
@@ -399,11 +400,11 @@ export const ChatMain: React.FC = () => {
         onChange={info => setAttachedFiles(info.fileList)}
         placeholder={type =>
           type === "drop"
-            ? { title: "Drop file here" }
+            ? { title: t("chat.senderHeaderAttachmentDropTitle") }
             : {
                 icon: <CloudUploadOutlined />,
-                title: "Upload files",
-                description: "Click or drag files to this area to upload"
+                title: t("chat.senderHeaderAttachmentTitle"),
+                description: t("chat.senderHeaderAttachmentDesc")
               }
         }
       />
@@ -454,7 +455,7 @@ export const ChatMain: React.FC = () => {
             </Flex>
           );
         }}
-        placeholder="Ask or input / use skills"
+        placeholder={t("chat.senderPlaceholder")}
       />
     </>
   );
