@@ -1,6 +1,24 @@
 export default {
+  title: " 优智云",
+  login: {
+    loading: "登录中...",
+    successMessage: "欢迎登录",
+    userName: "用户名",
+    userNameRequired: "请输入用户名!",
+    passWord: "密码",
+    passWordRequired: "请输入密码!",
+    resetButtonText: "重置",
+    LoginButtonText: "登录"
+  },
   home: {
     welcome: "欢迎使用"
+  },
+  greeting: {
+    morning: "早上好",
+    noon: "中午好",
+    afternoon: "下午好",
+    evening: "晚上好",
+    earlyMorning: "夜深了，该休息啦!"
   },
   tabs: {
     refresh: "刷新",

@@ -1,6 +1,24 @@
 export default {
+  title: "EUCloud",
+  login: {
+    loading: "Signing in...",
+    successMessage: "Welcome to",
+    userName: "UserName",
+    userNameRequired: "Please enter your username!",
+    passWord: "PassWord",
+    passWordRequired: "Please enter your passWord!",
+    resetButtonText: "Reset",
+    LoginButtonText: "Login"
+  },
   home: {
     welcome: "Welcome to"
+  },
+  greeting: {
+    morning: "Good morning",
+    noon: "Good noon",
+    afternoon: "Good afternoon",
+    evening: "Good evening",
+    earlyMorning: "It’s late — you should get some rest!"
   },
   tabs: {
     refresh: "Refresh",
