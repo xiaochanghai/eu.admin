@@ -26,7 +26,7 @@ public class ChatHelper
     /// <summary>
     /// API 访问密钥，用于身份认证。【记得替换为自己的】
     /// </summary>
-    private const string _apiKey = "sk-couagngrgouclgbtiqvwpzlhshfjvmmkhlkhbnyjluemltdv";
+    private const string _apiKey = "sk-xxxx";
 
     /// <summary>
     /// AI 服务的基础请求地址。【记得替换为自己的】
