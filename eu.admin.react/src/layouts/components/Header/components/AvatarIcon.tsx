@@ -11,18 +11,21 @@ import { modal, message } from "@/hooks/useMessage";
 import InfoModal, { InfoModalRef } from "./InfoModal";
 import PasswordModal, { PasswordModalRef } from "./PasswordModal";
 import avatar from "@/assets/images/avatar.png";
+import { useTranslation } from "react-i18next";
 
 let baseURL = import.meta.env.VITE_API_URL as string;
 let VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
 
 interface AvatarIconProps {
   height?: number;
+  layout?: string;
 }
 
 const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
+  const { t } = useTranslation();
 
   const passRef = useRef<PasswordModalRef>(null);
   const infoRef = useRef<InfoModalRef>(null);
@@ -60,20 +63,20 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
   const items: MenuProps["items"] = [
     {
       key: "1",
-      label: <span className="dropdown-item">首页</span>,
+      label: <span className="dropdown-item">{t("avatar.home")}</span>,
       icon: getIcon("HomeOutlined"),
       onClick: () => navigate(HOME_URL)
     },
     {
       key: "2",
-      label: <span className="dropdown-item">个人信息</span>,
+      label: <span className="dropdown-item">{t("avatar.profile")}</span>,
       icon: getIcon("UserOutlined"),
       // onClick: () => infoRef.current?.showModal({ name: "hooks" })
       onClick: () => navigate("/account/settings/index")
     },
     {
       key: "3",
-      label: <span className="dropdown-item">修改密码</span>,
+      label: <span className="dropdown-item">{t("avatar.password")}</span>,
       icon: getIcon("FormOutlined"),
       onClick: () => passRef.current?.showModal({ name: "hooks" })
     },
@@ -82,13 +85,13 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
     },
     {
       key: "4",
-      label: <span className="dropdown-item">关于系统</span>,
+      label: <span className="dropdown-item">{t("avatar.about")}</span>,
       icon: getIcon("InfoCircleOutlined"),
       onClick: () => navigate("/about")
     },
     {
       key: "5",
-      label: <span className="dropdown-item">退出登录</span>,
+      label: <span className="dropdown-item">{t("avatar.logout")}</span>,
       icon: getIcon("LoginOutlined"),
       onClick: logout
     }

@@ -47,7 +47,7 @@ const LayoutChat: React.FC = () => {
       <Layout>
         <Header>
           <ToolBarLeft />
-          <ToolBarRight />
+          <ToolBarRight layout="Chat" />
         </Header>
         <ChatMain />
       </Layout>

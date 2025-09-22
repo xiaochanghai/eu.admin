@@ -1,3 +1,5 @@
+import React from "react";
+
 import UserName from "./components/UserName";
 import AvatarIcon from "./components/AvatarIcon";
 import ComponentSize from "./components/ComponentSize";
@@ -8,7 +10,11 @@ import Message from "./components/Message";
 import Fullscreen from "./components/Fullscreen";
 import "./index.less";
 
-const ToolBarRight: React.FC = () => {
+interface ToolBarRightProps {
+  layout?: string;
+}
+
+const ToolBarRight: React.FC<ToolBarRightProps> = React.memo(({ layout }) => {
   return (
     <div className="tool-bar-ri">
       <div className="header-icon">
@@ -20,9 +26,9 @@ const ToolBarRight: React.FC = () => {
         <Fullscreen />
       </div>
       <UserName />
-      <AvatarIcon />
+      <AvatarIcon layout={layout} />
     </div>
   );
-};
+});
 
-export default ToolBarRight;
+export default React.memo(ToolBarRight);

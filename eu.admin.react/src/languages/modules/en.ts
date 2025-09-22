@@ -45,5 +45,12 @@ export default {
     senderHeaderAttachmentDropTitle: "Drop file here",
     senderPlaceholder: "Ask or input / use skills",
     loadingMessage: "Thinking..."
+  },
+  avatar: {
+    home: "Home",
+    profile: "Profile",
+    password: "Password",
+    about: "About",
+    logout: "SIgn out"
   }
 };

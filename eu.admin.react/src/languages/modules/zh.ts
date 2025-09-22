@@ -45,5 +45,12 @@ export default {
     senderHeaderAttachmentDropTitle: "将文件拖至此处",
     senderPlaceholder: "提问或输入 / 使用技能",
     loadingMessage: "正在思考中..."
+  },
+  avatar: {
+    home: "首页",
+    profile: "个人信息",
+    password: "修改密码",
+    about: "关于系统",
+    logout: "退出登录"
   }
 };
