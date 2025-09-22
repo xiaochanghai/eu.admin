@@ -1,6 +1,8 @@
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { Modal, message, Input, Form } from "antd";
 import http from "@/api";
+import { useTranslation } from "react-i18next";
+
 export interface ShowPassModalProps {
   name: string;
 }
@@ -12,6 +14,7 @@ export interface PasswordModalRef {
 const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { t } = useTranslation();
 
   useImperativeHandle(ref, () => ({ showModal }));
 
@@ -26,7 +29,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
       if (Success) {
         setIsModalOpen(false);
         form.resetFields();
-        message.success("修改密码成功 🎉");
+        message.success(t("password.changeSuccessMessage"));
       }
     });
   };
@@ -36,7 +39,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
   };
 
   return (
-    <Modal title="修改密码" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnHidden>
+    <Modal title={t("password.title")} open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnHidden>
       <Form
         form={form}
         name="dependencies"
@@ -48,7 +51,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
         layout="vertical"
       >
         <Form.Item
-          label="旧密码"
+          label={t("password.oldPassword")}
           name="oldPassword"
           rules={[
             {
@@ -59,7 +62,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
           <Input.Password />
         </Form.Item>
         <Form.Item
-          label="新密码"
+          label={t("password.newPassword")}
           name="newPassword"
           rules={[
             {
@@ -72,7 +75,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
 
         {/* Field */}
         <Form.Item
-          label="确认密码"
+          label={t("password.confirmPassword")}
           name="confirmPassword"
           dependencies={["newPassword"]}
           rules={[
@@ -84,7 +87,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
                 if (!value || getFieldValue("newPassword") === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error("确认密码与新密码不匹配!"));
+                return Promise.reject(new Error(t("password.notMatchMessage")));
               }
             })
           ]}

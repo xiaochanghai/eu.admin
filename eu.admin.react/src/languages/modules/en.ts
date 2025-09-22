@@ -52,5 +52,13 @@ export default {
     password: "Password",
     about: "About",
     logout: "SIgn out"
+  },
+  password: {
+    title: "Change Password",
+    oldPassword: "Old Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm Password",
+    notMatchMessage: "The confirmation password does not match the new password!",
+    changeSuccessMessage: "Password changed successfully 🎉"
   }
 };

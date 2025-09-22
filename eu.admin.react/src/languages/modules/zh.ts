@@ -52,5 +52,13 @@ export default {
     password: "修改密码",
     about: "关于系统",
     logout: "退出登录"
+  },
+  password: {
+    title: "修改密码",
+    oldPassword: "旧密码",
+    newPassword: "新密码",
+    confirmPassword: "确认密码",
+    notMatchMessage: "确认密码与新密码不匹配!",
+    changeSuccessMessage: "修改密码成功 🎉"
   }
 };
