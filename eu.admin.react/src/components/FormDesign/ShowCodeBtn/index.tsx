@@ -54,7 +54,7 @@ export default function CodeBox() {
         </svg>
         <span className="ml-1">show code</span>
       </button>
-      <Modal width="800px" onCancel={() => setVisible(false)} title="代码预览" footer={false} visible={visible}>
+      <Modal width="800px" onCancel={() => setVisible(false)} title="代码预览" footer={false} open={visible}>
         <AceEditor
           mode="javascript"
           theme="xcode"

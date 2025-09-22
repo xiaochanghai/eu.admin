@@ -747,7 +747,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
       )}
       {moduleInfo && moduleInfo.Success == true && moduleInfo.actions.includes("ImportExcel") && (
         <Modal
-          destroyOnClose
+          destroyOnHidden
           title={`${moduleInfo.moduleName}-导入`}
           open={uploadExcelVisible}
           maskClosable={false}

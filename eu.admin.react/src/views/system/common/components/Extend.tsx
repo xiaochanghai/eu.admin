@@ -165,7 +165,7 @@ const Extend: React.FC<any> = props => {
       {/* 表目录管理模块 */}
       {moduleCode === "SM_TABLE_CATALOG_MNG" && (
         <Modal
-          destroyOnClose
+          destroyOnHidden
           title="初始化表"
           open={modalVisible}
           maskClosable={false}
@@ -206,7 +206,7 @@ const Extend: React.FC<any> = props => {
             title="当前日志"
             open={modalVisible}
             width={1200}
-            destroyOnClose={true}
+            destroyOnHidden
             onOk={() => {
               setModalVisible(false);
               setLogContent("");
@@ -245,7 +245,7 @@ const Extend: React.FC<any> = props => {
       {/* 系统模块管理 */}
       {moduleCode === "SM_MODULE_MNG" && (
         <Modal
-          destroyOnClose
+          destroyOnHidden
           title="复制模块"
           open={isCronModalVisible}
           onOk={handleModuleCopy}

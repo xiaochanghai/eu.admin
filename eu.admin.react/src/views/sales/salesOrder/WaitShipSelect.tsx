@@ -179,7 +179,7 @@ const WaitShipSelect: React.FC<any> = props => {
   );
   return (
     <Modal
-      destroyOnClose
+      destroyOnHidden
       // title='选择物料'
       open={modalVisible}
       // onOk={this.okHandle}

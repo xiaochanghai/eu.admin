@@ -53,7 +53,7 @@ export default function ApiModal({ onChange }: Props): ReactElement {
       <Button ghost type="primary" onClick={() => setVisible(true)}>
         第三方API
       </Button>
-      <Modal title="配置api" visible={visible} onOk={handleOk} onCancel={() => setVisible(false)} okText="确定" cancelText="取消">
+      <Modal title="配置api" open={visible} onOk={handleOk} onCancel={() => setVisible(false)} okText="确定" cancelText="取消">
         <div>
           <Form.Item>
             <Input placeholder="请输入api地址" onChange={e => handleApiField("api", e.target.value)} />

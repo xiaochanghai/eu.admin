@@ -304,7 +304,7 @@ const Index: React.FC<any> = props => {
               ) : null}
               {actionAuthButton.ImportExcel ? (
                 <Modal
-                  destroyOnClose
+                  destroyOnHidden
                   title={moduleInfo.moduleName + "-导入"}
                   open={uploadExcelVisible}
                   maskClosable={false}

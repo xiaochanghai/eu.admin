@@ -191,7 +191,7 @@ const TableList: React.FC<TableListProps> = props => {
           {/* 模态框表单 */}
           {moduleInfo.openType === "Modal" && (
             <Modal
-              destroyOnClose
+              destroyOnHidden
               title={`${moduleInfo.moduleName}${id ? "->编辑" : "->新增"}`}
               open={modalVisible}
               width={moduleInfo.formPageWidth}

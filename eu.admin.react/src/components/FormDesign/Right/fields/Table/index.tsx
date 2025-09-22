@@ -317,7 +317,7 @@ class EditableTable extends React.Component<any, any> {
         <Button onClick={this.showModal}>编辑数据源</Button>
         <Modal
           title="编辑数据源"
-          visible={this.state.visible}
+          open={this.state.visible}
           onOk={this.handleOk}
           onCancel={this.handleCancel}
           okText="确定"
