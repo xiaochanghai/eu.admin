@@ -277,7 +277,7 @@ const Extend: React.FC<any> = props => {
       {moduleCode === "SM_ROLE_MNG" && (
         <Drawer
           closable
-          destroyOnClose
+          destroyOnHidden
           title={`${record.RoleName} - 权限设置`}
           placement="right"
           open={isCronModalVisible}
