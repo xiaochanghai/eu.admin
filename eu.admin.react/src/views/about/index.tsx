@@ -19,7 +19,7 @@ const About: React.FC = () => {
           <Link href="https://github.com/xiaochanghai/eu-admin" target="_blank">
             EU-Admin
           </Link>
-          一款一款基于.NET 8、React18、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite5、Ant-Design5
+          一款基于.NET 8、React18、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5、MCP
           的实现的通用管理平台框架，开箱即用。集成SqlSugar、缓存、 通讯、远程请求、任务调度等 开源的后台管理框架。
         </span>
       </Card>
@@ -51,7 +51,7 @@ const About: React.FC = () => {
             </Link>
           </Descriptions.Item>
           <Descriptions.Item label="预览地址">
-            <Link href="http://eu-keji.com/" target="_blank">
+            <Link href="http://116.204.98.209:9527/" target="_blank">
               预览地址
             </Link>
           </Descriptions.Item>

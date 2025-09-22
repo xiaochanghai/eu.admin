@@ -36,7 +36,7 @@ const PasswordModal = forwardRef<PasswordModalRef, {}>((_props, ref) => {
   };
 
   return (
-    <Modal title="修改密码" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnClose={true}>
+    <Modal title="修改密码" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnHidden>
       <Form
         form={form}
         name="dependencies"

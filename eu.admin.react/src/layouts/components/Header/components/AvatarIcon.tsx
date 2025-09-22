@@ -10,6 +10,7 @@ import { setAuthMenuList } from "@/redux/modules/auth";
 import { modal, message } from "@/hooks/useMessage";
 import InfoModal, { InfoModalRef } from "./InfoModal";
 import PasswordModal, { PasswordModalRef } from "./PasswordModal";
+import AboutModal, { AboutModalRef } from "./about";
 import avatar from "@/assets/images/avatar.png";
 import { useTranslation } from "react-i18next";
 
@@ -21,7 +22,7 @@ interface AvatarIconProps {
   layout?: string;
 }
 
-const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
+const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42, layout }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
@@ -29,6 +30,7 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
 
   const passRef = useRef<PasswordModalRef>(null);
   const infoRef = useRef<InfoModalRef>(null);
+  const aboutRef = useRef<AboutModalRef>(null);
 
   const logout = () => {
     modal.confirm({
@@ -60,42 +62,67 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
   const getIcon = (type: string) => {
     return <Icon name={type} className="font-size14" />;
   };
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: <span className="dropdown-item">{t("avatar.home")}</span>,
-      icon: getIcon("HomeOutlined"),
-      onClick: () => navigate(HOME_URL)
-    },
-    {
-      key: "2",
-      label: <span className="dropdown-item">{t("avatar.profile")}</span>,
-      icon: getIcon("UserOutlined"),
-      // onClick: () => infoRef.current?.showModal({ name: "hooks" })
-      onClick: () => navigate("/account/settings/index")
-    },
-    {
-      key: "3",
-      label: <span className="dropdown-item">{t("avatar.password")}</span>,
-      icon: getIcon("FormOutlined"),
-      onClick: () => passRef.current?.showModal({ name: "hooks" })
-    },
-    {
-      type: "divider"
-    },
-    {
-      key: "4",
-      label: <span className="dropdown-item">{t("avatar.about")}</span>,
-      icon: getIcon("InfoCircleOutlined"),
-      onClick: () => navigate("/about")
-    },
-    {
-      key: "5",
-      label: <span className="dropdown-item">{t("avatar.logout")}</span>,
-      icon: getIcon("LoginOutlined"),
-      onClick: logout
-    }
-  ];
+  const items: MenuProps["items"] =
+    layout === "Chat"
+      ? [
+          {
+            key: "3",
+            label: <span className="dropdown-item">{t("avatar.password")}</span>,
+            icon: getIcon("FormOutlined"),
+            onClick: () => passRef.current?.showModal({ name: "hooks" })
+          },
+          {
+            type: "divider"
+          },
+          {
+            key: "4",
+            label: <span className="dropdown-item">{t("avatar.about")}</span>,
+            icon: getIcon("InfoCircleOutlined"),
+            onClick: () => aboutRef.current?.showModal({ name: "hooks" })
+          },
+          {
+            key: "5",
+            label: <span className="dropdown-item">{t("avatar.logout")}</span>,
+            icon: getIcon("LoginOutlined"),
+            onClick: logout
+          }
+        ]
+      : [
+          {
+            key: "1",
+            label: <span className="dropdown-item">{t("avatar.home")}</span>,
+            icon: getIcon("HomeOutlined"),
+            onClick: () => navigate(HOME_URL)
+          },
+          {
+            key: "2",
+            label: <span className="dropdown-item">{t("avatar.profile")}</span>,
+            icon: getIcon("UserOutlined"),
+            // onClick: () => infoRef.current?.showModal({ name: "hooks" })
+            onClick: () => navigate("/account/settings/index")
+          },
+          {
+            key: "3",
+            label: <span className="dropdown-item">{t("avatar.password")}</span>,
+            icon: getIcon("FormOutlined"),
+            onClick: () => passRef.current?.showModal({ name: "hooks" })
+          },
+          {
+            type: "divider"
+          },
+          {
+            key: "4",
+            label: <span className="dropdown-item">{t("avatar.about")}</span>,
+            icon: getIcon("InfoCircleOutlined"),
+            onClick: () => navigate("/about")
+          },
+          {
+            key: "5",
+            label: <span className="dropdown-item">{t("avatar.logout")}</span>,
+            icon: getIcon("LoginOutlined"),
+            onClick: logout
+          }
+        ];
 
   return (
     <React.Fragment>
@@ -112,6 +139,7 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42 }) => {
       </Dropdown>
       <InfoModal ref={infoRef} />
       <PasswordModal ref={passRef} />
+      <AboutModal ref={aboutRef} />
     </React.Fragment>
   );
 });

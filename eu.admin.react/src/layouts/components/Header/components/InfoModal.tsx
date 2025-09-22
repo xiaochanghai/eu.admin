@@ -29,7 +29,7 @@ const InfoModal = forwardRef<InfoModalRef, {}>((_props, ref) => {
   };
 
   return (
-    <Modal title="个人信息" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnClose={true}>
+    <Modal title="个人信息" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} destroyOnHidden>
       <p>This is UserInfo...</p>
       <p>This is UserInfo...</p>
       <p>This is UserInfo...</p>
