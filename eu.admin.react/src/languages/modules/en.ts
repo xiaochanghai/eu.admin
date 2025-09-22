@@ -51,7 +51,10 @@ export default {
     profile: "Profile",
     password: "Password",
     about: "About",
-    logout: "SIgn out"
+    logout: "Sign out",
+    logoutModalTitle: "Friendly Reminder 🧡",
+    logoutModalContent: "Are you sure you want to sign out?",
+    logoutSuccessMessage: "Sign out successfully!"
   },
   password: {
     title: "Change Password",

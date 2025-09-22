@@ -51,7 +51,10 @@ export default {
     profile: "个人信息",
     password: "修改密码",
     about: "关于系统",
-    logout: "退出登录"
+    logout: "退出登录",
+    logoutModalTitle: "温馨提示 🧡",
+    logoutModalContent: "是否确认退出登录？",
+    logoutSuccessMessage: "退出登录成功！"
   },
   password: {
     title: "修改密码",

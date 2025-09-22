@@ -34,11 +34,9 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42, layout 
 
   const logout = () => {
     modal.confirm({
-      title: "温馨提示 🧡",
+      title: t("avatar.logoutModalTitle"),
       icon: <Icon name="ExclamationCircleOutlined" />,
-      content: "是否确认退出登录？",
-      okText: "确认",
-      cancelText: "取消",
+      content: t("avatar.logoutModalContent"),
       maskClosable: true,
       onOk: async () => {
         // Execute the logout interface
@@ -54,7 +52,7 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42, layout 
         // Jump to login page
         navigate(LOGIN_URL, { replace: true });
 
-        message.success("退出登录成功！");
+        message.success(t("avatar.logoutSuccessMessage"));
       }
     });
   };
