@@ -3707,6 +3707,16 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.RowNo">
+            <summary>
+            Execl行号
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmLovBase">
             <summary>
             字典管理 (Dto.Base)
@@ -9270,6 +9280,16 @@
         <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.RowNo">
+            <summary>
+            Execl行号
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmLov">

@@ -13,13 +13,13 @@
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
-*/  
+*/
 
 namespace EU.Core.Services;
 
-	/// <summary>
-	/// 导入模板定义明细 (服务)
-	/// </summary>
+/// <summary>
+/// 导入模板定义明细 (服务)
+/// </summary>
 public class SmImpTemplateDetailServices : BaseServices<SmImpTemplateDetail, SmImpTemplateDetailDto, InsertSmImpTemplateDetailInput, EditSmImpTemplateDetailInput>, ISmImpTemplateDetailServices
 {
     private readonly IBaseRepository<SmImpTemplateDetail> _dal;
@@ -28,4 +28,16 @@ public class SmImpTemplateDetailServices : BaseServices<SmImpTemplateDetail, SmI
         this._dal = dal;
         base.BaseDal = dal;
     }
+
+    #region 新增
+    public override async Task<Guid> Add(object entity)
+    {
+
+        var entity1 = ConvertToEntity(entity);
+
+        if (entity1.ModuleCode == "SM_IMPORT_TEMPLATE_MASTER_DETAIL_MNG")
+            entity1.DataType = "Master";
+        return await base.Add(ConvertToString(entity1));
+    }
+    #endregion
 }

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/9/23 22:22:43  SahHsiao   初版
+* V0.01  2025/9/23 22:55:24  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -113,4 +113,10 @@ public class SmImpTemplateDetail : BasePoco
     /// </summary>
     [Display(Name = "DataType"), Description("数据类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string DataType { get; set; }
+
+    /// <summary>
+    /// Execl行号
+    /// </summary>
+    [Display(Name = "RowNo"), Description("Execl行号"), SugarColumn(IsNullable = true)]
+    public int? RowNo { get; set; }
 }

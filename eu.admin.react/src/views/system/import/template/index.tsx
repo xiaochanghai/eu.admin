@@ -73,11 +73,16 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
     return [
       {
         key: 1,
+        label: "主表信息",
+        children: <TableList moduleCode="SM_IMPORT_TEMPLATE_MASTER_DETAIL_MNG" masterId={formPageId} IsView={formPageIsView} />
+      },
+      {
+        key: 2,
         label: "模板明细",
         children: <TableList moduleCode="SM_IMPORT_TEMPLATE_DETAIL_MNG" masterId={formPageId} IsView={formPageIsView} />
       },
       {
-        key: 2,
+        key: 3,
         label: "模板文件",
         children: <Attachment Id={formPageId} accept=".xlsx,.xls" filePath="ImportTemplate" isUnique={true} />
       }
