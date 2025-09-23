@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:53  SahHsiao   初版
+* V0.01  2025/9/23 22:22:43  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -106,4 +106,10 @@ public class SmImpTemplateDetailBase : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 数据类型
+    /// </summary>
+    [Display(Name = "DataType"), Description("数据类型"), MaxLength(32, ErrorMessage = "数据类型 不能超过 32 个字符")]
+    public string DataType { get; set; }
 }
