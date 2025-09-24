@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:52  SahHsiao   初版
+* V0.01  2025/9/24 8:32:21  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -113,4 +113,10 @@ public class SmImpTemplate : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 主表表代码
+    /// </summary>
+    [Display(Name = "MasterTableCode"), Description("主表表代码"), SugarColumn(IsNullable = true, Length = 32)]
+    public string MasterTableCode { get; set; }
 }

@@ -1528,6 +1528,11 @@
             系统导入数据明细(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportDataMasterController">
+            <summary>
+            导入数据主表明细(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmImportErrorController">
             <summary>
             系统导入模板异常信息(Controller)
