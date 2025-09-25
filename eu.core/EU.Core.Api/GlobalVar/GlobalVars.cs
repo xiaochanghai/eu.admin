@@ -1,4 +1,5 @@
-﻿using EU.Core.MCP.Models;
+﻿using EU.Core.Common.Caches;
+using EU.Core.MCP.Models;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using OpenAI;
@@ -16,6 +17,7 @@ namespace EU.Core;
 public class ChatHelper
 {
 
+    private static RedisCacheService Redis = new(9);
     private static IList<AIChatMessage> Messages;
     /// <summary>
     /// 存储当前会话中的所有聊天消息记录。
@@ -26,7 +28,7 @@ public class ChatHelper
     /// <summary>
     /// API 访问密钥，用于身份认证。【记得替换为自己的】
     /// </summary>
-    private const string _apiKey = "sk-xxxx";
+    private static string _apiKey = "sk-xxxx";
 
     /// <summary>
     /// AI 服务的基础请求地址。【记得替换为自己的】
@@ -42,6 +44,7 @@ public class ChatHelper
     {
         if (chatClient == null)
         {
+            _apiKey = Redis.Get("ApiKey");
             // 创建 API 密钥凭证
             var apiKeyCredential = new ApiKeyCredential(_apiKey);
 
