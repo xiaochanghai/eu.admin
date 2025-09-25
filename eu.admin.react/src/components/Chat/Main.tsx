@@ -89,6 +89,16 @@ export const ChatMain: React.FC = () => {
         role: "assistant"
       };
     },
+    requestPlaceholder: _ => {
+      return {
+        content: "loading",
+        role: "assistant"
+      };
+    },
+    // beforeRequest: (message: any) => {
+    //   console.log("message:", message);
+    //   return message;
+    // },
     transformMessage: info => {
       const { originMessage, chunk } = info || {};
       let currentContent = "";
@@ -142,14 +152,14 @@ export const ChatMain: React.FC = () => {
   });
 
   // 自动移除 loading 气泡：当最后一条不是 loading 时，删掉 loading
-  useEffect(() => {
-    if (!messages?.length) return;
-    const hasLoading = messages.some(m => m.id === "loading");
-    const last = messages[messages.length - 1];
-    if (hasLoading && last.id !== "loading") {
-      setMessages(prev => prev.filter(m => m.id !== "loading"));
-    }
-  }, [messages, setMessages]);
+  // useEffect(() => {
+  //   if (!messages?.length) return;
+  //   const hasLoading = messages.some(m => m.id === "loading");
+  //   const last = messages[messages.length - 1];
+  //   if (hasLoading && last.id !== "loading") {
+  //     setMessages(prev => prev.filter(m => m.id !== "loading"));
+  //   }
+  // }, [messages, setMessages]);
 
   // ==================== Event ====================
   const onSubmit = (val: string) => {
@@ -159,21 +169,22 @@ export const ChatMain: React.FC = () => {
       message.error("请求正在进行中，请等待请求完成");
       return;
     }
+    setAttachmentsOpen(false);
 
     // 提交后立即插入一条 loading 气泡（避免重复显示）
-    setMessages(prev => [
-      ...prev,
-      {
-        id: "loading",
-        message: { role: "assistant", content: "" },
-        status: "loading",
-        loading: true
-      } as any
-    ]);
+    // setMessages(prev => [
+    //   ...prev,
+    //   {
+    //     id: "loading",
+    //     message: { role: "assistant", content: "" },
+    //     status: "loading",
+    //     loading: true
+    //   } as any
+    // ]);
 
     onRequest({
       stream: true,
-      message: { role: "user", content: val, fileId }
+      message: { role: "user", content: val, fileId, files: attachedFiles }
     });
   };
 
@@ -184,7 +195,6 @@ export const ChatMain: React.FC = () => {
   const uploadFileAttachment = useCallback(
     async (files: UploadFile[]) => {
       if (files.length == 0) return;
-      setAttachedFiles(files);
       // 检查必要条件
       // if (!file || !MasterId) return false;
 
@@ -209,8 +219,8 @@ export const ChatMain: React.FC = () => {
         message.destroy();
         if (Success) {
           setFileId(Data);
-          setAttachedFiles([]);
-          setAttachmentsOpen(false);
+          setAttachedFiles(files);
+
           message.success("附件上传成功！");
         }
       } catch (error) {
@@ -342,17 +352,15 @@ export const ChatMain: React.FC = () => {
                 footer: i.id === "loading" ? null : undefined,
                 messageRender: (content: any) => {
                   // 统一在这里渲染 loading
-                  if (i.id === "loading" || i.status === "loading") {
+                  if (content === "loading")
                     return (
                       <Space>
                         <Spin size="small" />
                         <span style={{ color: "#666" }}>{t("chat.loadingMessage")}</span>
                       </Space>
                     );
-                  }
-                  if (i.message.role === "user") {
-                    return <ChatBubble message={i} content={content} />;
-                  }
+                  if (i.message.role === "user") return <ChatBubble message={i} content={content} />;
+
                   return Array.isArray(content) ? (
                     <Prompts items={content} className="chat-bubble-prompt" vertical />
                   ) : (
