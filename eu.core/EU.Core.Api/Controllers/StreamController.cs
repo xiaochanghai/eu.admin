@@ -7,7 +7,7 @@ namespace EU.Core.Api.Controllers.MCP;
 /// <summary>
 /// MCP 协议控制器 - 处理标准的 MCP 协议请求
 /// </summary>
-[ApiController,Route("api/Stream"),Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_Other), GlobalActionFilter]
+[ApiController, Route("api/Stream"), Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_Other), GlobalActionFilter]
 public class StreamController : ControllerBase
 {
     private readonly ILogger<McpProtocolController> _logger;
@@ -53,6 +53,9 @@ public class StreamController : ControllerBase
 
 
             //await chatAIClient.ProcessQueryAsync("测试", listToolsResult);
+
+            if (request.message.fileId.IsNotEmptyOrNull())
+                request.message.content += $"fileId:{request.message.fileId}";
 
             var cancellationToken = HttpContext.RequestAborted;
             await foreach (var streamEvent in ChatHelper.CallStreamAsync(chatId, request.message.content, listToolsResult, cancellationToken))
@@ -171,5 +174,6 @@ public class StreamRequestMessage
 {
     public string role { get; set; }
     public string content { get; set; }
+    public string fileId { get; set; }
 
 }

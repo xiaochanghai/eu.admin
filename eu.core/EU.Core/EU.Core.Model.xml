@@ -3517,6 +3517,41 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmImportDataMasterBase">
+            <summary>
+            导入数据主表明细 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.Col">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.Row">
+            <summary>
+            Row
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.Value">
+            <summary>
+            值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.IsError">
+            <summary>
+            是否错误
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataMasterBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmImportErrorBase">
             <summary>
             系统导入模板异常信息 (Dto.Base)
@@ -3632,6 +3667,11 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateBase.MasterTableCode">
+            <summary>
+            主表表代码
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmImpTemplateDetailBase">
             <summary>
             导入模板定义明细 (Dto.Base)
@@ -3705,6 +3745,16 @@
         <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.RowNo">
+            <summary>
+            Execl行号
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmLovBase">
@@ -5475,6 +5525,11 @@
         <member name="T:EU.Core.Model.Edit.EditSmImportDataDetailInput">
             <summary>
             系统导入数据明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmImportDataMasterInput">
+            <summary>
+            导入数据主表明细 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmImportErrorInput">
@@ -9082,6 +9137,41 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmImportDataMaster">
+            <summary>
+            导入数据主表明细 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.Col">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.Row">
+            <summary>
+            Row
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.Value">
+            <summary>
+            值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.IsError">
+            <summary>
+            是否错误
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataMaster.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmImportError">
             <summary>
             系统导入模板异常信息 (Model)
@@ -9197,6 +9287,11 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplate.MasterTableCode">
+            <summary>
+            主表表代码
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmImpTemplateDetail">
             <summary>
             导入模板定义明细 (Model)
@@ -9270,6 +9365,16 @@
         <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.RowNo">
+            <summary>
+            Execl行号
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmLov">
@@ -11103,6 +11208,11 @@
             系统导入数据明细(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmImportDataMasterDto">
+            <summary>
+            导入数据主表明细(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmImportErrorDto">
             <summary>
             系统导入模板异常信息(Dto.View)
@@ -11548,6 +11658,11 @@
         <member name="T:EU.Core.Model.Insert.InsertSmImportDataDetailInput">
             <summary>
             系统导入数据明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmImportDataMasterInput">
+            <summary>
+            导入数据主表明细 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmImportErrorInput">
