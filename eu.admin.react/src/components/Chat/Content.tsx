@@ -20,7 +20,7 @@ const ChatContent: React.FC<MarkdownProps> = React.memo(({ content }) => {
         return (
           <div style={{ maxWidth: 1000 }}>
             {moduleInfo.type === "module_list" && <TableList moduleCode={moduleInfo.moudleCode} />}
-            {moduleInfo.type === "module_edit" && <FormPage moduleCode={moduleInfo.moudleCode} />}
+            {moduleInfo.type === "module_edit" && <FormPage moduleCode={moduleInfo.moudleCode} id={moduleInfo.id ?? ""} />}
           </div>
         );
       }

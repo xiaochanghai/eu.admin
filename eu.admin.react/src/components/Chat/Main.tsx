@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   CloudUploadOutlined,
   CopyOutlined,
@@ -26,8 +26,10 @@ import { useStyle } from "./Styles";
 import { getCache, setCache, createUuid } from "@/utils";
 import { BubbleDataType, ChatBubble, BubbleDataTypeContent } from "./Bubble";
 let baseURL = import.meta.env.VITE_API_URL as string;
+import { uploadFile } from "@/api/modules/module";
 
 import ChatContent from "./Content";
+import type { UploadFile } from "antd/es/upload/interface";
 
 export const ChatMain: React.FC = () => {
   const { styles } = useStyle();
@@ -44,6 +46,7 @@ export const ChatMain: React.FC = () => {
 
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<GetProp<typeof Attachments, "items">>([]);
+  const [fileId, setFileId] = useState<string>("");
   // const [bubbleContents, setBubbleContents] = useState<BubbleDataTypeContent[]>([]);
   let bubbleContents: BubbleDataTypeContent[] = [];
   const [inputValue, setInputValue] = useState("");
@@ -170,9 +173,55 @@ export const ChatMain: React.FC = () => {
 
     onRequest({
       stream: true,
-      message: { role: "user", content: val }
+      message: { role: "user", content: val, fileId }
     });
   };
+
+  /**
+   * 上传附件
+   * @param action 表格操作对象
+   */
+  const uploadFileAttachment = useCallback(
+    async (files: UploadFile[]) => {
+      if (files.length == 0) return;
+      setAttachedFiles(files);
+      // 检查必要条件
+      // if (!file || !MasterId) return false;
+
+      // // 防止重复上传
+      // if (!uploadFlag) return false;
+
+      // uploadFlag = false;
+
+      try {
+        // 准备表单数据
+        const formData = new FormData();
+        formData.append("file", files[0].originFileObj as any);
+        // formData.append("masterId", MasterId);
+        formData.append("filePath", "Chat");
+        // formData.append("imageType", imageType ?? filePath);
+        // formData.append("isUnique", String(isUnique));
+        // 显示上传中提示
+        message.loading("附件上传中..", 0);
+        // 上传文件
+        const { Success, Data } = await uploadFile("/api/File/Upload", formData);
+        // 关闭加载提示
+        message.destroy();
+        if (Success) {
+          setFileId(Data);
+          setAttachedFiles([]);
+          setAttachmentsOpen(false);
+          message.success("附件上传成功！");
+        }
+      } catch (error) {
+        console.error("上传附件失败:", error);
+        message.error("上传附件失败");
+      } finally {
+        // uploadFlag = true; // 重置上传标志
+      }
+    },
+    [attachedFiles]
+  );
 
   // 移除监听消息变化的 useEffect
   // useEffect(() => {
@@ -397,7 +446,8 @@ export const ChatMain: React.FC = () => {
       <Attachments
         beforeUpload={() => false}
         items={attachedFiles}
-        onChange={info => setAttachedFiles(info.fileList)}
+        // onChange={info => setAttachedFiles(info.fileList)}
+        onChange={info => uploadFileAttachment(info.fileList)}
         placeholder={type =>
           type === "drop"
             ? { title: t("chat.senderHeaderAttachmentDropTitle") }
