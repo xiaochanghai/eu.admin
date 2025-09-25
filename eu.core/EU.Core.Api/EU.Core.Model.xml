@@ -12490,5 +12490,35 @@
             返回数据
             </summary>
         </member>
+        <member name="T:EU.Core.Models.McpRequest">
+            <summary>
+            MCP 请求基础模型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Models.McpResponse">
+            <summary>
+            MCP 响应基础模型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Models.McpError">
+            <summary>
+            MCP 错误模型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Models.McpTool">
+            <summary>
+            MCP 工具定义
+            </summary>
+        </member>
+        <member name="T:EU.Core.Models.McpResource">
+            <summary>
+            MCP 资源定义
+            </summary>
+        </member>
+        <member name="T:EU.Core.Models.McpStreamEvent">
+            <summary>
+            MCP 流式事件
+            </summary>
+        </member>
     </members>
 </doc>

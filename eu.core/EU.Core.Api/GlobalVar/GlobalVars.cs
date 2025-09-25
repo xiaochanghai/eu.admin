@@ -1,5 +1,5 @@
 ﻿using EU.Core.Common.Caches;
-using EU.Core.MCP.Models;
+using EU.Core.Models;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using OpenAI;

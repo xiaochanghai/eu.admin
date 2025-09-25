@@ -1,4 +1,4 @@
-﻿namespace EU.Core.MCP.Models;
+﻿namespace EU.Core.Models;
 
 /// <summary>
 /// MCP 流式事件

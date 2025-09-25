@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EU.Core.MCP.Models;
+namespace EU.Core.Models;
 
 /// <summary>
 /// MCP 请求基础模型

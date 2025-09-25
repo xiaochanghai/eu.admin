@@ -1,4 +1,4 @@
-using EU.Core.MCP.Models;
+using EU.Core.Models;
 using ModelContextProtocol.Client;
 //using ModelContextProtocol.Protocol.Transport;
 
@@ -10,10 +10,10 @@ namespace EU.Core.Api.Controllers.MCP;
 [ApiController, Route("api/Stream"), Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_Other), GlobalActionFilter]
 public class StreamController : ControllerBase
 {
-    private readonly ILogger<McpProtocolController> _logger;
+    private readonly ILogger<StreamController> _logger;
     //private readonly ChatAIClient chatAIClient;
 
-    public StreamController(ILogger<McpProtocolController> logger)
+    public StreamController(ILogger<StreamController> logger)
     {
 
         // 创建聊天客户端实例
