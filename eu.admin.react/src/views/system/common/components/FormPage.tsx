@@ -77,7 +77,7 @@ const FormPage: React.FC<any> = props => {
    * 根据是否有ID决定是新增还是编辑模式
    */
   useEffect(() => {
-    if (Id) {
+    if (Id && moduleInfo) {
       // 编辑模式
       setViewId(Id);
       setModifyType(ModifyType.Edit);
@@ -91,7 +91,7 @@ const FormPage: React.FC<any> = props => {
       setDisabled(false);
       setIsLoading(false);
     }
-  }, []);
+  }, [moduleInfo]);
 
   /**
    * 渲染表单组件
