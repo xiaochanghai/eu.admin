@@ -1,12 +1,12 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
 import { Card, Form, Flex, Tabs } from "antd";
 import TableList from "./TableList";
-import { querySingle, add, update } from "@/api/modules/module";
-import { setId } from "@/redux/modules/module";
+import { querySingle, add, update, getModuleInfo } from "@/api/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { ModuleInfo, ModifyType } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
-import { Loading, FormToolbar, Element } from "@/components";
+import { Loading, FormToolbar, Element, Skeleton } from "@/components";
+import { setModuleInfo, setId } from "@/redux/modules/module";
 
 /**
  * 表单页面组件
@@ -44,6 +44,18 @@ const FormPage: React.FC<any> = props => {
   // 获取当前模块信息
   const moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
   const { formColumns, openType, children, url, isDetail, masterColumn } = moduleInfo || {};
+  /**
+   * 初始化模块信息
+   */
+  useEffect(() => {
+    const fetchModuleInfo = async () => {
+      const { Data } = await getModuleInfo(moduleCode);
+      dispatch(setModuleInfo(Data));
+    };
+
+    // 如果模块信息不存在，则获取
+    if (!moduleInfo) fetchModuleInfo();
+  }, []);
 
   /**
    * 查询单条数据
@@ -218,79 +230,85 @@ const FormPage: React.FC<any> = props => {
 
   return (
     <>
-      {/* 标准页面表单 */}
-      {openType !== "Drawer" && openType !== "Modal" ? (
-        <Form
-          labelCol={{
-            xs: { span: 8 },
-            sm: { span: 8 },
-            md: { span: 8 }
-          }}
-          wrapperCol={{
-            xs: { span: 16 },
-            sm: { span: 16 },
-            md: { span: 16 }
-          }}
-          labelWrap
-          onFinish={onFinish}
-          onValuesChange={onValuesChange}
-          form={form}
-        >
-          {/* 表单工具栏 */}
-          <FormToolbar
-            moduleInfo={moduleInfo}
-            disabled={IsView === true || disabled === true || disabledToolbar}
-            onFinishAdd={onSaveAdd}
-            modifyType={modifyType}
-            onBack={() => changePage("FormIndex")}
-          />
-
-          {/* 表单内容 */}
-          {isLoading ? (
-            <Loading />
-          ) : (
-            <Card size="small" bordered={false}>
-              {renderFormComponent()}
-            </Card>
-          )}
-        </Form>
-      ) : null}
-
-      {/* 模态框/抽屉表单 */}
-      {(openType === "Modal" || openType === "Drawer") && (
-        <div style={{ marginTop: displayToolBar === true ? 0 : 20, marginBottom: displayToolBar === true ? 0 : 20 }}>
-          <Form
-            labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
-            labelWrap
-            wrapperCol={{ span: 16 }}
-            onFinish={onFinish}
-            onValuesChange={onValuesChange}
-            form={form}
-          >
-            {displayToolBar == true && (
-              <div style={{ paddingBottom: 10 }}>
-                <FormToolbar
-                  moduleInfo={moduleInfo}
-                  disabled={IsView === true || disabled === true || disabledToolbar}
-                  onFinishAdd={onSaveAdd}
-                  modifyType={modifyType}
-                  // onBack={() => changePage("FormIndex")}
-                />
-              </div>
-            )}
-            {isLoading ? <Loading /> : renderFormComponent()}
-          </Form>
-        </div>
-      )}
-
-      {/* 子表选项卡 */}
-      {moduleInfo && tabItems.length > 0 && (
+      {moduleInfo && moduleInfo.Success === true ? (
         <>
-          <div style={{ height: 10 }}></div>
-          <Card size="small" bordered={false}>
-            <Tabs items={tabItems} />
-          </Card>
+          {/* 标准页面表单 */}
+          {openType !== "Drawer" && openType !== "Modal" ? (
+            <Form
+              labelCol={{
+                xs: { span: 8 },
+                sm: { span: 8 },
+                md: { span: 8 }
+              }}
+              wrapperCol={{
+                xs: { span: 16 },
+                sm: { span: 16 },
+                md: { span: 16 }
+              }}
+              labelWrap
+              onFinish={onFinish}
+              onValuesChange={onValuesChange}
+              form={form}
+            >
+              {/* 表单工具栏 */}
+              <FormToolbar
+                moduleInfo={moduleInfo}
+                disabled={IsView === true || disabled === true || disabledToolbar}
+                onFinishAdd={onSaveAdd}
+                modifyType={modifyType}
+                onBack={() => changePage("FormIndex")}
+              />
+
+              {/* 表单内容 */}
+              {isLoading ? (
+                <Loading />
+              ) : (
+                <Card size="small" bordered={false}>
+                  {renderFormComponent()}
+                </Card>
+              )}
+            </Form>
+          ) : null}
+
+          {/* 模态框/抽屉表单 */}
+          {(openType === "Modal" || openType === "Drawer") && (
+            <div style={{ marginTop: displayToolBar === true ? 0 : 20, marginBottom: displayToolBar === true ? 0 : 20 }}>
+              <Form
+                labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
+                labelWrap
+                wrapperCol={{ span: 16 }}
+                onFinish={onFinish}
+                onValuesChange={onValuesChange}
+                form={form}
+              >
+                {displayToolBar == true && (
+                  <div style={{ paddingBottom: 10 }}>
+                    <FormToolbar
+                      moduleInfo={moduleInfo}
+                      disabled={IsView === true || disabled === true || disabledToolbar}
+                      onFinishAdd={onSaveAdd}
+                      modifyType={modifyType}
+                      // onBack={() => changePage("FormIndex")}
+                    />
+                  </div>
+                )}
+                {isLoading ? <Loading /> : renderFormComponent()}
+              </Form>
+            </div>
+          )}
+
+          {/* 子表选项卡 */}
+          {moduleInfo && tabItems.length > 0 && (
+            <>
+              <div style={{ height: 10 }}></div>
+              <Card size="small" variant="borderless">
+                <Tabs items={tabItems} />
+              </Card>
+            </>
+          )}
         </>
+      ) : (
+        <Skeleton type="form" />
       )}
     </>
   );

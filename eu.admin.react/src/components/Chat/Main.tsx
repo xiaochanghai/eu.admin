@@ -161,6 +161,37 @@ export const ChatMain: React.FC = () => {
   //   }
   // }, [messages, setMessages]);
 
+  // 添加：监听消息变化，确保用户消息包含文件信息
+  const lastSubmittedFiles = useRef<UploadFile[]>([]);
+  const lastSubmittedFileId = useRef<string>("");
+
+  useEffect(() => {
+    if (!messages?.length) return;
+
+    const lastMessage = messages[messages.length - 1];
+    // 如果最后一条是用户消息且缺少文件信息，但我们刚刚提交了文件
+    if (lastMessage.message?.role === "user" && !lastMessage.message.files && lastSubmittedFiles.current.length > 0) {
+      setMessages(prev => {
+        const newMessages = [...prev];
+        const lastIndex = newMessages.length - 1;
+        newMessages[lastIndex] = {
+          ...newMessages[lastIndex],
+          message: {
+            ...newMessages[lastIndex].message,
+            files: lastSubmittedFiles.current,
+            fileId: lastSubmittedFileId.current
+          }
+        };
+
+        // 清空临时存储
+        lastSubmittedFiles.current = [];
+        lastSubmittedFileId.current = "";
+
+        return newMessages;
+      });
+    }
+  }, [messages, setMessages]);
+
   // ==================== Event ====================
   const onSubmit = (val: string) => {
     if (!val) return;
@@ -220,7 +251,8 @@ export const ChatMain: React.FC = () => {
         if (Success) {
           setFileId(Data);
           setAttachedFiles(files);
-
+          lastSubmittedFiles.current = files;
+          lastSubmittedFileId.current = Data;
           message.success("附件上传成功！");
         }
       } catch (error) {

@@ -1,14 +1,15 @@
 import React from "react";
-import { Space, Spin } from "antd";
-
 import type { MessageInfo } from "@ant-design/x/es/use-x-chat";
 import Markdown from "./Markdown";
+import type { UploadFile } from "antd/es/upload/interface";
 
 export type BubbleDataType = {
   role: string;
   content: string;
   parentMessageId?: string;
   contents?: BubbleDataTypeContent[];
+  files?: UploadFile[];
+  fileId?: string;
 };
 
 export type BubbleDataTypeContent = {
@@ -23,17 +24,5 @@ interface BubbleViewProps {
 }
 
 export const ChatBubble: React.FC<BubbleViewProps> = React.memo(({ message, content }) => {
-  return (
-    <>
-      {message.id === "loading" ? (
-        <Space>
-          <Spin size="small" />
-        </Space>
-      ) : message.message.role === "user" ? (
-        content
-      ) : (
-        <Markdown content={content} />
-      )}
-    </>
-  );
+  return <>{message.message.role === "user" ? content : <Markdown content={content} />}</>;
 });
