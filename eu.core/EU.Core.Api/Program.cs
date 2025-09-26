@@ -52,7 +52,7 @@ builder.ConfigureApplication();
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
 builder.Services.AddAllOptionRegister();
 
-builder.Services.AddUiFilesZipSetup(builder.Environment);
+//builder.Services.AddUiFilesZipSetup(builder.Environment);
 ServiceExtensions.Init();
 
 Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool1();
