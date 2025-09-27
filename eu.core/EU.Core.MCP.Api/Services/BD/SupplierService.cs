@@ -43,11 +43,15 @@ public class UpdateSupplieArguments()
 public class SupplierService : BaseService<SupplierService, BdSupplier>, ISupplierService
 {
     private readonly string moudleCode = "BD_SUPPLIER_MNG";
+    IServices.IBdSupplierServices supplierService;
 
-    public SupplierService(ILogger<SupplierService> logger, IBaseRepository<BdSupplier> _baseDal) : base(logger, _baseDal)
+    public SupplierService(
+        ILogger<SupplierService> logger,
+        IBaseRepository<BdSupplier> _baseDal,
+        IServices.IBdSupplierServices _supplierService) : base(logger, _baseDal)
     {
+        supplierService = _supplierService;
     }
-
 
     #region 获取供应商列表 
     /// <summary>
@@ -210,6 +214,8 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
                  .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
                  .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
                  .FirstAsync();
+
+        //var result = await supplierService.QueryById(Guid.Parse(updateArguments.supplierId!));
 
         if (supply.IsNullOrEmpty())
             return new McpToolResult
