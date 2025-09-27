@@ -42,8 +42,6 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
 
     public SupplierService(ILogger<SupplierService> logger) : base(logger)
     {
-        // 在构造函数末尾初始化服务
-        InitializeService(this);
     }
 
     #region 获取供应商列表 
@@ -107,7 +105,7 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
         };
     }
     #endregion
-     
+
     #region 导入供应商 
     /// <summary>
     /// 导入供应商，根据传进来的fileId

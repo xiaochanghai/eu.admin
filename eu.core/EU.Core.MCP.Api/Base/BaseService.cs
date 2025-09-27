@@ -8,31 +8,33 @@ using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.MCP.Interfaces;
 
-public class BaseService<IServiceBase> : IBaseService
+public class BaseService<TService> : IBaseService where TService : class
 {
-    private readonly ILogger<BaseService<IServiceBase>> _logger;
-    private readonly Dictionary<string, MethodInfo> _toolMethods;
-    private IServiceBase? _serviceInstance; // 移除 readonly
+    private readonly ILogger<BaseService<TService>> _logger;
+    private readonly Dictionary<string, MethodInfo> _toolMethods; 
+    private readonly Lazy<TService> _serviceInstance;
 
-    public BaseService(ILogger<BaseService<IServiceBase>> logger)
+    public BaseService(ILogger<BaseService<TService>> logger)
     {
         _logger = logger;
         _toolMethods = new Dictionary<string, MethodInfo>();
+        _serviceInstance = new Lazy<TService>(() =>
+        {
+            if (this is TService service)
+            {
+                DiscoverMcpMethods();
+                return service;
+            }
+            throw new InvalidOperationException($"Service must implement {typeof(TService).Name}");
+        });
     }
-
-    // 添加一个受保护的方法来设置服务实例
-    protected void InitializeService(IServiceBase serviceInstance)
-    {
-        _serviceInstance = serviceInstance;
-
-        // 自动发现工具、资源和提示
-        DiscoverMcpMethods();
-    }
+     
+    protected TService ServiceInstance => _serviceInstance.Value;
 
 
     private void DiscoverMcpMethods()
     {
-        var type = typeof(IServiceBase);
+        var type = typeof(TService);
 
         // 发现工具方法
         foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
@@ -149,6 +151,7 @@ public class BaseService<IServiceBase> : IBaseService
 
     public virtual IEnumerable<McpTool> GetTools()
     {
+        _ = ServiceInstance;
         var tools = new List<McpTool>();
 
         // 动态生成工具列表
@@ -183,7 +186,11 @@ public class BaseService<IServiceBase> : IBaseService
         return tools;
     }
 
-    public bool CanHandle(string toolName) => _toolMethods.ContainsKey(toolName);
+    public bool CanHandle(string toolName)
+    {
+        _ = ServiceInstance;
+        return _toolMethods.ContainsKey(toolName);
+    }
 
     public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments, dynamic? dynamicObject)
     {
@@ -197,7 +204,7 @@ public class BaseService<IServiceBase> : IBaseService
         try
         {
             // 动态调用服务方法
-            var result = method.Invoke(_serviceInstance, [dynamicObject]);
+            var result = method.Invoke(ServiceInstance, [dynamicObject]);
 
             // 如果方法是异步的，等待完成
             if (result is Task task)
