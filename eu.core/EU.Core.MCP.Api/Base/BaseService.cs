@@ -18,14 +18,6 @@ public class BaseService<IServiceBase> : IBaseService
     {
         _logger = logger;
         _toolMethods = new Dictionary<string, MethodInfo>();
-    }
-
-    // 添加一个受保护的方法来设置服务实例
-    protected void InitializeService(IServiceBase serviceInstance)
-    {
-        _serviceInstance = serviceInstance;
-
-        // 自动发现工具、资源和提示
         DiscoverMcpMethods();
     }
 

@@ -32,7 +32,7 @@ public class BaseController<IServiceBase> : ControllerBase
     [HttpGet]
     public IActionResult HealthCheck()
     {
-        return Ok("ClaudeMCP API is running!");
+        return Ok("MCP API is running!");
     }
     #endregion
 

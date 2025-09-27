@@ -5,7 +5,7 @@ using EU.Core.Common.Helper;
 using System.ComponentModel;
 
 
-namespace EU.Core.Api.MCP.Services.Implementations;
+namespace EU.Core.Api.MCP.Services.BD;
 
 public class InputSchemaArguments()
 {
@@ -26,14 +26,22 @@ public class CreateSupplierFromFileArguments()
     public string? fileId { get; set; }
 }
 
+
+public class UpdateSupplieArguments()
+{
+    /// <summary>
+    /// 文件ID
+    /// </summary>
+    [Description("文件ID")]
+    public string? fileId { get; set; }
+}
+
 public class SupplierService : BaseService<SupplierService>, ISupplierService
 {
     private readonly string moudleCode = "BD_SUPPLIER_MNG";
 
     public SupplierService(ILogger<SupplierService> logger) : base(logger)
-    {
-        // 在构造函数末尾初始化服务
-        InitializeService(this);
+    { 
     }
 
     #region 获取供应商列表 
@@ -43,11 +51,11 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
     /// <param name="arguments"></param>
     /// <returns></returns>
     [McpTool(
-    "query_supplier_list",
+    "get_supplier",
     "用于打开供应商列表页面。当用户希望浏览、查看或管理供应商信息时使用。" +
     "此工具会返回前端模块标识 'BD_SUPPLIER_MNG'，客户端应据此加载对应的表格组件或跳转至管理界面。" +
     "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
-    public McpToolResult QuerySupplierList(object arguments)
+    public McpToolResult GetSupplier(object arguments)
     {
         return new McpToolResult
         {
@@ -153,29 +161,87 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
     }
     #endregion
 
-    [McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello", typeof(InputSchemaArguments))]
-    public async Task<McpToolResult> HandleTestHello2(object arguments)
+    #region 修改供应商 
+    /// <summary>
+    /// 修改供应商，根据传进来的Id
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "update_supplier",
+    @"工具名称：update_supplier
+
+功能描述：  
+用于修改**已存在的供应商**信息。仅当用户明确表示要**编辑、更新或修改某个具体供应商**的数据（如名称、联系人、地址、银行信息等）时调用。  
+系统将根据提供的 supplierId（系统唯一ID）或 supplierNo（业务供应商编号）定位目标供应商，并打开对应的编辑表单页面，预加载当前数据。
+
+输入参数（至少提供其一）：  
+- supplierId（字符串，可选）：系统生成的供应商唯一标识（如 ""6faa0538-1c99-433a-a4f3-6c7f40ffd4c2""）；  
+- supplierNo（字符串，可选）：用户定义的供应商业务编号（如 ""VENDOR-2024-001""）。  
+
+> ⚠️ 注意：supplierId 和 supplierNo 至少需提供一个。若两者同时提供，优先使用 supplierId。
+
+触发条件（必须满足）：  
+- 用户意图是**编辑、修改、更新**供应商（非创建、查询、删除）；  
+- 用户明确指定了**某个供应商**，并通过 ID、编号、名称等提供了可识别信息；  
+- 系统能从中解析出有效的 supplierId 或 supplierNo。
+
+行为说明：  
+- 工具返回前端模块标识 'BD_SUPPLIER_MNG'；  
+- 客户端应加载供应商编辑表单，并根据传入的标识符自动查询并填充对应供应商的当前数据；  
+- 实际数据保存由前端表单提交触发，本工具仅负责页面导航与数据预加载。
+
+注意事项：  
+- ❗ 本工具为**页面导航操作**，不直接修改数据库；  
+- ❗ 若用户仅说“修改供应商”但未指定具体对象，应引导其提供供应商编号或名称，**不得盲目调用**；  
+- ❗ 若用户意图是“创建新供应商”或“从文件导入”，应调用 create_supplier 或 create_supplier_from_file；  
+- ❗ 若用户仅想“查看”供应商信息，应调用 get_supplier 类工具，而非本工具。",
+            typeof(UpdateSupplieArguments))]
+
+    public McpToolResult update_supplier(object arguments)
     {
-        var aaqq = JsonHelper.JsonToObj<InputSchemaArguments>(JsonHelper.ObjToJson(arguments));
-
-        //if (arguments.ValueKind != JsonValueKind.Undefined &&
-        //    arguments.TryGetProperty("name", out var nameProperty))
-        //{
-        //    name = nameProperty.GetString() ?? "World";
-        //}
-
         return new McpToolResult
         {
-            Content = new[]
-            {
+            Content =
+            [
                 new McpContent
                 {
                     Type = "text",
-                    Text = $"Hello, {aaqq.name},{DateTime.Now}! Supplier MCP server is working! "
+                    Text = JsonHelper.ObjToJson(new
+                    {
+                        type = "module_edit",
+                        id = "a151f47a-92b8-4f81-8021-e2b1c3ad651a",
+                        moudleCode
+                    })
                 }
-            }
+            ]
         };
     }
+    #endregion
+
+    //[McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello", typeof(InputSchemaArguments))]
+    //public async Task<McpToolResult> HandleTestHello2(object arguments)
+    //{
+    //    var aaqq = JsonHelper.JsonToObj<InputSchemaArguments>(JsonHelper.ObjToJson(arguments));
+
+    //    //if (arguments.ValueKind != JsonValueKind.Undefined &&
+    //    //    arguments.TryGetProperty("name", out var nameProperty))
+    //    //{
+    //    //    name = nameProperty.GetString() ?? "World";
+    //    //}
+
+    //    return new McpToolResult
+    //    {
+    //        Content = new[]
+    //        {
+    //            new McpContent
+    //            {
+    //                Type = "text",
+    //                Text = $"Hello, {aaqq.name},{DateTime.Now}! Supplier MCP server is working! "
+    //            }
+    //        }
+    //    };
+    //}
 
     //public object GetAvailableTools()
     //{

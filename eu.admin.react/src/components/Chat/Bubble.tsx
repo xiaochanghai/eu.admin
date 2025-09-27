@@ -30,17 +30,25 @@ export const ChatBubble: React.FC<BubbleViewProps> = React.memo(({ message, cont
   return (
     <>
       {message.message.role === "user" ? (
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
-          {/* 显示文本内容 */}
-          {content && <div>{content}</div>}
+        <>
+          {message.message.files && message.message.files.length > 0 ? (
+            <>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                {/* 显示文本内容 */}
+                {content && <div>{content}</div>}
 
-          {/* 显示文件 */}
-          <Flex vertical gap="middle">
-            {message.message.files!.map((file, index) => (
-              <Attachments.FileCard key={index} item={file} />
-            ))}
-          </Flex>
-        </Space>
+                {/* 显示文件 */}
+                <Flex vertical gap="middle">
+                  {message.message.files!.map((file, index) => (
+                    <Attachments.FileCard key={index} item={file} />
+                  ))}
+                </Flex>
+              </Space>
+            </>
+          ) : (
+            content
+          )}
+        </>
       ) : (
         <Markdown content={content} />
       )}
