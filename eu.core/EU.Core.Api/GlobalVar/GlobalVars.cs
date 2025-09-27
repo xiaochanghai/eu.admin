@@ -39,6 +39,7 @@ public class ChatHelper
     /// 使用的 AI 模型标识符。【记得替换为自己的】
     /// </summary>
     private const string _modelID = "Qwen/Qwen2.5-32B-Instruct";
+    private static string lastMessage = "";
 
     public static void InitChat()
     {
@@ -106,12 +107,15 @@ public class ChatHelper
                     }
                 }
                 else if (historyMessges[j].Role == ChatRole.Tool.ToString())
+                {
                     yield return new McpStreamEvent
                     {
                         EventType = "tool_result",
                         Data = historyMessges[j].Content,
                         Id = id
                     };
+                }
+
                 id = Utility.GetGUID();
             }
             yield return new McpStreamEvent
@@ -191,7 +195,7 @@ You will select appropriate tools and call them to solve user queries
             var textBuilder = new StringBuilder();
             // 如果你想累积每次工具返回（可选）
             var toolResults = new List<string>();
-
+             
             await foreach (ChatResponseUpdate update in chatClient.GetStreamingResponseAsync(messages, options))
             {
                 updates.Add(update);
@@ -204,18 +208,29 @@ You will select appropriate tools and call them to solve user queries
                         {
                             // 工具返回的数据在这里
                             string oneToolResult = ConvertResultToString(frc.Result);
+
+                            var toolResult = JsonHelper.JsonToObj<Root>(oneToolResult);
                             toolResults.Add(oneToolResult);
                             id = Utility.GetGUID();
                             string messageId = Utility.GetGUID();
                             AddChatMessage(chatId, ChatRole.Tool.ObjToString(), oneToolResult, "tool_result", messageId.ObjToGuid(), parentId);
-
-                            // 如果你要把它往外抛事件
-                            yield return new McpStreamEvent
+                            if (toolResult.content.Count > 0)
                             {
-                                EventType = "tool_result",
-                                Data = oneToolResult,
-                                Id = messageId
-                            };
+                                if (toolResult.content[0].type == "text")
+                                    yield return new McpStreamEvent
+                                    {
+                                        EventType = "tool_result",
+                                        Data = toolResult.content[0].text,
+                                        Id = messageId
+                                    };
+                            }
+                            else
+                                yield return new McpStreamEvent  // 如果你要把它往外抛事件
+                                {
+                                    EventType = "tool_result",
+                                    Data = toolResult,
+                                    Id = messageId
+                                };
                         }
                     }
                     continue; // 该条 update 已经处理完
@@ -223,18 +238,22 @@ You will select appropriate tools and call them to solve user queries
                 // 2) 模型文本增量（普通回答）
                 if (toolResults.Count == 0)
                 {
-
                     if (!string.IsNullOrEmpty(update.Text))
                     {
                         textBuilder.Append(update.Text);
                         // 你已有的逻辑
                         AddChatMessage(chatId, ChatRole.Assistant.ObjToString(), update.Text, "tool_started", id.ObjToGuid(), parentId);
-                        yield return new McpStreamEvent
+                        if (lastMessage != "<tool_call>" && update.Text != "<tool_call>")
                         {
-                            EventType = "tool_started", // 你这里原本用的名字，可按需调整
-                            Data = update.Text,
-                            Id = id
-                        };
+                            lastMessage = update.Text;
+                            yield return new McpStreamEvent
+                            {
+                                EventType = "tool_started", // 你这里原本用的名字，可按需调整
+                                Data = update.Text,
+                                Id = id
+                            };
+                        }
+
                     }
                     // 3) 模型发起的“工具调用请求”（你也可以监听）
                     // 如果 Assistant 正在发起工具调用，会有 FunctionCallContent 或 FunctionCallUpdate
@@ -329,4 +348,15 @@ public class AIChatMessage()
     public string Content { get; set; }
     public Guid? ParentMessageId { get; set; }
 
+}
+
+public class ContentItem
+{
+    public string type { get; set; }
+    public string text { get; set; }
+}
+
+public class Root
+{
+    public List<ContentItem> content { get; set; }
 }

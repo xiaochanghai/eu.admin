@@ -1,13 +1,3 @@
-using EU.Core.Api.MCP.Attributes;
-using EU.Core.Api.MCP.Interfaces;
-using EU.Core.Api.MCP.Models.Mcp;
-using EU.Core.Common.Helper;
-using EU.Core.IRepository.Base;
-using EU.Core.Model.Entity;
-using SqlSugar;
-using System.ComponentModel;
-
-
 namespace EU.Core.Api.MCP.Services.BD;
 
 public class InputSchemaArguments()
@@ -248,9 +238,9 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
     }
     #endregion
 
-    #region 修改供应商 
+    #region 删除供应商 
     /// <summary>
-    /// 修改供应商，根据传进来的Id
+    /// 删除供应商
     /// </summary>
     /// <param name="arguments"></param>
     /// <returns></returns>
@@ -288,36 +278,53 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
 
     public async Task<McpToolResult> delete_supplier(object arguments)
     {
-        var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
-        var supply = await Db.Queryable<BdSupplier>()
-                 .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
-                 .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
-                 .FirstAsync();
+        try
+        {
+            var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
+            var supply = await Db.Queryable<BdSupplier>()
+                     .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
+                     .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
+                     .FirstAsync();
 
-        if (supply.IsNullOrEmpty())
+            if (supply.IsNullOrEmpty())
+                return new McpToolResult
+                {
+                    Content =
+                    [
+                        new McpContent
+                        {
+                            Type = "text",
+                            Text = "未查询到有效供应商数据！"
+                        }
+                    ]
+                };
+            var result = await _supplierService.DeleteById(supply.ID);
             return new McpToolResult
             {
                 Content =
-                [
-                    new McpContent
-                    {
-                        Type = "text",
-                        Text = "未查询到有效供应商数据！"
-                    }
-                ]
+                    [
+                        new McpContent
+                        {
+                            Type = "text",
+                            Text =result ? $"供应商 '{supply.SupplierNo}' 删除成功！":"删除失败！"
+                        }
+                    ]
             };
-        var result = await _supplierService.DeleteById(supply.ID);
-        return new McpToolResult
+        }
+        catch (Exception E)
         {
-            Content =
-                [
-                    new McpContent
-                    {
-                        Type = "text",
-                        Text =result ? "删除成功！":"删除失败！"
-                    }
-                ]
-        };
+            return new McpToolResult
+            {
+                Content =
+                    [
+                        new McpContent
+                        {
+                            Type = "text",
+                            Text = $"删除失败:{E.Message}！"
+                        }
+                    ]
+            };
+        }
     }
     #endregion
 

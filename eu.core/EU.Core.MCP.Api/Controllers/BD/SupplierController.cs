@@ -1,4 +1,3 @@
-using EU.Core.Api.MCP.Interfaces;
 using EU.Core.MCP.Controllers;
 
 namespace EU.Core.Api.MCP.Controllers;

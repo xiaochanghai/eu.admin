@@ -1,5 +1,4 @@
-﻿using EU.Core.Api.MCP.Interfaces;
-using EU.Core.Api.MCP.Services.BD;
+﻿using EU.Core.Api.MCP.Services.BD;
 
 namespace EU.Core.MCP.Api.Extensions;
 

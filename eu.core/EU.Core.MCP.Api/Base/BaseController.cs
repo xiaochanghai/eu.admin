@@ -1,6 +1,4 @@
-﻿using EU.Core.Api.MCP.Models.Mcp;
-using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace EU.Core.MCP.Controllers;
 
