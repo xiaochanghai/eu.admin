@@ -2,6 +2,9 @@ using EU.Core.Api.MCP.Attributes;
 using EU.Core.Api.MCP.Interfaces;
 using EU.Core.Api.MCP.Models.Mcp;
 using EU.Core.Common.Helper;
+using EU.Core.IRepository.Base;
+using EU.Core.Model.Entity;
+using SqlSugar;
 using System.ComponentModel;
 
 
@@ -30,19 +33,21 @@ public class CreateSupplierFromFileArguments()
 public class UpdateSupplieArguments()
 {
     /// <summary>
-    /// 文件ID
+    /// 供应商唯一标识
     /// </summary>
-    [Description("文件ID")]
-    public string? fileId { get; set; }
+    [Description("供应商唯一标识")]
+    public string? supplierId { get; set; }
+    public string? supplierNo { get; set; }
 }
 
-public class SupplierService : BaseService<SupplierService>, ISupplierService
+public class SupplierService : BaseService<SupplierService, BdSupplier>, ISupplierService
 {
     private readonly string moudleCode = "BD_SUPPLIER_MNG";
 
-    public SupplierService(ILogger<SupplierService> logger) : base(logger)
+    public SupplierService(ILogger<SupplierService> logger, IBaseRepository<BdSupplier> _baseDal) : base(logger, _baseDal)
     {
     }
+
 
     #region 获取供应商列表 
     /// <summary>
@@ -198,23 +203,41 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
 - ❗ 若用户仅想“查看”供应商信息，应调用 get_supplier 类工具，而非本工具。",
             typeof(UpdateSupplieArguments))]
 
-    public McpToolResult update_supplier(object arguments)
+    public async Task<McpToolResult> update_supplier(object arguments)
     {
+        var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
+        var supply = await Db.Queryable<BdSupplier>()
+                 .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
+                 .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
+                 .FirstAsync();
+
+        if (supply.IsNullOrEmpty())
+            return new McpToolResult
+            {
+                Content =
+                [
+                    new McpContent
+                    {
+                        Type = "text",
+                        Text = "未查询到有效供应商数据！"
+                    }
+                ]
+            };
         return new McpToolResult
         {
             Content =
-            [
-                new McpContent
-                {
-                    Type = "text",
-                    Text = JsonHelper.ObjToJson(new
+                [
+                    new McpContent
                     {
-                        type = "module_edit",
-                        id = "a151f47a-92b8-4f81-8021-e2b1c3ad651a",
-                        moudleCode
-                    })
-                }
-            ]
+                        Type = "text",
+                        Text = JsonHelper.ObjToJson(new
+                        {
+                            type = "module_edit",
+                            id = supply.ID,
+                            moudleCode
+                        })
+                    }
+                ]
         };
     }
     #endregion

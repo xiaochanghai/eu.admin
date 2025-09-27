@@ -1,22 +1,24 @@
 using EU.Core.Api.MCP.Attributes;
 using EU.Core.Api.MCP.Models.Mcp;
-using Microsoft.AspNetCore.Mvc;
+using EU.Core.IRepository.Base;
+using SqlSugar;
 using System.Dynamic;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.MCP.Interfaces;
-
-public class BaseService<TService> : IBaseService where TService : class
+ 
+public class BaseService<TService, TEntity> : IBaseService where TService : class where TEntity : class
 {
-    private readonly ILogger<BaseService<TService>> _logger;
+    private readonly ILogger<BaseService<TService, TEntity>> _logger;
     private readonly Dictionary<string, MethodInfo> _toolMethods; 
     private readonly Lazy<TService> _serviceInstance;
 
-    public BaseService(ILogger<BaseService<TService>> logger)
+    public  IBaseRepository<TEntity> BaseDal { get; set; } //通过在子类的构造函数中注入，这里是基类，不用构造函数
+    public BaseService(ILogger<BaseService<TService, TEntity>> logger,IBaseRepository<TEntity> _baseDal)
     {
         _logger = logger;
+        BaseDal = _baseDal;
         _toolMethods = new Dictionary<string, MethodInfo>();
         _serviceInstance = new Lazy<TService>(() =>
         {
@@ -31,6 +33,7 @@ public class BaseService<TService> : IBaseService where TService : class
      
     protected TService ServiceInstance => _serviceInstance.Value;
 
+    public ISqlSugarClient Db => BaseDal.Db;
 
     private void DiscoverMcpMethods()
     {
