@@ -41,7 +41,9 @@ public class SupplierService : BaseService<SupplierService>, ISupplierService
     private readonly string moudleCode = "BD_SUPPLIER_MNG";
 
     public SupplierService(ILogger<SupplierService> logger) : base(logger)
-    { 
+    {
+        // 在构造函数末尾初始化服务
+        InitializeService(this);
     }
 
     #region 获取供应商列表 
