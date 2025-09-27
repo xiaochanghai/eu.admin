@@ -43,14 +43,14 @@ public class UpdateSupplieArguments()
 public class SupplierService : BaseService<SupplierService, BdSupplier>, ISupplierService
 {
     private readonly string moudleCode = "BD_SUPPLIER_MNG";
-    IServices.IBdSupplierServices supplierService;
+    IServices.IBdSupplierServices _supplierService;
 
     public SupplierService(
         ILogger<SupplierService> logger,
         IBaseRepository<BdSupplier> _baseDal,
-        IServices.IBdSupplierServices _supplierService) : base(logger, _baseDal)
+        IServices.IBdSupplierServices supplierService) : base(logger, _baseDal)
     {
-        supplierService = _supplierService;
+        _supplierService = supplierService;
     }
 
     #region 获取供应商列表 
@@ -248,119 +248,77 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
     }
     #endregion
 
-    //[McpTool("test_hello_Supplier3", "A simple test supplier tool that says hello", typeof(InputSchemaArguments))]
-    //public async Task<McpToolResult> HandleTestHello2(object arguments)
-    //{
-    //    var aaqq = JsonHelper.JsonToObj<InputSchemaArguments>(JsonHelper.ObjToJson(arguments));
+    #region 修改供应商 
+    /// <summary>
+    /// 修改供应商，根据传进来的Id
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "delete_supplier",
+    @"工具名称：delete_supplier
 
-    //    //if (arguments.ValueKind != JsonValueKind.Undefined &&
-    //    //    arguments.TryGetProperty("name", out var nameProperty))
-    //    //{
-    //    //    name = nameProperty.GetString() ?? "World";
-    //    //}
+功能描述：  
+用于**永久删除**系统中已存在的供应商记录。仅当用户明确表达“删除”“移除”“作废”某个具体供应商的意图时调用。  
+系统将根据传入的 supplierId（系统唯一ID）或 supplierNo（业务供应商编号）定位目标供应商，并执行**不可逆的数据删除操作**。
 
-    //    return new McpToolResult
-    //    {
-    //        Content = new[]
-    //        {
-    //            new McpContent
-    //            {
-    //                Type = "text",
-    //                Text = $"Hello, {aaqq.name},{DateTime.Now}! Supplier MCP server is working! "
-    //            }
-    //        }
-    //    };
-    //}
+输入参数（至少提供其一）：  
+- supplierId（字符串，可选）：系统生成的供应商唯一标识（如 ""SUP20250925001""）；  
+- supplierNo（字符串，可选）：用户定义的供应商业务编号（如 ""VENDOR-2024-001""）。  
 
-    //public object GetAvailableTools()
-    //{
-    //    var allTools = GetTools().ToArray();
+> ⚠️ 注意：supplierId 和 supplierNo 至少需提供一个。若两者同时提供，优先使用 supplierId。
 
-    //    _logger.LogInformation($"Returning {allTools.Length} available tools");
-    //    return new { tools = allTools };
-    //}
+行为说明：  
+- 工具将校验供应商是否存在、是否可被删除（如无关联采购订单、合同、付款记录等）；  
+- 若校验通过，立即执行物理或逻辑删除（根据系统策略）；  
+- 成功后返回删除成功确认信息；失败时返回具体原因（如“该供应商存在未完成订单，无法删除”）。
 
-    //public async Task<McpToolResult> HandleToolCallAsync(JsonElement? parameters)
-    //{
-    //    if (parameters == null)
-    //        throw new ArgumentException("Missing parameters");
+触发条件（必须严格满足）：  
+- 用户明确使用“删除”“移除”“作废”等**强删除意图动词**；  
+- 用户指定了**具体供应商**（通过 ID、编号、名称等可识别信息）；  
+- 上下文或用户输入中能解析出有效的 supplierId 或 supplierNo。
 
-    //    var toolName = parameters.Value.GetProperty("name").GetString();
-    //    var arguments = parameters.Value.TryGetProperty("arguments", out var args) ? args : default;
+注意事项：  
+- ❗ 本工具为**高危写入操作**，直接修改数据库，**不可用于查询、查看或导航**；  
+- ❗ 若用户仅说“供应商不要了”但未指定对象，**不得调用**，应引导确认；  
+- ❗ 若供应商存在业务关联（如订单、合同、发票），应阻止删除并返回友好提示；  
+- ❗ 严禁在用户表达“查看”“编辑”“创建”等意图时误触发此工具；  
+- 建议在前端或 MCP 层增加二次确认机制（如“确定要删除供应商 XXX 吗？”），但工具本身以最终指令为准。",
+            typeof(UpdateSupplieArguments))]
 
-    //    if (string.IsNullOrEmpty(toolName))
-    //        throw new ArgumentException("Tool name is required");
+    public async Task<McpToolResult> delete_supplier(object arguments)
+    {
+        var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
+        var supply = await Db.Queryable<BdSupplier>()
+                 .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
+                 .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
+                 .FirstAsync();
 
-    //    _logger.LogInformation($"Executing tool: {toolName}");
+        if (supply.IsNullOrEmpty())
+            return new McpToolResult
+            {
+                Content =
+                [
+                    new McpContent
+                    {
+                        Type = "text",
+                        Text = "未查询到有效供应商数据！"
+                    }
+                ]
+            };
+        var result = await _supplierService.DeleteById(supply.ID);
+        return new McpToolResult
+        {
+            Content =
+                [
+                    new McpContent
+                    {
+                        Type = "text",
+                        Text =result ? "删除成功！":"删除失败！"
+                    }
+                ]
+        };
+    }
+    #endregion
 
-    //    // Find the service that can handle this tool
-    //    var isExist = CanHandle(toolName);
-
-    //    if (!isExist)
-    //        throw new ArgumentException($"No service found for tool: {toolName}");
-
-    //    return await ExecuteToolAsync(toolName, arguments);
-    //}
-
-    //public IEnumerable<McpTool> GetTools()
-    //{
-    //    return
-    //    [
-    //        new McpTool
-    //        {
-    //            Name = "test_hello_Supplier",
-    //            Description = "A simple test tool that says hello",
-    //            InputSchema = new
-    //            {
-    //                type = "object",
-    //                properties = new
-    //                {
-    //                    name = new { type = "string", description = "Name to greet" }
-    //                }
-    //            }
-    //        }
-    //    ];
-    //}
-
-    //public bool CanHandle(string toolName)
-    //{
-    //    var tools = GetTools();
-    //    return tools.Any(x => x.Name == toolName); ;
-    //}
-
-
-    //public async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments)
-    //{
-    //    _logger.LogInformation($"Executing test tool: {toolName}");
-
-    //    return toolName switch
-    //    {
-    //        "test_hello_Supplier" => await HandleTestHello(arguments),
-    //        _ => throw new ArgumentException($"Unknown tool: {toolName}")
-    //    };
-    //}
-
-    //private async Task<McpToolResult> HandleTestHello(JsonElement arguments)
-    //{
-    //    await Task.Delay(10); // Simulate async work
-
-    //    var name = "World";
-    //    if (arguments.ValueKind != JsonValueKind.Undefined &&
-    //        arguments.TryGetProperty("name", out var nameProperty))
-    //    {
-    //        name = nameProperty.GetString() ?? "World";
-    //    }
-
-    //    return new McpToolResult
-    //    {
-    //        Content = new[]
-    //        {
-    //            new McpContent
-    //            {
-    //                Type = "text",
-    //                Text = $"Hello, {name},{DateTime.Now}! Supplier MCP server is working! "
-    //            }
-    //        }
-    //    };
-    //}
 }
