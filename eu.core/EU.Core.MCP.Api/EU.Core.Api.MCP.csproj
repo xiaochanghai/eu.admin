@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.17" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\EU.Core.IServices\EU.Core.IServices.csproj" />
     <ProjectReference Include="..\EU.Core.Services\EU.Core.Services.csproj" />
     <ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />

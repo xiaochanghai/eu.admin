@@ -1,8 +1,6 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using EU.Core.Common;
 using EU.Core.Common.Core;
-using EU.Core.DataAccess;
 using EU.Core.Domain;
 using EU.Core.Extensions;
 using EU.Core.MCP.Api.Extensions;
