@@ -1,10 +1,10 @@
 import {
-  AppstoreAddOutlined,
+  // AppstoreAddOutlined,
   CommentOutlined,
-  FileSearchOutlined,
+  // FileSearchOutlined,
   HeartOutlined,
   PaperClipOutlined,
-  ProductOutlined,
+  // ProductOutlined,
   ScheduleOutlined,
   SmileOutlined
 } from "@ant-design/icons";
@@ -31,31 +31,32 @@ export const DEFAULT_CONVERSATIONS_ITEMS = [
 
 export const HOT_TOPICS = {
   key: "1",
-  label: "Hot Topics",
+  // label: "Hot Topics",
+  label: "热门",
   children: [
     {
       key: "1-1",
-      description: "What has Ant Design X upgraded?",
+      description: "如何修改供应商？",
       icon: <span style={{ color: "#f93a4a", fontWeight: 700 }}>1</span>
     },
     {
       key: "1-2",
-      description: "New AGI Hybrid Interface",
+      description: "新的 AGI 混合接口",
       icon: <span style={{ color: "#ff6565", fontWeight: 700 }}>2</span>
     },
     {
       key: "1-3",
-      description: "What components are in Ant Design X?",
+      description: "查询供应商列表",
       icon: <span style={{ color: "#ff8f1f", fontWeight: 700 }}>3</span>
     },
     {
       key: "1-4",
-      description: "Come and discover the new design paradigm of the AI era.",
+      description: "来发现 AI 时代的新设计范式。",
       icon: <span style={{ color: "#00000040", fontWeight: 700 }}>4</span>
     },
     {
       key: "1-5",
-      description: "How to quickly install and import components?",
+      description: "如何快速学习AI功能？",
       icon: <span style={{ color: "#00000040", fontWeight: 700 }}>5</span>
     }
   ]
@@ -63,7 +64,7 @@ export const HOT_TOPICS = {
 
 export const DESIGN_GUIDE = {
   key: "2",
-  label: "Design Guide",
+  label: "使用指南",
   children: [
     {
       key: "2-1",
@@ -95,22 +96,22 @@ export const DESIGN_GUIDE = {
 export const SENDER_PROMPTS: GetProp<typeof Prompts, "items"> = [
   {
     key: "1",
-    description: "Upgrades",
+    description: "查询供应商",
     icon: <ScheduleOutlined />
-  },
-  {
-    key: "2",
-    description: "Components",
-    icon: <ProductOutlined />
-  },
-  {
-    key: "3",
-    description: "RICH Guide",
-    icon: <FileSearchOutlined />
-  },
-  {
-    key: "4",
-    description: "Installation Introduction",
-    icon: <AppstoreAddOutlined />
+    // },
+    // {
+    //   key: "2",
+    //   description: "Components",
+    //   icon: <ProductOutlined />
+    // },
+    // {
+    //   key: "3",
+    //   description: "RICH Guide",
+    //   icon: <FileSearchOutlined />
+    // },
+    // {
+    //   key: "4",
+    //   description: "Installation Introduction",
+    //   icon: <AppstoreAddOutlined />
   }
 ];

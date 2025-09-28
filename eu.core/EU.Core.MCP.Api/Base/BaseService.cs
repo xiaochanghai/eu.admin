@@ -145,7 +145,7 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
     public virtual IEnumerable<McpTool> GetTools()
     {
         _ = ServiceInstance; // 确保服务实例已初始化
-        
+
         return _toolMethods.Select(kvp =>
         {
             var method = kvp.Value;
@@ -194,7 +194,7 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
                 result = GetTaskResult(task);
             }
 
-            return result as McpToolResult ?? 
+            return result as McpToolResult ??
                    throw new InvalidOperationException($"Method {toolName} did not return McpToolResult");
         }
         catch (TargetInvocationException ex) when (ex.InnerException != null)
@@ -214,4 +214,64 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
         var resultProperty = task.GetType().GetProperty("Result");
         return resultProperty?.GetValue(task);
     }
+
+
+
+    #region 辅助方法
+    /// <summary>
+    /// 创建标准的错误响应
+    /// </summary>
+    /// <param name="message">消息</param>
+    /// <returns></returns>
+    public static McpToolResult CreateErrorResult(string message)
+    {
+        return new McpToolResult
+        {
+            Content =
+            [
+                new McpContent
+                {
+                    Type = "text",
+                    Text = message
+                }
+            ]
+        };
+    }
+
+    /// <summary>
+    /// 创建模块响应
+    /// </summary>
+    /// <param name="moudleCode">模块代码</param>
+    /// <param name="type">类型</param>
+    /// <param name="id">数据ID</param>
+    /// <returns></returns>
+    public static McpToolResult CreateModuleResult(string moudleCode, string type, Guid? id = null)
+    {
+        var result = new
+        {
+            type,
+            moudleCode
+        };
+
+        var resultWithId = id.HasValue ? new
+        {
+            type,
+            id = id.Value,
+            moudleCode
+        } : (object)result;
+
+        return new McpToolResult
+        {
+            Content =
+            [
+                new McpContent
+                {
+                    Type = "text",
+                    Text = JsonHelper.ObjToJson(resultWithId)
+                }
+            ]
+        };
+    }
+
+    #endregion
 }

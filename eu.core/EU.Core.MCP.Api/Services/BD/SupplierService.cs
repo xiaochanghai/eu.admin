@@ -37,9 +37,8 @@ public class UpdateSupplieArguments()
 
 public class SupplierService : BaseService<SupplierService, BdSupplier>, ISupplierService
 {
-    private readonly string moudleCode = "BD_SUPPLIER_MNG";
     IServices.IBdSupplierServices _supplierService;
-
+    private const string MODULE_CODE = "BD_SUPPLIER_MNG";
     public SupplierService(
         ILogger<SupplierService> logger,
         IBaseRepository<BdSupplier> _baseDal,
@@ -61,21 +60,7 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
     "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
     public McpToolResult GetSupplier(object arguments)
     {
-        return new McpToolResult
-        {
-            Content = new[]
-            {
-                new McpContent
-                {
-                    Type = "text",
-                    Text = JsonHelper.ObjToJson(new
-                    {
-                        type = "module_list",
-                        moudleCode
-                    })
-                }
-            }
-        };
+        return CreateModuleResult(MODULE_CODE,"module_list");
     }
     #endregion
 
@@ -92,21 +77,7 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
     "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
     public McpToolResult CreateSupplier(object arguments)
     {
-        return new McpToolResult
-        {
-            Content =
-            [
-                new McpContent
-                {
-                    Type = "text",
-                    Text = JsonHelper.ObjToJson(new
-                    {
-                        type = "module_edit",
-                        moudleCode
-                    })
-                }
-            ]
-        };
+        return CreateModuleResult(MODULE_CODE, "module_edit");
     }
     #endregion
 
@@ -146,22 +117,7 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
 
     public McpToolResult CreateSupplierFromFile(object arguments)
     {
-        return new McpToolResult
-        {
-            Content =
-            [
-                new McpContent
-                {
-                    Type = "text",
-                    Text = JsonHelper.ObjToJson(new
-                    {
-                        type = "module_edit",
-                        id = "a151f47a-92b8-4f81-8021-e2b1c3ad651a",
-                        moudleCode
-                    })
-                }
-            ]
-        };
+        return CreateModuleResult(MODULE_CODE, "module_edit", Guid.Parse("a151f47a-92b8-4f81-8021-e2b1c3ad651a"));
     }
     #endregion
 
@@ -213,33 +169,8 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
         //var result = await supplierService.QueryById(Guid.Parse(updateArguments.supplierId!));
 
         if (supply.IsNullOrEmpty())
-            return new McpToolResult
-            {
-                Content =
-                [
-                    new McpContent
-                    {
-                        Type = "text",
-                        Text = "未查询到有效供应商数据！"
-                    }
-                ]
-            };
-        return new McpToolResult
-        {
-            Content =
-                [
-                    new McpContent
-                    {
-                        Type = "text",
-                        Text = JsonHelper.ObjToJson(new
-                        {
-                            type = "module_edit",
-                            id = supply.ID,
-                            moudleCode
-                        })
-                    }
-                ]
-        };
+            return CreateErrorResult("未查询到有效供应商数据！");
+        return CreateModuleResult(MODULE_CODE, "module_edit", supply.ID);
     }
     #endregion
 
@@ -254,7 +185,7 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
     @"工具名称：delete_supplier
 
 功能描述：  
-用于**永久删除**系统中已存在的供应商记录。仅当用户明确表达“删除”“移除”“作废”某个具体供应商的意图时调用。  
+用于**永久删除**系统中已存在的供应商记录。仅当用户明确表达""删除""""移除""""作废""某个具体供应商的意图时调用。  
 系统将根据传入的 supplierId（系统唯一ID）或 supplierNo（业务供应商编号）定位目标供应商，并执行**不可逆的数据删除操作**。
 
 输入参数（至少提供其一）：  
@@ -266,19 +197,19 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
 行为说明：  
 - 工具将校验供应商是否存在、是否可被删除（如无关联采购订单、合同、付款记录等）；  
 - 若校验通过，立即执行物理或逻辑删除（根据系统策略）；  
-- 成功后返回删除成功确认信息；失败时返回具体原因（如“该供应商存在未完成订单，无法删除”）。
+- 成功后返回删除成功确认信息；失败时返回具体原因（如""该供应商存在未完成订单，无法删除""）。
 
 触发条件（必须严格满足）：  
-- 用户明确使用“删除”“移除”“作废”等**强删除意图动词**；  
+- 用户明确使用""删除""""移除""""作废""等**强删除意图动词**； 
 - 用户指定了**具体供应商**（通过 ID、编号、名称等可识别信息）；  
 - 上下文或用户输入中能解析出有效的 supplierId 或 supplierNo。
 
 注意事项：  
 - ❗ 本工具为**高危写入操作**，直接修改数据库，**不可用于查询、查看或导航**；  
-- ❗ 若用户仅说“供应商不要了”但未指定对象，**不得调用**，应引导确认；  
+- ❗ 若用户仅说""供应商不要了""但未指定对象，**不得调用**，应引导确认； 
 - ❗ 若供应商存在业务关联（如订单、合同、发票），应阻止删除并返回友好提示；  
 - ❗ 严禁在用户表达“查看”“编辑”“创建”等意图时误触发此工具；  
-- 建议在前端或 MCP 层增加二次确认机制（如“确定要删除供应商 XXX 吗？”），但工具本身以最终指令为准。",
+- 建议在前端或 MCP 层增加二次确认机制（如""确定要删除供应商 XXX 吗？""，但工具本身以最终指令为准。",
             typeof(UpdateSupplieArguments))]
 
     public async Task<McpToolResult> delete_supplier(object arguments)
@@ -292,17 +223,8 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
                      .FirstAsync();
 
             if (supply.IsNullOrEmpty())
-                return new McpToolResult
-                {
-                    Content =
-                    [
-                        new McpContent
-                        {
-                            Type = "text",
-                            Text = "未查询到有效供应商数据！"
-                        }
-                    ]
-                };
+                return CreateErrorResult("未查询到有效供应商数据！");
+
             var result = await _supplierService.DeleteById(supply.ID);
             return new McpToolResult
             {
@@ -318,17 +240,7 @@ public class SupplierService : BaseService<SupplierService, BdSupplier>, ISuppli
         }
         catch (Exception E)
         {
-            return new McpToolResult
-            {
-                Content =
-                    [
-                        new McpContent
-                        {
-                            Type = "text",
-                            Text = $"删除失败:{E.Message}！"
-                        }
-                    ]
-            };
+            return CreateErrorResult($"删除失败：{E.Message}");
         }
     }
     #endregion

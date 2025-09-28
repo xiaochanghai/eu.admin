@@ -10,7 +10,8 @@ export const Welcome: React.FC<any> = React.memo(() => {
       variant="borderless"
       icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/fmt.webp"
       title={`你好, 我是 ${APP_TITLE} AI`}
-      description="Base on Ant Design, AGI product interface solution, create a better intelligent vision~"
+      description="智启制造，一问即答，AI赋能，全程智联，让制造决策快人一步，从数据到决策，助力企业高效运营！"
+      // description="Base on Ant Design, AGI product interface solution, create a better intelligent vision~"
       extra={
         <Space>
           <Button icon={<ShareAltOutlined />} />

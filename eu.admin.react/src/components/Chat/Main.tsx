@@ -462,7 +462,8 @@ export const ChatMain: React.FC = () => {
                   flex: 1,
                   backgroundImage: "linear-gradient(123deg, #e5f4ff 0%, #efe7ff 100%)",
                   borderRadius: 12,
-                  border: "none"
+                  border: "none",
+                  display: "none"
                 },
                 subItem: { background: "#ffffffa6" }
               }}
