@@ -37,16 +37,15 @@ public class StreamController : ControllerBase
             Response.Headers.Append("Access-Control-Allow-Origin", "*");
             Response.Headers.Append("Access-Control-Allow-Headers", "Cache-Control");
 
-            var config = new SseClientTransport(
-                new SseClientTransportOptions()
+            var config = new HttpClientTransport(
+                new HttpClientTransportOptions()
                 {
-                    // 设置远程服务器的 URI 地址 (记得替换真实的地址，从魔搭MCP广场获取)
                     Endpoint = new Uri("http://localhost:8020/Supplier/mcp"),
-                    //UseStreamableHttp = true
-                });
+                }
+            );
 
-            // 使用配置创建 MCP 客户端实例
-            var client = await McpClientFactory.CreateAsync(config);
+            // Create an MCP client instance using the above configuration
+            var client = await McpClient.CreateAsync(config);
 
             // 调用客户端的 ListToolsAsync 方法，获取可用工具列表
             var listToolsResult = await client.ListToolsAsync();
