@@ -68,10 +68,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.9.1" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.9.1-preview.1.25474.6" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
-	<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.1" />
   </ItemGroup>
 
