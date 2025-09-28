@@ -27,6 +27,11 @@ public class UpdateSupplieArguments()
     /// </summary>
     [Description("供应商唯一标识")]
     public string? supplierId { get; set; }
+
+    /// <summary>
+    /// 供应商编号
+    /// </summary>
+    [Description("供应商编号")]
     public string? supplierNo { get; set; }
 }
 
