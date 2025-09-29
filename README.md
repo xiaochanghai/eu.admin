@@ -24,7 +24,7 @@
 
 前后端分离，使用 JWT 认证。
 
-后端：基于 .NET8 、SqlSugar、 EF Core、Dapper，集成常用组件。
+后端：基于 .NET9 、SqlSugar、 EF Core、Dapper，集成常用组件。
 
 > 数据库文件：[https://pan.quark.cn/s/6076d8898646](https://pan.quark.cn/s/6076d8898646 "https://pan.quark.cn/s/6076d8898646")
 下载后SQL SERVER手动部署，版本2014（含）以上
