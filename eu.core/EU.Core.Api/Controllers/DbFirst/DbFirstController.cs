@@ -42,12 +42,12 @@ namespace EU.Core.Controllers
 
                 BaseDBConfig.ValidConfig.ForEach(m =>
                 {
-                    _sqlSugarClient.ChangeDatabase(m.ConfigId.ToLower());
-                    data.Data += $"库{m.ConfigId}-Model层生成：{FrameSeed.CreateModels(_sqlSugarClient, m.ConfigId, isMuti)} || ";
-                    data.Data += $"库{m.ConfigId}-IRepositorys层生成：{FrameSeed.CreateIRepositorys(_sqlSugarClient, m.ConfigId, isMuti)} || ";
-                    data.Data += $"库{m.ConfigId}-IServices层生成：{FrameSeed.CreateIServices(_sqlSugarClient, m.ConfigId, isMuti)} || ";
-                    data.Data += $"库{m.ConfigId}-Repository层生成：{FrameSeed.CreateRepository(_sqlSugarClient, m.ConfigId, isMuti)} || ";
-                    data.Data += $"库{m.ConfigId}-Services层生成：{FrameSeed.CreateServices(_sqlSugarClient, m.ConfigId, isMuti)} || ";
+                    _sqlSugarClient.ChangeDatabase(m.ConfigId.ObjToString().ToLower());
+                    data.Data += $"库{m.ConfigId}-Model层生成：{FrameSeed.CreateModels(_sqlSugarClient, m.ConfigId.ObjToString(), isMuti)} || ";
+                    data.Data += $"库{m.ConfigId}-IRepositorys层生成：{FrameSeed.CreateIRepositorys(_sqlSugarClient, m.ConfigId.ObjToString(), isMuti)} || ";
+                    data.Data += $"库{m.ConfigId}-IServices层生成：{FrameSeed.CreateIServices(_sqlSugarClient, m.ConfigId.ObjToString(), isMuti)} || ";
+                    data.Data += $"库{m.ConfigId}-Repository层生成：{FrameSeed.CreateRepository(_sqlSugarClient, m.ConfigId.ObjToString(), isMuti)} || ";
+                    data.Data += $"库{m.ConfigId}-Services层生成：{FrameSeed.CreateServices(_sqlSugarClient, m.ConfigId.ObjToString(), isMuti)} || ";
                 });
 
                 // 切回主库

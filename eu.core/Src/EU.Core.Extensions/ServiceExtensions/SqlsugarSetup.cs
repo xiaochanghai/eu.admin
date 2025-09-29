@@ -69,7 +69,7 @@ public static class SqlsugarSetup
             }
             else
             {
-                if (string.Equals(config.ConfigId, MainDb.CurrentDbConnId, StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(config.ConfigId.ObjToString(), MainDb.CurrentDbConnId, StringComparison.CurrentCultureIgnoreCase))
                     BaseDBConfig.MainConfig = config;
 
                 else if (m.ConnId.ToLower().StartsWith(MainDb.CurrentDbConnId.ToLower()))
