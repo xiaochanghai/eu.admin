@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
+  <Import Project="..\..\build\common.targets" />
 
   <ItemGroup>
     <Compile Remove="Migrations\20200714073858_4.cs" />
