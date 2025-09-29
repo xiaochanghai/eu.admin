@@ -19,7 +19,7 @@
 
 ## 项目概述📖
 
-🚀🚀🚀 EU-Admin 一款基于 React19、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5 的实现的通用管理平台框架，开箱即用。
+🚀🚀🚀 EU-Admin 一款基于.NET 9、 React19、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5 的实现的通用管理平台框架，开箱即用。
 集成SqlSugar、缓存、 通讯、远程请求、任务调度等
 
 前后端分离，使用 JWT 认证。
