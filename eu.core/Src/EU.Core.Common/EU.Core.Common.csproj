@@ -16,34 +16,34 @@
 
   <ItemGroup>
 	<PackageReference Include="Dapper" Version="2.1.66" />
-	<PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
-	<PackageReference Include="Magicodes.IE.Excel" Version="2.7.4.5" />
+	<PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+	<PackageReference Include="Magicodes.IE.Excel" Version="2.7.6" />
     <PackageReference Include="InitQ" Version="1.0.0.19" />
     <PackageReference Include="log4net" Version="3.2.0" />
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Mapster.Core" Version="1.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="NPOI" Version="2.7.4" />
     <PackageReference Include="PinYinConverterCore" Version="1.0.2" />
-    <PackageReference Include="MiniProfiler.Shared" Version="4.3.8" />
+    <PackageReference Include="MiniProfiler.Shared" Version="4.5.4" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
-    <PackageReference Include="RSAExtensions" Version="1.1.1" />
-    <PackageReference Include="Serilog.Expressions" Version="4.0.0" />
+    <PackageReference Include="RSAExtensions" Version="1.1.2" />
+    <PackageReference Include="Serilog.Expressions" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="9.0.3" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.2.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.1-dev-00771" />
 
-    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="UAParser" Version="3.1.47" />
 
