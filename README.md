@@ -47,7 +47,7 @@
 
 ### 前端主要功能 🔨
 
-- 使用 React18 + TypeScript 开发，整个项目使用高质量 Hooks + TypeScript 代码完成
+- 使用 React19 + TypeScript 开发，整个项目使用高质量 Hooks + TypeScript 代码完成
 - 使用 Vite5 作为开发、打包工具（配置 Gzip | Brotli 压缩打包、PWA 应用、Visualizer 包分析…）
 - 使用 React-RouterV6 全新路由钩子，项目支持多路由（Hash | History）切换、路由懒加载配置
 - 项目菜单、路由权限使用 **动态路由** 控制，完全根据后端菜单数据动态生成路由
