@@ -5,7 +5,6 @@ import LayoutVertical from "./LayoutVertical";
 import LayoutClassic from "./LayoutClassic";
 import LayoutTransverse from "./LayoutTransverse";
 import LayoutColumns from "./LayoutColumns";
-import LayoutChat from "./LayoutChat";
 import ThemeDrawer from "@/layouts/components/ThemeDrawer";
 
 import signalr from "@/utils/signalr";
@@ -14,13 +13,12 @@ const LayoutIndex: React.FC = () => {
   const layout = useSelector((state: RootState) => state.global.layout);
   const watermark = useSelector((state: RootState) => state.global.watermark);
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
-  let { UserId, UserType } = userInfo;
+  let { UserId } = userInfo;
   const LayoutComponents = {
     vertical: <LayoutVertical />,
     classic: <LayoutClassic />,
     transverse: <LayoutTransverse />,
-    columns: <LayoutColumns />,
-    chat: <LayoutChat />
+    columns: <LayoutColumns />
   };
   const connect = () => {
     signalr.start().catch((err: any) => {
@@ -77,7 +75,7 @@ const LayoutIndex: React.FC = () => {
 
   return (
     <Watermark className="watermark-content" zIndex={1001} content={watermark ? ["SuZhou", "EU Cloud"] : []}>
-      {LayoutComponents[UserType === "Admin" ? layout : "chat"]}
+      {LayoutComponents[layout]}
       <ThemeDrawer />
     </Watermark>
   );
