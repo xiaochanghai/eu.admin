@@ -36,6 +36,14 @@
 - Link：http://116.204.98.209:9527/#/login
 - 账号密码：Admin，1
 
+#### Urltra版本新增AI对话
+
+- Link：http://116.204.98.209:9527/#/login
+- 账号密码：Simon，123456
+
+![image-17](./doc/images/17.png)
+
+
 
 ### 前端主要功能 🔨
 
