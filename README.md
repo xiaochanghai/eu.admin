@@ -46,7 +46,7 @@
 
 ### 🔖 基于.NET Core的MCP开发框架访问如下地址
 
-[MCP](https://github.com/xiaochanghai/MCPsharp)
+[MCP](https://github.com/xiaochanghai/MCPSharp)
 
 ### 前端主要功能 🔨
 
