@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { ModifyType } from "@/api/interface/index";
 import Input from "./Input"; // 单行文本框
 import InputNumber from "./InputNumber"; // 数字输入框
-import ComboBox from "./ComboBox"; // 下拉框
+import ComboBox from "./ComBoBox"; // 下拉框
 import ComboGrid from "./ComboGrid"; // 下拉网格
 import Switch from "./Switch"; // 开关
 import TextArea from "./TextArea"; // 多行文本框
