@@ -1607,16 +1607,6 @@
             工作流节点(Controller)
             </summary>
         </member>
-        <member name="T:EU.Core.Api.Controllers.MCP.StreamController">
-            <summary>
-            MCP 协议控制器 - 处理标准的 MCP 协议请求
-            </summary>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.MCP.StreamController.HandleStreamRequest(EU.Core.Api.Controllers.MCP.StreamRequest,System.Guid)">
-            <summary>
-            处理 MCP 流式请求
-            </summary>
-        </member>
         <member name="T:EU.Core.Api.Controllers.Tenant.TenantByDbController">
             <summary>
             多租户-多库方案 测试
