@@ -44,6 +44,9 @@
 ![image-17](./doc/images/17.png)
 
 
+### 🔖 基于.NET Core的MCP开发框架访问如下地址
+
+[MCP](https://gitee.com/xiaochanghai520/MCPSharp)
 
 ### 前端主要功能 🔨
 
