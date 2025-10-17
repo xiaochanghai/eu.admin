@@ -1,4 +1,4 @@
-﻿using EU.Core.Common.UserManager;
+using EU.Core.Common.UserManager;
 using EU.Core.IServices.BASE;
 using SqlSugar;
 using System.Linq.Expressions;
@@ -348,7 +348,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     public virtual async Task<TEntityDto> QueryDto(object objId, bool blnUseCache = false)
     {
         var data = await Query(objId, blnUseCache);
-        return Mapper.Map(data).ToANew<TEntityDto>();
+        var data1 = Mapper.Map(data).ToANew<TEntityDto>();
+        if (data1 is RootEntityTkey<Guid> rootEntity)
+        {
+            var entityInfo1 = data; 
+            rootEntity.ID = Guid.Parse(objId.ObjToString());
+        }
+        return data1;
     }
     /// <summary>
     /// 根据ID查询一条数据
