@@ -1,16 +1,17 @@
 ﻿namespace EU.Core.Common.Helper;
 
 /// <summary>
-/// 时间帮助类
+/// 日期时间帮助类
+/// 提供各种日期时间格式化、转换和计算功能
 /// </summary>
 public static class DateTimeHelper
 {
     #region 获取日期是 今天or 明天 or 后天
     /// <summary>
-    /// 获取日期是 今天or 明天 or 后天
+    /// 获取友好的日期显示字符串（今天、明天、后天、昨天、前天或具体日期）
     /// </summary>
-    /// <param name="date">日期</param>
-    /// <returns></returns>
+    /// <param name="date">要转换的日期</param>
+    /// <returns>返回友好的日期字符串</returns>
     public static string FriendlyDate(this DateTime? date)
     {
         if (!date.HasValue) return string.Empty;
@@ -50,8 +51,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到年，如：2008
     /// </summary>
-    /// <param name="dateTime">时间</param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年份字符串（格式：yyyy）</returns>
     public static string ConvertToYearString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -61,10 +62,10 @@ public static class DateTimeHelper
     }
 
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，精确到年，如：2008
+    /// 格式化object类型为字符串类型，精确到年，如：2008
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年份字符串（格式：yyyy）</returns>
     public static string ConvertToYearString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -77,8 +78,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到月，如：2008/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月字符串（格式：yyyy/MM）</returns>
     public static string ConvertToMonthString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -89,8 +90,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化object类型为字符串类型，精确到月，如：2008/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月字符串（格式：yyyy/MM）</returns>
     public static string ConvertToMonthString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -103,8 +104,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到天，如：2008/01/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月日字符串（格式：yyyy/MM/dd）</returns>
     public static string ConvertToDayString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -113,10 +114,10 @@ public static class DateTimeHelper
     }
 
     /// <summary>
-    /// 格式化dateTime类型，精确到天，如：2008/01/01
+    /// 格式化DateTime类型，精确到天（去除时分秒），如：2008/01/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回DateTime类型（精确到天）</returns>
     public static DateTime ConvertToDay(this DateTime dateTime)
     {
         string result = ConvertToDayString(dateTime);
@@ -128,8 +129,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化object类型为字符串类型，精确到天，如：2008/01/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月日字符串（格式：yyyy/MM/dd）</returns>
     public static string ConvertToDayString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -143,8 +144,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到小时，如：2008/01/01 18
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月日小时字符串（格式：yyyy/MM/dd HH）</returns>
     public static string ConvertToHourString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -154,8 +155,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化object类型为字符串类型，精确到小时，如：2008/01/01 18
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月日小时字符串（格式：yyyy/MM/dd HH）</returns>
     public static string ConvertToHourString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -168,8 +169,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到分钟，如：2008/01/01 18:09
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月日时分字符串（格式：yyyy/MM/dd HH:mm）</returns>
     public static string ConvertToMiniuteString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -181,8 +182,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化object类型为字符串类型，精确到分钟，如：2008/01/01 18:09
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月日时分字符串（格式：yyyy/MM/dd HH:mm）</returns>
     public static string ConvertToMiniuteString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -196,8 +197,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化DateTime类型为字符串类型，精确到秒，如：2008/01/01 18:09:20
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月日时分秒字符串（格式：yyyy/MM/dd HH:mm:ss）</returns>
     public static string ConvertToSecondString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -207,10 +208,10 @@ public static class DateTimeHelper
     }
 
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，精确到秒，如：20080101180920
+    /// 格式化DateTime类型为字符串类型，精确到秒（无分隔符），如：20080101180920
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月日时分秒字符串（格式：yyyyMMddHHmmss）</returns>
     public static string ToSecondString1(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -222,8 +223,8 @@ public static class DateTimeHelper
     /// <summary>
     /// 格式化object类型为字符串类型，精确到秒，如：2008/01/01 18:09:20
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月日时分秒字符串（格式：yyyy/MM/dd HH:mm:ss）</returns>
     public static string ConvertToSecondString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -235,10 +236,10 @@ public static class DateTimeHelper
 
     #region 格式化为字符串类型，精确到日天，如：01/01
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，如：01/01
+    /// 格式化DateTime类型为字符串类型（仅月日），如：01/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回月日字符串（格式：MM/dd）</returns>
     public static string ConvertToOnlyMonthDayString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -247,10 +248,10 @@ public static class DateTimeHelper
         return dateTime.ToString(@"MM\/dd");
     }
     /// <summary>
-    /// 格式化object类型为字符串类型，如：01/01
+    /// 格式化object类型为字符串类型（仅月日），如：01/01
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回月日字符串（格式：MM/dd）</returns>
     public static string ConvertToOnlyMonthDayString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -263,10 +264,10 @@ public static class DateTimeHelper
     #region 格式化为字符串类型，精确到时分，如：12:12
 
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，如：12:12
+    /// 格式化DateTime类型为字符串类型（仅时分），如：12:12
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回时分字符串（格式：HH:mm）</returns>
     public static string ConvertToOnlyHourMinuteString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -275,10 +276,10 @@ public static class DateTimeHelper
         return dateTime.ToString(@"HH:mm");
     }
     /// <summary>
-    /// 格式化object类型为字符串类型，如：12:12
+    /// 格式化object类型为字符串类型（仅时分），如：12:12
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回时分字符串（格式：HH:mm）</returns>
     public static string ConvertToOnlyHourMinuteString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -290,10 +291,10 @@ public static class DateTimeHelper
 
     #region 格式化为字符串类型，精确到时分秒，如：12:12:12
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，如：12:12:12
+    /// 格式化DateTime类型为字符串类型（仅时分秒），如：12:12:12
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回时分秒字符串（格式：HH:mm:ss）</returns>
     public static string ConvertToOnlySecondString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -302,10 +303,10 @@ public static class DateTimeHelper
         return dateTime.ToString(@"HH:mm:ss");
     }
     /// <summary>
-    /// 格式化object类型为字符串类型，如：12:12:12
+    /// 格式化object类型为字符串类型（仅时分秒），如：12:12:12
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回时分秒字符串（格式：HH:mm:ss）</returns>
     public static string ConvertToOnlySecondString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -317,10 +318,10 @@ public static class DateTimeHelper
 
     #region 格式化为字符串类型，精确到年月，如：12:12:12
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，如：2020/05
+    /// 格式化DateTime类型为字符串类型，精确到年月，如：2020/05
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月字符串（格式：yyyy/MM）</returns>
     public static string ConvertToYearMonthString(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -329,10 +330,10 @@ public static class DateTimeHelper
         return dateTime.ToString(@"yyyy\/MM");
     }
     /// <summary>
-    /// 格式化object类型为字符串类型，如：2020/05
+    /// 格式化object类型为字符串类型，精确到年月，如：2020/05
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月字符串（格式：yyyy/MM）</returns>
     public static string ConvertToYearMonthString(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -342,10 +343,10 @@ public static class DateTimeHelper
     }
 
     /// <summary>
-    /// 格式化DateTime类型为字符串类型，如：2020-05
+    /// 格式化DateTime类型为字符串类型，精确到年月（使用横线分隔），如：2020-05
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间</param>
+    /// <returns>返回年月字符串（格式：yyyy-MM）</returns>
     public static string ConvertToYearMonthString1(this DateTime dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -354,10 +355,10 @@ public static class DateTimeHelper
         return dateTime.ToString(@"yyyy-MM");
     }
     /// <summary>
-    /// 格式化object类型为字符串类型，如：2020-05
+    /// 格式化object类型为字符串类型，精确到年月（使用横线分隔），如：2020-05
     /// </summary>
-    /// <param name="dateTime"></param>
-    /// <returns></returns>
+    /// <param name="dateTime">要格式化的日期时间对象</param>
+    /// <returns>返回年月字符串（格式：yyyy-MM）</returns>
     public static string ConvertToYearMonthString1(this object dateTime)
     {
         if (string.IsNullOrEmpty(Convert.ToString(dateTime)))
@@ -369,10 +370,10 @@ public static class DateTimeHelper
 
     #region 毫秒转天时分秒
     /// <summary>
-    /// 毫秒转天时分秒
+    /// 将毫秒数转换为天时分秒格式的字符串
     /// </summary>
-    /// <param name="ms"></param>
-    /// <returns></returns>
+    /// <param name="ms">毫秒数</param>
+    /// <returns>返回格式化的时间字符串（格式：XX 天 XX 小时 XX 分 XX 秒）</returns>
     public static string FormatTime(this long ms)
     {
         int ss = 1000;
@@ -399,9 +400,9 @@ public static class DateTimeHelper
 
     #region 获取系统当前时间（字符串）
     /// <summary>
-    /// 获取系统当前时间（字符串）
+    /// 获取系统当前时间的字符串表示
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回当前系统时间字符串（格式：yyyy/MM/dd HH:mm:ss）</returns>
     public static string GetSysDateTimeString()
     {
         return ConvertToSecondString(Utility.GetSysDate());
@@ -410,10 +411,10 @@ public static class DateTimeHelper
 
     #region 时间戳转时间
     /// <summary>
-    /// 时间戳转时间
+    /// 将Unix时间戳字符串转换为DateTime对象
     /// </summary>
-    /// <param name="time"></param>
-    /// <returns></returns>
+    /// <param name="time">Unix时间戳字符串（秒级，至少10位）</param>
+    /// <returns>返回对应的本地时间</returns>
     public static DateTime StampToDateTime(this string time)
     {
         time = time.Substring(0, 10);
@@ -426,11 +427,11 @@ public static class DateTimeHelper
 
     #region 算时间差，格式xx天xx时xx分
     /// <summary>
-    /// 算时间差，格式xx天xx时xx分
+    /// 计算两个时间的差值，并格式化为字符串
     /// </summary>
-    /// <param name="time1"></param>
-    /// <param name="time2"></param>
-    /// <returns></returns>
+    /// <param name="time1">时间1（被减数）</param>
+    /// <param name="time2">时间2（减数）</param>
+    /// <returns>返回时间差字符串（格式：XX 天 XX 时 XX 分）</returns>
     public static string TimeSubTract(DateTime time1, DateTime time2)
     {
         var subTract = time1.Subtract(time2);
@@ -440,8 +441,10 @@ public static class DateTimeHelper
 
     #region 时间戳转本地时间-时间戳精确到秒
     /// <summary>
-    ///  时间戳转本地时间-时间戳精确到秒
-    /// </summary> 
+    /// 将Unix时间戳（秒）转换为本地时间
+    /// </summary>
+    /// <param name="unix">Unix时间戳（秒级）</param>
+    /// <returns>返回对应的本地DateTime</returns>
     public static DateTime ToLocalTimeDateBySeconds(this long unix)
     {
         var dto = DateTimeOffset.FromUnixTimeSeconds(unix);
@@ -452,8 +455,10 @@ public static class DateTimeHelper
 
     #region 时间转时间戳Unix-时间戳精确到秒
     /// <summary>
-    ///  时间转时间戳Unix-时间戳精确到秒
-    /// </summary> 
+    /// 将DateTime转换为Unix时间戳（秒）
+    /// </summary>
+    /// <param name="dt">要转换的DateTime对象</param>
+    /// <returns>返回Unix时间戳（秒级）</returns>
     public static long ToUnixTimestampBySeconds(this DateTime dt)
     {
         var dto = new DateTimeOffset(dt);
@@ -464,8 +469,10 @@ public static class DateTimeHelper
 
     #region 时间戳转本地时间-时间戳精确到毫秒
     /// <summary>
-    ///  时间戳转本地时间-时间戳精确到毫秒
-    /// </summary> 
+    /// 将Unix时间戳（毫秒）转换为本地时间
+    /// </summary>
+    /// <param name="unix">Unix时间戳（毫秒级）</param>
+    /// <returns>返回对应的本地DateTime</returns>
     public static DateTime ToLocalTimeDateByMilliseconds(this long unix)
     {
         var dto = DateTimeOffset.FromUnixTimeMilliseconds(unix);
@@ -476,8 +483,10 @@ public static class DateTimeHelper
 
     #region 时间转时间戳Unix
     /// <summary>
-    ///  时间转时间戳Unix-时间戳精确到毫秒
-    /// </summary> 
+    /// 将DateTime转换为Unix时间戳（毫秒）
+    /// </summary>
+    /// <param name="dt">要转换的DateTime对象</param>
+    /// <returns>返回Unix时间戳（毫秒级）</returns>
     public static long ToUnixTimestampByMilliseconds(this DateTime dt)
     {
         var dto = new DateTimeOffset(dt);

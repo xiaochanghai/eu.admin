@@ -1,34 +1,34 @@
-﻿using System.Data;
-using System.Text;
-using EU.Core.Common.Caches;
+﻿using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
 using EU.Core.Common.Https;
 using EU.Core.Common.Module;
 using EU.Core.Model;
-using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels;
 using EU.Core.Module;
-using Newtonsoft.Json;
 using SqlSugar;
+using System.Data;
+using System.Text;
 using UAParser;
 
 namespace EU.Core.Common.Helper;
 
 /// <summary>
-/// 方法类
+/// 通用工具帮助类
+/// 提供系统常用的工具方法，包括ID生成、序列号生成、数据格式化、缓存管理、日志记录等功能
 /// </summary>
 public static class Utility
 {
 
     #region DataTable转Tree
     /// <summary>
-    /// DataTable转Tree
+    /// 将DataTable格式化为树形结构的DataTable
+    /// 根据模块配置对数据进行格式化处理，包括日期格式化、数字格式化、布尔值转换等
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <param name="userId">用户ID</param>
-    /// <param name="dt">DataTable</param>
-    /// <returns></returns>
+    /// <param name="dt">原始DataTable数据</param>
+    /// <returns>返回格式化后的DataTable</returns>
     public static DataTable FormatDataTableForTree(string moduleCode, string userId, DataTable dt)
     {
         ModuleSqlColumn moduleColumnInfo = new(moduleCode);
@@ -164,17 +164,18 @@ public static class Utility
 
     #region 求系统当前日期
     /// <summary>
-    /// 求系统当前日期（数据库所在服务器的日期）。
+    /// 获取系统当前日期时间
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回当前系统DateTime</returns>
     public static DateTime GetSysDate() => DateTime.Now;
     #endregion
 
     #region 求系统唯一字符串
     /// <summary>
-    /// 求系统唯一字符串，常用于ROW_ID值。
+    /// 生成系统唯一字符串ID（基于时间戳和GUID）
+    /// 格式：yyMMddHHmmss + 长整型数字，常用于ROW_ID值
     /// </summary>
-    /// <returns>字符串</returns>
+    /// <returns>返回唯一字符串ID</returns>
     public static string GetSysID()
     {
         var sid = string.Empty;
@@ -185,21 +186,29 @@ public static class Utility
     }
     #endregion
 
+    #region 雪花ID
+    /// <summary>
+    /// 生成雪花算法ID（分布式唯一ID）
+    /// </summary>
+    /// <returns>返回64位长整型唯一ID</returns>
+    public static long SnowID() => SnowFlakeSingle.Instance.NextId();
+    #endregion
+
     #region 求GUID
     /// <summary>
-    /// 获取一个GUID
+    /// 生成一个GUID字符串
     /// </summary>
-    /// <param name="format">格式-默认为N</param>
-    /// <returns></returns>
+    /// <param name="format">GUID格式（N=32位无分隔符, D=36位带连字符, B=38位带花括号等），默认为N</param>
+    /// <returns>返回格式化的GUID字符串</returns>
     public static string GetGUID(string format = "N")
     {
         return Guid.NewGuid().ToString(format);
     }
 
     /// <summary>  
-    /// 根据GUID获取19位的唯一数字序列  
+    /// 根据GUID生成19位的唯一长整型数字序列  
     /// </summary>  
-    /// <returns></returns>  
+    /// <returns>返回19位长整型唯一ID</returns>  
     public static long GetGuidToLongID()
     {
         var buffer = Guid.NewGuid().ToByteArray();
@@ -207,16 +216,16 @@ public static class Utility
     }
 
     /// <summary>  
-    /// 根据唯一数字序列  
+    /// 生成唯一长整型数字序列（使用雪花算法）
     /// </summary>  
-    /// <returns></returns>  
+    /// <returns>返回长整型唯一ID</returns>  
     public static long GetLongID()
     {
         return SnowFlakeSingle.Instance.NextId();
     }
 
     /// <summary>
-    /// 获取GUID字符串
+    /// 获取GUID字符串（带连字符格式）
     /// </summary>
     public static string GuidId1
     {
@@ -228,7 +237,7 @@ public static class Utility
     }
 
     /// <summary>
-    /// 获取GUID
+    /// 获取新的GUID对象
     /// </summary>
     public static Guid GuidId
     {
@@ -241,14 +250,15 @@ public static class Utility
 
     #region 获得当前公司ID
     /// <summary>
-    /// 获得当前公司ID
+    /// 获取当前公司ID（字符串格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回公司ID字符串</returns>
     public static string GetCompanyId() => GetCompanyGuidId().ToString();
+
     /// <summary>
-    /// 获得当前公司ID
+    /// 获取当前公司ID（GUID格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回公司GUID</returns>
     public static Guid GetCompanyGuidId()
     {
         try
@@ -264,9 +274,9 @@ public static class Utility
 
     #region 获得当前用户ID
     /// <summary>
-    /// 获得当前用户ID
+    /// 获取当前登录用户ID（字符串格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回用户ID字符串，未登录返回null</returns>
     public static string GetUserIdString()
     {
         try
@@ -281,10 +291,11 @@ public static class Utility
             throw;
         }
     }
+
     /// <summary>
-    /// 获得当前用户ID
+    /// 获取当前登录用户ID（GUID格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回用户GUID，未登录返回null</returns>
     public static Guid? GetUserId()
     {
         try
@@ -300,16 +311,15 @@ public static class Utility
 
     #region 获得当前集团ID
     /// <summary>
-    /// 获得当前集团ID
+    /// 获取当前集团ID（字符串格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回集团ID字符串</returns>
     public static string GetGroupId() => GetGroupGuidId().ToString();
 
-
     /// <summary>
-    /// 获得当前集团ID
+    /// 获取当前集团ID（GUID格式）
     /// </summary>
-    /// <returns></returns>
+    /// <returns>返回集团GUID</returns>
     public static Guid GetGroupGuidId()
     {
         try
@@ -325,9 +335,8 @@ public static class Utility
 
     #region 清空Redis缓存
     /// <summary>
-    /// 清空Redis缓存
+    /// 清空Redis缓存中的所有数据
     /// </summary>
-    /// <param name="moduleCode"></param>
     public static void ClearCache()
     {
         try
@@ -342,8 +351,8 @@ public static class Utility
     #region 重新初始化缓存
     /// <summary>
     /// 重新初始化缓存
+    /// 清空所有Redis缓存数据库，并重新加载模块、SQL、权限等配置信息
     /// </summary>
-    /// <param name="moduleCode"></param>
     public static void ReInitCache()
     {
         try
@@ -532,10 +541,12 @@ public static class Utility
     //}
 
     /// <summary>
-    /// 自动产生连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 自动生成连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 根据编号规则自动生成带前缀和日期的连续序列号
     /// </summary>
-    /// <param name="sequenceCode">规则代码</param>
-    /// <returns>新的序列号</returns>
+    /// <param name="sequenceCode">编号规则代码</param>
+    /// <param name="trans">是否使用事务，默认false</param>
+    /// <returns>返回新生成的序列号</returns>
     public static string GenerateContinuousSequence(string sequenceCode, bool trans = false)
     {
         try
@@ -549,11 +560,13 @@ public static class Utility
     }
 
     /// <summary>
-    /// 自动产生连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 自动生成连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 根据编号规则和自定义前缀生成连续序列号，支持日期格式
     /// </summary>
-    /// <param name="sequenceCode">规则代码</param>
-    /// <param name="prefix">代码前缀</param>
-    /// <returns>新的序列号</returns>
+    /// <param name="sequenceCode">编号规则代码</param>
+    /// <param name="prefix">自定义前缀（会附加在规则前缀之前）</param>
+    /// <param name="trans">是否使用事务，默认false</param>
+    /// <returns>返回新生成的序列号</returns>
     public static string GenerateContinuousSequence(string sequenceCode, string prefix, bool trans = false)
     {
         try
@@ -677,6 +690,15 @@ public static class Utility
         catch (Exception) { throw; }
     }
 
+    /// <summary>
+    /// 自动生成连续的序列号（根据指定表和列）
+    /// </summary>
+    /// <param name="tableCode">表名</param>
+    /// <param name="columnCode">列名</param>
+    /// <param name="prefix">前缀</param>
+    /// <param name="length">序列号总长度</param>
+    /// <param name="trans">是否使用事务，默认false</param>
+    /// <returns>返回新生成的序列号</returns>
     public static string GenerateContinuousSequence(string tableCode, string columnCode, string prefix, int length, bool trans = false)
     {
         try
@@ -731,6 +753,15 @@ public static class Utility
         catch (Exception) { throw; }
     }
 
+    /// <summary>
+    /// 自动生成连续的整型序列号
+    /// </summary>
+    /// <param name="tableCode">表名</param>
+    /// <param name="columnCode">列名</param>
+    /// <param name="fieldName">过滤字段名</param>
+    /// <param name="fieldValue">过滤字段值</param>
+    /// <param name="trans">是否使用事务，默认false</param>
+    /// <returns>返回新生成的整型序列号</returns>
     public static int GenerateContinuousSequence(string tableCode, string columnCode, string fieldName = null, string fieldValue = null, bool trans = false)
     {
         try
@@ -758,10 +789,11 @@ public static class Utility
     }
 
     /// <summary>
-    /// 自动产生连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 异步自动生成连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
     /// </summary>
-    /// <param name="sequenceCode">规则代码</param>
-    /// <returns>新的序列号</returns>
+    /// <param name="Db">SqlSugar数据库客户端</param>
+    /// <param name="sequenceCode">编号规则代码</param>
+    /// <returns>返回新生成的序列号</returns>
     public static async Task<string> GenerateContinuousSequence(ISqlSugarClient Db, string sequenceCode)
     {
         try
@@ -776,11 +808,13 @@ public static class Utility
 
 
     /// <summary>
-    /// 自动产生连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 异步自动生成连续的序列号（使用此函数时，一定要把存放此Sequence的列设为Unique）
+    /// 根据编号规则和自定义前缀生成连续序列号，支持日期格式
     /// </summary>
-    /// <param name="sequenceCode">规则代码</param>
-    /// <param name="prefix">代码前缀</param>
-    /// <returns>新的序列号</returns>
+    /// <param name="Db">SqlSugar数据库客户端</param>
+    /// <param name="sequenceCode">编号规则代码</param>
+    /// <param name="prefix">自定义前缀（会附加在规则前缀之前）</param>
+    /// <returns>返回新生成的序列号</returns>
     public static async Task<string> GenerateContinuousSequence(ISqlSugarClient Db, string sequenceCode, string prefix)
     {
         try
@@ -911,10 +945,15 @@ public static class Utility
     #region 记录模块操作日志
     /// <summary>
     /// 记录模块操作日志
+    /// 记录用户对模块数据的增删改查操作
     /// </summary>
-    /// <param name="userId">用户ID</param>
+    /// <param name="userId">操作用户ID</param>
     /// <param name="moduleCode">模块代码</param>
-    /// <param name="operateType">操作类型</param>
+    /// <param name="tableCode">表名</param>
+    /// <param name="tableRowId">记录ID</param>
+    /// <param name="operateType">操作类型（Add/Edit/Delete/View等）</param>
+    /// <param name="programName">程序名称</param>
+    /// <param name="remark">备注信息</param>
     public static void RecordOperateLog(string userId, string moduleCode, string tableCode, string tableRowId, OperateType operateType, string programName = null, string remark = null)
     {
         try
@@ -940,12 +979,13 @@ public static class Utility
 
     #region 记录登录日志
     /// <summary>
-    /// 记录登录日志
+    /// 记录用户登录日志
+    /// 记录用户登录信息，包括IP地址、归属地、操作系统、客户端类型等
     /// </summary>
-    /// <param name="userId">用户id</param>
-    /// <param name="loginClass">登录类型</param>
-    /// <param name="remark">备注</param>
-    /// <param name="companyId">公司id</param>
+    /// <param name="userId">登录用户ID</param>
+    /// <param name="loginClass">登录类型（Web/Mobile/Desktop等）</param>
+    /// <param name="remark">备注信息</param>
+    /// <param name="companyId">公司ID，默认为null时使用当前公司ID</param>
     public static async void RecordEntryLog(Guid userId, string loginClass, string remark = null, string companyId = null)
     {
         try
@@ -1029,10 +1069,11 @@ public static class Utility
 
     #region 去除后面多余的零
     /// <summary>
-    /// 去除后面多余的零
+    /// 去除小数点后面多余的零（可空类型）
+    /// 例如：1.2000 → 1.2, 1.0 → 1
     /// </summary>
-    /// <param name="dValue"></param>
-    /// <returns></returns>
+    /// <param name="dValue">decimal可空值</param>
+    /// <returns>返回去除尾部零后的字符串，空值返回null</returns>
     public static string RemoveZero(this decimal? dValue)
     {
         if (dValue.IsNullOrEmpty())
@@ -1050,11 +1091,13 @@ public static class Utility
     //        return null;
     //    return RemoveZero(dValue.Value);
     //}
+
     /// <summary>
-    /// 去除后面多余的零
+    /// 去除小数点后面多余的零
+    /// 例如：1.2000 → 1.2, 1.0 → 1
     /// </summary>
-    /// <param name="dValue"></param>
-    /// <returns></returns>
+    /// <param name="dValue">decimal值</param>
+    /// <returns>返回去除尾部零后的字符串</returns>
     public static string RemoveZero(decimal dValue)
     {
         string sResult = dValue.ToString();
@@ -1078,10 +1121,11 @@ public static class Utility
 
     #region 格式化数字字符
     /// <summary>
-    /// 格式化数字字符，如传入1.24500，返回1.245
+    /// 格式化数字字符串，去除尾部多余的零
+    /// 例如：传入"1.24500"，返回"1.245"
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
+    /// <param name="value">数字字符串</param>
+    /// <returns>返回格式化后的数字字符串</returns>
     public static string TrimDecimalString(string value)
     {
         try
@@ -1099,6 +1143,12 @@ public static class Utility
             throw;
         }
     }
+    /// <summary>
+    /// 格式化数字对象，去除尾部多余的零
+    /// 例如：传入1.24500，返回"1.245"
+    /// </summary>
+    /// <param name="value">数字对象</param>
+    /// <returns>返回格式化后的数字字符串</returns>
     public static string TrimDecimalString(object value)
     {
         try
@@ -1118,11 +1168,11 @@ public static class Utility
     }
 
     /// <summary>
-    /// 格式化数字字符，并保留指定的小数位
+    /// 格式化数字字符串，并保留指定的小数位数
     /// </summary>
-    /// <param name="value">需要处理的值</param>
-    /// <param name="reservedDigit">保留小数点后位数</param>
-    /// <returns></returns>
+    /// <param name="value">需要处理的数字字符串</param>
+    /// <param name="reservedDigit">保留小数点后位数，-1表示只去除尾部的零</param>
+    /// <returns>返回格式化后的数字字符串</returns>
     public static string TrimDecimalString(string value, int reservedDigit)
     {
         try
@@ -1145,11 +1195,11 @@ public static class Utility
     }
 
     /// <summary>
-    /// 格式化数字字符，并保留指定的小数位
+    /// 格式化数字对象，并保留指定的小数位数
     /// </summary>
-    /// <param name="value">需要处理的值</param>
-    /// <param name="reservedDigit">保留小数点后位数，-1时只会去除小数点后最后几位的0</param>
-    /// <returns></returns>
+    /// <param name="value">需要处理的数字对象</param>
+    /// <param name="reservedDigit">保留小数点后位数，-1表示只去除尾部的零</param>
+    /// <returns>返回格式化后的数字字符串</returns>
     public static string TrimDecimalString(object value, int reservedDigit)
     {
         try
@@ -1172,11 +1222,11 @@ public static class Utility
     }
 
     /// <summary>
-    /// 格式化数字字符，并保留指定的小数位
+    /// 格式化数字对象为decimal，并保留指定的小数位数
     /// </summary>
-    /// <param name="value">需要处理的值</param>
-    /// <param name="reservedDigit">保留小数点后位数，-1时只会去除小数点后最后几位的0</param>
-    /// <returns></returns>
+    /// <param name="value">需要处理的数字对象</param>
+    /// <param name="reservedDigit">保留小数点后位数，-1表示只去除尾部的零</param>
+    /// <returns>返回格式化后的decimal值</returns>
     public static decimal TrimDecimal(object value, int reservedDigit)
     {
         try
@@ -1201,13 +1251,13 @@ public static class Utility
 
     #region 根据分隔符返回前n条数据
     /// <summary>
-    /// 根据分隔符返回前n条数据
+    /// 根据分隔符切分字符串，并返回前n条数据
     /// </summary>
-    /// <param name="content">数据内容</param>
+    /// <param name="content">原始数据内容</param>
     /// <param name="separator">分隔符</param>
-    /// <param name="top">前n条</param>
-    /// <param name="isDesc">是否倒序（默认false）</param>
-    /// <returns></returns>
+    /// <param name="top">要返回的前n条数据，0表示返回全部</param>
+    /// <param name="isDesc">是否倒序，默认false为正序</param>
+    /// <returns>返回字符串列表</returns>
     public static List<string> GetTopDataBySeparator(string content, string separator, int top, bool isDesc = false)
     {
         if (string.IsNullOrEmpty(content))
@@ -1229,10 +1279,11 @@ public static class Utility
 
     #region 根据字段拼接get参数
     /// <summary>
-    /// 根据字段拼接get参数
+    /// 根据字典拼接GET请求参数字符串
+    /// 例如：{name: "张三", age: 18} → "name=张三&age=18"
     /// </summary>
-    /// <param name="dic"></param>
-    /// <returns></returns>
+    /// <param name="dic">参数字典</param>
+    /// <returns>返回URL参数字符串</returns>
     public static string GetPars(Dictionary<string, object> dic)
     {
 
@@ -1251,10 +1302,11 @@ public static class Utility
 
     #region 根据字段拼接get参数
     /// <summary>
-    /// 根据字段拼接get参数
+    /// 根据字典拼接GET请求参数字符串（字符串类型值）
+    /// 例如：{name: "张三", city: "北京"} → "name=张三&city=北京"
     /// </summary>
-    /// <param name="dic"></param>
-    /// <returns></returns>
+    /// <param name="dic">参数字典（字符串类型）</param>
+    /// <returns>返回URL参数字符串</returns>
     public static string GetPars(Dictionary<string, string> dic)
     {
 
@@ -1273,11 +1325,12 @@ public static class Utility
 
     #region 获取字符串最后X行
     /// <summary>
-    /// 获取字符串最后X行
+    /// 获取字符串的最后X行内容
+    /// 按行分割字符串，返回最后指定行数的内容
     /// </summary>
-    /// <param name="resourceStr"></param>
-    /// <param name="length"></param>
-    /// <returns></returns>
+    /// <param name="resourceStr">原始字符串</param>
+    /// <param name="length">要获取的行数</param>
+    /// <returns>返回拼接后的字符串</returns>
     public static string GetCusLine(string resourceStr, int length)
     {
         string[] arrStr = resourceStr.Split("\r\n");
