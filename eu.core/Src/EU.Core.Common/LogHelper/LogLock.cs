@@ -227,7 +227,7 @@ public class LogLock
                             di.Values("BeginTime", requestInfo.BeginTime);
                             di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
                             di.Values("Agent", requestInfo.Agent);
-                            DBHelper.ExcuteNonQuery(di.GetSql());
+                            DBHelper.ExecuteNonQuery(di.GetSql());
                         }
                 });
                 task.Start();

@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq.Expressions;
 using Dapper;
 
@@ -26,7 +26,7 @@ public interface ISqlDapper
     object ExecuteScalar(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false);
     Task<object> ExecuteScalarAsync(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false);
 
-    int ExcuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false);
+    int ExecuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false);
     IDataReader ExecuteReader(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false);
     SqlMapper.GridReader QueryMultiple(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false);
     (List<T1>, List<T2>) QueryMultiple<T1, T2>(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false);
@@ -89,6 +89,7 @@ public interface ISqlDapper
     /// <param name="fileName">默认$"{DateTime.Now.ToString("yyyyMMddHHmmss")}.csv"</param>
     /// <returns></returns>
     int BulkInsert(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null);
+    Task<int> BulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null, CancellationToken cancellationToken = default);
     /// <summary>
     /// 
     /// </summary>

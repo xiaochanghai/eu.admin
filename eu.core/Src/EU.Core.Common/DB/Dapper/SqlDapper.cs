@@ -5,7 +5,7 @@ using EU.Core.Common.Extensions;
 using EU.Core.Common.Helper;
 using MySql.Data.MySqlClient;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -89,7 +89,7 @@ public class SqlDapper : ISqlDapper
     {
         try
         {
-            return Execute<object>((conn, dbTransaction) =>
+            return Execute((conn, dbTransaction) =>
             {
                 return conn.ExecuteScalar(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
             }, beginTransaction);
@@ -115,9 +115,9 @@ public class SqlDapper : ISqlDapper
         }
     }
 
-    public int ExcuteNonQuery(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
+    public int ExecuteNonQuery(string cmd, object param, CommandType? commandType = null, bool beginTransaction = false)
     {
-        return Execute<int>((conn, dbTransaction) =>
+        return Execute((conn, dbTransaction) =>
         {
             return conn.Execute(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
         }, beginTransaction);
@@ -196,7 +196,7 @@ public class SqlDapper : ISqlDapper
 
     public int ExecuteDML(string cmd, object param, CommandType? commandType = null, IDbTransaction dbTransaction = null)
     {
-        return ExecuteDML<int>((conn, dbTransaction) =>
+        return ExecuteDML((conn, dbTransaction) =>
         {
             return conn.Execute(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
         }, dbTransaction, false);
@@ -279,10 +279,8 @@ public class SqlDapper : ISqlDapper
     /// <param name="updateFileds">指定插入的字段</param>
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns></returns>
-    public int Add<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = false)
-    {
-        return AddRange([entity], updateFileds, beginTransaction);
-    }
+    public int Add<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = false) => AddRange([entity], updateFileds, beginTransaction);
+
     /// <summary>
     /// 
     /// </summary>
@@ -340,10 +338,7 @@ public class SqlDapper : ISqlDapper
     /// <param name="updateFileds">指定更新的字段x=new {x.a,x.b}</param>
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns></returns>
-    public int Update<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = true)
-    {
-        return UpdateRange([entity], updateFileds, beginTransaction);
-    }
+    public int Update<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = true) => UpdateRange([entity], updateFileds, beginTransaction);
 
     /// <summary>
     ///(根据主键批量更新实体) sqlserver使用的临时表参数化批量更新，mysql待优化
@@ -374,13 +369,13 @@ public class SqlDapper : ISqlDapper
             }
             string sqltext = $@"UPDATE {entityType.GetEntityTableName()} SET {string.Join(",", paramsList)} WHERE {entityType.GetKeyName()} = @{entityType.GetKeyName()} ;";
 
-            return ExcuteNonQuery(sqltext, entities, CommandType.Text, true);
+            return ExecuteNonQuery(sqltext, entities, CommandType.Text, true);
             // throw new Exception("mysql批量更新未实现");
         }
         string fileds = string.Join(",", properties.Select(x => $" a.{x.Name}=b.{x.Name}").ToArray());
         string sql = $"update  a  set {fileds} from  {entityType.GetEntityTableName()} as a inner join {EntityToSqlTempName.TempInsert.ToString()} as b on a.{key.Name}=b.{key.Name}";
         sql = entities.ToList().GetEntitySql(true, sql, null, updateFileds, null);
-        return ExcuteNonQuery(sql, null, CommandType.Text, true);
+        return ExecuteNonQuery(sql, null, CommandType.Text, true);
     }
 
     public int DelWithKey<T>(bool beginTransaction = false, params object[] keys)
@@ -409,10 +404,7 @@ public class SqlDapper : ISqlDapper
     /// <typeparam name="T"></typeparam>
     /// <param name="keys"></param>
     /// <returns></returns>
-    public int DelWithKey<T>(params object[] keys)
-    {
-        return DelWithKey<T>(false, keys);
-    }
+    public int DelWithKey<T>(params object[] keys) => DelWithKey<T>(false, keys);
 
     #region 批量插入
     /// <summary>
@@ -440,6 +432,25 @@ public class SqlDapper : ISqlDapper
             return table.Rows.Count;
         }
     }
+
+    private async Task<int> MSSqlBulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions sqlBulkCopyOptions = SqlBulkCopyOptions.UseInternalTransaction, string dbKeyName = null, CancellationToken cancellationToken = default)
+    {
+        if (!string.IsNullOrEmpty(dbKeyName))
+            Connection.ConnectionString = DBServerProvider.GetConnectionString(dbKeyName);
+
+        using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(Connection.ConnectionString, sqlBulkCopyOptions))
+        {
+            sqlBulkCopy.DestinationTableName = tableName;
+            sqlBulkCopy.BatchSize = table.Rows.Count;
+            for (int i = 0; i < table.Columns.Count; i++)
+            {
+                sqlBulkCopy.ColumnMappings.Add(table.Columns[i].ColumnName, table.Columns[i].ColumnName);
+            }
+            await sqlBulkCopy.WriteToServerAsync(table, cancellationToken);
+            return table.Rows.Count;
+        }
+    }
+
     public int BulkInsert<T>(List<T> entities, string tableName = null, Expression<Func<T, object>> columns = null, SqlBulkCopyOptions? sqlBulkCopyOptions = null)
     {
         DataTable table = entities.ToDataTable(columns, false);
@@ -454,54 +465,197 @@ public class SqlDapper : ISqlDapper
             return MySqlBulkInsert(table, tableName, fileName, tmpPath);
         return MSSqlBulkInsert(table, tableName, sqlBulkCopyOptions ?? SqlBulkCopyOptions.KeepIdentity);
     }
+
+    public async Task<int> BulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null, CancellationToken cancellationToken = default)
+    {
+        if (!string.IsNullOrEmpty(tmpPath))
+            tmpPath = tmpPath.ReplacePath();
+
+        if (Connection.GetType().Name == "MySqlConnection")
+            return await MySqlBulkInsertAsync(table, tableName, fileName, tmpPath, cancellationToken);
+        return await MSSqlBulkInsertAsync(table, tableName, sqlBulkCopyOptions ?? SqlBulkCopyOptions.KeepIdentity, null, cancellationToken);
+    }
     #endregion
 
     #region 大批量数据插入,返回成功插入行数
     /// <summary>
-    ///大批量数据插入,返回成功插入行数
+    /// 准备CSV文件用于批量插入
     /// </summary>
-    /// <param name="connectionString">数据库连接字符串</param>
     /// <param name="table">数据表</param>
+    /// <param name="tmpPath">临时路径</param>
+    /// <param name="fileName">文件名</param>
+    /// <returns>返回CSV文件路径</returns>
+    private string PrepareCsvFile(DataTable table, string tmpPath, string fileName)
+    {
+        tmpPath = tmpPath ?? FileHelper.GetCurrentDownLoadPath();
+        fileName = fileName ?? $"{DateTime.Now:yyyyMMddHHmmss}.csv";
+        string csv = DataTableToCsv(table);
+        FileHelper.WriteFile(tmpPath, fileName, csv);
+        return Path.Combine(tmpPath, fileName);
+    }
+
+    /// <summary>
+    /// 异步准备CSV文件用于批量插入
+    /// </summary>
+    /// <param name="table">数据表</param>
+    /// <param name="tmpPath">临时路径</param>
+    /// <param name="fileName">文件名</param>
+    /// <returns>返回CSV文件路径</returns>
+    private async Task<string> PrepareCsvFileAsync(DataTable table, string tmpPath, string fileName)
+    {
+        tmpPath = tmpPath ?? FileHelper.GetCurrentDownLoadPath();
+        fileName = fileName ?? $"{DateTime.Now:yyyyMMddHHmmss}.csv";
+        string csv = DataTableToCsv(table);
+
+        string fullPath = Path.Combine(tmpPath, fileName);
+        // 使用异步文件写入
+        await File.WriteAllTextAsync(fullPath, csv, Encoding.UTF8);
+        return fullPath;
+    }
+
+    /// <summary>
+    /// 配置MySqlBulkLoader
+    /// </summary>
+    /// <param name="connection">MySQL连接</param>
+    /// <param name="table">数据表</param>
+    /// <param name="tableName">表名</param>
+    /// <param name="filePath">CSV文件路径</param>
+    /// <returns>配置好的MySqlBulkLoader</returns>
+    private MySqlBulkLoader ConfigureBulkLoader(MySqlConnection connection, DataTable table, string tableName, string filePath)
+    {
+        var bulk = new MySqlBulkLoader(connection)
+        {
+            FieldTerminator = ",",
+            FieldQuotationCharacter = '"',
+            EscapeCharacter = '"',
+            LineTerminator = "\r\n",
+            FileName = filePath.ReplacePath(),
+            NumberOfLinesToSkip = 0,
+            TableName = tableName,
+        };
+        bulk.Columns.AddRange(table.Columns.Cast<DataColumn>().Select(column => column.ColumnName));
+        return bulk;
+    }
+
+    /// <summary>
+    /// 大批量数据插入(同步版本),返回成功插入行数
+    /// </summary>
+    /// <param name="table">数据表</param>
+    /// <param name="tableName">表名</param>
+    /// <param name="fileName">文件名</param>
+    /// <param name="tmpPath">临时路径</param>
     /// <returns>返回成功插入行数</returns>
     private int MySqlBulkInsert(DataTable table, string tableName, string fileName = null, string tmpPath = null)
     {
         if (table.Rows.Count == 0)
             return 0;
-        tmpPath = tmpPath ?? FileHelper.GetCurrentDownLoadPath();
-        fileName = fileName ?? $"{DateTime.Now.ToString("yyyyMMddHHmmss")}.csv";
-        int insertCount = 0;
-        string csv = DataTableToCsv(table);
-        FileHelper.WriteFile(tmpPath, fileName, csv);
-        string path = tmpPath + fileName;
+
+        string filePath = null;
+        MySqlConnection mysqlConnection = null;
+        MySqlTransaction transaction = null;
+
         try
         {
-            if (Connection.State == ConnectionState.Closed)
-                Connection.Open();
-            using (IDbTransaction tran = Connection.BeginTransaction())
-            {
-                var bulk = new MySqlBulkLoader(Connection as MySqlConnection)
-                {
-                    FieldTerminator = ",",
-                    FieldQuotationCharacter = '"',
-                    EscapeCharacter = '"',
-                    LineTerminator = "\r\n",
-                    FileName = path.ReplacePath(),
-                    NumberOfLinesToSkip = 0,
-                    TableName = tableName,
-                };
-                bulk.Columns.AddRange(table.Columns.Cast<DataColumn>().Select(colum => colum.ColumnName).ToList());
-                insertCount = bulk.Load();
-                tran.Commit();
-            }
+            // 准备CSV文件
+            filePath = PrepareCsvFile(table, tmpPath, fileName);
+
+            // 确保连接是MySQL连接
+            mysqlConnection = Connection as MySqlConnection;
+            if (mysqlConnection == null)
+                throw new InvalidOperationException("Connection must be a MySqlConnection for bulk insert");
+
+            // 打开连接并开始事务
+            if (mysqlConnection.State == ConnectionState.Closed)
+                mysqlConnection.Open();
+
+            transaction = (MySqlTransaction)mysqlConnection.BeginTransaction();
+
+            // 配置并执行批量加载
+            var bulk = ConfigureBulkLoader(mysqlConnection, table, tableName, filePath);
+            int insertCount = bulk.Load();
+
+            transaction.Commit();
+            return insertCount;
         }
-        catch (Exception) { throw; }
+        catch (Exception ex)
+        {
+            transaction?.Rollback();
+            throw new InvalidOperationException($"MySQL bulk insert failed for table '{tableName}': {ex.Message}", ex);
+        }
         finally
         {
-            Connection?.Dispose();
-            Connection?.Close();
+            transaction?.Dispose();
+            mysqlConnection?.Dispose();
+
+            // 清理临时文件
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                try { File.Delete(filePath); }
+                catch { /* 忽略文件删除错误 */ }
+            }
         }
-        return insertCount;
-        //   File.Delete(path);
+    }
+
+    /// <summary>
+    /// 大批量数据插入(异步版本),返回成功插入行数
+    /// </summary>
+    /// <param name="table">数据表</param>
+    /// <param name="tableName">表名</param>
+    /// <param name="fileName">文件名</param>
+    /// <param name="tmpPath">临时路径</param>
+    /// <returns>返回成功插入行数</returns>
+    private async Task<int> MySqlBulkInsertAsync(DataTable table, string tableName, string fileName = null, string tmpPath = null, CancellationToken cancellationToken = default)
+    {
+        if (table.Rows.Count == 0)
+            return 0;
+
+        string filePath = null;
+        MySqlConnection mysqlConnection = null;
+        //MySqlTransaction transaction = null;
+
+        try
+        {
+            // 异步准备CSV文件
+            filePath = await PrepareCsvFileAsync(table, tmpPath, fileName);
+
+            // 确保连接是MySQL连接
+            mysqlConnection = Connection as MySqlConnection;
+            if (mysqlConnection == null)
+                throw new InvalidOperationException("Connection must be a MySqlConnection for bulk insert");
+
+            // 异步打开连接并开始事务
+            if (mysqlConnection.State == ConnectionState.Closed)
+                await mysqlConnection.OpenAsync(cancellationToken);
+
+            //transaction = await mysqlConnection.BeginTransactionAsync(cancellationToken);
+
+            // 配置批量加载器，由于MySqlBulkLoader.Load()没有异步版本，使用Task.Run包装
+            var bulk = ConfigureBulkLoader(mysqlConnection, table, tableName, filePath);
+            int insertCount = await Task.Run(() => bulk.Load(), cancellationToken);
+
+            //await transaction.CommitAsync(cancellationToken);
+            return insertCount;
+        }
+        catch (Exception ex)
+        {
+            //if (transaction != null)
+            //    await transaction.RollbackAsync();
+            throw new InvalidOperationException($"MySQL bulk insert failed for table '{tableName}': {ex.Message}", ex);
+        }
+        finally
+        {
+            //if (transaction != null)
+            //    await transaction.DisposeAsync();
+            if (mysqlConnection != null)
+                await mysqlConnection.DisposeAsync();
+
+            // 异步清理临时文件
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                try { File.Delete(filePath); }
+                catch { /* 忽略文件删除错误 */ }
+            }
+        }
     }
     #endregion
 

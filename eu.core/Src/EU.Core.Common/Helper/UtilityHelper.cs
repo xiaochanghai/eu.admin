@@ -929,7 +929,7 @@ public static class Utility
             di.Values("OperateDate", DateTime.Now);
             di.Values("Action", operateType.ToString());
             di.Values("Remark", remark);
-            DBHelper.ExcuteNonQuery(di.GetSql());
+            DBHelper.ExecuteNonQuery(di.GetSql());
         }
         catch (Exception)
         {

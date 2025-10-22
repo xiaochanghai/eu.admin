@@ -115,7 +115,7 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
                                       AND IsDeleted = 'false'
                                       AND ImageType = '{1}'";
             sql = string.Format(sql, upload.masterId, upload.imageType);
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteNonQuery(sql);
         }
 
         FileAttachment fileAttachment = new();
@@ -136,7 +136,7 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         {
             string sql = "UPDATE {2} SET {3}='{1}' WHERE ID='{0}'";
             sql = string.Format(sql, upload.masterId, fileName + "." + ext, upload.masterTable, "ImageUrl");
-            DBHelper.ExcuteNonQuery(sql);
+            DBHelper.ExecuteNonQuery(sql);
         }
 
         return ServiceResult<Guid>.OprateSuccess(fileAttachment.ID, "上传成功！");

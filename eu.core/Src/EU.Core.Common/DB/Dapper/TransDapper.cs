@@ -1,15 +1,14 @@
-﻿
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq.Expressions;
-using System.Text;
-using Dapper;
+﻿using Dapper;
 using EU.Core.Common.Const;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
 using EU.Core.Common.Helper;
+using Microsoft.Data.SqlClient;
 using MySql.Data.MySqlClient;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
+using System.Linq.Expressions;
+using System.Text;
 
 
 namespace EU.Core.Common.DB.Dapper;
@@ -101,10 +100,7 @@ public class TransDapper : ITransDapper
     /// <returns></returns>
     public List<T> QueryList<T>(string cmd, object param, CommandType? commandType = null) where T : class
     {
-        return Execute((conn) =>
-        {
-            return conn.Query<T>(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text).ToList();
-        });
+        return Execute((conn) => conn.Query<T>(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text).ToList());
     }
     public T QueryFirst<T>(string cmd, object param, CommandType? commandType = null) where T : class
     {
@@ -113,7 +109,7 @@ public class TransDapper : ITransDapper
     }
     public object ExecuteScalar(string cmd, object param, CommandType? commandType = null)
     {
-        return Execute<object>((conn) =>
+        return Execute((conn) =>
         {
             return conn.ExecuteScalar(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
         });
@@ -121,14 +117,14 @@ public class TransDapper : ITransDapper
 
     public int ExcuteNonQuery(string cmd, object param, CommandType? commandType = null)
     {
-        return Execute<int>((conn) =>
+        return Execute((conn) =>
         {
             return conn.Execute(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
         });
     }
     public IDataReader ExecuteReader(string cmd, object param, CommandType? commandType = null)
     {
-        return Execute<IDataReader>((conn) =>
+        return Execute((conn) =>
         {
             return conn.ExecuteReader(cmd, param, dbTransaction, commandType: commandType ?? CommandType.Text);
         });
@@ -188,10 +184,8 @@ public class TransDapper : ITransDapper
     /// <param name="updateFileds">指定插入的字段</param>
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns></returns>
-    public int Add<T>(T entity, Expression<Func<T, object>> updateFileds = null)
-    {
-        return AddRange<T>(new T[] { entity }, updateFileds);
-    }
+    public int Add<T>(T entity, Expression<Func<T, object>> updateFileds = null) => AddRange([entity], updateFileds);
+
     /// <summary>
     /// 
     /// </summary>
@@ -260,7 +254,7 @@ public class TransDapper : ITransDapper
             //sql = entities.GetEntitySql(entityType == typeof(Guid), sql, null, addFileds, null);
             sql = entities.GetEntitySql(true, sql, null, addFileds, null);
         }
-        return Execute<int>((conn) =>
+        return Execute((conn) =>
         {
             //todo pgsql待实现
             return conn.Execute(sql, (DBType.Name == DbCurrentType.MySql.ToString() || DBType.Name == DbCurrentType.PgSql.ToString()) ? entities.ToList() : null, dbTransaction);
@@ -276,10 +270,7 @@ public class TransDapper : ITransDapper
     /// <param name="updateFileds">指定更新的字段x=new {x.a,x.b}</param>
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns></returns>
-    public int Update<T>(T entity, Expression<Func<T, object>> updateFileds = null)
-    {
-        return UpdateRange<T>(new T[] { entity }, updateFileds);
-    }
+    public int Update<T>(T entity, Expression<Func<T, object>> updateFileds = null) => UpdateRange([entity], updateFileds);
 
     /// <summary>
     ///(根据主键批量更新实体) sqlserver使用的临时表参数化批量更新，mysql待优化

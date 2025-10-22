@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq.Expressions;
 using System.Text;
 using EU.Core.Common.Const;
@@ -59,7 +59,7 @@ public class DBHelper
                 {
                     di.Values(dt.Columns[j].ColumnName, dt.Rows[i][dt.Columns[j].ColumnName].ToString());
                 }
-                sql = di .GetSql();
+                sql = di.GetSql();
                 sqls.Append(sql + ";\n");
             }
             return sqls;
@@ -105,7 +105,7 @@ public class DBHelper
     public static object ExecuteScalar(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExecuteScalar(cmd, param, commandType, beginTransaction);
 
     public static async Task<object> ExecuteScalarAsync(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => await Instance.ExecuteScalarAsync(cmd, param, commandType, beginTransaction);
-    public static int ExcuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExcuteNonQuery(cmd, param, commandType, beginTransaction);
+    public static int ExecuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExecuteNonQuery(cmd, param, commandType, beginTransaction);
     public static (List<T1>, List<T2>) QueryMultiple<T1, T2>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.QueryMultiple<T1, T2>(cmd, param, commandType, beginTransaction);
 
     public static (List<T1>, List<T2>, List<T3>) QueryMultiple<T1, T2, T3>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.QueryMultiple<T1, T2, T3>(cmd, param, commandType, beginTransaction);
@@ -140,5 +140,6 @@ public class DBHelper
 
 
     public static int BulkInsert(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => Instance.BulkInsert(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
+    public static async Task<int> BulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => await Instance.BulkInsertAsync(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
 
 }

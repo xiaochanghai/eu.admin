@@ -172,10 +172,10 @@ public class SmTableCatalogServices : BaseServices<SmTableCatalog, SmTableCatalo
             {
                 string sql = string.Empty;
                 sql = "DELETE A FROM SmFieldCatalog A WHERE A.TableCode='" + dtTableCatalog.Rows[i]["TableCode"] + "' AND A.IsActive='false'";
-                DBHelper.Instance.ExcuteNonQuery(sql);
+                DBHelper.Instance.ExecuteNonQuery(sql);
 
                 sql = $"DELETE A FROM SmTableCatalog A WHERE A.ID='{dtTableCatalog.Rows[i]["ID"]?.ToString()}'";
-                DBHelper.Instance.ExcuteNonQuery(sql);
+                DBHelper.Instance.ExecuteNonQuery(sql);
             }
         }
         #endregion
