@@ -57,16 +57,17 @@ class RequestHttp {
         const { data } = response;
         tryHideFullScreenLoading();
         // login failure
-        message.destroy();
         if (data.Status == ResultEnum.OVERDUE) {
           store.dispatch(setToken(""));
+          message.destroy();
           message.error(data.Message);
           window.$navigate(LOGIN_URL);
           return Promise.reject(data);
         }
         // Global error information interception (to prevent data stream from being returned when downloading files, and report errors directly without code)
         if (data.Status && data.Status !== ResultEnum.SUCCESS) {
-          message.error(data.Message);
+         message.destroy();
+         message.error(data.Message);
           return Promise.reject(data);
         }
         // Successful request (no need to handle failure logic on the page unless there are special circumstances)
