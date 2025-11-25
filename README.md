@@ -19,7 +19,7 @@
 
 ## 项目概述📖
 
-🚀🚀🚀 EU-Admin 一款基于.NET 9、 React19、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5 的实现的通用管理平台框架，开箱即用。
+🚀🚀🚀 EU-Admin 一款基于.NET 9、 React19、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、antd6 的实现的通用管理平台框架，开箱即用。
 集成SqlSugar、缓存、 通讯、远程请求、任务调度等
 
 前后端分离，使用 JWT 认证。
@@ -55,7 +55,7 @@
 - 使用 React-RouterV6 全新路由钩子，项目支持多路由（Hash | History）切换、路由懒加载配置
 - 项目菜单、路由权限使用 **动态路由** 控制，完全根据后端菜单数据动态生成路由
 - 使用 Redux-Toolkit、Zustand 作为状态管理工具（多分支），集成 persist 持久化工具
-- 使用 Ant-Design 5 组件库开发，将 Design Token 注入到 CSS 变量中，方便配置项目主题
+- 使用 Ant-Design 6 组件库开发，将 Design Token 注入到 CSS 变量中，方便配置项目主题
 - 项目支持多主题：主题颜色、暗黑模式、灰色模式、色弱模式、紧凑主题、圆角大小配置
 - 项目支持多布局：横向布局、经典布局（可开启菜单分割功能）、纵向布局、分栏布局配置
 - 项目其它功能：菜单手风琴模式、无限级菜单、多标签页（拖拽）、详情页标签、面包屑导航、页面水印、ECharts 组件封装、SVG 图标组件、数据大屏…
