@@ -55,3 +55,6 @@ export interface FieldProps {
   WrapperCol?: number;
   MinRows?: number;
 }
+
+export type { ActionType } from "@ant-design/pro-components";
+export type { CollapseProps, CheckboxProps, TabsProps, MenuProps } from "antd";

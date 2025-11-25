@@ -6,7 +6,6 @@ import http from "@/api";
 import { uploadFile } from "@/api/modules/module";
 import { Icon } from "@/components";
 import { Skeleton } from "antd";
-const { Step } = Steps;
 const FormItem = Form.Item;
 
 /**
@@ -440,49 +439,26 @@ const UploadExcel: React.FC<UploadExcelProps> = props => {
     );
   }, [resetUpload]);
 
-  /**
-   * 渲染步骤内容
-   */
-  const renderStepContent = useCallback(() => {
-    if (stepsCurrent === 0) {
-      return renderUploadStep();
+  const items = [
+    {
+      title: "上传Excel",
+      content: renderUploadStep()
+    },
+    {
+      title: "数据预览",
+      content: errorList.length > 0 ? renderErrorPreview() : importList.length > 0 ? renderDataPreview() : null
+    },
+    {
+      title: "导入数据",
+      content: renderImportSuccess()
     }
-
-    if (stepsCurrent === 1) {
-      if (errorList.length > 0) {
-        return renderErrorPreview();
-      }
-      if (importList.length > 0) {
-        return renderDataPreview();
-      }
-    }
-
-    if (stepsCurrent === 2) {
-      return renderImportSuccess();
-    }
-
-    return null;
-  }, [
-    stepsCurrent,
-    errorList.length,
-    importList.length,
-    renderUploadStep,
-    renderErrorPreview,
-    renderDataPreview,
-    renderImportSuccess
-  ]);
-
+  ];
   // 渲染组件
   return (
     <>
       {!pageLoading ? (
         <>
-          <Steps type="navigation" current={stepsCurrent} size="small" className="site-navigation-steps">
-            <Step status="process" title="上传Excel" />
-            <Step status="process" title="数据预览" />
-            <Step status="process" title="导入数据" />
-          </Steps>
-          {renderStepContent()}
+          <Steps current={stepsCurrent} titlePlacement="vertical" items={items} ellipsis />
         </>
       ) : (
         <>

@@ -24,7 +24,7 @@ const usePermissions = () => {
         // No menu permission
         if (!menuList.length) {
           notification.warning({
-            message: "无权限访问",
+            title: "无权限访问",
             description: "当前账号无任何菜单权限，请联系系统管理员！"
           });
           dispatch(setToken(""));

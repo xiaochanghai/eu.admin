@@ -80,7 +80,7 @@ const LoginForm: React.FC<LoginFormProps> = React.memo(() => {
 
         // 登录成功提示
         notification.success({
-          message: getTimeState(),
+          title: getTimeState(),
           description: `${t("login.successMessage")} ${t("title")}`,
           icon: <Icon name="CheckCircleFilled" style={{ color: "#73d13d" }} />
         });

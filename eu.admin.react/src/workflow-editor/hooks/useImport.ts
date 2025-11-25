@@ -24,7 +24,7 @@ export function useImport() {
                 edtorStore?.setStartNode(flowJson.startNode);
               } else {
                 Notification.error({
-                  message: "提醒",
+                  title: "提醒",
                   description: t("fileIllegal")
                 });
                 // message.error(t("fileIllegal"));
@@ -32,7 +32,7 @@ export function useImport() {
             } catch (error: any) {
               console.error(error);
               Notification.error({
-                message: "提醒",
+                title: "提醒",
                 description: t("fileIllegal")
               });
               // message.error(t("fileIllegal"));

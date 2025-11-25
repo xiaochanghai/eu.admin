@@ -13,7 +13,7 @@ export function useExport() {
       .then(savedName => {
         if (savedName) {
           Notification.success({
-            message: "提醒",
+            title: "提醒",
             description: t("operateSuccess")
           });
           // message.success(t("operateSuccess"))

@@ -50,7 +50,7 @@ export function setupAppVersionNotification() {
       })(),
       description: "检测到系统有新版本发布，是否立即刷新页面？",
       // $t("system.updateContent")
-      message: "系统版本更新通知",
+      title: "系统版本更新通知",
       // t("system.updateTitle")
       onClose() {
         isShow = false;
