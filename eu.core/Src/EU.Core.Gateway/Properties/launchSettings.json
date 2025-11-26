@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Tiobon.Core.Gateway": {
+    "EU.Core.Gateway": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "http://localhost:9000",

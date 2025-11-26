@@ -859,7 +859,7 @@
     "IsHide": 0
   },
   {
-    "Code": "\/Tiobon\/Tiobons",
+    "Code": "\/EU\/Tiobons",
     "Name": "博客",
     "IsButton": 0,
     "Pid": 29,
@@ -1340,7 +1340,7 @@
     "IsHide": 0
   },
   {
-    "Code": "\/Tiobon\/Detail\/:id",
+    "Code": "\/EU\/Detail\/:id",
     "Name": "博客详情",
     "IsButton": 0,
     "Pid": 29,

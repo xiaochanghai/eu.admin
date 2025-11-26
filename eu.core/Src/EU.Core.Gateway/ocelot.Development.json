@@ -1,13 +1,13 @@
 {
   "Routes": [
-    // Tiobon-svc
+    // EU-svc
     {
-      "UpstreamPathTemplate": "/svc/Tiobon/{url}",
+      "UpstreamPathTemplate": "/svc/EU/{url}",
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
       },
-      "DownstreamPathTemplate": "/svc/Tiobon/{url}",
+      "DownstreamPathTemplate": "/svc/EU/{url}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -20,7 +20,7 @@
         "gw-sign": "Claims[gw-sign] > value"
       },
       "UpstreamHeaderTransform": {
-        "custom-key": "Tiobon.gateway"
+        "custom-key": "EU.gateway"
       },
       "DownstreamHeaderTransform": {
         "trace-id": "Trace-Id"
@@ -32,9 +32,9 @@
         "CustomResultHandler"
       ]
     },
-    // Tiobon-svc-swagger
+    // EU-svc-swagger
     {
-      "UpstreamPathTemplate": "/swagger/apiswg/Tiobon-svc/swagger.json",
+      "UpstreamPathTemplate": "/swagger/apiswg/EU-svc/swagger.json",
       "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/swagger/V2/swagger.json",
       "DownstreamScheme": "http",

@@ -2,7 +2,7 @@
 using System;
 using System.Net;
 
-namespace Blog.Core.Common.HttpRestSharp
+namespace EU.Core.Common.HttpRestSharp
 {
     /// <summary>
     /// 基于 RestSharp 封装HttpHelper

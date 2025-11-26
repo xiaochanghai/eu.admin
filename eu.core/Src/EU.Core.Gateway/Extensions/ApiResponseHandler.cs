@@ -1,4 +1,4 @@
-﻿using Blog.Core.Model;
+﻿using EU.Core.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -8,10 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Blog.Core.Gateway.Extensions
+namespace EU.Core.Gateway.Extensions
 {
     /// <summary>
-    /// 这里不需要，目前集成的是 Blog.Core.Extensions 下的接口处理器
+    /// 这里不需要，目前集成的是 EU.Core.Extensions 下的接口处理器
     /// 但是你可以单独在网关中使用这个。
     /// </summary>
     public class ApiResponseHandler : DelegatingHandler
