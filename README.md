@@ -1,156 +1,286 @@
+<div align="center">
+  <h1>EU-Admin</h1>
+  <h3>EU（一优） 一心一意 做好每件事</h3>
 
-<div align="center"><h1>EU-Admin</h1></div>
-<div align="center"><h3>EU（一优） 一心一意 做好每件事</h3></div>
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+  [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+  [![Ant Design](https://img.shields.io/badge/Ant%20Design-6.0-0170FE?logo=ant-design)](https://ant.design/)
+</div>
 
-## 前言
+## 📖 项目简介
 
-坐标苏州，2014年7月开始入行，学习.NET,最开始就学了webform，工作之后学了MVC、Sencha Touch（已抛弃技术）、JS、React、ReactNative、VUE，从.NetFramework 转到.NET CORE，很庆幸自己一直还是从事着开发的工作
+🚀 **EU-Admin** 是一款开箱即用的企业级管理平台框架，采用前后端分离架构，致力于让业务开发变得简单高效。
 
-从去年开始， 希望把前几年工作经历，以及想法做一个沉淀，故而有了这个项目。
-新开的这个项目，期望实现这样的能力：业务人员只需关注实体的构建，业务服务的编写，以及路由的配置，未来的计划是所以基础代码一键生产。
-部分代码是很早之前写的，可能不是那么规范，后面会统一优化掉
+**有合适工作机会给我推荐，base：苏州，谢谢谢谢！！！**
 
-让业务的开发，变成简单的三步走：创建实体 >> 业务开发 >> 路由配置。
+### 🎯 技术栈
 
+**前端技术栈**
+- **核心框架**: React 19 + TypeScript 5.7
+- **构建工具**: Vite 7
+- **UI 框架**: Ant Design 6 + Ant Design Pro Components
+- **状态管理**: Redux Toolkit / Zustand
+- **路由管理**: React Router v6
+- **数据可视化**: ECharts + Ant Design Plots
+- **实时通信**: SignalR
+- **AI 集成**: Ant Design X (AI Chat 组件)
 
-阿里巴巴大神毕玄曾说过，"一个优秀的工程师和一个普通工程师的区别，不是满天飞的架构图，他的功底体现在所写的每一行代码上"。
+**后端技术栈**
+- **核心框架**: .NET 9
+- **ORM 框架**: SqlSugar + EF Core + Dapper
+- **数据库支持**: SQL Server / MySQL / PostgreSQL / Oracle / SQLite / 达梦 / 人大金仓
+- **认证授权**: JWT + Cookie Authentication
+- **缓存方案**: Redis
+- **任务调度**: Quartz.NET
+- **消息队列**: RabbitMQ
+- **AI 集成**: Microsoft.Extensions.AI + MCP (Model Context Protocol)
+- **API 文档**: Swagger
 
-与君共思共勉！ **有合适工作机会给我推荐，base：苏州，谢谢谢谢！！！** 
+## 🌟 在线体验
 
-## 项目概述📖
+### 演示地址
 
-🚀🚀🚀 EU-Admin 一款基于.NET 9、 React19、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、antd6 的实现的通用管理平台框架，开箱即用。
-集成SqlSugar、缓存、 通讯、远程请求、任务调度等
+#### 标准版
+- 地址：http://116.62.175.91:9527/
+- 账号：`Admin` 密码：`1`
 
-前后端分离，使用 JWT 认证。
+#### Ultra 版（含 AI 对话功能）
+- 地址：http://116.62.175.91:9527/
+- 账号：`Simon` 密码：`123456`
 
-后端：基于 .NET9 、SqlSugar、 EF Core、Dapper，集成常用组件。
+![AI对话功能](./doc/images/17.png)
 
-> 数据库文件：[https://pan.quark.cn/s/6076d8898646](https://pan.quark.cn/s/6076d8898646 "https://pan.quark.cn/s/6076d8898646")
-下载后SQL SERVER手动部署，版本2014（含）以上
+### 相关项目
 
-> APP链接：[eu.admin.reactnative](https://gitee.com/xiaochanghai520/eu.admin.reactnative "https://gitee.com/xiaochanghai520/eu.admin.reactnative")
+- 📱 **移动端**: [EU-Admin-ReactNative](https://gitee.com/xiaochanghai520/eu.admin.reactnative)
+- 🔧 **MCP 框架**: [MCPSharp - 基于 .NET Core 的 MCP 开发框架](https://github.com/xiaochanghai/MCPSharp)
 
-### 在线预览地址 👀
+## 🚀 快速开始
 
-- Link：http://116.62.175.91:9527/
-- 账号密码：Admin，1
+### 前置要求
 
-#### Urltra版本新增AI对话
+- **前端**: Node.js >= 16.0.0
+- **后端**: .NET 9 SDK
+- **数据库**: SQL Server 2014+ / MySQL / PostgreSQL 等
+- **缓存**: Redis（可选）
 
-- Link：http://116.62.175.91:9527/
-- 账号密码：Simon，123456
+### 安装步骤
 
-![image-17](./doc/images/17.png)
+1. **克隆项目**
+   ```bash
+   git clone https://gitee.com/xiaochanghai520/eu-Admin.git
+   cd eu-Admin
+   ```
 
+2. **配置数据库**
+   - 下载数据库文件：[夸克网盘](https://pan.quark.cn/s/6076d8898646)
+   - 使用 SQL Server 2014+ 导入数据库
 
-### 🔖 基于.NET Core的MCP开发框架访问如下地址
+3. **启动后端**
+   ```bash
+   cd eu.core
+   dotnet restore
+   dotnet run --project EU.Core.Api
+   ```
 
-[MCP](https://github.com/xiaochanghai/MCPSharp)
+4. **启动前端**
+   ```bash
+   cd eu.admin.react
+   pnpm install
+   pnpm dev
+   ```
 
-### 前端主要功能 🔨
+5. **访问应用**
+   - 前端：http://localhost:5173
+   - API：http://localhost:5000/swagger
 
-- 使用 React19 + TypeScript 开发，整个项目使用高质量 Hooks + TypeScript 代码完成
-- 使用 Vite5 作为开发、打包工具（配置 Gzip | Brotli 压缩打包、PWA 应用、Visualizer 包分析…）
-- 使用 React-RouterV6 全新路由钩子，项目支持多路由（Hash | History）切换、路由懒加载配置
-- 项目菜单、路由权限使用 **动态路由** 控制，完全根据后端菜单数据动态生成路由
-- 使用 Redux-Toolkit、Zustand 作为状态管理工具（多分支），集成 persist 持久化工具
-- 使用 Ant-Design 6 组件库开发，将 Design Token 注入到 CSS 变量中，方便配置项目主题
-- 项目支持多主题：主题颜色、暗黑模式、灰色模式、色弱模式、紧凑主题、圆角大小配置
-- 项目支持多布局：横向布局、经典布局（可开启菜单分割功能）、纵向布局、分栏布局配置
-- 项目其它功能：菜单手风琴模式、无限级菜单、多标签页（拖拽）、详情页标签、面包屑导航、页面水印、ECharts 组件封装、SVG 图标组件、数据大屏…
-- 使用 Prettier 统一格式化代码，集成 Eslint、Stylelint 代码校验规范
-- 使用 husky、lint-staged、commitlint、czg、cz-git 规范代码提交信息
-- 支持Keepalive页面切换不刷新
+## ⚡ 核心功能
 
-### 后端主要功能 🔨
+### 前端特性
 
-- 采用`仓储+服务+接口`的形式封装框架；
-- 异步 async/await 开发；  
-- SqlSugar支持自由切换多种数据库，MySql/SqlServer/Sqlite/Oracle/Postgresql/达梦/人大金仓；
-- 实现数据库主键类型配置化，什么类型都可以自定义 ✨； 
-- 五种日志记录，审计/异常/请求响应/服务操作/Sql记录等,并自动持久化到数据库表🎶； 
-- 支持项目事务处理（若要分布式，用cap即可）✨；
-- 设计4种 AOP 切面编程，功能涵盖：日志、缓存、审计、事务 ✨；
-- 或使用 DbFirst 一键创建自己项目的四层文件（支持多库）；
-- 实现分表案例，支持分表的增删改查哈分页查询，具体查看SplitDemoController.cs;
-- 支持signalR对指定用户通讯; 
-- 认证：集成Cookies、JWT；默认启用 JWT，支持多终端认证系统
-- 授权：[基于策略（Policy）的授权](https://docs.microsoft.com/zh-cn/aspnet/core/security/authorization/policies?view=aspnetcore-6.0)
-- ORM：[EF Core](https://docs.microsoft.com/zh-cn/ef/core/) 的 [Code First 模式](https://docs.microsoft.com/zh-cn/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli)、接入国产数据库ORM组件 —— SqlSugar，封装数据库操作，支持级联操作
-- 依赖注入：默认 DI 容器，实现自动注入
-- 提供 Redis 做缓存处理
-- 使用 Swagger 做API文档
-- 支持 CORS 跨域
-- 事件总线：[默认启用 BackgroupService](https://docs.microsoft.com/zh-cn/dotnet/core/extensions/queue-service?source=recommendations)，基于[Channel](https://docs.microsoft.com/zh-cn/dotnet/api/system.threading.channels.channel-1) 实现的单机版发布订阅；可替换为 Redis 的发布订阅（可用于分布式）；也可替换为 RabbitMQ 的发布订阅（可用于分布式）
-- 定时任务：使用 Quartz.net 做任务调度
-- 对象映射：AutoMapper
-- RabbitMQ 消息队列
-- EventBus 事件总线  
-- 支持加载动态权限菜单，多方式轻松权限控制。
-- 数据库：SQL Server2014,设计文档见（[数据库设计文件](./model)）,依托于PowerDesigner进行数据库设计,目前支持一键迁移至MySql
-- 所有基础列表查询通过数据库脚本配置，实现自定义查询，包括列的显示、类型、是否允许导出、宽度、顺序等
-- 自定义导入导出，实现常规操作
-- 权限设计：用户关联角色，角色关联模块（菜单）
-- 
-## 数据库设计
+- ✅ **现代化技术栈**: React 19 + TypeScript 5.7，全面拥抱 Hooks 和类型安全
+- 🎨 **灵活主题系统**:
+  - 支持亮色/暗黑模式切换
+  - 主题颜色自定义、灰色模式、色弱模式
+  - 紧凑主题、圆角大小可配置
+  - Design Token 注入 CSS 变量
+- 📐 **多布局支持**: 横向、经典（支持菜单分割）、纵向、分栏布局可随意切换
+- 🔐 **权限管理**: 基于后端数据的动态路由生成，完整的菜单和路由权限控制
+- 🏷️ **标签页管理**: 支持多标签页拖拽排序、详情页标签、页面缓存（Keepalive）
+- 📊 **数据可视化**: ECharts 组件封装、数据大屏支持
+- 🛠️ **开发体验**:
+  - Vite 7 极速构建
+  - ESLint + Prettier + Stylelint 代码规范
+  - Husky + lint-staged + commitlint 提交规范
+  - 支持 Gzip/Brotli 压缩、PWA、包分析等
 
-![image-20230602140542](./doc/images/20230602140542.png)
-![image-20230602140529](./doc/images/20230602140529.png)
-![image-20230602140537](./doc/images/20230602140537.png)
+### 后端特性
 
-[数据库设计文件](./model)
+- 🏗️ **分层架构**: 采用 `仓储 + 服务 + 接口` 的标准分层设计
+- ⚡ **异步优先**: 全面使用 async/await 异步编程
+- 💾 **多数据库支持**:
+  - 基于 SqlSugar，支持 MySQL/SQL Server/SQLite/Oracle/PostgreSQL/达梦/人大金仓
+  - 支持主键类型配置化
+  - 支持数据库分表、级联操作
+  - DbFirst 一键生成四层文件
+- 📝 **完善的日志**:
+  - 五种日志类型：审计/异常/请求响应/服务操作/SQL 记录
+  - 日志自动持久化到数据库
+- 🎯 **AOP 切面**: 四种切面编程支持（日志、缓存、审计、事务）
+- 🔒 **认证授权**:
+  - 集成 Cookies、JWT 多终端认证
+  - 基于策略（Policy）的授权机制
+- 🔔 **实时通信**: SignalR 支持对指定用户通讯
+- ⏰ **任务调度**: Quartz.NET 定时任务
+- 🔄 **事件总线**:
+  - 基于 Channel 的单机版发布订阅
+  - 支持 Redis/RabbitMQ 分布式事件总线
+- 📦 **对象映射**: AutoMapper 自动映射
+- 🤖 **AI 集成**: 支持 OpenAI、MCP 协议
+- 🎨 **灵活配置**:
+  - 所有基础列表通过数据库脚本配置
+  - 支持自定义导入导出
+  - 动态权限菜单加载
 
-> 使用PowerDesign进行数据库结构设计，后期会嵌入到后台
+## 🗄️ 数据库设计
 
-## 部署
+项目采用 PowerDesigner 进行数据库结构设计，实现了完整的权限管理体系。
 
-前端利用Nginx部署，后端是用IIS
+### 设计特点
 
-## 容器化部署
-[Docker部署](./doc/Docker部署.md)
-开发环境发布工具、生产环境运维工具开发中
+- 📐 **规范化设计**: 基于 PowerDesigner 的专业数据库建模
+- 🔐 **权限体系**: 用户 → 角色 → 模块（菜单）的权限关联设计
+- 🔄 **多数据库支持**: 支持一键迁移至 MySQL 等多种数据库
+- 📋 **完整文档**: 详细的数据库设计文件见 [model 目录](./model)
 
-## 相关技术文档
+### 数据库架构图
 
-### TypeScript
-https://www.tslang.cn/docs/home.html
+<div align="center">
 
-### React Js
-https://react.docschina.org/docs/getting-started.html
+![基础表结构](./doc/images/20230602140542.png)
 
-### Ant Design 
-https://ant.design/components/overview-cn/
+![权限设计](./doc/images/20230602140529.png)
 
-### Ant Design Pro
-https://pro.ant.design/zh-CN/docs/overview
+![业务表设计](./doc/images/20230602140537.png)
 
-### Ant Design Chart
-https://charts.ant.design/zh
+</div>
 
-### Senparc
-https://github.com/JeffreySu/WeiXinMPSDK
+## 📦 部署指南
 
-https://sdk.weixin.senparc.com/
+### 开发环境部署
 
-感谢这些优秀的开源项目！
+**前端部署**
+```bash
+cd eu.admin.react
+pnpm install
+pnpm dev
+```
 
-## 一些Q&A
+**后端部署**
+```bash
+cd eu.core
+dotnet restore
+dotnet run --project EU.Core.Api
+```
 
-#### 为什么前端用React?
+### 生产环境部署
 
-答：现在国内大部分都是用vue，我个人可能比较喜欢react的语法吧，喜欢ant-design react版本，vue也会写写，后面会尝试深入学习vue
+- **前端**: Nginx 静态文件部署
+- **后端**: IIS / Docker 容器化部署
+- **容器化**: 详见 [Docker 部署文档](./doc/Docker部署.md)
 
-## 贡献
+### 相关脚本
 
-- 提 Issue 请到 gitee
+```bash
+# 构建项目
+./EU.Core.Build.bat
 
-## 联系我
+# 清理项目
+./EU.Core.Clean.bat
 
-邮箱：xiaochanghai@foxmail.com
+# 发布到 Docker
+./EU.Core.Publish.Docker.sh
 
-部分内容来源与其他开源作者，谢谢
+# Linux 发布
+./EU.Core.Publish.Linux.sh
+```
 
-## 感谢
+## 📚 技术文档
 
-苏州市创采软件有限公司 费鹏先生
+### 核心技术文档
+
+| 技术 | 官方文档 |
+|------|---------|
+| TypeScript | https://www.tslang.cn/docs/home.html |
+| React | https://react.docschina.org/docs/getting-started.html |
+| Ant Design | https://ant.design/components/overview-cn/ |
+| Ant Design Pro | https://pro.ant.design/zh-CN/docs/overview |
+| Ant Design Charts | https://charts.ant.design/zh |
+| .NET | https://learn.microsoft.com/zh-cn/dotnet/ |
+| EF Core | https://docs.microsoft.com/zh-cn/ef/core/ |
+| SqlSugar | https://www.donet5.com/Home/Doc |
+
+### 项目文档
+
+- 📖 [使用手册](./doc/使用手册.md)
+- 🐳 [Docker 部署](./doc/Docker部署.md)
+- 🖥️ [初始化服务器](./doc/初始化服务器.md)
+- 💻 [创建开发环境](./doc/创建开发环境.md)
+- 🔧 [移除开发环境](./doc/移除开发环境.md)
+
+## 🤝 参与贡献
+
+### 贡献指南
+
+欢迎所有形式的贡献！
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交改动 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交 Pull Request
+
+### Issue 提交
+
+- 提 Issue 请到 [Gitee Issues](https://gitee.com/xiaochanghai520/eu-Admin/issues)
+- Bug 反馈请包含：环境信息、复现步骤、预期结果、实际结果
+
+## ❓ 常见问题
+
+**Q: 为什么前端选择 React 而不是 Vue？**
+
+A: 个人比较喜欢 React 的语法和 Ant Design React 版本的设计。Vue 也是很优秀的框架，后续可能会推出 Vue 版本。
+
+**Q: 是否支持国产数据库？**
+
+A: 支持，项目已集成达梦数据库和人大金仓数据库的支持。
+
+**Q: 如何参与项目开发？**
+
+A: 欢迎提交 PR，也可以通过邮件联系作者讨论功能需求。
+
+## 📄 许可证
+
+本项目基于 [MIT](./LICENSE) 许可证开源。
+
+## 💌 联系方式
+
+- 📧 **邮箱**: xiaochanghai@foxmail.com
+- 🌐 **主页**: https://github.com/xiaochanghai/eu.admin
+- 🐛 **Issues**: https://github.com/xiaochanghai/eu.admin/issues
+
+## 🙏 鸣谢
+
+- 苏州市创采软件有限公司 费鹏先生
+
+---
+
+<div align="center">
+
+**与君共思共勉！欢迎 Star ⭐ 支持！**
+
+Made with ❤️ by [xiaochanghai](https://github.com/xiaochanghai)
+
+</div>
