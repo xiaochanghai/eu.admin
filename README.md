@@ -54,7 +54,7 @@
 
 ### 相关项目
 
-- 📱 **移动端**: [EU-Admin-ReactNative](https://gitee.com/xiaochanghai520/eu.admin.reactnative)
+- 📱 **移动端**: [EU-Admin-ReactNative](https://github.com/xiaochanghai/eu.admin.reactnative)
 - 🔧 **MCP 框架**: [MCPSharp - 基于 .NET Core 的 MCP 开发框架](https://github.com/xiaochanghai/MCPSharp)
 
 ## 🚀 快速开始
@@ -70,7 +70,7 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://gitee.com/xiaochanghai520/eu-Admin.git
+   git clone https://github.com/xiaochanghai/eu.admin
    cd eu-Admin
    ```
 
@@ -93,7 +93,7 @@
    ```
 
 5. **访问应用**
-   - 前端：http://localhost:5173
+   - 前端：http://localhost:9527
    - API：http://localhost:5000/swagger
 
 ## ⚡ 核心功能
@@ -191,21 +191,6 @@ dotnet run --project EU.Core.Api
 - **后端**: IIS / Docker 容器化部署
 - **容器化**: 详见 [Docker 部署文档](./doc/Docker部署.md)
 
-### 相关脚本
-
-```bash
-# 构建项目
-./EU.Core.Build.bat
-
-# 清理项目
-./EU.Core.Clean.bat
-
-# 发布到 Docker
-./EU.Core.Publish.Docker.sh
-
-# Linux 发布
-./EU.Core.Publish.Linux.sh
-```
 
 ## 📚 技术文档
 
@@ -244,7 +229,7 @@ dotnet run --project EU.Core.Api
 
 ### Issue 提交
 
-- 提 Issue 请到 [Gitee Issues](https://gitee.com/xiaochanghai520/eu-Admin/issues)
+- 提 Issue 请到 [Github Issues](https://github.com/xiaochanghai/eu.admin/issues)
 - Bug 反馈请包含：环境信息、复现步骤、预期结果、实际结果
 
 ## ❓ 常见问题
