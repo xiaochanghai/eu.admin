@@ -34,6 +34,6 @@ public class SmApplicationDeviceController : BaseController<ISmApplicationDevice
     /// <param name="device">设备信息</param>
     /// <returns></returns>
     [HttpPost("Record"), AllowAnonymous]
-    public ServiceResult Record([FromBody] SmApplicationDevice device) => _service.Record(device);
+    public async Task<ServiceResult> Record([FromBody] SmApplicationDevice device) =>await  _service.Record(device);
     #endregion
 }

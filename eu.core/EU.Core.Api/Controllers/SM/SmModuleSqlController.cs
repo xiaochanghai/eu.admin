@@ -34,25 +34,18 @@ public class SmModuleSqlController : BaseController<ISmModuleSqlServices, SmModu
     /// </summary>
     /// <param name="moduleId">模块ID</param>
     /// <returns></returns>
-    [HttpGet]
-    [Route("ByModuleId/{moduleId}")]
-    public async Task<dynamic> GetModuleInfo(Guid moduleId)
-    {
-        return await _service.GetByModuleId(moduleId);
-    }
+    [HttpGet, Route("ByModuleId/{moduleId}")]
+    public async Task<dynamic> GetModuleInfo(Guid moduleId) => await _service.GetByModuleId(moduleId);
     #endregion
 
-    #region 获取模块信息
+    #region 获取模块完整SQL
     /// <summary>
-    /// 获取模块信息
+    /// 获取模块完整SQL
     /// </summary>
     /// <param name="moduleId">模块ID</param>
     /// <returns></returns>
     [HttpPost, Route("GetModuleFullSql/{moduleId}")]
-    public async Task<ServiceResult<string>> GetModuleFullSql(Guid moduleId)
-    {
-        return await _service.GetModuleFullSql(moduleId);
-    }
+    public async Task<ServiceResult<string>> GetModuleFullSql(Guid moduleId) => await _service.GetModuleFullSql(moduleId);
     #endregion
 
 }

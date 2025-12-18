@@ -74,7 +74,7 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
         if (address == null)
             address = await src.Where(x => x.CustomerId == masterId && x.IsActive == true && x.IsDeleted == false).FirstAsync();
 
-        return ServiceResult<BdCustomerDeliveryAddress>.OprateSuccess(address);
+        return Success(address);
 
     }
 }

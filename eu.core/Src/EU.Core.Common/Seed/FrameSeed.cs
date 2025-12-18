@@ -1,15 +1,18 @@
+using EU.Core.Common.Helper;
+using SqlSugar;
 using System.Text;
 using System.Text.RegularExpressions;
-using EU.Core.Common.Helper;
-using EU.Core.Model;
-using SqlSugar;
 
 namespace EU.Core.Common.Seed;
 
 public class FrameSeed
 {
 
-    public static string path = AppDomain.CurrentDomain.BaseDirectory.Replace("EU.Core.Api\\bin\\Debug\\net8.0\\", null).Replace("Src\\EU.CodeGenerator\\bin\\Debug\\net8.0\\", null);
+    public static string path = AppDomain.CurrentDomain.BaseDirectory
+        .Replace("EU.Core.Api\\bin\\Debug\\net9.0\\", null)
+        .Replace("EU.Core.Api\\bin\\Release\\net9.0\\", null) 
+        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net9.0\\", null)
+        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net9.0\\", null);
     /// <summary>
     /// 生成Controller层
     /// </summary>
@@ -21,7 +24,7 @@ public class FrameSeed
     public static bool CreateControllers(SqlSugarScope sqlSugarClient, string ConnId = null, bool isMuti = false, string[] tableNames = null)
     {
         Create_Controller_ClassFileByDBTalbe(sqlSugarClient, ConnId, path + $@"EU.Core.Api\Controllers", "EU.Core.Api.Controllers", tableNames, "", isMuti);
-        return true;
+        return true; 
     }
 
     /// <summary>

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/9/23 22:55:24  SahHsiao   初版
+* V0.01  2025/10/25 22:48:25  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -36,9 +36,9 @@ public class SmImpTemplateDetailBase : BasePoco
     public int? ColumnNo { get; set; }
 
     /// <summary>
-    /// 列名称
+    /// 列代码
     /// </summary>
-    [Display(Name = "ColumnCode"), Description("列名称"), MaxLength(32, ErrorMessage = "列名称 不能超过 32 个字符")]
+    [Display(Name = "ColumnCode"), Description("列代码"), MaxLength(32, ErrorMessage = "列代码 不能超过 32 个字符")]
     public string ColumnCode { get; set; }
 
     /// <summary>
@@ -118,4 +118,22 @@ public class SmImpTemplateDetailBase : BasePoco
     /// </summary>
     [Display(Name = "RowNo"), Description("Execl行号")]
     public int? RowNo { get; set; }
+
+    /// <summary>
+    /// 列名称
+    /// </summary>
+    [Display(Name = "ColumnName"), Description("列名称"), MaxLength(32, ErrorMessage = "列名称 不能超过 32 个字符")]
+    public string ColumnName { get; set; }
+
+    /// <summary>
+    /// 通用下拉ID
+    /// </summary>
+    [Display(Name = "CommonListSqlId"), Description("通用下拉ID")]
+    public Guid? CommonListSqlId { get; set; }
+
+    /// <summary>
+    /// 序号
+    /// </summary>
+    [Display(Name = "SerialNumber"), Description("序号")]
+    public int? SerialNumber { get; set; }
 }

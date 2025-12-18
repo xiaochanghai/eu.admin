@@ -2,10 +2,7 @@ import React from "react";
 import { Card, Descriptions, Tag, Typography } from "antd";
 import "./index.less";
 
-const {
-  // Link,
-  Title
-} = Typography;
+const { Link, Title } = Typography;
 const style = { width: "280px" };
 
 const About: React.FC = () => {
@@ -19,10 +16,9 @@ const About: React.FC = () => {
           关于
         </Title>
         <span className="text">
-          {/* <Link href="https://github.com/xiaochanghai/eu-admin" target="_blank">
+          <Link href="https://github.com/xiaochanghai/eu-admin" target="_blank">
             EU-Admin
-          </Link> */}
-          EU-Admin
+          </Link>
           一款基于.NET8、React18、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5、MCP
           的实现的通用管理平台框架，开箱即用。集成SqlSugar、缓存、 通讯、远程请求、任务调度等 开源的后台管理框架。
         </span>
@@ -39,7 +35,7 @@ const About: React.FC = () => {
           <Descriptions.Item label="发布时间">
             <Tag color="processing">{lastBuildTime}</Tag>
           </Descriptions.Item>
-          {/* <Descriptions.Item label="Gitee">
+          <Descriptions.Item label="Gitee">
             <Link href="https://gitee.com/xiaochanghai520/eu-admin" target="_blank">
               Gitee
             </Link>
@@ -58,7 +54,7 @@ const About: React.FC = () => {
             <Link href="http://116.204.98.209:9527/" target="_blank">
               预览地址
             </Link>
-          </Descriptions.Item> */}
+          </Descriptions.Item>
         </Descriptions>
       </Card>
 

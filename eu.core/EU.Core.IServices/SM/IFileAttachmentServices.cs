@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using EU.Core.Model.ViewModels.Extend;
+
 namespace EU.Core.IServices;
 
 /// <summary>
@@ -31,4 +33,13 @@ public interface IFileAttachmentServices : IBaseServices<FileAttachment, FileAtt
     Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload);
 
     Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null);
+
+    /// <summary>
+    /// 通过文件地址导入数据
+    /// </summary>
+    /// <param name="fileUrl">文件地址</param>
+    /// <returns></returns>
+    Task<ServiceResult<FileAttachment>> AddByFileUrl(string fileUrl);
+
+    Task<ServiceResult<AnalysisUploadResult>> AnalysisUploadAsync(UploadForm upload);
 }

@@ -35,7 +35,17 @@ public class SmWorkFlowController : BaseController<ISmWorkFlowServices, SmWorkFl
     /// <param name="node">节点数据</param>
     /// <param name="id">流程ID</param>
     /// <returns></returns>
-    [HttpPost("{id}")]
-    public Task<ServiceResult> NodeSave([FromBody] WorkFlowNode node, Guid id) => _service.NodeSave(node, id);
+    [HttpPost("Publish/{id}")]
+    public Task<ServiceResult> NodeSave([FromBody] WorkFlowNode node, Guid id) => _service.NodeSave(node.childNode, id);
+    #endregion
+
+    #region 获取流程节点
+    /// <summary>
+    /// 获取流程节点
+    /// </summary>
+    /// <param name="id">流程ID</param>
+    /// <returns></returns>
+    [HttpGet("QueryNode/{id}")]
+    public Task<ServiceResult<WorkFlowNode>> QueryNode(Guid id) => _service.QueryNode(id);
     #endregion
 }

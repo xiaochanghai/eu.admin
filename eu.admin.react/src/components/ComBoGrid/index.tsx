@@ -1,88 +1,156 @@
-import { Select, Spin } from "antd";
-import { useState, useEffect } from "react";
+import { Select, Spin, message } from "antd";
+import { useState, useEffect, useCallback } from "react";
 import { getComboGridData } from "@/api/modules/module";
-import { SmLovData } from "@/api/interface/index";
+import { SmLovData } from "@/typings";
 
-let page = 1;
-let oldData: any[] = [];
-// let searchValue = "";
-const ComBoGrid: React.FC<any> = props => {
+interface ComBoGridProps {
+  value?: string | null;
+  onChange?: (value: string | null, option?: any, record?: SmLovData[] | null) => void;
+  code?: string;
+  id?: string;
+  parentColumn?: string;
+  parentId?: string | number | null;
+  pageSize?: number;
+  [key: string]: any;
+}
+
+const ComBoGrid: React.FC<ComBoGridProps> = props => {
+  const { onChange, code, parentColumn, id, parentId, pageSize = 1000, value, ...restProps } = props;
   const [loading, setLoading] = useState<boolean>(false);
-  const [comboValue, setComboValue] = useState<string>("");
+  const [comboValue, setComboValue] = useState<string | null>("");
   const [dropDownData, setDropDownData] = useState<SmLovData[]>([]);
-  let { onChange, code, parentColumn, id, parentId } = props;
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [cachedData, setCachedData] = useState<SmLovData[]>([]);
+
+  // 同步外部 value
   useEffect(() => {
-    setComboValue("");
-    queryLoadData();
+    if (value !== undefined) {
+      setComboValue(value);
+    }
+  }, [value]);
+
+  // 当 parentId 变化时重置组件状态
+  useEffect(() => {
+    setComboValue(value ?? "");
+    setCurrentPage(1);
+    setCachedData([]);
+    queryLoadData("", false, 1);
   }, [parentId]);
 
   /**
    * 下拉数据查询
-   * @param {*} sql
+   * @param searchValue - 搜索关键字
+   * @param isSearch - 是否为搜索操作
+   * @param targetPage - 目标页码
    */
-  const queryLoadData = async (value = "", isSearch = false) => {
-    if (isSearch) {
-      page = 1;
-      oldData = [];
-    }
-    // if (!parentId) parentId = props.parentId;
+  const queryLoadData = useCallback(
+    async (searchValue = "", isSearch = false, targetPage?: number) => {
+      try {
+        const pageToLoad = targetPage ?? currentPage;
 
-    // searchValue = value; // 记住搜索值，下拉事件调用
-    if (value) setLoading(true); // 查询显示加载
-    let paramData = {
-      current: page,
-      pageSize: 1000,
-      code: code ?? id,
-      key: value,
-      parentColumn,
-      parentId
-    };
+        // 搜索时重置状态
+        if (isSearch) {
+          setCurrentPage(1);
+          setCachedData([]);
+        }
 
-    // 联动上级数据
-    // let newParentId;
-    // let oldParentId;
-    // if (parentId) newParentId = Object.values(parentId)[0];
-    // else if (this.state.parentId) oldParentId = Object.values(this.state.parentId)[0];
+        // 显示加载状态
+        if (searchValue) {
+          setLoading(true);
+        }
 
-    // if (newParentId != oldParentId) {
-    //   page = 1;
-    //   oldData = [];
-    //   this.setState({ comboValue: "", loading: false, dropDownData: oldData });
-    // }
+        const paramData = {
+          current: isSearch ? 1 : pageToLoad,
+          pageSize,
+          code: code ?? id,
+          key: searchValue,
+          parentColumn,
+          parentId
+        };
 
-    let { Data, Success } = await getComboGridData(paramData);
-    setDropDownData(Data);
+        const { Data, Success } = await getComboGridData(paramData);
 
-    if (Success && Data.length > 0) setDropDownData([...oldData, ...Data]);
-    else setDropDownData(oldData);
-    setLoading(false);
-  };
+        if (Success && Data && Data.length > 0) {
+          // 搜索时使用新数据，否则追加数据
+          const newData = isSearch ? Data : [...cachedData, ...Data];
+          setCachedData(newData);
+          setDropDownData(newData);
+
+          // 更新页码（用于滚动加载更多）
+          if (!isSearch) {
+            setCurrentPage(prev => prev + 1);
+          }
+        } else if (isSearch) {
+          // 搜索无结果时清空
+          setCachedData([]);
+          setDropDownData([]);
+        } else {
+          // 保持原有数据
+          setDropDownData(cachedData);
+        }
+      } catch (error) {
+        console.error("ComBoGrid 数据加载失败:", error);
+        message.error("数据加载失败，请重试");
+        setDropDownData(cachedData);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, cachedData, pageSize, code, id, parentColumn, parentId]
+  );
+
+  /**
+   * 处理值变化
+   */
+  const handleChange = useCallback(
+    (newValue: string, option: any) => {
+      let record: SmLovData[] | null = null;
+
+      if (newValue && dropDownData.length > 0) {
+        record = dropDownData.filter(item => item.value === newValue);
+      }
+
+      setComboValue(newValue);
+
+      if (onChange) {
+        onChange(newValue, option, record);
+      }
+    },
+    [dropDownData, onChange]
+  );
+
+  /**
+   * 处理搜索
+   */
+  const handleSearch = useCallback(
+    (searchValue: string) => {
+      queryLoadData(searchValue, true);
+    },
+    [queryLoadData]
+  );
+
+  /**
+   * 处理清空
+   */
+  const handleClear = useCallback(() => {
+    setCurrentPage(1);
+    setCachedData([]);
+    queryLoadData("", false, 1);
+  }, [queryLoadData]);
 
   return (
     <Select
       allowClear
-      showSearch={true}
+      showSearch
       filterOption={false}
       value={comboValue}
       notFoundContent={loading ? <Spin size="small" /> : null}
       style={{ width: "100%" }}
-      onSearch={value => {
-        queryLoadData(value, true);
-      }}
-      {...props}
-      onChange={(value, Option) => {
-        let r = null;
-        if (dropDownData && dropDownData.length > 0)
-          r = dropDownData.filter(function (s) {
-            return s.value === value; // 注意：IE9以下的版本没有trim()方法
-          });
-        setComboValue(value);
-        if (onChange) onChange(value, Option, r);
-      }}
-      onClear={() => {
-        queryLoadData();
-      }}
+      onSearch={handleSearch}
+      onChange={handleChange}
+      onClear={handleClear}
       options={dropDownData}
+      {...restProps}
     />
   );
 };

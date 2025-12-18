@@ -1,7 +1,7 @@
 ﻿using RestSharp;
 using System;
 
-namespace EU.Core.Common.HttpRestSharp
+namespace Blog.Core.Common.HttpRestSharp
 {
     /// <summary>
     /// API请求执行者接口

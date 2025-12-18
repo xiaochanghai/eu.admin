@@ -1,7 +1,12 @@
-import { routeIcon, dealIcon, notifierIcon, sealIcon } from "../icons";
+import {
+  // routeIcon,
+  //  dealIcon,
+  notifierIcon,
+  sealIcon
+} from "../icons";
 import { NodeType } from "../interfaces";
 import { INodeMaterial } from "../interfaces/material";
-import { createUuid } from "../utils/create-uuid";
+// import { createUuid } from "../utils/create-uuid";
 
 //dlc 点击添加能出现的面板数据
 export const defaultMaterials: INodeMaterial[] = [
@@ -36,38 +41,38 @@ export const defaultMaterials: INodeMaterial[] = [
     defaultConfig: {
       nodeType: NodeType.notifier
     }
-  },
-  {
-    color: "#fb602d",
-    label: "dealer",
-    icon: dealIcon,
-    defaultConfig: {
-      nodeType: NodeType.audit
-    }
-  },
-  //条件节点
-  {
-    color: "#15bc83",
-    label: "routeNode",
-    icon: routeIcon,
-    createDefault: ({ t }) => {
-      return {
-        id: createUuid(),
-        nodeType: NodeType.route,
-        conditionNodeList: [
-          {
-            id: createUuid(),
-            nodeType: NodeType.condition,
-            name: t?.("condition") + "1"
-          },
-          {
-            id: createUuid(),
-            nodeType: NodeType.condition,
-            name: t?.("condition") + "2"
-          }
-        ]
-      };
-    }
+    // },
+    // {
+    //   color: "#fb602d",
+    //   label: "dealer",
+    //   icon: dealIcon,
+    //   defaultConfig: {
+    //     nodeType: NodeType.audit
+    //   }
+    // },
+    // {
+    //   //条件节点
+    //   color: "#15bc83",
+    //   label: "routeNode",
+    //   icon: routeIcon,
+    //   createDefault: ({ t }) => {
+    //     return {
+    //       id: createUuid(),
+    //       nodeType: NodeType.route,
+    //       conditionNodeList: [
+    //         {
+    //           id: createUuid(),
+    //           nodeType: NodeType.condition,
+    //           name: t?.("condition") + "1"
+    //         },
+    //         {
+    //           id: createUuid(),
+    //           nodeType: NodeType.condition,
+    //           name: t?.("condition") + "2"
+    //         }
+    //       ]
+    //     };
+    //   }
   },
   //分支节点
   {

@@ -4,10 +4,12 @@ import { Flex, Form, Card, message } from "antd";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
 import MaterialQuery from "../salesOrder/MaterialQuery";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import http from "@/api";
 import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
+import { SaveTypeEnum, ModifyType } from "@/typings";
+import { STANDARD_FORM_LAYOUT } from "@/config";
 
 // type DataSourceType = {
 //   id: React.Key;
@@ -51,7 +53,7 @@ const FormPage: React.FC<any> = props => {
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
   let moduleInfo1 = moduleInfos["SD_SALES_CHANGE_ORDER_DETAIL_MNG"];
 
-  let { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
+  let { formColumns, url, isDetail, masterColumn, menuData } = moduleInfo;
   let actionAuthButton: { [key: string]: boolean } = {};
   menuData?.forEach((item: any) => {
     actionAuthButton[item.FunctionCode] = true;
@@ -186,7 +188,7 @@ const FormPage: React.FC<any> = props => {
       </Flex>
     );
   };
-  const onFinish = async (data: any, type = "Save") => {
+  const onFinish = async (data: any, type = SaveTypeEnum.Save) => {
     message.loading("数据提交中...", 0);
     if (id) data = { ...data, url, Id: id ?? null };
     else data = { ...data, url };
@@ -206,8 +208,8 @@ const FormPage: React.FC<any> = props => {
       if (onDisabled) onDisabled(true);
       if (tableRef.current) tableRef.current.reload();
 
-      if (openType === "Modal" || openType === "Drawer") onReload();
-      if (type === "SaveAdd") {
+      // if (openType === "Modal" || openType === "Drawer") onReload();
+      if (type === SaveTypeEnum.SaveAdd) {
         setViewId(null);
         setDisabled(true);
         form.resetFields();
@@ -220,9 +222,9 @@ const FormPage: React.FC<any> = props => {
     }
   };
   const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
+  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, SaveTypeEnum.SaveAdd));
   const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
+    onDisabled?.(false);
     setDisabledToolbar(false);
     setDisabled(false);
   };
@@ -232,22 +234,7 @@ const FormPage: React.FC<any> = props => {
 
   return (
     <>
-      <Form
-        labelCol={{
-          xs: { span: 8 },
-          sm: { span: 8 },
-          md: { span: 8 }
-        }}
-        wrapperCol={{
-          xs: { span: 16 },
-          sm: { span: 16 },
-          md: { span: 16 }
-        }}
-        labelWrap
-        onFinish={onFinish}
-        onValuesChange={onValuesChange}
-        form={form}
-      >
+      <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={onFinish} onValuesChange={onValuesChange} form={form}>
         <FormToolbar
           moduleInfo={moduleInfo}
           disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
@@ -255,14 +242,17 @@ const FormPage: React.FC<any> = props => {
           modifyType={orderStatus == "WaitShip" ? modifyType : ModifyType.View}
           auditStatus={auditStatus}
           masterId={id}
-          onBack={() => changePage("FormIndex")}
+          onBack={() => {
+            onReload?.();
+            changePage("FormIndex");
+          }}
           onReload={() => querySingleData()}
         />
         {isLoading ? (
           <Loading />
         ) : (
           <>
-            <Card size="small" bordered={false}>
+            <Card size="small" variant="borderless">
               {component()}
             </Card>
 
@@ -273,12 +263,10 @@ const FormPage: React.FC<any> = props => {
               onSubmit={async (values: any) => {
                 for (let i = 0; i < values.length; i++) values[i].OrderId = id;
                 let { Success } = await http.post<any>("/api/SdOrderDetail/BulkInsert", values);
-                if (Success) {
-                  if (tableRef.current) tableRef.current.reload();
-                }
+                if (Success) tableRef.current?.reload();
               }}
             />
-            <Card title="物料信息" bordered={false} className="card-small">
+            <Card title="物料信息" variant="borderless" className="card-small">
               <EditableProTable
                 moduleCode="SD_SALES_CHANGE_ORDER_DETAIL_MNG"
                 tableRef={tableRef}

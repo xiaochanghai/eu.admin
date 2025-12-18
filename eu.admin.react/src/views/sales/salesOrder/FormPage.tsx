@@ -3,21 +3,34 @@ import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card } from "antd";
 import { querySingle, add, update } from "@/api/modules/module";
 import MaterialQuery from "./MaterialQuery";
-import { Attachment } from "@/components";
+
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { setId } from "@/redux/modules/module";
 import http from "@/api";
 // import WaitShipSelect from "./WaitShipSelect";
 import { message } from "@/hooks/useMessage";
-import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
+import { Attachment, Loading, Element, FormToolbar, EditableProTable } from "@/components";
 
-const FormPage: React.FC<any> = props => {
+import { ViewType, SaveTypeEnum, ModifyType } from "@/typings";
+import { STANDARD_FORM_LAYOUT } from "@/config";
+
+interface FormPageProps {
+  Id?: string | null;
+  moduleCode: string;
+  formPageRef?: any;
+  IsView?: boolean;
+  onDisabled?: (disabled: boolean) => void;
+  masterId?: string;
+  onReload?: () => void;
+  changePage: (viewType: ViewType, id?: string, isView?: boolean) => void;
+}
+const FormPage: React.FC<FormPageProps> = props => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [disabled, setDisabled] = useState(true);
   const [materialQueryVisible, setMaterialQueryVisible] = useState(false);
-  const [id, setViewId] = useState(null);
+  const [id, setViewId] = useState(props.Id ?? "");
   const [modifyType, setModifyType] = useState(ModifyType.Add);
   const [disabledToolbar, setDisabledToolbar] = useState(true);
   const [taxType, setTaxType] = useState("");
@@ -44,7 +57,7 @@ const FormPage: React.FC<any> = props => {
   } = props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
 
-  let { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
+  let { formColumns, url, isDetail, masterColumn, menuData } = moduleInfo;
   let actionAuthButton: { [key: string]: boolean } = {};
   menuData?.forEach((item: any) => {
     actionAuthButton[item.FunctionCode] = true;
@@ -56,7 +69,7 @@ const FormPage: React.FC<any> = props => {
       setAuditStatus(Data.AuditStatus);
       setOrderStatus(Data.SalesOrderStatus);
       // debugger;
-      if (Data.AuditStatus != ModifyType.Add) {
+      if (Data.AuditStatus !== ModifyType.Add) {
         setDisabled(true);
         setModifyType(ModifyType.AuditPass);
       }
@@ -89,7 +102,7 @@ const FormPage: React.FC<any> = props => {
               .filter((f: any) => f.HideInForm === false)
               .map((item: any, index: any) => {
                 const width = (item.GridSpan != null ? item?.GridSpan : 50) + "%";
-                if (item.DataIndex == "CustomerId")
+                if (item.DataIndex === "CustomerId")
                   return (
                     <div
                       style={{
@@ -124,7 +137,7 @@ const FormPage: React.FC<any> = props => {
                       />
                     </div>
                   );
-                else if (item.DataIndex == "TaxType")
+                else if (item.DataIndex === "TaxType")
                   return (
                     <div
                       style={{
@@ -147,7 +160,7 @@ const FormPage: React.FC<any> = props => {
                       />
                     </div>
                   );
-                else if (item.DataIndex == "TaxRate")
+                else if (item.DataIndex === "TaxRate")
                   return (
                     <div
                       style={{
@@ -158,7 +171,7 @@ const FormPage: React.FC<any> = props => {
                       <Element
                         field={item}
                         disabled={disabled ?? IsView}
-                        modifyType={taxType == "ZeroTax" ? ModifyType.Add : modifyType}
+                        modifyType={taxType === "ZeroTax" ? ModifyType.Add : modifyType}
                       />
                     </div>
                   );
@@ -177,27 +190,33 @@ const FormPage: React.FC<any> = props => {
       </Flex>
     );
   };
-  const onFinish = async (data: any, type = "Save") => {
+  const onFinish = async (data: any, type = SaveTypeEnum.Save) => {
     message.loading("数据提交中...", 0);
-    if (id) data = { ...data, url, Id: id ?? null };
-    else data = { ...data, url };
-    if (isDetail) data[masterColumn] = masterId;
-    data["ModuleCode"] = moduleCode;
 
-    for (let key in data) data[key] = data[key] ?? null;
-    let { Data, Success, Message } = id ? await update(data) : await add(data);
+    const formData = {
+      ...data,
+      url,
+      ModuleCode: moduleCode,
+      ...(id && { Id: id })
+    };
+    if (isDetail) formData[masterColumn] = masterId;
+
+    // for (let key in data) data[key] = data[key] ?? null;
+
+    Object.keys(formData).forEach(key => {
+      if (formData[key] === undefined) formData[key] = null;
+    });
+    let { Data, Success, Message } = id ? await update(formData) : await add(formData);
 
     message.destroy();
-    if (modifyType == ModifyType.View) {
-      // modifyType = "1";
-    }
+
     if (Success) {
       message.success(Message);
       setDisabledToolbar(true);
-      if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
-      if (type === "SaveAdd") {
-        setViewId(null);
+      onDisabled?.(false);
+      // if (openType === "Modal" || openType === "Drawer") onReload();
+      if (type === SaveTypeEnum.SaveAdd) {
+        setViewId("");
         setDisabled(true);
         form.resetFields();
       } else if (!id) {
@@ -209,9 +228,9 @@ const FormPage: React.FC<any> = props => {
     }
   };
   const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
+  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, SaveTypeEnum.SaveAdd));
   const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
+    onDisabled?.(false);
     setDisabledToolbar(false);
     setDisabled(false);
   };
@@ -276,30 +295,18 @@ const FormPage: React.FC<any> = props => {
         <Loading />
       ) : (
         <>
-          <Form
-            labelCol={{
-              xs: { span: 8 },
-              sm: { span: 8 },
-              md: { span: 8 }
-            }}
-            wrapperCol={{
-              xs: { span: 16 },
-              sm: { span: 16 },
-              md: { span: 16 }
-            }}
-            labelWrap
-            onFinish={onFinish}
-            onValuesChange={onValuesChange}
-            form={form}
-          >
+          <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={onFinish} onValuesChange={onValuesChange} form={form}>
             <FormToolbar
               moduleInfo={moduleInfo}
               disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
               onFinishAdd={onSaveAdd}
-              modifyType={orderStatus == "WaitShip" ? modifyType : ModifyType.View}
+              modifyType={orderStatus === "WaitShip" ? modifyType : ModifyType.View}
               auditStatus={auditStatus}
               masterId={id}
-              onBack={() => changePage("FormIndex")}
+              onBack={() => {
+                onReload?.();
+                changePage(ViewType.INDEX);
+              }}
               onReload={() => querySingleData()}
               // expendAction={
               //   moduleInfo &&
@@ -367,7 +374,7 @@ const FormPage: React.FC<any> = props => {
               //   ) : null
               // ]}
             />
-            <Card size="small" bordered={false}>
+            <Card size="small" variant="borderless">
               {component()}
             </Card>
           </Form>
@@ -379,18 +386,16 @@ const FormPage: React.FC<any> = props => {
             onSubmit={async (values: any) => {
               for (let i = 0; i < values.length; i++) values[i].OrderId = id;
               let { Success } = await http.post<any>("/api/SdOrderDetail/BulkInsert", values);
-              if (Success) if (tableRef.current) tableRef.current.reload();
+              if (Success) tableRef.current?.reload();
             }}
           />
-          <Card title="物料信息" bordered={false}>
+          <Card title="物料信息" variant="borderless">
             <EditableProTable
               moduleCode="SD_SALES_ORDER_DETAIL_MNG"
               tableRef={tableRef}
               modifyType={modifyType}
               masterId={id}
-              addCallBack={() => {
-                setMaterialQueryVisible(true);
-              }}
+              addCallBack={() => setMaterialQueryVisible(true)}
               editableCallBack={(originData: any, data: any) => {
                 originData.NoTaxAmount = data.NoTaxAmount;
                 originData.TaxAmount = data.TaxAmount;
@@ -401,8 +406,8 @@ const FormPage: React.FC<any> = props => {
           </Card>
 
           <div style={{ height: 20 }}></div>
-          <Card title="附件" bordered={false}>
-            <Attachment Id={id} IsView={modifyType == ModifyType.Edit ? false : true} />
+          <Card title="附件" variant="borderless">
+            <Attachment Id={id} IsView={modifyType === ModifyType.Edit ? false : true} />
           </Card>
         </>
       )}

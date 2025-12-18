@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import React, { useState, useRef } from "react";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 // import { Button } from "antd";
 import { message, modal } from "@/hooks/useMessage";
@@ -7,7 +7,7 @@ import { message, modal } from "@/hooks/useMessage";
 // import WaitShipSelect from "../salesOrder/WaitShipSelect";
 import http from "@/api";
 const { confirm } = modal;
-import { Icon } from "@/components";
+import { ActionType } from "@/typings";
 
 // let tableAction: any = {};
 const Index: React.FC<any> = () => {
@@ -20,6 +20,7 @@ const Index: React.FC<any> = () => {
   // const [waitShipSelectType, setWaitShipSelectType] = useState("Ship");
   // const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   // let moduleInfo = moduleInfos[moduleCode] as any;
+  const tableRef = useRef<ActionType>();
 
   const changePage = (value: any, id: string, isView: any) => {
     if (value == "FormPage") {
@@ -63,12 +64,15 @@ const Index: React.FC<any> = () => {
   const action = {
     SalesReturnOrderCarry
   };
+  const onReload = () => tableRef.current?.reload();
+
   return (
     <>
-      {viewType == "FormIndex" ? (
+      <div style={{ display: viewType === "FormIndex" ? "block" : "none" }}>
         <TableList
           moduleCode={moduleCode}
           changePage={changePage}
+          tableActionRef={tableRef}
           // expendAction={() => (
           //   <>
           //     {moduleInfo &&
@@ -99,10 +103,10 @@ const Index: React.FC<any> = () => {
           //   // );
           // }}
         />
-      ) : null}
-      {viewType == "FormPage" ? (
-        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={changePage} />
-      ) : null}
+      </div>
+      {viewType == "FormPage" && (
+        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={changePage} onReload={onReload} />
+      )}
 
       {/* <WaitShipSelect
         modalVisible={waitShipSelectVisible}

@@ -1,9 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Form } from "antd";
 import { ComboGrid } from "@/components";
-import { ModifyType, SmLovData } from "@/api/interface/index";
 import FieldTitle from "./FieldTitle";
-import { FieldProps } from "@/typings";
+import { FieldProps, SmLovData, ModifyType } from "@/typings";
 
 const FormItem = Form.Item;
 
@@ -27,18 +26,31 @@ interface ComboGridFieldProps {
 
 /**
  * 下拉表格选择框组件
+ * 功能：封装ComboGrid组件，提供统一的表单字段样式和验证规则
+ * 特性：
+ * 1. 支持必填验证
+ * 2. 支持禁用状态
+ * 3. 支持父子级联动查询
+ * 4. 自动处理字段标题和提示信息
+ * 5. 使用 React.memo 优化性能
+ *
  * @param props - 组件属性
  * @returns React组件
  */
-const ComboGridField: React.FC<ComboGridFieldProps> = props => {
-  const { field, disabled, onChange, parentColumn, parentId, modifyType } = props;
+const ComboGridField: React.FC<ComboGridFieldProps> = ({
+  field,
+  disabled,
+  onChange,
+  parentColumn,
+  parentId,
+  modifyType = ModifyType.Edit
+}) => {
   const { DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
 
-  // 根据条件确定是否禁用组件
-  // 1. 如果是编辑模式且设置了ModifyDisabled，则禁用
-  // 2. 如果设置了Disabled，则禁用
-  // 3. 如果外部传入disabled，则禁用
-  const isDisabled = (modifyType === ModifyType.Edit && ModifyDisabled) || Disabled || disabled;
+  // 根据修改类型和字段属性设置禁用状态
+  const isDisabled = useMemo(() => {
+    return (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled || disabled;
+  }, [modifyType, ModifyDisabled, Disabled, disabled]);
 
   /**
    * 处理值变更事件
@@ -47,25 +59,32 @@ const ComboGridField: React.FC<ComboGridFieldProps> = props => {
    * @param record - 选中的记录数据
    */
   const handleChange = useCallback(
-    (value: string, option: any, record?: SmLovData[] | null) => {
-      onChange?.(value, option, record);
+    (value: string | null, option: any, record?: SmLovData[] | null) => {
+      onChange?.(value ?? "", option, record);
     },
     [onChange]
   );
 
+  // 验证规则
+  const validationRules = useMemo(
+    () => [
+      {
+        required: Required ?? false,
+        message: `请选择${FormTitle}!`
+      }
+    ],
+    [Required, FormTitle]
+  );
+
   return (
-    <FormItem
-      name={DataIndex}
-      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={[{ required: Required ?? false, message: `请输入${FormTitle}!` }]}
-    >
+    <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules}>
       <ComboGrid
         code={DataSource} // 数据源代码，用于获取下拉选项
         disabled={isDisabled}
         onChange={handleChange}
         parentColumn={parentColumn} // 父级列名，用于联动查询
         parentId={parentId} // 父级ID，用于联动查询
-        placeholder={Placeholder ?? ""}
+        placeholder={Placeholder ?? "请选择"}
       />
     </FormItem>
   );

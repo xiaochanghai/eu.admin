@@ -286,7 +286,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
   };
   const showLogRecord = async (selectedRows: any) => {
     setRecordLogVisible(true);
-    let { Data } = await getModuleLogInfo({ moduleCode, id: selectedRows[0].ID });
+    let { Data } = await getModuleLogInfo(moduleCode, selectedRows[0].ID);
     setRecordLogData(Data);
   };
   const showLogRecordCancel = () => {

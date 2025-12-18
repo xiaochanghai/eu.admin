@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/9/23 22:55:24  SahHsiao   初版
+* V0.01  2025/10/25 22:48:25  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -37,9 +37,9 @@ public class SmImpTemplateDetail : BasePoco
     public int? ColumnNo { get; set; }
 
     /// <summary>
-    /// 列名称
+    /// 列代码
     /// </summary>
-    [Display(Name = "ColumnCode"), Description("列名称"), SugarColumn(IsNullable = true, Length = 32)]
+    [Display(Name = "ColumnCode"), Description("列代码"), SugarColumn(IsNullable = true, Length = 32)]
     public string ColumnCode { get; set; }
 
     /// <summary>
@@ -119,4 +119,22 @@ public class SmImpTemplateDetail : BasePoco
     /// </summary>
     [Display(Name = "RowNo"), Description("Execl行号"), SugarColumn(IsNullable = true)]
     public int? RowNo { get; set; }
+
+    /// <summary>
+    /// 列名称
+    /// </summary>
+    [Display(Name = "ColumnName"), Description("列名称"), SugarColumn(IsNullable = true, Length = 32)]
+    public string ColumnName { get; set; }
+
+    /// <summary>
+    /// 通用下拉ID
+    /// </summary>
+    [Display(Name = "CommonListSqlId"), Description("通用下拉ID"), SugarColumn(IsNullable = true)]
+    public Guid? CommonListSqlId { get; set; }
+
+    /// <summary>
+    /// 序号
+    /// </summary>
+    [Display(Name = "SerialNumber"), Description("序号"), SugarColumn(IsNullable = true)]
+    public int? SerialNumber { get; set; }
 }

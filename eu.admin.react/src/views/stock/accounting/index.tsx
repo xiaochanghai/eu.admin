@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import { TableList } from "@/components";
 import FormPage from "./FormPage";
 
 const Index: React.FC<any> = () => {

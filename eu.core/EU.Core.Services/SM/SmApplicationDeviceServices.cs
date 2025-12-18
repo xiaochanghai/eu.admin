@@ -15,11 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-using Google.Protobuf.WellKnownTypes;
 using SqlSugar;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using System.Net.Mail;
 
 namespace EU.Core.Services;
 
@@ -41,36 +37,71 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
     /// </summary>
     /// <param name="device">设备信息</param>
     /// <returns></returns>
-    public ServiceResult Record(SmApplicationDevice device)
+    public async Task<ServiceResult> Record(SmApplicationDevice device)
     {
-        Task.Factory.StartNew(() => DealData(Db, device));
+        // 在当前上下文中获取IP地址，避免在异步任务中HttpContext不可用
+        var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+
+        // 使用异步方法处理数据
+        await Task.Run(() => DealData(device, ipAddress));
+
         return Success(ResponseText.EXECUTE_SUCCESS);
     }
 
-    public void DealData(ISqlSugarClient _Db, SmApplicationDevice input)
+    /// <summary>
+    /// 处理设备数据并记录访问日志
+    /// </summary>
+    /// <param name="input">设备信息</param>
+    /// <param name="ipAddress">IP地址</param>
+    private void DealData(SmApplicationDevice input, string ipAddress)
     {
-
-        var device = _Db.Queryable<SmApplicationDevice>().Where(x => x.UUID == input.UUID).First();
-
-        if (device != null)
+        try
         {
+            // 查询现有设备信息
+            var existingDevice = Db.Queryable<SmApplicationDevice>()
+                .Where(x => x.UUID == input.UUID)
+                .First();
 
-            input.ID = device.ID;
-            _Db.Updateable(input).UpdateColumns(x => new { x.UUID, x.Platform, x.Version, x.Brand, x.Model, x.BundleId, x.BundleVersion, x.UpdateBy, x.UpdateTime }).ExecuteCommand();
+            if (existingDevice != null)
+            {
+                // 更新现有设备信息
+                input.ID = existingDevice.ID;
+                Db.Updateable(input)
+                    .UpdateColumns(x => new
+                    {
+                        x.UUID,
+                        x.Platform,
+                        x.Version,
+                        x.Brand,
+                        x.Model,
+                        x.BundleId,
+                        x.BundleVersion,
+                        x.UpdateBy,
+                        x.UpdateTime
+                    })
+                    .ExecuteCommand();
+            }
+            else
+            {
+                // 插入新设备信息
+                Db.Insertable(input).ExecuteCommand();
+            }
 
+            // 记录设备访问日志
+            var record = new SmApplicationRecord
+            {
+                UUID = input.UUID,
+                LaunchTime = DateTime.Now,
+                IP = ipAddress
+            };
+            Db.Insertable(record).ExecuteCommand();
         }
-        else
-            _Db.Insertable(input).ExecuteCommand();
-
-        var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
-
-        var record = new SmApplicationRecord()
+        catch (Exception ex)
         {
-            UUID = device?.UUID ?? input?.UUID,
-            LaunchTime = DateTime.Now,
-            IP = ipAddress,
-        };
-        Db.Insertable(record).ExecuteCommand();
+            // 记录异常信息（建议注入ILogger进行日志记录）
+            Console.WriteLine($"记录设备信息失败: UUID={input?.UUID}, Error={ex.Message}");
+            throw;
+        }
     }
     #endregion
 }

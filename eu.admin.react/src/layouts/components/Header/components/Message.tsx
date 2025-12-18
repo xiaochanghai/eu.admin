@@ -1,5 +1,5 @@
 import { Badge, Popover, Tabs, Empty } from "antd";
-import type { TabsProps } from "antd";
+import { TabsProps } from "@/typings";
 
 interface IconImports {
   [path: string]: () => Promise<{ default: string }>;

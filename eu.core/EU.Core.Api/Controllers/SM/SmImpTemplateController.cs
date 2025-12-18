@@ -35,6 +35,16 @@ public class SmImpTemplateController : BaseController<ISmImpTemplateServices, Sm
     /// <param name="moduleId">模板ID</param> 
     /// <returns></returns>
     [HttpGet("QueryByModuleId/{moduleId}")]
-    public async Task<ServiceResult<SmImpTemplateDto>> QueryByModuleId(Guid moduleId)=> await _service.QueryByModuleId(moduleId);
+    public async Task<ServiceResult<SmImpTemplateDto>> QueryByModuleId(Guid moduleId) => await _service.QueryByModuleId(moduleId);
+    #endregion
+
+    #region 根据模板ID下载
+    /// <summary>
+    /// 根据模板ID下载
+    /// </summary>
+    /// <param name="templateId">模板ID</param> 
+    /// <returns></returns>
+    [HttpGet("Download/{templateId}"), AllowAnonymous]
+    public async Task<ServiceResult<FileAttachment>> Download(Guid templateId) => await _service.Download(templateId);
     #endregion
 }

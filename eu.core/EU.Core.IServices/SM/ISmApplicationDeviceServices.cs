@@ -22,5 +22,5 @@ namespace EU.Core.IServices;
 public interface ISmApplicationDeviceServices : IBaseServices<SmApplicationDevice, SmApplicationDeviceDto, InsertSmApplicationDeviceInput, EditSmApplicationDeviceInput>
 {
 
-    ServiceResult Record(SmApplicationDevice device);
+    Task<ServiceResult> Record(SmApplicationDevice device);
 }

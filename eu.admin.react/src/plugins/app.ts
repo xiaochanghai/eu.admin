@@ -1,14 +1,13 @@
 import { Button } from "antd";
 import { createElement } from "react";
-//  import { useTranslation } from "react-i18next";
-
-//   import { $t } from "../languages/index";
+import { useTranslation } from "react-i18next";
 
 export function setupAppVersionNotification() {
   const canAutoUpdateApp = import.meta.env.VITE_AUTOMATICALLY_DETECT_UPDATE === "Y";
   const { lastBuildTime } = __APP_INFO__;
   if (!canAutoUpdateApp) return;
   let isShow = false;
+  const { t } = useTranslation();
 
   document.addEventListener("visibilitychange", async () => {
     const preConditions = [!isShow, document.visibilityState === "visible", !import.meta.env.DEV];
@@ -31,8 +30,7 @@ export function setupAppVersionNotification() {
                 window.$notification?.destroy();
               }
             },
-            "稍后再说"
-            // $t("system.updateCancel")
+            t("system.updateCancel")
           ),
           createElement(
             Button,
@@ -43,15 +41,12 @@ export function setupAppVersionNotification() {
               },
               type: "primary"
             },
-            "立即刷新"
-            // $t("system.updateConfirm")
+            t("system.updateConfirm")
           )
         ]);
       })(),
-      description: "检测到系统有新版本发布，是否立即刷新页面？",
-      // $t("system.updateContent")
-      title: "系统版本更新通知",
-      // t("system.updateTitle")
+      description: t("system.updateContent"),
+      title: t("system.updateTitle"),
       onClose() {
         isShow = false;
       }

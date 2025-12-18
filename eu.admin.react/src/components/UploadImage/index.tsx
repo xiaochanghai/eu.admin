@@ -176,7 +176,7 @@ const UploadImage: React.FC<UploadImageProps> = props => {
   const onRemove = useCallback(
     async (file: UploadFile) => {
       try {
-        await http.get<any>(`/api/File/Delete?Id=${file.uid}`);
+        await http.delete<any>(`/api/File/${file.uid}`);
 
         // 更新本地文件列表
         const tempList = [...files];
@@ -215,13 +215,19 @@ const UploadImage: React.FC<UploadImageProps> = props => {
     uid: item.ID,
     name: item.OriginalFileName,
     status: "done" as const,
-    url: `/api/File/GetByUrl?url=${item.FileName}.${item.FileExt}`
+    url: `${VITE_USER_NODE_ENV === "development" ? baseURL : ""}/api/File/Img/${item.ID}`
   }));
 
   // 渲染唯一图片模式
   const renderUniqueMode = () => (
     <Space style={{ justifyContent: "flex-start", float: "left" }}>
-      <Upload accept={accept} listType="picture-card" showUploadList={false} onChange={uploadFileAttachment} disabled={!masterId}>
+      <Upload
+        accept={accept ?? ".png,.jpeg,.jpg"}
+        listType="picture-card"
+        showUploadList={false}
+        onChange={uploadFileAttachment}
+        disabled={!masterId}
+      >
         {imageUrl ? (
           <img src={imageUrl} alt="上传图片" style={{ width: "100%" }} />
         ) : (
@@ -239,12 +245,13 @@ const UploadImage: React.FC<UploadImageProps> = props => {
     <>
       <div>
         <Upload
-          accept={accept}
+          accept={accept ?? ".png,.jpeg,.jpg"}
           listType="picture-card"
           fileList={fileList}
           onChange={uploadFileAttachment}
           onPreview={handlePreview}
           onRemove={onRemove}
+          disabled={!masterId}
         >
           <div>
             <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} className="font-size24" />
@@ -252,14 +259,14 @@ const UploadImage: React.FC<UploadImageProps> = props => {
           </div>
         </Upload>
       </div>
-      <Modal open={previewVisible} title={previewTitle} footer={null} onCancel={() => setPreviewVisible(false)}>
+      <Modal width={800} open={previewVisible} title={previewTitle} footer={null} onCancel={() => setPreviewVisible(false)}>
         <img alt="预览图片" style={{ width: "100%" }} src={previewImage} />
       </Modal>
     </>
   );
 
   // 根据模式渲染不同的上传组件
-  return <>{isUnique ? renderUniqueMode() : masterId ? renderMultipleMode() : null}</>;
+  return <>{isUnique ? renderUniqueMode() : renderMultipleMode()}</>;
 };
 
 // 添加组件显示名称，方便调试

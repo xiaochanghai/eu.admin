@@ -1,5 +1,3 @@
-// import { MinusOutlined, PlusOutlined } from "@ant-design/icons"
-// import { Button, Space } from "antd"
 import { Button, Space } from "antd";
 import { memo } from "react";
 import { styled } from "styled-components";

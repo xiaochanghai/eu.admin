@@ -1,0 +1,333 @@
+using EU.Core.Common.Https.HttpPolly;
+using EU.Core.Common.Module;
+using EU.Core.Model;
+
+namespace EU.Core.Api.MCP.Services.BD;
+
+public class InputSchemaArguments()
+{
+    /// <summary>
+    /// 供应商名称
+    /// </summary>
+    [Description("供应商名称")]
+    public string? name { get; set; }
+
+}
+
+public class CreateSupplierFromFileArguments()
+{
+    /// <summary>
+    /// 文件ID
+    /// </summary>
+    [Description("文件ID")]
+    public string? fileId { get; set; }
+}
+
+
+public class UpdateSupplieArguments()
+{
+    /// <summary>
+    /// 供应商唯一标识
+    /// </summary>
+    [Description("供应商唯一标识")]
+    public string? supplierId { get; set; }
+
+    /// <summary>
+    /// 供应商编号
+    /// </summary>
+    [Description("供应商编号")]
+    public string? supplierNo { get; set; }
+}
+
+public class SupplierService : BaseService<SupplierService, BdSupplier>, ISupplierService
+{
+    IServices.IBdSupplierServices _supplierService;
+    IServices.ISmImpTemplateServices _smImpTemplateServices;
+    private readonly IHttpPollyHelper _httpPollyHelper;
+    private const string MODULE_CODE = "BD_SUPPLIER_MNG";
+    public SupplierService(
+        ILogger<SupplierService> logger,
+        IBaseRepository<BdSupplier> _baseDal,
+        IServices.IBdSupplierServices supplierService,
+        IServices.ISmImpTemplateServices smImpTemplateServices, IHttpPollyHelper httpPollyHelper) : base(logger, _baseDal)
+    {
+        _supplierService = supplierService;
+        _smImpTemplateServices = smImpTemplateServices;
+        _httpPollyHelper = httpPollyHelper;
+    }
+
+    #region 获取供应商列表 
+    /// <summary>
+    /// 获取供应商管理模块的页面代码，用于加载供应商列表界面
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "get_supplier",
+    "用于打开供应商列表页面。当用户希望浏览、查看或管理供应商信息时使用。" +
+    "此工具会返回前端模块标识 'BD_SUPPLIER_MNG'，客户端应据此加载对应的表格组件或跳转至管理界面。" +
+    "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
+    public McpToolResult GetSupplier(object arguments)
+    {
+        return CreateModuleResult(MODULE_CODE, "module_list");
+    }
+    #endregion
+
+    #region 创建供应商 
+    /// <summary>
+    /// 创建供应商管理模块的页面代码，用于加载供应商列表界面
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "create_supplier",
+    "用于打开创建供应商表单页面。当用户希望创建供应商信息时使用。" +
+    "此工具会返回前端模块标识 'BD_SUPPLIER_MNG'，客户端应据此加载对应的表单界面。" +
+    "注意：这是一个页面导航操作，即使之前已调用过，只要用户再次提出查看请求，也应重新调用本工具。")]
+    public McpToolResult CreateSupplier(object arguments)
+    {
+        return CreateModuleResult(MODULE_CODE, "module_edit");
+    }
+    #endregion
+
+    #region 导入供应商 
+    /// <summary>
+    /// 导入供应商，根据传进来的fileId
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "create_supplier_from_file",
+    @"工具名称：create_supplier_from_file
+
+功能描述：
+仅当用户明确表示希望通过**已上传的文件**（如 Excel、CSV 等）**批量或自动创建新供应商**时，才调用此工具。  
+该工具会根据提供的文件标识（fileId）解析文件内容，并在系统中创建对应的供应商记录。
+
+输入参数：
+- fileId（字符串，必填）：由文件上传服务返回的、已成功上传的文件唯一标识。
+
+触发条件（必须同时满足）：
+- 用户意图是**创建/新增/导入**供应商（而非查看、查询、获取、编辑）；
+- 用户明确提及**文件、上传、导入、批量、模板、Excel、CSV**等关键词；
+- 用户提供了或系统上下文中存在有效的 fileId。
+
+行为说明：
+- 工具将解析文件并校验数据（如必填字段、唯一性约束等）；
+- 若校验失败（如格式错误、缺少字段、编码重复等），返回具体错误原因；
+- 创建成功后，返回新供应商 ID 及前端跳转模块（如 BD_SUPPLIER_DETAIL）。
+
+注意事项：
+- ❗ 本工具为**数据写入操作**，不可用于查询、查看或获取已有供应商信息；
+- ❗ 若用户仅说“获取供应商”“查看供应商列表”“查一下供应商”，**绝对不应调用此工具**；
+- ❗ 请勿与仅用于打开表单页面的 create_supplier 或用于查询的 get_supplier 工具混淆；
+- 调用前必须确认 fileId 有效且用户有权限访问该文件。",
+            typeof(CreateSupplierFromFileArguments))]
+
+    public McpToolResult CreateSupplierFromFile(object arguments)
+    {
+        return CreateModuleResult(MODULE_CODE, "module_edit", Guid.Parse("a151f47a-92b8-4f81-8021-e2b1c3ad651a"));
+    }
+    #endregion
+
+    #region 修改供应商 
+    /// <summary>
+    /// 修改供应商，根据传进来的Id
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "update_supplier",
+    @"工具名称：update_supplier
+
+功能描述：  
+用于修改**已存在的供应商**信息。仅当用户明确表示要**编辑、更新或修改某个具体供应商**的数据（如名称、联系人、地址、银行信息等）时调用。  
+系统将根据提供的 supplierId（系统唯一ID）或 supplierNo（业务供应商编号）定位目标供应商，并打开对应的编辑表单页面，预加载当前数据。
+
+输入参数（至少提供其一）：  
+- supplierId（字符串，可选）：系统生成的供应商唯一标识（如 ""6faa0538-1c99-433a-a4f3-6c7f40ffd4c2""）；  
+- supplierNo（字符串，可选）：用户定义的供应商业务编号（如 ""VENDOR-2024-001""）。  
+
+> ⚠️ 注意：supplierId 和 supplierNo 至少需提供一个。若两者同时提供，优先使用 supplierId。
+
+触发条件（必须满足）：  
+- 用户意图是**编辑、修改、更新**供应商（非创建、查询、删除）；  
+- 用户明确指定了**某个供应商**，并通过 ID、编号、名称等提供了可识别信息；  
+- 系统能从中解析出有效的 supplierId 或 supplierNo。
+
+行为说明：  
+- 工具返回前端模块标识 'BD_SUPPLIER_MNG'；  
+- 客户端应加载供应商编辑表单，并根据传入的标识符自动查询并填充对应供应商的当前数据；  
+- 实际数据保存由前端表单提交触发，本工具仅负责页面导航与数据预加载。
+
+注意事项：  
+- ❗ 本工具为**页面导航操作**，不直接修改数据库；  
+- ❗ 若用户仅说“修改供应商”但未指定具体对象，应引导其提供供应商编号或名称，**不得盲目调用**；  
+- ❗ 若用户意图是“创建新供应商”或“从文件导入”，应调用 create_supplier 或 create_supplier_from_file；  
+- ❗ 若用户仅想“查看”供应商信息，应调用 get_supplier 类工具，而非本工具。",
+            typeof(UpdateSupplieArguments))]
+
+    public async Task<McpToolResult> update_supplier(object arguments)
+    {
+        var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
+        var supply = await Db.Queryable<BdSupplier>()
+                 .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
+                 .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
+                 .FirstAsync();
+
+        //var result = await supplierService.QueryById(Guid.Parse(updateArguments.supplierId!));
+
+        if (supply.IsNullOrEmpty())
+            return CreateErrorResult("未查询到有效供应商数据！");
+        return CreateModuleResult(MODULE_CODE, "module_edit", supply.ID);
+    }
+    #endregion
+
+    #region 删除供应商 
+    /// <summary>
+    /// 删除供应商
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "delete_supplier",
+    @"工具名称：delete_supplier
+
+功能描述：  
+用于**永久删除**系统中已存在的供应商记录。仅当用户明确表达""删除""""移除""""作废""某个具体供应商的意图时调用。  
+系统将根据传入的 supplierId（系统唯一ID）或 supplierNo（业务供应商编号）定位目标供应商，并执行**不可逆的数据删除操作**。
+
+输入参数（至少提供其一）：  
+- supplierId（字符串，可选）：系统生成的供应商唯一标识（如 ""SUP20250925001""）；  
+- supplierNo（字符串，可选）：用户定义的供应商业务编号（如 ""VENDOR-2024-001""）。  
+
+> ⚠️ 注意：supplierId 和 supplierNo 至少需提供一个。若两者同时提供，优先使用 supplierId。
+
+行为说明：  
+- 工具将校验供应商是否存在、是否可被删除（如无关联采购订单、合同、付款记录等）；  
+- 若校验通过，立即执行物理或逻辑删除（根据系统策略）；  
+- 成功后返回删除成功确认信息；失败时返回具体原因（如""该供应商存在未完成订单，无法删除""）。
+
+触发条件（必须严格满足）：  
+- 用户明确使用""删除""""移除""""作废""等**强删除意图动词**； 
+- 用户指定了**具体供应商**（通过 ID、编号、名称等可识别信息）；  
+- 上下文或用户输入中能解析出有效的 supplierId 或 supplierNo。
+
+注意事项：  
+- ❗ 本工具为**高危写入操作**，直接修改数据库，**不可用于查询、查看或导航**；  
+- ❗ 若用户仅说""供应商不要了""但未指定对象，**不得调用**，应引导确认； 
+- ❗ 若供应商存在业务关联（如订单、合同、发票），应阻止删除并返回友好提示；  
+- ❗ 严禁在用户表达“查看”“编辑”“创建”等意图时误触发此工具；  
+- 建议在前端或 MCP 层增加二次确认机制（如""确定要删除供应商 XXX 吗？""，但工具本身以最终指令为准。",
+            typeof(UpdateSupplieArguments))]
+
+    public async Task<McpToolResult> delete_supplier(object arguments)
+    {
+        try
+        {
+            var updateArguments = JsonHelper.JsonToObj<UpdateSupplieArguments>(JsonHelper.ObjToJson(arguments));
+            var supply = await Db.Queryable<BdSupplier>()
+                     .WhereIF(updateArguments.supplierId.IsNotEmptyOrNull(), x => x.ID == Guid.Parse(updateArguments.supplierId!))
+                     .WhereIF(updateArguments.supplierNo.IsNotEmptyOrNull(), x => x.SupplierNo == updateArguments.supplierNo)
+                     .FirstAsync();
+
+            if (supply.IsNullOrEmpty())
+                return CreateErrorResult("未查询到有效供应商数据！");
+
+            var result = await _supplierService.DeleteById(supply.ID);
+            return new McpToolResult
+            {
+                Content =
+                    [
+                        new McpContent
+                        {
+                            Type = "text",
+                            Text =result ? $"供应商 '{supply.SupplierNo}' 删除成功！":"删除失败！"
+                        }
+                    ]
+            };
+        }
+        catch (Exception E)
+        {
+            return CreateErrorResult($"删除失败：{E.Message}");
+        }
+    }
+    #endregion
+
+    #region 获取供应商 Excel 模板 
+    /// <summary>
+    /// 获取供应商 Excel 模板
+    /// </summary>
+    /// <param name="arguments"></param>
+    /// <returns></returns>
+    [McpTool(
+    "get_supplier_import_template",
+    @"工具名称：get_supplier_import_template
+
+功能描述：  
+用于获取供应商批量导入所需的 **标准 Excel 模板文件**。调用后，系统将生成或返回一个预定义的空模板（含字段说明、格式规范、下拉选项等），并返回该文件的唯一标识 `fileId`，供前端用于下载或展示。
+
+输入参数：  
+- 无（无需任何输入参数）。
+
+行为说明：  
+- 工具将返回一个有效的 `files`，对应一个可下载的 Excel 文件（如 .xlsx 格式）；  
+- 该模板包含供应商创建所需的必填字段（如供应商编号、名称、联系人、税号、银行账号等）及填写说明；  
+- 每次调用应返回**最新版本**的模板，确保与当前系统字段一致；  
+- 返回的 `files` 应具备临时可访问权限（如 24 小时有效），供前端直接下载。
+
+触发条件：  
+- 用户表达“下载模板”“获取导入模板”“要一个供应商Excel格式”“怎么批量导入供应商”等意图时调用；  
+- 无需用户指定供应商信息，本工具与具体业务数据无关。
+
+注意事项：  
+- ❗ 本工具为**安全只读操作**，不修改任何业务数据；  
+- ❗ 不应与 `create_supplier_from_file`、`update_supplier` 等写入类工具混淆；  
+- ❗ 返回的 `files` 仅用于下载模板，**不能用于创建供应商**（因模板为空）；  
+- 建议前端在用户点击“下载模板”按钮时直接调用此工具。")]
+
+    public async Task<McpToolResult> get_supplier_import_template(object arguments)
+    {
+        var module = ModuleInfo.GetModuleInfo(MODULE_CODE);
+
+        var list = new List<FileAttachment>();
+        var templateIds = await Db.Queryable<SmImpTemplate>()
+            .Where(x => x.ModuleId == module.ID)
+            .Select(x => x.ID).ToListAsync();
+        var url = AppSettings.app(["APIHost"]);
+
+
+        for (int i = 0; i < templateIds.Count; i++)
+        {
+            //var result1 = await _smImpTemplateServices.Download(templateIds[i]);
+            //var responseString = await HttpHelper.GetAsync($"{url}api/SmImpTemplate/Download/{templateIds[i]}");
+            var responseString = await _httpPollyHelper.GetAsync(HttpEnum.Common,
+            $"{url}api/SmImpTemplate/Download/{templateIds[i]}");
+            if (responseString.IsNotEmptyOrNull())
+            {
+                var result1 = JsonHelper.JsonToObj<ServiceResult<FileAttachment>>(responseString);
+                list.Add(result1.Data);
+            } 
+        }
+
+        var result = new
+        {
+            type = "ExcelTemplate",
+            moduleCode = MODULE_CODE,
+            files = list
+        };
+
+        return new McpToolResult
+        {
+            Content =
+            [
+                new McpContent
+                {
+                    Type = "text",
+                    Text = JsonHelper.ObjToJson(result)
+                }
+            ]
+        };
+    }
+    #endregion
+}

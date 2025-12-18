@@ -3,9 +3,12 @@ import { IWorkFlowNode } from "../../workflow-editor";
 import { useTranslate } from "../../workflow-editor/react-locales";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { styled } from "styled-components";
-import { Modal } from "antd";
+import { Modal, Button } from "antd";
 import { useWorkFlow } from "@/workflow-editor/hooks";
-// import { notification as Notification } from "@/hooks/useMessage";
+import { RootState, useSelector } from "@/redux";
+import http from "@/api";
+import { message } from "@/hooks/useMessage";
+
 import { useUpdateEffect } from "ahooks";
 const Title = styled.div`
   display: flex;
@@ -54,6 +57,7 @@ export const PublishButton = memo(
 
     const t = useTranslate();
     // const editorStore = useEditorEngine();
+    const startNode = useSelector((state: RootState) => state.workflow.startNode);
 
     useUpdateEffect(() => {
       if (iWorkFlowNode && iWorkFlowNode.childNode) {
@@ -66,28 +70,33 @@ export const PublishButton = memo(
       }
     }, [iWorkFlowNode]);
 
-    // const handleValidate = () => {
-    //   const result = editorStore?.validate();
-    //   if (result !== true && result !== undefined) {
-    //     const errs: IErrorItem[] = [];
-    //     for (const nodeId of Object.keys(result)) {
-    //       const msg = result[nodeId];
-    //       const node = editorStore?.getNode(nodeId);
-    //       errs.push({
-    //         category: t("flowDesign"),
-    //         message: node?.name + ": " + msg
-    //       });
-    //     }
-    //     setErrors(errs);
-    //   } else {
-    //     Notification.success({
-    //       content: `验证成功`,
-    //       position: "bottomRight"
-    //     });
-    //     // message.info("验证成功");
-    //   }
-    //   return result;
-    // };
+    const handleValidate = async () => {
+      if (startNode) {
+        let id = "99fe490e-e022-49d7-a8ba-b82133cfccfc";
+        let { Success, Message } = await http.post<any>(`/api/SmWorkFlow/Publish/${id}`, startNode);
+        if (Success) message.success(Message);
+      }
+      // const result = editorStore?.validate();
+      // if (result !== true && result !== undefined) {
+      //   const errs: IErrorItem[] = [];
+      //   for (const nodeId of Object.keys(result)) {
+      //     const msg = result[nodeId];
+      //     const node = editorStore?.getNode(nodeId);
+      //     errs.push({
+      //       category: t("flowDesign"),
+      //       message: node?.name + ": " + msg
+      //     });
+      //   }
+      //   setErrors(errs);
+      // } else {
+      //   Notification.success({
+      //     content: `验证成功`,
+      //     position: "bottomRight"
+      //   });
+      //   // message.info("验证成功");
+      // }
+      // return result;
+    };
 
     const handleOk = () => {
       setErrors(undefined);
@@ -99,7 +108,7 @@ export const PublishButton = memo(
 
     return (
       <>
-        {/* <Button onClick={handleValidate}>{t("publish")}</Button> */}
+        <Button onClick={handleValidate}>{t("publish")}</Button>
         <Modal
           title={
             <Title>

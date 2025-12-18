@@ -1,5 +1,5 @@
 import http from "@/api";
-import { ModuleInfo, RecordLogData } from "@/api/interface/index";
+import { ModuleInfo, RecordLogData, ModuleInfo1 } from "@/api/interface/index";
 
 /**
  * 通用ID参数接口
@@ -38,13 +38,18 @@ export const getModuleInfo = (moduleCode: string) => {
   return http.get<ModuleInfo>(`/api/SmModule/GetModuleInfo/${moduleCode}`);
 };
 
+export const getModuleInfoById = (moduleId: string) => {
+  return http.get<ModuleInfo1>(`/api/SmModule/${moduleId}`);
+};
+
 /**
  * 获取模块日志信息
- * @param params 查询参数
+ * @moduleCode moduleCode 查询参数
+ * @id id 查询参数
  * @returns 记录日志数据
  */
-export const getModuleLogInfo = (params: Record<string, any>) => {
-  return http.get<RecordLogData>(`/api/SmModule/GetModuleLogInfo`, params);
+export const getModuleLogInfo = (moduleCode: string, id: string) => {
+  return http.get<RecordLogData>(`/api/SmModule/GetModuleLogInfo/${moduleCode}/${id}`);
 };
 
 /**

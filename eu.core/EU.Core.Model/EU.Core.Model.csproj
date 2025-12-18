@@ -23,9 +23,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Base\EM\" />
 	  <Folder Include="Base\IV\" />
 	  <Folder Include="Edit\IV\" />
+	  <Folder Include="Entity\EM\" />
 	  <Folder Include="Insert\IV\" />
+	  <Folder Include="View\EM\" />
 	  <Folder Include="View\IV\" />
 	</ItemGroup>
 

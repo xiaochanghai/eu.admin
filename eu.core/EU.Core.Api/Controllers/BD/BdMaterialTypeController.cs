@@ -54,7 +54,7 @@ public class MaterialTypeController : BaseController<IBdMaterialTypeServices, Bd
     public async Task<ServiceResult<List<BdMaterialType>>> QueryClass()
     {
         var result = await _service.QueryPage(x => x.ParentTypeId == null, 1, 100, "TaxisNo ASC");
-        return ServiceResult<List<BdMaterialType>>.OprateSuccess(result.data, ResponseText.QUERY_SUCCESS);
+        return Success(result.data, ResponseText.QUERY_SUCCESS);
     }
     #endregion
 }

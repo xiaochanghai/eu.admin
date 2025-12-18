@@ -473,4 +473,11 @@ public class FileHelper : IDisposable
             Directory.CreateDirectory(path);
     }
     #endregion
+
+    #region 判断文件是否存在
+    public static bool Exists(string path)
+    {
+        return File.Exists(path);
+    }
+    #endregion
 }

@@ -8,6 +8,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="EM\" />
     <Folder Include="IDS4Db\" />
     <Folder Include="IV\" />
   </ItemGroup>

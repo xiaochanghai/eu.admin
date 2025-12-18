@@ -33,12 +33,13 @@ public class ChatHelper
     /// <summary>
     /// AI 服务的基础请求地址。【记得替换为自己的】
     /// </summary>
-    private const string _baseURL = "https://api.siliconflow.cn/v1";
+    private static string _baseURL = "";
 
     /// <summary>
     /// 使用的 AI 模型标识符。【记得替换为自己的】
     /// </summary>
-    private const string _modelID = "Qwen/Qwen2.5-32B-Instruct";
+    //private const string _modelID = "Qwen/Qwen2.5-32B-Instruct";
+    private static string _modelID = "";
     private static string lastMessage = "";
 
     public static void InitChat()
@@ -46,6 +47,9 @@ public class ChatHelper
         if (chatClient == null)
         {
             _apiKey = Redis.Get("ApiKey");
+            _baseURL = Redis.Get("ApiUrl");
+            _modelID = Redis.Get("ApiModel");
+
             // 创建 API 密钥凭证
             var apiKeyCredential = new ApiKeyCredential(_apiKey);
 
@@ -213,13 +217,13 @@ You will select appropriate tools and call them to solve user queries
                             toolResults.Add(oneToolResult);
                             id = Utility.GetGUID();
                             string messageId = Utility.GetGUID();
-                            AddChatMessage(chatId, ChatRole.Tool.ObjToString(), oneToolResult, "tool_result", messageId.ObjToGuid(), parentId);
+                            AddChatMessage(chatId, ChatRole.Tool.ObjToString(), oneToolResult, "message", messageId.ObjToGuid(), parentId);
                             if (toolResult.content.Count > 0)
                             {
                                 if (toolResult.content[0].type == "text")
                                     yield return new McpStreamEvent
                                     {
-                                        EventType = "tool_result",
+                                        EventType = "message",
                                         Data = toolResult.content[0].text,
                                         Id = messageId
                                     };
@@ -227,7 +231,7 @@ You will select appropriate tools and call them to solve user queries
                             else
                                 yield return new McpStreamEvent  // 如果你要把它往外抛事件
                                 {
-                                    EventType = "tool_result",
+                                    EventType = "message",
                                     Data = toolResult,
                                     Id = messageId
                                 };
@@ -248,7 +252,7 @@ You will select appropriate tools and call them to solve user queries
                             lastMessage = update.Text;
                             yield return new McpStreamEvent
                             {
-                                EventType = "tool_started", // 你这里原本用的名字，可按需调整
+                                EventType = "message", // 你这里原本用的名字，可按需调整
                                 Data = update.Text,
                                 Id = id
                             };
@@ -277,7 +281,7 @@ You will select appropriate tools and call them to solve user queries
 
             yield return new McpStreamEvent
             {
-                EventType = "tool_completed",
+                EventType = "message",
                 Data = $"[DONE]",
                 Id = id
             };

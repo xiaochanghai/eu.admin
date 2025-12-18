@@ -1,12 +1,19 @@
 import React, { useEffect, useImperativeHandle, useState, useCallback } from "react";
-import { Form, Flex } from "antd";
-import { Loading, Element } from "@/components";
+import { Form } from "antd";
+
+import { Skeleton, renderFormComponent } from "@/components";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { EditOpenType } from "@/typings";
+import { EditOpenType, SaveType, SaveTypeEnum, ModifyType } from "@/typings";
+
+// 常量定义
+const MODULE_MANAGEMENT_CODE = "SM_MODULE_MNG";
+const LOADING_MESSAGE = "数据提交中...";
+const FETCH_ERROR_MESSAGE = "获取数据失败";
+const SUBMIT_ERROR_MESSAGE = "提交数据失败";
 
 /**
  * 表单页面属性接口
@@ -82,8 +89,8 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
             form.setFieldsValue(Data);
           }
         } catch (error) {
-          message.error("获取数据失败");
-          console.error("获取数据失败:", error);
+          message.error(FETCH_ERROR_MESSAGE);
+          console.error(FETCH_ERROR_MESSAGE, error);
         } finally {
           setIsLoading(false);
         }
@@ -96,53 +103,24 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
     };
 
     fetchRecordData();
-  }, [Id, dispatch, moduleCode, url, IsView, form]);
-
-  /**
-   * 渲染表单内容
-   * 根据模块配置的表单列动态生成表单项
-   */
-  const renderFormContent = useCallback(() => {
-    return (
-      <Flex wrap="wrap">
-        {formColumns.filter((f: any) => f.HideInForm === false)?.length === 0 ? (
-          <div className="main-tooltip">请选择进行系统表单配置</div>
-        ) : (
-          formColumns
-            .filter((f: any) => f.HideInForm === false)
-            .map((item: any, index: number) => {
-              return (
-                <div
-                  style={{
-                    width: (item.GridSpan != null ? item.GridSpan : 50) + "%"
-                  }}
-                  key={index}
-                >
-                  <Element field={item} disabled={disabled} modifyType={modifyType} />
-                </div>
-              );
-            })
-        )}
-      </Flex>
-    );
-  }, [formColumns, disabled, modifyType]);
+  }, [Id, dispatch, moduleCode, url, IsView, form, masterId]);
 
   /**
    * 处理表单提交
    * @param data 表单数据
-   * @param type 提交类型："Save"保存，"SaveAdd"保存并新增
+   * @param type 提交类型："SaveTypeEnum.Save"保存，"SaveTypeEnum.SaveAdd"保存并新增
    */
   const handleFormSubmit = useCallback(
-    async (data: any, type = "Save") => {
+    async (data: any, type: SaveType = SaveTypeEnum.Save) => {
       if (onDisabled) onDisabled(true);
-      message.loading("数据提交中...", 0);
+      const loadingMessage = message.loading(LOADING_MESSAGE, 0);
 
       try {
         // 准备提交数据
         let submitData = { ...data, url };
         if (id) submitData.Id = id;
         if (isDetail) submitData[masterColumn] = masterId;
-        if (moduleCode !== "SM_MODULE_MNG") submitData.ModuleCode = moduleCode;
+        if (moduleCode !== MODULE_MANAGEMENT_CODE) submitData.ModuleCode = moduleCode;
 
         // 处理空值
         for (let key in submitData) {
@@ -157,9 +135,9 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
           message.success(Message);
           if (openType === EditOpenType.Modal || openType === EditOpenType.Drawer) onReload?.();
 
-          if (type !== "SaveAdd" && onClose) onClose();
+          if (type !== SaveTypeEnum.SaveAdd && onClose) onClose();
 
-          if (type === "SaveAdd") {
+          if (type === SaveTypeEnum.SaveAdd) {
             // 保存并新增：重置表单
             setViewId(null);
             setDisabled(false);
@@ -171,14 +149,14 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
           }
         }
       } catch (error) {
-        message.error("提交数据失败");
-        console.error("提交数据失败:", error);
+        message.error(SUBMIT_ERROR_MESSAGE);
+        console.error(SUBMIT_ERROR_MESSAGE, error);
       } finally {
-        message.destroy();
-        if (onDisabled) onDisabled(false);
+        loadingMessage();
+        onDisabled?.(true);
       }
     },
-    [id, url, isDetail, masterColumn, moduleCode, onDisabled, onReload, onClose, setFormPageId, form, openType]
+    [id, url, isDetail, masterColumn, moduleCode, masterId, openType, onDisabled, onReload, onClose, setFormPageId, form]
   );
 
   /**
@@ -192,14 +170,14 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
    * 保存并新增表单数据
    */
   const onSaveAdd = useCallback(() => {
-    form.validateFields().then(values => handleFormSubmit(values, "SaveAdd"));
+    form.validateFields().then(values => handleFormSubmit(values, SaveTypeEnum.SaveAdd));
   }, [form, handleFormSubmit]);
 
   /**
    * 表单值变更处理
    */
   const onValuesChange = useCallback(() => {
-    if (onDisabled) onDisabled(false);
+    onDisabled?.(false);
     setDisabled(false);
   }, [onDisabled]);
 
@@ -210,27 +188,23 @@ const FormPage: React.FC<FormPageProps> = React.memo(props => {
   }));
 
   // 仅在Modal或Drawer模式下渲染表单
-  if (openType !== EditOpenType.Modal && openType !== EditOpenType.Drawer) {
-    return null;
-  }
+  if (openType !== EditOpenType.Modal && openType !== EditOpenType.Drawer) return null;
 
   return (
-    <div style={{ marginTop: 20, marginBottom: 20 }}>
-      <Form
-        labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
-        labelWrap
-        wrapperCol={{ span: 16 }}
-        onFinish={handleFormSubmit}
-        onValuesChange={onValuesChange}
-        form={form}
-      >
-        {isLoading ? <Loading /> : renderFormContent()}
-      </Form>
-    </div>
+    <Form
+      labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
+      labelWrap
+      wrapperCol={{ span: 16 }}
+      onFinish={handleFormSubmit}
+      onValuesChange={onValuesChange}
+      form={form}
+    >
+      {isLoading ? <Skeleton type="form" /> : renderFormComponent(formColumns, disabled, modifyType)}
+    </Form>
   );
 });
 
 // 添加组件显示名称，便于调试
-// FormPage.displayName = "FormPage";
+FormPage.displayName = "FormPage";
 
 export default FormPage;

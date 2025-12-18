@@ -67,6 +67,16 @@ public class ModuleInfo
             name = module.ModuleName;
         return name;
     }
+
+    public static string GetModuleCodeById(Guid? ID)
+    {
+        string name = string.Empty;
+        var moduleList = GetModuleList();
+        var module = moduleList.Where(x => x.ID == ID).FirstOrDefault();
+        if (module != null)
+            name = module.ModuleCode;
+        return name;
+    }
     #endregion
 
     #region 获取模块是否自动执行查询

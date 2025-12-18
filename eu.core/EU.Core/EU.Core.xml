@@ -218,12 +218,19 @@
             <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest,System.String)">
+        <member name="M:EU.Core.Controllers.CommonController.QueryImportExcelResultAsync(System.Guid,System.Guid)">
+            <summary>
+            获取Excel导入结果
+            </summary>
+            <param name="importDataId">导入数据ID</param>
+            <param name="templateId">模板ID</param>
+            <returns>ImportExcelResult</returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">
             <summary>
             Excel导入数据转换
             </summary>
-            <param name="request">请求数据</param>
-            <param name="moduleCode">模块代码</param>
+            <param name="request">请求数据</param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">
@@ -637,6 +644,32 @@
         <member name="T:EU.Core.Api.Controllers.SupplierController">
             <summary>
             供应商(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EmEquipmentController">
+            <summary>
+            设备基础资料(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EmEquipmentTypeController">
+            <summary>
+            设备分类(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EmRepairOrderController">
+            <summary>
+            报修工单(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.EmRepairOrderController.GetEquipment">
+            <summary>
+            获取设备
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EmRepairOrderLogController">
+            <summary>
+            报修工单日志(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.IvAccountingController">
@@ -1219,7 +1252,7 @@
             <summary>
             下载文件
             </summary>
-            <param name="id"></param>
+            <param name="id">文件ID</param>
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmApplicationDeviceController">
@@ -1238,6 +1271,17 @@
             <summary>
             APP客户端记录(Controller)
             </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmApplicationVersionController">
+            <summary>
+            APP版本(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmApplicationVersionController.Latest">
+            <summary>
+            获取最新版本信息
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmAutoCodeController">
             <summary>
@@ -1315,9 +1359,24 @@
             功能权限(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportDataController">
+            <summary>
+            导入数据表(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmImportDataDetailController">
             <summary>
             系统导入数据明细(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportDataDetailTempController">
+            <summary>
+            系统导入数据明细临时表(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmImportDataErrorColController">
+            <summary>
+            导入数据错误列(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmImportDataMasterController">
@@ -1340,6 +1399,13 @@
             根据模板ID获取明细
             </summary>
             <param name="moduleId">模板ID</param> 
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmImpTemplateController.Download(System.Guid)">
+            <summary>
+            根据模板ID下载
+            </summary>
+            <param name="templateId">模板ID</param> 
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmImpTemplateDetailController">
@@ -1393,18 +1459,11 @@
             <param name="moduleCode">模块代码</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleInfo1(System.String)">
-            <summary>
-            获取模块信息
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleFormColumn(System.String)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleFormColumn(System.Guid)">
             <summary>
             获取模块表单列信息
             </summary>
-            <param name="moduleCode">模块代码</param>
+            <param name="id">模块ID</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleLogInfo(System.String,System.String)">
@@ -1440,6 +1499,14 @@
             <param name="type">类型（list、form）</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.AddColumnAsync(System.String,EU.Core.Model.SmModuleFormOption)">
+            <summary>
+            新增模块表单列
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="column">表单信息</param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Api.Controllers.SmModulesController.RecordUserMoudleColumn(System.Guid,Newtonsoft.Json.Linq.JObject)">
             <summary>
             记录用户模块列
@@ -1470,7 +1537,7 @@
         </member>
         <member name="M:EU.Core.Api.Controllers.SmModuleSqlController.GetModuleFullSql(System.Guid)">
             <summary>
-            获取模块信息
+            获取模块完整SQL
             </summary>
             <param name="moduleId">模块ID</param>
             <returns></returns>
@@ -1602,6 +1669,18 @@
             <param name="id">流程ID</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.QueryNode(System.Guid)">
+            <summary>
+            获取流程节点
+            </summary>
+            <param name="id">流程ID</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeAuditController">
+            <summary>
+            工作流节点审核人员(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeController">
             <summary>
             工作流节点(Controller)
@@ -1616,6 +1695,13 @@
             <summary>
             处理 MCP 流式请求
             </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.MCP.StreamController.UploadAsync(EU.Core.Model.UploadForm)">
+            <summary>
+            上传附件接口
+            </summary>
+            <param name="upload"></param>
+            <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.Tenant.TenantByDbController">
             <summary>

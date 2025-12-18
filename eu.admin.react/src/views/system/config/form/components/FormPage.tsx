@@ -1,5 +1,5 @@
-import { Tabs, Card, Form, Flex, Tag, Button } from "antd";
-import React from "react";
+import { Tabs, Card, Form, Flex, Tag, Button, Modal, Input } from "antd";
+import React, { useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
@@ -7,7 +7,12 @@ import http from "@/api";
 import { Mode } from "./dsl/base";
 const { TabPane } = Tabs;
 import { Element, Icon } from "@/components";
+import { message } from "@/hooks/useMessage";
 
+type FieldType = {
+  Title?: string;
+  DataIndex?: string;
+};
 interface FieldSetCenterProps {
   moduleCode: any;
   fieldList: any[];
@@ -16,6 +21,7 @@ interface FieldSetCenterProps {
   onSelect: (field: string) => void; //当前选中字段
   onPlus: (field: any) => void; //当前选中字段
   onSetMode: (mode: Mode) => void; //设置表单配置还是列表配置
+  onReload: () => void; //重新加载
 }
 const FieldSetCenter = ({
   fieldList,
@@ -24,8 +30,13 @@ const FieldSetCenter = ({
   onDataChange,
   onPlus,
   moduleCode,
-  onSetMode
+  onSetMode,
+  onReload
 }: FieldSetCenterProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>(Mode.list);
+  const [form] = Form.useForm(); // 表单实例
+
   const DragFormHideItem = ({ id, text, index, moveItem, field }: any) => {
     const ref = React.useRef(null);
 
@@ -266,25 +277,43 @@ const FieldSetCenter = ({
     });
     await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/list`, items1);
   };
+  const add = async (data: any) => {
+    debugger;
+    let { Success, Message } = await http.post<any>(`/api/SmModule/AddColumn/${moduleCode}`, {
+      ...data,
+      HideInTable: mode == Mode.list && false,
+      HideInForm: mode == Mode.form && false
+    });
+    if (Success) {
+      onReload();
+      form.resetFields();
+      setIsModalOpen(false);
 
+      message.success(Message);
+    }
+  };
+  const handleOk = async () => {
+    form.validateFields().then(add);
+  };
   const onTabsChange = (key: string) => {
     console.log(key);
     onSetMode(key == "panel_list" ? Mode.list : Mode.form);
+    setMode(key == "panel_list" ? Mode.list : Mode.form);
   };
   return (
-    <div style={{ backgroundColor: "#fff" }}>
+    <div className="bg-white">
       <Tabs
-        defaultActiveKey={"panel_table"}
+        defaultActiveKey={"panel_list"}
         onChange={onTabsChange}
         tabBarExtraContent={{
           right: (
-            <Button type="primary" icon={<Icon name="PlusOutlined" />}>
+            <Button type="primary" icon={<Icon name="PlusOutlined" />} onClick={() => setIsModalOpen(true)}>
               新增
             </Button>
           )
         }}
       >
-        <TabPane key="panel_list" tab="表格栏位" icon={<Icon name="TableOutlined" />}>
+        <TabPane key="panel_list" tab="列表栏位" icon={<Icon name="TableOutlined" />}>
           <Card size="small" title="显示栏位">
             <DndProvider backend={HTML5Backend}>
               <Flex wrap>
@@ -360,6 +389,36 @@ const FieldSetCenter = ({
           </Form>
         </TabPane>
       </Tabs>
+
+      <Modal
+        title={mode === Mode.form ? "新增模块栏位" : "新增列表栏位"}
+        closable={{ "aria-label": "Custom Close Button" }}
+        open={isModalOpen}
+        onOk={handleOk}
+        destroyOnHidden={true}
+        onCancel={() => setIsModalOpen(false)}
+      >
+        <Form
+          name="basic"
+          labelCol={{
+            span: 6
+          }}
+          wrapperCol={{
+            span: 16
+          }}
+          form={form}
+          // onFinish={onFinish}
+          // onFinishFailed={onFinishFailed}
+          autoComplete="off"
+        >
+          <Form.Item<FieldType> label="列名" name="Title" rules={[{ required: true, message: "请输入列名!" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item<FieldType> label="数据列" name="DataIndex" rules={[{ required: true, message: "请输入数据列!" }]}>
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

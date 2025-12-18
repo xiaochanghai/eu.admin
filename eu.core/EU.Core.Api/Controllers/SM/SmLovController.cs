@@ -37,16 +37,11 @@ public class SmLovController : BaseController<ISmLovServices, SmLov, SmLovDto, I
     /// <param name="code">代码</param>
     /// <returns></returns>
     [HttpGet, Route("GetByCode/{code}")]
-    public async Task<ServiceResult<IEnumerable<KeyValue>>> GetByCode(string code)
-    {
-        return await _service.GetByCode(code);
-    }
+    public async Task<ServiceResult<IEnumerable<KeyValue>>> GetByCode(string code) => await _service.GetByCode(code);
+
 
     [HttpGet, Route("QueryByCode/{code}")]
-    public async Task<ServiceResult<IEnumerable<LovData>>> QueryByCode(string code)
-    {
-        return await _service.QueryByCode(code);
-    }
+    public async Task<ServiceResult<IEnumerable<LovData>>> QueryByCode(string code) => await _service.QueryByCode(code);
     #endregion
 
 }

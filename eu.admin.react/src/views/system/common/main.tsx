@@ -2,8 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import FormIndex from "./components/FormIndex";
-import { Loading } from "@/components";
+import { FormIndex, Skeleton } from "@/components";
 
 /**
  * 模块主页面属性接口
@@ -50,7 +49,7 @@ const Main: React.FC<ModuleIndexProps> = React.memo(props => {
 
   return (
     <React.Fragment>
-      {moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} extendAction={extendAction} /> : <Loading />}
+      {moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} extendAction={extendAction} /> : <Skeleton type="default" />}
     </React.Fragment>
   );
 });

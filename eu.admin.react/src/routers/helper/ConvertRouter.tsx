@@ -5,6 +5,7 @@ import { RouteObjectType } from "../interface";
 import RouterGuard from "./RouterGuard";
 import LayoutIndex from "@/layouts";
 import LazyComponent from "@/components/Lazy";
+import { Loading } from "@/components/Loading";
 
 // Import all view files in the views directory
 const modules = import.meta.glob("@/views/**/*.tsx") as Record<string, Parameters<typeof lazy>[number]>;
@@ -35,10 +36,14 @@ export const convertToDynamicRouterFormat = (authMenuList: RouteObjectType[]) =>
     item.loader = () => {
       return { ...item.meta, redirect: !!item.redirect };
     };
+
+    // Set HydrateFallback
+    item.HydrateFallback = () => <Loading />;
+
     return item;
   });
 
-  const dynamicRouter: RouteObjectType[] = [{ element: <LayoutIndex />, children: [] }];
+  const dynamicRouter: RouteObjectType[] = [{ element: <LayoutIndex />, children: [], HydrateFallback: () => <Loading /> }];
 
   // Add to Dynamic routing
   handleMenuList.forEach(item => {

@@ -582,7 +582,7 @@ public static class EntityProperties
             return value;
 
         var property = properties.Where(x => x.Name == field).FirstOrDefault();
-        value = property.GetValue(t, null).ToString();
+        value = property.GetValue(t, null).ObjToString();
 
         return value;
     }

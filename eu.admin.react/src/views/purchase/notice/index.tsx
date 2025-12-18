@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 import { Modal } from "antd";
 import { message } from "@/hooks/useMessage";
 // import { RootState, useSelector } from "@/redux";
 import WaitSelect from "./WaitInSelect";
 import http from "@/api";
-import { Icon } from "@/components";
 const { confirm } = Modal;
 
 let tableAction: any = {};
@@ -21,12 +20,11 @@ const Index: React.FC<any> = () => {
   // let moduleInfo = moduleInfos[moduleCode] as any;
 
   const changePage = (value: any, id: string, isView: any) => {
+    setViewType(value);
     if (value == "FormPage") {
-      setViewType(value);
       setFormPageId(id);
       setFormPageIsView(isView);
     } else if (value == "FormIndex") {
-      setViewType(value);
       setFormPageId("");
       setFormPageIsView("");
     }

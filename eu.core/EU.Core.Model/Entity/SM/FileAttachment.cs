@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Entity; 
+namespace EU.Core.Model.Entity;
 
 /// <summary>
 /// 附件 (Model)
@@ -59,7 +59,7 @@ public class FileAttachment : BasePoco
     /// </summary>
     [Display(Name = "Length"), Description("大小"), SugarColumn(IsNullable = true)]
     public long? Length { get; set; }
- 
+
 
     /// <summary>
     /// 文件类型

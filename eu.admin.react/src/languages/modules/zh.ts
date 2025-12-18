@@ -44,7 +44,19 @@ export default {
     senderHeaderAttachmentDesc: "点击或将文件拖拽到此区域进行上传",
     senderHeaderAttachmentDropTitle: "将文件拖至此处",
     senderPlaceholder: "提问或输入 / 使用技能",
-    loadingMessage: "正在思考中..."
+    loadingMessage: "正在思考中...",
+    noData: "暂无数据",
+    requestFailedPleaseTryAgain: "请求失败，请重试！",
+    itIsNowANewConversation: "当前已经是新会话",
+    today: "今天",
+    curConversation: "当前对话",
+    newConversation: "新对话",
+    rename: "重命名",
+    retry: "重新生成",
+    isMock: "当前为模拟功能",
+    deepThinking: "深度思考中",
+    completeThinking: "深度思考完成",
+    delete: "删除"
   },
   avatar: {
     home: "首页",
@@ -63,5 +75,11 @@ export default {
     confirmPassword: "确认密码",
     notMatchMessage: "确认密码与新密码不匹配!",
     changeSuccessMessage: "修改密码成功 🎉"
+  },
+  formOption: {
+    add: "新增",
+    edit: "编辑",
+    save: "保存",
+    saveAndAdd: "保存并新建"
   }
 };

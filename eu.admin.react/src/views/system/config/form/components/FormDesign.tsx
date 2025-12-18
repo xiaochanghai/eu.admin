@@ -8,7 +8,7 @@ import { Button, Card, Row, Col, Space, Skeleton, Descriptions } from "antd";
 import http from "@/api";
 import { Icon } from "@/components";
 import { message } from "@/hooks/useMessage";
-import { getModuleSqlInfo } from "@/api/modules/module";
+import { getModuleInfoById } from "@/api/modules/module";
 
 const Index: React.FC<any> = props => {
   const { ModuleId, changePage } = props;
@@ -18,29 +18,25 @@ const Index: React.FC<any> = props => {
   let [columns, setColumns] = useState<any[]>([]);
   let [mode, setMode] = useState<Mode>(Mode.list);
 
-  useEffect(() => {
-    if (ModuleId) {
-      const querySingleData = async () => {
-        let { Data, Success } = await getModuleSqlInfo(ModuleId);
-        if (Success) {
-          if (Data.module) {
-            setModuleCode(Data.module.ModuleCode);
-          }
-          queryFormColumn(Data.module.ModuleCode);
-          setModuleName(Data.module.ModuleName);
-        }
-      };
-      querySingleData();
+  const queryFormColumn = async () => {
+    let { Data } = await http.get<any>(`/api/SmModule/FormColumn/${ModuleId}`);
+    setColumns(Data);
+  };
+  const querySingleData = async () => {
+    let { Data, Success } = await getModuleInfoById(ModuleId);
+    if (Success && Data) {
+      setModuleCode(Data.ModuleCode);
+      setModuleName(Data.ModuleName);
     }
-    const queryFormColumn = async (moduleCode1: string) => {
-      let { Data } = await http.get<any>(`/api/SmModule/FormColumn/${moduleCode1}`);
-      setColumns(Data);
-    };
+  };
+  useEffect(() => {
+    if (ModuleId) querySingleData();
+    if (ModuleId) queryFormColumn();
   }, []);
 
   let currModel: any = {};
 
-  const saveFormColumn = async () => {
+  const save = async () => {
     let { Success, Message } = await http.put<any>(`/api/SmModule/UpdateColumn/${moduleCode}/${mode}`, currentField);
     if (Success) message.success(Message);
   };
@@ -74,7 +70,7 @@ const Index: React.FC<any> = props => {
                   <Col span={6}>
                     {currentField && (
                       <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Button onClick={saveFormColumn} icon={<Icon name="SaveOutlined" />}>
+                        <Button onClick={save} icon={<Icon name="SaveOutlined" />}>
                           保存
                         </Button>
                       </Space>
@@ -101,6 +97,7 @@ const Index: React.FC<any> = props => {
                     <FormPage
                       moduleCode={moduleCode}
                       fieldList={columns}
+                      // fieldList={columns.sort((a, b) => a.FromTaxisNo - b.FromTaxisNo)}
                       currentField={currentField}
                       // mode={Mode.form}
                       onDataChange={fields => {
@@ -119,6 +116,9 @@ const Index: React.FC<any> = props => {
                       onSetMode={(mode: Mode) => {
                         setMode(mode);
                         setCurrentField(null);
+                      }}
+                      onReload={() => {
+                        querySingleData();
                       }}
                     />
                   </Col>

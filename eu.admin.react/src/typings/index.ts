@@ -55,6 +55,51 @@ export interface FieldProps {
   WrapperCol?: number;
   MinRows?: number;
 }
-
+/**
+ * 子项类型定义
+ */
+export interface ChildrenItem {
+  key: number;
+  label: string;
+  children: React.ReactNode;
+}
+export type SaveType = "Save" | "SaveAdd";
+export enum SaveTypeEnum {
+  Save = "Save",
+  SaveAdd = "SaveAdd"
+}
 export type { ActionType } from "@ant-design/pro-components";
 export type { CollapseProps, CheckboxProps, TabsProps, MenuProps } from "antd";
+export interface SmLovData {
+  key: string;
+  value: string;
+}
+/**
+ * 数据修改模式
+ */
+export enum ModifyType {
+  /**
+   * 新增模式
+   */
+  Add = "Add",
+  /**
+   * 修改模式
+   */
+  Edit = "Edit",
+  /**
+   * 修改模式
+   */
+  View = "View",
+  /**
+   * 删除模式
+   */
+  Delete = "Delete",
+  /**
+   * 插入模式
+   */
+  Insert = "Insert",
+  /**
+   * 审核通过模式
+   */
+  AuditPass = "AuditPass"
+}

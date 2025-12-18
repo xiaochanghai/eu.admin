@@ -56,7 +56,7 @@ public class SmConfigController : BaseController<ISmConfigServices, SmConfig, Sm
         {
             o.detail = configs.Where(x => x.ConfigGroupId == o.ID).ToList();
         });
-        return ServiceResult<List<SmConfigView>>.OprateSuccess(groups, ResponseText.QUERY_SUCCESS);
+        return Success(groups, ResponseText.QUERY_SUCCESS);
         //return Ok(obj);
         //return await _systemSettingItemService.GetListByGroupAsync(groupId);
     }

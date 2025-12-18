@@ -33,17 +33,17 @@ public class SmLovServices : BaseServices<SmLov, SmLovDto, InsertSmLovInput, Edi
 
     public async Task<ServiceResult<IEnumerable<KeyValue>>> GetByCode(string code)
     {
-        var lsit = await LovHelper.GetLovListAsync(code);
-        var data = lsit.Select(x => new KeyValue() { key = x.Value, value = x.Text });
+        var list = await LovHelper.GetLovListAsync(code);
+        var data = list.Select(x => new KeyValue() { key = x.Value, value = x.Text });
 
-        return ServiceResult<IEnumerable<KeyValue>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS);
+        return Success(data);
     }
 
     public async Task<ServiceResult<IEnumerable<LovData>>> QueryByCode(string code)
     {
-        var lsit = await LovHelper.GetLovListAsync(code);
-        var data = lsit.Select(x => new LovData() { value = x.Value, label = x.Text });
+        var list = await LovHelper.GetLovListAsync(code);
+        var data = list.Select(x => new LovData() { value = code == "ColumnNo" ? x.Value.ObjToInt() : x.Value, label = x.Text });
 
-        return ServiceResult<IEnumerable<LovData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS);
+        return Success(data);
     }
 }

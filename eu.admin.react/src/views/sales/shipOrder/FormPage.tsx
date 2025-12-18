@@ -2,13 +2,14 @@ import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card } from "antd";
 import { querySingle, add, update } from "@/api/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { setId } from "@/redux/modules/module";
 import http from "@/api";
 import WaitShipSelect from "../salesOrder/WaitShipSelect";
 import { message } from "@/hooks/useMessage";
 import { Loading, Element, FormToolbar, EditableProTable } from "@/components";
-import { ViewType } from "@/typings";
+import { ViewType, SaveTypeEnum, ModifyType } from "@/typings";
+import { STANDARD_FORM_LAYOUT } from "@/config";
 
 /**
  * 发货单表单页面组件
@@ -44,7 +45,7 @@ const FormPage: React.FC<{
   const tableRef = useRef<any>();
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   const moduleInfo = moduleInfos[props.moduleCode] as ModuleInfo;
-  const { formColumns, openType, url, isDetail, masterColumn, menuData } = moduleInfo;
+  const { formColumns, url, isDetail, masterColumn, menuData } = moduleInfo;
 
   // 初始化操作权限
   const actionAuthButton: Record<string, boolean> = {};
@@ -108,7 +109,7 @@ const FormPage: React.FC<{
    * @param data 表单数据
    * @param type 提交类型 (Save/SaveAdd)
    */
-  const handleSubmit = async (data: any, type = "Save") => {
+  const handleSubmit = async (data: any, type = SaveTypeEnum.Save) => {
     message.loading("数据提交中...", 0);
 
     const payload = {
@@ -134,9 +135,9 @@ const FormPage: React.FC<{
       setDisabledToolbar(true);
       props.onDisabled?.(true);
 
-      if (openType === "Modal" || openType === "Drawer") props.onReload?.();
+      // if (openType === "Modal" || openType === "Drawer") props.onReload?.();
 
-      if (type === "SaveAdd") {
+      if (type === SaveTypeEnum.SaveAdd) {
         setViewId(null);
         setDisabled(true);
         form.resetFields();
@@ -152,19 +153,22 @@ const FormPage: React.FC<{
   // 暴露方法给父组件
   useImperativeHandle(props.formPageRef, () => ({
     onSave: () => form.validateFields().then(handleSubmit),
-    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, "SaveAdd"))
+    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, SaveTypeEnum.SaveAdd))
   }));
 
   return (
     <>
-      <Form labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} labelWrap onFinish={handleSubmit} form={form}>
+      <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={handleSubmit} form={form}>
         <FormToolbar
           moduleInfo={moduleInfo}
           disabled={props.IsView || disabled || disabledToolbar}
           modifyType={orderStatus === "WaitShip" ? modifyType : ModifyType.View}
           auditStatus={auditStatus}
           masterId={id}
-          onBack={() => props.changePage?.(ViewType.INDEX)}
+          onBack={() => {
+            props.onReload?.();
+            props.changePage?.(ViewType.INDEX);
+          }}
           onReload={querySingleData}
         />
 
@@ -172,13 +176,13 @@ const FormPage: React.FC<{
           <Loading />
         ) : (
           <>
-            <Card size="small" bordered={false}>
+            <Card size="small" variant="borderless">
               {renderFormFields()}
             </Card>
 
             <div style={{ height: 20 }} />
 
-            <Card title="物料信息" bordered={false} className="card-small">
+            <Card title="物料信息" variant="borderless" className="card-small">
               <EditableProTable
                 moduleCode="SD_SHIP_ORDER_DETAIL_MNG"
                 tableRef={tableRef}

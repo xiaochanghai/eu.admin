@@ -175,6 +175,165 @@ public static class StringExtension
         }
         return DateTime.TryParse(str.ToString(), out dateTime);
     }
+
+    /// <summary>
+    /// 检查字符串中的日期是否符合设定的格式
+    /// </summary>
+    /// <param name="date">date数据</param>
+    /// <param name="dateFormat">YYYY/MM/DD或YYYY/MM/DD HH24:MI</param>
+    /// <returns></returns>
+    public static bool IsDateTimeFormat(this string date, string dateFormat)
+    {
+        if (!string.IsNullOrEmpty(date))
+        {
+            #region 变量定义
+            int position = -1;
+            int outInt = 0;
+            string content = string.Empty;
+            int year = -1;
+            int month = -1;
+            int day = -1;
+            int hour = -1;
+            dateFormat = dateFormat.ToUpper();
+            bool result = false;
+            #endregion
+
+            #region 判断长度
+            if (dateFormat == "YYYY/MM/DD HH24:MI")
+            {
+                if (date.Length != dateFormat.Length - 2)
+                {
+                    return result;
+                }
+            }
+            else
+            {
+                if (date.Length != dateFormat.Length)
+                {
+                    return result;
+                }
+            }
+            if (date.IndexOf("-") > -1)
+            {
+                return result;
+            }
+            #endregion
+
+            #region 判断年
+            position = dateFormat.IndexOf("YYYY");
+            content = date.Substring(position, 4);
+            if (!string.IsNullOrEmpty(content))
+            {
+                if (int.TryParse(content, out outInt) == false)
+                {
+                    return result;
+                }
+                else
+                {
+                    year = Convert.ToInt32(content);
+                }
+            }
+            #endregion
+
+            #region 判断月
+            position = dateFormat.IndexOf("MM");
+            content = date.Substring(position, 2);
+            if (!string.IsNullOrEmpty(content))
+            {
+                if (int.TryParse(content, out outInt))
+                {
+                    if (Convert.ToInt32(content) >= 1 && Convert.ToInt32(content) <= 12)
+                    {
+                        month = Convert.ToInt32(content);
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            #endregion
+
+            #region 判断日
+            position = dateFormat.IndexOf("DD");
+            content = date.Substring(position, 2);
+            if (!string.IsNullOrEmpty(content))
+            {
+                if (int.TryParse(content, out outInt))
+                {
+                    if (Convert.ToInt32(content) >= 1 && Convert.ToInt32(content) <= DateTime.DaysInMonth(year, month))
+                    {
+                        day = Convert.ToInt32(content);
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            #endregion
+
+            #region 判断时分
+            if (dateFormat == "YYYY/MM/DD HH24:MI")
+            {
+                position = dateFormat.IndexOf("HH24");
+                content = date.Substring(position, 2);
+                if (!string.IsNullOrEmpty(content))
+                {
+                    if (int.TryParse(content, out outInt))
+                    {
+                        if (Convert.ToInt32(content) >= 1 && Convert.ToInt32(content) <= 24)
+                        {
+                            hour = Convert.ToInt32(content);
+                        }
+                        else
+                        {
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+
+                position = dateFormat.IndexOf("MI") - 2;
+                content = date.Substring(position, 2);
+                if (!string.IsNullOrEmpty(content))
+                {
+                    if (int.TryParse(content, out outInt))
+                    {
+                        if (Convert.ToInt32(content) >= 0 && Convert.ToInt32(content) <= 60)
+                        {
+                            hour = Convert.ToInt32(content);
+                        }
+                        else
+                        {
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+            }
+            #endregion
+
+            return true;
+        }
+        else
+            return false;
+    }
+
     /// <summary>
     /// 根据传入格式判断是否为小数
     /// </summary>

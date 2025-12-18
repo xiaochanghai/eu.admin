@@ -40,7 +40,7 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
 
     Task<ServiceResult<ImportExcelResult>> ImportExcelAsync(ImportExcelForm import, string moduleCode);
 
-    Task<ServiceResult> TransferExcelData(TransferExcelRequest request, string moduleCode);
+    Task<ServiceResult> TransferExcelData(TransferExcelRequest request);
 
     Task<ServiceResult<List<ComboGridData>>> ComboGridData(string parentColumn, string parentId, int? current, int? pageSize, string code, string[] items, string key);
     Task<ServiceResult<List<ComboGridData>>> GetComboGridData([FromBody] ComboGridDataBody body);
@@ -53,5 +53,13 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     Task<ServiceResult> Delete(string moduleCode, List<Guid> ids);
 
     Task<ServiceResult<object>> Query(string moduleCode, Guid id);
+
+    /// <summary>
+    /// 获取Excel导入结果
+    /// </summary>
+    /// <param name="importDataId">导入数据ID</param>
+    /// <param name="templateId">模板ID</param>
+    /// <returns></returns>
+    Task<ServiceResult<ImportExcelResult>> QueryImportExcelResultAsync(Guid importDataId, Guid templateId);
 
 }

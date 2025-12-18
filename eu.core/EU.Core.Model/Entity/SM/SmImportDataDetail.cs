@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:49  SahHsiao   初版
+* V0.01  2025/10/28 17:06:54  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -347,4 +347,10 @@ public class SmImportDataDetail : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 数据类型
+    /// </summary>
+    [Display(Name = "DataType"), Description("数据类型"), SugarColumn(IsNullable = true, Length = 32)]
+    public string DataType { get; set; }
 }

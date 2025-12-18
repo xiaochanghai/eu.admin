@@ -84,61 +84,31 @@ export interface ModuleInfo {
   url: string;
   customActionData: [];
 }
+export interface ModuleInfo1 {
+  ModuleName: string;
+  ModuleCode: string;
+}
 export interface ModuleInfoBeforeAction {
   id: string;
   taxisNo: number;
 }
+
+/**
+ * 模块日志数据接口
+ */
 export interface RecordLogData {
+  /** 表名称 */
   TableName: string;
-  ID: string;
+  /** 创建人 */
   CreatedBy: string;
+  /** 记录ID */
+  ID: string;
+  /** 更新人 */
   UpdateBy: string;
+  /** 创建时间 */
   CreatedTime: string;
+  /** 更新时间 */
   UpdateTime: string;
-}
-export interface SmLovData {
-  key: string;
-  value: string;
-}
-/**
- * 数据修改模式
- */
-export enum ModifyType {
-  /**
-   * 新增模式
-   */
-  Add = "Add",
-  /**
-   * 修改模式
-   */
-  Edit = "Edit",
-  /**
-   * 修改模式
-   */
-  View = "View",
-  /**
-   * 删除模式
-   */
-  Delete = "Delete",
-  /**
-   * 插入模式
-   */
-  Insert = "Insert",
-  /**
-   * 审核通过模式
-   */
-  AuditPass = "AuditPass"
-}
-/**
- * 页面打开方式
- */
-export enum OpenType {
-  /**
-   * 对话框
-   */
-  Modal = "Modal",
-  /**
-   * 对话框
-   */
-  Drawer = "Drawer"
+  /** 模块代码 */
+  ModuleCode: string;
 }

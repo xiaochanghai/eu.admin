@@ -4,6 +4,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Mapster" Version="7.4.0" />
+		<PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

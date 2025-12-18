@@ -3,7 +3,7 @@ using EU.Core.Common.DB.Dapper;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Extensions;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace EU.Core.Common.DB;
 

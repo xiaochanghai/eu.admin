@@ -3,8 +3,7 @@ import { useLocation } from "react-router-dom";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import FormIndex from "./components/FormIndex";
-import { Loading } from "@/components";
+import { FormIndex, Skeleton } from "@/components";
 
 /**
  * 通用模块页面组件
@@ -42,7 +41,11 @@ const Index: React.FC = React.memo(() => {
     if (!moduleInfo && moduleCode) fetchModuleInfo();
   }, [moduleInfo, moduleCode, fetchModuleInfo]);
 
-  return <React.Fragment>{moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} /> : <Loading />}</React.Fragment>;
+  return (
+    <React.Fragment>
+      {moduleInfo && moduleCode ? <FormIndex moduleCode={moduleCode} /> : <Skeleton type="default" />}
+    </React.Fragment>
+  );
 });
 
 export default Index;

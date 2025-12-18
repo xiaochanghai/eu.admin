@@ -55,6 +55,17 @@ public class LovHelper
         return cache ?? null;
     }
 
+    public static string GetCommonListSql(Guid? commonListSqlId)
+    {
+        var cache = redis.Get<string>(CacheKeys.CommonListSql.ToString(), commonListSqlId.ObjToString());
+        if (cache == null)
+        {
+            InitCommonListSql();
+            cache = redis.Get<string>(CacheKeys.CommonListSql.ToString(), commonListSqlId.ObjToString());
+        }
+        return cache ?? null;
+    }
+
     #endregion
 
     /// <summary>
@@ -86,6 +97,7 @@ public class LovHelper
         var sql = "SELECT * FROM SmCommonListSql WHERE IsDeleted='false'";
         var listSqls = DBHelper.QueryList<SmCommonListSql>(sql);
         listSqls.ForEach(item => redis.AddObject(CacheKeys.CommonListSql.ToString(), item.CommonCode, item.SelectSql));
+        listSqls.ForEach(item => redis.AddObject(CacheKeys.CommonListSql.ToString(), item.ID.ObjToString(), item.SelectSql));
     }
     /// <summary>
     /// 初始化系统参数

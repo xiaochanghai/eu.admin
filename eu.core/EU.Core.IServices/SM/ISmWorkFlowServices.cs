@@ -22,4 +22,6 @@ namespace EU.Core.IServices;
 public interface ISmWorkFlowServices : IBaseServices<SmWorkFlow, SmWorkFlowDto, InsertSmWorkFlowInput, EditSmWorkFlowInput>
 {
     Task<ServiceResult> NodeSave(WorkFlowNode node, Guid id);
+
+    Task<ServiceResult<WorkFlowNode>> QueryNode(Guid id);
 }

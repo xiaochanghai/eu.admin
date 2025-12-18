@@ -1,9 +1,9 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Form } from "antd";
 import { ComBoBox } from "@/components";
 import FieldTitle from "./FieldTitle";
-import { SmLovData } from "@/api/interface";
-import { FieldProps } from "@/typings";
+import { FieldProps, SmLovData } from "@/typings";
+import { ModifyType } from "@/typings";
 
 const FormItem = Form.Item;
 
@@ -15,21 +15,31 @@ interface ComboBoxFieldProps {
   field: FieldProps;
   /** 是否禁用 */
   disabled?: boolean;
+  /** 修改类型（新增/编辑/查看） */
+  modifyType?: ModifyType;
   /** 值变更回调函数 */
   onChange?: (value: string, option: any, record?: SmLovData[] | null) => void;
 }
 
 /**
  * 下拉选择框组件
+ * 功能：封装ComBoBox组件，提供统一的表单字段样式和验证规则
+ * 特性：
+ * 1. 支持必填验证
+ * 2. 支持禁用状态
+ * 3. 自动处理字段标题和提示信息
+ * 4. 使用 React.memo 优化性能
+ *
  * @param props - 组件属性
  * @returns React组件
  */
-const ComboBoxField: React.FC<ComboBoxFieldProps> = props => {
-  const { field, disabled, onChange } = props;
-  const { DefaultValue, DataIndex, Placeholder, Required, DataSource, Disabled, FormTitle } = field;
+const ComboBoxField: React.FC<ComboBoxFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
+  const { DefaultValue, DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
 
-  // 合并组件级和字段级的禁用状态
-  const isDisabled = disabled || Disabled;
+  // 根据修改类型和字段属性设置禁用状态
+  const isDisabled = useMemo(() => {
+    return (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled || disabled;
+  }, [modifyType, ModifyDisabled, Disabled, disabled]);
 
   /**
    * 处理值变更事件
@@ -44,16 +54,22 @@ const ComboBoxField: React.FC<ComboBoxFieldProps> = props => {
     [onChange]
   );
 
+  // 验证规则
+  const validationRules = useMemo(
+    () => [
+      {
+        required: Required ?? false,
+        message: `请选择${FormTitle}!`
+      }
+    ],
+    [Required, FormTitle]
+  );
+
   return (
-    <FormItem
-      name={DataIndex}
-      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={[{ required: Required ?? false, message: `请输入${FormTitle}!` }]}
-    >
+    <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <ComBoBox
         id={DataSource ?? DataIndex} // 如果没有指定DataSource，则使用DataIndex作为数据源ID
-        placeholder={Placeholder}
-        defaultValue={DefaultValue}
+        placeholder={Placeholder ?? "请选择"}
         disabled={isDisabled}
         onChange={handleChange}
       />

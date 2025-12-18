@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 import { Modal } from "antd";
 import { message } from "@/hooks/useMessage";
 import http from "@/api";
 const { confirm } = Modal;
 
-import { Icon } from "@/components";
 const Index: React.FC<any> = () => {
   let moduleCode = "PO_RETURN_ORDER_MNG";
   const [viewType, setViewType] = useState("FormIndex");

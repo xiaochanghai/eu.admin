@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
-import TableList from "../../common/components/TableList";
+import React, { useState, useCallback, useRef } from "react";
+import { TableList } from "@/components";
 import SqlEdit from "./SqlEdit";
 import FormDesign from "../../config/form/components/FormDesign";
 import FormPage from "./FormPage";
-import { ViewType } from "@/typings";
+import { ViewType, ActionType } from "@/typings";
 
 /**
  * 模块管理组件属性接口
@@ -27,6 +27,7 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
   const [formPageId, setFormPageId] = useState<string>("");
   // 表单页面是否为查看模式状态
   const [formPageIsView, setFormPageIsView] = useState<boolean>(false);
+  const tableRef = useRef<ActionType>();
 
   /**
    * 页面切换处理函数
@@ -43,26 +44,23 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
 
     setFormPageIsView(isView);
   }, []);
+  const handleReload = useCallback(() => {
+    tableRef.current?.reload();
+  }, []);
 
-  /**
-   * 根据当前视图类型渲染对应组件
-   */
-  const renderContent = () => {
-    switch (viewType) {
-      case ViewType.INDEX:
-        return <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} DynamicFormPage={FormPage} />;
-      case ViewType.SQL_EDIT:
-        return <SqlEdit ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />;
-      case ViewType.FORM_COLLOCATE:
-        return (
-          <FormDesign moduleCode="SD_SALES_ORDER_MNG" ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return <>{renderContent()}</>;
+  return (
+    <>
+      <div style={{ display: viewType == ViewType.INDEX ? "block" : "none" }}>
+        <TableList moduleCode="SM_MODULE_MNG" changePage={changePage} DynamicFormPage={FormPage} tableActionRef={tableRef} />
+      </div>
+      {viewType == ViewType.SQL_EDIT && (
+        <SqlEdit ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} onReload={handleReload} />
+      )}
+      {viewType == ViewType.FORM_COLLOCATE && (
+        <FormDesign ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} onReload={handleReload} />
+      )}
+    </>
+  );
 };
 
 // 使用 React.memo 优化组件性能，避免不必要的重渲染

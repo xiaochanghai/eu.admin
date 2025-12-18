@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 import { Button } from "antd";
 import { RootState, useSelector } from "@/redux";
 import { message, modal } from "@/hooks/useMessage";
 const { confirm } = modal;
 import http from "@/api";
-import { Icon } from "@/components";
 
 const SalesOrder: React.FC<any> = () => {
   let moduleCode = "PO_REQUESTION_MNG";

@@ -7,7 +7,6 @@ using EU.Core.Services.Extensions;
 using EU.Core.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace EU.Core.Jobs;
 

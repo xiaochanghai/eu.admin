@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
         //"ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "SkyAPM.Agent.AspNetCore"// 如果要开始skywalking，请取消此行注释
       },
-      "applicationUrl": "http://localhost:9291"
+      "applicationUrl": "http://localhost:8015"
     },
     "IIS Express": {
       "commandName": "IISExpress",

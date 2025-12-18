@@ -1,9 +1,7 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { InputNumber, Form } from "antd";
 import FieldTitle from "./FieldTitle";
-
-import { FieldProps } from "@/typings";
-import { ModifyType } from "@/api/interface/index";
+import { FieldProps, ModifyType } from "@/typings";
 
 const FormItem = Form.Item;
 
@@ -17,6 +15,8 @@ interface InputNumberFieldProps {
   disabled?: boolean;
   /** 修改类型（新增/编辑/查看） */
   modifyType?: ModifyType;
+  /** 值变更回调函数 */
+  onChange?: (value: number | null) => void;
 }
 
 /**
@@ -27,49 +27,71 @@ interface InputNumberFieldProps {
  * 2. 内置表单验证规则
  * 3. 支持禁用状态
  * 4. 自动处理字段标题和提示信息
+ * 5. 使用 React.memo 优化性能
+ *
+ * @param props - 组件属性
+ * @returns React组件
  */
-const InputNumberField: React.FC<InputNumberFieldProps> = props => {
-  const { field, disabled, modifyType = ModifyType.Edit } = props;
+const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
   const { FormTitle, DefaultValue, DataIndex, Placeholder, Required, Minimum, Maximum, Disabled, ModifyDisabled } = field;
-  const isDisabled = (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled;
+
+  // 根据修改类型和字段属性设置禁用状态
+  const isDisabled = useMemo(() => {
+    return (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled || disabled;
+  }, [modifyType, ModifyDisabled, Disabled, disabled]);
+
+  // 处理数字变化
+  const handleChange = useCallback(
+    (value: number | null) => {
+      onChange?.(value);
+    },
+    [onChange]
+  );
 
   // 构建验证规则数组
-  const rules: any[] = [
-    // 必填验证
-    { required: Required ?? false, message: `请输入${FormTitle}!` }
-  ];
+  const validationRules = useMemo(() => {
+    const rules: any[] = [
+      // 必填验证
+      { required: Required ?? false, message: `请输入${FormTitle}!` }
+    ];
 
-  // 添加最小值验证规则
-  if (Minimum != null) {
-    rules.push({
-      type: "number",
-      min: Minimum,
-      message: `${FormTitle}最小值为${Minimum}!`
-    });
-  }
+    // 添加最小值验证规则
+    if (Minimum != null) {
+      rules.push({
+        type: "number",
+        min: Minimum,
+        message: `${FormTitle}最小值为${Minimum}!`
+      });
+    }
 
-  // 添加最大值验证规则
-  if (Maximum != null) {
-    rules.push({
-      type: "number",
-      max: Maximum,
-      message: `${FormTitle}最大值为${Maximum}!`
-    });
-  }
+    // 添加最大值验证规则
+    if (Maximum != null) {
+      rules.push({
+        type: "number",
+        max: Maximum,
+        message: `${FormTitle}最大值为${Maximum}!`
+      });
+    }
+
+    return rules;
+  }, [Required, FormTitle, Minimum, Maximum]);
+
+  // 处理默认值
+  const initialValue = useMemo(() => {
+    if (DefaultValue === undefined || DefaultValue === null) return undefined;
+    const numValue = Number(DefaultValue);
+    return isNaN(numValue) ? undefined : numValue;
+  }, [DefaultValue]);
 
   return (
-    <FormItem
-      name={DataIndex}
-      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={rules}
-      initialValue={DefaultValue ?? null}
-    >
+    <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={initialValue}>
       <InputNumber
         placeholder={Placeholder ?? "请输入"}
-        disabled={disabled ?? isDisabled}
-        // 设置最小值/最大值（可选，与验证规则配合使用）
+        disabled={isDisabled}
         min={Minimum ?? undefined}
         max={Maximum ?? undefined}
+        onChange={handleChange}
+        style={{ width: "100%" }}
       />
     </FormItem>
   );

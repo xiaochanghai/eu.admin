@@ -6,6 +6,9 @@ import { FormVo } from "@/api/Form";
 import { Drawer } from "antd";
 import { RootState, useSelector } from "@/redux";
 import { useWorkFlow } from "@/workflow-editor/hooks";
+import { useDispatch } from "@/redux";
+
+import { CHANGE_NODE } from "@/redux/modules/workflow";
 
 const Content = styled.div`
   display: flex;
@@ -15,6 +18,7 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
   const workFlow = useWorkFlow();
   const selectedId = useSelector((state: RootState) => state.workflow.selectedId);
   const selectedNode = selectedId ? workFlow.getNode(selectedId) : undefined;
+  const dispatch = useDispatch();
 
   const materialUi = useMaterialUI(selectedNode);
   const handelClose = () => {
@@ -35,10 +39,10 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
         selectedNode?.nodeType === "audit" || //办理节点
         selectedNode?.nodeType === "start" || //开始节点
         selectedNode?.nodeType === "notifier" //抄送节点
-      )
+      ) {
         workFlow.changeNode({ ...selectedNode, approverSettings: { auditList: value } });
-      // dispatch(CHANGE_NODE({ ...selectedNode, approverSettings: { auditList: value } }));
-      else if (selectedNode?.nodeType === "condition") workFlow.changeNode({ ...selectedNode, conditions: value }); //条件节点
+        dispatch(CHANGE_NODE({ ...selectedNode, approverSettings: { auditList: value } }));
+      } else if (selectedNode?.nodeType === "condition") workFlow.changeNode({ ...selectedNode, conditions: value }); //条件节点
     },
     [selectedNode]
   );
@@ -47,7 +51,7 @@ export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
     <Drawer
       title={selectedNode && <NodeTitle node={selectedNode} onNameChange={handleNameChange} />}
       placement="right"
-      width={656}
+      size={656}
       closable={true}
       // footer={
       //   <Button size="small" icon={<CloseOutlined />} onClick={handelClose} />

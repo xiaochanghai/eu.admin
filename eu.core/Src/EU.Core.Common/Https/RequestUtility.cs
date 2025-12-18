@@ -1,8 +1,6 @@
-﻿using Elasticsearch.Net;
-using EU.Core.Common.Const;
+﻿using EU.Core.Common.Const;
 using EU.Core.Common.Helper;
 using EU.Core.Model;
-using Magicodes.IE.Core;
 using RestSharp;
 
 namespace EU.Core.Common.Https;

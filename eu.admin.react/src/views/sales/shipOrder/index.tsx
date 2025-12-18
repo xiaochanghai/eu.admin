@@ -1,13 +1,12 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Button, Modal } from "antd";
 import { RootState, useSelector } from "@/redux";
 import http from "@/api";
 import { message } from "@/hooks/useMessage";
-import { Icon } from "@/components";
-import TableList from "../../system/common/components/TableList";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 import WaitShipSelect from "../salesOrder/WaitShipSelect";
-import { ViewType } from "@/typings";
+import { ViewType, ActionType } from "@/typings";
 
 const { confirm } = Modal;
 
@@ -56,6 +55,7 @@ const ShipOrder: React.FC<ShipOrderProps> = React.memo(() => {
   // 从Redux获取模块信息
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   const moduleInfo = moduleInfos[MODULE_CODE];
+  const tableRef = useRef<ActionType>();
 
   /**
    * 切换页面视图
@@ -182,15 +182,21 @@ const ShipOrder: React.FC<ShipOrderProps> = React.memo(() => {
       </>
     );
   }, [moduleInfo]);
+  const onReload = () => tableRef.current?.reload();
 
   return (
     <>
-      {viewType === ViewType.INDEX && (
-        <TableList moduleCode={MODULE_CODE} changePage={changePage} expendAction={renderCustomActions} {...actionMethods} />
-      )}
-
+      <div style={{ display: viewType == ViewType.INDEX ? "block" : "none" }}>
+        <TableList
+          moduleCode={MODULE_CODE}
+          changePage={changePage}
+          expendAction={renderCustomActions}
+          {...actionMethods}
+          tableActionRef={tableRef}
+        />
+      </div>
       {viewType === ViewType.PAGE && (
-        <FormPage moduleCode={MODULE_CODE} Id={formPageId} IsView={formPageIsView} changePage={changePage} />
+        <FormPage moduleCode={MODULE_CODE} Id={formPageId} IsView={formPageIsView} changePage={changePage} onReload={onReload} />
       )}
 
       <WaitShipSelect

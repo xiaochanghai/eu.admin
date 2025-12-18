@@ -1,7 +1,5 @@
-﻿using Castle.DynamicProxy;
-using EU.Core.Common.Const;
+﻿using EU.Core.Common.Const;
 using EU.Core.Common.Seed;
-using EU.Core.Tasks;
 
 namespace EU.Core.Controllers;
 
@@ -79,15 +77,25 @@ public class CommonController : Controller
     public async Task<ServiceResult<ImportExcelResult>> ImportExcelAsync([FromForm] ImportExcelForm import, string moduleCode) => await _service.ImportExcelAsync(import, moduleCode);
     #endregion
 
+    #region 获取Excel导入结果
+    /// <summary>
+    /// 获取Excel导入结果
+    /// </summary>
+    /// <param name="importDataId">导入数据ID</param>
+    /// <param name="templateId">模板ID</param>
+    /// <returns>ImportExcelResult</returns>
+    [HttpGet("QueryImportExcelResult/{importDataId}/{templateId}")]
+    public async Task<ServiceResult<ImportExcelResult>> QueryImportExcelResultAsync(Guid importDataId, Guid templateId) => await _service.QueryImportExcelResultAsync(importDataId, templateId);
+    #endregion
+
     #region Excel导入数据转换
     /// <summary>
     /// Excel导入数据转换
     /// </summary>
-    /// <param name="request">请求数据</param>
-    /// <param name="moduleCode">模块代码</param>
+    /// <param name="request">请求数据</param> 
     /// <returns></returns>
-    [HttpPost("TransferExcelData/{moduleCode}")]
-    public Task<ServiceResult> TransferExcelData([FromBody] TransferExcelRequest request, string moduleCode) => _service.TransferExcelData(request, moduleCode);
+    [HttpPost("TransferExcelData")]
+    public Task<ServiceResult> TransferExcelData([FromBody] TransferExcelRequest request) => _service.TransferExcelData(request);
     #endregion
 
     #region 获取通用下拉数据
@@ -164,7 +172,7 @@ public class CommonController : Controller
     [HttpGet("GenerateAllEntity"), AllowAnonymous]
     public ServiceResult GenerateAllEntity()
     {
- 
+
         DBSeed.GenerateAllEntity(_myContext);
 
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
@@ -206,7 +214,34 @@ public class CommonController : Controller
         //var aa = Guid.NewGuid().ToString("N");
         //var aa1 = Guid.NewGuid();
         DBSeed.MigrationLogs1(_myContext);
- 
+
+
+        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
+
+    }
+    #endregion
+
+
+
+    #region 测试
+    [HttpGet("SyncData/{tableName}"), AllowAnonymous]
+    public async Task<ServiceResult> SyncDataTable(string tableName)
+    {
+        //for (int i = 0; i < 100; i++)
+        //{
+        //    TaskMsg msg = new TaskMsg();
+
+        //    msg.MsgId = Guid.NewGuid();
+        //    msg.Time = DateTime.Now;
+        //    RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
+        //    Thread.Sleep(2000);
+        //}
+        //DBHelper.ExecuteDML("UPDATE  SmModules set UpdateTime=getdate() where ID='402d1606-286a-47ec-8e45-346a12450e9a'");
+
+        //var aa = Guid.NewGuid().ToString("N");
+        //var aa1 = Guid.NewGuid();
+        DBSeed.SyncData(_myContext, tableName);
+
 
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
 

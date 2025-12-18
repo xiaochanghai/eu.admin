@@ -44,7 +44,19 @@ export default {
     senderHeaderAttachmentDesc: "Click or drag files to this area to upload",
     senderHeaderAttachmentDropTitle: "Drop file here",
     senderPlaceholder: "Ask or input / use skills",
-    loadingMessage: "Thinking..."
+    loadingMessage: "Thinking...",
+    noData: "No Data",
+    requestFailedPleaseTryAgain: "Request failed, please try again!",
+    itIsNowANewConversation: "It is now a new conversation.",
+    today: "Today",
+    curConversation: "Current Conversation",
+    newConversation: "New Conversation",
+    rename: "Rename",
+    retry: "retry",
+    isMock: "It is Mock",
+    delete: "Delete",
+    deepThinking: "Deep Thinking",
+    completeThinking: "Complete Thinking"
   },
   avatar: {
     home: "Home",
@@ -63,5 +75,11 @@ export default {
     confirmPassword: "Confirm Password",
     notMatchMessage: "The confirmation password does not match the new password!",
     changeSuccessMessage: "Password changed successfully 🎉"
+  },
+  formOption: {
+    add: "Add",
+    edit: "Edit",
+    save: "Save",
+    saveAndAdd: "Save and Add"
   }
 };

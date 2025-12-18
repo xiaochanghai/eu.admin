@@ -38,9 +38,179 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         _configuration = configuration;
         _hostingEnvironment = hostingEnvironment;
     }
+
     public async Task<ServiceResult<Guid>> UploadAsync(UploadForm upload)
     {
         var file = upload.file;
+        var filePath = upload.filePath;
+        filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
+        string ImageType = filePath;
+
+        var ext = string.Empty;
+        if (file.FileName.IsNotEmptyOrNull())
+        {
+            var dotPos = file.FileName.LastIndexOf('.');
+            ext = file.FileName.Substring(dotPos + 1);
+        }
+        filePath = $"/{filePath}/";
+
+        FileHelper.CreateRootDirectory(filePath);
+
+        string fileName = $"{Utility.SnowID()}.{ext}";
+        var filepath = Path.Combine(filePath, fileName);
+        //var filepath = Path.Combine(pathHeader, file.FileName);
+        using (var stream = File.Create(FileHelper.GetPhysicsPath() + filepath))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        InsertFileAttachmentInput fileAttachment = new();
+        fileAttachment.OriginalFileName = file.FileName;
+        fileAttachment.FileName = fileName;
+        fileAttachment.FileExt = ext;
+        fileAttachment.MasterId = upload.masterId;
+        fileAttachment.Length = file.Length;
+        fileAttachment.Path = filePath;
+        fileAttachment.ImageType = ImageType;
+        var id = await base.Add(fileAttachment);
+
+        return Success(id);
+    }
+
+    public async Task<ServiceResult<Guid>> UploadImageAsync(UploadForm upload)
+    {
+        string filePath = upload.filePath;
+        filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
+        var ext = string.Empty;
+        var file = upload.file;
+        if (file.FileName.IsNotEmptyOrNull())
+        {
+            var dotPos = file.FileName.LastIndexOf('.');
+            ext = file.FileName.Substring(dotPos + 1);
+        }
+        string pathHeader = "wwwroot/" + filePath;
+        FileHelper.CreateDirectory(pathHeader);
+
+        var fileName = $"{Utility.SnowID()}.{ext}";
+        var filepath = Path.Combine(pathHeader, fileName);
+        //var filepath = Path.Combine(pathHeader, file.FileName);
+        using (var stream = File.Create(filepath))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        if (upload.isUnique)
+            await Db.Updateable<FileAttachment>()
+                .SetColumns(it => new FileAttachment() { IsDeleted = true }, true)
+                .Where(x => x.MasterId == upload.masterId && x.ImageType == upload.imageType)
+                .ExecuteCommandAsync();
+
+        InsertFileAttachmentInput fileAttachment = new();
+        fileAttachment.OriginalFileName = file.FileName;
+        fileAttachment.FileName = fileName;
+        fileAttachment.FileExt = ext;
+        fileAttachment.MasterId = upload.masterId;
+        fileAttachment.Length = file.Length;
+        fileAttachment.Path = filePath;
+        fileAttachment.ImageType = upload.imageType ?? filePath;
+        var id = await base.Add(fileAttachment);
+
+        if (upload.masterTable.IsNotEmptyOrNull() && upload.masterColumn.IsNotEmptyOrNull())
+        {
+            var dt = new Dictionary<string, object>
+            {
+                { "ID", upload.masterId },
+                { "UpdateBy", Utility.GetUserId() },
+                { "UpdateTime", Utility.GetSysDate() }
+            };
+            if (upload.masterColumn == "ImageUrl")
+                dt.Add(upload.masterColumn, fileName);
+            else
+                dt.Add(upload.masterColumn, id);
+            await Db.Updateable(dt).AS(upload.masterTable)
+                .WhereColumns("ID").ExecuteCommandAsync();
+        }
+
+        return Success(id, "上传成功！");
+    }
+
+    public async Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload)
+    {
+        var path = $"{$"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}files{Path.DirectorySeparatorChar}upload{Path.DirectorySeparatorChar}{upload.id}{Path.DirectorySeparatorChar}"}";
+
+        FileHelper.CreateDirectory(path);
+
+        using (var stream = File.Create(path + $"{upload.chunkIndex}"))
+        {
+            await upload.file.CopyToAsync(stream);
+        }
+
+        if (upload.chunkIndex == upload.totalChunks - 1)
+        {
+            var ext = string.Empty;
+            var file = upload.file;
+            if (file.FileName.IsNotEmptyOrNull())
+            {
+                var dotPos = upload.fileName.LastIndexOf('.');
+                ext = upload.fileName.Substring(dotPos + 1);
+            }
+            string id = Utility.GetSysID();
+            await VideoHelper.FileMerge(upload.id, "." + ext, id);
+
+            InsertFileAttachmentInput fileAttachment = new();
+            fileAttachment.OriginalFileName = file.FileName;
+            fileAttachment.FileName = upload.fileName;
+            fileAttachment.FileExt = ext;
+            //fileAttachment.MasterId = upload.masterId;
+            fileAttachment.Length = file.Length;
+            fileAttachment.Path = $"/files/upload/{id}.{ext}";
+            await base.Add(fileAttachment);
+
+            return Success<string>(null, "上传成功！");
+        }
+        return Success<string>(null, "上传成功！");
+    }
+
+    public async Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null)
+    {
+        var data = await Db.Queryable<FileAttachment>()
+            .WhereIF(!string.IsNullOrEmpty(imageType), o => o.ImageType == imageType)
+            .Where(x => x.MasterId == masterId).OrderByDescending(x => x.CreatedTime)
+            .ToListAsync();
+        return Success(data);
+    }
+
+    /// <summary>
+    /// 通过文件地址导入数据
+    /// </summary>
+    /// <param name="fileUrl"></param>
+    /// <returns></returns>
+    public async Task<ServiceResult<FileAttachment>> AddByFileUrl(string fileUrl)
+    {
+        InsertFileAttachmentInput fileAttachment = new();
+
+        FileInfo fileInfo = new FileInfo(fileUrl);
+        fileAttachment.OriginalFileName = fileInfo.Name;
+        fileAttachment.FileName = fileInfo.Name;
+        fileAttachment.FileExt = fileInfo.Extension.Replace(".", null);
+        fileAttachment.Length = fileInfo.Length;
+        fileAttachment.Path = fileUrl.Replace("wwwroot", null).Replace(fileInfo.Name, null);
+        var id = await base.Add(fileAttachment);
+
+        var entity1 = Mapper.Map(fileAttachment).ToANew<FileAttachment>();
+
+        entity1.ID = id;
+        return Success(entity1);
+    }
+
+    public async Task<ServiceResult<AnalysisUploadResult>> AnalysisUploadAsync(UploadForm upload)
+    {
+        var result = new AnalysisUploadResult();
+        var file = upload.file;
+
+        if (file is null)
+            return Failed<AnalysisUploadResult>("无效的文件！");
+
         var filePath = upload.filePath;
         filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
         string ImageType = filePath;
@@ -51,7 +221,7 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
             var dotPos = file.FileName.LastIndexOf('.');
             ext = file.FileName.Substring(dotPos + 1);
         }
-        filePath += "/" + Utility.GetLongID() + "/";
+        filePath += "/" + Utility.SnowID() + "/";
 
         string pathHeader = "wwwroot/" + filePath;
         filePath = "/" + filePath;
@@ -73,124 +243,33 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         fileAttachment.Path = filePath;
         fileAttachment.ImageType = ImageType;
         var id = await base.Add(fileAttachment);
+        result.FileId = id;
 
-        if (upload.isUnique)
-            await Db.Updateable<FileAttachment>()
-                    .SetColumns(it => new FileAttachment() { IsDeleted = true })
-                    .Where(it => it.MasterId == upload.masterId && it.ID != id && it.ImageType == upload.imageType)
-                    .ExecuteCommandAsync();
-        return ServiceResult<Guid>.OprateSuccess(id);
-    }
+        var info = NPOIHelper.GetTemplateInfo(filePath + fileName);
 
-    public async Task<ServiceResult<Guid>> UploadImageAsync(UploadForm upload)
-    {
-        using var _context = ContextFactory.CreateContext();
-        string filePath = upload.filePath;
-        filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
-        var ext = string.Empty;
-        var file = upload.file;
-        if (string.IsNullOrEmpty(file.FileName) == false)
+        if (info.TemplateId.IsNotEmptyOrNull())
         {
-            var dotPos = file.FileName.LastIndexOf('.');
-            ext = file.FileName.Substring(dotPos + 1);
-        }
+            var template = await Db.Queryable<SmImpTemplate>().Where(x => x.ID == info.TemplateId).FirstAsync();
+            result.TemplateId = info.TemplateId;
 
-        string pathHeader = "wwwroot/" + filePath;
-        if (!Directory.Exists(pathHeader))
-            Directory.CreateDirectory(pathHeader);
-
-        string fileName = Utility.GetSysID();
-        var filepath = Path.Combine(pathHeader, $"{fileName}.{ext}");
-        //var filepath = Path.Combine(pathHeader, file.FileName);
-        using (var stream = File.Create(filepath))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        if (upload.isUnique)
-        {
-            string sql = @"UPDATE FileAttachment
-                                SET IsDeleted = 'true'
-                                WHERE MasterId = '{0}'
-                                      AND IsDeleted = 'false'
-                                      AND ImageType = '{1}'";
-            sql = string.Format(sql, upload.masterId, upload.imageType);
-            DBHelper.ExecuteNonQuery(sql);
-        }
-
-        FileAttachment fileAttachment = new();
-        fileAttachment.OriginalFileName = file.FileName;
-        fileAttachment.CreatedBy = App.User.ID;
-        fileAttachment.CreatedTime = Utility.GetSysDate();
-        fileAttachment.FileName = fileName;
-        fileAttachment.FileExt = ext;
-        fileAttachment.MasterId = upload.masterId;
-        fileAttachment.Length = file.Length;
-        fileAttachment.Path = filePath;
-        fileAttachment.ImageType = upload.imageType ?? filePath;
-        //url = fileName + "." + ext;
-        await _context.AddAsync(fileAttachment);
-        await _context.SaveChangesAsync();
-
-        if (!string.IsNullOrEmpty(upload.masterTable) && !string.IsNullOrEmpty(upload.masterColumn))
-        {
-            string sql = "UPDATE {2} SET {3}='{1}' WHERE ID='{0}'";
-            sql = string.Format(sql, upload.masterId, fileName + "." + ext, upload.masterTable, "ImageUrl");
-            DBHelper.ExecuteNonQuery(sql);
-        }
-
-        return ServiceResult<Guid>.OprateSuccess(fileAttachment.ID, "上传成功！");
-    }
-
-    public async Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload)
-    {
-        var path = $"{$"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}files{Path.DirectorySeparatorChar}upload{Path.DirectorySeparatorChar}{upload.id}{Path.DirectorySeparatorChar}"}";
-        if (!Directory.Exists(path))
-            Directory.CreateDirectory(path);
-        using (var stream = File.Create(path + $"{upload.chunkIndex}"))
-        {
-            await upload.file.CopyToAsync(stream);
-        }
-
-        if (upload.chunkIndex == upload.totalChunks - 1)
-        {
-            var ext = string.Empty;
-            var file = upload.file;
-            if (string.IsNullOrEmpty(file.FileName) == false)
+            if (template != null)
             {
-                var dotPos = upload.fileName.LastIndexOf('.');
-                ext = upload.fileName.Substring(dotPos + 1);
+                result.IsTemplate = true;
+
+                var importDataId = Utility.GuidId;
+
+                try
+                {
+                    await ImportHelper.ImportData(Db, importDataId, template, filePath + fileName);
+                }
+                catch (Exception E)
+                {
+                    result.Message = E.Message;
+                }
+                result.ImportDataId = importDataId;
             }
-            string id = Utility.GetSysID();
-            await VideoHelper.FileMerge(upload.id, "." + ext, id);
-
-
-            FileAttachment fileAttachment = new();
-            fileAttachment.OriginalFileName = file.FileName;
-            fileAttachment.CreatedBy = App.User.ID;
-            fileAttachment.CreatedTime = Utility.GetSysDate();
-            fileAttachment.FileName = upload.fileName;
-            fileAttachment.FileExt = ext;
-            //fileAttachment.MasterId = upload.masterId;
-            fileAttachment.Length = file.Length;
-            fileAttachment.Path = $"/files/upload/{id}.{ext}";
-            //fileAttachment.ImageType = upload.imageType ?? filePath;
-            //url = fileName + "." + ext;
-            await _context.AddAsync(fileAttachment);
-            await _context.SaveChangesAsync();
-
-            return Success<string>(null, "上传成功！");
         }
-        return Success<string>(null, "上传成功！");
-    }
 
-    public async Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null)
-    {
-        var src = Db.Queryable<FileAttachment>();
-        if (!string.IsNullOrEmpty(imageType))
-            src = src.Where(o => o.ImageType == imageType);
-
-        var data = await src.Where(x => x.MasterId == masterId).OrderByDescending(x => x.CreatedTime).ToListAsync();
-        return ServiceResult<List<FileAttachment>>.OprateSuccess(data);
+        return Success(result);
     }
 }

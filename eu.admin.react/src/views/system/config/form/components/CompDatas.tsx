@@ -65,6 +65,18 @@ export const FormComponents = [
     icon: "DateTimePicker",
     fieldType: "DateTimePicker",
     label: "日期时间选择器"
+  },
+  {
+    key: 10,
+    icon: "BgColorsOutlined",
+    fieldType: "ColorPicker",
+    label: "颜色选择器"
+  },
+  {
+    key: 11,
+    icon: "FileImageOutlined",
+    fieldType: "ImageCover",
+    label: "封面上传"
   }
   // VfCheckbox: {
   //   component: VfCheckbox,

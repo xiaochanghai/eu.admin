@@ -184,14 +184,14 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
             await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "PoArrivalOrderDetail", id);
             await Db.Ado.CommitTranAsync();
 
-            return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+            return Success(ResponseText.EXECUTE_SUCCESS);
 
         }
         catch (Exception E)
         {
             await Db.Ado.RollbackTranAsync();
 
-            return ServiceResult.OprateFailed(E.Message);
+            return Failed(E.Message);
         }
     }
     #endregion
@@ -329,7 +329,7 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
             it.OrderStatus != DIC_PURCHASE_NOTICE_ORDER_STATUS.InComplete &&
             it.AuditStatus == DIC_SYSTEM_AUDIT_STATUS.CompleteAudit)
             .ExecuteCommandAsync();
-        return ServiceResult.OprateSuccess(ResponseText.EXECUTE_SUCCESS);
+        return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
 

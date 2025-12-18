@@ -26,7 +26,7 @@ public interface ISmModulesServices : IBaseServices<SmModules, SmModulesDto, Ins
 
     Task<ServiceResult<List<TreeMenuData>>> GetMenuData();
     Task<dynamic> GetModuleInfo(string moduleCode);
-    ServicePageResult<SmModuleFormOption> GetModuleFormColumn(string moduleCode);
+    Task<ServicePageResult<SmModuleFormOption>> GetModuleFormColumn(Guid id);
 
     Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id);
 
@@ -40,4 +40,6 @@ public interface ISmModulesServices : IBaseServices<SmModules, SmModulesDto, Ins
     Task<ServiceResult> UpdateTaxisNoAsync(string moduleCode, List<SmModuleColumn> columns, string type);
 
     Task<ServiceResult> UpdateColumnAsync(string moduleCode, SmModuleFormOption column, string type);
+
+    Task<ServiceResult> AddColumnAsync(string moduleCode, SmModuleColumn column);
 }

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:31:17  SahHsiao   初版
+* V0.01  2025/11/15 23:05:38  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -32,14 +32,14 @@ public class SmWorkFlowNodeBase : BasePoco
     /// <summary>
     /// 上级节点ID
     /// </summary>
-    [Display(Name = "ParentNodeId"), Description("上级节点ID"), MaxLength(64, ErrorMessage = "上级节点ID 不能超过 64 个字符")]
-    public string ParentNodeId { get; set; }
+    [Display(Name = "ParentNodeId"), Description("上级节点ID")]
+    public Guid? ParentNodeId { get; set; }
 
     /// <summary>
     /// 节点ID
     /// </summary>
-    [Display(Name = "NodeId"), Description("节点ID"), MaxLength(64, ErrorMessage = "节点ID 不能超过 64 个字符")]
-    public string NodeId { get; set; }
+    [Display(Name = "NodeId"), Description("节点ID")]
+    public Guid? NodeId { get; set; }
 
     /// <summary>
     /// 节点类型

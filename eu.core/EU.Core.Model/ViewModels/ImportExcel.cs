@@ -6,10 +6,12 @@ namespace EU.Core.Model;
 public class ImportExcelResult
 {
     public List<SmImportError> ErrorList { get; set; }
-    public string ImportDataId { get; set; }
+    public Guid? ImportDataId { get; set; }
     public List<string> ImportColumns { get; set; }
     public List<string> ImportColumnNames { get; set; }
     public DataTable ImportList { get; set; }
+    public DataTable ImportMasterList { get; set; }
+    public object Template { get; set; }
 
 
 }
@@ -29,7 +31,7 @@ public class ImportExcelForm
 public class TransferExcelRequest
 {
     public string ImportTemplateCode { get; set; }
-    public string ImportDataId { get; set; }
+    public Guid ImportDataId { get; set; }
     public string Type { get; set; }
     public string MasterId { get; set; }
     public string ModuleCode { get; set; }

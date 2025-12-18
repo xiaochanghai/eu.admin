@@ -59,6 +59,7 @@ export const wrappedStaticRouter = staticRouter.map(route => {
     element: <RouterGuard>{route.element}</RouterGuard>,
     loader: () => {
       return { ...route.meta };
-    }
+    },
+    HydrateFallback: () => <Loading />
   };
 });

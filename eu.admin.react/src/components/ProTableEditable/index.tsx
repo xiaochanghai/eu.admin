@@ -4,13 +4,14 @@ import { Popconfirm, Button, Modal, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
 import { getModuleLogInfo, getModuleInfo } from "@/api/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType, RecordLogData } from "@/api/interface/index";
+import { ModuleInfo, RecordLogData } from "@/api/interface/index";
 import http from "@/api";
 import { pagination1 } from "@/config/proTable";
 import { queryByFilter } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { UploadExcel, ModuleLog, Icon, Loading } from "@/components";
 import { setTableParam, setModuleInfo } from "@/redux/modules/module";
+import { ModifyType } from "@/typings";
 
 const Index: React.FC<any> = props => {
   let tableAction: any;
@@ -88,7 +89,7 @@ const Index: React.FC<any> = props => {
 
   const showLogRecord = async (selectedRows: any) => {
     setRecordLogVisible(true);
-    let { Data } = await getModuleLogInfo({ moduleCode, id: selectedRows[0].ID });
+    let { Data } = await getModuleLogInfo(moduleCode, selectedRows[0].ID);
     setRecordLogData(Data);
   };
   const showLogRecordCancel = () => {

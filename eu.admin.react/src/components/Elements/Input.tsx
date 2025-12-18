@@ -1,7 +1,7 @@
+import React, { useCallback, useMemo } from "react";
 import { Input, Form } from "antd";
-import { ModifyType } from "@/api/interface/index";
 import FieldTitle from "./FieldTitle";
-import { FieldProps } from "@/typings";
+import { FieldProps, ModifyType } from "@/typings";
 
 const FormItem = Form.Item;
 
@@ -15,6 +15,8 @@ interface InputFieldProps {
   disabled?: boolean;
   /** 修改类型（新增/编辑/查看） */
   modifyType?: ModifyType;
+  /** 值变更回调函数 */
+  onChange?: (value: string) => void;
 }
 
 /**
@@ -25,37 +27,55 @@ interface InputFieldProps {
  * 2. 内置表单验证规则
  * 3. 支持禁用状态和清除功能
  * 4. 自动处理字段标题和提示信息
+ * 5. 使用 React.memo 优化性能
+ *
+ * @param props - 组件属性
+ * @returns React组件
  */
-const InputField: React.FC<InputFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit }) => {
+const InputField: React.FC<InputFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit, onChange }) => {
   // 解构字段属性
   const { DefaultValue, DataIndex, Placeholder, Required, Disabled, MaxLength, ModifyDisabled, AllowClear, FormTitle } = field;
 
   // 根据修改类型和字段属性设置禁用状态
-  const isDisabled = (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled;
+  const isDisabled = useMemo(() => {
+    return (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled || disabled;
+  }, [modifyType, ModifyDisabled, Disabled, disabled]);
 
   // 是否显示清除按钮
-  const showClear = AllowClear === true;
+  const showClear = useMemo(() => AllowClear === true, [AllowClear]);
+
+  // 处理输入变化
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange?.(e.target.value);
+    },
+    [onChange]
+  );
+
+  // 验证规则
+  const validationRules = useMemo(
+    () => [
+      {
+        required: Required ?? false,
+        message: `请输入${FormTitle ?? "该字段"}!`
+      }
+    ],
+    [Required, FormTitle]
+  );
 
   return (
-    <FormItem
-      name={DataIndex}
-      label={<FieldTitle name="InfoCircleOutlined" className="ml-5" {...field} />}
-      rules={[
-        {
-          required: Required ?? false,
-          message: `请输入${FormTitle ?? "该字段"}!`
-        }
-      ]}
-      initialValue={DefaultValue ?? null}
-    >
+    <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <Input
         placeholder={Placeholder ?? "请输入"}
-        disabled={disabled ?? isDisabled}
+        disabled={isDisabled}
         maxLength={MaxLength ?? undefined}
         allowClear={showClear}
+        onChange={handleChange}
+        style={{ width: "100%" }}
       />
     </FormItem>
   );
 };
 
-export default InputField;
+// 使用React.memo优化性能，避免不必要的重渲染
+export default React.memo(InputField);

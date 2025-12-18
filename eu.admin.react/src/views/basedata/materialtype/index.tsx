@@ -55,7 +55,7 @@ const ImportTemplate: React.FC<any> = () => {
   };
   const onTabClick = async (key: any) => setTabKey(key);
   return (
-    <Card size="small" bordered={false}>
+    <Card size="small" variant="borderless">
       <Row gutter={[16, 16]} style={{ background: "#fff" }}>
         <Col span={6}>
           {treeData.length > 0 ? (

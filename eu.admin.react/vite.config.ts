@@ -90,7 +90,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             "editor-vendor": ["react-ace", "markdown-it"],
 
             // 其他常用第三方库
-            "misc-vendor": ["ahooks", "antd-style", "styled-components", "uuid", "qs", "md5"]
+            "misc-vendor": ["ahooks", "antd-style", "styled-components", "uuid", "qs", "md5"],
+            "chat-module": [resolve(__dirname, "./src/components/Chat/index.tsx")]
 
             // // 工作流编辑器 (大模块)
             // "workflow-editor": [/.*workflow-editor.*/]

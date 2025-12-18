@@ -4,9 +4,12 @@ import { message } from "@/hooks/useMessage";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
+import { SaveTypeEnum, EditOpenType, ModifyType } from "@/typings";
 import http from "@/api";
 import { Element, UploadImage, Attachment, Loading } from "@/components";
+import { STANDARD_FORM_LAYOUT } from "@/config";
+
 const FormItem = Form.Item;
 
 const FormPage: React.FC<any> = props => {
@@ -151,42 +154,7 @@ const FormPage: React.FC<any> = props => {
       </Flex>
     );
   };
-  // const component = (group: any | 1) => {
-  //   return (
-  //     <Flex wrap="wrap">
-  //       {formColumns.filter((f: { HideInForm: boolean; FromFieldGroup: any }) => f.HideInForm === false)?.length === 0
-  //         ? null
-  //         : formColumns
-  //             .filter((f: any) => f.HideInForm === false && f.FromFieldGroup === group)
-  //             .map((item: any, index: any) => {
-  //               return (
-  //                 <div
-  //                   style={{
-  //                     width: (item.GridSpan != null ? item?.GridSpan : 50) + "%"
-  //                   }}
-  //                   key={index}
-  //                 >
-  //                   {item.DataIndex == "MaterialTypeId" ? (
-  //                     <FormItem name="MaterialTypeId" label="物料类型" rules={[{ required: true }]}>
-  //                       <TreeSelect
-  //                         // value={this.state.MaterialTypeId}
-  //                         dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
-  //                         treeData={treeData}
-  //                         placeholder="请选择物料类型"
-  //                         disabled={disabled ?? IsView}
-  //                         treeDefaultExpandAll
-  //                       />
-  //                     </FormItem>
-  //                   ) : (
-  //                     <Layout field={item} IsView={disabled ?? IsView} modifyType={modifyType} />
-  //                   )}
-  //                 </div>
-  //               );
-  //             })}
-  //     </Flex>
-  //   );
-  // };
-  const onFinish = async (data: any, type = "Save") => {
+  const onFinish = async (data: any, type = SaveTypeEnum.Save) => {
     if (id) data = { ...data, url, Id: id ?? null };
     else data = { ...data, url };
     if (isDetail) data[masterColumn] = masterId;
@@ -197,9 +165,9 @@ const FormPage: React.FC<any> = props => {
 
     if (Success) {
       message.success(Message);
-      if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
-      if (type === "SaveAdd") {
+      onDisabled?.(true);
+      if (openType === EditOpenType.Modal || openType === EditOpenType.Drawer) onReload();
+      if (type === SaveTypeEnum.SaveAdd) {
         setViewId(null);
         setDisabled(true);
         form.resetFields();
@@ -207,9 +175,9 @@ const FormPage: React.FC<any> = props => {
     }
   };
   const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
+  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, SaveTypeEnum.SaveAdd));
   const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
+    onDisabled?.(false);
     setDisabled(false);
   };
 
@@ -246,25 +214,13 @@ const FormPage: React.FC<any> = props => {
   ];
   return (
     <>
-      {openType === "Modal" || openType === "Drawer" ? (
-        <div style={{ marginTop: 20, marginBottom: 20 }}>
-          <Form
-            labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
-            labelWrap
-            wrapperCol={{ span: 16 }}
-            onFinish={onFinish}
-            onValuesChange={onValuesChange}
-            form={form}
-          >
-            {isLoading ? <Loading /> : component(1)}
-            <div style={{ height: 20 }}></div>
-            <Tabs items={items} />
-          </Form>
-        </div>
+      {openType === EditOpenType.Modal || openType === EditOpenType.Drawer ? (
+        <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={onFinish} onValuesChange={onValuesChange} form={form}>
+          {isLoading ? <Loading /> : component(1)}
+          <div style={{ height: 20 }}></div>
+          <Tabs items={items} />
+        </Form>
       ) : null}
-      {/* Tabs Begin */}
-
-      {/* Tabs Begin */}
     </>
   );
 };

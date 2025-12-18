@@ -22,4 +22,5 @@ namespace EU.Core.IServices;
 public interface ISmImpTemplateServices : IBaseServices<SmImpTemplate, SmImpTemplateDto, InsertSmImpTemplateInput, EditSmImpTemplateInput>
 {
     Task<ServiceResult<SmImpTemplateDto>> QueryByModuleId(Guid moduleId);
+    Task<ServiceResult<FileAttachment>> Download(Guid templateId);
 }

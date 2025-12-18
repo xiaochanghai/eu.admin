@@ -1,14 +1,14 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Drawer, Modal, Button, Space } from "antd";
-import type { ActionType } from "@ant-design/pro-components";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { Skeleton, SmProTable, Icon } from "@/components";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
-import Extend from "./Extend";
-import FormPage from "./FormPage";
-import { ViewType } from "@/typings";
+import Extend from "@/views/system/common/components/Extend";
+import { FormPage } from "./FormPage";
+import { ViewType, EditOpenType, ActionType } from "@/typings";
+import { useTranslation } from "react-i18next";
 
 /**
  * 模块表格组件接口定义
@@ -20,7 +20,7 @@ interface TableListProps {
   IsView?: boolean | null; // 是否为查看模式
   DynamicFormPage?: React.ComponentType<any>; // 动态表单页面组件
   [key: string]: any; // 其他属性
-
+  tableActionRef?: React.RefObject<ActionType | undefined>; // 视图操作引用
   extendAction?: any;
 }
 
@@ -29,8 +29,10 @@ interface TableListProps {
  * 用于展示模块数据并处理表单操作（新增、编辑、查看）
  * @param props 组件属性
  */
-const TableList: React.FC<TableListProps> = props => {
+export const TableList: React.FC<TableListProps> = props => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
+
   // 状态管理
   const [drawerOpen, setDrawerOpen] = useState(false); // 抽屉是否打开
   const [modalVisible, setModalVisible] = useState(false); // 模态框是否可见
@@ -38,7 +40,7 @@ const TableList: React.FC<TableListProps> = props => {
   const [disabled, setDisabled] = useState(true); // 表单是否禁用
 
   // 从props中解构属性
-  const { moduleCode, masterId, changePage, IsView, DynamicFormPage, extendAction } = props;
+  const { moduleCode, masterId, changePage, IsView, DynamicFormPage, extendAction, tableActionRef } = props;
 
   // 从Redux获取模块信息和ID
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
@@ -73,13 +75,11 @@ const TableList: React.FC<TableListProps> = props => {
     setDrawerOpen(false);
     setDisabled(true);
     setModalVisible(false);
-    // 注释掉的代码保留，可能后续需要恢复
-    // dispatch({
-    //   type: "smcommon/setId",
-    //   payload: { moduleCode, id: null }
-    // });
   };
 
+  const onReload = () => {
+    (tableActionRef ?? tableRef).current?.reload();
+  };
   /**
    * 渲染表单组件
    * @returns 表单组件
@@ -93,7 +93,7 @@ const TableList: React.FC<TableListProps> = props => {
             Id={id}
             masterId={masterId}
             IsView={isView}
-            onReload={() => tableRef.current?.reload()}
+            onReload={onReload}
             onClose={onClose}
             formPageRef={formPageRef}
             onDisabled={(value: boolean) => setDisabled(value)}
@@ -104,7 +104,7 @@ const TableList: React.FC<TableListProps> = props => {
             Id={id}
             masterId={masterId}
             IsView={isView}
-            onReload={() => tableRef.current?.reload()}
+            onReload={onReload}
             onClose={onClose}
             formPageRef={formPageRef}
             onDisabled={(value: boolean) => setDisabled(value)}
@@ -162,16 +162,17 @@ const TableList: React.FC<TableListProps> = props => {
   const handleEdit = (recordId: string, viewMode: boolean) => {
     dispatch(setId({ moduleCode, id: recordId }));
 
-    if (moduleInfo.openType === "Modal") {
+    if (moduleInfo.openType === EditOpenType.Modal) {
       setModalVisible(true);
       setIsView(viewMode);
-    } else if (moduleInfo.openType === "Drawer") {
+    } else if (moduleInfo.openType === EditOpenType.Drawer) {
       setDrawerOpen(true);
       setIsView(viewMode);
     } else if (changePage) {
       changePage(ViewType.PAGE, recordId, viewMode);
     }
   };
+
   return (
     <>
       {moduleInfo && moduleInfo.Success === true ? (
@@ -179,7 +180,7 @@ const TableList: React.FC<TableListProps> = props => {
           <SmProTable
             // moduleCode={moduleCode}
             moduleInfo={moduleInfo}
-            actionRef={tableRef}
+            actionRef={tableActionRef ?? tableRef}
             formRef={formRef}
             IsView={IsView}
             masterId={masterId}
@@ -189,10 +190,10 @@ const TableList: React.FC<TableListProps> = props => {
           />
 
           {/* 模态框表单 */}
-          {moduleInfo.openType === "Modal" && (
+          {moduleInfo.openType === EditOpenType.Modal && (
             <Modal
               destroyOnHidden
-              title={`${moduleInfo.moduleName}${id ? "->编辑" : "->新增"}`}
+              title={`${moduleInfo.moduleName}->${id ? t("formOption.edit") : t("formOption.add")}`}
               open={modalVisible}
               width={moduleInfo.formPageWidth}
               footer={null}
@@ -203,30 +204,30 @@ const TableList: React.FC<TableListProps> = props => {
           )}
 
           {/* 抽屉表单 */}
-          {moduleInfo.openType === "Drawer" && (
+          {moduleInfo.openType === EditOpenType.Drawer && (
             <Drawer
-              title={`${moduleInfo.moduleName}${id ? "->编辑" : "->新增"}`}
-              width={moduleInfo.formPageWidth}
+              title={`${moduleInfo.moduleName}->${id ? t("formOption.edit") : t("formOption.add")}`}
+              size={moduleInfo.formPageWidth}
               onClose={onClose}
               open={drawerOpen}
               extra={
                 <Space>
                   <Button
-                    key="submit"
+                    key="save"
                     disabled={isView ?? disabled}
                     type="primary"
                     block={true}
                     onClick={() => formPageRef.current?.onSave()}
                   >
-                    保存
+                    {t("formOption.save")}
                   </Button>
                   <Button
-                    key="submit1"
+                    key="saveAndAdd"
                     disabled={isView ?? disabled}
                     block={true}
                     onClick={() => formPageRef.current?.onSaveAdd()}
                   >
-                    保存并新建
+                    {t("formOption.saveAndAdd")}
                   </Button>
                   <Button key="back" type="text" block={true} onClick={onClose}>
                     <Icon name="RollbackOutlined" />
@@ -234,7 +235,7 @@ const TableList: React.FC<TableListProps> = props => {
                 </Space>
               }
             >
-              {drawerOpen ? renderFormComponent() : null}
+              {drawerOpen && renderFormComponent()}
             </Drawer>
           )}
         </>
@@ -247,5 +248,3 @@ const TableList: React.FC<TableListProps> = props => {
     </>
   );
 };
-
-export default TableList;

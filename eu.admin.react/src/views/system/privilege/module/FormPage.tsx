@@ -1,12 +1,13 @@
 import React, { useEffect, useImperativeHandle, useState } from "react";
-import { Form, Flex } from "antd";
-import { Loading, Element } from "@/components";
+import { Form } from "antd";
+import { Skeleton, renderFormComponent } from "@/components";
 import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
-import { EditOpenType } from "@/typings";
+import { SaveTypeEnum, EditOpenType, ModifyType } from "@/typings";
+import { STANDARD_FORM_LAYOUT } from "@/config";
 
 // 定义组件props类型
 interface FormPageProps {
@@ -70,30 +71,30 @@ const FormPage: React.FC<FormPageProps> = props => {
   /**
    * 渲染表单字段组件
    */
-  const renderFormFields = () => {
-    const visibleColumns = formColumns?.filter((f: any) => f.HideInForm === false);
+  // const renderFormFields = () => {
+  //   const visibleColumns = formColumns?.filter((f: any) => f.HideInForm === false);
 
-    if (!visibleColumns?.length) {
-      return <div className="main-tooltip">请选择进行系统表单配置</div>;
-    }
+  //   if (!visibleColumns?.length) {
+  //     return <div className="main-tooltip">请选择进行系统表单配置</div>;
+  //   }
 
-    return (
-      <Flex wrap="wrap">
-        {visibleColumns.map((item: any, index: number) => (
-          <div style={{ width: `${item.GridSpan ?? 50}%` }} key={`${item.DataIndex}_${index}`}>
-            <Element field={item} disabled={disabled} modifyType={modifyType} />
-          </div>
-        ))}
-      </Flex>
-    );
-  };
+  //   return (
+  //     <Flex wrap="wrap">
+  //       {visibleColumns.map((item: any, index: number) => (
+  //         <div style={{ width: `${item.GridSpan ?? 50}%` }} key={`${item.DataIndex}_${index}`}>
+  //           <Element field={item} disabled={disabled} modifyType={modifyType} />
+  //         </div>
+  //       ))}
+  //     </Flex>
+  //   );
+  // };
 
   /**
    * 表单提交处理
    * @param data 表单数据
    * @param type 提交类型 (Save/SaveAdd)
    */
-  const handleSubmit = async (data: any, type = "Save") => {
+  const handleSubmit = async (data: any, type = SaveTypeEnum.Save) => {
     const payload = {
       ...data,
       url,
@@ -114,10 +115,10 @@ const FormPage: React.FC<FormPageProps> = props => {
       message.success(Message);
 
       // 处理不同提交类型的回调
-      if (props.onDisabled) props.onDisabled(true);
+      props.onDisabled?.(true);
       if (openType === EditOpenType.Modal || openType === EditOpenType.Drawer) props.onReload?.();
 
-      if (type !== "SaveAdd") {
+      if (type !== SaveTypeEnum.SaveAdd) {
         props.onClose?.();
       } else {
         setViewId(null);
@@ -135,7 +136,7 @@ const FormPage: React.FC<FormPageProps> = props => {
   // 暴露方法给父组件
   useImperativeHandle(props.formPageRef, () => ({
     onSave: () => form.validateFields().then(handleSubmit),
-    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, "SaveAdd"))
+    onSaveAdd: () => form.validateFields().then(values => handleSubmit(values, SaveTypeEnum.SaveAdd))
   }));
 
   /**
@@ -150,18 +151,9 @@ const FormPage: React.FC<FormPageProps> = props => {
   if (openType !== EditOpenType.Modal && openType !== EditOpenType.Drawer) return null;
 
   return (
-    <div style={{ margin: "20px 0" }}>
-      <Form
-        labelCol={{ span: 6, xl: 6, md: 8, sm: 8 }}
-        labelWrap
-        wrapperCol={{ span: 16 }}
-        onFinish={handleSubmit}
-        onValuesChange={handleValuesChange}
-        form={form}
-      >
-        {isLoading ? <Loading /> : renderFormFields()}
-      </Form>
-    </div>
+    <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={handleSubmit} onValuesChange={handleValuesChange} form={form}>
+      {isLoading ? <Skeleton type="form" /> : renderFormComponent(formColumns, disabled, modifyType)}
+    </Form>
   );
 };
 

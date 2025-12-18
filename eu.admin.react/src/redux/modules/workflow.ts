@@ -42,8 +42,39 @@ const workflowSlice = createSlice({
       state.startNode = payload;
     },
     CHANGE_NODE(state, { payload }: PayloadAction<any>) {
-      if (state.startNode.id === payload.id) state.startNode = payload;
-      else modifyWorkFlowStartNode(ActionType.CHANGE_NODE, state.startNode, payload.node, payload.id);
+      // 递归更新节点的辅助函数
+      const updateNode = (node: any): any => {
+        // 找到目标节点，合并 payload
+        if (node.id === payload.id) {
+          return { ...node, ...payload };
+        }
+
+        // 创建新对象副本
+        const updates: any = { ...node };
+
+        // 递归处理 childNode
+        if (node.childNode) {
+          updates.childNode = updateNode(node.childNode);
+        }
+
+        // 递归处理 conditionNodeList
+        if (node.conditionNodeList) {
+          updates.conditionNodeList = node.conditionNodeList.map((condNode: any) => {
+            if (condNode.id === payload.id) {
+              return { ...condNode, ...payload };
+            }
+            if (condNode.childNode) {
+              return { ...condNode, childNode: updateNode(condNode.childNode) };
+            }
+            return condNode;
+          });
+        }
+
+        return updates;
+      };
+
+      // 更新 startNode
+      state.startNode = updateNode(state.startNode);
     },
     ADD_NODE(state, { payload }: PayloadAction<any>) {
       // let code = JSON.stringify(state.startNode);

@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -23,10 +25,12 @@ namespace EU.Core.Services;
 public class SmImpTemplateServices : BaseServices<SmImpTemplate, SmImpTemplateDto, InsertSmImpTemplateInput, EditSmImpTemplateInput>, ISmImpTemplateServices
 {
     private readonly IBaseRepository<SmImpTemplate> _dal;
-    public SmImpTemplateServices(IBaseRepository<SmImpTemplate> dal)
+    private readonly IFileAttachmentServices _fileAttachmentServices;
+    public SmImpTemplateServices(IBaseRepository<SmImpTemplate> dal, IFileAttachmentServices fileAttachmentServices)
     {
         this._dal = dal;
         base.BaseDal = dal;
+        _fileAttachmentServices = fileAttachmentServices;
     }
 
     #region 按模块代码获取数据
@@ -44,6 +48,41 @@ public class SmImpTemplateServices : BaseServices<SmImpTemplate, SmImpTemplateDt
                 template1.FileId = attachment.ID;
         }
         return Success(template1, ResponseText.QUERY_SUCCESS);
+    }
+    #endregion
+
+    #region 按配置生成模板文件
+    /// <summary>
+    /// 按配置生成模板文件
+    /// </summary>
+    /// <param name="moduleId"></param>
+    /// <returns></returns>
+    public async Task<ServiceResult<FileAttachment>> Download(Guid templateId)
+    {
+        var template = await QueryById(templateId);
+        if (template is null)
+            return Success(new FileAttachment(), ResponseText.QUERY_SUCCESS);
+
+        var startRow = template.StartRow;
+        var templateDetails = await Db.Queryable<SmImpTemplateDetail>()
+            .Where(x => x.ImpTemplateId == templateId).OrderBy(x => x.ColumnNo).ToListAsync();
+
+
+        string fileName = $"{template.TemplateName}.xlsx";
+        string filePath = $"/Download/ExcelTemplate/{Utility.SnowID()}/";
+        string savePath = "wwwroot" + filePath;
+        FileHelper.CreateDirectory(savePath);
+
+        var fileUrl = savePath + fileName;
+        var templatefileUrl = string.Empty;
+        var attachment = await Db.Queryable<FileAttachment>().Where(x => x.MasterId == template.ID).OrderByDescending(x => x.CreatedTime).FirstAsync();
+        if (attachment != null)
+            templatefileUrl = attachment.Path + attachment.FileName;
+
+        NPOIHelper.ExportExcelTemplate(templateDetails, template.TemplateName, template.SheetName, fileUrl, templatefileUrl, template.StartRow ?? 0);
+
+        var result = await _fileAttachmentServices.AddByFileUrl(savePath + fileName);
+        return Success(result.Data, ResponseText.QUERY_SUCCESS);
     }
     #endregion
 }

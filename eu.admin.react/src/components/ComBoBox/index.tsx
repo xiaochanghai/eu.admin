@@ -1,33 +1,86 @@
-import { Select } from "antd";
-import { useState, useEffect } from "react";
+import { Select, SelectProps } from "antd";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { getLovData } from "@/api/modules/module";
-import { SmLovData } from "@/api/interface/index";
+import { SmLovData } from "@/typings";
 
-const ComBoBox: React.FC<any> = props => {
-  const [comboValue, setComboValue] = useState<string>("");
+interface ComBoBoxProps extends Omit<SelectProps, "onChange"> {
+  id: string;
+  value?: string | number;
+  defaultValue?: string | number;
+  onChange?: (value: any, option: any, record?: SmLovData[]) => void;
+}
+
+const ComBoBox: React.FC<ComBoBoxProps> = props => {
+  const { onChange, defaultValue, id, value, ...restProps } = props;
+
+  const [comboValue, setComboValue] = useState<string | number | undefined>(value);
   const [options, setOptions] = useState<SmLovData[]>([]);
-  let { onChange, defaultValue, id, value } = props;
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+
+  // 获取 LOV 数据
   useEffect(() => {
-    const GetLovData = async () => {
-      let { Data } = await getLovData(id);
-      setOptions(Data);
+    if (!id) {
+      setError("ComBoBox id is required");
+      return;
+    }
+
+    const fetchLovData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const { Data } = await getLovData(id);
+        setOptions(Data || []);
+      } catch (err) {
+        console.error("Failed to load ComBoBox data:", err);
+        setError("Failed to load data");
+        setOptions([]);
+      } finally {
+        setLoading(false);
+      }
     };
-    GetLovData();
+
+    fetchLovData();
+  }, [id]);
+
+  // 同步外部 value 变化
+  useEffect(() => {
     setComboValue(value);
-  }, []);
+  }, [value]);
+
+  // 使用 useMemo 缓存过滤逻辑
+  const findOptionRecord = useMemo(() => {
+    return (selectedValue: any): SmLovData[] | undefined => {
+      if (!options || options.length === 0 || selectedValue == null) {
+        return undefined;
+      }
+      return options.filter((item: SmLovData) => item.value === selectedValue);
+    };
+  }, [options]);
+
+  // 使用 useCallback 优化 onChange 处理
+  const handleChange = useCallback(
+    (selectedValue: any, option: any) => {
+      setComboValue(selectedValue);
+
+      if (onChange) {
+        const record = findOptionRecord(selectedValue);
+        onChange(selectedValue, option, record);
+      }
+    },
+    [onChange, findOptionRecord]
+  );
+
   return (
     <Select
       allowClear
-      value={comboValue ?? defaultValue ?? null}
-      {...props}
-      onChange={(value, Option) => {
-        let r = null;
-        if (options && options.length > 0)
-          r = options.filter(function (s: any) {
-            return s.value === value; // 注意：IE9以下的版本没有trim()方法
-          });
-        if (onChange) onChange(value, Option, r);
-      }}
+      loading={loading}
+      value={comboValue ?? defaultValue ?? undefined}
+      placeholder={error || restProps.placeholder || "请选择"}
+      disabled={!!error || restProps.disabled}
+      status={error ? "error" : undefined}
+      {...restProps}
+      onChange={handleChange}
       options={options}
     />
   );

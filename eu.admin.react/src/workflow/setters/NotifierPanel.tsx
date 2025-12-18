@@ -1,13 +1,34 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 // import { VF } from "@src/dsl/VF";
 // import FormPage from "@src/pages/common/formPage";
 // import { IApproverSettings } from "@/workflow-editor/classes/vlife";
-// import { FormVo } from "@/api/Form";
+import { FormVo } from "@/api/Form";
+import MemberSelect from "@/workflow-editor/components/MemberSelect";
+import { IApproverSettings } from "@/workflow-editor/classes/vlife";
 
-export const NotifierPanel = memo(() => {
+// export const NotifierPanel = memo(() => {
+export const NotifierPanel = memo((props: { value?: IApproverSettings; formVo?: FormVo; onChange?: (value?: any) => void }) => {
+  const [initValue, setInitValue] = useState<any[]>();
   // (props: { value?: IApproverSettings; formVo?: FormVo; onChange?: (value?: IApproverSettings) => void }) => {
   return (
-    <></>
+    <>
+      抄送
+      <MemberSelect
+        // read={read || disabled}
+        multiple={true}
+        value={initValue ?? props.value?.auditList ?? []}
+        // value={initValue}
+        onDataChange={(data?: any[]) => {
+          data = data?.map((f: any) => {
+            return { ...f, userType: "notifier" };
+          });
+          setInitValue(data);
+          //仅需要id即可
+          props?.onChange?.(data);
+        }}
+        showUser={true}
+      />
+    </>
     // <FormPage
     //   terse
     //   fontBold

@@ -21,9 +21,7 @@ namespace EU.Core.Api.Controllers;
 /// <summary>
 /// 系统模板(Controller)
 /// </summary>
-[Route("api/SmModule")]
-[ApiController, GlobalActionFilter]
-[Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_SM)]
+[Route("api/SmModule"), ApiController, GlobalActionFilter, Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_SM)]
 public class SmModulesController : BaseController<ISmModulesServices, SmModules, SmModulesDto, InsertSmModulesInput, EditSmModulesInput>
 {
     public SmModulesController(ISmModulesServices service) : base(service)
@@ -31,7 +29,6 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     }
 
     #region 获取左侧菜单
-
     /// <summary>
     /// 获取左侧菜单
     /// </summary>
@@ -53,27 +50,18 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
-    [HttpGet("GetModuleInfo")]
+    [HttpGet("GetModuleInfo"), HttpGet("GetModuleInfo/{moduleCode}")]
     public async Task<dynamic> GetModuleInfo(string moduleCode) => await _service.GetModuleInfo(moduleCode);
-
-    /// <summary>
-    /// 获取模块信息
-    /// </summary>
-    /// <param name="moduleCode">模块代码</param>
-    /// <returns></returns>
-    [HttpGet("GetModuleInfo/{moduleCode}")]
-
-    public async Task<dynamic> GetModuleInfo1(string moduleCode) => await _service.GetModuleInfo(moduleCode);
     #endregion
 
     #region 获取模块表单列信息
     /// <summary>
     /// 获取模块表单列信息
     /// </summary>
-    /// <param name="moduleCode">模块代码</param>
+    /// <param name="id">模块ID</param>
     /// <returns></returns>
-    [HttpGet("FormColumn/{moduleCode}")]
-    public ServicePageResult<SmModuleFormOption> GetModuleFormColumn(string moduleCode) => _service.GetModuleFormColumn(moduleCode);
+    [HttpGet("FormColumn/{id}")]
+    public async Task<ServicePageResult<SmModuleFormOption>> GetModuleFormColumn(Guid id) => await _service.GetModuleFormColumn(id);
     #endregion 
 
     #region 获取模块日志信息
@@ -83,7 +71,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <param name="moduleCode"></param>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet("GetModuleLogInfo")]
+    [HttpGet("GetModuleLogInfo/{moduleCode}/{id}")]
     public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id) => await _service.GetModuleLogInfo(moduleCode, id);
     #endregion
 
@@ -119,6 +107,17 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <returns></returns>
     [HttpPut("UpdateColumn/{moduleCode}/{type}")]
     public async Task<ServiceResult> UpdateColumnAsync(string moduleCode, [FromBody] SmModuleFormOption column, string type) => await _service.UpdateColumnAsync(moduleCode, column, type);
+    #endregion
+
+    #region 新增模块表单列
+    /// <summary>
+    /// 新增模块表单列
+    /// </summary>
+    /// <param name="moduleCode">模块代码</param>
+    /// <param name="column">表单信息</param>
+    /// <returns></returns>
+    [HttpPost("AddColumn/{moduleCode}")]
+    public async Task<ServiceResult> AddColumnAsync(string moduleCode, [FromBody] SmModuleFormOption column) => await _service.AddColumnAsync(moduleCode, column);
     #endregion 
 
     #region 记录用户模块列

@@ -1,5 +1,5 @@
 import React from "react";
-// import FormDesign from "./components/FormDesign";
+import FormDesign from "./components/FormDesign";
 // import { FormVo } from "@/api/Form";
 import { ItemType } from "@/api/base";
 import FlowDesign from "./FlowDesign";
@@ -12,7 +12,7 @@ const Index: React.FC = () => {
     // createId: "",
     // createDate: 2024/01/8,
     rules: [],
-    id: "4028b8818cec22b7018cec22cdc1004b",
+    id: "99fe490e-e022-49d7-a8ba-b82133cfccfc",
     title: "产品",
     type: "product",
     typeParentsStr: "Item,IStatus,IdBean,Serializable,IModel,DbEntity,Object",
@@ -71,7 +71,8 @@ const Index: React.FC = () => {
           // });
         }}
       />
-      {/* <FormDesign /> */}
+      <div> 表单设计</div>
+      <FormDesign />
     </>
   );
 };

@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import TableList from "../../system/common/components/TableList";
+import React, { useState, useRef } from "react";
+import { TableList, Icon } from "@/components";
 import FormPage from "./FormPage";
 import { Button, Modal } from "antd";
 import { message } from "@/hooks/useMessage";
 import { RootState, useSelector } from "@/redux";
 import http from "@/api";
 const { confirm } = Modal;
-import { Icon } from "@/components";
+import { ActionType } from "@/typings";
 
 const Index: React.FC<any> = () => {
   let moduleCode = "SD_CHANGE_ORDER_MNG";
@@ -15,6 +15,7 @@ const Index: React.FC<any> = () => {
   const [formPageIsView, setFormPageIsView] = useState("Index");
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let moduleInfo = moduleInfos[moduleCode] as any;
+  const tableRef = useRef<ActionType>();
 
   const changePage = (value: any, id: string, isView: any) => {
     if (value == "FormPage") {
@@ -61,9 +62,10 @@ const Index: React.FC<any> = () => {
     SalesChangeOrderSubmit
   };
 
+  const onReload = () => tableRef.current?.reload();
   return (
     <>
-      {viewType == "FormIndex" ? (
+      <div style={{ display: viewType == "FormIndex" ? "block" : "none" }}>
         <TableList
           moduleCode={moduleCode}
           changePage={changePage}
@@ -72,34 +74,16 @@ const Index: React.FC<any> = () => {
               {moduleInfo &&
                 moduleInfo.customActionData &&
                 moduleInfo.customActionData.map((item: any) => {
-                  return <Button>{item.FunctionName}</Button>;
+                  return <Button key={item.FunctionName}>{item.FunctionName}</Button>;
                 })}
             </>
           )}
+          tableActionRef={tableRef}
           {...action}
-          // expendAction={(action, selectedRows) => {
-          // expendAction={(_action: any, _selectedRows: any, selectedRowKeys: any) => {
-          // expendAction={() => {
-          //   {
-          //     moduleInfo &&
-          //       moduleInfo.customActionData &&
-          //       moduleInfo.customActionData.map((item: any) => {
-          //         return <Button>{item.FunctionName}</Button>;
-          //       });
-          //   }
-          //   // return (
-          //   //   <>
-          //   //     <Button>订单完结</Button>
-          //   //     <Button>订单变更</Button>
-          //   //     <Button>出货通知</Button>
-          //   //     <Button>发货</Button>
-          //   //   </>
-          //   // );
-          // }}
         />
-      ) : null}
+      </div>
       {viewType == "FormPage" ? (
-        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={changePage} />
+        <FormPage moduleCode={moduleCode} Id={formPageId} IsView={formPageIsView} changePage={changePage} onReload={onReload} />
       ) : null}
     </>
   );

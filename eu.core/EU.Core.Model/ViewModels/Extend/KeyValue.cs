@@ -9,6 +9,6 @@ public class KeyValue
     public class LovData
     {
         public string label { get; set; }
-        public string value { get; set; }
+        public object value { get; set; }
     }
 }

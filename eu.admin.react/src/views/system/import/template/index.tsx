@@ -1,17 +1,6 @@
-import React, { useState } from "react";
-import TableList from "../../common/components/TableList";
-import FormPage from "../../common/components/FormPage";
-import { Attachment } from "@/components";
-import { ViewType } from "@/typings";
-
-/**
- * 子项类型定义
- */
-interface ChildrenItem {
-  key: number;
-  label: string;
-  children: React.ReactNode;
-}
+import React, { useState, useRef, useMemo } from "react";
+import { TableList, FormPage, Attachment } from "@/components";
+import { ViewType, ChildrenItem, ActionType } from "@/typings";
 
 /**
  * 导入模板组件属性定义
@@ -32,7 +21,10 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
   // 当前操作的表单ID
   const [formPageId, setFormPageId] = useState<string>("");
   // 表单是否为查看模式
-  const [formPageIsView, setFormPageIsView] = useState<boolean | null | undefined>(false);
+  const [formPageIsView, setFormPageIsView] = useState(false);
+
+  const tableRef = useRef<ActionType>();
+  const moduleCode = "SM_IMPORT_TEMPLATE_MNG";
 
   /**
    * 切换页面视图
@@ -42,12 +34,11 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
    * @param isView - 是否为查看模式
    */
   const changePage = (value: ViewType, id: string, isView?: boolean): void => {
-    if (value === "FormPage") {
-      setViewType(value);
+    setViewType(value);
+    if (value === ViewType.PAGE) {
       setFormPageId(id);
-      setFormPageIsView(isView);
-    } else if (value === "FormIndex") {
-      setViewType(value);
+      setFormPageIsView(isView ?? false);
+    } else if (value === ViewType.INDEX) {
       setFormPageId("");
       setFormPageIsView(false);
     }
@@ -58,17 +49,16 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
    *
    * @param id - 新的表单ID
    */
-  const handleFormPageIdChange = (id: string): void => {
-    setFormPageId(id);
-  };
+  const handleFormPageIdChange = (id: string): void => setFormPageId(id);
+
+  const onReload = () => tableRef.current?.reload();
 
   /**
-   * 生成子项配置
-   *
-   * @returns 子项配置数组
+   * 生成子项配置（使用 useMemo 优化性能）
+   * 仅在 viewType、formPageId 或 formPageIsView 变化时重新计算
    */
-  const generateChildrenItems = (): ChildrenItem[] => {
-    if (viewType !== "FormPage") return [];
+  const childrenItems = useMemo<ChildrenItem[]>(() => {
+    if (viewType !== ViewType.PAGE) return [];
 
     return [
       {
@@ -87,23 +77,23 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
         children: <Attachment Id={formPageId} accept=".xlsx,.xls" filePath="ImportTemplate" isUnique={true} />
       }
     ];
-  };
-
-  // 生成子项配置
-  const childrenItems = generateChildrenItems();
+  }, [viewType, formPageId, formPageIsView]);
 
   return (
     <>
-      {viewType === "FormIndex" && <TableList moduleCode="SM_IMPORT_TEMPLATE_MNG" changePage={changePage} />}
+      <div style={{ display: viewType == ViewType.INDEX ? "block" : "none" }}>
+        <TableList moduleCode={moduleCode} changePage={changePage} tableActionRef={tableRef} />
+      </div>
 
-      {viewType === "FormPage" && (
+      {viewType === ViewType.PAGE && (
         <FormPage
-          moduleCode="SM_IMPORT_TEMPLATE_MNG"
+          moduleCode={moduleCode}
           Id={formPageId}
           IsView={formPageIsView}
           changePage={changePage}
           setFormPageId={handleFormPageIdChange}
           childrenItems={childrenItems}
+          onReload={onReload}
         />
       )}
     </>

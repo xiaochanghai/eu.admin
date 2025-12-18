@@ -2,14 +2,15 @@
 import React, { useEffect, useImperativeHandle, useState, useRef } from "react";
 import { Flex, Form, Card, Popconfirm } from "antd";
 import { getModuleInfo, querySingle, add, update } from "@/api/modules/module";
-import { Element } from "@/components";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import { setModuleInfo, setId } from "@/redux/modules/module";
 import http from "@/api";
 import WaitSelect from "./WaitSelect";
 import { message } from "@/hooks/useMessage";
-import { EditableProTable, FormToolbar, ComboGrid, Loading } from "@/components";
+import { EditableProTable, FormToolbar, ComboGrid, Skeleton, Element, Loading } from "@/components";
+import { SaveTypeEnum, EditOpenType, ModifyType } from "@/typings";
+import { STANDARD_FORM_LAYOUT } from "@/config";
 
 const FormPage: React.FC<any> = props => {
   const dispatch = useDispatch();
@@ -146,7 +147,7 @@ const FormPage: React.FC<any> = props => {
       </Flex>
     );
   };
-  const onFinish = async (data: any, type = "Save") => {
+  const onFinish = async (data: any, type = SaveTypeEnum.Save) => {
     message.loading("数据提交中...", 0);
     if (id) data = { ...data, url, Id: id ?? null };
     else data = { ...data, url };
@@ -165,9 +166,9 @@ const FormPage: React.FC<any> = props => {
       setDisabledToolbar(true);
 
       if (tableRef.current) tableRef.current.reload();
-      if (onDisabled) onDisabled(true);
-      if (openType === "Modal" || openType === "Drawer") onReload();
-      if (type === "SaveAdd") {
+      onDisabled?.(true);
+      if (openType === EditOpenType.Modal || openType === EditOpenType.Drawer) onReload();
+      if (type === SaveTypeEnum.SaveAdd) {
         setViewId(null);
         setDisabled(true);
         form.resetFields();
@@ -180,9 +181,9 @@ const FormPage: React.FC<any> = props => {
     }
   };
   const onSave = () => form.validateFields().then(onFinish);
-  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, "SaveAdd"));
+  const onSaveAdd = () => form.validateFields().then(values => onFinish(values, SaveTypeEnum.SaveAdd));
   const onValuesChange = () => {
-    if (onDisabled) onDisabled(false);
+    onDisabled?.(false);
     setDisabledToolbar(false);
     setDisabled(false);
   };
@@ -309,22 +310,7 @@ const FormPage: React.FC<any> = props => {
   columns = [...columns, test1];
   return (
     <>
-      <Form
-        labelCol={{
-          xs: { span: 8 },
-          sm: { span: 8 },
-          md: { span: 8 }
-        }}
-        wrapperCol={{
-          xs: { span: 16 },
-          sm: { span: 16 },
-          md: { span: 16 }
-        }}
-        labelWrap
-        onFinish={onFinish}
-        onValuesChange={onValuesChange}
-        form={form}
-      >
+      <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={onFinish} onValuesChange={onValuesChange} form={form}>
         <FormToolbar
           moduleInfo={moduleInfo}
           disabled={IsView === true ? true : disabled === true ? true : disabledToolbar}
@@ -336,16 +322,16 @@ const FormPage: React.FC<any> = props => {
           onReload={() => querySingleData()}
         />
         {isLoading ? (
-          <Loading />
+          <Skeleton type="form" />
         ) : (
           <>
-            <Card size="small" bordered={false}>
+            <Card size="small" variant="borderless">
               {component()}
             </Card>
 
             <div style={{ height: 20 }}></div>
 
-            <Card title="物料信息" bordered={false} className="card-small">
+            <Card title="物料信息" variant="borderless" className="card-small">
               {moduleInfo1 && columns ? (
                 <EditableProTable
                   moduleCode={moduleCode1}

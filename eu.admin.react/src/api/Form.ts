@@ -54,4 +54,5 @@ export interface FormVo extends VoBean, Omit<FormDto, "fields"> {
   // parentsName:string[];//继承和实现的类的名称
   // parentForm: FormVo; //当前form模型作为子表它所在的父表信息
   fields: FormFieldVo[]; //字段信息
+  id: string;
 }

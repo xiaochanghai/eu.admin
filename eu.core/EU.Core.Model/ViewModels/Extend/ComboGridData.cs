@@ -2,13 +2,13 @@
 
 public class ComboGridData
 {
-    public string value { get; set; }
+    public object value { get; set; }
     public string label { get; set; }
 }
 
 public class ComboGridDataBody
 {
-    public string value { get; set; }
+    public object value { get; set; }
     public string label { get; set; }
 
     public string parentColumn;

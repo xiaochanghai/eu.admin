@@ -2,7 +2,7 @@
 using RestSharp.Authenticators;
 using System;
 
-namespace EU.Core.Common.HttpRestSharp
+namespace Blog.Core.Common.HttpRestSharp
 {
     /// <summary>
     /// Rest接口执行者

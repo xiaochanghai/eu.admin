@@ -14,6 +14,8 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
+using SharpCompress.Common;
+
 namespace EU.Core.Api.Controllers;
 
 /// <summary>
@@ -87,15 +89,19 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
         {
             var webRootPath = _hostingEnvironment.WebRootPath;
 
-            using var _context = ContextFactory.CreateContext();
             var dotPos = url.LastIndexOf('.');
             var ext = url.Substring(dotPos + 1);
-            var file = await _context.FileAttachment.Where(o => o.FileName == url.Replace("." + ext, null)).FirstOrDefaultAsync();
+            var file = await _service.QuerySingle(x => x.FileName == url.Replace("." + ext, null));
 
             if (file == null)
-                return Ok("找不到文件");
+                return Ok("文件不存在");
 
             var filePath = $"{webRootPath}{"\\" + file.Path + "\\" + url}";
+
+
+            if (!FileHelper.Exists(filePath))
+                return Ok("文件不存在");
+
             var fileName = !string.IsNullOrEmpty(file.FileName) ? file.FileName : Path.GetFileName(filePath);
 
             var contentTypDict = new Dictionary<string, string> {
@@ -115,10 +121,10 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
             //未知的图片类型
             contentTypeStr = contentTypDict[ext];
 
-            using (var sw = new FileStream(filePath, global::System.IO.FileMode.Open))
+            using (var sw = new FileStream(filePath, FileMode.Open))
             {
                 var bytes = new byte[sw.Length];
-                sw.Read(bytes, 0, bytes.Length);
+                sw.ReadExactly(bytes);
                 sw.Close();
                 return new FileContentResult(bytes, contentTypeStr);
             }
@@ -145,13 +151,15 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
             return Ok($"无效的图片ID");
 
         var dotPos = file.FileName.LastIndexOf('.');
-        var ext = file.FileExt;
+        var ext = file.FileExt.ToLower();
 
         if (file == null)
-            return Ok("找不到文件");
+            return Ok("文件不存在");
 
-        var filePath = $"{webRootPath}{"\\" + file.Path + "\\" + file.FileName + "." + ext}";
-        //var fileName = !string.IsNullOrEmpty(file.FileName) ? file.FileName : Path.GetFileName(filePath);
+        var filePath = $"{webRootPath}{"\\" + file.Path + "\\" + file.FileName}";
+
+        if (!FileHelper.Exists(filePath))
+            return Ok("文件不存在");
 
         var contentTypDict = new Dictionary<string, string> {
                 {"jpg","image/jpeg"},
@@ -170,10 +178,10 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
         //未知的图片类型
         contentTypeStr = contentTypDict[ext];
 
-        using (var sw = new FileStream(filePath, global::System.IO.FileMode.Open))
+        using (var sw = new FileStream(filePath, FileMode.Open))
         {
             var bytes = new byte[sw.Length];
-            sw.Read(bytes, 0, bytes.Length);
+            sw.ReadExactly(bytes);
             sw.Close();
             return new FileContentResult(bytes, contentTypeStr);
         }
@@ -184,19 +192,23 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// <summary>
     /// 下载文件
     /// </summary>
-    /// <param name="id"></param>
+    /// <param name="id">文件ID</param>
     /// <returns></returns>
     [AllowAnonymous, HttpGet("Download/{id}")]
-    public IActionResult Download(Guid id)
+    public async Task<IActionResult> Download(Guid id)
     {
-        string sql = $"SELECT * FROM FileAttachment where ID='{id}' and IsDeleted='false'";
-        var attachment = DBHelper.QueryFirst<FileAttachment>(sql);
+        //string sql = $"SELECT * FROM FileAttachment where ID='{id}' and IsDeleted='false'";
+        //var attachment = DBHelper.QueryFirst<FileAttachment>(sql);
+
+        var attachment = await _service.QueryById(id);
 
         if (attachment != null)
         {
-            var fileName = attachment.FileName;
-            string path = FileHelper.GetPhysicsPath() + attachment.Path + fileName;
+            var fileName = attachment.OriginalFileName;
+            string path = FileHelper.GetPhysicsPath() + attachment.Path + attachment.FileName;
 
+            if (!FileHelper.Exists(path))
+                return Ok("文件不存在");
             //if (!Directory.Exists(path))
             //    return Ok("文件不存在！");
 

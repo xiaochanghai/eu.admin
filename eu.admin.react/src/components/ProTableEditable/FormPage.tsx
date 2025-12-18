@@ -4,13 +4,14 @@ import { Popconfirm, Button, Space } from "antd";
 import { EditableProTable } from "@ant-design/pro-components";
 import { getModuleInfo } from "@/api/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
-import { ModuleInfo, ModifyType } from "@/api/interface/index";
+import { ModuleInfo } from "@/api/interface/index";
 import http from "@/api";
 import { pagination1 } from "@/config/proTable";
 import { queryByFilter } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { Loading, Icon } from "@/components";
 import { setTableParam, setModuleInfo } from "@/redux/modules/module";
+import { ModifyType } from "@/typings";
 
 const ProTableEditable: React.FC<any> = props => {
   const dispatch = useDispatch();

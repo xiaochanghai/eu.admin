@@ -477,12 +477,21 @@ public class DBSeed
             //!x.Name.EndsWith("Dto")
             )
             .ToList();
+
+        string name = string.Join(',', modelTypes.Select(x => x.Name));
+        Console.Write(name);
+
         Stopwatch sw = Stopwatch.StartNew();
 
         var tables = logDb.DbMaintenance.GetTableInfoList();
 
         modelTypes.ForEach(t =>
         {
+            if (t.Name == "SmImportDataDetail")
+            {
+                Console.WriteLine(t.Name);
+
+            }
             // 这里只支持添加修改表，不支持删除
             // 如果想要删除，数据库直接右键删除，或者联系SqlSugar作者；
             if (!tables.Any(s => s.Name.Contains(t.Name)))
@@ -576,7 +585,7 @@ public class DBSeed
     /// </summary>
     /// <param name="myContext"></param>
     /// <exception cref="ApplicationException"></exception>
-    public static void SyncData(MyContext myContext)
+    public static void SyncData(MyContext myContext, string tableName = null)
     {
         var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
         var referencedAssemblies = System.IO.Directory.GetFiles(path, "EU.Core.Model.dll")
@@ -598,6 +607,7 @@ public class DBSeed
             //!x.Name.EndsWith("Input") &&
             //!x.Name.EndsWith("Dto")
             )
+            .WhereIF(tableName.IsNotEmptyOrNull(), x => x.Name == tableName)
             .ToList();
         Stopwatch sw = Stopwatch.StartNew();
 
@@ -611,18 +621,20 @@ public class DBSeed
 
         for (int i = 0; i < modelTypes.Count; i++)
         {
-            var dt = myContext.Db.Ado.GetDataTable($"select * from {modelTypes[i].Name}");
-            List<Dictionary<string, object>> dc = myContext.Db.Utilities.DataTableToDictionaryList(dt);//5.0.23版本支持
-            logDb.Ado.GetDataTable($"delete from {modelTypes[i].Name}");
+
 
             try
             {
+                var dt = myContext.Db.Ado.GetDataTable($"select * from {modelTypes[i].Name}");
+                List<Dictionary<string, object>> dc = myContext.Db.Utilities.DataTableToDictionaryList(dt);//5.0.23版本支持
+                logDb.Ado.GetDataTable($"delete from {modelTypes[i].Name}");
                 logDb.Insertable(dc).AS(modelTypes[i].Name).ExecuteCommand();
 
 
             }
             catch (Exception E)
             {
+
             }
         }
         sw.Stop();

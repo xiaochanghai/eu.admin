@@ -1,5 +1,3 @@
-// import { PlusOutlined } from "@ant-design/icons"
-// import { Popover } from "antd"
 import { Popover } from "antd";
 import { memo, useCallback, useState } from "react";
 import { styled } from "styled-components";

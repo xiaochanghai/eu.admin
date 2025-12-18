@@ -684,6 +684,266 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.EmEquipmentBase">
+            <summary>
+            设备基础资料 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.MachineTypeId">
+            <summary>
+            设备类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.MachineNo">
+            <summary>
+            设备编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.MachineName">
+            <summary>
+            设备名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.Status">
+            <summary>
+            设备状态,加工中/空闲中/报修中
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.UseDeptId">
+            <summary>
+            使用部门
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.UseManagerId">
+            <summary>
+            使用负责人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.RepairManagerId">
+            <summary>
+            维修负责人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.BrandModel">
+            <summary>
+            品牌型号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.Manufacturer">
+            <summary>
+            生产厂家
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.Supplier">
+            <summary>
+            供应商家
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.Location">
+            <summary>
+            设备位置
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.AnnualInspection">
+            <summary>
+            年检，是/否
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.AnnualInspectionDate">
+            <summary>
+            年检日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.CommissioningDate">
+            <summary>
+            投入日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.StopDate">
+            <summary>
+            停用日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.ImageId">
+            <summary>
+            图片ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.EmEquipmentTypeBase">
+            <summary>
+            设备分类 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentTypeBase.TypeNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentTypeBase.TypeName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentTypeBase.DepartmentId">
+            <summary>
+            部门ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmEquipmentTypeBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.EmRepairOrderBase">
+            <summary>
+            报修工单 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.EquipmentId">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.FaultType">
+            <summary>
+            故障类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.UrgencyLevel">
+            <summary>
+            紧急程度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.Priority">
+            <summary>
+            优先级
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.Impact">
+            <summary>
+            影响程度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.FaultDesc">
+            <summary>
+            故障描述
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.AssignUserId">
+            <summary>
+            指派人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.StartTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.ExpectedCompleteTime">
+            <summary>
+            预计完成时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.CompleteTime">
+            <summary>
+            完成时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.RepairDuration">
+            <summary>
+            维修时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.StopDuration">
+            <summary>
+            停机时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.RepairStatus">
+            <summary>
+            维修状态数据字典
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.AcceptTime">
+            <summary>
+            验收时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.AcceptUserId">
+            <summary>
+            验收人员
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.AcceptRemark">
+            <summary>
+            验收备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.RejectedReason">
+            <summary>
+            驳回原因
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderBase.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.EmRepairOrderLogBase">
+            <summary>
+            报修工单日志 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.OrderId">
+            <summary>
+            工单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.DealStatus">
+            <summary>
+            处理状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.DealDesc">
+            <summary>
+            处理说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.DealTime">
+            <summary>
+            处理时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.DealerId">
+            <summary>
+            指派人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.IsDisplay">
+            <summary>
+            是否显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.IvAccountingBase">
             <summary>
             库存建帐 (Dto.Base)
@@ -2777,6 +3037,51 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmApplicationVersionBase">
+            <summary>
+            APP版本 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.Platform">
+            <summary>
+            版本平台
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.VersionNo">
+            <summary>
+            版本号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.BuildNum">
+            <summary>
+            打包序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.VersionDesc">
+            <summary>
+            版本说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.UpdateType">
+            <summary>
+            更新类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.Channel">
+            <summary>
+            渠道
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.FileUrl">
+            <summary>
+            文件地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationVersionBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmAutoCodeBase">
             <summary>
             自动编号 (Dto.Base)
@@ -3242,6 +3547,21 @@
             功能脚本
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmImportDataBase">
+            <summary>
+            导入数据表 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataBase.ImportFileName">
+            <summary>
+            导入文件名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmImportDataDetailBase">
             <summary>
             系统导入数据明细 (Dto.Base)
@@ -3517,6 +3837,326 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailBase.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.SmImportDataDetailTempBase">
+            <summary>
+            系统导入数据明细临时表 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.LineNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col1">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col2">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col3">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col4">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col5">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col6">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col7">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col8">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col9">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col10">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col11">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col12">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col13">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col14">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col15">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col16">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col17">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col18">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col19">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col20">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col21">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col22">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col23">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col24">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col25">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col26">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col27">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col28">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col29">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col30">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col31">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col32">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col33">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col34">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col35">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col36">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col37">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col38">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col39">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col40">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col41">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col42">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col43">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col44">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col45">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col46">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col47">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col48">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col49">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Col50">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.IsError">
+            <summary>
+            是否错误
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataDetailTempBase.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.SmImportDataErrorColBase">
+            <summary>
+            导入数据错误列 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.LineNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.ColumnNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.ErrorMessage">
+            <summary>
+            错误说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.ErrorType">
+            <summary>
+            错误类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImportDataErrorColBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmImportDataMasterBase">
             <summary>
             导入数据主表明细 (Dto.Base)
@@ -3689,7 +4329,7 @@
         </member>
         <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.ColumnCode">
             <summary>
-            列名称
+            列代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.IsUnique">
@@ -3755,6 +4395,21 @@
         <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.RowNo">
             <summary>
             Execl行号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.ColumnName">
+            <summary>
+            列名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.CommonListSqlId">
+            <summary>
+            通用下拉ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmImpTemplateDetailBase.SerialNumber">
+            <summary>
+            序号
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmLovBase">
@@ -4827,6 +5482,51 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmWorkFlowNodeAuditBase">
+            <summary>
+            工作流节点审核人员 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.WorkFlowId">
+            <summary>
+            工作流ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.NodeId">
+            <summary>
+            节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.ObjectId">
+            <summary>
+            审核对象ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeAuditBase.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.WxConfigBase">
             <summary>
             微信账号配置 (Dto.Base)
@@ -5222,6 +5922,16 @@
             盘点完成
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Consts.DIC_REPAIR_ORDER_STATUS">
+            <summary>
+            销售订单-订单状态
+            </summary>
+        </member>
+        <member name="F:EU.Core.Model.Consts.DIC_REPAIR_ORDER_STATUS.Wait">
+            <summary>
+            待处理
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Consts.DIC_SYSTEM_AUDIT_STATUS">
             <summary>
             数据审核状态
@@ -5300,6 +6010,26 @@
         <member name="T:EU.Core.Model.Edit.EditBdSupplierInput">
             <summary>
             供应商 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEmEquipmentInput">
+            <summary>
+            设备基础资料 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEmEquipmentTypeInput">
+            <summary>
+            设备分类 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEmRepairOrderInput">
+            <summary>
+            报修工单 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEmRepairOrderLogInput">
+            <summary>
+            报修工单日志 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditIvAccountingInput">
@@ -5462,6 +6192,11 @@
             APP客户端记录 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditSmApplicationVersionInput">
+            <summary>
+            APP版本 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditSmAutoCodeInput">
             <summary>
             自动编号 (Dto.EditInput)
@@ -5522,9 +6257,24 @@
             功能权限 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditSmImportDataInput">
+            <summary>
+            导入数据表 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditSmImportDataDetailInput">
             <summary>
             系统导入数据明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmImportDataDetailTempInput">
+            <summary>
+            系统导入数据明细临时表 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmImportDataErrorColInput">
+            <summary>
+            导入数据错误列 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmImportDataMasterInput">
@@ -5630,6 +6380,11 @@
         <member name="T:EU.Core.Model.Edit.EditSmWorkFlowNodeInput">
             <summary>
             工作流节点 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmWorkFlowNodeAuditInput">
+            <summary>
+            工作流节点审核人员 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditWxConfigInput">
@@ -6303,6 +7058,266 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.BdSupplier.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EmEquipment">
+            <summary>
+            设备基础资料 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.MachineTypeId">
+            <summary>
+            设备类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.MachineNo">
+            <summary>
+            设备编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.MachineName">
+            <summary>
+            设备名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.Status">
+            <summary>
+            设备状态,加工中/空闲中/报修中
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.UseDeptId">
+            <summary>
+            使用部门
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.UseManagerId">
+            <summary>
+            使用负责人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.RepairManagerId">
+            <summary>
+            维修负责人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.BrandModel">
+            <summary>
+            品牌型号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.Manufacturer">
+            <summary>
+            生产厂家
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.Supplier">
+            <summary>
+            供应商家
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.Location">
+            <summary>
+            设备位置
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.AnnualInspection">
+            <summary>
+            年检，是/否
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.AnnualInspectionDate">
+            <summary>
+            年检日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.CommissioningDate">
+            <summary>
+            投入日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.StopDate">
+            <summary>
+            停用日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.ImageId">
+            <summary>
+            图片ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipment.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EmEquipmentType">
+            <summary>
+            设备分类 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipmentType.TypeNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipmentType.TypeName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipmentType.DepartmentId">
+            <summary>
+            部门ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmEquipmentType.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EmRepairOrder">
+            <summary>
+            报修工单 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.OrderNo">
+            <summary>
+            单号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.EquipmentId">
+            <summary>
+            设备ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.FaultType">
+            <summary>
+            故障类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.UrgencyLevel">
+            <summary>
+            紧急程度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.Priority">
+            <summary>
+            优先级
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.Impact">
+            <summary>
+            影响程度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.FaultDesc">
+            <summary>
+            故障描述
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.AssignUserId">
+            <summary>
+            指派人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.StartTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.ExpectedCompleteTime">
+            <summary>
+            预计完成时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.CompleteTime">
+            <summary>
+            完成时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.RepairDuration">
+            <summary>
+            维修时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.StopDuration">
+            <summary>
+            停机时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.RepairStatus">
+            <summary>
+            维修状态数据字典
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.AcceptTime">
+            <summary>
+            验收时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.AcceptUserId">
+            <summary>
+            验收人员
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.AcceptRemark">
+            <summary>
+            验收备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.RejectedReason">
+            <summary>
+            驳回原因
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrder.Status">
+            <summary>
+            Status
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EmRepairOrderLog">
+            <summary>
+            报修工单日志 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.OrderId">
+            <summary>
+            工单ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.DealStatus">
+            <summary>
+            处理状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.DealDesc">
+            <summary>
+            处理说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.DealTime">
+            <summary>
+            处理时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.DealerId">
+            <summary>
+            指派人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.IsDisplay">
+            <summary>
+            是否显示
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.Remark">
             <summary>
             备注
             </summary>
@@ -8397,6 +9412,51 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmApplicationVersion">
+            <summary>
+            APP版本 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.Platform">
+            <summary>
+            版本平台
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.VersionNo">
+            <summary>
+            版本号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.BuildNum">
+            <summary>
+            打包序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.VersionDesc">
+            <summary>
+            版本说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.UpdateType">
+            <summary>
+            更新类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.Channel">
+            <summary>
+            渠道
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.FileUrl">
+            <summary>
+            文件地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationVersion.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmAutoCode">
             <summary>
             自动编号 (Model)
@@ -8862,6 +9922,21 @@
             功能脚本
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmImportData">
+            <summary>
+            导入数据表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportData.ImportFileName">
+            <summary>
+            导入文件名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportData.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmImportDataDetail">
             <summary>
             系统导入数据明细 (Model)
@@ -9137,6 +10212,326 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetail.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.SmImportDataDetailTemp">
+            <summary>
+            系统导入数据明细临时表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.LineNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col1">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col2">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col3">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col4">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col5">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col6">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col7">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col8">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col9">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col10">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col11">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col12">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col13">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col14">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col15">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col16">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col17">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col18">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col19">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col20">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col21">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col22">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col23">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col24">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col25">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col26">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col27">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col28">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col29">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col30">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col31">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col32">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col33">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col34">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col35">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col36">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col37">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col38">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col39">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col40">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col41">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col42">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col43">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col44">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col45">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col46">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col47">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col48">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col49">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Col50">
+            <summary>
+            Col
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.IsError">
+            <summary>
+            是否错误
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataDetailTemp.DataType">
+            <summary>
+            数据类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.SmImportDataErrorCol">
+            <summary>
+            导入数据错误列 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.LineNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.ColumnNo">
+            <summary>
+            Execl列号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.SheetName">
+            <summary>
+            Sheet名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.ErrorMessage">
+            <summary>
+            错误说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.ErrorType">
+            <summary>
+            错误类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImportDataErrorCol.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmImportDataMaster">
             <summary>
             导入数据主表明细 (Model)
@@ -9309,7 +10704,7 @@
         </member>
         <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.ColumnCode">
             <summary>
-            列名称
+            列代码
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.IsUnique">
@@ -9375,6 +10770,21 @@
         <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.RowNo">
             <summary>
             Execl行号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.ColumnName">
+            <summary>
+            列名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.CommonListSqlId">
+            <summary>
+            通用下拉ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmImpTemplateDetail.SerialNumber">
+            <summary>
+            序号
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmLov">
@@ -10447,6 +11857,51 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmWorkFlowNodeAudit">
+            <summary>
+            工作流节点审核人员 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.WorkFlowId">
+            <summary>
+            工作流ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.NodeId">
+            <summary>
+            节点ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.ObjectId">
+            <summary>
+            审核对象ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNodeAudit.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.WxConfig">
             <summary>
             微信账号配置 (Model)
@@ -10858,6 +12313,71 @@
             供应商(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.EmEquipmentDto">
+            <summary>
+            设备基础资料(Dto.View)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.ImageIds">
+            <summary>
+            设备图片ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.Attachments">
+            <summary>
+            设备附件
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.UseManagerName">
+            <summary>
+            责任人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.StartDate1">
+            <summary>
+            启用日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.DeptName">
+            <summary>
+            部门
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.Runtime">
+            <summary>
+            运行时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.Health">
+            <summary>
+            健康度
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.StatusText">
+            <summary>
+            状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.EmEquipmentDto.MachineType">
+            <summary>
+            设备类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EmEquipmentTypeDto">
+            <summary>
+            设备分类(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EmRepairOrderDto">
+            <summary>
+            报修工单(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EmRepairOrderLogDto">
+            <summary>
+            报修工单日志(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.IvAccountingDto">
             <summary>
             库存建帐(Dto.View)
@@ -11143,6 +12663,11 @@
             APP客户端记录(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmApplicationVersionDto">
+            <summary>
+            APP版本(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmAutoCodeDto">
             <summary>
             自动编号(Dto.View)
@@ -11203,9 +12728,24 @@
             功能权限(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmImportDataDto">
+            <summary>
+            导入数据表(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmImportDataDetailDto">
             <summary>
             系统导入数据明细(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmImportDataDetailTempDto">
+            <summary>
+            系统导入数据明细临时表(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmImportDataErrorColDto">
+            <summary>
+            导入数据错误列(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmImportDataMasterDto">
@@ -11311,6 +12851,11 @@
         <member name="T:EU.Core.Model.Models.SmWorkFlowNodeDto">
             <summary>
             工作流节点(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.SmWorkFlowNodeAuditDto">
+            <summary>
+            工作流节点审核人员(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.WxConfigDto">
@@ -11433,6 +12978,26 @@
         <member name="T:EU.Core.Model.Insert.InsertBdSupplierInput">
             <summary>
             供应商 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEmEquipmentInput">
+            <summary>
+            设备基础资料 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEmEquipmentTypeInput">
+            <summary>
+            设备分类 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEmRepairOrderInput">
+            <summary>
+            报修工单 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEmRepairOrderLogInput">
+            <summary>
+            报修工单日志 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertIvAccountingInput">
@@ -11595,6 +13160,11 @@
             APP客户端记录 (Dto.InsertInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmApplicationVersionInput">
+            <summary>
+            APP版本 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertSmAutoCodeInput">
             <summary>
             自动编号 (Dto.InsertInput)
@@ -11655,9 +13225,24 @@
             功能权限 (Dto.InsertInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmImportDataInput">
+            <summary>
+            导入数据表 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertSmImportDataDetailInput">
             <summary>
             系统导入数据明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmImportDataDetailTempInput">
+            <summary>
+            系统导入数据明细临时表 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmImportDataErrorColInput">
+            <summary>
+            导入数据错误列 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmImportDataMasterInput">
@@ -11763,6 +13348,11 @@
         <member name="T:EU.Core.Model.Insert.InsertSmWorkFlowNodeInput">
             <summary>
             工作流节点 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmWorkFlowNodeAuditInput">
+            <summary>
+            工作流节点审核人员 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertWxConfigInput">

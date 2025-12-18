@@ -361,6 +361,19 @@ public class Consts
     }
     #endregion
 
+    #region 销售管理
+    /// <summary>
+    /// 销售订单-订单状态
+    /// </summary>
+    public static class DIC_REPAIR_ORDER_STATUS
+    {
+        /// <summary>
+        /// 待处理
+        /// </summary>
+        public const string Wait = "Wait"; 
+    } 
+    #endregion
+
     #region 系统
 
     /// <summary>

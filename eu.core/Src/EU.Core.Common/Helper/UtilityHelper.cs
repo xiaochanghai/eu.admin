@@ -215,15 +215,6 @@ public static class Utility
         return BitConverter.ToInt64(buffer, 0);
     }
 
-    /// <summary>  
-    /// 生成唯一长整型数字序列（使用雪花算法）
-    /// </summary>  
-    /// <returns>返回长整型唯一ID</returns>  
-    public static long GetLongID()
-    {
-        return SnowFlakeSingle.Instance.NextId();
-    }
-
     /// <summary>
     /// 获取GUID字符串（带连字符格式）
     /// </summary>
