@@ -23,7 +23,7 @@ namespace EU.Core.Services;
 public class SmRoleFunctionServices : BaseServices<SmRoleFunction, SmRoleFunctionDto, InsertSmRoleFunctionInput, EditSmRoleFunctionInput>, ISmRoleFunctionServices
 {
     private readonly IBaseRepository<SmRoleFunction> _dal;
-    public SmRoleFunctionServices(IBaseRepository<SmRoleFunction> dal, DataContext context)
+    public SmRoleFunctionServices(IBaseRepository<SmRoleFunction> dal)
     {
         this._dal = dal;
         base.BaseDal = dal;

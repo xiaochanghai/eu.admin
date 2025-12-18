@@ -487,7 +487,7 @@ public class DBSeed
 
         modelTypes.ForEach(t =>
         {
-            if (t.Name == "SmImportDataDetail")
+            if (t.Name == "SmModuleSql")
             {
                 Console.WriteLine(t.Name);
 

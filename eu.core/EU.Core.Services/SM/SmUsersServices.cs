@@ -41,7 +41,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     private readonly PermissionRequirement _requirement;
     private readonly IWebHostEnvironment _hostingEnvironment;
 
-    public SmUsersServices(IBaseRepository<SmUsers> dal, DataContext context, PermissionRequirement requirement, IWebHostEnvironment hostingEnvironment)
+    public SmUsersServices(IBaseRepository<SmUsers> dal, PermissionRequirement requirement, IWebHostEnvironment hostingEnvironment)
     {
         this._dal = dal;
         base.BaseDal = dal;

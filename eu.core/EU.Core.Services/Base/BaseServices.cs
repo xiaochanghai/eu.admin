@@ -42,7 +42,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <summary>
     /// 数据上下文对象
     /// </summary>
-    public DataContext _context;
+    //public DataContext _context;
 
     /// <summary>
     /// 当前登录用户完整信息

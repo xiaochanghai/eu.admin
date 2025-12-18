@@ -11,8 +11,8 @@ public class FrameSeed
     public static string path = AppDomain.CurrentDomain.BaseDirectory
         .Replace("EU.Core.Api\\bin\\Debug\\net9.0\\", null)
         .Replace("EU.Core.Api\\bin\\Release\\net9.0\\", null) 
-        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net9.0\\", null)
-        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net9.0\\", null);
+        .Replace("Src\\EU.CodeGenerator\\bin\\Debug\\net9.0\\", null)
+        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net9.0\\", null); 
     /// <summary>
     /// 生成Controller层
     /// </summary>

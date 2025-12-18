@@ -62,7 +62,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
     /// <param name="dal">角色模块数据访问层</param>
     /// <param name="smModulesServices">模块服务</param>
     /// <param name="context">数据上下文</param>
-    public SmRoleModuleServices(IBaseRepository<SmRoleModule> dal, ISmModulesServices smModulesServices, DataContext context)
+    public SmRoleModuleServices(IBaseRepository<SmRoleModule> dal, ISmModulesServices smModulesServices)
     {
         this._dal = dal;
         base.BaseDal = dal;

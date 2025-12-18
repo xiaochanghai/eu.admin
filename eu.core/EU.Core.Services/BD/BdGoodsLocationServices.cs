@@ -23,7 +23,7 @@ namespace EU.Core.Services;
 public class BdGoodsLocationServices : BaseServices<BdGoodsLocation, BdGoodsLocationDto, InsertBdGoodsLocationInput, EditBdGoodsLocationInput>, IBdGoodsLocationServices
 {
     private readonly IBaseRepository<BdGoodsLocation> _dal;
-    public BdGoodsLocationServices(IBaseRepository<BdGoodsLocation> dal, DataContext context)
+    public BdGoodsLocationServices(IBaseRepository<BdGoodsLocation> dal)
     {
         this._dal = dal;
         base.BaseDal = dal;

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:31:01  SahHsiao   初版
+* V0.01  2025/12/18 15:01:41  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -57,13 +57,13 @@ public class SmModuleSql : BasePoco
     /// <summary>
     /// Select语句
     /// </summary>
-    [Display(Name = "SqlSelect"), Description("Select语句"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlSelect"), Description("Select语句"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlSelect { get; set; }
 
     /// <summary>
     /// 首页Select语句
     /// </summary>
-    [Display(Name = "SqlSelectBrw"), Description("首页Select语句"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlSelectBrw"), Description("首页Select语句"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlSelectBrw { get; set; }
 
     /// <summary>
@@ -87,25 +87,25 @@ public class SmModuleSql : BasePoco
     /// <summary>
     /// 关联条件
     /// </summary>
-    [Display(Name = "SqlJoinCondition"), Description("关联条件"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlJoinCondition"), Description("关联条件"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlJoinCondition { get; set; }
 
     /// <summary>
     /// 默认条件
     /// </summary>
-    [Display(Name = "SqlDefaultCondition"), Description("默认条件"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlDefaultCondition"), Description("默认条件"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlDefaultCondition { get; set; }
 
     /// <summary>
     /// 回收站条件
     /// </summary>
-    [Display(Name = "SqlRecycleCondition"), Description("回收站条件"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlRecycleCondition"), Description("回收站条件"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlRecycleCondition { get; set; }
 
     /// <summary>
     /// 初始查询条件
     /// </summary>
-    [Display(Name = "SqlQueryCondition"), Description("初始查询条件"), SugarColumn(IsNullable = true, Length = 4000)]
+    [Display(Name = "SqlQueryCondition"), Description("初始查询条件"), SugarColumn(IsNullable = true, Length = 2000)]
     public string SqlQueryCondition { get; set; }
 
     /// <summary>
