@@ -14,6 +14,26 @@
             表中文名
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.BdColorBase">
+            <summary>
+            颜色 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdColorBase.ColorNo">
+            <summary>
+            颜色编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdColorBase.ColorNames">
+            <summary>
+            颜色名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdColorBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.BdCurrencyBase">
             <summary>
             币别 (Dto.Base)
@@ -195,6 +215,46 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.BdCustomerLevelBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdDeliveryWayBase">
+            <summary>
+            送货方式 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDeliveryWayBase.DeliveryNo">
+            <summary>
+            送货编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDeliveryWayBase.DeliveryName">
+            <summary>
+            送货名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDeliveryWayBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdDistrictBase">
+            <summary>
+            地区建立 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDistrictBase.DistrictNo">
+            <summary>
+            地区编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDistrictBase.DistrictName">
+            <summary>
+            地区名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdDistrictBase.Remark">
             <summary>
             备注
             </summary>
@@ -680,6 +740,101 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.BdSupplierBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdSupplierClassBase">
+            <summary>
+            供应商分类 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierClassBase.ClassNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierClassBase.ClassName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierClassBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdSupplierLevelBase">
+            <summary>
+            供应商等级 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierLevelBase.LevelNo">
+            <summary>
+            等级编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierLevelBase.LevelName">
+            <summary>
+            等级名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdSupplierLevelBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdTextureBase">
+            <summary>
+            材质 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdTextureBase.TextureNo">
+            <summary>
+            材质编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdTextureBase.TextureNames">
+            <summary>
+            材质名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdTextureBase.Proportion">
+            <summary>
+            比重
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdTextureBase.BaseAmount">
+            <summary>
+            基数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdTextureBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.BdUnitBase">
+            <summary>
+            计量单位 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdUnitBase.UnitNo">
+            <summary>
+            类型编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdUnitBase.UnitNames">
+            <summary>
+            类型名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdUnitBase.DecimalPlaces">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.BdUnitBase.Remark">
             <summary>
             备注
             </summary>
@@ -5947,6 +6102,11 @@
             草稿
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditBdColorInput">
+            <summary>
+            颜色 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditBdCurrencyInput">
             <summary>
             币别 (Dto.EditInput)
@@ -5970,6 +6130,16 @@
         <member name="T:EU.Core.Model.Edit.EditBdCustomerLevelInput">
             <summary>
             客户等级 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdDeliveryWayInput">
+            <summary>
+            送货方式 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdDistrictInput">
+            <summary>
+            地区建立 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditBdGoodsLocationInput">
@@ -6010,6 +6180,26 @@
         <member name="T:EU.Core.Model.Edit.EditBdSupplierInput">
             <summary>
             供应商 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdSupplierClassInput">
+            <summary>
+            供应商分类 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdSupplierLevelInput">
+            <summary>
+            供应商等级 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdTextureInput">
+            <summary>
+            材质 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditBdUnitInput">
+            <summary>
+            计量单位 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditEmEquipmentInput">
@@ -6392,6 +6582,26 @@
             WxConfig (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.BdColor">
+            <summary>
+            颜色 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdColor.ColorNo">
+            <summary>
+            颜色编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdColor.ColorNames">
+            <summary>
+            颜色名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdColor.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.BdCurrency">
             <summary>
             币别 (Model)
@@ -6573,6 +6783,46 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.BdCustomerLevel.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdDeliveryWay">
+            <summary>
+            送货方式 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDeliveryWay.DeliveryNo">
+            <summary>
+            送货编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDeliveryWay.DeliveryName">
+            <summary>
+            送货名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDeliveryWay.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdDistrict">
+            <summary>
+            地区建立 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDistrict.DistrictNo">
+            <summary>
+            地区编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDistrict.DistrictName">
+            <summary>
+            地区名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdDistrict.Remark">
             <summary>
             备注
             </summary>
@@ -7058,6 +7308,101 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.BdSupplier.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdSupplierClass">
+            <summary>
+            供应商分类 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierClass.ClassNo">
+            <summary>
+            分类编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierClass.ClassName">
+            <summary>
+            分类名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierClass.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdSupplierLevel">
+            <summary>
+            供应商等级 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierLevel.LevelNo">
+            <summary>
+            等级编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierLevel.LevelName">
+            <summary>
+            等级名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdSupplierLevel.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdTexture">
+            <summary>
+            材质 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdTexture.TextureNo">
+            <summary>
+            材质编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdTexture.TextureNames">
+            <summary>
+            材质名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdTexture.Proportion">
+            <summary>
+            比重
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdTexture.BaseAmount">
+            <summary>
+            基数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdTexture.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.BdUnit">
+            <summary>
+            计量单位 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdUnit.UnitNo">
+            <summary>
+            类型编号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdUnit.UnitNames">
+            <summary>
+            类型名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdUnit.DecimalPlaces">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.BdUnit.Remark">
             <summary>
             备注
             </summary>
@@ -12238,6 +12583,11 @@
             金额
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.BdColorDto">
+            <summary>
+            颜色(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdCurrencyDto">
             <summary>
             币别(Dto.View)
@@ -12261,6 +12611,16 @@
         <member name="T:EU.Core.Model.Models.BdCustomerLevelDto">
             <summary>
             客户等级(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdDeliveryWayDto">
+            <summary>
+            送货方式(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdDistrictDto">
+            <summary>
+            地区建立(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.BdGoodsLocationDto">
@@ -12311,6 +12671,26 @@
         <member name="T:EU.Core.Model.Models.BdSupplierDto">
             <summary>
             供应商(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdSupplierClassDto">
+            <summary>
+            供应商分类(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdSupplierLevelDto">
+            <summary>
+            供应商等级(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdTextureDto">
+            <summary>
+            材质(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.BdUnitDto">
+            <summary>
+            计量单位(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.EmEquipmentDto">
@@ -12915,6 +13295,11 @@
             修改时间
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdColorInput">
+            <summary>
+            颜色 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertBdCurrencyInput">
             <summary>
             币别 (Dto.InsertInput)
@@ -12938,6 +13323,16 @@
         <member name="T:EU.Core.Model.Insert.InsertBdCustomerLevelInput">
             <summary>
             客户等级 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdDeliveryWayInput">
+            <summary>
+            送货方式 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdDistrictInput">
+            <summary>
+            地区建立 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertBdGoodsLocationInput">
@@ -12978,6 +13373,26 @@
         <member name="T:EU.Core.Model.Insert.InsertBdSupplierInput">
             <summary>
             供应商 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdSupplierClassInput">
+            <summary>
+            供应商分类 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdSupplierLevelInput">
+            <summary>
+            供应商等级 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdTextureInput">
+            <summary>
+            材质 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertBdUnitInput">
+            <summary>
+            计量单位 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertEmEquipmentInput">

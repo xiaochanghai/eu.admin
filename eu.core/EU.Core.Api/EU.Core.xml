@@ -555,6 +555,11 @@
             通过此处的key格式为 xx:xx:x
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.BdColorController">
+            <summary>
+            颜色(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.BdCurrencyController">
             <summary>
             币别(Controller)
@@ -586,6 +591,16 @@
         <member name="T:EU.Core.Api.Controllers.BdCustomerLevelController">
             <summary>
             客户等级(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdDeliveryWayController">
+            <summary>
+            送货方式(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdDistrictController">
+            <summary>
+            地区建立(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.GoodsLocationController">
@@ -641,9 +656,29 @@
             仓库 (Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.BdSupplierClassController">
+            <summary>
+            供应商分类(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SupplierController">
             <summary>
             供应商(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdSupplierLevelController">
+            <summary>
+            供应商等级(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdTextureController">
+            <summary>
+            材质(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.BdUnitController">
+            <summary>
+            计量单位(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.EmEquipmentController">
