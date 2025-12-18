@@ -268,8 +268,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         // 获取模块SQL配置
         var userId = string.Empty;
-        ModuleSql moduleSql = new(moduleCode);
-        GridList grid = new();
+        ModuleSql moduleSql = new(moduleCode, Db);
+        GridList grid = new(Db);
         var tableName = moduleSql.GetTableName();
         var fullSql = moduleSql.GetFullSql();
         var sqlSelectBrwAndTable = moduleSql.GetSqlSelectBrwAndTable();
