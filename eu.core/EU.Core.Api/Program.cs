@@ -27,6 +27,8 @@ builder.Host
     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(builder =>
     {
+
+        DbSetup.DapperSqlMapper();
         builder.RegisterModule(new AutofacModuleRegister());
         builder.RegisterModule<AutofacPropertityModuleReg>();
 
@@ -63,7 +65,7 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
-builder.Services.AddDataContextSetup();
+//builder.Services.AddDataContextSetup();
 builder.Services.AddDbSetup();
 builder.Services.AddInitializationHostServiceSetup();
 
@@ -144,7 +146,7 @@ else
     //app.UseHsts();
 }
 
-app.UseDataContext();
+//app.UseDataContext();
 app.UseEncryptionRequest();
 app.UseEncryptionResponse();
 

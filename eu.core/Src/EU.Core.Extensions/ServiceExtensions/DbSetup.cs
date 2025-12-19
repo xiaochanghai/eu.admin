@@ -1,5 +1,7 @@
 ﻿using EU.Core.Common.Seed;
+using EU.Core.Extensions.Middlewares;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace EU.Core.Extensions;
 
@@ -14,5 +16,11 @@ public static class DbSetup
 
         services.AddScoped<DBSeed>();
         services.AddScoped<MyContext>();
+    }
+
+    public static void DapperSqlMapper()
+    {
+        Dapper.SqlMapper.AddTypeHandler(new GuidTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(new NullableGuidTypeHandler());
     }
 }
