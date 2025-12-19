@@ -2,12 +2,14 @@
 using EU.Core.Common.Enums;
 using EU.Core.Common.Helper;
 using EU.Core.Model.Entity;
+using SqlSugar;
 
 namespace EU.Core.Common.Module;
 
 public class ModuleInfo
 {
     private static RedisCacheService Redis = new(2);
+    private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
 
     #region 获取模块
     /// <summary>
@@ -51,8 +53,9 @@ public class ModuleInfo
         var moduleList = Redis.Get<List<SmModules>>(code);
         if (moduleList == null)
         {
-            string sql = "SELECT A.* FROM SmModules A WHERE A.IsDeleted='false' ORDER BY A.ModuleCode ASC";
-            moduleList = DBHelper.QueryList<SmModules>(sql);
+            moduleList = Db.Queryable<SmModules>()
+                .OrderBy(x => x.ModuleCode)
+                .ToList();
             Redis.AddObject(code, moduleList);
         }
         return moduleList;
