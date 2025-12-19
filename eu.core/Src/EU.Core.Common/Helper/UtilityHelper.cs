@@ -4,6 +4,7 @@ using EU.Core.Common.Extensions;
 using EU.Core.Common.Https;
 using EU.Core.Common.Module;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels;
 using EU.Core.Module;
 using SqlSugar;
@@ -977,7 +978,7 @@ public static class Utility
     /// <param name="loginClass">登录类型（Web/Mobile/Desktop等）</param>
     /// <param name="remark">备注信息</param>
     /// <param name="companyId">公司ID，默认为null时使用当前公司ID</param>
-    public static async void RecordEntryLog(Guid userId, string loginClass, string remark = null, string companyId = null)
+    public static async void RecordEntryLog(ISqlSugarClient Db, Guid userId, string loginClass, string remark = null, string companyId = null)
     {
         try
         {
@@ -1034,22 +1035,22 @@ public static class Utility
                 }
             }
 
+            var log = new SmEntryLog();
+            log.LoginUserId = userId;
+            log.IpAddress = ipAddress;
+            log.IpAddressName1 = countryName;
+            log.IpAddressName2 = cityName;
+            log.LoginDate = GetSysDate();
+            log.LoginClass = loginClass;
+            log.OSName = os;
+            log.ClientType = clientType;
+            log.Remark = remark;
+            await Db.Insertable(log).ExecuteCommandAsync();
 
-            di.Values("LoginUserId", userId.ToString());
-            di.Values("IpAddress", ipAddress);
-            di.Values("IpAddressName1", countryName);
-            di.Values("IpAddressName2", cityName);
-            di.Values("LoginDate", GetSysDate());
-            di.Values("LoginClass", loginClass);
-            di.Values("OSName", os);
-            di.Values("ClientType", clientType);
-            di.Values("Remark", remark);
-            DBHelper.ExecuteDML(di.GetSql());
-
-
-            var du = new DbUpdate("SmUsers", "ID", userId);
-            du.Set("LastLoginTime", GetSysDate());
-            DBHelper.ExecuteDML(du.GetSql());
+            await Db.Updateable<SmUsers>()
+                 .SetColumns(it => new SmUsers() { LastLoginTime = DateTime.Now })
+                 .Where(it => it.ID == userId)
+                 .ExecuteCommandAsync();
         }
         catch (Exception)
         {
