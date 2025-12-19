@@ -240,11 +240,10 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             var isDevelopment = _hostingEnvironment.IsDevelopment();
             var platform = App.User.GetPlatform();
 
-            if (!isDevelopment)
-            {
-                // 使用Task.Run代替new Task，更简洁且自动启动
-                _ = Task.Run(() => Utility.RecordEntryLog(user.ID, platform ?? "Web"));
-            }
+
+            // 使用Task.Run代替new Task，更简洁且自动启动
+            _ = Task.Run(() => Utility.RecordEntryLog(Db, user.ID, platform ?? "Web"));
+
             #endregion
 
             return Success(result, ResponseText.LOGIN_SUCCESS);

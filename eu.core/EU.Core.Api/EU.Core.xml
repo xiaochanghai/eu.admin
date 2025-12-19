@@ -1290,6 +1290,11 @@
             <param name="id">文件ID</param>
             <returns></returns>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmApiLogController">
+            <summary>
+            SmApiLog(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmApplicationDeviceController">
             <summary>
             APP客户端记录(Controller)
@@ -1382,6 +1387,11 @@
         <member name="T:EU.Core.Api.Controllers.SmEmployeeController">
             <summary>
             员工管理(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmEntryLogController">
+            <summary>
+            SmEntryLog(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmFieldCatalogController">

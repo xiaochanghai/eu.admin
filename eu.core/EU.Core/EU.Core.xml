@@ -1384,6 +1384,11 @@
             员工管理(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmEntryLogController">
+            <summary>
+            SmEntryLog(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmFieldCatalogController">
             <summary>
             映射表字段(Controller)

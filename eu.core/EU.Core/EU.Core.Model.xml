@@ -3617,6 +3617,76 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmEntryLogBase">
+            <summary>
+            SmEntryLog (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.LoginUserId">
+            <summary>
+            操作人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.IpAddress">
+            <summary>
+            操作人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.IpAddressName1">
+            <summary>
+            操作程序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.IpAddressName2">
+            <summary>
+            模块代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.LoginDate">
+            <summary>
+            表名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.LoginClass">
+            <summary>
+            数据ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.OSName">
+            <summary>
+            操作时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.ClientType">
+            <summary>
+            操作类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmEntryLogBase.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmFieldCatalogBase">
             <summary>
             系统表栏位 (Dto.Base)
@@ -6435,6 +6505,11 @@
         <member name="T:EU.Core.Model.Edit.EditSmEmployeeInput">
             <summary>
             员工管理 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmEntryLogInput">
+            <summary>
+            SmEntryLog (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmFieldCatalogInput">
@@ -10182,6 +10257,76 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmEntryLog">
+            <summary>
+            SmEntryLog (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.LoginUserId">
+            <summary>
+            操作人ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.IpAddress">
+            <summary>
+            操作人
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.IpAddressName1">
+            <summary>
+            操作程序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.IpAddressName2">
+            <summary>
+            模块代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.LoginDate">
+            <summary>
+            表名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.LoginClass">
+            <summary>
+            数据ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.OSName">
+            <summary>
+            操作时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.ClientType">
+            <summary>
+            操作类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.ExtRemark1">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.ExtRemark2">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.ExtRemark3">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmEntryLog.ExtRemark4">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmFieldCatalog">
             <summary>
             系统表栏位 (Model)
@@ -13098,6 +13243,11 @@
             员工管理(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmEntryLogDto">
+            <summary>
+            SmEntryLog(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmFieldCatalogDto">
             <summary>
             映射表字段(Dto.View)
@@ -13628,6 +13778,11 @@
         <member name="T:EU.Core.Model.Insert.InsertSmEmployeeInput">
             <summary>
             员工管理 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmEntryLogInput">
+            <summary>
+            SmEntryLog (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmFieldCatalogInput">
