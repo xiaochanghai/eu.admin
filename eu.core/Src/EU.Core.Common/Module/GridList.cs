@@ -1,9 +1,16 @@
-﻿using EU.Core.Common.Helper;
+﻿using SqlSugar;
 
 namespace EU.Core.Common.Module;
 
 public class GridList
 {
+    private ISqlSugarClient Db;
+
+    public GridList(ISqlSugarClient _Db = null)
+    {
+        Db = _Db;
+    }
+
     public string SqlSelect;
     public string SqlDefaultCondition;
     public string SqlQueryCondition;
@@ -88,7 +95,7 @@ public class GridList
             else
             {
                 sql = "SELECT COUNT(0) FROM ( " + FullSql + " ) A WHERE 1=1";
-       
+
                 if (!string.IsNullOrEmpty(SqlQueryCondition))
                     sql += " AND " + SqlQueryCondition;
 
@@ -97,8 +104,7 @@ public class GridList
 
             }
             sql = string.Format(sql, innerCondition);
-            int count = Convert.ToInt32(DBHelper.ExecuteScalar(sql));
-            return count;
+            return Db.Ado.GetInt(sql);
         }
         catch (Exception)
         {
