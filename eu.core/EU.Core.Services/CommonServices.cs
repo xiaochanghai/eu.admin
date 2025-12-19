@@ -792,6 +792,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict.Add("ModificationNum", 0);
         dict.Add("GroupId", Utility.GetGroupId());
         dict.Add("CompanyId", Utility.GetCompanyId());
+        dict.Add("IsActive", true);
+        dict.Add("IsDeleted", false);
 
         // 执行插入操作
         await Db.Insertable(dict).AS(tableName).ExecuteCommandAsync();
@@ -833,12 +835,20 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         // 添加更新时间和更新人
         dict.Add("UpdateTime", Utility.GetSysDate());
         dict.Add("UpdateBy", App.User.ID);
+        dict.Add("ID", id);
+        dict.Add("IsDeleted", false);
 
         // 执行更新操作
-        await Db.Updateable(dict).AS(tableName).Where($"IsDeleted='false' AND ID='{id}'").ExecuteCommandAsync();
+        await Db.Updateable(dict).AS(tableName).WhereColumns(["ID", "IsDeleted"]).ExecuteCommandAsync();
 
         #region 回写修改次数
         string sql = $"UPDATE {tableName} SET ModificationNum = isnull(ModificationNum, 0) + 1, Tag = 1 WHERE ID='{id}'";
+
+        if (Db.Ado.Context.CurrentConnectionConfig.DbType == SqlSugar.DbType.MySql)
+            sql = $@"UPDATE `{tableName}` 
+                    SET ModificationNum = IFNULL(ModificationNum, 0) + 1, 
+                        Tag = 1 
+                    WHERE ID = '{id}';";
         await Db.Ado.ExecuteCommandAsync(sql);
         #endregion
 
