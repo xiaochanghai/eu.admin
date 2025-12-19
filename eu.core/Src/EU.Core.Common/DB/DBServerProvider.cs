@@ -12,7 +12,7 @@ public class DBServerProvider
     /// <summary>
     /// 数据库连接池
     /// </summary>
-    private static Dictionary<string, string> ConnectionPool = new(StringComparer.OrdinalIgnoreCase);
+    private static Dictionary<string, MutiDBOperate> ConnectionPool = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// 默认数据库连接名
@@ -25,9 +25,9 @@ public class DBServerProvider
         var listdatabase = AppSettings.app<MutiDBOperate>("DBS")
            .Where(i => i.Enabled).ToList();
         var mainConnetctDb = listdatabase.Find(x => x.ConnId == mainDbId);
-        SetConnection(DefaultConnName, mainConnetctDb.Connection);
+        SetConnection(DefaultConnName, mainConnetctDb);
     }
-    public static void SetConnection(string key, string val)
+    public static void SetConnection(string key, MutiDBOperate val)
     {
         if (ConnectionPool.ContainsKey(key))
         {
@@ -40,7 +40,7 @@ public class DBServerProvider
     /// 设置默认数据库连接
     /// </summary>
     /// <param name="val"></param>
-    public static void SetDefaultConnection(string val) => SetConnection(DefaultConnName, val);
+    public static void SetDefaultConnection(MutiDBOperate val) => SetConnection(DefaultConnName, val);
 
     /// <summary>
     /// 获取默认数据库连接
@@ -51,9 +51,23 @@ public class DBServerProvider
     {
         key = key ?? DefaultConnName;
         if (ConnectionPool.ContainsKey(key))
-            return ConnectionPool[key];
+            return ConnectionPool[key].Connection;
         return key;
     }
+
+    /// <summary>
+    /// 获取默认数据库类型
+    /// </summary>
+    /// <param name="key">数据库连接Key</param>
+    /// <returns></returns>
+    public static DataBaseType GetDbType(string key = null)
+    {
+        key = key ?? DefaultConnName;
+        if (ConnectionPool.ContainsKey(key))
+            return ConnectionPool[key].DbType;
+        return DataBaseType.SqlServer;
+    }
+
     /// <summary>
     /// 获取默认数据库连接
     /// </summary>
@@ -72,9 +86,14 @@ public class DBServerProvider
     /// <returns></returns>
     public static IDbConnection GetDbConnection(string connString = null)
     {
-        if (_isMysql)
-            return new MySql.Data.MySqlClient.MySqlConnection(connString ?? ConnectionPool[DefaultConnName]);
-        return new SqlConnection(connString ?? ConnectionPool[DefaultConnName]);
+        var DbType = GetDbType();
+        if (DbType == DataBaseType.MySql)
+        {
+            DBType.Name = DbCurrentType.MySql.ToString();
+            return new MySql.Data.MySqlClient.MySqlConnection(connString ?? ConnectionPool[DefaultConnName].Connection);
+
+        }
+        return new SqlConnection(connString ?? ConnectionPool[DefaultConnName].Connection);
     }
 
     /// <summary>
@@ -90,50 +109,6 @@ public class DBServerProvider
         return new MySql.Data.MySqlClient.MySqlConnection(mySql);
 
     }
-    //public static VOLContext DbContext
-    //{
-    //    get { return GetEFDbContext(); }
-    //}
-    //public static VOLContext GetEFDbContext()
-    //{
-    //    return GetEFDbContext(null);
-    //}
-    //public static VOLContext GetEFDbContext(string dbName)
-    //{
-    //    VOLContext beefContext = Utilities.HttpContext.Current.RequestServices.GetService(typeof(VOLContext)) as VOLContext;
-    //    if (dbName != null)
-    //    {
-    //        if (!ConnectionPool.ContainsKey(dbName))
-    //        {
-    //            throw new Exception("数据库连接名称错误");
-    //        }
-    //        beefContext.Database.GetDbConnection().ConnectionString = ConnectionPool[dbName];
-    //    }
-    //    return beefContext;
-    //}
-
-    //public static void SetDbContextConnection(VOLContext beefContext, string dbName)
-    //{
-    //    if (!ConnectionPool.ContainsKey(dbName))
-    //    {
-    //        throw new Exception("数据库连接名称错误");
-    //    }
-    //    beefContext.Database.GetDbConnection().ConnectionString = ConnectionPool[dbName];
-    //}
-    /// <summary>
-    /// 获取实体的数据库连接
-    /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    /// <param name="defaultDbContext"></param>
-    /// <returns></returns>
-    //public static void GetDbContextConnection<TEntity>(VOLContext defaultDbContext)
-    //{
-    //    //string connstr= defaultDbContext.Database.GetDbConnection().ConnectionString;
-    //    // if (connstr != ConnectionPool[DefaultConnName])
-    //    // {
-    //    //     defaultDbContext.Database.GetDbConnection().ConnectionString = ConnectionPool[DefaultConnName];
-    //    // };
-    //}
 
     public static ISqlDapper SqlDapper
     {

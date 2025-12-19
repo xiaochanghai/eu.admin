@@ -611,13 +611,14 @@ public class DBSeed
             .ToList();
         Stopwatch sw = Stopwatch.StartNew();
 
-        var configID = "WMEU_MYSQL".ToLower();
+        var configID = "WMEU_MSSQL_Main".ToLower();
         if (!myContext.Db.IsAnyConnection(configID))
         {
             throw new ApplicationException("未配置日志数据库，请在appsettings.json中DBS节点中配置");
         }
 
-        var logDb = myContext.Db.GetConnection(configID);
+        var mssqlDb = myContext.Db.GetConnection("WMEU_MSSQL_Main".ToLower());
+        var mysqlDb = myContext.Db.GetConnection("WMEU_MYSQL".ToLower());
 
         for (int i = 0; i < modelTypes.Count; i++)
         {
@@ -625,10 +626,10 @@ public class DBSeed
 
             try
             {
-                var dt = myContext.Db.Ado.GetDataTable($"select * from {modelTypes[i].Name}");
-                List<Dictionary<string, object>> dc = myContext.Db.Utilities.DataTableToDictionaryList(dt);//5.0.23版本支持
-                logDb.Ado.GetDataTable($"delete from {modelTypes[i].Name}");
-                logDb.Insertable(dc).AS(modelTypes[i].Name).ExecuteCommand();
+                var dt = mssqlDb.Ado.GetDataTable($"select * from {modelTypes[i].Name}");
+                List<Dictionary<string, object>> dc = mssqlDb.Utilities.DataTableToDictionaryList(dt);//5.0.23版本支持
+                mysqlDb.Ado.GetDataTable($"delete from {modelTypes[i].Name}");
+                mysqlDb.Insertable(dc).AS(modelTypes[i].Name).ExecuteCommand();
 
 
             }
