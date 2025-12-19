@@ -59,19 +59,21 @@ public class DbInsert
 
     public DbInsert(string tableName)
     {
-        SetTableName(tableName.ToUpper());
+        SetTableName(tableName);
     }
 
     public DbInsert(string tableName, string createProgram)
     {
-        SetTableName(tableName.ToUpper());
+        SetTableName(tableName);
         this.createProgram = createProgram;
     }
 
     public void SetTableName(string tableName)
     {
         sql = "INSERT INTO {0} () VALUES ()";
-        sql = string.Format(sql, tableName.ToUpper());
+
+        sql = string.Format(sql, DBHelper.MySql ? $"`{tableName}`" : tableName);
+
     }
     #endregion
 
@@ -84,7 +86,7 @@ public class DbInsert
         string s = "N'{0}'";
         s = string.Format(s, value);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
     public void Values(string fieldName, Guid value)
     {
@@ -95,7 +97,7 @@ public class DbInsert
         string s = "N'{0}'";
         s = string.Format(s, value1);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
 
     public void Values(string fieldName, Guid? value)
@@ -107,27 +109,27 @@ public class DbInsert
         string s = "N'{0}'";
         s = string.Format(s, value1);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
 
     public void Values(string fieldName, int value)
     {
-        FormatValue(fieldName.ToUpper(), Convert.ToString(value));
+        FormatValue(fieldName, Convert.ToString(value));
     }
 
     public void Values(string fieldName, double value)
     {
-        FormatValue(fieldName.ToUpper(), Convert.ToString(value));
+        FormatValue(fieldName, Convert.ToString(value));
     }
 
     public void Values(string fieldName, decimal value)
     {
-        FormatValue(fieldName.ToUpper(), Convert.ToString(value));
+        FormatValue(fieldName, Convert.ToString(value));
     }
 
     public void Values(string fieldName, decimal? value)
     {
-        FormatValue(fieldName.ToUpper(), Convert.ToString(value));
+        FormatValue(fieldName, Convert.ToString(value));
     }
 
     public void Values(string fieldName, DateTime value)
@@ -137,10 +139,10 @@ public class DbInsert
         valTemp = Convert.ToString(value);
         //valTemp = valTemp.Replace("'", "''");
         string s = string.Empty;
-        s = "CAST('{0}' AS DATETIME)";
+        s = DBHelper.MySql ? "'{0}'" : "CAST('{0}' AS DATETIME)";
         s = string.Format(s, valTemp);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
     public void Values(string fieldName, DateTime? value)
     {
@@ -149,10 +151,10 @@ public class DbInsert
         valTemp = Convert.ToString(value);
         //valTemp = valTemp.Replace("'", "''");
         string s = string.Empty;
-        s = "CAST('{0}' AS DATETIME)";
+        s = DBHelper.MySql ? "'{0}'" : "CAST('{0}' AS DATETIME)";
         s = string.Format(s, valTemp);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
     #endregion
 
@@ -169,7 +171,7 @@ public class DbInsert
         string s = "encryptbykey(key_guid('fookey'),N'{0}')";
         s = string.Format(s, value);
 
-        FormatValue(fieldName.ToUpper(), s);
+        FormatValue(fieldName, s);
     }
     /// <summary>
     /// 加密保存
@@ -178,7 +180,7 @@ public class DbInsert
     /// <param name="value"></param>
     public void ValuesAsSecurity(string fieldName, int value)
     {
-        ValuesAsSecurity(fieldName.ToUpper(), Convert.ToString(value));
+        ValuesAsSecurity(fieldName, Convert.ToString(value));
     }
     /// <summary>
     /// 加密保存
@@ -187,7 +189,7 @@ public class DbInsert
     /// <param name="value"></param>
     public void ValuesAsSecurity(string fieldName, double value)
     {
-        ValuesAsSecurity(fieldName.ToUpper(), Convert.ToString(value));
+        ValuesAsSecurity(fieldName, Convert.ToString(value));
     }
     /// <summary>
     /// 加密保存
@@ -196,7 +198,7 @@ public class DbInsert
     /// <param name="value"></param>
     public void ValuesAsSecurity(string fieldName, decimal value)
     {
-        ValuesAsSecurity(fieldName.ToUpper(), Convert.ToString(value));
+        ValuesAsSecurity(fieldName, Convert.ToString(value));
     }
     #endregion
 
@@ -244,7 +246,7 @@ public class DbInsert
             n = sql.LastIndexOf(")");
             sql = sql.Insert(n, " {1}");
         }
-        sql = string.Format(sql, fieldName.ToUpper(), value);
+        sql = string.Format(sql, fieldName, value);
     }
 
     /// <summary>
@@ -264,7 +266,7 @@ public class DbInsert
         //}
 
         //create_by
-        Guid? createBy = UserContext.Current.User_Id;
+        Guid? createBy = App.User.ID;
         if (createBy != Guid.Empty)
             Values("CreatedBy", createBy);
 
@@ -278,7 +280,8 @@ public class DbInsert
         //tag
         Values("Tag", 1);
         //active_flag
-        //Values("DELETE_FLAG", "N");
+        Values("IsDeleted", 0);
+        Values("IsActive", 1);
     }
     #endregion
 }
