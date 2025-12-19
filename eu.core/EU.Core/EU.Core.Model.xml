@@ -3122,6 +3122,61 @@
             ImageType
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmApiLogBase">
+            <summary>
+            SmApiLog (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.UserId">
+            <summary>
+            用户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.IP">
+            <summary>
+            IP
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Path">
+            <summary>
+            请求地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Method">
+            <summary>
+            请求方式
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Source">
+            <summary>
+            来源
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.RequestData">
+            <summary>
+            请求内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.BeginTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.OPTime">
+            <summary>
+            操作时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Agent">
+            <summary>
+            代理
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmApplicationDeviceBase">
             <summary>
             APP客户端记录 (Dto.Base)
@@ -6442,6 +6497,11 @@
             FileAttachment (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditSmApiLogInput">
+            <summary>
+            SmApiLog (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditSmApplicationDeviceInput">
             <summary>
             APP客户端记录 (Dto.EditInput)
@@ -9760,6 +9820,61 @@
         <member name="P:EU.Core.Model.Entity.FileAttachment.ImageType">
             <summary>
             文件类型
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.SmApiLog">
+            <summary>
+            SmApiLog (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.UserId">
+            <summary>
+            用户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.IP">
+            <summary>
+            IP
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Path">
+            <summary>
+            请求地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Method">
+            <summary>
+            请求方式
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Source">
+            <summary>
+            来源
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.RequestData">
+            <summary>
+            请求内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.BeginTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.OPTime">
+            <summary>
+            操作时长
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Agent">
+            <summary>
+            代理
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmApplicationDevice">
@@ -13178,6 +13293,11 @@
             FileAttachment(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmApiLogDto">
+            <summary>
+            SmApiLog(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmApplicationDeviceDto">
             <summary>
             APP客户端记录(Dto.View)
@@ -13713,6 +13833,11 @@
         <member name="T:EU.Core.Model.Insert.InsertFileAttachmentInput">
             <summary>
             FileAttachment (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmApiLogInput">
+            <summary>
+            SmApiLog (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmApplicationDeviceInput">
