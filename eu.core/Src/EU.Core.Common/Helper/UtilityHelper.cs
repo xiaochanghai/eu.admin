@@ -1329,4 +1329,29 @@ public static class Utility
         return string.Join("", (from q in arrStr select q).Skip(arrStr.Length - length + 1).Take(length).ToArray());
     }
     #endregion
+
+    #region 检查端口开放情况
+    /// <summary>
+    /// 检查端口是否打开
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="port"></param>
+    /// <param name="timeout"></param>
+    /// <returns></returns>
+    public static bool IsPortOpen(string host, int port, TimeSpan timeout)
+    {
+        try
+        {
+            using var client = new System.Net.Sockets.TcpClient();
+            var result = client.BeginConnect(host, port, null, null);
+            var success = result.AsyncWaitHandle.WaitOne(timeout);
+            client.EndConnect(result);
+            return success;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    #endregion
 }
