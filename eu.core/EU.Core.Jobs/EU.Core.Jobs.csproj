@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EU.Core.Services\EU.Core.Services.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Extensions\EU.Core.Extensions.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Tasks\EU.Core.Tasks.csproj" />
   </ItemGroup>
 

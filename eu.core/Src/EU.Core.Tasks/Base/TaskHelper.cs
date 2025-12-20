@@ -566,8 +566,13 @@ public class TaskHelper
                                A.IsActive,
                                A.IsDeleted,
                                A.CurrentNode
-                        FROM SmQuartzJob A
-                        WHERE A.IsDeleted = 'false' AND A.IsActive = 'true'";
+                        FROM SmQuartzJob A";
+
+        if (DBHelper.MySql)
+            sql += " WHERE A.IsDeleted = '0' AND A.IsActive = '1'";
+        else
+            sql += " WHERE A.IsDeleted = 'false' AND A.IsActive = 'true'";
+
         return await DBHelper.QueryListAsync<SmQuartzJob>(sql);
     }
     public static async Task<SmQuartzJob> GetSmQuartzJob(Guid taskId)
