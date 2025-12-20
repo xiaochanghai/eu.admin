@@ -40,37 +40,48 @@ public class DbUpdate
     #region 构造函数
     public DbUpdate(string tableName)
     {
+        if (DBHelper.MySql)
+            tableName = $"`{tableName}`";
         sql = "UPDATE {0} SET WHERE {1}";
-        sql = string.Format(sql, tableName.ToUpper(), "1=1");
+        sql = string.Format(sql, tableName, "1=1");
         sqlTag = "SELECT TAG FROM {0} WHERE {1}";
-        sqlTag = string.Format(sqlTag, tableName.ToUpper(), "1=1");
+        sqlTag = string.Format(sqlTag, tableName, "1=1");
     }
     public DbUpdate(string tableName, string condition)
     {
+        if (DBHelper.MySql)
+            tableName = $"`{tableName}`";
         sql = "UPDATE {0} SET WHERE {1}";
-        sql = string.Format(sql, tableName.ToUpper(), condition);
+        sql = string.Format(sql, tableName, condition);
         sqlTag = "SELECT TAG FROM {0} WHERE {1}";
-        sqlTag = string.Format(sqlTag, tableName.ToUpper(), condition);
+        sqlTag = string.Format(sqlTag, tableName, condition);
     }
     public DbUpdate(string tableName, string fieldName, string fieldValue)
     {
+        if (DBHelper.MySql)
+            tableName = $"`{tableName}`";
         sql = "UPDATE {0} SET WHERE {1} = N'{2}'";
-        sql = string.Format(sql, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+        sql = string.Format(sql, tableName, fieldName, fieldValue);
         sqlTag = "SELECT TAG FROM {0} WHERE {1} = N'{2}'";
-        sqlTag = string.Format(sqlTag, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+        sqlTag = string.Format(sqlTag, tableName, fieldName, fieldValue);
     }
     public DbUpdate(string tableName, string fieldName, Guid fieldValue)
     {
-        sql = $"UPDATE {tableName.ToUpper()} SET WHERE {fieldName.ToUpper()} = N'{fieldValue}'";
+        if (DBHelper.MySql)
+            tableName = $"`{tableName}`";
+        sql = $"UPDATE {tableName} SET WHERE {fieldName} = N'{fieldValue}'";
         sqlTag = "SELECT TAG FROM {0} WHERE {1} = N'{2}'";
-        sqlTag = string.Format(sqlTag, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+        sqlTag = string.Format(sqlTag, tableName, fieldName, fieldValue);
     }
     public DbUpdate(string tableName, string fieldName, string fieldValue, string updateProgram)
     {
+        if (DBHelper.MySql)
+            tableName = $"`{tableName}`";
+
         sql = "UPDATE {0} SET WHERE {1} = N'{2}'";
-        sql = string.Format(sql, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+        sql = string.Format(sql, tableName, fieldName, fieldValue);
         sqlTag = "SELECT TAG FROM {0} WHERE {1} = N'{2}'";
-        sqlTag = string.Format(sqlTag, tableName.ToUpper(), fieldName.ToUpper(), fieldValue);
+        sqlTag = string.Format(sqlTag, tableName, fieldName, fieldValue);
         this.updateProgram = updateProgram;
     }
     #endregion
@@ -78,20 +89,20 @@ public class DbUpdate
     #region Set
     public void Set(string fieldName, int value)
     {
-        inset(fieldName.ToUpper(), Convert.ToString(value));
+        inset(fieldName, Convert.ToString(value));
     }
     public void Set(string fieldName, decimal? value)
     {
-        inset(fieldName.ToUpper(), Convert.ToString(value));
+        inset(fieldName, Convert.ToString(value));
     }
     public void Set(string fieldName, int? value)
     {
-        inset(fieldName.ToUpper(), Convert.ToString(value));
+        inset(fieldName, Convert.ToString(value));
     }
 
     public void Set(string fieldName, decimal value)
     {
-        inset(fieldName.ToUpper(), Convert.ToString(value));
+        inset(fieldName, Convert.ToString(value));
     }
 
     public void Set(string fieldName, string value)
@@ -105,14 +116,14 @@ public class DbUpdate
             }
             if (!string.IsNullOrEmpty(value))
             {
-                string s = "N'{0}'";
+                string s = DBHelper.MySql ? "'{0}'" : "N'{0}'";
                 value = value.Replace("'", "''");
                 s = string.Format(s, value);
-                inset(fieldName.ToUpper(), s);
+                inset(fieldName, s);
             }
             else
             {
-                inset(fieldName.ToUpper(), null);
+                inset(fieldName, null);
             }
         }
         catch (Exception) { throw; }
@@ -129,14 +140,14 @@ public class DbUpdate
             }
             if (!string.IsNullOrEmpty(value1))
             {
-                string s = "N'{0}'";
+                string s = DBHelper.MySql ? "'{0}'" : "N'{0}'";
                 value1 = value1.Replace("'", "''");
                 s = string.Format(s, value1);
-                inset(fieldName.ToUpper(), s);
+                inset(fieldName, s);
             }
             else
             {
-                inset(fieldName.ToUpper(), null);
+                inset(fieldName, null);
             }
         }
         catch (Exception)
@@ -149,28 +160,28 @@ public class DbUpdate
     {
         if (value == DateTime.MinValue) return;
         string valTemp = string.Empty;
-        valTemp = Convert.ToString(value);
+        valTemp = value.ConvertToSecondString();
         valTemp = valTemp.Replace("'", "''");
         string s = string.Empty;
-        s = "CAST('{0}' AS DATETIME)";
+        s = DBHelper.MySql ? "'{0}'" : "CAST('{0}' AS DATETIME)";
         s = string.Format(s, valTemp);
 
-        inset(fieldName.ToUpper(), s);
+        inset(fieldName, s);
     }
 
     public void Set(string fieldName, DateTime? value)
     {
         if (value == null) return;
         string valTemp = string.Empty;
-        valTemp = Convert.ToString(value);
+        valTemp = value.ConvertToSecondString();
         valTemp = valTemp.Replace("'", "''");
         string s = string.Empty;
-        s = "CAST('{0}' AS DATETIME)";
+        s = DBHelper.MySql ? "'{0}'" : "CAST('{0}' AS DATETIME)";
         s = string.Format(s, valTemp);
 
-        inset(fieldName.ToUpper(), s);
+        inset(fieldName, s);
     }
-   
+
     /// <summary>
     /// 设置计算类型的更新，如SetCompute("TAG","TAG+1")
     /// </summary>
@@ -184,7 +195,7 @@ public class DbUpdate
             {
                 value = value.Trim();
             }
-            inset(fieldName.ToUpper(), value);
+            inset(fieldName, value);
         }
         catch (Exception)
         {
@@ -207,7 +218,7 @@ public class DbUpdate
         else
         {
             string temp = "encryptbykey(key_guid('fookey'),N'" + value + "')";
-            inset(fieldName.ToUpper(), temp);
+            inset(fieldName, temp);
         }
     }
     /// <summary>
@@ -322,19 +333,19 @@ public class DbUpdate
     }
     public void Where(string fieldName, string condition, string fieldValue)
     {
-        this.whereCondition += fieldName.ToUpper() + condition + "'" + fieldValue + "'" + " AND ";
+        this.whereCondition += fieldName + condition + "'" + fieldValue + "'" + " AND ";
     }
     public void Where(string fieldName, string condition, Guid? fieldValue)
     {
-        this.whereCondition += fieldName.ToUpper() + condition + "'" + fieldValue + "'" + " AND ";
+        this.whereCondition += fieldName + condition + "'" + fieldValue + "'" + " AND ";
     }
     public void Where(string fieldName, string condition, Guid fieldValue)
     {
-        this.whereCondition += fieldName.ToUpper() + condition + "'" + fieldValue + "'" + " AND ";
+        this.whereCondition += fieldName + condition + "'" + fieldValue + "'" + " AND ";
     }
     public void Where(string fieldName, string condition, decimal fieldValue)
     {
-        this.whereCondition += fieldName.ToUpper() + condition + fieldValue + " AND ";
+        this.whereCondition += fieldName + condition + fieldValue + " AND ";
     }
     public void Where(string fieldName, string condition, DateTime fieldValue)
     {
@@ -342,7 +353,7 @@ public class DbUpdate
         string tempFieldValue = Convert.ToString(fieldValue);
         tempFieldValue = tempFieldValue.Replace("'", "''");
         string tempValue = string.Empty;
-        tempValue = fieldName.ToUpper() + condition + "DBO.TO_DATE('{0}','YYYY/MM/DD HH24:MI:SS')" + " AND ";
+        tempValue = fieldName + condition + "DBO.TO_DATE('{0}','YYYY/MM/DD HH24:MI:SS')" + " AND ";
         tempValue = string.Format(tempValue, tempFieldValue);
         this.whereCondition += tempValue;
     }
@@ -354,7 +365,7 @@ public class DbUpdate
     /// <param name="fieldValue"></param>
     public void WhereSecurity(string fieldName, string condition, string fieldValue)
     {
-        this.whereCondition += "cast(decryptbykey(" + fieldName.ToUpper() + ") AS NVARCHAR(256))" + condition + "'" + fieldValue + "'" + " AND ";
+        this.whereCondition += "cast(decryptbykey(" + fieldName + ") AS NVARCHAR(256))" + condition + "'" + fieldValue + "'" + " AND ";
     }
     /// <summary>
     /// 对字段解密后进行比较
@@ -364,7 +375,7 @@ public class DbUpdate
     /// <param name="fieldValue"></param>
     public void WhereSecurity(string fieldName, string condition, decimal fieldValue)
     {
-        this.whereCondition += "cast(decryptbykey(" + fieldName.ToUpper() + ") AS NVARCHAR(256))" + condition + fieldValue + " AND ";
+        this.whereCondition += "cast(decryptbykey(" + fieldName + ") AS NVARCHAR(256))" + condition + fieldValue + " AND ";
     }
     /// <summary>
     /// 对字段解密后进行比较
@@ -374,7 +385,7 @@ public class DbUpdate
     /// <param name="fieldValue"></param>
     public void WhereSecurity(string fieldName, string condition, int fieldValue)
     {
-        this.whereCondition += "cast(decryptbykey(" + fieldName.ToUpper() + ") AS NVARCHAR(256))" + condition + fieldValue + " AND ";
+        this.whereCondition += "cast(decryptbykey(" + fieldName + ") AS NVARCHAR(256))" + condition + fieldValue + " AND ";
     }
     #endregion
 
@@ -429,7 +440,7 @@ public class DbUpdate
                 n = sql.LastIndexOf(" WHERE");
                 sql = sql.Insert(n, " {0} = NULL ");
             }
-            sql = string.Format(sql, fieldName.ToUpper());
+            sql = string.Format(sql, fieldName);
         }
         else
         {
@@ -443,7 +454,7 @@ public class DbUpdate
                 n = sql.IndexOf(" WHERE");
                 sql = sql.Insert(n, " {0} = {1} ");
             }
-            sql = string.Format(sql, fieldName.ToUpper(), value);
+            sql = string.Format(sql, fieldName, value);
         }
     }
     /// <summary>
@@ -451,7 +462,7 @@ public class DbUpdate
     /// </summary>
     private void InitDefaultValues()
     {
-        string tempSql = sql.ToUpper();
+        string tempSql = sql;
         //try
         //{
         //    if (UserContext.Current != null)
