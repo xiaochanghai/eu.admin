@@ -175,8 +175,12 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                     {
                         SmFunctionId = Guid.Parse(x.Replace(FUNCTION_PRIVILEGES_PREFIX, null)),
                         SmRoleId = RoleId,
-                        SmModuleId = FunctionPrivilege.Query(Guid.Parse(x.Replace(FUNCTION_PRIVILEGES_PREFIX, null)))?.SmModuleId
                     }).ToList();
+
+                for (int i = 0; i < keyList.Count; i++)
+                {
+                    roleFunctions[i].SmModuleId = (await FunctionPrivilege.Query(Guid.Parse(keyList[i].Replace(FUNCTION_PRIVILEGES_PREFIX, null))))?.SmModuleId;
+                }
 
                 // 处理通用操作权限（格式：CommonOption_{ActionCode}_{ModuleId}）
                 keyList.Where(x => x.Contains(COMMON_OPTION_PREFIX)).ToList()

@@ -1,44 +1,45 @@
-﻿using EU.Core.Common.Caches;
+﻿using EU.Core.Common;
+using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
-using EU.Core.Common.Helper;
 using EU.Core.Model.Entity;
+using SqlSugar;
 
 namespace EU.Core.Module;
 
 public class FunctionPrivilege
 {
     private static RedisCacheService Redis = new(2);
+    private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
+    private static string key = CacheKeys.SmFunctionPrivilege.ToString();
 
     #region 获取权限定义
     /// <summary>
     /// 获取权限定义
     /// </summary>
     /// <returns></returns>
-    public static List<SmFunctionPrivilege> Query(string moduleCode)
+    public static async Task<List<SmFunctionPrivilege>> Query(string moduleCode)
     {
-        var moduleList = Redis.Get<List<SmFunctionPrivilege>>(CacheKeys.SmFunctionPrivilege.ToString(), moduleCode);
+        var moduleList = Redis.Get<List<SmFunctionPrivilege>>(key, moduleCode);
         if (moduleList == null)
         {
-            string sql = $@"SELECT A.*
-                                FROM SmFunctionPrivilege A
-                                     JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
-                                WHERE B.ModuleCode = '{moduleCode}' AND A.IsDeleted = 'false'";
-            moduleList = DBHelper.QueryList<SmFunctionPrivilege>(sql);
-            Redis.AddObject(CacheKeys.SmFunctionPrivilege.ToString(), moduleCode, moduleList);
+            moduleList = await Db.Queryable<SmFunctionPrivilege, SmModules>((a, b) => new JoinQueryInfos(JoinType.Inner, a.SmModuleId == b.ID && a.IsDeleted == b.IsDeleted))
+                .Where((a, b) => a.IsDeleted == false && b.IsDeleted == false && b.ModuleCode == moduleCode)
+                .Select((a, b) => a)
+                .ToListAsync();
+            Redis.AddObject(key, moduleCode, moduleList);
         }
         return moduleList;
     }
 
-    public static SmFunctionPrivilege Query(Guid id)
+    public static async Task<SmFunctionPrivilege> Query(Guid id)
     {
-        var moduleList = Redis.Get<List<SmFunctionPrivilege>>(CacheKeys.SmFunctionPrivilege.ToString(), id.ToString());
+        var moduleList = Redis.Get<List<SmFunctionPrivilege>>(key, id.ToString());
         if (moduleList == null)
         {
-            string sql = $@"SELECT A.*
-                                FROM SmFunctionPrivilege A 
-                                WHERE A.IsDeleted = 'false'";
-            moduleList = DBHelper.QueryList<SmFunctionPrivilege>(sql);
-            Redis.AddObject(CacheKeys.SmFunctionPrivilege.ToString(), id.ToString(), moduleList);
+            moduleList = await Db.Queryable<SmFunctionPrivilege>()
+                .Where(x => x.IsDeleted == false)
+                .ToListAsync();
+            Redis.AddObject(key, id.ToString(), moduleList);
         }
         return moduleList.Where(x => x.ID == id).FirstOrDefault();
     }
@@ -49,6 +50,6 @@ public class FunctionPrivilege
     /// </summary>
     public static void Init()
     {
-        Redis.Remove(CacheKeys.SmFunctionPrivilege.ToString());
+        Redis.Remove(key);
     }
 }

@@ -530,7 +530,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             obj.formColumns = Mapper.Map(moduleColumns.Where(x => (x.ColumnMode != "list" || x.ColumnMode == null)).OrderBy(x => x.FromTaxisNo)).ToANew<List<SmModuleForm>>();
 
             // 获取功能权限列表
-            var privileges = FunctionPrivilege.Query(moduleCode);
+            var privileges = await FunctionPrivilege.Query(moduleCode);
             var ids = privileges.Select(x => x.ID).ToList();
 
             // 从缓存获取用户功能权限
