@@ -1,4 +1,5 @@
-﻿using SqlSugar;
+﻿using EU.Core.Common.Helper;
+using SqlSugar;
 
 namespace EU.Core.Common.Module;
 
@@ -57,6 +58,9 @@ public class GridList
         queryString += ") A ) B ) C";
         if (CurrentPage != null && PageSize != null)
             queryString += " WHERE NUM <= " + CurrentPage * PageSize + " AND NUM >" + (CurrentPage - 1) * PageSize;
+
+        if (DBHelper.MySql && queryString.IsNotEmptyOrNull())
+            queryString = queryString.Replace("ISNULL", "IFNULL").Replace("isnull", "IFNULL");
         return queryString;
     }
 
