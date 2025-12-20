@@ -938,24 +938,37 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         // 查询日志信息
         if (!string.IsNullOrEmpty(tableName))
         {
-            string sql = @$"SELECT A.ID,
-                                   B.UserName CreatedBy,
-                                   A.CreatedTime,
-                                   C.UserName UpdateBy,
-                                   A.UpdateTime
-                            FROM {tableName} A
-                                 LEFT JOIN SmUsers B ON A.CreatedBy = B.ID
-                                 LEFT JOIN SmUsers C ON A.UpdateBy = C.ID
-                            WHERE A.ID = '{id}' AND A.IsDeleted = 'false'";
-            var dt = await Db.Ado.GetDataTableAsync(sql);
-            if (dt.Rows.Count > 0)
+            dynamic dt1 = await Db.Queryable<object>()
+                .AS(tableName, "A")
+                .AddJoinInfo("SmUsers", "B", ObjectFuncModel.Create("Equals", "A.CreatedBy", "B.id"), JoinType.Left)
+                .AddJoinInfo("SmUsers", "C", ObjectFuncModel.Create("Equals", "A.UpdateBy", "C.id"), JoinType.Left)
+                .Select(new List<SelectModel>(){
+                    new SelectModel { AsName = "ID", FieldName = "A.ID" },
+                    new SelectModel { AsName = "CreatedBy", FieldName = "B.UserName" },
+                    new SelectModel { AsName = "CreatedTime", FieldName = "A.CreatedTime" },
+                    new SelectModel { AsName = "UpdateBy", FieldName = "C.UserName" },
+                    new SelectModel { AsName = "UpdateTime", FieldName = "A.UpdateTime" }
+                })
+                .FirstAsync();
+
+            // 获取 ID
+            if (dt1 != null)
             {
-                data.CreatedBy = dt.Rows[0]["CreatedBy"].ToString();
-                data.CreatedTime = dt.Rows[0]["CreatedTime"].ToString();
-                data.UpdateBy = dt.Rows[0]["UpdateBy"].ToString();
-                data.UpdateTime = dt.Rows[0]["UpdateTime"].ToString();
-                data.ModuleCode = moduleCode;
+                data.CreatedBy = dt1.CreatedBy;
+                if (dt1.CreatedTime != null)
+                {
+                    var createdTime = (DateTime)dt1.UpdateTime;
+                    data.CreatedTime = createdTime.ConvertToSecondString();
+                }
+                data.UpdateBy = dt1.UpdateBy;
+
+                if (dt1.UpdateTime != null)
+                {
+                    var updateTime = (DateTime)dt1.UpdateTime;
+                    data.UpdateTime = updateTime.ConvertToSecondString();
+                }
             }
+            data.ModuleCode = moduleCode;
         }
 
         return ServiceResult<dynamic>.OprateSuccess(data, ResponseText.QUERY_SUCCESS);
