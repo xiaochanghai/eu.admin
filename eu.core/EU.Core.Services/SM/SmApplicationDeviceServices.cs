@@ -15,8 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using SqlSugar;
-
 namespace EU.Core.Services;
 
 /// <summary>

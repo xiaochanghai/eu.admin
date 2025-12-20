@@ -1,8 +1,5 @@
-﻿using System.Data;
+﻿using EU.Core.IServices.BASE;
 using System.Linq.Expressions;
-using EU.Core.Common.Helper;
-using EU.Core.IServices.BASE;
-using SqlSugar;
 
 namespace EU.Core.Services.BASE;
 
