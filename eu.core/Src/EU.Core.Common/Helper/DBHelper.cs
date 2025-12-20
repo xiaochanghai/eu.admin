@@ -38,6 +38,17 @@ public class DBHelper
         }
     }
 
+    #region 初始化
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    /// <returns></returns>
+    public static void Init()
+    {
+        DBType.Name = DBServerProvider.GetDbType().ToString();
+    }
+    #endregion
+
     #region 获取SQL插入语句
     /// <summary>
     /// 获取SQL插入语句
@@ -108,7 +119,7 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回查询结果DataTable</returns>
     public static DataTable GetDataTable(string sql, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.GetDataTable(sql, param, commandType, beginTransaction);
-    
+
     /// <summary>
     /// 异步执行SQL查询并返回DataTable
     /// </summary>
@@ -153,7 +164,7 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回第一个实体对象</returns>
     public static T QueryFirst<T>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) where T : class => Instance.QueryFirst<T>(cmd, param, commandType, beginTransaction);
-    
+
     /// <summary>
     /// 异步查询并返回第一个实体对象
     /// </summary>
@@ -185,7 +196,7 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回单个值</returns>
     public static async Task<object> ExecuteScalarAsync(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => await Instance.ExecuteScalarAsync(cmd, param, commandType, beginTransaction);
-    
+
     /// <summary>
     /// 执行SQL命令（不返回结果集）
     /// </summary>
@@ -195,7 +206,7 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回受影响的行数</returns>
     public static int ExecuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExecuteNonQuery(cmd, param, commandType, beginTransaction);
-    
+
     /// <summary>
     /// 执行SQL查询并返回两个结果集
     /// </summary>
@@ -292,7 +303,7 @@ public class DBHelper
     /// <param name="tmpPath">临时文件路径（用于MySQL导入）</param>
     /// <returns>返回受影响的行数</returns>
     public static int BulkInsert(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => Instance.BulkInsert(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
-    
+
     /// <summary>
     /// 异步批量插入数据（使用SqlBulkCopy）
     /// </summary>
