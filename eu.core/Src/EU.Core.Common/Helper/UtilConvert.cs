@@ -103,16 +103,6 @@ public static class UtilConvert
     /// </summary>
     /// <param name="thisValue"></param>
     /// <returns></returns>
-    public static string ObjToString1(this object thisValue)
-    {
-        if (thisValue != null) return thisValue.ToString().Trim();
-        return "";
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="thisValue"></param>
-    /// <returns></returns>
     public static string ObjToString(this object thisValue)
     {
         if (thisValue != null) return thisValue.ToString().Trim();
