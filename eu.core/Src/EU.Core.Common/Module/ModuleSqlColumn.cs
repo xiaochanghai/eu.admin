@@ -1,8 +1,9 @@
-﻿using System.Data;
-using EU.Core.Common.Caches;
+﻿using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
-using EU.Core.Common.Helper;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
+using SqlSugar;
+using System.Data;
 
 namespace EU.Core.Common.Module;
 
@@ -14,6 +15,7 @@ public class ModuleSqlColumn
     private string moduleCode;
     private static RedisCacheService Redis = new(2);
     private static string code = CacheKeys.SmModuleColumn.ToString();
+    private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
 
     public ModuleSqlColumn(string moduleCode = null)
     {
@@ -25,12 +27,16 @@ public class ModuleSqlColumn
         if (cache == null)
         {
             var moduleList = ModuleInfo.GetModuleList();
-            string sql = @"SELECT A.*, B.ModuleCode
-                                FROM SmModuleColumn A
-                                     JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
-                                WHERE A.IsDeleted = 'false'
-                                ORDER BY A.TAXISNO ASC";
-            cache = DBHelper.QueryList<SmModuleColumnExtend>(sql);
+
+            cache = Db.Queryable<SmModuleColumn, SmModules>((a, b) =>
+            new object[]
+            {
+                JoinType.Inner, a.SmModuleId == b.ID
+            })
+                .OrderBy((a, b) => a.TaxisNo, OrderByType.Asc)
+                .Select((a, b) => new { a, b.ModuleCode })
+                .Select<SmModuleColumnExtend>()
+                .ToList();
             Redis.Remove(code);
             foreach (var item in moduleList)
             {
@@ -64,16 +70,9 @@ public class ModuleSqlColumn
         string columns = string.Empty;
         string name = string.Empty;
         string id = string.Empty;
-        string sql = @"SELECT A.*, B.ModuleCode
-                                FROM SmModuleColumn A
-                                     JOIN SmModules B
-                                        ON     A.SmModuleId = B.ID
-                                           AND A.IsDeleted = B.IsDeleted
-                                           AND B.ModuleCode = '{0}'
-                                WHERE A.IsExport = 'true' AND A.IsDeleted = 'false'
-                                ORDER BY A.TAXISNO ASC";
-        sql = string.Format(sql, moduleCode);
-        var moduleSqlColumn = DBHelper.QueryList<SmModuleColumnExtend>(sql);
+
+        var moduleSqlColumn = GetModuleSqlColumn();
+        moduleSqlColumn = moduleSqlColumn.Where(x => x.IsExport == true).ToList();
         if (moduleSqlColumn != null)
         {
             for (int i = 0; i < moduleSqlColumn.Count; i++)
@@ -121,13 +120,13 @@ public class ModuleSqlColumn
 
     public static void Reload(string moduleCode)
     {
+        var cache = Db.Queryable<SmModuleColumn, SmModules>((a, b) =>
+        new JoinQueryInfos(JoinType.Inner, a.SmModuleId == b.ID && a.IsDeleted == b.IsDeleted))
+            .Where(x => x.IsDeleted == false && x.ModuleCode == moduleCode)
+            .OrderBy(x => x.TaxisNo)
+            .Select<SmModuleColumnExtend>()
+            .ToList();
 
-        string sql = $@"SELECT A.*, B.ModuleCode
-                                FROM SmModuleColumn A
-                                     JOIN SmModules B ON A.SmModuleId = B.ID AND A.IsDeleted = B.IsDeleted
-                                WHERE A.IsDeleted = 'false' AND B.ModuleCode='{moduleCode}'
-                                ORDER BY A.TAXISNO ASC";
-        var cache = DBHelper.QueryList<SmModuleColumnExtend>(sql);
         Redis.AddObject(code, moduleCode, cache);
     }
 }
