@@ -1,18 +1,26 @@
+using Dm.util;
 using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Helper;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
+using MathNet.Numerics.Distributions;
+using SqlSugar;
 
 namespace EU.Core.Common.Module;
 
 public class ModuleSql
 {
+    private ISqlSugarClient Db;
     private readonly string moduleCode;
     private static readonly RedisCacheService Redis = new(2);
 
-    public ModuleSql(string moduleCode)
+    private readonly string key = CacheKeys.SmModuleSql.ToString();
+
+    public ModuleSql(string moduleCode, ISqlSugarClient _Db)
     {
         this.moduleCode = moduleCode;
+        Db = _Db;
     }
 
     #region 获取模块SQL
@@ -21,12 +29,12 @@ public class ModuleSql
     /// </summary>
     public SmModuleSqlExtend GetModuleSql()
     {
-        var module = Redis.Get<SmModuleSqlExtend>(CacheKeys.SmModuleSql.ToString(), moduleCode);
+        var module = Redis.Get<SmModuleSqlExtend>(key, moduleCode);
         if (module == null)
         {
             var cache = GetModuleSqlList();
-            Redis.Remove(CacheKeys.SmModuleSql.ToString());
-            cache.ForEach(item => Redis.AddObject(CacheKeys.SmModuleSql.ToString(), item.ModuleCode, item));
+            Redis.Remove(key);
+            cache.ForEach(item => Redis.AddObject(key, item.ModuleCode, item));
             module = cache.FirstOrDefault(x => x.ModuleCode == moduleCode);
         }
         return module;
@@ -34,13 +42,15 @@ public class ModuleSql
 
     public List<SmModuleSqlExtend> GetModuleSqlList()
     {
-        string sql = @"SELECT A.*, B.ModuleCode
-                                FROM SmModuleSql A
-                                     JOIN SmModules B
-                                        ON A.ModuleId = B.ID
-                                           AND A.IsDeleted = B.IsDeleted
-                                WHERE A.IsDeleted = 'false'";
-        return DBHelper.QueryList<SmModuleSqlExtend>(sql);
+        var cache = Db.Queryable<SmModuleSql, SmModules>((a, b) =>
+            new object[]
+            {
+                JoinType.Inner, a.ModuleId == b.ID
+            })
+             .Select((a, b) => new { a, b.ModuleCode })
+             .Select<SmModuleSqlExtend>()
+             .ToList();
+        return cache;
     }
     #endregion
 
@@ -61,14 +71,23 @@ public class ModuleSql
     #region 获取Sql
     public string GetSqlSelectBrwAndTable()
     {
-        return $"{GetSqlSelectBrw()} FROM {GetTableNamesAndTableAliasNames()}";
+        var result = $"{GetSqlSelectBrw()} FROM {GetTableNamesAndTableAliasNames()}";
+
+        if (result.IsNotEmptyOrNull() && Db != null)
+            if (Db.Ado.Context.CurrentConnectionConfig.DbType == DbType.MySql)
+                result = result.replace("[Text]", "`Text`").replace("[Value]", "`Value`");
+        return result;
     }
     #endregion
 
     #region 获取Select语句
     public string GetModuleSqlSelect()
     {
-        return GetModuleSql()?.SqlSelect ?? string.Empty;
+        var result = GetModuleSql()?.SqlSelect ?? string.Empty;
+
+        if (string.IsNullOrEmpty(result))
+            result = GetModuleSqlSelect();
+        return result;
     }
     #endregion
 
@@ -171,7 +190,11 @@ public class ModuleSql
     #region 获取SqlDefaultCondition
     public string GetSqlDefaultCondition()
     {
-        return GetModuleSql()?.SqlDefaultCondition ?? string.Empty;
+        string sqlDefaultCondition = GetModuleSql()?.SqlDefaultCondition ?? string.Empty;
+        if (sqlDefaultCondition.IsNotEmptyOrNull() && Db != null)
+            if (Db.Ado.Context.CurrentConnectionConfig.DbType == DbType.MySql)
+                sqlDefaultCondition = sqlDefaultCondition.replace("'true'", "'1'").replace("'false'", "'0'");
+        return sqlDefaultCondition;
     }
     #endregion
 
@@ -424,9 +447,9 @@ public class ModuleSql
     /// <summary>
     /// 初始化
     /// </summary>
-    public static void Init()
+    public static void Init(ISqlSugarClient _Db)
     {
-        new ModuleSql("").GetModuleSql();
+        new ModuleSql("", _Db).GetModuleSql();
     }
 
     private static string[]? SplitCsv(string value)

@@ -113,7 +113,7 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
     {
         // 获取模块信息
         var module = await _modulesDal.QueryById(moduleId);
-        ModuleSql moduleSql = new(module.ModuleCode);
+        ModuleSql moduleSql = new(module.ModuleCode, Db);
 
         // 获取表名和SQL片段
         string tableName = moduleSql.GetTableName();
@@ -176,7 +176,7 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
         var result = await base.Add(entity);
 
         // 重新初始化模块SQL缓存
-        ModuleSql.Init();
+        ModuleSql.Init(Db);
 
         return result;
     }
@@ -199,7 +199,7 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
         var result = await base.Update(Id, entity);
 
         // 重新初始化模块SQL缓存
-        ModuleSql.Init();
+        ModuleSql.Init(Db);
 
         return result;
     }

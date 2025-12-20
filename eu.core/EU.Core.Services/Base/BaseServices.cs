@@ -1098,10 +1098,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="entity">实体</param>
     /// <param name="id">主键ID</param>
-    public static void CheckForm(string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
+    public static void CheckForm(ISqlSugarClient _Db, string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
     {
         var module = ModuleInfo.GetModuleInfo(moduleCode);
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, _Db);
         string tableName = moduleSql.GetTableName();
 
         if (tableName == "SmModules")

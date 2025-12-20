@@ -922,7 +922,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (module == null)
             throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
 
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
 
         // 初始化返回数据

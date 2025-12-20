@@ -130,7 +130,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         // 获取模块SQL配置
         string userId = string.Empty;
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         var grid = new GridList();
         string tableName = moduleSql.GetTableName();
         string fullSql = moduleSql.GetFullSql();
@@ -391,7 +391,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         #region 处理模块信息
         SmModules module = ModuleInfo.GetModuleInfo(moduleCode);
-        ModuleSql moduleSql = new ModuleSql(moduleCode);
+        ModuleSql moduleSql = new ModuleSql(moduleCode, Db);
         ModuleSqlColumn moduleSqlColumn = new ModuleSqlColumn(moduleCode);
         #endregion
 
@@ -657,7 +657,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <returns>操作结果</returns>
     public ServiceResult ClearCache()
     {
-        Utility.ReInitCache();
+        Utility.ReInitCache(Db);
         return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
@@ -745,7 +745,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         // 获取表名并查询数据
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
         var isDeleted = false;
 
@@ -769,7 +769,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         // 获取模块表名和表单列配置
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
         string json = entity.ToString();
         var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
@@ -781,7 +781,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict = dict.Where(pair => formColumns.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
 
         #region 数据格式校验
-        CheckForm(moduleCode, dict);
+        CheckForm(Db, moduleCode, dict);
         #endregion
 
         // 添加系统字段
@@ -817,7 +817,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         // 获取模块表名和表单列配置
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
         string json = entity.ToString();
         var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
@@ -829,7 +829,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict = dict.Where(pair => formColumns.Contains(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
 
         #region 数据唯一性校验
-        CheckForm(moduleCode, dict, OperateType.Update, id);
+        CheckForm(Db, moduleCode, dict, OperateType.Update, id);
         #endregion
 
         // 添加更新时间和更新人
@@ -878,7 +878,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         #endregion
 
         // 获取表名
-        var moduleSql = new ModuleSql(moduleCode);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
 
         // 构建批量更新数据（逻辑删除）

@@ -234,7 +234,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         }
 
         // 重新初始化缓存
-        Utility.ReInitCache();
+        Utility.ReInitCache(Db);
 
         return Success("角色模块保存成功！");
     }
