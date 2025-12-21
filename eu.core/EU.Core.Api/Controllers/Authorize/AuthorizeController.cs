@@ -1,6 +1,5 @@
 ﻿using EU.Core.AuthHelper;
 using EU.Core.Common.Caches;
-using System.Security.Claims;
 
 namespace EU.Core.Controllers;
 
