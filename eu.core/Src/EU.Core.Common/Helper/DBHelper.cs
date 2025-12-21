@@ -15,6 +15,8 @@ namespace EU.Core.Common.Helper;
 /// </summary>
 public class DBHelper
 {
+
+    #region 获取SQL Dapper实例
     /// <summary>
     /// 获取SQL Dapper实例
     /// 用于执行数据库操作的核心对象
@@ -26,7 +28,9 @@ public class DBHelper
             return DBServerProvider.SqlDapper;
         }
     }
+    #endregion
 
+    #region 判断当前数据库类型是否为MySQL
     /// <summary>
     /// 判断当前数据库类型是否为MySQL
     /// </summary>
@@ -37,6 +41,7 @@ public class DBHelper
             return DBType.Name == DbCurrentType.MySql.ToString() ? true : false;
         }
     }
+    #endregion
 
     #region 初始化
     /// <summary>
@@ -109,7 +114,7 @@ public class DBHelper
 
     #endregion
 
-
+    #region 执行SQL查询并返回DataTable
     /// <summary>
     /// 执行SQL查询并返回DataTable
     /// </summary>
@@ -119,7 +124,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回查询结果DataTable</returns>
     public static DataTable GetDataTable(string sql, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.GetDataTable(sql, param, commandType, beginTransaction);
+    #endregion
 
+    #region 异步执行SQL查询并返回DataTable
     /// <summary>
     /// 异步执行SQL查询并返回DataTable
     /// </summary>
@@ -130,7 +137,9 @@ public class DBHelper
     /// <param name="commandTimeout">命令超时时间</param>
     /// <returns>返回查询结果DataTable</returns>
     public static async Task<DataTable> GetDataTableAsync(string cmd, object param = null, IDbTransaction transaction = null, CommandType? commandType = null, int? commandTimeout = null) => await Instance.GetDataTableAsync(cmd, param, transaction, commandType, commandTimeout);
+    #endregion
 
+    #region 查询并返回实体列表
     /// <summary>
     /// 查询并返回实体列表
     /// </summary>
@@ -141,7 +150,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回实体列表</returns>
     public static List<T> QueryList<T>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) where T : class => Instance.QueryList<T>(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 异步查询并返回实体列表
     /// <summary>
     /// 异步查询并返回实体列表
     /// </summary>
@@ -153,7 +164,9 @@ public class DBHelper
     /// <param name="commandTimeout">命令超时时间</param>
     /// <returns>返回实体列表</returns>
     public static async Task<List<T>> QueryListAsync<T>(string cmd, object param = null, IDbTransaction beginTransaction = null, CommandType? commandType = null, int? commandTimeout = null) where T : class => await Instance.QueryListAsync<T>(cmd, param, commandType, beginTransaction, commandTimeout);
+    #endregion
 
+    #region 查询并返回第一个实体对象
     /// <summary>
     /// 查询并返回第一个实体对象
     /// </summary>
@@ -164,7 +177,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回第一个实体对象</returns>
     public static T QueryFirst<T>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) where T : class => Instance.QueryFirst<T>(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 异步查询并返回第一个实体对象
     /// <summary>
     /// 异步查询并返回第一个实体对象
     /// </summary>
@@ -176,7 +191,9 @@ public class DBHelper
     /// <param name="commandTimeout">命令超时时间</param>
     /// <returns>返回第一个实体对象</returns>
     public static async Task<T> QueryFirstAsync<T>(string cmd, object param = null, CommandType? commandType = null, IDbTransaction beginTransaction = null, int? commandTimeout = null) where T : class => await Instance.QueryFirstAsync<T>(cmd, param, commandType, beginTransaction, commandTimeout);
+    #endregion
 
+    #region 执行SQL查询并返回单个值（第一行第一列）
     /// <summary>
     /// 执行SQL查询并返回单个值（第一行第一列）
     /// </summary>
@@ -186,7 +203,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回单个值</returns>
     public static object ExecuteScalar(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExecuteScalar(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 异步执行SQL查询并返回单个值（第一行第一列）
     /// <summary>
     /// 异步执行SQL查询并返回单个值（第一行第一列）
     /// </summary>
@@ -196,7 +215,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回单个值</returns>
     public static async Task<object> ExecuteScalarAsync(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => await Instance.ExecuteScalarAsync(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 执行SQL命令（不返回结果集）
     /// <summary>
     /// 执行SQL命令（不返回结果集）
     /// </summary>
@@ -206,7 +227,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回受影响的行数</returns>
     public static int ExecuteNonQuery(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.ExecuteNonQuery(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 执行SQL查询并返回两个结果集
     /// <summary>
     /// 执行SQL查询并返回两个结果集
     /// </summary>
@@ -218,7 +241,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回两个实体列表的元组</returns>
     public static (List<T1>, List<T2>) QueryMultiple<T1, T2>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.QueryMultiple<T1, T2>(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 执行SQL查询并返回三个结果集
     /// <summary>
     /// 执行SQL查询并返回三个结果集
     /// </summary>
@@ -231,7 +256,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回三个实体列表的元组</returns>
     public static (List<T1>, List<T2>, List<T3>) QueryMultiple<T1, T2, T3>(string cmd, object param = null, CommandType? commandType = null, bool beginTransaction = false) => Instance.QueryMultiple<T1, T2, T3>(cmd, param, commandType, beginTransaction);
+    #endregion
 
+    #region 执行DML语句（数据操作语言：INSERT、UPDATE、DELETE）
     /// <summary>
     /// 执行DML语句（数据操作语言：INSERT、UPDATE、DELETE）
     /// </summary>
@@ -241,7 +268,9 @@ public class DBHelper
     /// <param name="dbTransaction">数据库事务</param>
     /// <returns>返回受影响的行数</returns>
     public static int ExecuteDML(string cmd, object param = null, CommandType? commandType = null, IDbTransaction dbTransaction = null) => Instance.ExecuteDML(cmd, param, commandType, dbTransaction);
+    #endregion
 
+    #region 异步执行DML语句（数据操作语言：INSERT、UPDATE、DELETE）
     /// <summary>
     /// 异步执行DML语句（数据操作语言：INSERT、UPDATE、DELETE）
     /// </summary>
@@ -251,7 +280,9 @@ public class DBHelper
     /// <param name="dbTransaction">数据库事务</param>
     /// <returns>返回受影响的行数</returns>
     public static async Task<int> ExecuteDMLAsync(string cmd, object param = null, CommandType? commandType = null, IDbTransaction dbTransaction = null) => await Instance.ExecuteDMLAsync(cmd, param, commandType, dbTransaction);
+    #endregion
 
+    #region 添加单个实体到数据库
     /// <summary>
     /// 添加单个实体到数据库
     /// </summary>
@@ -261,7 +292,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务</param>
     /// <returns>返回受影响的行数</returns>
     public static int Add<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = false) => Instance.Add(entity, updateFileds, beginTransaction);
+    #endregion
 
+    #region 批量添加实体到数据库
     /// <summary>
     /// 批量添加实体到数据库
     /// </summary>
@@ -271,7 +304,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务，默认开启</param>
     /// <returns>返回受影响的行数</returns>
     public static int AddRange<T>(IEnumerable<T> entities, Expression<Func<T, object>> addFileds = null, bool beginTransaction = true) => Instance.AddRange(entities, addFileds, beginTransaction);
+    #endregion
 
+    #region 更新单个实体到数据库
     /// <summary>
     /// 更新单个实体到数据库
     /// </summary>
@@ -281,7 +316,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务，默认开启</param>
     /// <returns>返回受影响的行数</returns>
     public static int Update<T>(T entity, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = true) => Instance.Update(entity, updateFileds, beginTransaction);
+    #endregion
 
+    #region 根据主键批量更新实体
     /// <summary>
     /// 根据主键批量更新实体
     /// SQL Server使用临时表参数化批量更新，MySQL待优化
@@ -292,7 +329,9 @@ public class DBHelper
     /// <param name="beginTransaction">是否开启事务，默认开启</param>
     /// <returns>返回受影响的行数</returns>
     public static int UpdateRange<T>(IEnumerable<T> entities, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = true) => Instance.UpdateRange(entities, updateFileds, beginTransaction);
+    #endregion
 
+    #region 批量插入数据（使用SqlBulkCopy）
     /// <summary>
     /// 批量插入数据（使用SqlBulkCopy）
     /// </summary>
@@ -303,7 +342,9 @@ public class DBHelper
     /// <param name="tmpPath">临时文件路径（用于MySQL导入）</param>
     /// <returns>返回受影响的行数</returns>
     public static int BulkInsert(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => Instance.BulkInsert(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
+    #endregion
 
+    #region 异步批量插入数据（使用SqlBulkCopy）
     /// <summary>
     /// 异步批量插入数据（使用SqlBulkCopy）
     /// </summary>
@@ -314,5 +355,6 @@ public class DBHelper
     /// <param name="tmpPath">临时文件路径（用于MySQL导入）</param>
     /// <returns>返回受影响的行数</returns>
     public static async Task<int> BulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => await Instance.BulkInsertAsync(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
+    #endregion
 
 }
