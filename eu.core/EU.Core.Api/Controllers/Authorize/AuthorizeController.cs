@@ -59,12 +59,14 @@ public class AuthorizeController : BaseApiController
     public async Task<ServiceResult> RestPassword([FromBody] RestPassword password) => await _smUsersServices.RestPasswordAsync(password);
     #endregion
 
+    #region 退出登录
     /// <summary>
     /// 退出登录
     /// </summary>
     /// <returns></returns>
     [HttpGet]
     public ServiceResult LogOut() => _smUsersServices.LogOutAsync();
+    #endregion
 
     #region 获取token
     /// <summary>
