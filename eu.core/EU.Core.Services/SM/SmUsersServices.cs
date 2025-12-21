@@ -359,4 +359,57 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         }
     }
     #endregion
+
+    #region 获取token
+    /// <summary>
+    /// 获取token
+    /// </summary>
+    /// <param name="request">获取token</param> 
+    public async Task<ServiceResult<LoginReturn>> GetAccessToken()
+    {
+        try
+        {
+            var user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == "Admin");
+
+            if (user == null)
+                return ServiceResult<LoginReturn>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
+
+            // 更新用户缓存
+            RefreshUserCache(user.ID, user);
+
+            // 生成会话ID和Token
+            var sessionId = Utility.SnowID().ObjToString();
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
+                //new Claim("TenantId", user.FirstOrDefault().Id.ToString()),
+                new("SessionId", sessionId),
+                new(JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
+                new(ClaimTypes.Expiration, "2099/12/31 23:59:59")
+            };
+            var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
+
+            var result = new LoginReturn
+            {
+                Token = token.token,
+                UserId = user.ID,
+                //Modules = new List<SmModules>(),
+                //UserInfo = new CurrentUser
+                //{
+                //    UserName = user.UserName,
+                //    UserId = user.ID,
+                //    AvatarFileId = user.AvatarFileId,
+                //    UserType = user.UserType,
+                //    WeekName = DateTime.Now.GetWeekNameOfDay()
+                //}
+            }; 
+
+            return Success(result, ResponseText.LOGIN_SUCCESS);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<LoginReturn>.OprateFailed($"登录失败: {ex.Message}");
+        }
+    }
+    #endregion
 }

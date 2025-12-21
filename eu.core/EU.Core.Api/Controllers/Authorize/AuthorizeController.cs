@@ -1,5 +1,6 @@
 ﻿using EU.Core.AuthHelper;
 using EU.Core.Common.Caches;
+using System.Security.Claims;
 
 namespace EU.Core.Controllers;
 
@@ -65,11 +66,14 @@ public class AuthorizeController : BaseApiController
     [HttpGet]
     public ServiceResult LogOut() => _smUsersServices.LogOutAsync();
 
-    ///// <summary>
-    ///// 获取token
-    ///// </summary>
-    ///// <returns></returns>
-    //[HttpGet]
+    #region 获取token
+    /// <summary>
+    /// 获取token
+    /// </summary>
+    /// <returns></returns>
+    [AllowAnonymous, HttpGet]
+    public async Task<ServiceResult<LoginReturn>> GetAccessToken() => await _smUsersServices.GetAccessToken();
+
     //public IActionResult GetAccessToken()
     //{
     //    dynamic obj = new ExpandoObject();
@@ -107,4 +111,5 @@ public class AuthorizeController : BaseApiController
     //    obj.message = message;
     //    return Ok(obj);
     //}
+    #endregion
 }

@@ -30,4 +30,6 @@ public interface ISmUsersServices : IBaseServices<SmUsers, SmUsersDto, InsertSmU
 
     Task<ServiceResult<LoginReturn>> LoginAsync(LoginRequest request);
     Task<ServiceResult<CurrentUser>> CurrentUserAsync();
+
+    Task<ServiceResult<LoginReturn>> GetAccessToken();
 }
