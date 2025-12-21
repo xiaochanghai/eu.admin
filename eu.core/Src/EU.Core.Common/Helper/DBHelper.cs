@@ -362,10 +362,12 @@ public class DBHelper
     #region 检查服务是否可用
 
     /// <summary>
-    /// 检查服务是否可用
+    /// 检查数据库服务是否可用，支持 MySQL/SQL Server
+    /// 如果主库不可用，会每 5 秒重试，直至可用
     /// </summary>
     public static void CheckServiceAvailable()
     {
+        // 获取主库配置（仅对已启用的配置进行检查）
         var listdatabase = BaseDBConfig.MutiConnectionString.allDbs;
         var mainDbId = MainDb.CurrentDbConnId;
         var mainConnetctDb = listdatabase.Find(x => x.ConnId == mainDbId);
@@ -375,6 +377,7 @@ public class DBHelper
             return;
         }
 
+        // 仅支持的数据库类型才进行自动可用性检测
         if (!IsSupportedDbType(mainConnetctDb.DbType))
         {
             Logger.WriteLog($"[数据库:{mainConnetctDb.DbType}] 暂未支持自动可用性检测");
@@ -383,6 +386,7 @@ public class DBHelper
 
         var dbLabel = BuildDbLabel(mainConnetctDb);
 
+        // 循环探测，直到数据库可用
         while (true)
         {
             if (IsDatabaseAvailable(mainConnetctDb))
@@ -413,6 +417,12 @@ public class DBHelper
 
     }
 
+    /// <summary>
+    /// 根据数据库类型尝试建立短连接以判断可用性
+    /// 仅支持 MySQL 与 SQL Server，超时为 3 秒
+    /// </summary>
+    /// <param name="dbConfig">数据库配置</param>
+    /// <returns>可连接返回 true，否则返回 false</returns>
     private static bool IsDatabaseAvailable(MutiDBOperate dbConfig)
     {
         return dbConfig.DbType switch
@@ -423,6 +433,12 @@ public class DBHelper
         };
     }
 
+    /// <summary>
+    /// 校验 MySQL 连接可用性
+    /// 超时为 3 秒
+    /// </summary>
+    /// <param name="connectionString">连接字符串</param>
+    /// <returns>可连接返回 true，否则返回 false</returns>
     private static bool CheckMySqlConnection(string connectionString)
     {
         try
@@ -442,6 +458,12 @@ public class DBHelper
         }
     }
 
+    /// <summary>
+    /// 校验 SQL Server 连接可用性
+    /// 超时为 3 秒
+    /// </summary>
+    /// <param name="connectionString">连接字符串</param>
+    /// <returns>可连接返回 true，否则返回 false</returns>
     private static bool CheckSqlServerConnection(string connectionString)
     {
         try
@@ -461,6 +483,11 @@ public class DBHelper
         }
     }
 
+    /// <summary>
+    /// 生成数据库日志标识文本，包含类型与地址信息
+    /// </summary>
+    /// <param name="dbConfig">数据库配置</param>
+    /// <returns>用于日志输出的标识文本</returns>
     private static string BuildDbLabel(MutiDBOperate dbConfig)
     {
         try
@@ -478,12 +505,22 @@ public class DBHelper
         }
     }
 
+    /// <summary>
+    /// 生成 MySQL 日志标识文本
+    /// </summary>
+    /// <param name="connectionString">连接字符串</param>
+    /// <returns>用于日志输出的标识文本</returns>
     private static string BuildMySqlLabel(string connectionString)
     {
         var builder = new MySqlConnectionStringBuilder(connectionString);
         return $"[数据库:MySql {builder.Server}:{builder.Port}]";
     }
 
+    /// <summary>
+    /// 生成 SQL Server 日志标识文本
+    /// </summary>
+    /// <param name="connectionString">连接字符串</param>
+    /// <returns>用于日志输出的标识文本</returns>
     private static string BuildSqlServerLabel(string connectionString)
     {
         var builder = new SqlConnectionStringBuilder(connectionString);
@@ -499,6 +536,11 @@ public class DBHelper
         return $"[数据库:SqlServer {dataSource}]";
     }
 
+    /// <summary>
+    /// 判断是否为当前支持的数据库类型
+    /// </summary>
+    /// <param name="dbType">数据库类型</param>
+    /// <returns>支持返回 true，否则返回 false</returns>
     private static bool IsSupportedDbType(DataBaseType dbType)
     {
         return dbType == DataBaseType.MySql || dbType == DataBaseType.SqlServer;
