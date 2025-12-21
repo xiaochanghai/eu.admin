@@ -1,11 +1,13 @@
-﻿using System.Data;
-using Microsoft.Data.SqlClient;
-using System.Linq.Expressions;
-using System.Text;
-using EU.Core.Common.Const;
+﻿using EU.Core.Common.Const;
 using EU.Core.Common.DB;
 using EU.Core.Common.DB.Dapper;
 using EU.Core.Common.Enums;
+using EU.Core.Common.LogHelper;
+using Microsoft.Data.SqlClient;
+using MySql.Data.MySqlClient;
+using System.Data;
+using System.Linq.Expressions;
+using System.Text;
 
 namespace EU.Core.Common.Helper;
 
@@ -357,4 +359,149 @@ public class DBHelper
     public static async Task<int> BulkInsertAsync(DataTable table, string tableName, SqlBulkCopyOptions? sqlBulkCopyOptions = null, string fileName = null, string tmpPath = null) => await Instance.BulkInsertAsync(table, tableName, sqlBulkCopyOptions, fileName, tmpPath);
     #endregion
 
+    #region 检查服务是否可用
+
+    /// <summary>
+    /// 检查服务是否可用
+    /// </summary>
+    public static void CheckServiceAvailable()
+    {
+        var listdatabase = BaseDBConfig.MutiConnectionString.allDbs;
+        var mainDbId = MainDb.CurrentDbConnId;
+        var mainConnetctDb = listdatabase.Find(x => x.ConnId == mainDbId);
+        if (mainConnetctDb == null)
+        {
+            Logger.WriteLog("[数据库] 未找到匹配的主库配置或配置未启用");
+            return;
+        }
+
+        if (!IsSupportedDbType(mainConnetctDb.DbType))
+        {
+            Logger.WriteLog($"[数据库:{mainConnetctDb.DbType}] 暂未支持自动可用性检测");
+            return;
+        }
+
+        var dbLabel = BuildDbLabel(mainConnetctDb);
+
+        while (true)
+        {
+            if (IsDatabaseAvailable(mainConnetctDb))
+            {
+                Logger.WriteLog($"{dbLabel} 服务状态正常");
+                break;
+            }
+            else
+            {
+                Logger.WriteLog($"{dbLabel} 服务状态异常, 等待 5 秒后重试");
+                Thread.Sleep(5000);
+            }
+        }
+
+        //while (true)
+        //{
+        //    if (Utility.IsPortOpen(AppSettingHelper.RabbitMQ_HostName, int.Parse(AppSettingHelper.RabbitMQ_Port), TimeSpan.FromSeconds(3.0)))
+        //    {
+        //        SendLog("[RabbitMQ] 服务状态正常");
+        //        break;
+        //    }
+        //    else
+        //    {
+        //        SendLog("[RabbitMQ] 服务状态异常, 等待 5 秒后重试");
+        //        Thread.Sleep(5000);
+        //    }
+        //}
+
+    }
+
+    private static bool IsDatabaseAvailable(MutiDBOperate dbConfig)
+    {
+        return dbConfig.DbType switch
+        {
+            DataBaseType.MySql => CheckMySqlConnection(dbConfig.Connection),
+            DataBaseType.SqlServer => CheckSqlServerConnection(dbConfig.Connection),
+            _ => false
+        };
+    }
+
+    private static bool CheckMySqlConnection(string connectionString)
+    {
+        try
+        {
+            var builder = new MySqlConnectionStringBuilder(connectionString)
+            {
+                ConnectionTimeout = 3
+            };
+
+            using var connection = new MySqlConnection(builder.ConnectionString);
+            connection.Open();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool CheckSqlServerConnection(string connectionString)
+    {
+        try
+        {
+            var builder = new SqlConnectionStringBuilder(connectionString)
+            {
+                ConnectTimeout = 3
+            };
+
+            using var connection = new SqlConnection(builder.ConnectionString);
+            connection.Open();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string BuildDbLabel(MutiDBOperate dbConfig)
+    {
+        try
+        {
+            return dbConfig.DbType switch
+            {
+                DataBaseType.MySql => BuildMySqlLabel(dbConfig.Connection),
+                DataBaseType.SqlServer => BuildSqlServerLabel(dbConfig.Connection),
+                _ => $"[数据库:{dbConfig.DbType}]"
+            };
+        }
+        catch
+        {
+            return $"[数据库:{dbConfig.DbType}]";
+        }
+    }
+
+    private static string BuildMySqlLabel(string connectionString)
+    {
+        var builder = new MySqlConnectionStringBuilder(connectionString);
+        return $"[数据库:MySql {builder.Server}:{builder.Port}]";
+    }
+
+    private static string BuildSqlServerLabel(string connectionString)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        var dataSource = builder.DataSource ?? string.Empty;
+
+        if (dataSource.Contains(","))
+        {
+            var parts = dataSource.Split(',', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 2)
+                return $"[数据库:SqlServer {parts[0]}:{parts[1]}]";
+        }
+
+        return $"[数据库:SqlServer {dataSource}]";
+    }
+
+    private static bool IsSupportedDbType(DataBaseType dbType)
+    {
+        return dbType == DataBaseType.MySql || dbType == DataBaseType.SqlServer;
+    }
+    #endregion
 }

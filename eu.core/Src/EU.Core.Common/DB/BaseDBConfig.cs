@@ -61,6 +61,7 @@ public class BaseDBConfig
         var listdatabase = AppSettings.app<MutiDBOperate>("DBS")
             .Where(i => i.Enabled).ToList();
         var mainDbId = AppSettings.app(["MainDB"]).ObjToString();
+        MainDb.CurrentDbConnId = mainDbId;
         var mainDbModel = listdatabase.Single(d => d.ConnId == mainDbId);
         listdatabase.Remove(mainDbModel);
         listdatabase.Insert(0, mainDbModel);
