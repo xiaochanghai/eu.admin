@@ -687,6 +687,21 @@
             计量单位(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.EcBannerController">
+            <summary>
+            EcBanner(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EcGoodsController">
+            <summary>
+            商品管理(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EcNewsController">
+            <summary>
+            新闻(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.EmEquipmentController">
             <summary>
             设备基础资料(Controller)

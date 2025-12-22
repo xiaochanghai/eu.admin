@@ -839,6 +839,136 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.EcBannerBase">
+            <summary>
+            EcBanner (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcBannerBase.BannerCode">
+            <summary>
+            代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcBannerBase.BannerName">
+            <summary>
+            名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcBannerBase.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcBannerBase.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcBannerBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.EcGoodsBase">
+            <summary>
+            商品管理 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.TypeId">
+            <summary>
+            类型ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.TypeDetailId">
+            <summary>
+            类型明细ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.GoodsCode">
+            <summary>
+            商品代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.GoodsName">
+            <summary>
+            商品名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.Brand">
+            <summary>
+            品牌
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.ViewCount">
+            <summary>
+            访问次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcGoodsBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.EcNewsBase">
+            <summary>
+            新闻 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.Title">
+            <summary>
+            标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.Summary">
+            <summary>
+            简介
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.PublishDate">
+            <summary>
+            发布日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.Author">
+            <summary>
+            作者
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.NewsContent">
+            <summary>
+            新闻内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.NewsType">
+            <summary>
+            类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EcNewsBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.EmEquipmentBase">
             <summary>
             设备基础资料 (Dto.Base)
@@ -6327,6 +6457,21 @@
             计量单位 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditEcBannerInput">
+            <summary>
+            EcBanner (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEcGoodsInput">
+            <summary>
+            商品管理 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditEcNewsInput">
+            <summary>
+            新闻 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditEmEquipmentInput">
             <summary>
             设备基础资料 (Dto.EditInput)
@@ -7538,6 +7683,136 @@
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.BdUnit.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EcBanner">
+            <summary>
+            EcBanner (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcBanner.BannerCode">
+            <summary>
+            代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcBanner.BannerName">
+            <summary>
+            名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcBanner.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcBanner.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcBanner.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EcGoods">
+            <summary>
+            商品管理 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.TypeId">
+            <summary>
+            类型ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.TypeDetailId">
+            <summary>
+            类型明细ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.GoodsCode">
+            <summary>
+            商品代码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.GoodsName">
+            <summary>
+            商品名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.Brand">
+            <summary>
+            品牌
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.ViewCount">
+            <summary>
+            访问次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcGoods.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.EcNews">
+            <summary>
+            新闻 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.Title">
+            <summary>
+            标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.Summary">
+            <summary>
+            简介
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.PublishDate">
+            <summary>
+            发布日期
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.Author">
+            <summary>
+            作者
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.NewsContent">
+            <summary>
+            新闻内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.NewsType">
+            <summary>
+            类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.ImageUrl">
+            <summary>
+            图片URL
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.TaxisNo">
+            <summary>
+            排序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EcNews.Remark">
             <summary>
             备注
             </summary>
@@ -12953,6 +13228,21 @@
             计量单位(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.EcBannerDto">
+            <summary>
+            EcBanner(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EcGoodsDto">
+            <summary>
+            商品管理(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.EcNewsDto">
+            <summary>
+            新闻(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.EmEquipmentDto">
             <summary>
             设备基础资料(Dto.View)
@@ -13663,6 +13953,21 @@
         <member name="T:EU.Core.Model.Insert.InsertBdUnitInput">
             <summary>
             计量单位 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEcBannerInput">
+            <summary>
+            EcBanner (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEcGoodsInput">
+            <summary>
+            商品管理 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertEcNewsInput">
+            <summary>
+            新闻 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertEmEquipmentInput">
