@@ -22,4 +22,5 @@ namespace EU.Core.Model.Models;
 /// </summary>
 public class EmRepairOrderDto : EmRepairOrder
 {
+    public EmEquipment Equipment { get; set; }
 }

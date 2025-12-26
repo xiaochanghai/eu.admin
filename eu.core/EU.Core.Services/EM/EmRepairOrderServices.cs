@@ -15,6 +15,9 @@
 *└──────────────────────────────────┘
 */
 
+using EU.Core.Model.ViewModels;
+using Microsoft.AspNetCore.Http;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -22,11 +25,12 @@ namespace EU.Core.Services;
 /// </summary>
 public class EmRepairOrderServices : BaseServices<EmRepairOrder, EmRepairOrderDto, InsertEmRepairOrderInput, EditEmRepairOrderInput>, IEmRepairOrderServices
 {
-    public EmRepairOrderServices(IBaseRepository<EmRepairOrder> dal)
+    private readonly IHttpContextAccessor _accessor;
+    public EmRepairOrderServices(IBaseRepository<EmRepairOrder> dal, IHttpContextAccessor accessor)
     {
         BaseDal = dal;
+        _accessor = accessor;
     }
-
 
     /// <summary>
     /// 获取设备
@@ -46,7 +50,33 @@ public class EmRepairOrderServices : BaseServices<EmRepairOrder, EmRepairOrderDt
         return Success(equipments);
     }
 
+    #region 详情
+    public override async Task<EmRepairOrderDto> QueryById(object objId)
+    {
+        var entity = await base.QueryById(objId);
+        var platform = _accessor.HttpContext?.Request?.Headers["platform"].ObjToString();
 
+        if (platform.IsNotEmptyOrNull())
+        {
+            entity.Equipment = await Db.Queryable<EmEquipment>()
+                .Where(x => x.ID == entity.EquipmentId)
+            .Select(x => new EmEquipment()
+            {
+                ID = x.ID,
+                MachineNo = x.MachineNo,
+                MachineName = x.MachineName,
+                Location = x.Location
+            })
+            .FirstAsync();
+
+            entity.FaultType = await LovHelper.GetLovText("EquipmentFaultType", entity.FaultType);
+            entity.Status = await LovHelper.GetLovText("RepairOrderStatus", entity.Status);
+            entity.Impact = await LovHelper.GetLovText("RepairOrderImpact", entity.Impact);
+        }
+
+        return entity;
+    }
+    #endregion
 
     #region 新增
     public override async Task<Guid> Add(object entity)
