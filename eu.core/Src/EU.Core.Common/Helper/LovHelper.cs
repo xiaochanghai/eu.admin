@@ -44,6 +44,19 @@ public class LovHelper
         return cache ?? new List<LovInfo>();
     }
 
+    /// <summary>
+    /// 获取值列表
+    /// </summary>
+    /// <param name="moduleCode">值代码</param>
+    /// <returns></returns>
+    public static async Task<string> GetLovText(string code, string value)
+    {
+        var list = await GetLovListAsync(code);
+        if (!list.Any())
+            return value;
+        return list.Where(x => x.Value == value).Select(x => x.Text).First() ?? value;
+    }
+
     public static string GetCommonListSql(string code)
     {
         var cache = redis.Get<string>(CacheKeys.CommonListSql.ToString(), code);
