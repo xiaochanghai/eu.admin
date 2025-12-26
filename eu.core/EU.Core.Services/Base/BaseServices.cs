@@ -130,7 +130,6 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
 
         // 获取需要插入的列（排除ID字段）
         var lstColumns = dic.Keys.Where(x => x != nameof(BasePoco.ID) && x != "Id").ToList();
-        lstColumns.Add(nameof(BasePoco.AuditStatus));
 
         CheckForm(model, OperateType.Add);
         return await BaseDal.Add(model, lstColumns);

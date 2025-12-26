@@ -147,10 +147,16 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <returns>返回自增量列</returns>
     public async Task<Guid> Add(TEntity entity, List<string> insertColumns)
     {
-        insertColumns.Add("ID");
-        insertColumns.Add("CreatedBy");
-        insertColumns.Add("CreatedTime");
-
+        insertColumns.Add(nameof(BasePoco.ID));
+        insertColumns.Add(nameof(BasePoco.CreatedBy));
+        insertColumns.Add(nameof(BasePoco.CreatedTime));
+        insertColumns.Add(nameof(BasePoco.AuditStatus));
+        insertColumns.Add(nameof(BasePoco.ModificationNum));
+        insertColumns.Add(nameof(BasePoco.Tag));
+        insertColumns.Add(nameof(BasePoco.IsDeleted));
+        insertColumns.Add(nameof(BasePoco.IsActive));
+        insertColumns.Add(nameof(BasePoco.CompanyId));
+        insertColumns.Add(nameof(BasePoco.GroupId));
         var id = Guid.Empty;
         var insert = _db.Insertable(entity);
         string sql = insert.InsertColumns(insertColumns.ToArray()).ToSqlString();
@@ -239,7 +245,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <param name="lstIgnoreColumns">不更新某列</param>
     /// <param name="where">where条件</param>
     /// <returns></returns>
-    public async Task<bool> Update(TEntity entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)=> await Update([entity], lstColumns, lstIgnoreColumns, where);
+    public async Task<bool> Update(TEntity entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null) => await Update([entity], lstColumns, lstIgnoreColumns, where);
 
     /// <summary>
     /// 根据实体删除一条数据

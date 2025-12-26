@@ -45,6 +45,8 @@ public static class SqlSugarAop
             entityInfo.PropertyName == "UpdateTime" ||
             entityInfo.PropertyName == "GroupId" ||
             entityInfo.PropertyName == "CompanyId" ||
+            entityInfo.PropertyName == "IsActive" ||
+            entityInfo.PropertyName == "IsDeleted" ||
             entityInfo.PropertyName == "Tag" ||
             entityInfo.PropertyName == "ID" ||
             entityInfo.PropertyName == "ModificationNum")
@@ -88,6 +90,10 @@ public static class SqlSugarAop
                             baseEntity.ModificationNum = 0;
                         if (baseEntity.Tag.IsNullOrEmpty())
                             baseEntity.Tag = 0;
+                        if (baseEntity.IsDeleted.IsNullOrEmpty())
+                            baseEntity.IsDeleted = false;
+                        if (baseEntity.IsActive.IsNullOrEmpty())
+                            baseEntity.IsActive = true;
                         break;
                 }
             }
