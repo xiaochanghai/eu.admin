@@ -65,4 +65,28 @@ public class EmRepairOrderLog : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 300)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 图标
+    /// </summary>
+    [Display(Name = "Icon"), Description("图标"), SugarColumn(IsNullable = true, Length = 300)]
+    public string Icon { get; set; }
+
+    /// <summary>
+    /// 图标颜色
+    /// </summary>
+    [Display(Name = "IconColor"), Description("图标颜色"), SugarColumn(IsNullable = true, Length = 300)]
+    public string IconColor { get; set; }
+
+    /// <summary>
+    /// 图标背景颜色
+    /// </summary>
+    [Display(Name = "BgColor"), Description("图标背景颜色"), SugarColumn(IsNullable = true, Length = 300)]
+    public string BgColor { get; set; }
+
+    /// <summary>
+    /// 标题
+    /// </summary>
+    [Display(Name = "Title"), Description("标题"), SugarColumn(IsNullable = true, Length = 300)]
+    public string Title { get; set; }
 }

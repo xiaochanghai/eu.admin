@@ -72,6 +72,21 @@ public class EmRepairOrderServices : BaseServices<EmRepairOrder, EmRepairOrderDt
             entity.FaultType = await LovHelper.GetLovText("EquipmentFaultType", entity.FaultType);
             entity.Status = await LovHelper.GetLovText("RepairOrderStatus", entity.Status);
             entity.Impact = await LovHelper.GetLovText("RepairOrderImpact", entity.Impact);
+
+            entity.ProgressSteps = await Db.Queryable<EmRepairOrderLog>()
+                .OrderBy(x => x.DealTime)
+                .Where(x => x.OrderId == entity.ID && x.IsDisplay == true)
+                .Select(x => new EmRepairOrderLogDto()
+                {
+                    ID = x.ID,
+                    DealDesc = x.DealDesc,
+                    DealTime = x.DealTime,
+                    Title = x.Title,
+                    Icon = x.Icon,
+                    IconColor = x.IconColor,
+                    BgColor = x.BgColor
+                })
+                .ToListAsync();
         }
 
         return entity;

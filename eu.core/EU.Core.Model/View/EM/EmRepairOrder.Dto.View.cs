@@ -13,7 +13,7 @@
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SahHsiao                                                  │
 *└──────────────────────────────────┘
-*/ 
+*/
 
 namespace EU.Core.Model.Models;
 
@@ -23,4 +23,6 @@ namespace EU.Core.Model.Models;
 public class EmRepairOrderDto : EmRepairOrder
 {
     public EmEquipment Equipment { get; set; }
+    public List<EmRepairOrderLogDto> ProgressSteps { get; set; }
+
 }
