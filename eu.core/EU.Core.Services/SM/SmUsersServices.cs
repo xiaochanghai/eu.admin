@@ -18,7 +18,6 @@
 using EU.Core.AuthHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -29,13 +28,18 @@ namespace EU.Core.Services;
 /// </summary>
 public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersInput, EditSmUsersInput>, ISmUsersServices
 {
+    #region 常量和静态字段
     // TODO: 考虑将静态字段改为依赖注入，以提高可测试性和避免潜在的并发问题
     private static readonly RedisCacheService TokenRedis = new();
     private static readonly RedisCacheService Redis = new(4);
 
     private const string AvatarDirectory = "files/userAvatar";
-    private const string AvatarFileExtension = "png";
+    private const string AvatarFileExtension = "png"; 
     private static readonly TimeSpan UserCacheExpiration = new(1, 0, 0); // 1小时
+
+    // SECURITY WARNING: 用于开发/测试的Admin账号名称，生产环境应该禁用GetAccessToken方法
+    private const string SYSTEM_ADMIN_ACCOUNT = "Admin";
+    #endregion
 
     private readonly IBaseRepository<SmUsers> _dal;
     private readonly PermissionRequirement _requirement;
@@ -43,8 +47,8 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
     public SmUsersServices(IBaseRepository<SmUsers> dal, PermissionRequirement requirement, IWebHostEnvironment hostingEnvironment)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _requirement = requirement;
         _hostingEnvironment = hostingEnvironment;
     }
@@ -62,17 +66,14 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         try
         {
-            var wwwrootPath = Path.Combine(Environment.CurrentDirectory, "wwwroot");
-            var relativePath = Path.Combine("files", "userAvatar");
-            var fullPath = Path.Combine(wwwrootPath, relativePath);
-
             // 确保目录存在
-            FileHelper.CreateDirectory(fullPath);
-
-            var fileId = Utility.GetSysID();
+            var path = "wwwroot/"+ AvatarDirectory;
+            FileHelper.CreateDirectory(path);
+            var fileId = Utility.SnowID();
             var fileName = $"{fileId}.{AvatarFileExtension}";
-            var filePath = Path.Combine(fullPath, fileName);
+            var filePath = Path.Combine(path, fileName);
 
+            
             // 保存文件
             using (var stream = File.Create(filePath))
             {
@@ -89,7 +90,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                 FileExt = AvatarFileExtension,
                 MasterId = UserId,
                 Length = file.Length,
-                Path = "\\files\\userAvatar\\"
+                Path = AvatarDirectory
             };
 
             await Db.Insertable(fileAttachment).ExecuteCommandAsync();
@@ -185,6 +186,29 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     {
         return MD5Helper.MD5Encrypt32(password);
     }
+
+    /// <summary>
+    /// 生成JWT Token
+    /// </summary>
+    /// <param name="user">用户对象</param>
+    /// <param name="expiration">过期时间（可选，为null时使用配置中的默认值）</param>
+    /// <returns>Token字符串和会话ID</returns>
+    private (string token, string sessionId) GenerateJwtToken(SmUsers user, DateTime? expiration = null)
+    {
+        var sessionId = Utility.SnowID().ObjToString();
+        var expirationTime = expiration ?? DateTime.Now.AddSeconds(_requirement.Expiration.TotalSeconds);
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
+            new("SessionId", sessionId),
+            new(JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
+            new(ClaimTypes.Expiration, expirationTime.ToString())
+        };
+
+        var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
+        return (token.token, sessionId);
+    }
     #endregion
 
     #region 用户登录
@@ -209,21 +233,12 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             // 更新用户缓存
             RefreshUserCache(user.ID, user);
 
-            // 生成会话ID和Token
-            var sessionId = Utility.SnowID().ObjToString();
-            var claims = new List<Claim>
-            {
-                new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
-                //new Claim("TenantId", user.FirstOrDefault().Id.ToString()),
-                new("SessionId", sessionId),
-                new(JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
-                new(ClaimTypes.Expiration, DateTime.Now.AddSeconds(_requirement.Expiration.TotalSeconds).ToString())
-            };
-            var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
+            // 生成Token
+            var (token, sessionId) = GenerateJwtToken(user);
 
             var result = new LoginReturn
             {
-                Token = token.token,
+                Token = token,
                 UserId = user.ID,
                 Modules = new List<SmModules>(),
                 UserInfo = new CurrentUser
@@ -236,15 +251,9 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                 }
             };
 
-            #region 记录用户登录日志
-            var isDevelopment = _hostingEnvironment.IsDevelopment();
-            var platform = App.User.GetPlatform();
-
-
-            // 使用Task.Run代替new Task，更简洁且自动启动
-            _ = Task.Run(() => Utility.RecordEntryLog(Db, user.ID, platform ?? "Web"));
-
-            #endregion
+            // 记录用户登录日志（异步执行，不阻塞主流程）
+            var platform = App.User.GetPlatform() ?? "Web";
+            _ = Task.Run(() => Utility.RecordEntryLog(Db, user.ID, platform));
 
             return Success(result, ResponseText.LOGIN_SUCCESS);
         }
@@ -271,10 +280,10 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
             if (user == null)
             {
-                user = await QueryDto(UserId);
+                user = await Query(UserId);
                 if (user != null)
                 {
-                    SetUserCache(UserId.ObjToString(), user);
+                    SetUserCache(UserId.Value, user);
                 }
                 else
                 {
@@ -306,7 +315,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// </summary>
     /// <param name="password">密码修改请求</param>
     /// <returns>修改结果</returns>
-    public async Task<ServiceResult> RestPasswordAsync(RestPassword password)
+    public async Task<ServiceResult> ResetPasswordAsync(RestPassword password)
     {
         if (password == null || string.IsNullOrWhiteSpace(password.oldPassword) || string.IsNullOrWhiteSpace(password.newPassword))
             return ServiceResult.OprateFailed("密码不能为空");
@@ -335,6 +344,12 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             return ServiceResult.OprateFailed($"修改密码失败: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// 修改密码（旧方法名，保持向后兼容）
+    /// </summary>
+    [Obsolete("建议使用 ResetPasswordAsync 方法")]
+    public async Task<ServiceResult> RestPasswordAsync(RestPassword password) => await ResetPasswordAsync(password);
     #endregion
 
     #region 退出登录
@@ -342,13 +357,14 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// 退出登录，清除Token缓存
     /// </summary>
     /// <returns>操作结果</returns>
-    public ServiceResult LogOutAsync()
+    public ServiceResult LogOut()
     {
         try
         {
-            if (!string.IsNullOrWhiteSpace(App.User.SessionId.ObjToString()))
+            var sessionId = App.User.SessionId?.ObjToString();
+            if (!string.IsNullOrWhiteSpace(sessionId))
             {
-                TokenRedis.Remove(App.User.SessionId.ObjToString());
+                TokenRedis.Remove(sessionId);
             }
 
             return Success(ResponseText.EXECUTE_SUCCESS);
@@ -358,57 +374,62 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             return ServiceResult.OprateFailed($"退出登录失败: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// 退出登录（旧方法名，保持向后兼容）
+    /// </summary>
+    [Obsolete("建议使用 LogOut 方法（非异步）")]
+    public ServiceResult LogOutAsync() => LogOut();
     #endregion
 
-    #region 获取token
+    #region 获取token（开发测试用）
     /// <summary>
-    /// 获取token
+    /// 获取 Access Token（仅用于开发/测试）
+    ///
+    /// ⚠️ SECURITY WARNING - 严重安全隐患：
+    /// 1. 硬编码查询 Admin 用户
+    /// 2. Token 永不过期（2099年）
+    /// 3. 没有任何身份验证
+    ///
+    /// 🚫 生产环境必须禁用或删除此方法！
+    /// 建议：
+    /// - 仅在开发环境启用（检查 IsDevelopment）
+    /// - 使用环境变量控制是否允许调用
+    /// - 添加 IP 白名单限制
     /// </summary>
-    /// <param name="request">获取token</param> 
+    /// <returns>包含永久Token的登录结果</returns>
+    [Obsolete("此方法存在严重安全隐患，仅用于开发测试，生产环境必须禁用！")]
     public async Task<ServiceResult<LoginReturn>> GetAccessToken()
     {
+        // TODO: 添加环境检查，仅在开发环境允许调用
+        // if (!_hostingEnvironment.IsDevelopment())
+        //     return ServiceResult<LoginReturn>.OprateFailed("此功能仅在开发环境可用");
+
         try
         {
-            var user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == "Admin");
+            var user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == SYSTEM_ADMIN_ACCOUNT);
 
             if (user == null)
-                return ServiceResult<LoginReturn>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
+                return ServiceResult<LoginReturn>.OprateFailed($"系统账号 {SYSTEM_ADMIN_ACCOUNT} 不存在");
 
             // 更新用户缓存
             RefreshUserCache(user.ID, user);
 
-            // 生成会话ID和Token
-            var sessionId = Utility.SnowID().ObjToString();
-            var claims = new List<Claim>
-            {
-                new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
-                //new Claim("TenantId", user.FirstOrDefault().Id.ToString()),
-                new("SessionId", sessionId),
-                new(JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
-                new(ClaimTypes.Expiration, "2099/12/31 23:59:59")
-            };
-            var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
+            // 生成永久Token（2099年过期）
+            var permanentExpiration = new DateTime(2099, 12, 31, 23, 59, 59);
+            var (token, _) = GenerateJwtToken(user, permanentExpiration);
 
             var result = new LoginReturn
             {
-                Token = token.token,
-                UserId = user.ID,
-                //Modules = new List<SmModules>(),
-                //UserInfo = new CurrentUser
-                //{
-                //    UserName = user.UserName,
-                //    UserId = user.ID,
-                //    AvatarFileId = user.AvatarFileId,
-                //    UserType = user.UserType,
-                //    WeekName = DateTime.Now.GetWeekNameOfDay()
-                //}
-            }; 
+                Token = token,
+                UserId = user.ID
+            };
 
-            return Success(result, ResponseText.LOGIN_SUCCESS);
+            return Success(result, "Token 生成成功（警告：此Token永不过期）");
         }
         catch (Exception ex)
         {
-            return ServiceResult<LoginReturn>.OprateFailed($"登录失败: {ex.Message}");
+            return ServiceResult<LoginReturn>.OprateFailed($"生成Token失败: {ex.Message}");
         }
     }
     #endregion
