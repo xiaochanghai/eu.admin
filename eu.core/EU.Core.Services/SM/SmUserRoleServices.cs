@@ -22,15 +22,17 @@ namespace EU.Core.Services;
 /// </summary>
 public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, InsertSmUserRoleInput, EditSmUserRoleInput>, ISmUserRoleServices
 {
+    #region 常量定义
     private const string AllRolesKey = "All";
     private const string RoleTreeRootTitle = "请选择用户的功能角色";
+    #endregion
 
     private readonly IBaseRepository<SmUserRole> _dal;
 
     public SmUserRoleServices(IBaseRepository<SmUserRole> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     /// <summary>
@@ -95,32 +97,22 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
     /// <returns>操作结果</returns>
     public async Task<ServiceResult> BatchInsertUserRole(UserRoleVM userRoleVm)
     {
-        if (userRoleVm == null)
-            return Failed("参数不能为空");
-
-        if (userRoleVm.UserId == Guid.Empty)
-            return Failed("用户ID不能为空");
-
-        if (userRoleVm.RoleList == null)
-            return Failed("角色列表不能为空");
+        // 参数验证
+        var validationResult = ValidateUserRoleInput(userRoleVm);
+        if (!validationResult.Success)
+            return validationResult;
 
         try
         {
-            var roleList = new List<string>(userRoleVm.RoleList);
             var userId = userRoleVm.UserId;
 
-            // 移除"All"选项
-            roleList.Remove(AllRolesKey);
-
-            // 转换角色ID列表为Guid集合
-            var roleIdList = new HashSet<Guid>();
-            foreach (var roleIdStr in roleList)
-            {
-                if (Guid.TryParse(roleIdStr, out var roleId))
-                {
-                    roleIdList.Add(roleId);
-                }
-            }
+            // 转换角色ID列表（排除"All"，并转换为Guid）
+            var roleIdList = userRoleVm.RoleList
+                .Where(r => r != AllRolesKey)
+                .Select(r => Guid.TryParse(r, out var guid) ? guid : (Guid?)null)
+                .Where(g => g.HasValue)
+                .Select(g => g.Value)
+                .ToHashSet();
 
             // 使用事务确保数据一致性
             await Db.Ado.BeginTranAsync();
@@ -128,26 +120,22 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
             {
                 // 查询当前用户的所有有效角色
                 var existingUserRoles = await Query(x => x.IsDeleted == false && x.SmUserId == userId && x.SmRoleId != null);
+                var existingRoleIds = existingUserRoles.Select(x => x.SmRoleId.Value).ToHashSet();
 
                 // 找出需要删除的角色（存在于数据库但不在新列表中）
-                var rolesToDelete = existingUserRoles
+                var deleteIds = existingUserRoles
                     .Where(x => !roleIdList.Contains(x.SmRoleId.Value))
+                    .Select(x => x.ID)
                     .ToList();
 
                 // 批量标记删除
-                if (rolesToDelete.Any())
+                if (deleteIds.Any())
                 {
-                    var deleteIds = rolesToDelete.Select(x => x.ID).ToList();
                     await Db.Updateable<SmUserRole>()
                         .SetColumns(x => x.IsDeleted == true)
                         .Where(x => deleteIds.Contains(x.ID))
                         .ExecuteCommandAsync();
                 }
-
-                // 找出已存在的角色ID
-                var existingRoleIds = existingUserRoles
-                    .Select(x => x.SmRoleId)
-                    .ToHashSet();
 
                 // 找出需要新增的角色（在新列表中但不在数据库中）
                 var rolesToAdd = roleIdList
@@ -172,10 +160,10 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
 
                 return Success("用户角色保存成功！");
             }
-            catch
+            catch (Exception ex)
             {
                 await Db.Ado.RollbackTranAsync();
-                throw;
+                return Failed($"保存用户角色失败: {ex.Message}");
             }
         }
         catch (Exception ex)
@@ -183,4 +171,27 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
             return Failed($"保存用户角色失败: {ex.Message}");
         }
     }
+
+    #region 私有辅助方法
+
+    /// <summary>
+    /// 验证用户角色输入参数
+    /// </summary>
+    /// <param name="userRoleVm">用户角色视图模型</param>
+    /// <returns>验证结果</returns>
+    private ServiceResult ValidateUserRoleInput(UserRoleVM userRoleVm)
+    {
+        if (userRoleVm == null)
+            return Failed("参数不能为空");
+
+        if (userRoleVm.UserId == Guid.Empty)
+            return Failed("用户ID不能为空");
+
+        if (userRoleVm.RoleList == null)
+            return Failed("角色列表不能为空");
+
+        return Success();
+    }
+
+    #endregion
 }
