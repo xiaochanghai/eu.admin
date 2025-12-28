@@ -183,17 +183,6 @@
             公共服务
             </summary>
         </member>
-        <member name="M:EU.Core.Controllers.CommonController.GetGridList(System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-            自定义列模块数据返回
-            </summary>
-            <param name="paramData">查询条件</param>
-            <param name="moduleCode">模块代码</param>
-            <param name="sorter">排序</param>
-            <param name="parentColumn"></param>
-            <param name="parentId"></param>
-            <returns></returns>
-        </member>
         <member name="M:EU.Core.Controllers.CommonController.QueryByFilter(EU.Core.Common.QueryFilter,System.String)">
             <summary>
             自定义列模块数据返回
@@ -685,6 +674,21 @@
         <member name="T:EU.Core.Api.Controllers.BdUnitController">
             <summary>
             计量单位(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EcBannerController">
+            <summary>
+            EcBanner(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EcGoodsController">
+            <summary>
+            商品管理(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.EcNewsController">
+            <summary>
+            新闻(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.EmEquipmentController">

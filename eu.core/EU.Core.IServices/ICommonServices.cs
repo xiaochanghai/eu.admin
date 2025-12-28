@@ -11,12 +11,6 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// <summary>
     /// 自定义列模块数据返回
     /// </summary>
-    /// <returns></returns>
-    Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null);
-
-    /// <summary>
-    /// 自定义列模块数据返回
-    /// </summary>
     /// <param name="filter">filter</param>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>

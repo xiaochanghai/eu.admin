@@ -26,18 +26,6 @@ public class CommonController : Controller
     /// <summary>
     /// 自定义列模块数据返回
     /// </summary>
-    /// <param name="paramData">查询条件</param>
-    /// <param name="moduleCode">模块代码</param>
-    /// <param name="sorter">排序</param>
-    /// <param name="parentColumn"></param>
-    /// <param name="parentId"></param>
-    /// <returns></returns>
-    [HttpGet("GetGridList")]
-    public async Task<GridListReturn> GetGridList(string paramData, string moduleCode, string sorter = "{}", string parentColumn = null, string parentId = null) => await _service.GetGridList(paramData, moduleCode, sorter, parentColumn, parentId);
-
-    /// <summary>
-    /// 自定义列模块数据返回
-    /// </summary>
     /// <param name="filter">filter</param>
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>

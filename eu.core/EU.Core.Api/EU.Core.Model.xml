@@ -1229,6 +1229,26 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.Icon">
+            <summary>
+            图标
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.IconColor">
+            <summary>
+            图标颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.BgColor">
+            <summary>
+            图标背景颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.EmRepairOrderLogBase.Title">
+            <summary>
+            标题
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.IvAccountingBase">
             <summary>
             库存建帐 (Dto.Base)
@@ -8075,6 +8095,26 @@
         <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.Icon">
+            <summary>
+            图标
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.IconColor">
+            <summary>
+            图标颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.BgColor">
+            <summary>
+            图标背景颜色
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.EmRepairOrderLog.Title">
+            <summary>
+            标题
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.IvAccounting">
