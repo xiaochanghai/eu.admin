@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using Microsoft.Extensions.Logging;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -22,12 +24,15 @@ namespace EU.Core.Services;
 /// </summary>
 public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmApplicationDeviceDto, InsertSmApplicationDeviceInput, EditSmApplicationDeviceInput>, ISmApplicationDeviceServices
 {
-    public SmApplicationDeviceServices(IBaseRepository<SmApplicationDevice> dal)
+    private readonly ILogger<SmApplicationDeviceServices> _logger;
+
+    public SmApplicationDeviceServices(
+        IBaseRepository<SmApplicationDevice> dal,
+        ILogger<SmApplicationDeviceServices> logger)
     {
         BaseDal = dal;
+        _logger = logger;
     }
-
-
 
     #region 记录设备信息
     /// <summary>
@@ -35,36 +40,45 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
     /// </summary>
     /// <param name="device">设备信息</param>
     /// <returns></returns>
-    public async Task<ServiceResult> Record(SmApplicationDevice device)
+    public Task<ServiceResult> Record(SmApplicationDevice device)
     {
-        // 在当前上下文中获取IP地址，避免在异步任务中HttpContext不可用
         var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
 
-        // 使用异步方法处理数据
-        await Task.Run(() => DealData(device, ipAddress));
+        // 在后台线程异步执行，不阻塞主线程
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await RecordDeviceAsync(device, ipAddress);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "记录设备信息失败: UUID={UUID}", device?.UUID);
+            }
+        });
 
-        return Success(ResponseText.EXECUTE_SUCCESS);
+        return Task.FromResult(Success(ResponseText.EXECUTE_SUCCESS));
     }
 
     /// <summary>
-    /// 处理设备数据并记录访问日志
+    /// 异步处理设备数据并记录访问日志
     /// </summary>
     /// <param name="input">设备信息</param>
     /// <param name="ipAddress">IP地址</param>
-    private void DealData(SmApplicationDevice input, string ipAddress)
+    private async Task RecordDeviceAsync(SmApplicationDevice input, string ipAddress)
     {
         try
         {
-            // 查询现有设备信息
-            var existingDevice = Db.Queryable<SmApplicationDevice>()
+            await Db.Ado.BeginTranAsync();
+
+            var existingDevice = await Db.Queryable<SmApplicationDevice>()
                 .Where(x => x.UUID == input.UUID)
-                .First();
+                .FirstAsync();
 
             if (existingDevice != null)
             {
-                // 更新现有设备信息
                 input.ID = existingDevice.ID;
-                Db.Updateable(input)
+                await Db.Updateable(input)
                     .UpdateColumns(x => new
                     {
                         x.UUID,
@@ -77,27 +91,26 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
                         x.UpdateBy,
                         x.UpdateTime
                     })
-                    .ExecuteCommand();
+                    .ExecuteCommandAsync();
             }
             else
             {
-                // 插入新设备信息
-                Db.Insertable(input).ExecuteCommand();
+                await Db.Insertable(input).ExecuteCommandAsync();
             }
 
-            // 记录设备访问日志
             var record = new SmApplicationRecord
             {
                 UUID = input.UUID,
                 LaunchTime = DateTime.Now,
                 IP = ipAddress
             };
-            Db.Insertable(record).ExecuteCommand();
+            await Db.Insertable(record).ExecuteCommandAsync();
+
+            await Db.Ado.CommitTranAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // 记录异常信息（建议注入ILogger进行日志记录）
-            Console.WriteLine($"记录设备信息失败: UUID={input?.UUID}, Error={ex.Message}");
+            await Db.Ado.RollbackTranAsync();
             throw;
         }
     }
