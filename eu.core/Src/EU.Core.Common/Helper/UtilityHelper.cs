@@ -345,7 +345,7 @@ public static class Utility
     /// 重新初始化缓存
     /// 清空所有Redis缓存数据库，并重新加载模块、SQL、权限等配置信息
     /// </summary>
-    public static void ReInitCache(ISqlSugarClient _Db)
+    public static async Task ReInitCache(ISqlSugarClient _Db)
     {
         try
         {
@@ -358,10 +358,10 @@ public static class Utility
             ModuleInfo.Init();
             ModuleSql.Init(_Db);
             ModuleSqlColumn.Init();
-            LovHelper.Init();
+            await LovHelper.Init(_Db);
             LovHelper.InitCommonListSql();
             ConfigCache.Init();
-            FunctionPrivilege.Init();
+            FunctionPrivilege.ClearCache();
             #endregion
         }
         catch (Exception) { throw; }

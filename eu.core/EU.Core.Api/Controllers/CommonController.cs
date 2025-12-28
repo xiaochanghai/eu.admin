@@ -40,7 +40,7 @@ public class CommonController : Controller
     /// </summary>
     /// <returns></returns>
     [HttpGet("ClearCache")]
-    public ServiceResult ClearCache() => _service.ClearCache();
+    public async Task<ServiceResult> ClearCache() => await _service.ClearCache();
     #endregion
 
     #region Excel导出

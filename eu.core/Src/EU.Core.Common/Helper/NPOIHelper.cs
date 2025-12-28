@@ -12,6 +12,7 @@ using SqlSugar;
 using System.Collections;
 using System.Data;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace EU.Core.Common.Helper;
 
@@ -729,9 +730,9 @@ public class NPOIHelper
     /// <param name="dtSource">源 DataaTable</param>
     /// <param name="strHeaderText">表头文本</param>
     /// <param name="strFileName">保存位置(文件名及路径)</param>
-    public static void ExportExcelTemplate(List<SmImpTemplateDetail> details, string strHeaderText, string sheetName, string strFileName, string templatefileUrl, int startRow)
+    public static async Task ExportExcelTemplate(ISqlSugarClient _Db, List<SmImpTemplateDetail> details, string strHeaderText, string sheetName, string strFileName, string templatefileUrl, int startRow)
     {
-        using (MemoryStream ms = ExportExcelTemplate(details, strHeaderText, sheetName, templatefileUrl, startRow))
+        using (MemoryStream ms = await ExportExcelTemplate(_Db, details, strHeaderText, sheetName, templatefileUrl, startRow))
         {
             using (FileStream fs = new FileStream(strFileName, FileMode.Create, FileAccess.Write))
             {
@@ -749,7 +750,7 @@ public class NPOIHelper
     /// <param name="dtSource">源 DataTable</param>
     /// <param name="strHeaderText">表头文本 空值未不要表头标题</param>
     /// <returns></returns>
-    private static MemoryStream ExportExcelTemplate(List<SmImpTemplateDetail> templateDetails, string strHeaderText, string sheetName, string templatefileUrl, int startRow)
+    private async static Task<MemoryStream> ExportExcelTemplate(ISqlSugarClient _Db, List<SmImpTemplateDetail> templateDetails, string strHeaderText, string sheetName, string templatefileUrl, int startRow)
     {
         //var details = templateDetails.Where(x => x.DataType == null).ToList();
         //var masterDetails = templateDetails.Where(x => x.DataType == "Master").ToList();
@@ -867,7 +868,7 @@ public class NPOIHelper
             }
             else if (item.LovCode.IsNotEmptyOrNull())
             {
-                var enumData = LovHelper.GetLovList(item.LovCode);
+                var enumData = await LovHelper.GetLovList(_Db, item.LovCode);
 
                 var vals = enumData.Select(x => x.Text).ToArray();
                 //設置生成下拉框的行和列
@@ -992,7 +993,7 @@ public class NPOIHelper
                         }
                         else if (item.LovCode.IsNotEmptyOrNull())
                         {
-                            var enumData = LovHelper.GetLovList(item.LovCode);
+                            var enumData = await LovHelper.GetLovList(_Db, item.LovCode);
 
                             var vals = enumData.Select(x => x.Text).ToArray();
                             //設置生成下拉框的行和列

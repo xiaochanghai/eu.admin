@@ -14,6 +14,8 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
+using System.Threading.Tasks;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -401,9 +403,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// 清空系统缓存
     /// </summary>
     /// <returns>操作结果</returns>
-    public ServiceResult ClearCache()
+    public async Task<ServiceResult> ClearCache()
     {
-        Utility.ReInitCache(Db);
+        await Utility.ReInitCache(Db);
         return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion

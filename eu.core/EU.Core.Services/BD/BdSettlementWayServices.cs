@@ -40,7 +40,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         CheckOnly(model);
         #endregion
 
-        var enumData = LovHelper.GetLovList("SettlementAccountType").ToList();
+        var enumData = await LovHelper.GetLovList(Db, "SettlementAccountType");
 
         if (enumData.Any())
         {
@@ -68,7 +68,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         CheckOnly(model, Id);
         #endregion
 
-        var enumData = LovHelper.GetLovList("SettlementAccountType").ToList();
+        var enumData = await LovHelper.GetLovList(Db, "SettlementAccountType");
 
         if (enumData.Any())
         {

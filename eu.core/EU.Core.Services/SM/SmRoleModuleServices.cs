@@ -179,7 +179,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
 
                 for (int i = 0; i < keyList.Count; i++)
                 {
-                    roleFunctions[i].SmModuleId = (await FunctionPrivilege.Query(Guid.Parse(keyList[i].Replace(FUNCTION_PRIVILEGES_PREFIX, null))))?.SmModuleId;
+                    roleFunctions[i].SmModuleId = (await FunctionPrivilege.QueryByIdAsync(Db, Guid.Parse(keyList[i].Replace(FUNCTION_PRIVILEGES_PREFIX, null))))?.SmModuleId;
                 }
 
                 // 处理通用操作权限（格式：CommonOption_{ActionCode}_{ModuleId}）

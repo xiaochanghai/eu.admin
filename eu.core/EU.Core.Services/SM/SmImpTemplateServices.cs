@@ -79,7 +79,7 @@ public class SmImpTemplateServices : BaseServices<SmImpTemplate, SmImpTemplateDt
         if (attachment != null)
             templatefileUrl = attachment.Path + attachment.FileName;
 
-        NPOIHelper.ExportExcelTemplate(templateDetails, template.TemplateName, template.SheetName, fileUrl, templatefileUrl, template.StartRow ?? 0);
+        await NPOIHelper.ExportExcelTemplate(Db, templateDetails, template.TemplateName, template.SheetName, fileUrl, templatefileUrl, template.StartRow ?? 0);
 
         var result = await _fileAttachmentServices.AddByFileUrl(savePath + fileName);
         return Success(result.Data, ResponseText.QUERY_SUCCESS);

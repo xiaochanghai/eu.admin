@@ -518,7 +518,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             var moduleId = module.ID;
 
             // 获取表格列配置
-            obj.columns = GetModuleColumn(moduleId, module);
+            obj.columns = await GetModuleColumn(moduleId, module);
 
             // 获取表单列配置
             var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
@@ -530,7 +530,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             obj.formColumns = Mapper.Map(moduleColumns.Where(x => (x.ColumnMode != "list" || x.ColumnMode == null)).OrderBy(x => x.FromTaxisNo)).ToANew<List<SmModuleForm>>();
 
             // 获取功能权限列表
-            var privileges = await FunctionPrivilege.Query(moduleCode);
+            var privileges = await FunctionPrivilege.QueryByModuleCodeAsync(Db, moduleCode);
             var ids = privileges.Select(x => x.ID).ToList();
 
             // 从缓存获取用户功能权限
@@ -725,7 +725,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// 返回前端表格组件所需的列配置，包括显示类型、宽度、对齐方式等
     /// 支持布尔类型、枚举类型、自定义标签颜色等特性
     /// </remarks>
-    public JArray GetModuleColumn(Guid moduleId, SmModules moduleInfo)
+    public async Task<JArray> GetModuleColumn(Guid moduleId, SmModules moduleInfo)
     {
         var columns = new JArray();
         var moduleColumnInfo = new ModuleSqlColumn(moduleInfo.ModuleCode);
@@ -821,9 +821,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 JObject enumobj = new();
 
                 // 获取枚举数据
-                var enumData = LovHelper.GetLovList(column.DataIndex);
+                var enumData = await LovHelper.GetLovList(Db, column.DataIndex);
                 if (column.DataSource.IsNotEmptyOrNull())
-                    enumData = LovHelper.GetLovList(column.DataSource);
+                    enumData = await LovHelper.GetLovList(Db, column.DataSource);
 
                 if (enumData.Count() > 0)
                 {

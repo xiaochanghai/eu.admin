@@ -19,7 +19,7 @@ public interface ICommonServices : IBaseServices<SmModules, SmModulesDto, Insert
     /// <summary>
     /// 清空缓存
     /// </summary>
-    ServiceResult ClearCache();
+    Task<ServiceResult> ClearCache();
 
     /// <summary>
     /// Excel导出
