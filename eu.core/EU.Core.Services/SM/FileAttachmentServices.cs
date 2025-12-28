@@ -16,6 +16,7 @@
 */
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace EU.Core.Services;
@@ -25,113 +26,156 @@ namespace EU.Core.Services;
 /// </summary>
 public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmentDto, InsertFileAttachmentInput, EditFileAttachmentInput>, IFileAttachmentServices
 {
+    #region 常量定义
+    private const string DEFAULT_UPLOAD_DIR_CONFIG_KEY = "FileUploadOptions:UploadDir";
+    private const string PATH_SEPARATOR = "/";
+    private const string WWWROOT_PREFIX = "wwwroot/";
+    #endregion
+
     private readonly IBaseRepository<FileAttachment> _dal;
-    /// <summary>
-    /// 配置信息
-    /// </summary>
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _hostingEnvironment;
+
     public FileAttachmentServices(IBaseRepository<FileAttachment> dal, IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _configuration = configuration;
         _hostingEnvironment = hostingEnvironment;
     }
 
     public async Task<ServiceResult<Guid>> UploadAsync(UploadForm upload)
     {
-        var file = upload.file;
-        var filePath = upload.filePath;
-        filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
-        string ImageType = filePath;
+        // 参数验证
+        var validationResult = ValidateUploadFile(upload?.file);
+        if (!validationResult.Success)
+            return Failed<Guid>(validationResult.Message);
 
-        var ext = string.Empty;
-        if (file.FileName.IsNotEmptyOrNull())
+        try
         {
-            var dotPos = file.FileName.LastIndexOf('.');
-            ext = file.FileName.Substring(dotPos + 1);
+            var file = upload.file;
+
+            // 获取上传路径
+            var imageType = upload.imageType ?? upload.filePath;
+            var uploadPath = GetUploadPath(upload.filePath);
+
+            // 提取文件扩展名
+            var ext = GetFileExtension(file.FileName);
+
+            // 构建完整路径
+            var fullPath = $"{PATH_SEPARATOR}{uploadPath}{PATH_SEPARATOR}";
+            FileHelper.CreateRootDirectory(fullPath);
+
+            // 生成唯一文件名
+            var fileName = $"{Utility.SnowID()}.{ext}";
+            var filePath = Path.Combine(fullPath, fileName);
+
+            // 保存文件
+            using (var stream = File.Create(FileHelper.GetPhysicsPath() + filePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // 创建文件附件记录
+            var fileAttachment = new InsertFileAttachmentInput
+            {
+                OriginalFileName = file.FileName,
+                FileName = fileName,
+                FileExt = ext,
+                MasterId = upload.masterId,
+                Length = file.Length,
+                Path = fullPath,
+                ImageType = imageType
+            };
+
+            var id = await base.Add(fileAttachment);
+
+            return Success(id, "上传成功！");
         }
-        filePath = $"/{filePath}/";
-
-        FileHelper.CreateRootDirectory(filePath);
-
-        string fileName = $"{Utility.SnowID()}.{ext}";
-        var filepath = Path.Combine(filePath, fileName);
-        //var filepath = Path.Combine(pathHeader, file.FileName);
-        using (var stream = File.Create(FileHelper.GetPhysicsPath() + filepath))
+        catch (Exception ex)
         {
-            await file.CopyToAsync(stream);
+            return Failed<Guid>($"文件上传失败: {ex.Message}");
         }
-
-        InsertFileAttachmentInput fileAttachment = new();
-        fileAttachment.OriginalFileName = file.FileName;
-        fileAttachment.FileName = fileName;
-        fileAttachment.FileExt = ext;
-        fileAttachment.MasterId = upload.masterId;
-        fileAttachment.Length = file.Length;
-        fileAttachment.Path = filePath;
-        fileAttachment.ImageType = ImageType;
-        var id = await base.Add(fileAttachment);
-
-        return Success(id);
     }
 
     public async Task<ServiceResult<Guid>> UploadImageAsync(UploadForm upload)
     {
-        string filePath = upload.filePath;
-        filePath = !string.IsNullOrEmpty(filePath) ? filePath : _configuration["FileUploadOptions:UploadDir"];
-        var ext = string.Empty;
-        var file = upload.file;
-        if (file.FileName.IsNotEmptyOrNull())
+        // 参数验证
+        var validationResult = ValidateUploadFile(upload?.file);
+        if (!validationResult.Success)
+            return Failed<Guid>(validationResult.Message);
+
+        try
         {
-            var dotPos = file.FileName.LastIndexOf('.');
-            ext = file.FileName.Substring(dotPos + 1);
-        }
-        string pathHeader = "wwwroot/" + filePath;
-        FileHelper.CreateDirectory(pathHeader);
+            var file = upload.file;
 
-        var fileName = $"{Utility.SnowID()}.{ext}";
-        var filepath = Path.Combine(pathHeader, fileName);
-        //var filepath = Path.Combine(pathHeader, file.FileName);
-        using (var stream = File.Create(filepath))
-        {
-            await file.CopyToAsync(stream);
-        }
+            // 获取上传路径
+            var imageType = upload.imageType ?? upload.filePath;
+            var uploadPath = GetUploadPath(upload.filePath);
 
-        if (upload.isUnique)
-            await Db.Updateable<FileAttachment>()
-                .SetColumns(it => new FileAttachment() { IsDeleted = true }, true)
-                .Where(x => x.MasterId == upload.masterId && x.ImageType == upload.imageType)
-                .ExecuteCommandAsync();
+            // 提取文件扩展名
+            var ext = GetFileExtension(file.FileName);
 
-        InsertFileAttachmentInput fileAttachment = new();
-        fileAttachment.OriginalFileName = file.FileName;
-        fileAttachment.FileName = fileName;
-        fileAttachment.FileExt = ext;
-        fileAttachment.MasterId = upload.masterId;
-        fileAttachment.Length = file.Length;
-        fileAttachment.Path = filePath;
-        fileAttachment.ImageType = upload.imageType ?? filePath;
-        var id = await base.Add(fileAttachment);
+            // 构建物理路径
+            var physicalPath = WWWROOT_PREFIX + uploadPath;
+            FileHelper.CreateDirectory(physicalPath);
 
-        if (upload.masterTable.IsNotEmptyOrNull() && upload.masterColumn.IsNotEmptyOrNull())
-        {
-            var dt = new Dictionary<string, object>
+            // 生成唯一文件名
+            var fileName = $"{Utility.SnowID()}.{ext}";
+            var fullFilePath = Path.Combine(physicalPath, fileName);
+
+            // 保存文件
+            using (var stream = File.Create(fullFilePath))
             {
-                { "ID", upload.masterId },
-                { "UpdateBy", Utility.GetUserId() },
-                { "UpdateTime", Utility.GetSysDate() }
-            };
-            if (upload.masterColumn == "ImageUrl")
-                dt.Add(upload.masterColumn, fileName);
-            else
-                dt.Add(upload.masterColumn, id);
-            await Db.Updateable(dt).AS(upload.masterTable)
-                .WhereColumns("ID").ExecuteCommandAsync();
-        }
+                await file.CopyToAsync(stream);
+            }
 
-        return Success(id, "上传成功！");
+            // 如果需要唯一性,标记同类型旧文件为已删除
+            if (upload.isUnique)
+            {
+                await Db.Updateable<FileAttachment>()
+                    .SetColumns(it => new FileAttachment { IsDeleted = true })
+                    .Where(x => x.MasterId == upload.masterId && x.ImageType == imageType)
+                    .ExecuteCommandAsync();
+            }
+
+            // 创建文件附件记录
+            var fileAttachment = new InsertFileAttachmentInput
+            {
+                OriginalFileName = file.FileName,
+                FileName = fileName,
+                FileExt = ext,
+                MasterId = upload.masterId,
+                Length = file.Length,
+                Path = uploadPath,
+                ImageType = imageType
+            };
+
+            var id = await base.Add(fileAttachment);
+
+            // 如果指定了主表和主列,更新主表记录
+            if (upload.masterTable.IsNotEmptyOrNull() && upload.masterColumn.IsNotEmptyOrNull())
+            {
+                var updateData = new Dictionary<string, object>
+                {
+                    { "ID", upload.masterId },
+                    { "UpdateBy", Utility.GetUserId() },
+                    { "UpdateTime", Utility.GetSysDate() },
+                    { upload.masterColumn, upload.masterColumn == "ImageUrl" ? fileName : id }
+                };
+
+                await Db.Updateable(updateData)
+                    .AS(upload.masterTable)
+                    .WhereColumns("ID")
+                    .ExecuteCommandAsync();
+            }
+
+            return Success(id, "上传成功！");
+        }
+        catch (Exception ex)
+        {
+            return Failed<Guid>($"图片上传失败: {ex.Message}");
+        }
     }
 
     public async Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload)
@@ -272,4 +316,56 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
 
         return Success(result);
     }
+
+    #region 私有辅助方法
+
+    /// <summary>
+    /// 验证上传文件
+    /// </summary>
+    /// <param name="file">上传的文件</param>
+    /// <returns>验证结果</returns>
+    private ServiceResult ValidateUploadFile(IFormFile file)
+    {
+        if (file == null)
+            return Failed("文件不能为空");
+
+        if (file.Length == 0)
+            return Failed("文件大小不能为0");
+
+        if (string.IsNullOrWhiteSpace(file.FileName))
+            return Failed("文件名不能为空");
+
+        return Success();
+    }
+
+    /// <summary>
+    /// 获取上传路径（如果未指定则使用配置中的默认路径）
+    /// </summary>
+    /// <param name="filePath">指定的文件路径</param>
+    /// <returns>上传路径</returns>
+    private string GetUploadPath(string filePath)
+    {
+        return !string.IsNullOrEmpty(filePath)
+            ? "files/" + filePath
+            : _configuration[DEFAULT_UPLOAD_DIR_CONFIG_KEY] ?? "upload";
+    }
+
+    /// <summary>
+    /// 提取文件扩展名（不包含点号）
+    /// </summary>
+    /// <param name="fileName">文件名</param>
+    /// <returns>文件扩展名</returns>
+    private string GetFileExtension(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return string.Empty;
+
+        var dotPos = fileName.LastIndexOf('.');
+        if (dotPos < 0 || dotPos == fileName.Length - 1)
+            return string.Empty;
+
+        return fileName.Substring(dotPos + 1);
+    }
+
+    #endregion
 }

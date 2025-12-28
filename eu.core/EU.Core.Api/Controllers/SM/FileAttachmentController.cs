@@ -156,8 +156,7 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
         if (file == null)
             return Ok("文件不存在");
 
-        var filePath = $"{webRootPath}{"\\" + file.Path + "\\" + file.FileName}";
-
+        var filePath = $"{webRootPath}{"/" + file.Path + "/" + file.FileName}";
         if (!FileHelper.Exists(filePath))
             return Ok("文件不存在");
 
