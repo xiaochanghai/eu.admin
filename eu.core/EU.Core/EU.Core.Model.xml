@@ -4917,11 +4917,6 @@
             标签颜色
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Base.SmLovDetailBase.TagBordered">
-            <summary>
-            标签是否有边框
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Base.SmLovDetailBase.TagIcon">
             <summary>
             标签图标
@@ -4930,6 +4925,11 @@
         <member name="P:EU.Core.Model.Base.SmLovDetailBase.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLovDetailBase.TagVariant">
+            <summary>
+            标签变体
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmModuleColumnBase">
@@ -11782,11 +11782,6 @@
             标签颜色
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Entity.SmLovDetail.TagBordered">
-            <summary>
-            标签是否有边框
-            </summary>
-        </member>
         <member name="P:EU.Core.Model.Entity.SmLovDetail.TagIcon">
             <summary>
             标签图标
@@ -11795,6 +11790,11 @@
         <member name="P:EU.Core.Model.Entity.SmLovDetail.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLovDetail.TagVariant">
+            <summary>
+            标签变体
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleColumn">

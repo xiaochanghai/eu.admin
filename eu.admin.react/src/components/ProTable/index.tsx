@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { Button, Dropdown, Tag, Space, Modal, Tooltip, Switch } from "antd";
 import { pagination } from "@/config/proTable";
 import { ProTable } from "@ant-design/pro-components";
@@ -102,28 +102,21 @@ const SmProTable: React.FC<any> = React.memo(props => {
     dispatch(setModuleInfo(updatedModuleInfo));
   };
 
-  let moreToolBar = [];
-  if (actions && moduleInfo.actions.includes("ExportExcel")) moreToolBar.push("ExportExcel");
+  const hasExportExcel = actions?.includes("ExportExcel");
 
-  const getMoreToolBarItems = (action: any) => {
-    const moreToolBarItems: MenuProps["items"] = [];
-    if (moreToolBar.includes("ExportExcel")) {
-      moreToolBarItems.push({
+  const getMoreToolBarItems = (action: any): MenuProps["items"] => {
+    const items: MenuProps["items"] = [];
+
+    if (hasExportExcel) {
+      items.push({
         key: "ExportExcel",
-        icon: (
-          <i
-            style={{
-              marginInlineEnd: 8
-            }}
-          >
-            <Icon name="excel-export" />
-          </i>
-        ),
+        icon: <Icon name="excel-export" />,
         label: "导出Excel",
         onClick: () => moreToolBarMenuClick("ExportExcel", action)
       });
     }
-    return moreToolBarItems;
+
+    return items;
   };
   const actionAuthButton: { [key: string]: boolean } = {};
   actions?.forEach((item: any) => {
@@ -136,55 +129,56 @@ const SmProTable: React.FC<any> = React.memo(props => {
   const dropActionAuthButton: { [key: string]: boolean } = {};
   dropActions?.forEach((item: any) => (dropActionAuthButton[item.id] = true));
 
-  const getDropActions = (record: any, action: any) => {
-    const dropActionItems: MenuProps["items"] = [];
-    dropActions.map((item: ModuleInfoBeforeAction) => {
-      if (item.id === "Update" && !IsView)
-        dropActionItems.push({
-          key: "dropActionUpdate",
-          label: "修改",
-          onClick: () => onOptionEdit(record)
-        });
-      else if (item.id === "View")
-        dropActionItems.push({
-          key: "dropActionView",
-          label: "查看",
-          icon: <Icon name="EyeOutlined" />,
-          onClick: () => onOptionView(record)
-        });
-      else if (item.id === "Delete" && !IsView)
-        dropActionItems.push({
-          key: "dropActionDelete",
-          label: "删除",
-          icon: <Icon name="DeleteOutlined" />,
-          onClick: () => onOptionDelete(action, record)
-        });
-      else {
-        for (let i = 0; i < moduleInfo.actionData.length; i++) {
-          const data = moduleInfo.actionData[i];
-          if (item.id === data.ID) {
-            dropActionItems.push({
-              key: "dropAction" + item.id,
-              label: data.FunctionName,
-              icon: data.Icon && (
-                <i
-                  style={{
-                    marginInlineEnd: 8
-                  }}
-                >
-                  <Icon name={data.Icon} />
-                </i>
-              ),
-              onClick: () => props[data.FunctionCode](record.ID, action, record)
-            });
-          }
+  const getDropActions = (record: any, action: any): MenuProps["items"] => {
+    return dropActions
+      .map((item: ModuleInfoBeforeAction) => {
+        // 处理修改操作
+        if (item.id === "Update" && !IsView) {
+          return {
+            key: "dropActionUpdate",
+            label: "修改",
+            onClick: () => onOptionEdit(record)
+          };
         }
-      }
-    });
-    return dropActionItems;
+
+        // 处理查看操作
+        if (item.id === "View") {
+          return {
+            key: "dropActionView",
+            label: "查看",
+            icon: <Icon name="EyeOutlined" />,
+            onClick: () => onOptionView(record)
+          };
+        }
+
+        // 处理删除操作
+        if (item.id === "Delete" && !IsView) {
+          return {
+            key: "dropActionDelete",
+            label: "删除",
+            icon: <Icon name="DeleteOutlined" />,
+            onClick: () => onOptionDelete(action, record)
+          };
+        }
+
+        // 处理自定义操作
+        const customAction = moduleInfo.actionData?.find((data: any) => data.ID === item.id);
+        if (customAction) {
+          return {
+            key: `dropAction${item.id}`,
+            label: customAction.FunctionName,
+            icon: customAction.Icon ? <Icon name={customAction.Icon} /> : undefined,
+            onClick: () => props[customAction.FunctionCode](record.ID, action, record)
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
   };
+
   const actionColumn: any =
-    moduleInfo && moduleInfo.Success === true && moduleInfo.actionCount > 0
+    moduleInfo?.Success === true && moduleInfo.actionCount > 0
       ? {
           title: "操作",
           dataIndex: "option",
@@ -450,155 +444,140 @@ const SmProTable: React.FC<any> = React.memo(props => {
 
   const onReset = () => dispatch(setTableParam({ moduleCode }));
 
-  const toolBarRender = (action: any, { selectedRows, selectedRowKeys }: any) => [
-    <Space style={{ display: "flex", justifyContent: "center" }}>
-      {moduleInfo && moduleInfo.Success === true && !IsView && (
-        <>
-          {moduleInfo.actions.includes("Add") && (
-            <Button
-              type="primary"
-              icon={<Icon name="PlusOutlined" />}
-              onClick={onOptionAdd}
-              disabled={isDetail && !masterId ? true : false}
-            >
-              新建
-            </Button>
-          )}
-          {moduleInfo.actions.includes("ImportExcel") && (
-            <Button
-              icon={<Icon name="excel-import" />}
-              onClick={() => {
-                tableAction = action;
-                setUploadExcelVisible(true);
-              }}
-            >
-              Excel导入
-            </Button>
-          )}
-        </>
-      )}
-      {IsShowAudit && (
-        <>
-          {actionAuthButton.Audit && (
-            <Button
-              icon={<Icon name="CheckCircleOutlined" />}
-              color="primary"
-              onClick={() => batchAuditConfirm(action, selectedRows, selectedRowKeys)}
-            >
-              审核
-            </Button>
-          )}
-          {actionAuthButton.Revocation && (
-            <Button
-              type="primary"
-              icon={<Icon name="RollbackOutlined" />}
-              danger
-              onClick={() => batchRevocationConfirm(action, selectedRows, selectedRowKeys)}
-            >
-              撤销
-            </Button>
-          )}
-        </>
-      )}
+  const toolBarRender = (action: any, { selectedRows, selectedRowKeys }: any) => {
+    const isModuleSuccess = moduleInfo?.Success === true;
+    const hasSelectedRows = selectedRows?.length > 0;
+    const hasSingleSelection = selectedRows?.length === 1;
 
-      {moduleInfo && moduleInfo.Success === true && moduleInfo.menuData.length > 0 && (
-        <>
-          {moduleInfo.menuData.map((item: any) => {
-            return (
-              <Button
-                key={item.ID}
-                icon={item.Icon && <Icon name={item.Icon} />}
-                onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}
-              >
-                {item.FunctionName}
-              </Button>
-            );
-          })}
-        </>
-      )}
-    </Space>,
-    moreToolBar.length > 0 && (
-      <Dropdown
-        onOpenChange={handlerToolBarVisibleChange}
-        open={moreToolBarVisible}
-        menu={{ items: getMoreToolBarItems(action) }}
-        // overlay={
-        //   <>
-        //     <Menu
-        //       onClick={e => {
-        //         moreToolBarMenuClick(e, action);
-        //       }}
-        //     >
-        //       {moreToolBar.includes("ExportExcel") && (
-        //         <Menu.Item key="2" icon={<Icon name="excel-export" />} style={{ gap: 5 }}>
-        //           导出Excel
-        //         </Menu.Item>
-        //       )}
-        //     </Menu>
-        //   </>
-        // }
-      >
-        <Button type="text" style={{ paddingLeft: 5, paddingRight: 5 }}>
-          更多 <Icon name="DownOutlined" />
-        </Button>
-      </Dropdown>
-    ),
-    selectedRows && selectedRows.length === 1 && (
-      <Button onClick={() => showLogRecord(selectedRows)}>
-        <Icon name="UnorderedListOutlined" /> 日志
-      </Button>
-    ),
-    selectedRows && selectedRows.length > 0 && (
+    return [
       <Space style={{ display: "flex", justifyContent: "center" }}>
-        {moduleInfo && moduleInfo.Success === true && moduleInfo.hideMenu.length > 0 && (
+        {isModuleSuccess && !IsView && (
           <>
-            {moduleInfo.hideMenu.map((item: any) => {
-              return (
-                <Button key={item.ID} onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}>
-                  {item.Icon && <Icon name={item.Icon} />}
-                  {item.FunctionName}
-                </Button>
-              );
-            })}
-          </>
-        )}
-        {expendHideAction && expendHideAction(action, selectedRows)}
-        {moduleInfo && moduleInfo.Success === true && (
-          <>
-            {moduleInfo.actions.includes("Submit") && <Button onClick={() => submitAudit(action, selectedRows)}>提交</Button>}
-            {moduleInfo.actions.includes("BatchDelete") && !IsView && (
-              <Button onClick={() => batchDeleteConfirm(action, selectedRows)}>
-                <Icon name="DeleteOutlined" /> 批量删除
+            {moduleInfo.actions.includes("Add") && (
+              <Button type="primary" icon={<Icon name="PlusOutlined" />} onClick={onOptionAdd} disabled={isDetail && !masterId}>
+                新建
+              </Button>
+            )}
+            {moduleInfo.actions.includes("ImportExcel") && (
+              <Button
+                icon={<Icon name="excel-import" />}
+                onClick={() => {
+                  tableAction = action;
+                  setUploadExcelVisible(true);
+                }}
+              >
+                Excel导入
               </Button>
             )}
           </>
         )}
-      </Space>
-    ),
-    expendAction && expendAction(action, selectedRows, selectedRowKeys),
-    <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0, boxShadow: "none" }}>
-      <Tooltip placement="top" title="查询">
-        <Icon name="SearchOutlined" className="font-size16" />
-      </Tooltip>
-    </Button>
-  ];
+        {IsShowAudit && (
+          <>
+            {actionAuthButton.Audit && (
+              <Button
+                icon={<Icon name="CheckCircleOutlined" />}
+                color="primary"
+                onClick={() => batchAuditConfirm(action, selectedRows, selectedRowKeys)}
+              >
+                审核
+              </Button>
+            )}
+            {actionAuthButton.Revocation && (
+              <Button
+                type="primary"
+                icon={<Icon name="RollbackOutlined" />}
+                danger
+                onClick={() => batchRevocationConfirm(action, selectedRows, selectedRowKeys)}
+              >
+                撤销
+              </Button>
+            )}
+          </>
+        )}
+
+        {isModuleSuccess &&
+          moduleInfo.menuData?.length > 0 &&
+          moduleInfo.menuData.map((item: any) => (
+            <Button
+              key={item.ID}
+              icon={item.Icon && <Icon name={item.Icon} />}
+              onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}
+            >
+              {item.FunctionName}
+            </Button>
+          ))}
+      </Space>,
+
+      hasExportExcel && (
+        <Dropdown
+          onOpenChange={handlerToolBarVisibleChange}
+          open={moreToolBarVisible}
+          menu={{ items: getMoreToolBarItems(action) }}
+        >
+          <Button type="text" style={{ paddingLeft: 5, paddingRight: 5 }}>
+            更多 <Icon name="DownOutlined" />
+          </Button>
+        </Dropdown>
+      ),
+
+      hasSingleSelection && (
+        <Button onClick={() => showLogRecord(selectedRows)}>
+          <Icon name="UnorderedListOutlined" /> 日志
+        </Button>
+      ),
+
+      hasSelectedRows && (
+        <Space style={{ display: "flex", justifyContent: "center" }}>
+          {isModuleSuccess &&
+            moduleInfo.hideMenu?.length > 0 &&
+            moduleInfo.hideMenu.map((item: any) => (
+              <Button key={item.ID} onClick={() => props[item.FunctionCode](action, selectedRows, selectedRowKeys)}>
+                {item.Icon && <Icon name={item.Icon} />}
+                {item.FunctionName}
+              </Button>
+            ))}
+          {expendHideAction?.(action, selectedRows)}
+          {isModuleSuccess && (
+            <>
+              {moduleInfo.actions.includes("Submit") && <Button onClick={() => submitAudit(action, selectedRows)}>提交</Button>}
+              {moduleInfo.actions.includes("BatchDelete") && !IsView && (
+                <Button onClick={() => batchDeleteConfirm(action, selectedRows)}>
+                  <Icon name="DeleteOutlined" /> 批量删除
+                </Button>
+              )}
+            </>
+          )}
+        </Space>
+      ),
+
+      expendAction?.(action, selectedRows, selectedRowKeys),
+
+      <Button type="dashed" onClick={onSearchVisible} style={{ border: 0, padding: 0, boxShadow: "none" }}>
+        <Tooltip placement="top" title="查询">
+          <Icon name="SearchOutlined" className="font-size16" />
+        </Tooltip>
+      </Button>
+    ];
+  };
 
   const actionRef = useRef<ActionType>();
-  const enhancedColumns = [...columns];
-  enhancedColumns &&
-    enhancedColumns.map((item: any, index: any) => {
-      let hasChange = false;
-      let column = enhancedColumns[index];
+
+  const enhancedColumns = useMemo(() => {
+    if (!columns) return [];
+
+    return columns.map((item: any) => {
+      const columnEnhancements: any = {};
+
+      // 处理 ComboGrid 类型
       if (!item.hideInSearch && item.fieldType === "ComboGrid") {
-        const renderFormItem = () => <ComboGrid code={item.dataSource} />;
-        column = { ...column, renderFormItem };
-        hasChange = true;
+        columnEnhancements.renderFormItem = () => <ComboGrid code={item.dataSource} />;
       }
 
+      // 处理标签显示
       if (item.isTagDisplay === true) {
-        const render = (_: any, record: any) => {
-          const valueEnum = item.valueEnum[record[item.dataIndex]];
-          if (valueEnum)
+        columnEnhancements.render = (_: any, record: any) => {
+          const valueEnum = item.valueEnum?.[record[item.dataIndex]];
+          if (valueEnum) {
             return (
               <Tag
                 color={valueEnum.tagColor}
@@ -608,50 +587,38 @@ const SmProTable: React.FC<any> = React.memo(props => {
                 {valueEnum.text}
               </Tag>
             );
-          else return record[item.dataIndex];
+          }
+          return record[item.dataIndex];
         };
-        column = { ...column, render };
-        hasChange = true;
       }
 
+      // 根据 valueType 处理不同类型
       switch (item.valueType) {
         case "icon":
-          {
-            const render1 = (_: any, record: any) => {
-              if (record[item.dataIndex]) return <Icon name={record[item.dataIndex]} />;
-              else return "";
-            };
-            column = { ...column, render: render1 };
-            hasChange = true;
-          }
+          columnEnhancements.render = (_: any, record: any) => {
+            return record[item.dataIndex] ? <Icon name={record[item.dataIndex]} /> : "";
+          };
           break;
+
         case "switch":
-          {
-            const render = (_: any, record: any) => {
-              return <Switch disabled checked={record[item.dataIndex] === "true" ? true : false} />;
-            };
-            column = { ...column, render };
-            hasChange = true;
-          }
+          columnEnhancements.render = (_: any, record: any) => {
+            return <Switch disabled checked={record[item.dataIndex] === "true"} />;
+          };
           break;
+
         case "fontColor":
           if (item.isFollowThemeColor === true) {
-            const renderText = (val: string) => {
-              return <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
-            };
-            column = { ...column, renderText };
-            hasChange = true;
+            columnEnhancements.renderText = (val: string) => <span style={{ color: "var(--hooks-colorPrimary)" }}>{val}</span>;
           } else if (item.color) {
-            const renderText = (val: string) => {
-              return <span style={{ color: item.color }}>{val}</span>;
-            };
-            column = { ...column, renderText };
-            hasChange = true;
+            columnEnhancements.renderText = (val: string) => <span style={{ color: item.color }}>{val}</span>;
           }
           break;
       }
-      if (hasChange === true) enhancedColumns[index] = { ...enhancedColumns[index], ...column };
+
+      // 如果有任何增强，合并到原列配置中
+      return Object.keys(columnEnhancements).length > 0 ? { ...item, ...columnEnhancements } : item;
     });
+  }, [columns]);
   return (
     <>
       <ProTable
