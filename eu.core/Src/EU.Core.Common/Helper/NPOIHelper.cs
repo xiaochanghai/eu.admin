@@ -838,7 +838,7 @@ public class NPOIHelper
             var colNo = (item.ColumnNo ?? 0) - 1;
             if (item.CommonListSqlId.IsNotEmptyOrNull())
             {
-                var sql = LovHelper.GetCommonListSql(item.CommonListSqlId);
+                var sql = await LovHelper.GetCommonListSql(_Db, item.CommonListSqlId);
                 if (sql.IsNotEmptyOrNull())
                 {
                     var data = DBHelper.QueryList<ComboGridData>(sql);

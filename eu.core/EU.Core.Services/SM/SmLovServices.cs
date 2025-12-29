@@ -33,7 +33,7 @@ public class SmLovServices : BaseServices<SmLov, SmLovDto, InsertSmLovInput, Edi
 
     public async Task<ServiceResult<IEnumerable<KeyValue>>> GetByCode(string code)
     {
-        var list = await LovHelper.GetLovListAsync(code);
+        var list = await LovHelper.GetLovListAsync(Db, code);
         var data = list.Select(x => new KeyValue() { key = x.Value, value = x.Text });
 
         return Success(data);
@@ -41,7 +41,7 @@ public class SmLovServices : BaseServices<SmLov, SmLovDto, InsertSmLovInput, Edi
 
     public async Task<ServiceResult<IEnumerable<LovData>>> QueryByCode(string code)
     {
-        var list = await LovHelper.GetLovListAsync(code);
+        var list = await LovHelper.GetLovListAsync(Db, code);
         var data = list.Select(x => new LovData() { value = code == "ColumnNo" ? x.Value.ObjToInt() : x.Value, label = x.Text });
 
         return Success(data);

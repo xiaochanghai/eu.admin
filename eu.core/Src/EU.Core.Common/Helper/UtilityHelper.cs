@@ -359,7 +359,7 @@ public static class Utility
             ModuleSql.Init(_Db);
             ModuleSqlColumn.Init();
             await LovHelper.Init(_Db);
-            LovHelper.InitCommonListSql();
+            await LovHelper.InitCommonListSql(_Db);
             ConfigCache.Init();
             FunctionPrivilege.ClearCache();
             #endregion

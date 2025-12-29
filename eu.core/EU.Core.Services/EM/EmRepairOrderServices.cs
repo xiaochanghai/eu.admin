@@ -69,9 +69,9 @@ public class EmRepairOrderServices : BaseServices<EmRepairOrder, EmRepairOrderDt
             })
             .FirstAsync();
 
-            entity.FaultType = await LovHelper.GetLovText("EquipmentFaultType", entity.FaultType);
-            entity.Status = await LovHelper.GetLovText("RepairOrderStatus", entity.Status);
-            entity.Impact = await LovHelper.GetLovText("RepairOrderImpact", entity.Impact);
+            entity.FaultType = await LovHelper.GetLovText(Db, "EquipmentFaultType", entity.FaultType);
+            entity.Status = await LovHelper.GetLovText(Db, "RepairOrderStatus", entity.Status);
+            entity.Impact = await LovHelper.GetLovText(Db, "RepairOrderImpact", entity.Impact);
 
             entity.ProgressSteps = await Db.Queryable<EmRepairOrderLog>()
                 .OrderBy(x => x.DealTime)

@@ -920,7 +920,7 @@ public class ImportHelper
 
             if (commonListSqlId.IsNotEmptyOrNull())
             {
-                sql = LovHelper.GetCommonListSql(commonListSqlId);
+                sql = await LovHelper.GetCommonListSql(Db, commonListSqlId);
                 sql = @$"SELECT DISTINCT A.{columnName} AS CORRES_VALUE
                             FROM SmImportDataDetail A
                             WHERE     A.ImportDataId = '{importDataId}'
@@ -1174,7 +1174,7 @@ public class ImportHelper
                     }
                     else if (commonListSqlId.IsNotEmptyOrNull())
                     {
-                        string commonListSql = LovHelper.GetCommonListSql(commonListSqlId);
+                        string commonListSql = await LovHelper.GetCommonListSql(Db, commonListSqlId);
 
                         sql = @"UPDATE A SET A.{0}=B.{1}
                                           FROM SmImportDataDetailTemp A,({2}) B

@@ -14,8 +14,6 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
-using System.Threading.Tasks;
-
 namespace EU.Core.Services;
 
 /// <summary>
@@ -730,7 +728,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var data = new List<ComboGridData>();
 
         // 获取数据字典对应的SQL
-        var sql = LovHelper.GetCommonListSql(code);
+        var sql = await LovHelper.GetCommonListSql(Db, code);
         if (string.IsNullOrWhiteSpace(sql))
             return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, 0);
 
