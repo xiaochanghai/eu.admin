@@ -118,14 +118,14 @@ public class ModuleSqlColumn
         moduleColumnInfo.GetModuleSqlColumn();
     }
 
-    public static void Reload(string moduleCode)
+    public static async Task Reload(string moduleCode)
     {
-        var cache = Db.Queryable<SmModuleColumn, SmModules>((a, b) =>
-        new JoinQueryInfos(JoinType.Inner, a.SmModuleId == b.ID && a.IsDeleted == b.IsDeleted))
-            .Where(x => x.IsDeleted == false && x.ModuleCode == moduleCode)
-            .OrderBy(x => x.TaxisNo)
+        var cache = await Db.Queryable<SmModuleColumn, SmModules>((a, b) =>
+        new JoinQueryInfos(JoinType.Inner, a.SmModuleId == b.ID))
+            .Where((a, b) => b.ModuleCode == moduleCode)
+            .OrderBy(a => a.TaxisNo)
             .Select<SmModuleColumnExtend>()
-            .ToList();
+            .ToListAsync();
 
         Redis.AddObject(code, moduleCode, cache);
     }

@@ -1098,7 +1098,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
 
         // 重新加载缓存
-        ModuleSqlColumn.Reload(moduleCode);
+        await ModuleSqlColumn.Reload(moduleCode);
 
         return Success();
     }
@@ -1207,7 +1207,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
 
         // 重新加载缓存
-        ModuleSqlColumn.Reload(moduleCode);
+        await ModuleSqlColumn.Reload(moduleCode);
 
         return Success();
     }
@@ -1237,7 +1237,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         await Db.Insertable(column).ExecuteCommandAsync();
 
         // 重新加载缓存
-        ModuleSqlColumn.Reload(moduleCode);
+        await ModuleSqlColumn.Reload(moduleCode);
 
         return Success();
     }
