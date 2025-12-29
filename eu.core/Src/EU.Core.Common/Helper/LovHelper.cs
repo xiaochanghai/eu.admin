@@ -147,9 +147,9 @@ public class LovInfo
     public string TagIcon { get; set; }
 
     /// <summary>
-    /// 边框显示
+    /// 边框变体
     /// </summary>
-    public bool? TagBordered { get; set; }
+    public string TagVariant { get; set; }
 
     /// <summary>
     /// 是否标签显示

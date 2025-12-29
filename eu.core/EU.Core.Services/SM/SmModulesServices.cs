@@ -836,7 +836,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         enumobj.Add(new JProperty(enumData[n].Value, new JObject(
                             new JProperty("text", enumData[n].Text),
                             new JProperty("tagColor", enumData[n].TagColor),
-                            new JProperty("tagBordered", enumData[n].TagBordered),
+                            new JProperty("tagVariant", enumData[n].TagVariant ?? "filled"),
                             new JProperty("tagIcon", enumData[n].TagIcon)
                         )));
 

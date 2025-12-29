@@ -600,7 +600,11 @@ const SmProTable: React.FC<any> = React.memo(props => {
           const valueEnum = item.valueEnum[record[item.dataIndex]];
           if (valueEnum)
             return (
-              <Tag color={valueEnum.tagColor} bordered={valueEnum.tagBordered}>
+              <Tag
+                color={valueEnum.tagColor}
+                icon={valueEnum.tagIcon ? <Icon name={valueEnum.tagIcon} /> : null}
+                variant={valueEnum.tagVariant}
+              >
                 {valueEnum.text}
               </Tag>
             );

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:56  SahHsiao   初版
+* V0.01  2025/12/29 15:03:39  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -67,12 +67,6 @@ public class SmLovDetail : BasePoco
     public string TagColor { get; set; }
 
     /// <summary>
-    /// 标签是否有边框
-    /// </summary>
-    [Display(Name = "TagBordered"), Description("标签是否有边框"), SugarColumn(IsNullable = true)]
-    public bool? TagBordered { get; set; }
-
-    /// <summary>
     /// 标签图标
     /// </summary>
     [Display(Name = "TagIcon"), Description("标签图标"), SugarColumn(IsNullable = true, Length = 32)]
@@ -83,4 +77,10 @@ public class SmLovDetail : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 标签变体
+    /// </summary>
+    [Display(Name = "TagVariant"), Description("标签变体"), SugarColumn(IsNullable = true, Length = 32)]
+    public string TagVariant { get; set; }
 }
