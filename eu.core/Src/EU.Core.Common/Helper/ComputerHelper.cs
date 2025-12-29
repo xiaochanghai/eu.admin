@@ -418,12 +418,13 @@ public class MemoryMetricsClient
     /// <returns></returns>
     public MemoryMetrics GetUnixMetrics()
     {
-        string output = ShellUtil.Bash("free -m | awk '{print $2,$3,$4,$5,$6}'");
         var metrics = new MemoryMetrics();
-        var lines = output.Split('\n', (char)StringSplitOptions.RemoveEmptyEntries);
-        if (lines.Length <= 0) return metrics;
 
-        if (lines != null && lines.Length > 0)
+        // 尝试使用 free 命令
+        string output = ShellUtil.Bash("free -m | awk '{print $2,$3,$4,$5,$6}'");
+        var lines = output.Split('\n', (char)StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines != null && lines.Length > 1)
         {
             var memory = lines[1].Split(' ', (char)StringSplitOptions.RemoveEmptyEntries);
             if (memory.Length >= 3)
@@ -431,8 +432,57 @@ public class MemoryMetricsClient
                 metrics.Total = double.Parse(memory[0]);
                 metrics.Used = double.Parse(memory[1]);
                 metrics.Free = double.Parse(memory[2]);//m
+                return metrics;
             }
         }
+
+        // 如果 free 命令失败（如在某些容器中），直接读取 /proc/meminfo
+        try
+        {
+            if (File.Exists("/proc/meminfo"))
+            {
+                var memInfo = File.ReadAllLines("/proc/meminfo");
+                double memTotal = 0;
+                double memAvailable = 0;
+                double memFree = 0;
+                double buffers = 0;
+                double cached = 0;
+
+                foreach (var line in memInfo)
+                {
+                    if (line.StartsWith("MemTotal:"))
+                    {
+                        memTotal = double.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) / 1024; // 转换为 MB
+                    }
+                    else if (line.StartsWith("MemAvailable:"))
+                    {
+                        memAvailable = double.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) / 1024;
+                    }
+                    else if (line.StartsWith("MemFree:"))
+                    {
+                        memFree = double.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) / 1024;
+                    }
+                    else if (line.StartsWith("Buffers:"))
+                    {
+                        buffers = double.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) / 1024;
+                    }
+                    else if (line.StartsWith("Cached:"))
+                    {
+                        cached = double.Parse(line.Split(' ', StringSplitOptions.RemoveEmptyEntries)[1]) / 1024;
+                    }
+                }
+
+                metrics.Total = memTotal;
+                // 优先使用 MemAvailable，如果不存在则使用 MemFree + Buffers + Cached
+                metrics.Free = memAvailable > 0 ? memAvailable : (memFree + buffers + cached);
+                metrics.Used = metrics.Total - metrics.Free;
+            }
+        }
+        catch
+        {
+            // 如果读取失败，返回空的 metrics
+        }
+
         return metrics;
     }
 

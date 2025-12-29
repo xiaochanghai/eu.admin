@@ -4,7 +4,6 @@ using EU.Core.Common.Enums;
 using EU.Core.Common.Helper;
 using EU.Core.Model;
 using EU.Core.Model.Entity;
-using MathNet.Numerics.Distributions;
 using SqlSugar;
 
 namespace EU.Core.Common.Module;
