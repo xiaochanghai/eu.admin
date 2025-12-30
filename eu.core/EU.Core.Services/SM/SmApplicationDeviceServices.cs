@@ -87,9 +87,8 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
                         x.Brand,
                         x.Model,
                         x.BundleId,
-                        x.BundleVersion,
-                        x.UpdateBy,
-                        x.UpdateTime
+                        x.BundleVersion, 
+                        x.PushRegistrationId,
                     })
                     .ExecuteCommandAsync();
             }

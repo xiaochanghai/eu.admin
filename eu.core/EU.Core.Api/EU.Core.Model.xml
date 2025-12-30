@@ -3372,6 +3372,11 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmApplicationDeviceBase.PushRegistrationId">
+            <summary>
+            推送ID
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmApplicationRecordBase">
             <summary>
             SmApplicationRecord (Dto.Base)
@@ -10235,6 +10240,11 @@
         <member name="P:EU.Core.Model.Entity.SmApplicationDevice.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApplicationDevice.PushRegistrationId">
+            <summary>
+            推送ID
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmApplicationRecord">

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/4/27 16:04:05  SahHsiao   初版
+* V0.01  2025/12/30 13:16:54  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -70,4 +70,10 @@ public class SmApplicationDeviceBase : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 推送ID
+    /// </summary>
+    [Display(Name = "PushRegistrationId"), Description("推送ID"), MaxLength(64, ErrorMessage = "推送ID 不能超过 64 个字符")]
+    public string PushRegistrationId { get; set; }
 }

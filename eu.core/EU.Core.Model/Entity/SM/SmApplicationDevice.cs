@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/4/27 16:04:05  SahHsiao   初版
+* V0.01  2025/12/30 13:16:54  SahHsiao   初版
 *
 * Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -71,4 +71,10 @@ public class SmApplicationDevice : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 推送ID
+    /// </summary>
+    [Display(Name = "PushRegistrationId"), Description("推送ID"), SugarColumn(IsNullable = true, Length = 64)]
+    public string PushRegistrationId { get; set; }
 }
