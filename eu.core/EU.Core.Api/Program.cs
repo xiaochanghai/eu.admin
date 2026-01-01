@@ -67,6 +67,7 @@ builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
 //builder.Services.AddDataContextSetup();
 builder.Services.AddDbSetup();
+DBHelper.CheckServiceAvailable();
 builder.Services.AddInitializationHostServiceSetup();
 
 builder.Host.AddSerilogSetup();
@@ -132,6 +133,7 @@ Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 // 3、配置中间件
 var app = builder.Build();
 IdentityModelEventSource.ShowPII = true;
+//IdentityModelEventSource.ShowPII = app.Environment.IsDevelopment();
 
 app.ConfigureApplication();
 app.UseApplicationSetup();
@@ -157,11 +159,9 @@ app.UseRecordAccessLogsMiddle();
 app.UseSignalRSendMiddle();
 app.UseIpLogMiddle();
 //app.UseAllServicesMiddle(builder.Services);
-app.UseSession();
 app.UseSwaggerAuthorized();
 app.UseSwaggerMiddle(() => Assembly.GetExecutingAssembly().GetManifestResourceStream("EU.Core.Api.index.html"));
 
-app.UseCors(AppSettings.app(["Startup", "Cors", "PolicyName"]));
 DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
 defaultFilesOptions.DefaultFileNames.Clear();
 defaultFilesOptions.DefaultFileNames.Add("index.html");
@@ -176,6 +176,8 @@ app.UseSerilogRequestLogging(options =>
     options.EnrichDiagnosticContext = SerilogRequestUtility.EnrichFromRequest;
 });
 app.UseRouting();
+app.UseCors(AppSettings.app(["Startup", "Cors", "PolicyName"]));
+app.UseSession();
 
 if (builder.Configuration.GetValue<bool>("AppSettings:UseLoadTest"))
     app.UseMiddleware<ByPassAuthMiddleware>();
