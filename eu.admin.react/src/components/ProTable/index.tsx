@@ -626,19 +626,21 @@ const SmProTable: React.FC<any> = React.memo(props => {
         tableAlertRender={false}
         columns={enhancedColumns}
         toolBarRender={toolBarRender}
-        onRow={record => {
-          return {
-            onDoubleClick: () => {
-              if (moduleInfo && moduleInfo.Success === true && record.ID !== "SumRowID") {
-                let actions = moduleInfo.beforeActions;
-                let index = actions.findIndex((item: any) => item.id === "Update");
-                if (index <= -1) actions = moduleInfo.dropActions;
-                index = actions.findIndex((item: any) => item.id === "Update");
-                if (index > -1 && !IsView) onOptionEdit(record);
-              }
+        onRow={record => ({
+          onDoubleClick: () => {
+            // 忽略汇总行
+            if (record.ID === "SumRowID" || !moduleInfo?.Success || IsView) return;
+
+            // 检查是否有编辑权限（在 beforeActions 或 dropActions 中）
+            const hasUpdatePermission =
+              moduleInfo.beforeActions?.some((item: any) => item.id === "Update") ||
+              moduleInfo.dropActions?.some((item: any) => item.id === "Update");
+
+            if (hasUpdatePermission) {
+              onOptionEdit(record);
             }
-          };
-        }}
+          }
+        })}
         className="ant-pro-table-scroll"
         rowSelection={{
           fixed: "left",
@@ -652,33 +654,46 @@ const SmProTable: React.FC<any> = React.memo(props => {
         // cardBordered
         scroll={{ scrollToFirstRowOnChange: true, x: columns.length * 100, y: "100%" }}
         onLoad={() => {
-          if (currentParams && formRef.current) formRef.current.setFieldsValue(currentParams);
-          else if (tableParam && tableParam.params && formRef.current) formRef.current.setFieldsValue({ ...tableParam.params });
+          if (!formRef.current) return;
+
+          if (currentParams) {
+            formRef.current.setFieldsValue(currentParams);
+          } else if (tableParam?.params) {
+            formRef.current.setFieldsValue({ ...tableParam.params });
+          }
         }}
         pagination={
-          tableParam && tableParam.params
-            ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize }
-            : pagination
+          tableParam?.params ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize } : pagination
         }
         request={async (params, sorter, _filterCondition) => {
-          if (tableParam && tableParam.params && !params._timestamp) params = { ...tableParam.params, ...params };
-          if (tableParam && tableParam.sorter) sorter = { ...tableParam.sorter, ...sorter };
+          // 合并表格参数
+          if (tableParam?.params && !params._timestamp) {
+            params = { ...tableParam.params, ...params };
+          }
+          if (tableParam?.sorter) {
+            sorter = { ...tableParam.sorter, ...sorter };
+          }
+
           currentParams = params;
-          let filter = { PageIndex: params.current, PageSize: params.pageSize, sorter, params, Conditions: "" };
-          dispatch(setTableParam({ params: params, sorter, moduleCode, filter }));
 
-          if (isDetail) {
-            if (masterColumn && masterId) filter = { ...filter, Conditions: `A.${masterColumn} = '${masterId}'` };
-            else filter = { ...filter, Conditions: "1 != 1" };
+          // 构建过滤条件
+          const filter = {
+            PageIndex: params.current,
+            PageSize: params.pageSize,
+            sorter,
+            params,
+            Conditions: isDetail && masterColumn && masterId ? `A.${masterColumn} = '${masterId}'` : isDetail ? "1 != 1" : ""
+          };
 
-            if (masterId) return await queryByFilter(moduleCode, {}, filter);
-            else
-              return {
-                data: [],
-                success: true,
-                total: 0
-              };
-          } else return await queryByFilter(moduleCode, {}, filter);
+          dispatch(setTableParam({ params, sorter, moduleCode, filter }));
+
+          // 处理明细表且无主表 ID 的情况
+          if (isDetail && !masterId) {
+            return { data: [], success: true, total: 0 };
+          }
+
+          // 加载数据
+          return await queryByFilter(moduleCode, {}, filter);
         }}
         // columnsState={{
         //   persistenceKey: "use-pro-table-key",
@@ -698,11 +713,12 @@ const SmProTable: React.FC<any> = React.memo(props => {
         {...props}
         // headerTitle="使用 ProTable"
       />
-      {moduleInfo && moduleInfo.Success === true && (
+      {moduleInfo?.Success === true && (
         <>
           <Modal title="日志" open={recordLogVisible} width={1000} footer={null} onCancel={showLogRecordCancel}>
             <ModuleLog log={recordLogData} />
           </Modal>
+
           {moduleInfo.actions.includes("ImportExcel") && (
             <Modal
               destroyOnHidden
@@ -710,17 +726,13 @@ const SmProTable: React.FC<any> = React.memo(props => {
               open={uploadExcelVisible}
               maskClosable={false}
               width={1000}
-              onCancel={() => {
-                setUploadExcelVisible(false);
-              }}
               footer={null}
+              onCancel={() => setUploadExcelVisible(false)}
             >
               <UploadExcel
                 moduleInfo={moduleInfo}
                 onCancel={() => setUploadExcelVisible(false)}
-                onReload={() => {
-                  tableAction.current?.reload();
-                }}
+                onReload={() => tableAction.current?.reload()}
               />
             </Modal>
           )}
