@@ -9,13 +9,11 @@
             登录管理【无权限】
             </summary>
         </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.AuthorizeController})">
+        <member name="M:EU.Core.Controllers.AuthorizeController.#ctor(EU.Core.IServices.ISmUsersServices)">
             <summary>
             构造函数注入
             </summary>
-            <param name="smUsersServices"></param> 
-            <param name="requirement"></param>
-            <param name="logger"></param>
+            <param name="smUsersServices"></param>
         </member>
         <member name="M:EU.Core.Controllers.AuthorizeController.Login(EU.Core.Model.LoginRequest)">
             <summary>

@@ -1,37 +1,27 @@
-ï»¿using EU.Core.AuthHelper;
-using EU.Core.Common.Caches;
-
 namespace EU.Core.Controllers;
 
 /// <summary>
-/// ç™»å½•ç®¡ç†ã€æ— æƒé™ã€‘
+/// µÇÂ¼¹ÜÀí¡¾ÎŞÈ¨ÏŞ¡¿
 /// </summary>
 [Produces("application/json")]
 [Route("api/[controller]/[action]")]
 [Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_Auth)]
 public class AuthorizeController : BaseApiController
 {
-    readonly ISmUsersServices _smUsersServices;
-    readonly PermissionRequirement _requirement;
-    private readonly ILogger<AuthorizeController> _logger;
-    private RedisCacheService Redis = new(4);
+    private readonly ISmUsersServices _smUsersServices;
 
     /// <summary>
-    /// æ„é€ å‡½æ•°æ³¨å…¥
+    /// ¹¹Ôìº¯Êı×¢Èë
     /// </summary>
-    /// <param name="smUsersServices"></param> 
-    /// <param name="requirement"></param>
-    /// <param name="logger"></param>
-    public AuthorizeController(ISmUsersServices smUsersServices, PermissionRequirement requirement, ILogger<AuthorizeController> logger)
+    /// <param name="smUsersServices"></param>
+    public AuthorizeController(ISmUsersServices smUsersServices)
     {
         _smUsersServices = smUsersServices;
-        _requirement = requirement;
-        _logger = logger;
     }
 
-    #region ç”¨æˆ·è®¤è¯-è®¤è¯æˆæƒ 
+    #region ÓÃ»§ÈÏÖ¤-ÈÏÖ¤ÊÚÈ¨ 
     /// <summary>
-    /// ç”¨æˆ·è®¤è¯-è®¤è¯æˆæƒ
+    /// ÓÃ»§ÈÏÖ¤-ÈÏÖ¤ÊÚÈ¨
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
@@ -39,18 +29,18 @@ public class AuthorizeController : BaseApiController
     public async Task<ServiceResult<LoginReturn>> Login([FromBody] LoginRequest request) => await _smUsersServices.LoginAsync(request);
     #endregion
 
-    #region è·å–ç”¨æˆ·ä¿¡æ¯
+    #region »ñÈ¡ÓÃ»§ĞÅÏ¢
     /// <summary>
-    /// è·å–ç”¨æˆ·ä¿¡æ¯
+    /// »ñÈ¡ÓÃ»§ĞÅÏ¢
     /// </summary>
     /// <returns></returns>
     [HttpGet]
     public async Task<ServiceResult<CurrentUser>> CurrentUser() => await _smUsersServices.CurrentUserAsync();
     #endregion
 
-    #region ä¿®æ”¹å¯†ç 
+    #region ĞŞ¸ÄÃÜÂë
     /// <summary>
-    /// ä¿®æ”¹å¯†ç 
+    /// ĞŞ¸ÄÃÜÂë
     /// </summary>
     /// <param name="password"></param>
     /// <returns></returns>
@@ -58,18 +48,18 @@ public class AuthorizeController : BaseApiController
     public async Task<ServiceResult> RestPassword([FromBody] RestPassword password) => await _smUsersServices.RestPasswordAsync(password);
     #endregion
 
-    #region é€€å‡ºç™»å½•
+    #region ÍË³öµÇÂ¼
     /// <summary>
-    /// é€€å‡ºç™»å½•
+    /// ÍË³öµÇÂ¼
     /// </summary>
     /// <returns></returns>
     [HttpGet]
     public ServiceResult LogOut() => _smUsersServices.LogOutAsync();
     #endregion
 
-    #region è·å–token
+    #region »ñÈ¡token
     /// <summary>
-    /// è·å–token
+    /// »ñÈ¡token
     /// </summary>
     /// <returns></returns>
     [AllowAnonymous, HttpGet]
@@ -90,13 +80,13 @@ public class AuthorizeController : BaseApiController
     //            DateTime NowTime = DateTime.UtcNow;
 
     //            TimeSpan timeSpan = ExpirationTime.Subtract(NowTime);
-    //            if (timeSpan.Minutes < 10)//è¿‡æœŸæ—¶é—´æœ€åçš„ååˆ†é’Ÿåˆ·æ–°token
+    //            if (timeSpan.Minutes < 10)//¹ıÆÚÊ±¼ä×îºóµÄÊ®·ÖÖÓË¢ĞÂtoken
     //            {
     //                //var dto = _context.Set<SmUsers>().Where(x => x.ID == Guid.Parse(User.Identity.Name)).FirstOrDefault();
     //                //var result = _jwtApp.RefreshAsync(token, dto).Result;
     //                //if (result.Success != false)
     //                //{
-    //                //    _jwtApp.DeactivateAsync(token);//åœç”¨åˆ·æ–°å‰çš„token
+    //                //    _jwtApp.DeactivateAsync(token);//Í£ÓÃË¢ĞÂÇ°µÄtoken
     //                //    obj.token = result.Token;
     //                //}
     //            }
@@ -114,3 +104,5 @@ public class AuthorizeController : BaseApiController
     //}
     #endregion
 }
+
+
