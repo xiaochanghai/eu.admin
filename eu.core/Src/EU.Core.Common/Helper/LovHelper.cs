@@ -57,7 +57,7 @@ public class LovHelper
         var list = await GetLovListAsync(_Db, code);
         if (!list.Any())
             return value;
-        return list.Where(x => x.Value == value).Select(x => x.Text).First() ?? value;
+        return list.Where(x => x.Value == value).Any()? list.Where(x => x.Value == value).Select(x => x.Text).First() : value;
     }
 
     public static async Task<string> GetCommonListSql(ISqlSugarClient _Db, string code)
