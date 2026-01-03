@@ -1,4 +1,4 @@
-﻿using EU.Core.Common.Extensions;
+using EU.Core.Common.Extensions;
 using EU.Core.Common.Helper;
 using EU.Core.Model;
 using Newtonsoft.Json;
@@ -8,12 +8,33 @@ using System.Text;
 
 namespace EU.Core.Common.LogHelper;
 
-public class LogLock
+public class LogLock : IDisposable
 {
-    static ReaderWriterLockSlim LogWriteLock = new ReaderWriterLockSlim();
-    static int WritedCount = 0;
-    static int FailedCount = 0;
-    static string _contentRoot = string.Empty;
+    private static readonly ReaderWriterLockSlim _logWriteLock = new();
+    private static int _writedCount = 0;
+    private static int _failedCount = 0;
+    private static string _contentRoot = string.Empty;
+    private static bool _disposed = false;
+
+    // 常量定义
+    private const string LogFolderName = "Logs";
+    private const string DateFormat = "yyyyMMdd";
+    private const string LogSeparator = "--------------------------------\r\n";
+    private const int MaxLogEntries = 100;
+    private const int MaxWeekApis = 5;
+    private const int MaxDateEntries = 7;
+    private const int MaxHourEntries = 24;
+
+    // 日志配置映射
+    private static readonly Dictionary<string, (string Node, string Name)> LogSettingsMap = new()
+    {
+        ["AOPLog"] = ("AppSettings", "LogAOP"),
+        ["AOPLogEx"] = ("AppSettings", "LogAOP"),
+        ["RequestIpInfoLog"] = ("Middleware", "IPLog"),
+        ["RecordAccessLogs"] = ("Middleware", "RecordAccessLogs"),
+        ["SqlLog"] = ("AppSettings", "SqlAOP"),
+        ["RequestResponseLog"] = ("Middleware", "RequestResponseLog")
+    };
 
     public LogLock(string contentPath)
     {
@@ -22,130 +43,46 @@ public class LogLock
 
     public static void OutLogAOP(string prefix, string traceId, string[] dataParas, bool IsHeader = true)
     {
-        string AppSetingNodeName = "AppSettings";
-        string AppSetingName = "LogAOP";
-        switch (prefix)
+        if (!LogSettingsMap.TryGetValue(prefix, out var settings))
         {
-            case "AOPLog":
-                AppSetingName = "LogAOP";
-                break;
-            case "AOPLogEx":
-                AppSetingName = "LogAOP";
-                break;
-            case "RequestIpInfoLog":
-                AppSetingNodeName = "Middleware";
-                AppSetingName = "IPLog";
-                break;
-            case "RecordAccessLogs":
-                AppSetingNodeName = "Middleware";
-                AppSetingName = "RecordAccessLogs";
-                break;
-            case "SqlLog":
-                AppSetingName = "SqlAOP";
-                break;
-            case "RequestResponseLog":
-                AppSetingNodeName = "Middleware";
-                AppSetingName = "RequestResponseLog";
-                break;
-            default:
-                break;
+            return;
         }
 
-        if (AppSettings.app(new string[] { AppSetingNodeName, AppSetingName, "Enabled" }).ObjToBool())
-        {
-            if (AppSettings.app(new string[] { AppSetingNodeName, AppSetingName, "LogToDB", "Enabled" }).ObjToBool())
-            {
-                OutSql2LogToDB(prefix, traceId, dataParas, IsHeader);
-            }
+        var (nodeName, settingName) = settings;
 
-            if (AppSettings.app(new string[] { AppSetingNodeName, AppSetingName, "LogToFile", "Enabled" }).ObjToBool())
-            {
-                OutSql2LogToFile(prefix, traceId, dataParas, IsHeader);
-            }
+        if (!AppSettings.app(new[] { nodeName, settingName, "Enabled" }).ObjToBool())
+        {
+            return;
         }
 
-        //if (AppSettings.app(new string[] { "AppSettings", "LogFile", "Enabled" }).ObjToBool())
-        //{
-        //    OutSql2LogFile(prefix, dataParas, IsHeader);
-        //}
-        //else
-        //{
-        //    OutSql2Log(prefix, dataParas, IsHeader);
-        //}
+        if (AppSettings.app(new[] { nodeName, settingName, "LogToDB", "Enabled" }).ObjToBool())
+        {
+            OutSql2LogToDB(prefix, traceId, dataParas, IsHeader);
+        }
+
+        if (AppSettings.app(new[] { nodeName, settingName, "LogToFile", "Enabled" }).ObjToBool())
+        {
+            OutSql2LogToFile(prefix, traceId, dataParas, IsHeader);
+        }
     }
 
     public static void OutSql2LogToFile(string prefix, string traceId, string[] dataParas, bool IsHeader = true, bool isWrt = false)
     {
         try
         {
-            //设置读写锁为写入模式独占资源，其他写入请求需要等待本次写入结束之后才能继续写入
-            //注意：长时间持有读线程锁或写线程锁会使其他线程发生饥饿 (starve)。 为了得到最好的性能，需要考虑重新构造应用程序以将写访问的持续时间减少到最小。
-            //      从性能方面考虑，请求进入写入模式应该紧跟文件操作之前，在此处进入写入模式仅是为了降低代码复杂度
-            //      因进入与退出写入模式应在同一个try finally语句块内，所以在请求进入写入模式之前不能触发异常，否则释放次数大于请求次数将会触发异常
-            LogWriteLock.EnterWriteLock();
+            _logWriteLock.EnterWriteLock();
 
-            var folderPath = Path.Combine(_contentRoot, $@"Logs/{DateTime.Now.ToString("yyyyMMdd")}");
+            var folderPath = Path.Combine(_contentRoot, LogFolderName, DateTime.Now.ToString(DateFormat));
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            //string logFilePath = Path.Combine(path, $@"{filename}.log");
             var logFilePath = FileHelper.GetAvailableFileWithPrefixOrderSize(folderPath, prefix);
-            switch (prefix)
-            {
-                case "AOPLog":
-                    AOPLogInfo apiLogAopInfo = JsonConvert.DeserializeObject<AOPLogInfo>(dataParas[1]);
-                    //记录被拦截方法信息的日志信息
-                    var dataIntercept = "" +
-                                        $"【操作时间】：{apiLogAopInfo.RequestTime}\r\n" +
-                                        $"【当前操作用户】：{apiLogAopInfo.OpUserName} \r\n" +
-                                        $"【当前执行方法】：{apiLogAopInfo.RequestMethodName} \r\n" +
-                                        $"【携带的参数有】： {apiLogAopInfo.RequestParamsName} \r\n" +
-                                        $"【携带的参数JSON】： {apiLogAopInfo.RequestParamsData} \r\n" +
-                                        $"【响应时间】：{apiLogAopInfo.ResponseIntervalTime}\r\n" +
-                                        $"【执行完成时间】：{apiLogAopInfo.ResponseTime}\r\n" +
-                                        $"【执行完成结果】：{apiLogAopInfo.ResponseJsonData}\r\n";
-                    dataParas = new string[] { dataIntercept };
-                    break;
-                case "AOPLogEx":
-                    AOPLogExInfo apiLogAopExInfo = JsonConvert.DeserializeObject<AOPLogExInfo>(dataParas[1]);
-                    var dataInterceptEx = "" +
-                                          $"【操作时间】：{apiLogAopExInfo.ApiLogAopInfo.RequestTime}\r\n" +
-                                          $"【当前操作用户】：{apiLogAopExInfo.ApiLogAopInfo.OpUserName} \r\n" +
-                                          $"【当前执行方法】：{apiLogAopExInfo.ApiLogAopInfo.RequestMethodName} \r\n" +
-                                          $"【携带的参数有】： {apiLogAopExInfo.ApiLogAopInfo.RequestParamsName} \r\n" +
-                                          $"【携带的参数JSON】： {apiLogAopExInfo.ApiLogAopInfo.RequestParamsData} \r\n" +
-                                          $"【响应时间】：{apiLogAopExInfo.ApiLogAopInfo.ResponseIntervalTime}\r\n" +
-                                          $"【执行完成时间】：{apiLogAopExInfo.ApiLogAopInfo.ResponseTime}\r\n" +
-                                          $"【执行完成结果】：{apiLogAopExInfo.ApiLogAopInfo.ResponseJsonData}\r\n" +
-                                          $"【执行完成异常信息】：方法中出现异常：{apiLogAopExInfo.ExMessage}\r\n" +
-                                          $"【执行完成异常】：方法中出现异常：{apiLogAopExInfo.InnerException}\r\n";
-                    dataParas = new string[] { dataInterceptEx };
-                    break;
-            }
 
-            var now = DateTime.Now;
-            string logContent = String.Join("\r\n", dataParas);
-            if (IsHeader)
-            {
-                logContent = (
-                    "--------------------------------\r\n" +
-                    DateTime.Now + "|\r\n" +
-                    String.Join("\r\n", dataParas) + "\r\n"
-                );
-            }
-            else
-            {
-                logContent = (
-                    dataParas[1] + ",\r\n"
-                );
-            }
+            // 格式化日志内容
+            var logContent = FormatLogContent(prefix, dataParas, IsHeader);
 
-            //if (logContent.IsNotEmptyOrNull() && logContent.Length > 500)
-            //{
-            //    logContent = logContent.Substring(0, 500) + "\r\n";
-            //}
             if (isWrt)
             {
                 File.WriteAllText(logFilePath, logContent);
@@ -155,92 +92,160 @@ public class LogLock
                 File.AppendAllText(logFilePath, logContent);
             }
 
-            WritedCount++;
+            Interlocked.Increment(ref _writedCount);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.Write(e.Message);
-            FailedCount++;
+            Console.WriteLine($"日志写入失败: {ex.Message}");
+            Interlocked.Increment(ref _failedCount);
         }
         finally
         {
-            //退出写入模式，释放资源占用
-            //注意：一次请求对应一次释放
-            //      若释放次数大于请求次数将会触发异常[写入锁定未经保持即被释放]
-            //      若请求处理完成后未释放将会触发异常[此模式不下允许以递归方式获取写入锁定]
-            LogWriteLock.ExitWriteLock();
+            _logWriteLock.ExitWriteLock();
         }
+    }
+
+    private static string FormatLogContent(string prefix, string[] dataParas, bool IsHeader)
+    {
+        string content = string.Empty;
+
+        switch (prefix)
+        {
+            case "AOPLog":
+                if (dataParas.Length > 1)
+                {
+                    var apiLogAopInfo = JsonConvert.DeserializeObject<AOPLogInfo>(dataParas[1]);
+                    content = FormatAOPLogInfo(apiLogAopInfo);
+                }
+                break;
+
+            case "AOPLogEx":
+                if (dataParas.Length > 1)
+                {
+                    var apiLogAopExInfo = JsonConvert.DeserializeObject<AOPLogExInfo>(dataParas[1]);
+                    content = FormatAOPLogExInfo(apiLogAopExInfo);
+                }
+                break;
+
+            default:
+                content = string.Join("\r\n", dataParas);
+                break;
+        }
+
+        if (IsHeader)
+        {
+            return $"{LogSeparator}{DateTime.Now}|\r\n{content}\r\n";
+        }
+        else
+        {
+            return dataParas.Length > 1 ? $"{dataParas[1]},\r\n" : string.Empty;
+        }
+    }
+
+    private static string FormatAOPLogInfo(AOPLogInfo info)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"【操作时间】：{info.RequestTime}");
+        sb.AppendLine($"【当前操作用户】：{info.OpUserName}");
+        sb.AppendLine($"【当前执行方法】：{info.RequestMethodName}");
+        sb.AppendLine($"【携带的参数有】： {info.RequestParamsName}");
+        sb.AppendLine($"【携带的参数JSON】： {info.RequestParamsData}");
+        sb.AppendLine($"【响应时间】：{info.ResponseIntervalTime}");
+        sb.AppendLine($"【执行完成时间】：{info.ResponseTime}");
+        sb.Append($"【执行完成结果】：{info.ResponseJsonData}");
+        return sb.ToString();
+    }
+
+    private static string FormatAOPLogExInfo(AOPLogExInfo info)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"【操作时间】：{info.ApiLogAopInfo.RequestTime}");
+        sb.AppendLine($"【当前操作用户】：{info.ApiLogAopInfo.OpUserName}");
+        sb.AppendLine($"【当前执行方法】：{info.ApiLogAopInfo.RequestMethodName}");
+        sb.AppendLine($"【携带的参数有】： {info.ApiLogAopInfo.RequestParamsName}");
+        sb.AppendLine($"【携带的参数JSON】： {info.ApiLogAopInfo.RequestParamsData}");
+        sb.AppendLine($"【响应时间】：{info.ApiLogAopInfo.ResponseIntervalTime}");
+        sb.AppendLine($"【执行完成时间】：{info.ApiLogAopInfo.ResponseTime}");
+        sb.AppendLine($"【执行完成结果】：{info.ApiLogAopInfo.ResponseJsonData}");
+        sb.AppendLine($"【执行完成异常信息】：方法中出现异常：{info.ExMessage}");
+        sb.Append($"【执行完成异常】：方法中出现异常：{info.InnerException}");
+        return sb.ToString();
     }
 
     public static void OutSql2LogToDB(string prefix, string traceId, string[] dataParas, bool IsHeader = true)
     {
-        //log4net.LogicalThreadContext.Properties["LogType"] = prefix;
-        //log4net.LogicalThreadContext.Properties["TraceId"] = traceId;
-        //if (dataParas.Length >= 2)
-        //{
-        //    log4net.LogicalThreadContext.Properties["DataType"] = dataParas[0];
-        //}
-
         dataParas = dataParas.Skip(1).ToArray();
-
-        string logContent = String.Join("", dataParas);
-        if (IsHeader)
-        {
-            logContent = (String.Join("", dataParas));
-        }
+        string logContent = string.Join("", dataParas);
 
         switch (prefix)
         {
-            //DEBUG | INFO | WARN | ERROR | FATAL
             case "AOPLog":
                 Log.Information(logContent);
                 break;
+
             case "AOPLogEx":
                 Log.Error(logContent);
                 break;
+
             case "RequestIpInfoLog":
-                //TODO 是否需要Debug输出？
                 Log.Information(logContent);
                 break;
+
             case "RecordAccessLogs":
-                //TODO 是否需要Debug输出？
                 Log.Information(logContent);
-
-                Task task = new Task(() =>
-                {
-                    var IP = HttpContextExtension.GetUserIp(HttpUseContext.Current);
-
-                    var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
-                    if (requestInfo.RequestData != null)
-                        if (requestInfo != null && requestInfo.API != "/api/Authorize/Login" &&
-                        !requestInfo.API.Contains("SM_SYSTEM_API_LOG_MNG") &&
-                        !requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
-                        {
-                            if (requestInfo.Filter.IsNotEmptyOrNull())
-                                requestInfo.Filter = WebUtility.UrlDecode(requestInfo.Filter);
-                            DbInsert di = new("SmApiLog");
-                            di.Values("UserId", requestInfo.User);
-                            di.Values("IP", IP == "::1" ? "localhost" : IP);
-                            di.Values("Path", requestInfo.API);
-                            di.Values("Method", requestInfo.RequestMethod);
-                            di.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);
-                            di.Values("BeginTime", requestInfo.BeginTime);
-                            di.Values("OPTime", requestInfo.OPTime.Replace("ms", null));
-                            di.Values("Agent", requestInfo.Agent);
-                            DBHelper.ExecuteNonQuery(di.GetSql());
-                        }
-                });
-                task.Start();
+                Task.Run(() => ProcessAccessLog(logContent));
                 break;
+
             case "SqlLog":
                 Log.Information(logContent);
                 break;
+
             case "RequestResponseLog":
-                //TODO 是否需要Debug输出？
                 Log.Information(logContent);
                 break;
-            default:
-                break;
+        }
+    }
+
+    private static void ProcessAccessLog(string logContent)
+    {
+        try
+        {
+            var ip = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+            var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
+
+            if (requestInfo?.RequestData == null)
+            {
+                return;
+            }
+
+            // 过滤特定的API
+            if (requestInfo.API == "/api/Authorize/Login" ||
+                requestInfo.API.Contains("SM_SYSTEM_API_LOG_MNG") ||
+                requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
+            {
+                return;
+            }
+
+            if (requestInfo.Filter.IsNotEmptyOrNull())
+            {
+                requestInfo.Filter = WebUtility.UrlDecode(requestInfo.Filter);
+            }
+
+            var dbInsert = new DbInsert("SmApiLog");
+            dbInsert.Values("UserId", requestInfo.User);
+            dbInsert.Values("IP", ip == "::1" ? "localhost" : ip);
+            dbInsert.Values("Path", requestInfo.API);
+            dbInsert.Values("Method", requestInfo.RequestMethod);
+            dbInsert.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);
+            dbInsert.Values("BeginTime", requestInfo.BeginTime);
+            dbInsert.Values("OPTime", requestInfo.OPTime.Replace("ms", string.Empty));
+            dbInsert.Values("Agent", requestInfo.Agent);
+
+            DBHelper.ExecuteNonQuery(dbInsert.GetSql());
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "处理访问日志时发生错误");
         }
     }
 
@@ -251,101 +256,133 @@ public class LogLock
     /// <param name="fileName">文件名</param>
     /// <param name="encode">编码</param>
     /// <param name="readType">读取类型(0:精准,1:前缀模糊)</param>
+    /// <param name="takeOnlyTop">仅取前N个文件</param>
     /// <returns></returns>
     public static string ReadLog(string folderPath, string fileName, Encoding encode, ReadType readType = ReadType.Accurate, int takeOnlyTop = -1)
     {
-        string s = "";
         try
         {
-            LogWriteLock.EnterReadLock();
+            _logWriteLock.EnterReadLock();
 
-            // 根据文件名读取当前文件内容
-            if (readType == ReadType.Accurate)
+            return readType switch
             {
-                var filePath = Path.Combine(folderPath, fileName);
-                if (!File.Exists(filePath))
-                {
-                    s = null;
-                }
-                else
-                {
-                    StreamReader f2 = new StreamReader(filePath, encode);
-                    s = f2.ReadToEnd();
-                    f2.Close();
-                    f2.Dispose();
-                }
-            }
-
-            // 根据前缀读取所有文件内容
-            if (readType == ReadType.Prefix)
-            {
-                var allFiles = new DirectoryInfo(folderPath);
-                var selectFiles = allFiles.GetFiles().Where(fi => fi.Name.ToLower().Contains(fileName.ToLower())).ToList();
-
-                selectFiles = takeOnlyTop > 0 ? selectFiles.OrderByDescending(d => d.Name).Take(takeOnlyTop).ToList() : selectFiles;
-
-                foreach (var item in selectFiles)
-                {
-                    if (File.Exists(item.FullName))
-                    {
-                        StreamReader f2 = new StreamReader(item.FullName, encode);
-                        s += f2.ReadToEnd();
-                        f2.Close();
-                        f2.Dispose();
-                    }
-                }
-            }
-
-            // 根据前缀读取 最新文件 时间倒叙
-            if (readType == ReadType.PrefixLatest)
-            {
-                var allFiles = new DirectoryInfo(folderPath);
-                var selectLastestFile = allFiles.GetFiles().Where(fi => fi.Name.ToLower().Contains(fileName.ToLower())).OrderByDescending(d => d.Name).FirstOrDefault();
-
-                if (selectLastestFile != null && File.Exists(selectLastestFile.FullName))
-                {
-                    StreamReader f2 = new StreamReader(selectLastestFile.FullName, encode);
-                    s = f2.ReadToEnd();
-                    f2.Close();
-                    f2.Dispose();
-                }
-            }
+                ReadType.Accurate => ReadSingleFile(folderPath, fileName, encode),
+                ReadType.Prefix => ReadPrefixFiles(folderPath, fileName, encode, takeOnlyTop),
+                ReadType.PrefixLatest => ReadLatestPrefixFile(folderPath, fileName, encode),
+                _ => string.Empty
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            FailedCount++;
+            Log.Error(ex, $"读取日志文件失败: {fileName}");
+            Interlocked.Increment(ref _failedCount);
+            return string.Empty;
         }
         finally
         {
-            LogWriteLock.ExitReadLock();
+            _logWriteLock.ExitReadLock();
+        }
+    }
+
+    private static string ReadSingleFile(string folderPath, string fileName, Encoding encode)
+    {
+        var filePath = Path.Combine(folderPath, fileName);
+        if (!File.Exists(filePath))
+        {
+            return string.Empty;
         }
 
-        return s;
+        using var reader = new StreamReader(filePath, encode);
+        return reader.ReadToEnd();
+    }
+
+    private static string ReadPrefixFiles(string folderPath, string fileName, Encoding encode, int takeOnlyTop)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            return string.Empty;
+        }
+
+        var allFiles = new DirectoryInfo(folderPath);
+        IEnumerable<FileInfo> selectFiles = allFiles.GetFiles()
+            .Where(fi => fi.Name.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(d => d.Name);
+
+        if (takeOnlyTop > 0)
+        {
+            selectFiles = selectFiles.Take(takeOnlyTop);
+        }
+
+        var sb = new StringBuilder();
+        foreach (var file in selectFiles)
+        {
+            if (File.Exists(file.FullName))
+            {
+                using var reader = new StreamReader(file.FullName, encode);
+                sb.Append(reader.ReadToEnd());
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private static string ReadLatestPrefixFile(string folderPath, string fileName, Encoding encode)
+    {
+        if (!Directory.Exists(folderPath))
+        {
+            return string.Empty;
+        }
+
+        var allFiles = new DirectoryInfo(folderPath);
+        var latestFile = allFiles.GetFiles()
+            .Where(fi => fi.Name.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(d => d.Name)
+            .FirstOrDefault();
+
+        if (latestFile == null || !File.Exists(latestFile.FullName))
+        {
+            return string.Empty;
+        }
+
+        using var reader = new StreamReader(latestFile.FullName, encode);
+        return reader.ReadToEnd();
     }
 
     private static List<RequestInfo> GetRequestInfo(ReadType readType)
     {
-        List<RequestInfo> requestInfos = new();
+        var requestInfos = new List<RequestInfo>();
         var accessLogs = ReadLog(Path.Combine(_contentRoot, "Log"), "RequestIpInfoLog_", Encoding.UTF8, readType).ObjToString();
+
+        if (string.IsNullOrEmpty(accessLogs))
+        {
+            return requestInfos;
+        }
+
         try
         {
-            return JsonConvert.DeserializeObject<List<RequestInfo>>("[" + accessLogs + "]");
+            return JsonConvert.DeserializeObject<List<RequestInfo>>("[" + accessLogs + "]") ?? new List<RequestInfo>();
         }
-        catch (Exception)
+        catch
         {
             var accLogArr = accessLogs.Split("\r\n");
             foreach (var item in accLogArr)
             {
-                if (item.ObjToString() != "")
+                if (string.IsNullOrEmpty(item))
                 {
-                    try
+                    continue;
+                }
+
+                try
+                {
+                    var accItem = JsonConvert.DeserializeObject<RequestInfo>(item.TrimEnd(','));
+                    if (accItem != null)
                     {
-                        var accItem = JsonConvert.DeserializeObject<RequestInfo>(item.TrimEnd(','));
                         requestInfos.Add(accItem);
                     }
-                    catch (Exception)
-                    {
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, $"解析请求信息失败: {item}");
                 }
             }
         }
@@ -353,268 +390,283 @@ public class LogLock
         return requestInfos;
     }
 
-
     public static List<LogInfo> GetLogData()
     {
-        List<LogInfo> aopLogs = new List<LogInfo>();
-        List<LogInfo> excLogs = new List<LogInfo>();
-        List<LogInfo> sqlLogs = new List<LogInfo>();
-        List<LogInfo> reqresLogs = new List<LogInfo>();
+        var allLogs = new List<LogInfo>();
 
+        // 读取 AOP 日志
+        allLogs.AddRange(ReadAOPLogs());
+
+        // 读取异常日志
+        allLogs.AddRange(ReadExceptionLogs());
+
+        // 读取 SQL 日志
+        allLogs.AddRange(ReadSqlLogs());
+
+        // 读取请求响应日志
+        allLogs.AddRange(ReadRequestResponseLogs());
+
+        return allLogs
+            .OrderByDescending(d => d.Import)
+            .ThenByDescending(d => d.Datetime)
+            .Take(MaxLogEntries)
+            .ToList();
+    }
+
+    private static List<LogInfo> ReadAOPLogs()
+    {
         try
         {
             var aoplogContent = ReadLog(Path.Combine(_contentRoot, "Log"), "AOPLog_", Encoding.UTF8, ReadType.Prefix);
 
-            if (!string.IsNullOrEmpty(aoplogContent))
+            if (string.IsNullOrEmpty(aoplogContent))
             {
-                aopLogs = aoplogContent.Split("--------------------------------")
-                    .Where(d => !string.IsNullOrEmpty(d) && d != "\n" && d != "\r\n")
-                    .Select(d => new LogInfo
-                    {
-                        Datetime = d.Split("|")[0].ObjToDate(),
-                        Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
-                        LogColor = "AOP",
-                    }).ToList();
+                return new List<LogInfo>();
             }
-        }
-        catch (Exception)
-        {
-        }
 
+            return aoplogContent.Split(LogSeparator)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => new LogInfo
+                {
+                    Datetime = d.Split("|")[0].ObjToDate(),
+                    Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
+                    LogColor = "AOP",
+                }).ToList();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "读取AOP日志失败");
+            return new List<LogInfo>();
+        }
+    }
+
+    private static List<LogInfo> ReadExceptionLogs()
+    {
         try
         {
-            var exclogContent = ReadLog(Path.Combine(_contentRoot, "Log"), $"GlobalExceptionLogs_{DateTime.Now.ToString("yyyMMdd")}.log", Encoding.UTF8);
+            var exclogContent = ReadLog(
+                Path.Combine(_contentRoot, "Log"),
+                $"GlobalExceptionLogs_{DateTime.Now:yyyMMdd}.log",
+                Encoding.UTF8);
 
-            if (!string.IsNullOrEmpty(exclogContent))
+            if (string.IsNullOrEmpty(exclogContent))
             {
-                excLogs = exclogContent.Split("--------------------------------")
-                    .Where(d => !string.IsNullOrEmpty(d) && d != "\n" && d != "\r\n")
-                    .Select(d => new LogInfo
-                    {
-                        Datetime = (d.Split("|")[0]).Split(',')[0].ObjToDate(),
-                        Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
-                        LogColor = "EXC",
-                        Import = 9,
-                    }).ToList();
+                return new List<LogInfo>();
             }
+
+            return exclogContent.Split(LogSeparator)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => new LogInfo
+                {
+                    Datetime = d.Split("|")[0].Split(',')[0].ObjToDate(),
+                    Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
+                    LogColor = "EXC",
+                    Import = 9,
+                }).ToList();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "读取异常日志失败");
+            return new List<LogInfo>();
         }
+    }
 
-
+    private static List<LogInfo> ReadSqlLogs()
+    {
         try
         {
             var sqllogContent = ReadLog(Path.Combine(_contentRoot, "Log"), "SqlLog_", Encoding.UTF8, ReadType.PrefixLatest);
 
-            if (!string.IsNullOrEmpty(sqllogContent))
+            if (string.IsNullOrEmpty(sqllogContent))
             {
-                sqlLogs = sqllogContent.Split("--------------------------------")
-                    .Where(d => !string.IsNullOrEmpty(d) && d != "\n" && d != "\r\n")
-                    .Select(d => new LogInfo
-                    {
-                        Datetime = d.Split("|")[0].ObjToDate(),
-                        Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
-                        LogColor = "SQL",
-                    }).ToList();
+                return new List<LogInfo>();
             }
+
+            return sqllogContent.Split(LogSeparator)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Select(d => new LogInfo
+                {
+                    Datetime = d.Split("|")[0].ObjToDate(),
+                    Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
+                    LogColor = "SQL",
+                }).ToList();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "读取SQL日志失败");
+            return new List<LogInfo>();
         }
+    }
 
-        //try
-        //{
-        //    reqresLogs = ReadLog(Path.Combine(_contentRoot, "Log", "RequestResponseLog.log"), Encoding.UTF8)?
-        //          .Split("--------------------------------")
-        //          .Where(d => !string.IsNullOrEmpty(d) && d != "\n" && d != "\r\n")
-        //          .Select(d => new LogInfo
-        //          {
-        //              Datetime = d.Split("|")[0].ObjToDate(),
-        //              Content = d.Split("|")[1]?.Replace("\r\n", "<br>"),
-        //              LogColor = "ReqRes",
-        //          }).ToList();
-        //}
-        //catch (Exception)
-        //{
-        //}
-
+    private static List<LogInfo> ReadRequestResponseLogs()
+    {
         try
         {
-            var Logs = GetRequestInfo(ReadType.PrefixLatest);
+            var logs = GetRequestInfo(ReadType.PrefixLatest);
+            logs = logs.Where(d => d.Datetime.ObjToDate() >= DateTime.Today).ToList();
 
-            Logs = Logs.Where(d => d.Datetime.ObjToDate() >= DateTime.Today).ToList();
-
-            reqresLogs = Logs.Select(d => new LogInfo
+            return logs.Select(d => new LogInfo
             {
                 Datetime = d.Datetime.ObjToDate(),
                 Content = $"IP:{d.Ip}<br>{d.Url}",
                 LogColor = "ReqRes",
             }).ToList();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "读取请求响应日志失败");
+            return new List<LogInfo>();
         }
-
-        if (excLogs != null)
-        {
-            aopLogs.AddRange(excLogs);
-        }
-
-        if (sqlLogs != null)
-        {
-            aopLogs.AddRange(sqlLogs);
-        }
-
-        if (reqresLogs != null)
-        {
-            aopLogs.AddRange(reqresLogs);
-        }
-
-        aopLogs = aopLogs.OrderByDescending(d => d.Import).ThenByDescending(d => d.Datetime).Take(100).ToList();
-
-        return aopLogs;
     }
-
 
     public static RequestApiWeekView RequestApiinfoByWeek()
     {
-        List<RequestInfo> Logs = new List<RequestInfo>();
-        List<ApiWeek> apiWeeks = new List<ApiWeek>();
-        string apiWeeksJson = string.Empty;
-        List<string> columns = new List<string>();
-        columns.Add("日期");
-
+        var columns = new List<string> { "日期" };
+        var jsonBuilder = new StringBuilder();
+        jsonBuilder.Append('[');
 
         try
         {
-            Logs = GetRequestInfo(ReadType.Prefix);
+            var logs = GetRequestInfo(ReadType.Prefix);
+            var apiWeeks = (from n in logs
+                           group n by new { n.Week, n.Url } into g
+                           select new ApiWeek
+                           {
+                               week = g.Key.Week,
+                               url = g.Key.Url,
+                               count = g.Count(),
+                           }).ToList();
 
-            apiWeeks = (from n in Logs
-                        group n by new { n.Week, n.Url }
-                        into g
-                        select new ApiWeek
-                        {
-                            week = g.Key.Week,
-                            url = g.Key.Url,
-                            count = g.Count(),
-                        }).ToList();
+            var weeks = apiWeeks.GroupBy(x => x.week).Select(s => s.First()).ToList();
+            var isFirstWeek = true;
 
-            //apiWeeks = apiWeeks.OrderByDescending(d => d.count).Take(8).ToList();
-        }
-        catch (Exception)
-        {
-        }
-
-        StringBuilder jsonBuilder = new StringBuilder();
-        jsonBuilder.Append("[");
-
-        var weeks = apiWeeks.GroupBy(x => new { x.week }).Select(s => s.First()).ToList();
-        foreach (var week in weeks)
-        {
-            var apiweeksCurrentWeek = apiWeeks.Where(d => d.week == week.week).OrderByDescending(d => d.count).Take(5).ToList();
-            jsonBuilder.Append("{");
-
-            jsonBuilder.Append("\"");
-            jsonBuilder.Append("日期");
-            jsonBuilder.Append("\":\"");
-            jsonBuilder.Append(week.week);
-            jsonBuilder.Append("\",");
-
-            foreach (var item in apiweeksCurrentWeek)
+            foreach (var week in weeks)
             {
-                columns.Add(item.url);
-                jsonBuilder.Append("\"");
-                jsonBuilder.Append(item.url);
-                jsonBuilder.Append("\":\"");
-                jsonBuilder.Append(item.count);
-                jsonBuilder.Append("\",");
-            }
+                if (!isFirstWeek)
+                {
+                    jsonBuilder.Append(',');
+                }
+                isFirstWeek = false;
 
-            if (apiweeksCurrentWeek.Count > 0)
-            {
-                jsonBuilder.Remove(jsonBuilder.Length - 1, 1);
-            }
+                var apiweeksCurrentWeek = apiWeeks
+                    .Where(d => d.week == week.week)
+                    .OrderByDescending(d => d.count)
+                    .Take(MaxWeekApis)
+                    .ToList();
 
-            jsonBuilder.Append("},");
+                jsonBuilder.Append('{');
+                jsonBuilder.Append($"\"日期\":\"{week.week}\"");
+
+                foreach (var item in apiweeksCurrentWeek)
+                {
+                    columns.Add(item.url);
+                    jsonBuilder.Append($",\"{item.url}\":\"{item.count}\"");
+                }
+
+                jsonBuilder.Append('}');
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "获取每周API信息失败");
         }
 
-        if (weeks.Count > 0)
+        jsonBuilder.Append(']');
+
+        return new RequestApiWeekView
         {
-            jsonBuilder.Remove(jsonBuilder.Length - 1, 1);
-        }
-
-        jsonBuilder.Append("]");
-
-        //columns.AddRange(apiWeeks.OrderByDescending(d => d.count).Take(8).Select(d => d.url).ToList());
-        columns = columns.Distinct().ToList();
-
-        return new RequestApiWeekView()
-        {
-            columns = columns,
+            columns = columns.Distinct().ToList(),
             rows = jsonBuilder.ToString(),
         };
     }
 
     public static AccessApiDateView AccessApiByDate()
     {
-        List<RequestInfo> Logs = new List<RequestInfo>();
-        List<ApiDate> apiDates = new List<ApiDate>();
         try
         {
-            Logs = GetRequestInfo(ReadType.Prefix);
+            var logs = GetRequestInfo(ReadType.Prefix);
+            var apiDates = (from n in logs
+                           group n by n.Date into g
+                           select new ApiDate
+                           {
+                               date = g.Key,
+                               count = g.Count(),
+                           })
+                           .OrderByDescending(d => d.date)
+                           .Take(MaxDateEntries)
+                           .OrderBy(d => d.date)
+                           .ToList();
 
-            apiDates = (from n in Logs
-                        group n by new { n.Date }
-                        into g
-                        select new ApiDate
-                        {
-                            date = g.Key.Date,
-                            count = g.Count(),
-                        }).ToList();
-
-            apiDates = apiDates.OrderByDescending(d => d.date).Take(7).ToList();
+            return new AccessApiDateView
+            {
+                columns = new[] { "date", "count" },
+                rows = apiDates,
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "获取每日API访问数据失败");
+            return new AccessApiDateView
+            {
+                columns = new[] { "date", "count" },
+                rows = new List<ApiDate>(),
+            };
         }
-
-        return new AccessApiDateView()
-        {
-            columns = new string[] { "date", "count" },
-            rows = apiDates.OrderBy(d => d.date).ToList(),
-        };
     }
 
     public static AccessApiDateView AccessApiByHour()
     {
-        List<RequestInfo> Logs = new List<RequestInfo>();
-        List<ApiDate> apiDates = new List<ApiDate>();
         try
         {
-            Logs = GetRequestInfo(ReadType.Prefix);
+            var logs = GetRequestInfo(ReadType.Prefix);
+            var apiDates = (from n in logs
+                           where n.Datetime.ObjToDate() >= DateTime.Today
+                           group n by n.Datetime.ObjToDate().Hour into g
+                           select new ApiDate
+                           {
+                               date = g.Key.ToString("00"),
+                               count = g.Count(),
+                           })
+                           .OrderBy(d => d.date)
+                           .Take(MaxHourEntries)
+                           .ToList();
 
-            apiDates = (from n in Logs
-                        where n.Datetime.ObjToDate() >= DateTime.Today
-                        group n by new { hour = n.Datetime.ObjToDate().Hour }
-                        into g
-                        select new ApiDate
-                        {
-                            date = g.Key.hour.ToString("00"),
-                            count = g.Count(),
-                        }).ToList();
-
-            apiDates = apiDates.OrderBy(d => d.date).Take(24).ToList();
+            return new AccessApiDateView
+            {
+                columns = new[] { "date", "count" },
+                rows = apiDates,
+            };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Error(ex, "获取每小时API访问数据失败");
+            return new AccessApiDateView
+            {
+                columns = new[] { "date", "count" },
+                rows = new List<ApiDate>(),
+            };
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
         }
 
-        return new AccessApiDateView()
+        if (disposing)
         {
-            columns = new string[] { "date", "count" },
-            rows = apiDates,
-        };
+            _logWriteLock?.Dispose();
+        }
+
+        _disposed = true;
     }
 }
 
