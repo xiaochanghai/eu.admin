@@ -16,10 +16,10 @@ public static class Logger
     {
         get
         {
-            return CurrentPath + "\\Log\\Queue\\";
+            return CurrentPath + "\\Logs\\Queue\\";
         }
     }
-    private static string _logPath { get { return CurrentPath + "\\Log\\"; } }
+    private static string _logPath { get { return CurrentPath + "/Logs/"; } }
     static Logger()
     {
         var baseDirectory = AppContext.BaseDirectory;
@@ -161,7 +161,7 @@ public static class Logger
     {
         try
         {
-            FileHelper.WriteFile(_loggerPath + "WriteError\\", $"{DateTime.Now.ToString("yyyyMMdd")}.txt", message + "\r\n");
+            FileHelper.WriteFile(_loggerPath + "WriteError/", $"{DateTime.Now.ToString("yyyyMMdd")}.txt", message + "\r\n");
         }
         catch (Exception ex)
         {
@@ -224,12 +224,12 @@ public static class Logger
                 }
                 if (isForce == true)
                 {
-                    FileHelper.WriteFile(_logPath + folder + "\\", fileName, message + "\r\n", true);
+                    FileHelper.WriteFile(_logPath + folder + "/", fileName, message + "\r\n", true);
                 }
                 else
                 {
                     //判断设置是否需要记录日志
-                    FileHelper.WriteFile(_logPath + folder + "\\", fileName, message + "\r\n", true);
+                    FileHelper.WriteFile(_logPath + folder + "/", fileName, message + "\r\n", true);
                 }
             }
         }
