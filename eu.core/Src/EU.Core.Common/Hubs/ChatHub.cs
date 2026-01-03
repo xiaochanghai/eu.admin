@@ -1,72 +1,153 @@
-﻿using EU.Core.Common.Caches;
+using EU.Core.Common.Caches;
 using EU.Core.Common.Const;
-using EU.Core.Common.LogHelper;
 using Microsoft.AspNetCore.SignalR;
+using Serilog;
 
 namespace EU.Core.Hubs;
 
+/// <summary>
+/// 聊天 SignalR Hub
+/// </summary>
 public class ChatHub : Hub
 {
-    private RedisCacheService Redis = new(5);
-    private string cacheKey = "SignalRConnection";
+    private readonly RedisCacheService _redis = new(5);
+    private const string CacheKeyPrefix = "SignalRConnection";
+
+    /// <summary>
+    /// 发送消息给所有客户端
+    /// </summary>
+    /// <param name="user">发送者</param>
+    /// <param name="message">消息内容</param>
     public async Task SendMessage(string user, string message)
     {
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+        if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(message))
+        {
+            Log.Warning("SendMessage 接收到空的用户或消息");
+            return;
+        }
+
+        try
+        {
+            await Clients.All.SendAsync("ReceiveMessage", user, message);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "发送消息失败: User={User}, Message={Message}", user, message);
+            throw;
+        }
     }
 
-    #region 客户端连接时触发
     /// <summary>
     /// 客户端连接时触发
     /// </summary>
-    /// <returns></returns>
     public override async Task OnConnectedAsync()
     {
         var connectionId = Context.ConnectionId;
-        var arg = $"{connectionId} joined";
-        Logger.WriteLog("SignalR", arg);
-        await base.OnConnectedAsync();
-        await Clients.Client(connectionId).SendAsync(SignalRConsts.METHOD_ON_CONNECTED, connectionId);
-    }
-    #endregion
 
-    #region 客户端注册
+        try
+        {
+            Log.Information("SignalR 客户端连接: ConnectionId={ConnectionId}", connectionId);
+
+            await base.OnConnectedAsync();
+            await Clients.Client(connectionId).SendAsync(SignalRConsts.METHOD_ON_CONNECTED, connectionId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "客户端连接处理失败: ConnectionId={ConnectionId}", connectionId);
+            throw;
+        }
+    }
+
     /// <summary>
     /// 客户端注册
     /// </summary>
-    /// <param name="sessionid"></param>
-    /// <returns></returns>
-    public Task SendRegister(string userId)
+    /// <param name="userId">用户ID</param>
+    public async Task SendRegister(string userId)
     {
-        var connectionId = Context.ConnectionId;
-        var arg = $"{connectionId} register ,userId:{userId}";
-        Logger.WriteLog("SignalR", arg);
-        var connectionIds = Redis.Get<List<string>>(cacheKey + "-" + userId) ?? new List<string>();
-        if (!connectionIds.Where(o => o == connectionId).Any())
-            connectionIds.Add(connectionId);
-        Redis.AddObject(cacheKey + "-" + userId, connectionIds);
-        Redis.Add(cacheKey + "-" + connectionId, userId);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Log.Warning("SendRegister 接收到空的 userId");
+            return;
+        }
 
-        return Clients.Client(connectionId).SendAsync(SignalRConsts.METHOD_ON_CONSOLE, $"{DateTime.Now} register success");
+        var connectionId = Context.ConnectionId;
+
+        try
+        {
+            Log.Information("SignalR 客户端注册: ConnectionId={ConnectionId}, UserId={UserId}", connectionId, userId);
+
+            // 获取用户的连接ID列表
+            var userConnectionKey = GetUserConnectionKey(userId);
+            var connectionIds = _redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
+
+            // 如果连接ID不存在，则添加
+            if (!connectionIds.Contains(connectionId))
+            {
+                connectionIds.Add(connectionId);
+                _redis.AddObject(userConnectionKey, connectionIds);
+            }
+
+            // 存储连接ID到用户ID的映射
+            var connectionUserKey = GetConnectionUserKey(connectionId);
+            _redis.Add(connectionUserKey, userId);
+
+            await Clients.Client(connectionId).SendAsync(
+                SignalRConsts.METHOD_ON_CONSOLE,
+                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} 注册成功");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "客户端注册失败: ConnectionId={ConnectionId}, UserId={UserId}", connectionId, userId);
+            throw;
+        }
     }
-    #endregion
 
     /// <summary>
     /// 客户端断开时触发
     /// </summary>
-    /// <param name="ex"></param>
-    /// <returns></returns>
+    /// <param name="ex">断开异常信息</param>
     public override async Task OnDisconnectedAsync(Exception ex)
     {
         var connectionId = Context.ConnectionId;
-        var arg = $"{connectionId} left";
 
-        var userId = Redis.Get(cacheKey + "-" + connectionId);
-        var connectionIds = Redis.Get<List<string>>(cacheKey + "-" + userId) ?? new List<string>();
-        var index = connectionIds.FindIndex(o => o == connectionId);
-        if (index > -1)
-            connectionIds.RemoveAt(index);
-        Redis.AddObject(cacheKey + "-" + userId, connectionIds);
-        Redis.Remove(cacheKey + "-" + connectionId);
-        await base.OnDisconnectedAsync(ex);
+        try
+        {
+            Log.Information("SignalR 客户端断开: ConnectionId={ConnectionId}", connectionId);
+
+            // 获取用户ID
+            var connectionUserKey = GetConnectionUserKey(connectionId);
+            var userId = _redis.Get(connectionUserKey);
+
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                // 从用户的连接列表中移除此连接
+                var userConnectionKey = GetUserConnectionKey(userId);
+                var connectionIds = _redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
+
+                if (connectionIds.Remove(connectionId))
+                {
+                    _redis.AddObject(userConnectionKey, connectionIds);
+                }
+
+                // 删除连接到用户的映射
+                _redis.Remove(connectionUserKey);
+            }
+
+            await base.OnDisconnectedAsync(ex);
+        }
+        catch (Exception error)
+        {
+            Log.Error(error, "客户端断开处理失败: ConnectionId={ConnectionId}", connectionId);
+        }
     }
+
+    /// <summary>
+    /// 获取用户连接缓存键
+    /// </summary>
+    private static string GetUserConnectionKey(string userId) => $"{CacheKeyPrefix}-{userId}";
+
+    /// <summary>
+    /// 获取连接用户缓存键
+    /// </summary>
+    private static string GetConnectionUserKey(string connectionId) => $"{CacheKeyPrefix}-{connectionId}";
 }
