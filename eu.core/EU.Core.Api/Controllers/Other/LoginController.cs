@@ -289,7 +289,7 @@ namespace EU.Core.Controllers
                 if (result.Success)
                 {
                     HttpContext.SuccessSwagger();
-                    HttpContext.SuccessSwaggerJwt(result.Data.token);
+                    HttpContext.SetSwaggerJwtToken(result.Data.token);
                     return new { result = true };
                 }
             }
