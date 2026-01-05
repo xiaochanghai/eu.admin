@@ -9,6 +9,8 @@ namespace EU.Core.Common.Caches;
 /// </summary>
 public class RedisCacheService : IDisposable
 {
+    #region 私有字段
+
     /// <summary>
     /// Redis数据库实例
     /// </summary>
@@ -44,6 +46,10 @@ public class RedisCacheService : IDisposable
     /// </summary>
     public static IMemoryCache memoryCache = new MemoryCache(new MemoryCacheOptions());
 
+    #endregion
+
+    #region 构造函数
+
     /// <summary>
     /// 初始化Redis缓存服务
     /// </summary>
@@ -55,6 +61,10 @@ public class RedisCacheService : IDisposable
         _cache = _connection.GetDatabase(_num);
         _instance = "nc";
     }
+
+    #endregion
+
+    #region 基础操作
 
     /// <summary>
     /// 清空当前数据库中的所有数据
@@ -120,6 +130,10 @@ public class RedisCacheService : IDisposable
         return _instance + key;
     }
 
+    #endregion
+
+    #region 键操作
+
     /// <summary>
     /// 验证缓存项是否存在
     /// </summary>
@@ -140,11 +154,15 @@ public class RedisCacheService : IDisposable
     //{
     //    if (string.IsNullOrEmpty(key))
     //        throw new ArgumentNullException(nameof(key));
-         
+
     //    var keys = _cache.keyex
     //    return keys.Select(x => x.ObjToString()).ToList();
 
     //}
+
+    #endregion
+
+    #region 列表操作
 
     /// <summary>
     /// 向列表左侧添加值
@@ -208,6 +226,10 @@ public class RedisCacheService : IDisposable
         _cache.ListTrim(key, keepIndex, -1);
     }
 
+    #endregion
+
+    #region 删除操作
+
     /// <summary>
     /// 删除缓存
     /// </summary>
@@ -269,6 +291,10 @@ public class RedisCacheService : IDisposable
         }
     }
 
+    #endregion
+
+    #region 获取操作
+
     /// <summary>
     /// 获取缓存并反序列化为指定类型
     /// </summary>
@@ -321,6 +347,10 @@ public class RedisCacheService : IDisposable
         }
         return dict;
     }
+
+    #endregion
+
+    #region 修改操作
 
     /// <summary>
     /// 修改缓存
@@ -394,15 +424,9 @@ public class RedisCacheService : IDisposable
         return AddObject(key, value);
     }
 
-    /// <summary>
-    /// 释放资源
-    /// </summary>
-    public void Dispose()
-    {
-        if (_connection != null)
-            _connection.Dispose();
-        GC.SuppressFinalize(this);
-    }
+    #endregion
+
+    #region 添加操作
 
     /// <summary>
     /// 添加对象缓存
@@ -446,6 +470,10 @@ public class RedisCacheService : IDisposable
     }
 
     public bool Add(Guid key, string value, TimeSpan? expiresIn = null, bool isSliding = false) => Add(key.ObjToString(), value, expiresIn, isSliding);
+
+    #endregion
+
+    #region 哈希表操作
 
     /// <summary>
     /// 在哈希表中设置字段值
@@ -535,4 +563,20 @@ public class RedisCacheService : IDisposable
             return null;
         return JsonConvert.DeserializeObject<T>(value);
     }
+
+    #endregion
+
+    #region 资源释放
+
+    /// <summary>
+    /// 释放资源
+    /// </summary>
+    public void Dispose()
+    {
+        if (_connection != null)
+            _connection.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    #endregion
 }
