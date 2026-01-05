@@ -226,6 +226,22 @@ public class RedisCacheService : IDisposable
     /// <summary>
     /// 删除缓存
     /// </summary>
+    /// <param name="key">缓存键</param>
+    /// <param name="hashField"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<bool> RemoveObject(string key, string hashField)
+    {
+        if (string.IsNullOrEmpty(key))
+            throw new ArgumentNullException(nameof(key));
+
+        key = _redisKeyPrefix + key;
+        return await _cache.HashDeleteAsync(key, hashField);
+    }
+
+    /// <summary>
+    /// 删除缓存
+    /// </summary>
     /// <param name="key">缓存键（Guid类型）</param>
     /// <returns>是否删除成功</returns>
     /// <exception cref="ArgumentNullException">键为空时抛出异常</exception>
