@@ -72,7 +72,7 @@ public class LogLock : IDisposable
         {
             _logWriteLock.EnterWriteLock();
 
-            var folderPath = Path.Combine(_contentRoot, LogFolderName, DateTime.Now.ToString(DateFormat));
+                var folderPath = Path.Combine(_contentRoot, LogFolderName, DateTime.Now.ToString(DateFormat));
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);

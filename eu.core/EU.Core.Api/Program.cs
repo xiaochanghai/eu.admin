@@ -57,8 +57,8 @@ builder.Services.AddAllOptionRegister();
 //builder.Services.AddUiFilesZipSetup(builder.Environment);
 ServiceExtensions.Init();
 
-Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool1();
-Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool1();
+Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool();
+Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool();
 RoutePrefix.Name = AppSettings.app(["AppSettings", "SvcName"]).ObjToString();
 //ChatHelper.InitChat();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
