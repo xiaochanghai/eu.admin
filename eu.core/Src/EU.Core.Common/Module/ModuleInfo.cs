@@ -6,51 +6,95 @@ using SqlSugar;
 
 namespace EU.Core.Common.Module;
 
+/// <summary>
+/// 模块信息管理类
+/// 提供模块信息的缓存管理、查询和格式化等功能
+/// </summary>
 public class ModuleInfo
 {
-    private static RedisCacheService Redis = new(2);
+    #region 私有字段
+
+    /// <summary>
+    /// Redis 缓存服务实例（数据库索引: 2）
+    /// </summary>
+    private static readonly RedisCacheService Redis = new(2);
+
+    /// <summary>
+    /// 数据库上下文
+    /// </summary>
     private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
 
-    #region 获取模块
+    #endregion
+
+    #region 模块信息查询
+
     /// <summary>
-    /// 获取模块
+    /// 根据模块代码获取模块信息
+    /// 优先从缓存读取，缓存不存在时从数据库加载并更新缓存
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
-    /// <returns></returns>
+    /// <returns>模块信息对象，不存在时返回 null</returns>
     public static SmModules GetModuleInfo(string moduleCode)
     {
+        if (string.IsNullOrWhiteSpace(moduleCode))
+            return null;
+
         var module = Redis.Get<SmModules>("SM_MODULE", moduleCode);
         if (module == null)
         {
             var moduleList = GetModuleList();
-            module = moduleList.Where(x => x.ModuleCode == moduleCode).FirstOrDefault();
+            module = moduleList.FirstOrDefault(x => x.ModuleCode == moduleCode);
 
+            // 重新缓存所有模块信息
             Redis.Remove("SM_MODULE");
-            moduleList.ForEach(item => Redis.AddObject("SM_MODULE", item.ModuleCode, item));
+            foreach (var item in moduleList)
+            {
+                Redis.AddObject("SM_MODULE", item.ModuleCode, item);
+            }
         }
         return module;
     }
 
+    /// <summary>
+    /// 获取指定模块的所有下级模块
+    /// </summary>
+    /// <param name="moduleCode">父模块代码</param>
+    /// <returns>下级模块列表</returns>
     public static List<SmModules> GetLowerModules(string moduleCode)
     {
+        if (string.IsNullOrWhiteSpace(moduleCode))
+            return new List<SmModules>();
+
+        var cacheKey = $"SM_MODULE_LOWER_{moduleCode}";
         var modules = Redis.Get<List<SmModules>>("SM_MODULE_LOWER", moduleCode);
+
         if (modules == null)
         {
             var module = GetModuleInfo(moduleCode);
-            modules = GetModuleList().Where(x => x.BelongModuleId == module.ID).ToList();
+            if (module != null)
+            {
+                modules = GetModuleList().Where(x => x.BelongModuleId == module.ID).ToList();
+            }
+            else
+            {
+                modules = new List<SmModules>();
+            }
             Redis.AddObject("SM_MODULE_LOWER", moduleCode, modules);
         }
+
         return modules;
     }
 
     /// <summary>
-    /// 
+    /// 获取所有模块列表
+    /// 优先从缓存读取，缓存不存在时从数据库加载
     /// </summary>
-    /// <returns></returns>
+    /// <returns>模块列表，按模块代码排序</returns>
     public static List<SmModules> GetModuleList()
     {
         var code = CacheKeys.SmModule.ToString();
         var moduleList = Redis.Get<List<SmModules>>(code);
+
         if (moduleList == null)
         {
             moduleList = Db.Queryable<SmModules>()
@@ -58,95 +102,126 @@ public class ModuleInfo
                 .ToList();
             Redis.AddObject(code, moduleList);
         }
-        return moduleList;
+
+        return moduleList ?? new List<SmModules>();
     }
 
+    /// <summary>
+    /// 根据模块 ID 获取模块名称
+    /// </summary>
+    /// <param name="ID">模块 ID</param>
+    /// <returns>模块名称，不存在时返回空字符串</returns>
     public static string GetModuleNameById(Guid? ID)
     {
-        string name = string.Empty;
+        if (ID == null || ID == Guid.Empty)
+            return string.Empty;
+
         var moduleList = GetModuleList();
-        var module = moduleList.Where(x => x.ID == ID).FirstOrDefault();
-        if (module != null)
-            name = module.ModuleName;
-        return name;
+        var module = moduleList.FirstOrDefault(x => x.ID == ID);
+
+        return module?.ModuleName ?? string.Empty;
     }
 
+    /// <summary>
+    /// 根据模块 ID 获取模块代码
+    /// </summary>
+    /// <param name="ID">模块 ID</param>
+    /// <returns>模块代码，不存在时返回空字符串</returns>
     public static string GetModuleCodeById(Guid? ID)
     {
-        string name = string.Empty;
+        if (ID == null || ID == Guid.Empty)
+            return string.Empty;
+
         var moduleList = GetModuleList();
-        var module = moduleList.Where(x => x.ID == ID).FirstOrDefault();
-        if (module != null)
-            name = module.ModuleCode;
-        return name;
+        var module = moduleList.FirstOrDefault(x => x.ID == ID);
+
+        return module?.ModuleCode ?? string.Empty;
     }
+
     #endregion
 
-    #region 获取模块是否自动执行查询
+    #region 模块配置查询
+
     /// <summary>
-    /// 获取模块是否自动执行查询
+    /// 获取模块是否自动执行查询的配置
     /// </summary>
     /// <param name="moduleCode">模块代码</param>
-    /// <returns></returns>
+    /// <returns>是否自动执行查询，模块不存在时返回 false</returns>
     public static bool? GetIsExecQuery(string moduleCode)
     {
-        try
-        {
-            bool? result = false;
-            var Module = GetModuleInfo(moduleCode);
-            if (Module != null)
-                result = Module.IsExecQuery;
-            return result;
-        }
-        catch (Exception) { throw; }
+        if (string.IsNullOrWhiteSpace(moduleCode))
+            return false;
+
+        var module = GetModuleInfo(moduleCode);
+        return module?.IsExecQuery ?? false;
     }
+
     #endregion
 
+    #region 缓存管理
+
     /// <summary>
-    /// 初始化
+    /// 初始化模块缓存
+    /// 清除现有缓存并重新加载所有模块数据
     /// </summary>
     public static void Init()
     {
         var code = CacheKeys.SmModule.ToString();
 
+        // 清除所有模块相关缓存
         Redis.Remove("SM_MODULE");
         Redis.Remove(code);
+
+        // 重新加载模块列表到缓存
         GetModuleList();
-        GetModuleInfo("");
     }
 
+    /// <summary>
+    /// 清除所有模块缓存
+    /// </summary>
+    public static void ClearCache()
+    {
+        var code = CacheKeys.SmModule.ToString();
+        Redis.Remove("SM_MODULE");
+        Redis.Remove("SM_MODULE_LOWER");
+        Redis.Remove(code);
+    }
+
+    #endregion
+
+    #region SQL 变量格式化
+
+    /// <summary>
+    /// 格式化 SQL 字符串中的变量占位符
+    /// 将特定的占位符替换为实际的用户上下文值
+    /// </summary>
+    /// <param name="sqlString">包含占位符的 SQL 字符串</param>
+    /// <returns>格式化后的 SQL 字符串</returns>
+    /// <remarks>
+    /// 支持的占位符：
+    /// - [CompanyId]: 当前公司 ID
+    /// - [QueryGroupId]: 当前查询组 ID
+    /// - [UserId]: 当前用户 ID
+    /// </remarks>
     public static string FormatSqlVariable(string sqlString)
     {
-        try
-        {
-            if (sqlString.IndexOf("[CompanyId]") > -1)
-                sqlString = sqlString.Replace("[CompanyId]", Utility.GetCompanyId());
-
-            if (sqlString.IndexOf("[QueryGroupId]") > -1)
-                sqlString = sqlString.Replace("[QueryGroupId]", Utility.GetGroupId());
-
-
-            if (sqlString.IndexOf("[UserId]") > -1)
-                sqlString = sqlString.Replace("[UserId]", Utility.GetUserIdString());
-
-            //if (sqlString.IndexOf("[UserCode]") > -1)
-            //{
-            //    sqlString = sqlString.Replace("[UserCode]", UserCode);
-            //}
-
-            //if (sqlString.IndexOf("[Language]") > -1)
-            //{
-            //    sqlString = sqlString.Replace("[Language]", Resource.GetCultureInfoName());
-            //}
-
-            //if (sqlString.IndexOf("[EmployeeId]") > -1)
-            //{
-            //    sqlString = sqlString.Replace("[EmployeeId]", EmployeeId);
-            //}
-
+        if (string.IsNullOrWhiteSpace(sqlString))
             return sqlString;
-        }
-        catch (Exception) { throw; }
+
+        // 替换公司 ID
+        if (sqlString.Contains("[CompanyId]"))
+            sqlString = sqlString.Replace("[CompanyId]", Utility.GetCompanyId());
+
+        // 替换查询组 ID
+        if (sqlString.Contains("[QueryGroupId]"))
+            sqlString = sqlString.Replace("[QueryGroupId]", Utility.GetGroupId());
+
+        // 替换用户 ID
+        if (sqlString.Contains("[UserId]"))
+            sqlString = sqlString.Replace("[UserId]", Utility.GetUserIdString());
+
+        return sqlString;
     }
 
+    #endregion
 }
