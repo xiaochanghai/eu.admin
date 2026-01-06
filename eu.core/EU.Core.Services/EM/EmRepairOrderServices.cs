@@ -15,7 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using EU.Core.Model.ViewModels;
 using Microsoft.AspNetCore.Http;
 
 namespace EU.Core.Services;
