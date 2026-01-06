@@ -10,10 +10,7 @@ import { message } from "@/hooks/useMessage";
 import { singleDelete } from "@/api/modules/module";
 
 // Hooks
-import { useProTableData } from "@/hooks/useProTableData";
-import { useProTableColumns } from "@/hooks/useProTableColumns";
-import { useProTableBatchOps } from "@/hooks/useProTableBatchOps";
-import { useProTableToolbar } from "@/hooks/useProTableToolbar";
+import { useProTableData, useProTableColumns, useProTableBatchOps, useProTableToolbar } from "@/hooks/ProTable";
 
 // Components
 import { Toolbar, RecordLogModal, UploadExcelModal } from "./components";
@@ -59,16 +56,7 @@ const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, d
  * 提供模块化的表格功能，包括数据请求、操作列、工具栏、批量操作等
  */
 const SmProTable: React.FC<ProTableProps> = React.memo(props => {
-  const {
-    moduleInfo,
-    IsView,
-    onEdit,
-    masterId,
-    formRef,
-    expendHideAction,
-    expendAction,
-    ...restProps
-  } = props;
+  const { moduleInfo, IsView, onEdit, masterId, formRef, expendHideAction, expendAction, ...restProps } = props;
 
   const { moduleCode, columns, url, beforeActions, dropActions } = moduleInfo;
   const actionRef = useRef<ActionType>();
@@ -243,7 +231,9 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
             <>
               {record.ID !== SUM_ROW_ID && (
                 <>
-                  {optionAuthButton.Update && !IsView && <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />}
+                  {optionAuthButton.Update && !IsView && (
+                    <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
+                  )}
                   {optionAuthButton.View && (
                     <Button
                       type="dashed"
