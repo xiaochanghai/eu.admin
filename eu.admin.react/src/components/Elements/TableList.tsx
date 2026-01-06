@@ -159,7 +159,7 @@ export const TableList: React.FC<TableListProps> = props => {
    * @param recordId 记录ID
    * @param viewMode 是否为查看模式
    */
-  const handleEdit = (recordId: string, viewMode: boolean) => {
+  const handleEdit = (recordId: string | null, viewMode?: boolean) => {
     dispatch(setId({ moduleCode, id: recordId }));
 
     if (moduleInfo.openType === EditOpenType.Modal) {

@@ -63,26 +63,26 @@ export interface ModuleInfo {
   Success: boolean;
   UserModuleColumn: {};
   actionCount: number;
-  actionData: [];
-  actions: [];
+  actionData: any[];
+  actions: string[];
   beforeActions: ModuleInfoBeforeAction[];
-  children: [];
+  children: any[];
   columns: ProColumns[];
-  dropActions: [];
-  formColumns: [];
+  dropActions: any[];
+  formColumns: any[];
   formPage: string;
   formPageWidth: number;
-  hideMenu: [];
+  hideMenu: any[];
   isDetail: false;
   masterColumn: string;
-  menuData: [];
+  menuData: any[];
   moduleId: string;
   moduleName: string;
   moduleCode: string;
   moduleType: string;
   openType: string;
   url: string;
-  customActionData: [];
+  customActionData: any[];
 }
 export interface ModuleInfo1 {
   ModuleName: string;
