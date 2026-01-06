@@ -19,7 +19,6 @@ import ErrorBoundary from "@/components/Error/ErrorBoundary";
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
-  setupAppVersionNotification();
 
   const { isDark, primary, isHappy, componentSize, compactAlgorithm, borderRadius, language } = useSelector(
     (state: RootState) => ({
@@ -52,6 +51,11 @@ const App: React.FC = () => {
   useEffect(() => {
     initLanguage();
   }, [language]);
+
+  // Setup app version notification (only once on mount)
+  useEffect(() => {
+    setupAppVersionNotification();
+  }, []);
 
   return (
     <ErrorBoundary>
