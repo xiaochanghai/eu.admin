@@ -6,6 +6,7 @@ import Login from "@/views/login/index";
 import NotAuth from "@/components/Error/403";
 import NotFound from "@/components/Error/404";
 import NotNetwork from "@/components/Error/500";
+import ErrorTest from "@/components/Error/ErrorTest";
 import RouterGuard from "../helper/RouterGuard";
 
 /**
@@ -43,6 +44,14 @@ export const staticRouter: RouteObjectType[] = [
     element: <NotNetwork />,
     meta: {
       title: "500页面"
+    }
+  },
+  // ErrorBoundary test (development only)
+  {
+    path: "/error-test",
+    element: <ErrorTest />,
+    meta: {
+      title: "ErrorBoundary测试"
     }
   },
   // Set <Loading /> here first to prevent page refresh 404

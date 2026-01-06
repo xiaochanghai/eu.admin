@@ -15,6 +15,7 @@ import zhCN from "antd/locale/zh_CN";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import { setupAppVersionNotification } from "./plugins";
+import ErrorBoundary from "@/components/Error/ErrorBoundary";
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -53,25 +54,27 @@ const App: React.FC = () => {
   }, [language]);
 
   return (
-    <ConfigProvider
-      locale={language === "zh" ? zhCN : enUS}
-      componentSize={componentSize}
-      // autoInsertSpaceInButton={true}
-      theme={{
-        token: { colorPrimary: primary, borderRadius },
-        algorithm: algorithm()
-      }}
-    >
-      <HappyProvider disabled={!isHappy}>
-        <AppProvider>
-          <I18nextProvider i18n={i18n}>
-            <RefreshProvider>
-              <RouterProvider />
-            </RefreshProvider>
-          </I18nextProvider>
-        </AppProvider>
-      </HappyProvider>
-    </ConfigProvider>
+    <ErrorBoundary>
+      <ConfigProvider
+        locale={language === "zh" ? zhCN : enUS}
+        componentSize={componentSize}
+        // autoInsertSpaceInButton={true}
+        theme={{
+          token: { colorPrimary: primary, borderRadius },
+          algorithm: algorithm()
+        }}
+      >
+        <HappyProvider disabled={!isHappy}>
+          <AppProvider>
+            <I18nextProvider i18n={i18n}>
+              <RefreshProvider>
+                <RouterProvider />
+              </RefreshProvider>
+            </I18nextProvider>
+          </AppProvider>
+        </HappyProvider>
+      </ConfigProvider>
+    </ErrorBoundary>
   );
 };
 
