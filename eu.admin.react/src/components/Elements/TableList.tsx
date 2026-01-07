@@ -172,7 +172,7 @@ export const TableList: React.FC<TableListProps> = props => {
       changePage(ViewType.PAGE, recordId, viewMode);
     }
   };
-
+  const buttonDisable = isView === true ? isView : disabled;
   return (
     <>
       {moduleInfo && moduleInfo.Success === true ? (
@@ -214,19 +214,14 @@ export const TableList: React.FC<TableListProps> = props => {
                 <Space>
                   <Button
                     key="save"
-                    disabled={isView ?? disabled}
+                    disabled={buttonDisable}
                     type="primary"
                     block={true}
                     onClick={() => formPageRef.current?.onSave()}
                   >
                     {t("formOption.save")}
                   </Button>
-                  <Button
-                    key="saveAndAdd"
-                    disabled={isView ?? disabled}
-                    block={true}
-                    onClick={() => formPageRef.current?.onSaveAdd()}
-                  >
+                  <Button key="saveAndAdd" disabled={buttonDisable} block={true} onClick={() => formPageRef.current?.onSaveAdd()}>
                     {t("formOption.saveAndAdd")}
                   </Button>
                   <Button key="back" type="text" block={true} onClick={onClose}>
