@@ -32,7 +32,7 @@ export const Skeleton = ({ type = "default", rows = 3, active = true }: Skeleton
       case "form":
         return (
           <div className="skeleton-box">
-            <Card size="small" style={{ width: "100%" }}>
+            <Card size="small" style={{ width: "100%" }} variant="borderless">
               <AntSkeleton.Input active={active} style={{ width: 200, marginBottom: 16 }} />
               <AntSkeleton active={active} paragraph={{ rows: 2 }} />
               <AntSkeleton.Input active={active} style={{ width: 150, marginBottom: 16 }} />
