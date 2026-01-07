@@ -144,22 +144,18 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
     modifyType,
     disabledToolbar,
     auditStatus,
-    orderStatus,
     moduleInfo,
     querySingleData,
     onFinish,
     onSaveAdd,
     onValuesChange
-  } = useFormPage({ ...hookOptions, onClose, setFormPageId });
+  } = useFormPage({ ...hookOptions, onClose, setFormPageId, computeModifyType });
 
   if (!moduleInfo) {
     return <Loading />;
   }
 
   const { formColumns, openType, children } = moduleInfo;
-
-  // 计算最终的 modifyType
-  const finalModifyType = computeModifyType ? computeModifyType({ modifyType, auditStatus, orderStatus }) : modifyType;
 
   // 计算是否禁用表单
   const isFormDisabled = hookOptions.IsView === true ? true : disabled === true ? true : disabledToolbar;
@@ -182,10 +178,10 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
       key: String(index),
       label: childModule.ModuleName,
       children: (
-        <TableList moduleCode={childModule.ModuleCode} masterId={id} IsView={hookOptions.IsView} modifyType={finalModifyType} />
+        <TableList moduleCode={childModule.ModuleCode} masterId={id} IsView={hookOptions.IsView} modifyType={modifyType} />
       )
     }));
-  }, [childrenItems, children, id, hookOptions.IsView, finalModifyType]);
+  }, [childrenItems, children, id, hookOptions.IsView, modifyType]);
 
   // 表单内容渲染
   const renderFormContent = () => (
@@ -195,7 +191,7 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
         form,
         disabled,
         moduleInfo,
-        modifyType: finalModifyType
+        modifyType: modifyType
       })}
     </>
   );
@@ -206,7 +202,7 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
       moduleInfo={moduleInfo}
       disabled={isFormDisabled}
       onFinishAdd={onSaveAdd}
-      modifyType={finalModifyType}
+      modifyType={modifyType}
       auditStatus={auditStatus}
       masterId={id}
       onBack={
@@ -262,14 +258,14 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
                   renderDetailTable({
                     tableRef,
                     masterId: id,
-                    modifyType: finalModifyType,
+                    modifyType: modifyType,
                     moduleInfo
                   })
                 ) : (
                   <EditableProTable
                     moduleCode={detailModuleCode}
                     tableRef={tableRef}
-                    modifyType={finalModifyType}
+                    modifyType={modifyType}
                     masterId={id}
                     addCallBack={onDetailAdd}
                     editableCallBack={onDetailEdit}
@@ -284,7 +280,7 @@ const BaseFormPage: React.FC<BaseFormPageProps> = props => {
             <>
               <div style={{ height: 20 }}></div>
               <Card title="附件" variant="borderless">
-                <Attachment Id={id} IsView={finalModifyType === ModifyType.Edit ? false : true} />
+                <Attachment Id={id} IsView={modifyType === ModifyType.Edit ? false : true} />
               </Card>
             </>
           )}

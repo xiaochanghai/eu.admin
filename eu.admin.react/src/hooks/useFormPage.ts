@@ -1,4 +1,4 @@
-import { useState, useRef, useImperativeHandle, useEffect, useCallback } from "react";
+import { useState, useRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
 import { Form } from "antd";
 import { useDispatch, useSelector, RootState } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
@@ -35,6 +35,8 @@ export interface UseFormPageOptions {
   onClose?: () => void;
   /** 设置表单 ID 回调 */
   setFormPageId?: (id: string) => void;
+  /** 自定义 modifyType 计算 */
+  computeModifyType?: (params: { modifyType: ModifyType; auditStatus: string; orderStatus: string }) => ModifyType;
 }
 
 export const useFormPage = (options: UseFormPageOptions) => {
@@ -48,7 +50,8 @@ export const useFormPage = (options: UseFormPageOptions) => {
     onQuerySuccess,
     beforeSave,
     onClose,
-    setFormPageId
+    setFormPageId,
+    computeModifyType
   } = options;
 
   const dispatch = useDispatch();
@@ -91,7 +94,11 @@ export const useFormPage = (options: UseFormPageOptions) => {
     if (Success) {
       dispatch(setId({ moduleCode, id: Id ?? id }));
       setAuditStatus(Data.AuditStatus);
-      setOrderStatus(Data.OrderStatus || Data.SalesOrderStatus || "");
+
+      // 只在提供了 computeModifyType 时才设置 orderStatus
+      if (computeModifyType) {
+        setOrderStatus(Data.OrderStatus || Data.SalesOrderStatus || "");
+      }
 
       // 审核通过的记录禁用编辑
       if (Data.AuditStatus !== ModifyType.Add) {
@@ -109,7 +116,7 @@ export const useFormPage = (options: UseFormPageOptions) => {
       // 自定义回调
       onQuerySuccess?.(Data);
     }
-  }, [Id, id, moduleCode, url, IsView, dispatch, form, onQuerySuccess]);
+  }, [Id, id, moduleCode, url, IsView, dispatch, form, onQuerySuccess, computeModifyType]);
 
   /**
    * 表单提交处理
@@ -267,6 +274,17 @@ export const useFormPage = (options: UseFormPageOptions) => {
     reload: querySingleData
   }));
 
+  /**
+   * 计算最终的 modifyType
+   * 如果提供了 computeModifyType 回调，则使用它计算
+   */
+  const finalModifyType = useMemo(() => {
+    if (computeModifyType) {
+      return computeModifyType({ modifyType, auditStatus, orderStatus });
+    }
+    return modifyType;
+  }, [computeModifyType, modifyType, auditStatus, orderStatus]);
+
   return {
     // State
     form,
@@ -274,10 +292,9 @@ export const useFormPage = (options: UseFormPageOptions) => {
     isLoading,
     disabled,
     id,
-    modifyType,
+    modifyType: finalModifyType,
     disabledToolbar,
     auditStatus,
-    orderStatus,
     moduleInfo,
     actionAuthButton,
 
@@ -293,7 +310,6 @@ export const useFormPage = (options: UseFormPageOptions) => {
     setModifyType,
     setDisabled,
     setDisabledToolbar,
-    setAuditStatus,
-    setOrderStatus
+    setAuditStatus
   };
 };
