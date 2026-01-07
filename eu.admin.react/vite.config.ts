@@ -91,7 +91,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
             // 其他常用第三方库
             "misc-vendor": ["ahooks", "antd-style", "styled-components", "uuid", "qs", "md5"],
-            "chat-module": [resolve(__dirname, "./src/components/Chat/index.tsx")]
+            "chat-module": [resolve(__dirname, "./src/components/Chat/index.tsx")],
+            "pro-table": [
+              resolve(__dirname, "./src/components/ProTable/index.tsx"),
+              resolve(__dirname, "./src/components/ProTableEditable/index.tsx")
+            ]
 
             // // 工作流编辑器 (大模块)
             // "workflow-editor": [/.*workflow-editor.*/]
