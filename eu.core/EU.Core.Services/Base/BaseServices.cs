@@ -47,13 +47,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// 当前登录用户完整信息
     /// 从用户上下文中获取
     /// </summary>
-    public SmUsers UserInfo = UserContext.Current.UserInfo;
+    public SmUsers UserInfo => UserContext.Current.UserInfo;
 
     /// <summary>
     /// 当前登录用户ID
     /// 类型为Guid?，可能为空
     /// </summary>
-    public Guid? UserId = UserContext.Current.User_Id;
+    public Guid? UserId => UserContext.Current.User_Id;
 
     /// <summary>
     /// 当前登录用户ID的字符串形式
@@ -65,13 +65,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// 当前登录用户所属公司ID
     /// 用于多公司场景的数据隔离
     /// </summary>
-    public Guid? CompanyId = UserContext.Current.CompanyId;
+    public Guid? CompanyId => UserContext.Current.CompanyId;
 
     /// <summary>
     /// 当前登录用户所属集团ID
     /// 用于多集团场景的数据隔离
     /// </summary>
-    public Guid? GroupId = UserContext.Current.GroupId;
+    public Guid? GroupId => UserContext.Current.GroupId;
 
     #endregion
 
