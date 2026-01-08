@@ -10,7 +10,8 @@ namespace EU.Core.Common.Helper;
 /// </summary>
 public class LovHelper
 {
-    private static readonly RedisCacheService redis = new(3);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService redis => _redisInstance ??= RedisCacheService.Create(3);
     private static readonly string lovCacheCode = CacheKeys.SmLov.ToString();
     private static readonly string commonListCacheCode = CacheKeys.CommonListSql.ToString();
 

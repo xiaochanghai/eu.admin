@@ -6,7 +6,8 @@ namespace EU.Core.Common.UserManager;
 
 public class UserContext
 {
-    private static RedisCacheService Redis = new(4);
+    private static RedisCacheService _redis;
+    private static RedisCacheService Redis => _redis ??= RedisCacheService.Create(4);
     /// <summary>
     /// 为了尽量减少redis或Memory读取,保证执行效率,将UserContext注入到DI，
     /// 每个UserContext的属性至多读取一次redis或Memory缓存从而提高查询效率

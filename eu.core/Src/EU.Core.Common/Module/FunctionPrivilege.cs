@@ -7,7 +7,8 @@ namespace EU.Core.Module;
 
 public class FunctionPrivilege
 {
-    private static readonly RedisCacheService _redis = new(2);
+    private static RedisCacheService __redis;
+    private static RedisCacheService _redis => __redis ??= RedisCacheService.Create(2);
     private const string CacheKey = nameof(CacheKeys.SmFunctionPrivilege);
 
     #region 获取权限定义

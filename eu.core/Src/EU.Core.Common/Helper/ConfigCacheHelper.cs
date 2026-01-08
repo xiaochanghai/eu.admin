@@ -16,7 +16,8 @@ public class ConfigCache
     /// <summary>
     /// Redis 缓存服务实例（数据库索引: 3）
     /// </summary>
-    private static readonly RedisCacheService redis = new(3);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService redis => _redisInstance ??= RedisCacheService.Create(3);
 
     /// <summary>
     /// 配置参数在 Redis 中的缓存键

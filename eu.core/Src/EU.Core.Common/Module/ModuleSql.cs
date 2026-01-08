@@ -12,7 +12,8 @@ public class ModuleSql
 {
     private ISqlSugarClient Db;
     private readonly string moduleCode;
-    private static readonly RedisCacheService Redis = new(2);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(2);
 
     private readonly string key = CacheKeys.SmModuleSql.ToString();
 

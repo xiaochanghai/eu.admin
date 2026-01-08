@@ -17,7 +17,8 @@ public class ModuleInfo
     /// <summary>
     /// Redis 缓存服务实例（数据库索引: 2）
     /// </summary>
-    private static readonly RedisCacheService Redis = new(2);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(2);
 
     /// <summary>
     /// 数据库上下文

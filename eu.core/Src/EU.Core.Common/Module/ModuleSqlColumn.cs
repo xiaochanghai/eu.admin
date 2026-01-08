@@ -13,7 +13,8 @@ public class ModuleSqlColumn
     /// 模块代码
     /// </summary>
     private string moduleCode;
-    private static RedisCacheService Redis = new(2);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(2);
     private static string code = CacheKeys.SmModuleColumn.ToString();
     private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
 

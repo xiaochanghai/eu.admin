@@ -333,7 +333,7 @@ public static class Utility
     {
         try
         {
-            RedisCacheService di = new();
+            var di = RedisCacheService.Create();
             di.Clear();
         }
         catch (Exception) { throw; }
@@ -349,10 +349,15 @@ public static class Utility
     {
         try
         {
-            new RedisCacheService(1).Clear();
-            new RedisCacheService(2).Clear();
-            new RedisCacheService(3).Clear();
-            new RedisCacheService(4).Clear();
+            // 使用依赖注入获取 IConnectionMultiplexer
+            var connection = App.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+            var configuration = App.GetService<Microsoft.Extensions.Configuration.IConfiguration>();
+
+            // 清空不同数据库的缓存
+            new RedisCacheService(connection, configuration, 1).Clear();
+            new RedisCacheService(connection, configuration, 2).Clear();
+            new RedisCacheService(connection, configuration, 3).Clear();
+            new RedisCacheService(connection, configuration, 4).Clear();
 
             #region 初始化缓存
             ModuleInfo.Init();

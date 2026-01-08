@@ -10,7 +10,8 @@ namespace EU.Core.Hubs;
 /// </summary>
 public class ChatHub : Hub
 {
-    private readonly RedisCacheService _redis = new(5);
+    private RedisCacheService _redis;
+    private RedisCacheService Redis => _redis ??= RedisCacheService.Create(5);
     private const string CacheKeyPrefix = "SignalRConnection";
 
     /// <summary>
@@ -78,18 +79,18 @@ public class ChatHub : Hub
 
             // 获取用户的连接ID列表
             var userConnectionKey = GetUserConnectionKey(userId);
-            var connectionIds = _redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
+            var connectionIds = Redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
 
             // 如果连接ID不存在，则添加
             if (!connectionIds.Contains(connectionId))
             {
                 connectionIds.Add(connectionId);
-                _redis.AddObject(userConnectionKey, connectionIds);
+                Redis.AddObject(userConnectionKey, connectionIds);
             }
 
             // 存储连接ID到用户ID的映射
             var connectionUserKey = GetConnectionUserKey(connectionId);
-            _redis.Add(connectionUserKey, userId);
+            Redis.Add(connectionUserKey, userId);
 
             await Clients.Client(connectionId).SendAsync(
                 SignalRConsts.METHOD_ON_CONSOLE,
@@ -116,21 +117,21 @@ public class ChatHub : Hub
 
             // 获取用户ID
             var connectionUserKey = GetConnectionUserKey(connectionId);
-            var userId = _redis.Get(connectionUserKey);
+            var userId = Redis.Get(connectionUserKey);
 
             if (!string.IsNullOrWhiteSpace(userId))
             {
                 // 从用户的连接列表中移除此连接
                 var userConnectionKey = GetUserConnectionKey(userId);
-                var connectionIds = _redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
+                var connectionIds = Redis.Get<List<string>>(userConnectionKey) ?? new List<string>();
 
                 if (connectionIds.Remove(connectionId))
                 {
-                    _redis.AddObject(userConnectionKey, connectionIds);
+                    Redis.AddObject(userConnectionKey, connectionIds);
                 }
 
                 // 删除连接到用户的映射
-                _redis.Remove(connectionUserKey);
+                Redis.Remove(connectionUserKey);
             }
 
             await base.OnDisconnectedAsync(ex);

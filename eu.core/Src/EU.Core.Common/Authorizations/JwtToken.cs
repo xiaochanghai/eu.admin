@@ -11,7 +11,8 @@ namespace EU.Core.AuthHelper;
 /// </summary>
 public class JwtToken
 {
-    private static RedisCacheService Redis = new();
+    private static RedisCacheService _redis;
+    private static RedisCacheService Redis => _redis ??= RedisCacheService.Create();
 
     /// <summary>
     /// 获取基于JWT的Token

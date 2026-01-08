@@ -4,7 +4,8 @@ namespace EU.Core.Common.Module;
 
 public class UserModuleColumn
 {
-    private static RedisCacheService Redis = new(1);
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(1);
 
 
 }
