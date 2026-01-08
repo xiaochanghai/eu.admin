@@ -821,6 +821,124 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:EU.Core.Api.Controllers.RedisTestController">
+            <summary>
+            Redis 服务测试控制器
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestPing">
+            <summary>
+            测试 Redis 连接状态
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestBasicOperations">
+            <summary>
+            测试基本的 Redis 操作（增删改查）
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestHashOperations">
+            <summary>
+            测试 Redis 哈希表操作
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestListOperations">
+            <summary>
+            测试 Redis 列表操作
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestMultiDatabase">
+            <summary>
+            测试 Redis 多数据库操作
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestExpiration">
+            <summary>
+            测试 Redis 过期时间
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.GetServerInfo">
+            <summary>
+            获取 Redis 服务器信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController.TestAll">
+            <summary>
+            综合测试（运行所有测试）
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.RedisTestController_Example1">
+            <summary>
+            Redis 测试控制器 - 方式一：注入依赖手动创建（推荐）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example1.#ctor(StackExchange.Redis.IConnectionMultiplexer,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            构造函数：注入连接和配置，创建不同数据库的实例
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example1.TestMultipleDatabases">
+            <summary>
+            测试不同数据库的操作
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example1.TestDynamicDatabase(System.Int32)">
+            <summary>
+            动态指定数据库编号进行操作
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example1.TestDatabaseOperations(System.Int32)">
+            <summary>
+            测试特定数据库的所有操作
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.RedisTestController_Example2">
+            <summary>
+            Redis 测试控制器 - 方式二：使用静态工厂方法（向后兼容）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example2.TestStaticFactory">
+            <summary>
+            测试使用静态工厂方法创建不同数据库实例
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example2.FactoryDynamic(System.Int32)">
+            <summary>
+            动态使用工厂方法操作指定数据库
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.RedisTestController_Example3">
+            <summary>
+            Redis 测试控制器 - 方式三：使用工厂模式（最优雅）
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example3.#ctor(EU.Core.Common.Caches.IRedisCacheServiceFactory)">
+            <summary>
+            构造函数：注入工厂
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example3.TestFactory">
+            <summary>
+            测试使用工厂创建不同数据库实例
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example3.FactoryDynamic(System.Int32)">
+            <summary>
+            动态使用工厂创建指定数据库实例
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.RedisTestController_Example3.BatchOperations">
+            <summary>
+            批量操作多个数据库
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SignalRTestController">
             <summary>
             SignalR测试
