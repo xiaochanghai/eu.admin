@@ -271,7 +271,7 @@ public class DbInsert
             Values("CreatedBy", createBy);
 
         //create_date 
-        Values("CreatedTime", Utility.GetSysDate());
+        Values("CreatedTime", Utility.GetSysDate().ConvertToSecondString());
         Values("GroupId", UserContext.Current.GroupId);
         Values("CompanyId", UserContext.Current.CompanyId);
 
