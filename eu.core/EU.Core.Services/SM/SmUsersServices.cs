@@ -18,6 +18,8 @@
 using EU.Core.AuthHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -29,10 +31,6 @@ namespace EU.Core.Services;
 public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersInput, EditSmUsersInput>, ISmUsersServices
 {
     #region 常量和静态字段
-    // TODO: 考虑将静态字段改为依赖注入，以提高可测试性和避免潜在的并发问题
-    private static readonly RedisCacheService TokenRedis = new();
-    private static readonly RedisCacheService Redis = new(4);
-
     private const string AvatarDirectory = "files/userAvatar";
     private const string AvatarFileExtension = "png"; 
     private static readonly TimeSpan UserCacheExpiration = new(1, 0, 0); // 1小时
@@ -45,12 +43,25 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     private readonly PermissionRequirement _requirement;
     private readonly IWebHostEnvironment _hostingEnvironment;
 
-    public SmUsersServices(IBaseRepository<SmUsers> dal, PermissionRequirement requirement, IWebHostEnvironment hostingEnvironment)
+
+    private readonly IConnectionMultiplexer _connection;
+    private readonly IConfiguration _configuration;
+    private readonly RedisCacheService _tokenRedis;  // 默认数据库
+    private readonly RedisCacheService _redis;  // 用户菜单数据库
+
+    public SmUsersServices(IBaseRepository<SmUsers> dal, PermissionRequirement requirement, IWebHostEnvironment hostingEnvironment,
+        IConnectionMultiplexer connection,
+        IConfiguration configuration)
     {
         _dal = dal;
         BaseDal = dal;
         _requirement = requirement;
         _hostingEnvironment = hostingEnvironment;
+        _connection = connection;
+        _configuration = configuration;
+
+        _tokenRedis = new RedisCacheService(_connection, _configuration, 0);
+        _redis = new RedisCacheService(_connection, _configuration, 4);
     }
 
     #region 上传头像
@@ -113,7 +124,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     public override async Task<SmUsersDto> QueryDto(object objId, bool blnUseCache = false)
     {
         var userId = objId.ObjToString();
-        var data = Redis.Get<SmUsers>(userId);
+        var data = _redis.Get<SmUsers>(userId);
 
         if (data == null)
         {
@@ -158,7 +169,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// </summary>
     private void SetUserCache(string userId, SmUsers user)
     {
-        Redis.AddObject(userId, user, UserCacheExpiration);
+        _redis.AddObject(userId, user, UserCacheExpiration);
     }
 
     /// <summary>
@@ -174,7 +185,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// </summary>
     private void RefreshUserCache(Guid userId, SmUsers user)
     {
-        Redis.Remove(userId);
+        _redis.Remove(userId);
         SetUserCache(userId, user);
     }
 
@@ -276,7 +287,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         try
         {
-            var user = Redis.Get<SmUsers>(UserId);
+            var user = _redis.Get<SmUsers>(UserId);
 
             if (user == null)
             {
@@ -364,7 +375,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             var sessionId = App.User.SessionId?.ObjToString();
             if (!string.IsNullOrWhiteSpace(sessionId))
             {
-                TokenRedis.Remove(sessionId);
+                _tokenRedis.Remove(sessionId);
             }
 
             return Success(ResponseText.EXECUTE_SUCCESS);
