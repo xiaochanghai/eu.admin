@@ -47,8 +47,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     #endregion
 
     #region 字段
-
-    private readonly RedisCacheService _redisCacheService = new(1);
+    private readonly RedisCacheService _redisCacheService;
+    private readonly IConnectionMultiplexer _connection;
+    private readonly IConfiguration _configuration;
     private readonly ISmRoleFunctionServices _smRoleFunctionServices;
     private readonly ISmUserModuleColumnServices _smUserModuleColumnServices;
     private readonly ISmRolesServices _smRolesServices;
@@ -72,7 +73,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         ISmRoleFunctionServices smRoleFunctionServices,
         ISmUserModuleColumnServices smUserModuleColumnServices,
         ISmRolesServices smRolesServices,
-        ISmModuleColumnServices smModuleColumnServices)
+        ISmModuleColumnServices smModuleColumnServices,
+        IConnectionMultiplexer connection,
+        IConfiguration configuration)
     {
         this._dal = dal;
         base.BaseDal = dal;
@@ -80,8 +83,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         this._smUserModuleColumnServices = smUserModuleColumnServices;
         this._smRolesServices = smRolesServices;
         this._smModuleColumnServices = smModuleColumnServices;
-    }
 
+        _connection = connection;
+        _configuration = configuration;
+        _redisCacheService = new RedisCacheService(_connection, _configuration, 1);
+    }
     #endregion
 
     #region 新增

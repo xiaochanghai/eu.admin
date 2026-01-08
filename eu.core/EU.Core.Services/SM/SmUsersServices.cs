@@ -18,8 +18,6 @@
 using EU.Core.AuthHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -32,7 +30,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 {
     #region 常量和静态字段
     private const string AvatarDirectory = "files/userAvatar";
-    private const string AvatarFileExtension = "png"; 
+    private const string AvatarFileExtension = "png";
     private static readonly TimeSpan UserCacheExpiration = new(1, 0, 0); // 1小时
 
     // SECURITY WARNING: 用于开发/测试的Admin账号名称，生产环境应该禁用GetAccessToken方法
@@ -78,13 +76,13 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         try
         {
             // 确保目录存在
-            var path = "wwwroot/"+ AvatarDirectory;
+            var path = "wwwroot/" + AvatarDirectory;
             FileHelper.CreateDirectory(path);
             var fileId = Utility.SnowID();
             var fileName = $"{fileId}.{AvatarFileExtension}";
             var filePath = Path.Combine(path, fileName);
 
-            
+
             // 保存文件
             using (var stream = File.Create(filePath))
             {
