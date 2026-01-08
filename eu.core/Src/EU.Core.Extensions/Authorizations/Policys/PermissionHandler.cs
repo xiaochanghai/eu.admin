@@ -27,7 +27,8 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
     private readonly IHttpContextAccessor _accessor;
     private readonly ISmUsersServices _smUsersServices;
     private readonly IUser _user;
-    private static RedisCacheService Redis = new();
+    private static RedisCacheService _redisInstance;
+    private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create();
 
     /// <summary>
     /// 构造函数注入
