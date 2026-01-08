@@ -14,8 +14,10 @@ public static class CacheSetup
 	/// <param name="services"></param>
 	public static void AddCacheSetup(this IServiceCollection services)
 	{
-		var cacheOptions = App.GetOptions<RedisOptions>();
-		if (cacheOptions.Enable)
+		var cacheOptions = App.GetConfig<RedisOptions>();
+		Console.WriteLine("统一注册缓存 Enable:" + cacheOptions.Enable);
+		Console.WriteLine("统一注册缓存 ConnectionString:" + cacheOptions.ConnectionString);
+        if (cacheOptions?.Enable == true)
 		{
 			// 配置启动Redis服务，虽然可能影响项目启动速度，但是不能在运行的时候报错，所以是合理的
 			services.AddSingleton<IConnectionMultiplexer>(sp =>

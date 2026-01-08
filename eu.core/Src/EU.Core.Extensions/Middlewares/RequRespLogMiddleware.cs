@@ -116,8 +116,10 @@ public class RequRespLogMiddleware
             Parallel.For(0, 1, e =>
         {
             //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
-            LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
-                new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
+
+            if (!response.ContentType.Contains("image/"))
+                LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
+                    new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
         });
             //SerilogServer.WriteLog("RequestResponseLog", new string[] { "Response Data:", responseBody });
         }

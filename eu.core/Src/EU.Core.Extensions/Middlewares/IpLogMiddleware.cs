@@ -1,4 +1,5 @@
 ﻿using EU.Core.Common;
+using EU.Core.Common.Helper;
 using EU.Core.Common.LogHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -45,9 +46,9 @@ public class IpLogMiddleware
 				var requestInfo = JsonConvert.SerializeObject(new RequestInfo()
 				{
 					Ip = GetClientIP(context),
-					Url = request.Path.ObjToString().TrimEnd('/').ToLower(),
-					Datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-					Date = DateTime.Now.ToString("yyyy-MM-dd"),
+					Url = request.Path.ObjToString().TrimEnd('/'),
+					Datetime = DateTime.Now.ConvertToSecondString(),
+					Date = DateTime.Now.ConvertToDayString(),
 					Week = GetWeek(),
 				});
 
