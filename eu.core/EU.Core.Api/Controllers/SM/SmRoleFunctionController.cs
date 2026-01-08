@@ -14,8 +14,6 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
-using EU.Core.Common.Caches;
-
 namespace EU.Core.Api.Controllers;
 
 /// <summary>
@@ -26,7 +24,6 @@ namespace EU.Core.Api.Controllers;
 [Authorize(Permissions.Name), ApiExplorerSettings(GroupName = Grouping.GroupName_SM)]
 public class SmRoleFunctionController : BaseController<ISmRoleFunctionServices, SmRoleFunction, SmRoleFunctionDto, InsertSmRoleFunctionInput, EditSmRoleFunctionInput>
 {
-    RedisCacheService RedisCacheService = new RedisCacheService(1);
     public SmRoleFunctionController(ISmRoleFunctionServices service) : base(service)
     {
     }

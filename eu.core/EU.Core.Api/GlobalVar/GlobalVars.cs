@@ -17,7 +17,8 @@ namespace EU.Core;
 public class ChatHelper
 {
 
-    private static RedisCacheService Redis = new(9);
+    private static RedisCacheService _redis;
+    private static RedisCacheService Redis => _redis ??= RedisCacheService.Create(9);
     private static IList<AIChatMessage> Messages;
     /// <summary>
     /// 存储当前会话中的所有聊天消息记录。
