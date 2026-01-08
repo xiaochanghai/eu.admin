@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
@@ -19,7 +20,7 @@ public class RedisCacheService : IDisposable
     /// <summary>
     /// Redis连接多路复用器
     /// </summary>
-    private ConnectionMultiplexer _connection;
+    private readonly IConnectionMultiplexer _connection;
 
     /// <summary>
     /// Redis实例名称
@@ -32,14 +33,9 @@ public class RedisCacheService : IDisposable
     private readonly int _num = 0;
 
     /// <summary>
-    /// Redis连接字符串
-    /// </summary>
-    private readonly string _connectionString = AppSettings.app(["Redis", "ConnectionString"]).ToString();
-
-    /// <summary>
     /// Redis键前缀
     /// </summary>
-    private readonly string _redisKeyPrefix = AppSettings.app(["Redis", "InstanceName"]).ToString();
+    private readonly string _redisKeyPrefix;
 
     /// <summary>
     /// 内存缓存实例，用于本地缓存
@@ -51,15 +47,31 @@ public class RedisCacheService : IDisposable
     #region 构造函数
 
     /// <summary>
-    /// 初始化Redis缓存服务
+    /// 初始化Redis缓存服务（通过依赖注入）
     /// </summary>
+    /// <param name="connection">Redis连接多路复用器</param>
+    /// <param name="configuration">配置对象</param>
     /// <param name="num">数据库编号：0：默认，1：用户左侧菜单，2：模块信息相关，3：系统参数相关，4：用户信息，5：SignalR 数据</param>
-    public RedisCacheService(int num = 0)
+    public RedisCacheService(IConnectionMultiplexer connection, IConfiguration configuration, int num = 0)
     {
-        _connection = ConnectionMultiplexer.Connect(_connectionString);
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         _num = num;
         _cache = _connection.GetDatabase(_num);
+        _redisKeyPrefix = configuration["Redis:InstanceName"] ?? "nc";
         _instance = "nc";
+    }
+
+    /// <summary>
+    /// 创建 RedisCacheService 实例（从服务定位器获取依赖）
+    /// 注意：建议优先使用构造函数注入，此方法用于向后兼容
+    /// </summary>
+    /// <param name="num">数据库编号</param>
+    /// <returns>RedisCacheService 实例</returns>
+    public static RedisCacheService Create(int num = 0)
+    {
+        var connection = App.GetService<IConnectionMultiplexer>();
+        var configuration = App.GetService<IConfiguration>();
+        return new RedisCacheService(connection, configuration, num);
     }
 
     #endregion
@@ -90,8 +102,11 @@ public class RedisCacheService : IDisposable
     {
         try
         {
-            string hostAndPort = _connectionString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)[0];
-            IServer server = _connection.GetServer(hostAndPort);
+            var endpoints = _connection.GetEndPoints(true);
+            if (endpoints.Length == 0)
+                return false;
+
+            IServer server = _connection.GetServer(endpoints[0]);
             var pingTime = server.Ping();
             return true;
         }
@@ -109,8 +124,11 @@ public class RedisCacheService : IDisposable
     {
         try
         {
-            string hostAndPort = _connectionString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)[0];
-            IServer server = _connection.GetServer(hostAndPort);
+            var endpoints = _connection.GetEndPoints(true);
+            if (endpoints.Length == 0)
+                return false;
+
+            IServer server = _connection.GetServer(endpoints[0]);
             var pingTime = await server.PingAsync();
             return true;
         }
@@ -570,11 +588,11 @@ public class RedisCacheService : IDisposable
 
     /// <summary>
     /// 释放资源
+    /// 注意：IConnectionMultiplexer 由 DI 容器管理，不在此处释放
     /// </summary>
     public void Dispose()
     {
-        if (_connection != null)
-            _connection.Dispose();
+        // 连接由 DI 容器管理，不需要在此处释放
         GC.SuppressFinalize(this);
     }
 

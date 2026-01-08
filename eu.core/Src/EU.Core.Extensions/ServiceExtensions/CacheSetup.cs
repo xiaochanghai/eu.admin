@@ -23,6 +23,10 @@ public static class CacheSetup
 				//获取连接字符串
 				var configuration = ConfigurationOptions.Parse(cacheOptions.ConnectionString, true);
 				configuration.ResolveDns = true;
+				configuration.ConnectTimeout = 5000;
+				configuration.SyncTimeout = 5000;
+				configuration.AbortOnConnectFail = false;
+				configuration.ConnectRetry = 3;
 				return ConnectionMultiplexer.Connect(configuration);
 			});
 			services.AddSingleton<ConnectionMultiplexer>(p => p.GetService<IConnectionMultiplexer>() as ConnectionMultiplexer);
@@ -34,6 +38,12 @@ public static class CacheSetup
 			});
 
 			services.AddTransient<IRedisBasketRepository, RedisBasketRepository>();
+
+			// 注册 RedisCacheService（使用依赖注入）
+			services.AddScoped<RedisCacheService>();
+
+			// 注册 RedisCacheService 工厂（用于创建不同数据库的实例）
+			services.AddScoped<IRedisCacheServiceFactory, RedisCacheServiceFactory>();
 		}
 		else
 		{
