@@ -1,6 +1,8 @@
-import { useState, useImperativeHandle, forwardRef } from "react";
+import { useState, useImperativeHandle, forwardRef, lazy } from "react";
 import { Modal } from "antd";
-import Content from "@/views/about";
+import LazyComponent from "@/components/Lazy";
+
+const AboutContent = LazyComponent(lazy(() => import("@/views/about")));
 
 export interface ShowAboutModalProps {
   name: string;
@@ -25,7 +27,7 @@ const AboutModal = forwardRef<AboutModalRef, {}>((_props, ref) => {
 
   return (
     <Modal open={isModalOpen} width={1000} footer={null} onCancel={handleCancel} destroyOnHidden>
-      <Content />
+      {AboutContent}
     </Modal>
   );
 });

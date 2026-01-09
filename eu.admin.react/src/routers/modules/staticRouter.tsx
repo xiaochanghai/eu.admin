@@ -1,13 +1,16 @@
+import { lazy } from "react";
 import { Navigate } from "react-router-dom";
 import { Loading } from "@/components/Loading";
+import LazyComponent from "@/components/Lazy";
 import { HOME_URL, LOGIN_URL } from "@/config";
 import { RouteObjectType } from "@/routers/interface";
-import Login from "@/views/login/index";
 import NotAuth from "@/components/Error/403";
 import NotFound from "@/components/Error/404";
 import NotNetwork from "@/components/Error/500";
 import ErrorTest from "@/components/Error/ErrorTest";
 import RouterGuard from "../helper/RouterGuard";
+
+const Login = LazyComponent(lazy(() => import("@/views/login/index")));
 
 /**
  * staticRouter
@@ -19,7 +22,7 @@ export const staticRouter: RouteObjectType[] = [
   },
   {
     path: LOGIN_URL,
-    element: <Login />,
+    element: Login,
     meta: {
       title: "登录"
     }
