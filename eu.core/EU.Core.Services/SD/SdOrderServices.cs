@@ -25,8 +25,8 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
     private readonly ISdOrderDetailServices _sdOrderDetailServices;
     public SdOrderServices(IBaseRepository<SdOrder> dal, ISdOrderDetailServices sdOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _sdOrderDetailServices = sdOrderDetailServices;
     }
 
@@ -66,8 +66,6 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
 
         if (order.TaxRate != model.TaxRate || order.TaxType != model.TaxType)
         {
-            string sql = string.Empty;
-
             var details = await Db.Queryable<SdOrderDetail>().Where(x => x.OrderId == Id).ToArrayAsync();
             if (details.Any())
             {
@@ -95,6 +93,9 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<SdOrder>();
         foreach (var id in ids)
         {
@@ -160,23 +161,38 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var customerIds = new List<Guid>();
             var salesOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.EXECUTE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("CustomerId"))
-                    customerIds.Add(Guid.Parse(x["CustomerId"].ToString()));
+                    customerIds.Add(ParseGuid(x, "CustomerId"));
 
                 if (x.ContainsKey("SalesOrderId"))
-                    salesOrderIds.Add(Guid.Parse(x["SalesOrderId"].ToString()));
+                    salesOrderIds.Add(ParseGuid(x, "SalesOrderId"));
             });
             var dt = Utility.GetSysDate();
             var userId = App.User.ID;
             customerIds = customerIds.Distinct().ToList();
             salesOrderIds = salesOrderIds.Distinct().ToList();
+
+            var salesOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+            var salesOrderDetails = await Db.Queryable<SdOrderDetail>()
+                .Where(x => salesOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var salesOrderDetailMap = salesOrderDetails.ToDictionary(x => x.ID, x => x);
 
             if (type == "Ship")
                 for (int i = 0; i < customerIds.Count; i++)
@@ -200,14 +216,13 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
                     for (int j = 0; j < dicts.Count; j++)
                     {
                         var x = dicts[j];
-                        if (x.ContainsKey("CustomerId") && Guid.Parse(x["CustomerId"].ToString()) == customerId)
+                        if (x.ContainsKey("CustomerId") && ParseGuid(x, "CustomerId") == customerId)
                         {
-                            var salesOrderId = Guid.Parse(x["SalesOrderId"].ToString());
-                            var salesOrderDetailId = Guid.Parse(x["ID"].ToString());
-                            decimal? shipQTY = Convert.ToDecimal(x["ShipQTY"].ToString());
+                            var salesOrderId = ParseGuid(x, "SalesOrderId");
+                            var salesOrderDetailId = ParseGuid(x, "ID");
+                            decimal? shipQTY = ParseDecimal(x, "ShipQTY");
 
-                            var sdOrderDetail = await Db.Queryable<SdOrderDetail>().FirstAsync(x => x.ID == salesOrderDetailId);
-                            if (!sdOrderDetail.IsNullOrEmpty())
+                            if (salesOrderDetailMap.TryGetValue(salesOrderDetailId, out var sdOrderDetail) && sdOrderDetail.IsNotEmptyOrNull())
                             {
                                 if (sdOrderDetail.QTY - (sdOrderDetail.ShipQTY ?? 0) >= shipQTY)
                                     sdOrderDetail.ShipQTY = (sdOrderDetail.ShipQTY ?? 0) + shipQTY;
@@ -230,7 +245,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
                                     OrderId = order.ID,
                                     SalesOrderId = salesOrderId,
                                     SalesOrderDetailId = salesOrderDetailId,
-                                    MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                    MaterialId = ParseGuid(x, "MaterialId"),
                                     ShipQTY = shipQTY,
                                     OutQTY = 0,
                                     GroupId = Utility.GetGroupGuidId(),
@@ -274,14 +289,13 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
                     for (int j = 0; j < dicts.Count; j++)
                     {
                         var x = dicts[j];
-                        if (x.ContainsKey("CustomerId") && Guid.Parse(x["CustomerId"].ToString()) == customerId)
+                        if (x.ContainsKey("CustomerId") && ParseGuid(x, "CustomerId") == customerId)
                         {
-                            var salesOrderId = Guid.Parse(x["SalesOrderId"].ToString());
-                            var salesOrderDetailId = Guid.Parse(x["ID"].ToString());
-                            decimal? outQTY = Convert.ToDecimal(x["OutQTY"].ToString());
+                            var salesOrderId = ParseGuid(x, "SalesOrderId");
+                            var salesOrderDetailId = ParseGuid(x, "ID");
+                            decimal? outQTY = ParseDecimal(x, "OutQTY");
 
-                            var sdOrderDetail = await Db.Queryable<SdOrderDetail>().FirstAsync(x => x.ID == salesOrderDetailId);
-                            if (!sdOrderDetail.IsNullOrEmpty())
+                            if (salesOrderDetailMap.TryGetValue(salesOrderDetailId, out var sdOrderDetail) && sdOrderDetail.IsNotEmptyOrNull())
                             {
                                 if (sdOrderDetail.QTY - (sdOrderDetail.OutQTY ?? 0) >= outQTY)
                                     sdOrderDetail.OutQTY = (sdOrderDetail.OutQTY ?? 0) + outQTY;
@@ -306,7 +320,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
                                     OrderId = orderId,
                                     SalesOrderId = salesOrderId,
                                     SalesOrderDetailId = salesOrderDetailId,
-                                    MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                    MaterialId = ParseGuid(x, "MaterialId"),
                                     OutQTY = outQTY,
                                     ReturnQTY = 0,
                                     GroupId = Utility.GetGroupGuidId(),
@@ -476,4 +490,26 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         }
     }
     #endregion
+
+    private static Guid ParseGuid(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!Guid.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
+
+    private static decimal ParseDecimal(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!decimal.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
 }

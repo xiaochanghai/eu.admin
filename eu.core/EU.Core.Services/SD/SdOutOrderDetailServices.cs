@@ -21,11 +21,12 @@ namespace EU.Core.Services;
 /// </summary>
 public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrderDetailDto, InsertSdOutOrderDetailInput, EditSdOutOrderDetailInput>, ISdOutOrderDetailServices
 {
+    private const string ModuleCode = "SD_OUT_ORDER_DETAIL_MNG";
     private readonly IBaseRepository<SdOutOrderDetail> _dal;
     public SdOutOrderDetailServices(IBaseRepository<SdOutOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 更新
@@ -45,6 +46,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
             if (entity.ShipOrderDetailId.IsNullOrEmpty())
             {
                 var orderDetail = await Db.Queryable<SdOrderDetail>().FirstAsync(x => x.ID == entity.SalesOrderDetailId);
+                if (orderDetail == null)
+                    throw new Exception("未找到对应的销售单明细，无法更新出库数量。");
 
                 var qty = orderDetail.QTY - (orderDetail.ShipQTY ?? 0);
 
@@ -66,6 +69,8 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
             else
             {
                 var orderDetail = await Db.Queryable<SdShipOrderDetail>().FirstAsync(x => x.ID == entity.ShipOrderDetailId.Value);
+                if (orderDetail == null)
+                    throw new Exception("未找到对应的发货通知明细，无法更新出库数量。");
 
                 var qty = orderDetail.ShipQTY - (orderDetail.OutQTY ?? 0);
 
@@ -83,7 +88,7 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
                 await UpdateShipOrderStatus(entity.ShipOrderId);
             }
 
-            var lstColumns = new ModuleSqlColumn("SD_OUT_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
+            var lstColumns = new ModuleSqlColumn(ModuleCode).GetModuleTableEditableColumns();
 
             await Update(model, lstColumns);
 
@@ -110,6 +115,9 @@ public class SdOutOrderDetailServices : BaseServices<SdOutOrderDetail, SdOutOrde
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();

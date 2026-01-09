@@ -26,8 +26,8 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
     public SdShipOrderServices(IBaseRepository<SdShipOrder> dal,
         ISdShipOrderDetailServices sdShipOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _sdShipOrderDetailServices = sdShipOrderDetailServices;
     }
 
@@ -39,6 +39,9 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<SdShipOrder>();
         for (int i = 0; i < ids.Length; i++)
         {
@@ -105,33 +108,51 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var salesOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.SAVE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("SalesOrderId"))
-                    salesOrderIds.Add(Guid.Parse(x["SalesOrderId"].ToString()));
+                    salesOrderIds.Add(ParseGuid(x, "SalesOrderId"));
             });
-
-            var dt = Utility.GetSysDate();
-            var userId = App.User.ID;
             salesOrderIds = salesOrderIds.Distinct().ToList();
 
             var addDetails = new List<SdShipOrderDetail>();
             var updateDetails = new List<SdShipOrderDetail>();
+            var updateDetailIds = new HashSet<Guid>();
+
+            var salesOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+
+            var orderDetailMap = await Db.Queryable<SdOrderDetail>()
+                .Where(x => salesOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+
+            var orderDetailLookup = orderDetailMap.ToDictionary(x => x.ID, x => x);
+            var shipDetailLookup = await Db.Queryable<SdShipOrderDetail>()
+                .Where(x => x.OrderId == id && x.SalesOrderDetailId != null && salesOrderDetailIds.Contains(x.SalesOrderDetailId.Value))
+                .ToListAsync();
+            var shipDetailMap = shipDetailLookup.ToDictionary(x => x.SalesOrderDetailId.Value, x => x);
 
             for (int j = 0; j < dicts.Count; j++)
             {
                 var x = dicts[j];
 
-                var salesOrderId = Guid.Parse(x["SalesOrderId"].ToString());
-                var salesOrderDetailId = Guid.Parse(x["ID"].ToString());
-                decimal? shipQTY = Convert.ToDecimal(x["ShipQTY"].ToString());
+                var salesOrderId = ParseGuid(x, "SalesOrderId");
+                var salesOrderDetailId = ParseGuid(x, "ID");
+                decimal? shipQTY = ParseDecimal(x, "ShipQTY");
 
-                var sdOrderDetail = await Db.Queryable<SdOrderDetail>().FirstAsync(x => x.ID == salesOrderDetailId);
-                if (!sdOrderDetail.IsNullOrEmpty())
+                if (orderDetailLookup.TryGetValue(salesOrderDetailId, out var sdOrderDetail) && sdOrderDetail.IsNotEmptyOrNull())
                 {
                     if (sdOrderDetail.QTY - (sdOrderDetail.ShipQTY ?? 0) >= shipQTY)
                         sdOrderDetail.ShipQTY = (sdOrderDetail.ShipQTY ?? 0) + shipQTY;
@@ -146,15 +167,14 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                         .Where(it => it.ID == salesOrderDetailId)
                         .ExecuteCommandAsync();
 
-                    var shipOrderDetail = await Db.Queryable<SdShipOrderDetail>().FirstAsync(x => x.OrderId == id && x.SalesOrderDetailId == salesOrderDetailId);
-                    if (shipOrderDetail.IsNullOrEmpty())
+                    if (!shipDetailMap.TryGetValue(salesOrderDetailId, out var shipOrderDetail) || shipOrderDetail.IsNullOrEmpty())
                         addDetails.Add(new SdShipOrderDetail()
                         {
                             SerialNumber = 1,
                             OrderId = id,
                             SalesOrderId = salesOrderId,
                             SalesOrderDetailId = salesOrderDetailId,
-                            MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                            MaterialId = ParseGuid(x, "MaterialId"),
                             ShipQTY = shipQTY,
                             OutQTY = 0,
                             GroupId = Utility.GetGroupGuidId(),
@@ -163,7 +183,8 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                     else
                     {
                         shipOrderDetail.ShipQTY += shipQTY;
-                        updateDetails.Add(shipOrderDetail);
+                        if (updateDetailIds.Add(shipOrderDetail.ID))
+                            updateDetails.Add(shipOrderDetail);
                     }
                 }
             }
@@ -219,23 +240,37 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var customerIds = new List<Guid>();
             var shipOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.SAVE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("CustomerId"))
-                    customerIds.Add(Guid.Parse(x["CustomerId"].ToString()));
+                    customerIds.Add(ParseGuid(x, "CustomerId"));
 
                 if (x.ContainsKey("SalesOrderId"))
-                    shipOrderIds.Add(Guid.Parse(x["SalesOrderId"].ToString()));
+                    shipOrderIds.Add(ParseGuid(x, "SalesOrderId"));
             });
             var dt = Utility.GetSysDate();
-            var userId = App.User.ID;
             customerIds = customerIds.Distinct().ToList();
             shipOrderIds = shipOrderIds.Distinct().ToList();
+
+            var shipOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+            var shipOrderDetails = await Db.Queryable<SdShipOrderDetail>()
+                .Where(x => shipOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var shipOrderDetailMap = shipOrderDetails.ToDictionary(x => x.ID, x => x);
 
             for (int i = 0; i < customerIds.Count; i++)
             {
@@ -264,14 +299,13 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                 for (int j = 0; j < dicts.Count; j++)
                 {
                     var x = dicts[j];
-                    if (x.ContainsKey("CustomerId") && Guid.Parse(x["CustomerId"].ToString()) == customerId)
+                    if (x.ContainsKey("CustomerId") && ParseGuid(x, "CustomerId") == customerId)
                     {
-                        var shipOrderId = Guid.Parse(x["SalesOrderId"].ToString());
-                        var shipOrderDetailId = Guid.Parse(x["ID"].ToString());
-                        decimal? outQTY = Convert.ToDecimal(x["OutQTY"].ToString());
+                        var shipOrderId = ParseGuid(x, "SalesOrderId");
+                        var shipOrderDetailId = ParseGuid(x, "ID");
+                        decimal? outQTY = ParseDecimal(x, "OutQTY");
 
-                        var sdShipDetail = await Db.Queryable<SdShipOrderDetail>().FirstAsync(x => x.ID == shipOrderDetailId);
-                        if (!sdShipDetail.IsNullOrEmpty())
+                        if (shipOrderDetailMap.TryGetValue(shipOrderDetailId, out var sdShipDetail) && sdShipDetail.IsNotEmptyOrNull())
                         {
                             if (sdShipDetail.ShipQTY - (sdShipDetail.OutQTY ?? 0) >= outQTY)
                                 sdShipDetail.OutQTY = (sdShipDetail.OutQTY ?? 0) + outQTY;
@@ -297,7 +331,7 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
                                 ShipOrderDetailId = shipOrderDetailId,
                                 SalesOrderDetailId = sdShipDetail.SalesOrderDetailId,
                                 SalesOrderId = sdShipDetail.SalesOrderId,
-                                MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                MaterialId = ParseGuid(x, "MaterialId"),
                                 OutQTY = outQTY,
                                 ReturnQTY = 0,
                                 GroupId = Utility.GetGroupGuidId(),
@@ -345,4 +379,26 @@ public class SdShipOrderServices : BaseServices<SdShipOrder, SdShipOrderDto, Ins
         }
     }
     #endregion
+
+    private static Guid ParseGuid(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!Guid.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
+
+    private static decimal ParseDecimal(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!decimal.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
 }

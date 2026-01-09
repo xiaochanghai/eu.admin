@@ -27,8 +27,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
     public PoInOrderServices(IBaseRepository<PoInOrder> dal,
         IPoInOrderDetailServices poInOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _poInOrderDetailServices = poInOrderDetailServices;
     }
 
@@ -60,6 +60,9 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<PoInOrder>();
         for (int i = 0; i < ids.Length; i++)
         {
@@ -126,18 +129,23 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var poOrderIds = new List<Guid>();
             var poNoticeOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.EXECUTE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("PoOrderId"))
-                    poOrderIds.Add(Guid.Parse(x["PoOrderId"].ToString()));
+                    poOrderIds.Add(ParseGuid(x, "PoOrderId"));
 
                 if (x.ContainsKey("PoNoticeOrderId"))
-                    poNoticeOrderIds.Add(Guid.Parse(x["PoNoticeOrderId"].ToString()));
+                    poNoticeOrderIds.Add(ParseGuid(x, "PoNoticeOrderId"));
             });
 
             var dt = Utility.GetSysDate();
@@ -147,6 +155,25 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
 
             var addDetails = new List<PoInOrderDetail>();
             var updateDetails = new List<PoInOrderDetail>();
+            var updateDetailIds = new HashSet<Guid>();
+
+            var sourceOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+            var arrivalDetailLookup = await Db.Queryable<PoArrivalOrderDetail>()
+                .Where(x => sourceOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var arrivalDetailMap = arrivalDetailLookup.ToDictionary(x => x.ID, x => x);
+            var orderDetailLookup = await Db.Queryable<PoOrderDetail>()
+                .Where(x => sourceOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var orderDetailMap = orderDetailLookup.ToDictionary(x => x.ID, x => x);
+            var inOrderDetailLookup = await Db.Queryable<PoInOrderDetail>()
+                .Where(x => x.OrderId == id && x.SourceOrderDetailId != null && sourceOrderDetailIds.Contains(x.SourceOrderDetailId.Value))
+                .ToListAsync();
+            var inOrderDetailMap = inOrderDetailLookup.ToDictionary(x => x.SourceOrderDetailId.Value, x => x);
 
             var inOrder = await base.QueryDto(id);
             if (inOrder.OrderSource == "NoticeOrder")
@@ -154,12 +181,12 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                 {
                     var x = dicts[j];
 
-                    var poNoticeOrderId = Guid.Parse(x["PoNoticeOrderId"].ToString());
-                    var poNoticeOrderDetailId = Guid.Parse(x["ID"].ToString());
-                    decimal? qty = Convert.ToDecimal(x["InQTY"].ToString());
+                    var poNoticeOrderId = ParseGuid(x, "PoNoticeOrderId");
+                    var poNoticeOrderDetailId = ParseGuid(x, "ID");
+                    decimal? qty = ParseDecimal(x, "InQTY");
 
-                    var poNoticeOrderDetail = await Db.Queryable<PoArrivalOrderDetail>().FirstAsync(x => x.ID == poNoticeOrderDetailId);
-                    if (!poNoticeOrderDetail.IsNullOrEmpty())
+                    if (arrivalDetailMap.TryGetValue(poNoticeOrderDetailId, out var poNoticeOrderDetail) &&
+                        poNoticeOrderDetail.IsNotEmptyOrNull())
                     {
                         if (poNoticeOrderDetail.NoticeQTY - (poNoticeOrderDetail.InQTY ?? 0) >= qty)
                             poNoticeOrderDetail.InQTY = (poNoticeOrderDetail.InQTY ?? 0) + qty;
@@ -177,15 +204,15 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                             .Where(it => it.ID == poNoticeOrderDetailId)
                             .ExecuteCommandAsync();
 
-                        var inOrderDetail = await Db.Queryable<PoInOrderDetail>().FirstAsync(x => x.OrderId == id && x.SourceOrderDetailId == poNoticeOrderDetailId);
-                        if (inOrderDetail.IsNullOrEmpty())
+                        if (!inOrderDetailMap.TryGetValue(poNoticeOrderDetailId, out var inOrderDetail) ||
+                            inOrderDetail.IsNullOrEmpty())
                             addDetails.Add(new PoInOrderDetail()
                             {
                                 SerialNumber = 1,
                                 OrderId = id,
                                 SourceOrderId = poNoticeOrderId,
                                 SourceOrderDetailId = poNoticeOrderDetailId,
-                                MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                MaterialId = ParseGuid(x, "MaterialId"),
                                 InQTY = qty,
                                 ReturnQTY = 0,
                                 GroupId = Utility.GetGroupGuidId(),
@@ -194,7 +221,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                         else
                         {
                             inOrderDetail.InQTY += qty;
-                            updateDetails.Add(inOrderDetail);
+                            if (updateDetailIds.Add(inOrderDetail.ID))
+                                updateDetails.Add(inOrderDetail);
                         }
                     }
                 }
@@ -203,18 +231,18 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                 {
                     var x = dicts[j];
 
-                    var poOrderId = Guid.Parse(x["PoOrderId"].ToString());
-                    var poOrderDetailId = Guid.Parse(x["ID"].ToString());
-                    decimal? qty = Convert.ToDecimal(x["InQTY"].ToString());
+                    var poOrderId = ParseGuid(x, "PoOrderId");
+                    var poOrderDetailId = ParseGuid(x, "ID");
+                    decimal? qty = ParseDecimal(x, "InQTY");
 
-                    var poOrderDetail = await Db.Queryable<PoOrderDetail>().FirstAsync(x => x.ID == poOrderDetailId);
-                    if (!poOrderDetail.IsNullOrEmpty())
+                    if (orderDetailMap.TryGetValue(poOrderDetailId, out var poOrderDetail) &&
+                        poOrderDetail.IsNotEmptyOrNull())
                     {
-                        if (poOrderDetail.InQTY - (poOrderDetail.InQTY ?? 0) >= qty)
+                        if (poOrderDetail.QTY - (poOrderDetail.InQTY ?? 0) >= qty)
                             poOrderDetail.InQTY = (poOrderDetail.InQTY ?? 0) + qty;
                         else
                         {
-                            qty = poOrderDetail.InQTY - (poOrderDetail.InQTY ?? 0);
+                            qty = poOrderDetail.QTY - (poOrderDetail.InQTY ?? 0);
                             poOrderDetail.InQTY = poOrderDetail.QTY;
                         }
 
@@ -226,15 +254,15 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                             .Where(it => it.ID == poOrderDetailId)
                             .ExecuteCommandAsync();
 
-                        var inOrderDetail = await Db.Queryable<PoInOrderDetail>().FirstAsync(x => x.OrderId == id && x.SourceOrderDetailId == poOrderDetailId);
-                        if (inOrderDetail.IsNullOrEmpty())
+                        if (!inOrderDetailMap.TryGetValue(poOrderDetailId, out var inOrderDetail) ||
+                            inOrderDetail.IsNullOrEmpty())
                             addDetails.Add(new PoInOrderDetail()
                             {
                                 SerialNumber = 1,
                                 OrderId = id,
                                 SourceOrderId = poOrderId,
                                 SourceOrderDetailId = poOrderDetailId,
-                                MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                MaterialId = ParseGuid(x, "MaterialId"),
                                 InQTY = qty,
                                 ReturnQTY = 0,
                                 GroupId = Utility.GetGroupGuidId(),
@@ -243,7 +271,8 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
                         else
                         {
                             inOrderDetail.InQTY += qty;
-                            updateDetails.Add(inOrderDetail);
+                            if (updateDetailIds.Add(inOrderDetail.ID))
+                                updateDetails.Add(inOrderDetail);
                         }
                     }
                 }
@@ -321,4 +350,26 @@ public class PoInOrderServices : BaseServices<PoInOrder, PoInOrderDto, InsertPoI
         return Success(ResponseText.EXECUTE_SUCCESS);
     }
     #endregion
+
+    private static Guid ParseGuid(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!Guid.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
+
+    private static decimal ParseDecimal(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!decimal.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
 }

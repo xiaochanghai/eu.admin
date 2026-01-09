@@ -24,8 +24,8 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
     private readonly IBaseRepository<SdChangeOrder> _dal;
     public SdChangeOrderServices(IBaseRepository<SdChangeOrder> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 审核数据
@@ -103,6 +103,9 @@ public class SdChangeOrderServices : BaseServices<SdChangeOrder, SdChangeOrderDt
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<SdChangeOrder>();
         foreach (var id in ids)
         {

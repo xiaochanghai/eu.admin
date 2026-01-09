@@ -25,8 +25,8 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
     private readonly IBaseRepository<PoArrivalOrderDetail> _dal;
     public PoArrivalOrderDetailServices(IBaseRepository<PoArrivalOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 更新
@@ -51,7 +51,6 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
 
             orderDetail.NoticeQTY = orderDetail.NoticeQTY - entity.NoticeQTY + model.NoticeQTY;
 
-            var dic = ConvertToDic(entity1);
             var lstColumns = new ModuleSqlColumn("PO_ARRIVAL_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
 
             await Update(model, lstColumns);
@@ -88,6 +87,9 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();

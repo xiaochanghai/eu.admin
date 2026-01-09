@@ -25,8 +25,8 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
     private readonly IBaseRepository<PoOrderDetail> _dal;
     public PoOrderDetailServices(IBaseRepository<PoOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 新增 
@@ -37,13 +37,38 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
     /// <returns>影响行数</returns>
     public override async Task<List<Guid>> Add(List<InsertPoOrderDetailInput> listEntity)
     {
+        if (listEntity == null || listEntity.Count == 0)
+            return new List<Guid>();
+
         var orderId = listEntity[0].OrderId;
+        if (orderId.IsNullOrEmpty())
+            return new List<Guid>();
+
         var result = new List<Guid>();
 
         var inserts = new List<InsertPoOrderDetailInput>();
         var updates = new List<PoOrderDetail>();
+        var updateIds = new HashSet<Guid>();
 
         var order = await Db.Queryable<PoOrder>().FirstAsync(x => x.ID == orderId);
+        var materialIds = listEntity.Select(x => x.MaterialId).Distinct().ToList();
+        var orderSources = listEntity.Select(x => x.OrderSource ?? "Material").Distinct().ToList();
+        var existingDetails = await Db.Queryable<PoOrderDetail>()
+            .Where(x => x.OrderId == orderId && materialIds.Contains(x.MaterialId) && orderSources.Contains(x.OrderSource))
+            .ToListAsync();
+        var detailMap = existingDetails.ToDictionary(x => (x.MaterialId, x.OrderSource), x => x);
+
+        var requestionDetailIds = listEntity
+            .Where(x => x.OrderSource == "Requestion" && x.SourceOrderDetailId.HasValue)
+            .Select(x => x.SourceOrderDetailId.Value)
+            .Distinct()
+            .ToList();
+        var requestionDetailMap = requestionDetailIds.Any()
+            ? (await Db.Queryable<PoRequestionDetail>()
+                .Where(x => requestionDetailIds.Contains(x.ID))
+                .ToListAsync()).ToDictionary(x => x.ID, x => x)
+            : new Dictionary<Guid, PoRequestionDetail>();
+
         for (int i = 0; i < listEntity.Count; i++)
         {
             var entity = listEntity[i];
@@ -51,9 +76,12 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
 
             if (entity.OrderSource == "Requestion")
             {
-                var poRequestionDetail = await Db.Queryable<PoRequestionDetail>().FirstAsync(x => x.ID == entity.SourceOrderDetailId);
+                if (!entity.SourceOrderDetailId.HasValue)
+                    continue;
 
-                if (poRequestionDetail.IsNullOrEmpty())
+                var sourceDetailId = entity.SourceOrderDetailId.Value;
+                if (!requestionDetailMap.TryGetValue(sourceDetailId, out var poRequestionDetail) ||
+                    poRequestionDetail.IsNullOrEmpty())
                     continue;
 
                 if (poRequestionDetail.QTY <= poRequestionDetail.PurchaseQTY)
@@ -69,7 +97,7 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
                     {
                         PurchaseQTY = poRequestionDetail.PurchaseQTY
                     }, true)
-                    .Where(it => it.ID == entity.SourceOrderDetailId)
+                    .Where(it => it.ID == sourceDetailId)
                     .ExecuteCommandAsync();
 
                 var orderStatus = DIC_PURCHASE_REQUEST_STATUS.InPurchase;
@@ -90,13 +118,12 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
                     .ExecuteCommandAsync();
             }
 
-            var detail = await base.QuerySingle(x => x.OrderId == orderId && x.MaterialId == entity.MaterialId && x.OrderSource == entity.OrderSource);
-            if (detail.IsNullOrEmpty())
+            if (!detailMap.TryGetValue((entity.MaterialId, entity.OrderSource), out var detail) || detail.IsNullOrEmpty())
             {
                 (decimal? NoTaxAmount, decimal? TaxAmount, decimal? TaxIncludedAmount) = IVChangeHelper.UpdataTaxAmount(order.TaxType, order.TaxRate, entity.Price, entity.QTY);
                 entity.DeliveryDate = order.DeliveryDate;
                 entity.NoTaxAmount = NoTaxAmount;
-                entity.TaxAmount = TaxIncludedAmount;
+                entity.TaxAmount = TaxAmount;
                 entity.TaxIncludedAmount = TaxIncludedAmount;
 
                 inserts.Add(entity);
@@ -105,7 +132,8 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
             {
                 detail.QTY += entity.QTY;
                 (decimal? NoTaxAmount, decimal? TaxAmount, decimal? TaxIncludedAmount) = IVChangeHelper.UpdataTaxAmount(order.TaxType, order.TaxRate, detail.Price, detail.QTY);
-                updates.Add(detail);
+                if (updateIds.Add(detail.ID))
+                    updates.Add(detail);
             }
         }
         if (inserts.Any())
@@ -209,6 +237,9 @@ public class PoOrderDetailServices : BaseServices<PoOrderDetail, PoOrderDetailDt
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();

@@ -27,8 +27,8 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
     public PoReturnOrderServices(IBaseRepository<PoReturnOrder> dal,
         IPoReturnOrderDetailServices poReturnOrderDetailService)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _poReturnOrderDetailServices = poReturnOrderDetailService;
     }
 
@@ -60,6 +60,9 @@ public class PoReturnOrderServices : BaseServices<PoReturnOrder, PoReturnOrderDt
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<PoReturnOrder>();
         for (int i = 0; i < ids.Length; i++)
         {

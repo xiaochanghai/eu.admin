@@ -25,8 +25,8 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
     private readonly IBaseRepository<PoReturnOrderDetail> _dal;
     public PoReturnOrderDetailServices(IBaseRepository<PoReturnOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 新增 
@@ -37,13 +37,38 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
     /// <returns>影响行数</returns>
     public override async Task<List<Guid>> Add(List<InsertPoReturnOrderDetailInput> listEntity)
     {
+        if (listEntity == null || listEntity.Count == 0)
+            return new List<Guid>();
+
         var orderId = listEntity[0].OrderId;
+        if (orderId.IsNullOrEmpty())
+            return new List<Guid>();
+
         var result = new List<Guid>();
 
         var inserts = new List<InsertPoReturnOrderDetailInput>();
         var updates = new List<PoReturnOrderDetail>();
+        var updateIds = new HashSet<Guid>();
 
         var order = await Db.Queryable<PoOrder>().FirstAsync(x => x.ID == orderId);
+        var materialIds = listEntity.Select(x => x.MaterialId).Distinct().ToList();
+        var orderSources = listEntity.Select(x => x.OrderSource ?? "Material").Distinct().ToList();
+        var existingDetails = await Db.Queryable<PoReturnOrderDetail>()
+            .Where(x => x.OrderId == orderId && materialIds.Contains(x.MaterialId) && orderSources.Contains(x.OrderSource))
+            .ToListAsync();
+        var detailMap = existingDetails.ToDictionary(x => (x.MaterialId, x.OrderSource), x => x);
+
+        var inDetailIds = listEntity
+            .Where(x => x.OrderSource == "PurchaseInOrder" && x.SourceOrderDetailId.HasValue)
+            .Select(x => x.SourceOrderDetailId.Value)
+            .Distinct()
+            .ToList();
+        var inDetailMap = inDetailIds.Any()
+            ? (await Db.Queryable<PoInOrderDetail>()
+                .Where(x => inDetailIds.Contains(x.ID))
+                .ToListAsync()).ToDictionary(x => x.ID, x => x)
+            : new Dictionary<Guid, PoInOrderDetail>();
+
         for (int i = 0; i < listEntity.Count; i++)
         {
             var entity = listEntity[i];
@@ -51,9 +76,12 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
 
             if (entity.OrderSource == "PurchaseInOrder")
             {
-                var poInDetail = await Db.Queryable<PoInOrderDetail>().FirstAsync(x => x.ID == entity.SourceOrderDetailId);
+                if (!entity.SourceOrderDetailId.HasValue)
+                    continue;
 
-                if (poInDetail.IsNullOrEmpty())
+                var sourceDetailId = entity.SourceOrderDetailId.Value;
+                if (!inDetailMap.TryGetValue(sourceDetailId, out var poInDetail) ||
+                    poInDetail.IsNullOrEmpty())
                     continue;
 
                 if (poInDetail.InQTY <= poInDetail.ReturnQTY)
@@ -69,7 +97,7 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
                     {
                         ReturnQTY = poInDetail.ReturnQTY
                     }, true)
-                    .Where(it => it.ID == entity.SourceOrderDetailId)
+                    .Where(it => it.ID == sourceDetailId)
                     .ExecuteCommandAsync();
 
                 var orderStatus = DIC_PURCHASE_IN_ORDER_STATUS.InReturn;
@@ -90,13 +118,13 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
                     .ExecuteCommandAsync();
             }
 
-            var detail = await base.QuerySingle(x => x.OrderId == orderId && x.MaterialId == entity.MaterialId && x.OrderSource == entity.OrderSource);
-            if (detail.IsNullOrEmpty())
+            if (!detailMap.TryGetValue((entity.MaterialId, entity.OrderSource), out var detail) || detail.IsNullOrEmpty())
                 inserts.Add(entity);
             else
             {
                 detail.QTY += entity.QTY;
-                updates.Add(detail);
+                if (updateIds.Add(detail.ID))
+                    updates.Add(detail);
             }
         }
         if (inserts.Any())
@@ -122,6 +150,9 @@ public class PoReturnOrderDetailServices : BaseServices<PoReturnOrderDetail, PoR
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();

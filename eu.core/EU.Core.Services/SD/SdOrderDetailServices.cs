@@ -25,8 +25,8 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
     private readonly IBaseRepository<SdOrderDetail> _dal;
     public SdOrderDetailServices(IBaseRepository<SdOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 新增
@@ -62,15 +62,26 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
     /// <returns>影响行数</returns>
     public override async Task<List<Guid>> Add(List<InsertSdOrderDetailInput> listEntity)
     {
+        if (listEntity == null || listEntity.Count == 0)
+            return new List<Guid>();
+
         Guid? orderId = listEntity[0].OrderId;
+        if (orderId.IsNullOrEmpty())
+            return new List<Guid>();
+
         var order = await Db.Queryable<SdOrder>().FirstAsync(x => x.ID == orderId);
+        var materialIds = listEntity.Select(x => x.MaterialId).Distinct().ToList();
+        var existingDetails = await Db.Queryable<SdOrderDetail>()
+            .Where(x => x.OrderId == orderId && materialIds.Contains(x.MaterialId))
+            .ToListAsync();
+        var detailMap = existingDetails.ToDictionary(x => x.MaterialId, x => x);
 
         var inserts = new List<InsertSdOrderDetailInput>();
         var updates = new List<SdOrderDetail>();
+        var updateIds = new HashSet<Guid>();
         for (int i = 0; i < listEntity.Count; i++)
         {
-            var detail = await base.QuerySingle(x => x.OrderId == orderId && x.MaterialId == listEntity[i].MaterialId);
-            if (detail.IsNullOrEmpty())
+            if (!detailMap.TryGetValue(listEntity[i].MaterialId, out var detail))
             {
                 (decimal? NoTaxAmount, decimal? TaxAmount, decimal? TaxIncludedAmount) = IVChangeHelper.UpdataTaxAmount(order.TaxType, order.TaxRate, listEntity[i].Price, listEntity[i].QTY);
                 listEntity[i].NoTaxAmount = NoTaxAmount;
@@ -83,7 +94,8 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
             else
             {
                 detail.QTY += listEntity[i].QTY;
-                updates.Add(detail);
+                if (updateIds.Add(detail.ID))
+                    updates.Add(detail);
             }
         }
         var result = await base.Add(inserts);

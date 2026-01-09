@@ -24,8 +24,8 @@ public class PoRequestionServices : BaseServices<PoRequestion, PoRequestionDto, 
     private readonly IBaseRepository<PoRequestion> _dal;
     public PoRequestionServices(IBaseRepository<PoRequestion> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
     #region 删除数据  
     /// <summary>
@@ -35,6 +35,9 @@ public class PoRequestionServices : BaseServices<PoRequestion, PoRequestionDto, 
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<PoRequestion>();
         foreach (var id in ids)
         {

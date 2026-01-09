@@ -26,8 +26,8 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
     private readonly ISdReturnOrderDetailServices _sdReturnOrderDetailServices;
     public SdReturnOrderServices(IBaseRepository<SdReturnOrder> dal, ISdReturnOrderDetailServices sdReturnOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _sdReturnOrderDetailServices = sdReturnOrderDetailServices;
     }
 
@@ -39,6 +39,9 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<SdReturnOrder>();
         for (int i = 0; i < ids.Length; i++)
         {
@@ -106,16 +109,29 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entitys == null || entitys.Count == 0)
+                return Success(ResponseText.INSERT_SUCCESS);
 
             int serialNumber = 1;
             var inserts = new List<SdReturnOrderDetail>();
             var updates = new List<SdReturnOrderDetail>();
+            var outDetailIds = entitys
+                .Where(x => x.OutOrderDetailId.HasValue)
+                .Select(x => x.OutOrderDetailId.Value)
+                .Distinct()
+                .ToList();
+            var outDetails = await Db.Queryable<SdOutOrderDetail>()
+                .Where(x => outDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var outDetailMap = outDetails.ToDictionary(x => x.ID, x => x);
+
             for (int j = 0; j < entitys.Count; j++)
             {
                 var entity = entitys[j];
                 entity.SerialNumber = serialNumber;
-                var sdOutDetail = await Db.Queryable<SdOutOrderDetail>().FirstAsync(x => x.ID == entity.OutOrderDetailId);
-                if (!sdOutDetail.IsNullOrEmpty())
+                if (entity.OutOrderDetailId.HasValue &&
+                    outDetailMap.TryGetValue(entity.OutOrderDetailId.Value, out var sdOutDetail) &&
+                    sdOutDetail.IsNotEmptyOrNull())
                 {
                     if (sdOutDetail.OutQTY <= sdOutDetail.ReturnQTY)
                         continue;
@@ -129,7 +145,7 @@ public class SdReturnOrderServices : BaseServices<SdReturnOrder, SdReturnOrderDt
 
                     var result = await Db.Updateable<SdOutOrderDetail>()
                       .SetColumns(it => new SdOutOrderDetail() { ReturnQTY = sdOutDetail.ReturnQTY }, true)
-                      .Where(it => it.ID == entity.OutOrderDetailId)
+                      .Where(it => it.ID == entity.OutOrderDetailId.Value)
                       .ExecuteCommandAsync();
                     entity.OrderId = orderId;
 

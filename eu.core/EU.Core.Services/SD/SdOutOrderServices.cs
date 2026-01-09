@@ -25,8 +25,8 @@ public class SdOutOrderServices : BaseServices<SdOutOrder, SdOutOrderDto, Insert
     private readonly ISdOutOrderDetailServices _sdOutOrderDetailServices;
     public SdOutOrderServices(IBaseRepository<SdOutOrder> dal, ISdOutOrderDetailServices sdOutOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _sdOutOrderDetailServices = sdOutOrderDetailServices;
     }
 
@@ -75,6 +75,9 @@ public class SdOutOrderServices : BaseServices<SdOutOrder, SdOutOrderDto, Insert
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<SdOutOrder>();
         for (int i = 0; i < ids.Length; i++)
         {

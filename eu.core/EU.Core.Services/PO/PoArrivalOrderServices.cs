@@ -26,8 +26,8 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
     private readonly IPoArrivalOrderDetailServices _poArrivalOrderDetailServices;
     public PoArrivalOrderServices(IBaseRepository<PoArrivalOrder> dal, IPoArrivalOrderDetailServices poArrivalOrderDetailServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _poArrivalOrderDetailServices = poArrivalOrderDetailServices;
     }
 
@@ -39,6 +39,9 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<PoArrivalOrder>();
         for (int i = 0; i < ids.Length; i++)
 
@@ -106,14 +109,19 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var poOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.EXECUTE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("PoOrderId"))
-                    poOrderIds.Add(Guid.Parse(x["PoOrderId"].ToString()));
+                    poOrderIds.Add(ParseGuid(x, "PoOrderId"));
             });
 
             var dt = Utility.GetSysDate();
@@ -122,17 +130,32 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
 
             var addDetails = new List<PoArrivalOrderDetail>();
             var updateDetails = new List<PoArrivalOrderDetail>();
+            var updateDetailIds = new HashSet<Guid>();
+
+            var sourceOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+            var poOrderDetailMap = await Db.Queryable<PoOrderDetail>()
+                .Where(x => sourceOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var poOrderDetailLookup = poOrderDetailMap.ToDictionary(x => x.ID, x => x);
+            var arrivalDetailMap = await Db.Queryable<PoArrivalOrderDetail>()
+                .Where(x => x.OrderId == id && x.SourceOrderDetailId != null && sourceOrderDetailIds.Contains(x.SourceOrderDetailId.Value))
+                .ToListAsync();
+            var arrivalDetailLookup = arrivalDetailMap.ToDictionary(x => x.SourceOrderDetailId.Value, x => x);
 
             for (int j = 0; j < dicts.Count; j++)
             {
                 var x = dicts[j];
 
-                var poOrderId = Guid.Parse(x["PoOrderId"].ToString());
-                var poOrderDetailId = Guid.Parse(x["ID"].ToString());
-                decimal? qty = Convert.ToDecimal(x["NoticeQTY"].ToString());
+                var poOrderId = ParseGuid(x, "PoOrderId");
+                var poOrderDetailId = ParseGuid(x, "ID");
+                decimal? qty = ParseDecimal(x, "NoticeQTY");
 
-                var poOrderDetail = await Db.Queryable<PoOrderDetail>().FirstAsync(x => x.ID == poOrderDetailId);
-                if (!poOrderDetail.IsNullOrEmpty())
+                if (poOrderDetailLookup.TryGetValue(poOrderDetailId, out var poOrderDetail) &&
+                    poOrderDetail.IsNotEmptyOrNull())
                 {
                     if (poOrderDetail.QTY - (poOrderDetail.NoticeQTY ?? 0) >= qty)
                         poOrderDetail.NoticeQTY = (poOrderDetail.NoticeQTY ?? 0) + qty;
@@ -150,15 +173,15 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                         .Where(it => it.ID == poOrderDetailId)
                         .ExecuteCommandAsync();
 
-                    var shipOrderDetail = await Db.Queryable<PoArrivalOrderDetail>().FirstAsync(x => x.OrderId == id && x.SourceOrderDetailId == poOrderDetailId);
-                    if (shipOrderDetail.IsNullOrEmpty())
+                    if (!arrivalDetailLookup.TryGetValue(poOrderDetailId, out var shipOrderDetail) ||
+                        shipOrderDetail.IsNullOrEmpty())
                         addDetails.Add(new PoArrivalOrderDetail()
                         {
                             SerialNumber = 1,
                             OrderId = id,
                             SourceOrderId = poOrderId,
                             SourceOrderDetailId = poOrderDetailId,
-                            MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                            MaterialId = ParseGuid(x, "MaterialId"),
                             NoticeQTY = qty,
                             InQTY = 0,
                             GroupId = Utility.GetGroupGuidId(),
@@ -167,7 +190,8 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                     else
                     {
                         shipOrderDetail.NoticeQTY += qty;
-                        updateDetails.Add(shipOrderDetail);
+                        if (updateDetailIds.Add(shipOrderDetail.ID))
+                            updateDetails.Add(shipOrderDetail);
                     }
                 }
             }
@@ -202,23 +226,38 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
         try
         {
             await Db.Ado.BeginTranAsync();
+            if (entity == null)
+                return Failed("数据不能为空。");
+
             string json = entity.ToString();
             var supplierIds = new List<Guid>();
             var poNoticeOrderIds = new List<Guid>();
             var dicts = JsonHelper.JsonToObj<List<Dictionary<string, object>>>(json);
+            if (dicts == null || dicts.Count == 0)
+                return Success(ResponseText.EXECUTE_SUCCESS);
 
             dicts.ForEach(x =>
             {
                 if (x.ContainsKey("SupplierId"))
-                    supplierIds.Add(Guid.Parse(x["SupplierId"].ToString()));
+                    supplierIds.Add(ParseGuid(x, "SupplierId"));
 
                 if (x.ContainsKey("PoNoticeOrderId"))
-                    poNoticeOrderIds.Add(Guid.Parse(x["PoNoticeOrderId"].ToString()));
+                    poNoticeOrderIds.Add(ParseGuid(x, "PoNoticeOrderId"));
             });
             var dt = Utility.GetSysDate();
             var userId = App.User.ID;
             supplierIds = supplierIds.Distinct().ToList();
             poNoticeOrderIds = poNoticeOrderIds.Distinct().ToList();
+
+            var sourceOrderDetailIds = dicts
+                .Where(x => x.ContainsKey("ID"))
+                .Select(x => ParseGuid(x, "ID"))
+                .Distinct()
+                .ToList();
+            var noticeDetailMap = await Db.Queryable<PoArrivalOrderDetail>()
+                .Where(x => sourceOrderDetailIds.Contains(x.ID))
+                .ToListAsync();
+            var noticeDetailLookup = noticeDetailMap.ToDictionary(x => x.ID, x => x);
 
             for (int i = 0; i < supplierIds.Count; i++)
             {
@@ -242,14 +281,14 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                 for (int j = 0; j < dicts.Count; j++)
                 {
                     var x = dicts[j];
-                    if (x.ContainsKey("SupplierId") && Guid.Parse(x["SupplierId"].ToString()) == supplierId)
+                    if (x.ContainsKey("SupplierId") && ParseGuid(x, "SupplierId") == supplierId)
                     {
-                        var poNoticeOrderId = Guid.Parse(x["PoNoticeOrderId"].ToString());
-                        var sourceOrderDetailId = Guid.Parse(x["ID"].ToString());
-                        decimal? inQTY = Convert.ToDecimal(x["InQTY"].ToString());
+                        var poNoticeOrderId = ParseGuid(x, "PoNoticeOrderId");
+                        var sourceOrderDetailId = ParseGuid(x, "ID");
+                        decimal? inQTY = ParseDecimal(x, "InQTY");
 
-                        var poNoticeOrderDetail = await Db.Queryable<PoArrivalOrderDetail>().FirstAsync(x => x.ID == sourceOrderDetailId);
-                        if (!poNoticeOrderDetail.IsNullOrEmpty())
+                        if (noticeDetailLookup.TryGetValue(sourceOrderDetailId, out var poNoticeOrderDetail) &&
+                            poNoticeOrderDetail.IsNotEmptyOrNull())
                         {
                             if (poNoticeOrderDetail.NoticeQTY - (poNoticeOrderDetail.InQTY ?? 0) >= inQTY)
                                 poNoticeOrderDetail.InQTY = (poNoticeOrderDetail.InQTY ?? 0) + inQTY;
@@ -274,7 +313,7 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
                                 OrderId = orderId,
                                 SourceOrderId = poNoticeOrderId,
                                 SourceOrderDetailId = sourceOrderDetailId,
-                                MaterialId = Guid.Parse(x["MaterialId"].ToString()),
+                                MaterialId = ParseGuid(x, "MaterialId"),
                                 InQTY = inQTY,
                                 ReturnQTY = 0
                             });
@@ -360,5 +399,27 @@ public class PoArrivalOrderServices : BaseServices<PoArrivalOrder, PoArrivalOrde
             .ExecuteCommandAsync();
     }
     #endregion
+
+    private static Guid ParseGuid(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!Guid.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
+
+    private static decimal ParseDecimal(IReadOnlyDictionary<string, object> data, string key)
+    {
+        if (!data.TryGetValue(key, out var value) || value == null)
+            throw new Exception($"缺少字段：{key}");
+
+        if (!decimal.TryParse(value.ToString(), out var result))
+            throw new Exception($"字段【{key}】格式错误");
+
+        return result;
+    }
 
 }

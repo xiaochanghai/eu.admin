@@ -21,11 +21,12 @@ namespace EU.Core.Services;
 /// </summary>
 public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipOrderDetailDto, InsertSdShipOrderDetailInput, EditSdShipOrderDetailInput>, ISdShipOrderDetailServices
 {
+    private const string ModuleCode = "SD_SHIP_ORDER_DETAIL_MNG";
     private readonly IBaseRepository<SdShipOrderDetail> _dal;
     public SdShipOrderDetailServices(IBaseRepository<SdShipOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 更新
@@ -44,7 +45,12 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
             #endregion
 
             var entity = await QueryDto(Id);
+            if (entity == null)
+                throw new Exception("未找到发货明细数据，无法更新。");
+
             var orderDetail = await Db.Queryable<SdOrderDetail>().FirstAsync(x => x.ID == entity.SalesOrderDetailId);
+            if (orderDetail == null)
+                throw new Exception("未找到对应的销售单明细，无法更新出货数量。");
 
             var qty = orderDetail.QTY - (orderDetail.ShipQTY ?? 0);
 
@@ -52,7 +58,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
                 throw new Exception($"出货通知数量最大为：{Utility.RemoveZero(qty + entity.ShipQTY)}");
 
             orderDetail.ShipQTY = orderDetail.ShipQTY - entity.ShipQTY + model.ShipQTY;
-            var lstColumns = new ModuleSqlColumn("SD_SHIP_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
+            var lstColumns = new ModuleSqlColumn(ModuleCode).GetModuleTableEditableColumns();
 
             await Update(model, lstColumns);
 
@@ -92,6 +98,9 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();

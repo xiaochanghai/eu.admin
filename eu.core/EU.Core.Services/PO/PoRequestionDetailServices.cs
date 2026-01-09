@@ -25,8 +25,8 @@ public class PoRequestionDetailServices : BaseServices<PoRequestionDetail, PoReq
     private readonly IBaseRepository<PoRequestionDetail> _dal;
     public PoRequestionDetailServices(IBaseRepository<PoRequestionDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 新增 
@@ -38,16 +38,27 @@ public class PoRequestionDetailServices : BaseServices<PoRequestionDetail, PoReq
     /// <returns>影响行数</returns>
     public override async Task<List<Guid>> Add(List<InsertPoRequestionDetailInput> listEntity)
     {
+        if (listEntity == null || listEntity.Count == 0)
+            return new List<Guid>();
+
         var orderId = listEntity[0].OrderId;
+        if (orderId.IsNullOrEmpty())
+            return new List<Guid>();
 
         var inserts = new List<InsertPoRequestionDetailInput>();
         var updates = new List<PoRequestionDetail>();
+        var updateIds = new HashSet<Guid>();
 
         var order = await Db.Queryable<PoRequestion>().FirstAsync(x => x.ID == orderId);
+        var materialIds = listEntity.Select(x => x.MaterialId).Distinct().ToList();
+        var existingDetails = await Db.Queryable<PoRequestionDetail>()
+            .Where(x => x.OrderId == orderId && materialIds.Contains(x.MaterialId))
+            .ToListAsync();
+        var detailMap = existingDetails.ToDictionary(x => x.MaterialId, x => x);
+
         for (int i = 0; i < listEntity.Count; i++)
         {
-            var detail = await base.QuerySingle(x => x.OrderId == orderId && x.MaterialId == listEntity[i].MaterialId);
-            if (detail.IsNullOrEmpty())
+            if (!detailMap.TryGetValue(listEntity[i].MaterialId, out var detail) || detail.IsNullOrEmpty())
             {
                 listEntity[i].RequestionDate = order.RequestionDate;
                 inserts.Add(listEntity[i]);
@@ -55,7 +66,8 @@ public class PoRequestionDetailServices : BaseServices<PoRequestionDetail, PoReq
             else
             {
                 detail.QTY += listEntity[i].QTY;
-                updates.Add(detail);
+                if (updateIds.Add(detail.ID))
+                    updates.Add(detail);
             }
         }
         var result = await base.Add(inserts);

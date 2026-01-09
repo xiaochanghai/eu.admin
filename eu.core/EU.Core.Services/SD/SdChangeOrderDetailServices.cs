@@ -22,11 +22,12 @@ namespace EU.Core.Services;
 /// </summary>
 public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdChangeOrderDetailDto, InsertSdChangeOrderDetailInput, EditSdChangeOrderDetailInput>, ISdChangeOrderDetailServices
 {
+    private const string ModuleCode = "SD_SALES_CHANGE_ORDER_DETAIL_MNG";
     private readonly IBaseRepository<SdChangeOrderDetail> _dal;
     public SdChangeOrderDetailServices(IBaseRepository<SdChangeOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 更新
@@ -38,13 +39,15 @@ public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdC
         CheckOnly(model, Id);
         #endregion
 
-        var order = await Db.Queryable<SdChangeOrder>().FirstAsync(x => x.ID == model.OrderId);
-        (decimal? NoTaxAmount, decimal? TaxAmount, decimal? TaxIncludedAmount) = IVChangeHelper.UpdataTaxAmount(order.TaxType, order.TaxRate, model.Price, model.QTY);
+        var orderTax = await Db.Queryable<SdChangeOrder>()
+            .Where(x => x.ID == model.OrderId)
+            .Select(x => new { x.TaxType, x.TaxRate })
+            .FirstAsync();
+        (decimal? NoTaxAmount, decimal? TaxAmount, decimal? TaxIncludedAmount) = IVChangeHelper.UpdataTaxAmount(orderTax.TaxType, orderTax.TaxRate, model.Price, model.QTY);
         model.NoTaxAmount = NoTaxAmount;
         model.TaxAmount = TaxAmount;
         model.TaxIncludedAmount = TaxIncludedAmount;
-        var dic = ConvertToDic(entity);
-        var lstColumns = new ModuleSqlColumn("SD_SALES_CHANGE_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
+        var lstColumns = new ModuleSqlColumn(ModuleCode).GetModuleTableEditableColumns();
 
         await Update(model, lstColumns);
         return Mapper.Map(model).ToANew<SdChangeOrderDetailDto>();

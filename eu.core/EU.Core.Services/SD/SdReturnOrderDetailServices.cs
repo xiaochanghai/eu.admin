@@ -21,11 +21,12 @@ namespace EU.Core.Services;
 /// </summary>
 public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdReturnOrderDetailDto, InsertSdReturnOrderDetailInput, EditSdReturnOrderDetailInput>, ISdReturnOrderDetailServices
 {
+    private const string ModuleCode = "SD_RETURN_ORDER_DETAIL_MNG";
     private readonly IBaseRepository<SdReturnOrderDetail> _dal;
     public SdReturnOrderDetailServices(IBaseRepository<SdReturnOrderDetail> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 
     #region 更新
@@ -41,7 +42,12 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
             #endregion
 
             var entity = await QueryDto(Id);
+            if (entity == null)
+                throw new Exception("未找到退货明细数据，无法更新。");
+
             var orderDetail = await Db.Queryable<SdOutOrderDetail>().Where(x => x.ID == entity.OutOrderDetailId).FirstAsync();
+            if (orderDetail == null)
+                throw new Exception("未找到对应的出库明细，无法更新退库数量。");
 
             var qty = orderDetail.OutQTY - (orderDetail.ReturnQTY ?? 0);
 
@@ -50,7 +56,7 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
 
             orderDetail.ReturnQTY = orderDetail.ReturnQTY - entity.ReturnQTY + model.ReturnQTY;
 
-            var lstColumns = new ModuleSqlColumn("SD_RETURN_ORDER_DETAIL_MNG").GetModuleTableEditableColumns();
+            var lstColumns = new ModuleSqlColumn(ModuleCode).GetModuleTableEditableColumns();
 
             await Update(model, lstColumns);
 
@@ -89,6 +95,9 @@ public class SdReturnOrderDetailServices : BaseServices<SdReturnOrderDetail, SdR
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         try
         {
             await Db.Ado.BeginTranAsync();
