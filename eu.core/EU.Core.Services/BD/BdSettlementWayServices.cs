@@ -68,7 +68,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         CheckOnly(model, Id);
         #endregion
 
-        var enumData = await LovHelper.GetLovList(Db, "SettlementAccountType");
+        var enumData = await LovHelper.GetLovListAsync(Db, "SettlementAccountType");
 
         if (enumData.Any())
         {
@@ -82,7 +82,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         }
 
         var dic = ConvertToDic(entity);
-        var lstColumns = dic.Keys.ToList();
+        var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
         lstColumns.Add("SettlementName");
         return await Update(model, lstColumns);
     }

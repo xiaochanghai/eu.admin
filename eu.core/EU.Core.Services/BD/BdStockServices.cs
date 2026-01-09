@@ -32,6 +32,9 @@ public class BdStockServices : BaseServices<BdStock, BdStockDto, InsertBdStockIn
     #region 新增
     public override async Task<Guid> Add(object entity)
     {
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+
         var model = ConvertToEntity(entity);
 
         var reult = await base.Add(entity);
@@ -49,10 +52,15 @@ public class BdStockServices : BaseServices<BdStock, BdStockDto, InsertBdStockIn
     #region 更新
     public override async Task<bool> Update(Guid Id, object entity)
     {
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+
         var model = ConvertToEntity(entity);
         if (model.IsVirtual == true)
-            if (await Db.Queryable<BdGoodsLocation>().AnyAsync(x => x.StockId == model.ID))
+        {
+            if (await Db.Queryable<BdGoodsLocation>().AnyAsync(x => x.StockId == Id))
                 throw new("该仓库下存在多个货位，不可变更为虚拟仓!");
+        }
         return await base.Update(Id, entity);
     }
     #endregion

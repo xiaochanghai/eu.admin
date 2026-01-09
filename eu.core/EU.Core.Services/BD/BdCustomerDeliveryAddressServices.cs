@@ -41,7 +41,7 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
                     UpdateBy = UserId,
                     UpdateTime = Utility.GetSysDate()
                 })
-                .Where(x => x.ID != result && x.IsDefault == true)
+                .Where(x => x.CustomerId == model.CustomerId && x.ID != result && x.IsDefault == true)
                 .ExecuteCommandAsync();
 
         return result;
@@ -58,7 +58,7 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
                 {
                     IsDefault = false
                 })
-                .Where(x => x.ID != Id && x.IsDefault == true)
+                .Where(x => x.CustomerId == model.CustomerId && x.ID != Id && x.IsDefault == true)
                 .ExecuteCommandAsync();
         return await base.Update(Id, entity);
     }
