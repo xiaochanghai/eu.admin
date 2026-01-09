@@ -32,7 +32,13 @@ public class IvCheckDetailServices : BaseServices<IvCheckDetail, IvCheckDetailDt
     #region 更新
     public override async Task<IvCheckDetailDto> UpdateReturn(Guid Id, object entity1)
     {
+        if (entity1 == null)
+            throw new ArgumentNullException(nameof(entity1));
+
         var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+        if (dict == null || !dict.ContainsKey("masterId"))
+            throw new Exception("缺少字段：masterId");
+
         var orderId = dict["masterId"].ObjToGuid();
         var entity = await Query(Id);
         var model = ConvertToEntity(entity1);

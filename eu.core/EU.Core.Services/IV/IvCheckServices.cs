@@ -15,7 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using MathNet.Numerics.Distributions;
 using static EU.Core.Common.Helper.IVChangeHelper;
 
 namespace EU.Core.Services;
@@ -95,6 +94,9 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<IvCheck>();
         foreach (var id in ids)
         {
@@ -166,6 +168,9 @@ public class IvCheckServices : BaseServices<IvCheck, IvCheckDto, InsertIvCheckIn
     [UseTran]
     public async Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return Success(ResponseText.EXECUTE_SUCCESS);
+
         for (int i = 0; i < ids.Length; i++)
         {
             var id = ids[i];

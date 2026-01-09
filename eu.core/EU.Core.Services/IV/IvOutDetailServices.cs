@@ -26,8 +26,8 @@ public class IvOutDetailServices : BaseServices<IvOutDetail, IvOutDetailDto, Ins
     private readonly IBdMaterialServices _materialServices;
     public IvOutDetailServices(IBaseRepository<IvOutDetail> dal, IBdMaterialServices materialServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _materialServices = materialServices;
     }
 
@@ -36,7 +36,13 @@ public class IvOutDetailServices : BaseServices<IvOutDetail, IvOutDetailDto, Ins
     {
         try
         {
+            if (entity1 == null)
+                throw new ArgumentNullException(nameof(entity1));
+
             var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+            if (dict == null || !dict.ContainsKey("masterId"))
+                throw new Exception("缺少字段：masterId");
+
             var orderId = dict["masterId"].ObjToGuid();
             var entity = await Query(Id);
             var model = ConvertToEntity(entity1);
@@ -58,13 +64,20 @@ public class IvOutDetailServices : BaseServices<IvOutDetail, IvOutDetailDto, Ins
             var model1 = Mapper.Map(model).ToANew<IvOutDetailDto>();
 
             var material = await _materialServices.QueryDto(model.MaterialId);
-            model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
-            model1.Specifications = material.Specifications;
-            model1.UnitName = material.UnitName;
+            if (material != null)
+            {
+                model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
+                model1.Specifications = material.Specifications;
+                model1.UnitName = material.UnitName;
+            }
             if (model.StockId != null)
-                model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
+                model1.StockName = await Db.Ado.GetStringAsync(
+                    "SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID=@id",
+                    new { id = model.StockId });
             if (model.GoodsLocationId != null)
-                model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
+                model1.GoodsLocationName = await Db.Ado.GetStringAsync(
+                    "SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID=@id",
+                    new { id = model.GoodsLocationId });
 
             if (model.QTY > 0 && model.Price > 0)
                 model1.Amount = model.Price * model.QTY;
@@ -83,6 +96,9 @@ public class IvOutDetailServices : BaseServices<IvOutDetail, IvOutDetailDto, Ins
     #region 删除
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var result = await base.Delete(ids);
         var orderDetail = await Db.Queryable<IvOutDetail>().FirstAsync(x => x.ID == ids[0]);
         if (orderDetail != null)

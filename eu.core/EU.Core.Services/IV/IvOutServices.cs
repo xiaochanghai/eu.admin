@@ -37,6 +37,9 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
     /// <returns></returns>
     public override async Task<bool> Delete(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return true;
+
         var entities = new List<IvOut>();
         foreach (var id in ids)
         {
@@ -104,6 +107,9 @@ public class IvOutServices : BaseServices<IvOut, IvOutDto, InsertIvOutInput, Edi
     /// <returns></returns>
     public async Task<ServiceResult> BulkOrderPostingAsync(Guid[] ids)
     {
+        if (ids == null || ids.Length == 0)
+            return Success(ResponseText.EXECUTE_SUCCESS);
+
         try
         {
             await Db.Ado.BeginTranAsync();

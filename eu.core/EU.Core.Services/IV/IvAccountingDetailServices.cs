@@ -26,15 +26,21 @@ public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAcc
     private readonly IBdMaterialServices _materialServices;
     public IvAccountingDetailServices(IBaseRepository<IvAccountingDetail> dal, IBdMaterialServices materialServices)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
         _materialServices = materialServices;
     }
 
     #region 更新
     public override async Task<IvAccountingDetailDto> UpdateReturn(Guid Id, object entity1)
     {
+        if (entity1 == null)
+            throw new ArgumentNullException(nameof(entity1));
+
         var dict = JsonHelper.JsonToObj<Dictionary<string, object>>(entity1.ToString());
+        if (dict == null || !dict.ContainsKey("masterId"))
+            throw new Exception("缺少字段：masterId");
+
         var orderId = dict["masterId"].ObjToGuid();
         var entity = await Query(Id);
         var model = ConvertToEntity(entity1);
@@ -49,13 +55,20 @@ public class IvAccountingDetailServices : BaseServices<IvAccountingDetail, IvAcc
         var model1 = Mapper.Map(model).ToANew<IvAccountingDetailDto>();
 
         var material = await _materialServices.QueryDto(model.MaterialId);
-        model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
-        model1.Specifications = material.Specifications;
-        model1.UnitName = material.UnitName;
+        if (material != null)
+        {
+            model1.MaterialName = material.MaterialName + "（" + material.MaterialNo + "）";
+            model1.Specifications = material.Specifications;
+            model1.UnitName = material.UnitName;
+        }
         if (model.StockId != null)
-            model1.StockName = await Db.Ado.GetStringAsync($"SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID='{model.StockId}'");
+            model1.StockName = await Db.Ado.GetStringAsync(
+                "SELECT StockNames + '（' + StockNo + '）' FROM BdStock WHERE ID=@id",
+                new { id = model.StockId });
         if (model.GoodsLocationId != null)
-            model1.GoodsLocationName = await Db.Ado.GetStringAsync($"SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID='{model.GoodsLocationId}'");
+            model1.GoodsLocationName = await Db.Ado.GetStringAsync(
+                "SELECT GoodsLocationName1 FROM BdGoodsLocation_V WHERE ID=@id",
+                new { id = model.GoodsLocationId });
 
         await IVChangeHelper.UpdataOrderDetailSerialNumber(Db, "IvAccountingDetail", orderId);
 

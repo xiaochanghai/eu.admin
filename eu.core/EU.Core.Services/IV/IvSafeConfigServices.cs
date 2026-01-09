@@ -25,7 +25,7 @@ public class IvSafeConfigServices : BaseServices<IvSafeConfig, IvSafeConfigDto, 
     private readonly IBaseRepository<IvSafeConfig> _dal;
     public IvSafeConfigServices(IBaseRepository<IvSafeConfig> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 }

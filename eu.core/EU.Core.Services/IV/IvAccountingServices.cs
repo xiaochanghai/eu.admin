@@ -25,7 +25,7 @@ public class IvAccountingServices : BaseServices<IvAccounting, IvAccountingDto, 
     private readonly IBaseRepository<IvAccounting> _dal;
     public IvAccountingServices(IBaseRepository<IvAccounting> dal)
     {
-        this._dal = dal;
-        base.BaseDal = dal;
+        _dal = dal;
+        BaseDal = dal;
     }
 }
