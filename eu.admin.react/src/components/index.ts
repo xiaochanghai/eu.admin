@@ -2,7 +2,6 @@ export * from "@/components/UploadExcel";
 export { default as ModuleLog } from "@/components/Common/ModuleLog";
 export { default as ComboGrid } from "@/components/ComBoGrid";
 export { default as ComBoBox } from "@/components/ComBoBox";
-export { default as SmProTable } from "@/components/ProTable";
 export { default as EditableProTable } from "@/components/ProTableEditable/index";
 export { Loading, PageLoader, Skeleton } from "@/components/Loading/index";
 export { Icon } from "@/components/Icon";

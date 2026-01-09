@@ -6,7 +6,8 @@ import FormPage from "./FormPage";
 import http from "@/api";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo } from "@/redux/modules/module";
-import { Icon, SmProTable } from "@/components";
+import { Icon } from "@/components";
+import SmProTable from "@/components/ProTable";
 
 const { TabPane } = Tabs;
 let moduleCode = "BD_MATERIAL_TYPE_MNG";

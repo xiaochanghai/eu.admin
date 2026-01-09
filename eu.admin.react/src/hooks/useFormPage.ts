@@ -149,9 +149,7 @@ export const useFormPage = (options: UseFormPageOptions) => {
         formData = beforeSave(formData);
       }
 
-      const { Data, Success, Message } = id
-        ? await update(formData)
-        : await add(formData);
+      const { Data, Success, Message } = id ? await update(formData) : await add(formData);
 
       message.destroy();
 
@@ -172,7 +170,7 @@ export const useFormPage = (options: UseFormPageOptions) => {
             onClose();
           } else {
             setViewId(null);
-            setDisabled(false);  // 保存并新增后，表单应该可编辑
+            setDisabled(false); // 保存并新增后，表单应该可编辑
             form.resetFields();
           }
         }
@@ -221,9 +219,7 @@ export const useFormPage = (options: UseFormPageOptions) => {
    * 保存并新增
    */
   const onSaveAdd = useCallback(() => {
-    return form
-      .validateFields()
-      .then(values => onFinish(values, SaveTypeEnum.SaveAdd));
+    return form.validateFields().then(values => onFinish(values, SaveTypeEnum.SaveAdd));
   }, [form, onFinish]);
 
   /**
