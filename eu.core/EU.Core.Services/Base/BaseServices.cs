@@ -407,32 +407,31 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>删除成功返回true</returns>
     /// <remarks>
     /// 逻辑删除实现：
-    /// 1. 遍历ID数组，查询对应的实体
-    /// 2. 将实体的IsDeleted字段设置为true
+    /// 1. 一次性查询所有数据（优化：避免N+1查询）
+    /// 2. 在内存中批量设置IsDeleted字段为true
     /// 3. 批量更新到数据库
     /// 优点：数据可恢复，保留历史记录
     /// </remarks>
     public virtual async Task<bool> Delete(Guid[] ids)
     {
-        var entities = new List<TEntity>();
+        if (ids == null || !ids.Any())
+            return false;
 
-        foreach (var id in ids)
+        // 1. 一次性查询所有数据（只需1次数据库访问）
+        var entities = await BaseDal.Query(x =>
+            ids.Contains(((BasePoco)(object)x).ID));
+
+        if (!entities.Any())
+            return false;
+
+        // 2. 批量设置删除标记
+        entities.ForEach(entity =>
         {
-            // 检查数据是否存在
-            if (!await AnyAsync(id))
-                continue;
+            if (entity is BasePoco basePoco)
+                basePoco.IsDeleted = true;
+        });
 
-            // 查询实体数据
-            var entity = await Query(id);
-
-            // 设置为已删除
-            var ent = entity as BasePoco;
-            ent.IsDeleted = true;
-
-            entities.Add(entity);
-        }
-
-        // 批量更新IsDeleted字段
+        // 3. 批量更新（只需1次数据库访问）
         return await BaseDal.Update(entities, ["IsDeleted"]);
     }
 
@@ -896,37 +895,39 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>审核成功返回true</returns>
     /// <remarks>
     /// 审核流程：
-    /// 1. 遍历ID数组，查询对应实体
-    /// 2. 检查审核状态是否为"Add"（待审核）
+    /// 1. 一次性查询所有数据（优化：避免N+1查询）
+    /// 2. 在内存中过滤状态为"Add"（待审核）的数据
     /// 3. 将审核状态改为"CompleteAudit"（已审核）
     /// 4. 批量更新到数据库
     /// 只有状态为"Add"的数据才会被审核
     /// </remarks>
     public virtual async Task<bool> BulkAudit(Guid[] ids, string where = null)
     {
-        List<TEntity> entities = new();
+        if (ids == null || !ids.Any())
+            return false;
 
-        foreach (var id in ids)
-        {
-            // 检查数据是否存在
-            if (!await AnyAsync(id))
-                continue;
+        // 1. 一次性查询所有数据（只需1次数据库访问）
+        var entities = await BaseDal.Query(x =>
+            ids.Contains(((BasePoco)(object)x).ID));
 
-            // 查询实体数据
-            var entity = await Query(id);
-            var ent = entity as BasePoco;
+        if (!entities.Any())
+            return false;
 
-            // 只审核状态为"Add"的数据
-            if (ent.AuditStatus == "Add")
+        // 2. 在内存中过滤和修改
+        var entitiesToUpdate = entities
+            .Where(x => (x as BasePoco)?.AuditStatus == "Add")
+            .Select(x =>
             {
-                ent.AuditStatus = "CompleteAudit";
-                entities.Add(entity);
-            }
-        }
+                (x as BasePoco).AuditStatus = "CompleteAudit";
+                return x;
+            })
+            .ToList();
 
-        // 批量更新审核状态
-        await BaseDal.Update(entities, ["AuditStatus"], null, where);
-        return true;
+        if (!entitiesToUpdate.Any())
+            return false;
+
+        // 3. 批量更新（只需1次数据库访问）
+        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"], null, where);
     }
 
     #endregion
@@ -950,37 +951,39 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <returns>撤销成功返回true</returns>
     /// <remarks>
     /// 撤销流程：
-    /// 1. 遍历ID数组，查询对应实体
-    /// 2. 检查审核状态是否为"CompleteAudit"（已审核）
+    /// 1. 一次性查询所有数据（优化：避免N+1查询）
+    /// 2. 在内存中过滤状态为"CompleteAudit"（已审核）的数据
     /// 3. 将审核状态改回"Add"（待审核）
     /// 4. 批量更新到数据库
     /// 只有状态为"CompleteAudit"的数据才能被撤销
     /// </remarks>
     public virtual async Task<bool> BulkRevocation(Guid[] ids)
     {
-        List<TEntity> entities = new();
+        if (ids == null || !ids.Any())
+            return false;
 
-        foreach (var id in ids)
-        {
-            // 检查数据是否存在
-            if (!await AnyAsync(id))
-                continue;
+        // 1. 一次性查询所有数据（只需1次数据库访问）
+        var entities = await BaseDal.Query(x =>
+            ids.Contains(((BasePoco)(object)x).ID));
 
-            // 查询实体数据
-            var entity = await Query(id);
-            var ent = entity as BasePoco;
+        if (!entities.Any())
+            return false;
 
-            // 只撤销状态为"CompleteAudit"的数据
-            if (ent.AuditStatus == "CompleteAudit")
+        // 2. 在内存中过滤和修改
+        var entitiesToUpdate = entities
+            .Where(x => (x as BasePoco)?.AuditStatus == "CompleteAudit")
+            .Select(x =>
             {
-                ent.AuditStatus = "Add";
-                entities.Add(entity);
-            }
-        }
+                (x as BasePoco).AuditStatus = "Add";
+                return x;
+            })
+            .ToList();
 
-        // 批量更新审核状态
-        await BaseDal.Update(entities, ["AuditStatus"]);
-        return true;
+        if (!entitiesToUpdate.Any())
+            return false;
+
+        // 3. 批量更新（只需1次数据库访问）
+        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"]);
     }
 
     #endregion
