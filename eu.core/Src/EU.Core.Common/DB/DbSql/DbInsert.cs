@@ -266,7 +266,7 @@ public class DbInsert
         //}
 
         //create_by
-        Guid? createBy = App.User.ID;
+        Guid? createBy = App.User?.ID;
         if (createBy != Guid.Empty)
             Values("CreatedBy", createBy);
 
