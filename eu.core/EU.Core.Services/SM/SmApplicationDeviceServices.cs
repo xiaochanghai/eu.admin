@@ -42,6 +42,9 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
     /// <returns></returns>
     public Task<ServiceResult> Record(SmApplicationDevice device)
     {
+        if (device == null || device.UUID.IsNullOrEmpty())
+            return Task.FromResult(Failed("设备信息不能为空"));
+
         var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
 
         // 在后台线程异步执行，不阻塞主线程
@@ -67,6 +70,9 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
     /// <param name="ipAddress">IP地址</param>
     private async Task RecordDeviceAsync(SmApplicationDevice input, string ipAddress)
     {
+        if (input == null || input.UUID.IsNullOrEmpty())
+            return;
+
         try
         {
             await Db.Ado.BeginTranAsync();
@@ -87,7 +93,7 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
                         x.Brand,
                         x.Model,
                         x.BundleId,
-                        x.BundleVersion, 
+                        x.BundleVersion,
                         x.PushRegistrationId,
                     })
                     .ExecuteCommandAsync();
