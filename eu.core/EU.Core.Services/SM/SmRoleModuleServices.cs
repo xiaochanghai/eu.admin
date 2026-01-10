@@ -170,16 +170,29 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                 await Db.Deleteable<SmRoleFunction>().Where(it => it.SmRoleId == RoleId).ExecuteCommandAsync();
 
                 // 处理功能权限（格式：functionPrivileges_{FunctionId}）
-                roleFunctions = keyList.Where(x => x.Contains(FUNCTION_PRIVILEGES_PREFIX))
-                    .Select(x => new SmRoleFunction()
+                roleFunctions = keyList
+                    .Where(x => x.Contains(FUNCTION_PRIVILEGES_PREFIX))
+                    .Select(x =>
                     {
-                        SmFunctionId = Guid.Parse(x.Replace(FUNCTION_PRIVILEGES_PREFIX, null)),
-                        SmRoleId = RoleId,
-                    }).ToList();
+                        var functionIdText = x.Replace(FUNCTION_PRIVILEGES_PREFIX, string.Empty);
+                        return Guid.TryParse(functionIdText, out var functionId)
+                            ? new SmRoleFunction
+                            {
+                                SmFunctionId = functionId,
+                                SmRoleId = RoleId,
+                            }
+                            : null;
+                    })
+                    .Where(x => x != null)
+                    .ToList();
 
-                for (int i = 0; i < keyList.Count; i++)
+                foreach (var roleFunction in roleFunctions)
                 {
-                    roleFunctions[i].SmModuleId = (await FunctionPrivilege.QueryByIdAsync(Db, Guid.Parse(keyList[i].Replace(FUNCTION_PRIVILEGES_PREFIX, null))))?.SmModuleId;
+                    if (roleFunction.SmFunctionId.HasValue)
+                    {
+                        var privilege = await FunctionPrivilege.QueryByIdAsync(Db, roleFunction.SmFunctionId.Value);
+                        roleFunction.SmModuleId = privilege?.SmModuleId;
+                    }
                 }
 
                 // 处理通用操作权限（格式：CommonOption_{ActionCode}_{ModuleId}）
@@ -187,9 +200,12 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
                     .ForEach(x =>
                     {
                         var array = x.Split(SEPARATOR);
+                        if (array.Length < 3 || !Guid.TryParse(array[2], out var moduleId))
+                            return;
+
                         roleFunctions.Add(new SmRoleFunction()
                         {
-                            SmModuleId = Guid.Parse(array[2]),
+                            SmModuleId = moduleId,
                             SmRoleId = RoleId,
                             ActionCode = array[1]
                         });
@@ -375,7 +391,7 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         {
             // 获取顶级父模块（没有父级的模块）
             subItems = smModules
-                .Where(x => x.IsParent == true && string.IsNullOrEmpty(x.ParentId.ToString()))
+                .Where(x => x.IsParent == true && x.ParentId == null)
                 .Select(y => new ModuleTree
                 {
                     title = y.ModuleName,
@@ -411,7 +427,12 @@ public class SmRoleModuleServices : BaseServices<SmRoleModule, SmRoleModuleDto, 
         // 如果是叶子节点，添加操作权限和功能权限
         if (moduleTree.isLeaf == true)
         {
-            var module = smModules.Where(x => x.ID == Guid.Parse(moduleTree.key)).First();
+            if (!Guid.TryParse(moduleTree.key, out var moduleId))
+                return;
+
+            var module = smModules.FirstOrDefault(x => x.ID == moduleId);
+            if (module == null)
+                return;
 
             // 定义所有可用的操作权限
             var allActions = new Dictionary<string, string>
