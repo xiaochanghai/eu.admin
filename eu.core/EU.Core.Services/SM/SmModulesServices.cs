@@ -160,7 +160,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         {
             // 获取顶级父模块
             subItems = smModules
-                .Where(x => x.IsParent == true && string.IsNullOrEmpty(x.ParentId.ToString()) && roleModule.Contains(x.ID))
+                .Where(x => x.IsParent == true && x.ParentId == null && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
                 .Select(y => new TreeMenuData
                 {
@@ -173,9 +173,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
         else
         {
+            if (!Guid.TryParse(moduleTree.id, out var parentId))
+            {
+                moduleTree.children = [];
+                return;
+            }
+
             // 获取子模块
             subItems = smModules
-                .Where(x => x.ParentId == Guid.Parse(moduleTree.id) && roleModule.Contains(x.ID))
+                .Where(x => x.ParentId == parentId && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
                 .Select(y => new TreeMenuData
                 {
@@ -215,7 +221,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         {
             // 获取顶级父模块
             subItems = smModules
-                .Where(x => x.IsParent == true && string.IsNullOrEmpty(x.ParentId.ToString()) && roleModule.Contains(x.ID))
+                .Where(x => x.IsParent == true && x.ParentId == null && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
                 .Select(y => new TreeAuthMenu
                 {
@@ -234,9 +240,15 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
         else
         {
+            if (!Guid.TryParse(moduleTree.id, out var parentId))
+            {
+                moduleTree.children = [];
+                return;
+            }
+
             // 获取子模块
             subItems = smModules
-                .Where(x => x.ParentId == Guid.Parse(moduleTree.id) && roleModule.Contains(x.ID))
+                .Where(x => x.ParentId == parentId && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
                 .Select(y => new TreeAuthMenu
                 {
@@ -1442,3 +1454,4 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
     #endregion
 }
+
