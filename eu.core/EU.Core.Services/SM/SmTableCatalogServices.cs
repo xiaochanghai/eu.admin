@@ -64,7 +64,10 @@ public class SmTableCatalogServices : BaseServices<SmTableCatalog, SmTableCatalo
         {
             DbSelect dsUserTables = new DbSelect("INFORMATION_SCHEMA.TABLES A", "A", null);
             dsUserTables.IsInitDefaultValue = false;
-            string dbName = DBServerProvider.GetConnectionString().Split("Database=")[1].Split(";")[0]?.Trim();
+            string dbName = GetDatabaseName();
+            if (dbName.IsNullOrEmpty())
+                return Failed("无法解析数据库名称");
+
             dsUserTables.Where($"A.TABLE_SCHEMA='{dbName}' AND A.TABLE_TYPE='BASE TABLE'");
             dsUserTables.Select("A.TABLE_NAME");
             dsUserTables.Select("A.ID");
@@ -133,7 +136,10 @@ public class SmTableCatalogServices : BaseServices<SmTableCatalog, SmTableCatalo
                 {
                     dsUserTables1 = new DbSelect("INFORMATION_SCHEMA.TABLES A", "A", null);
                     dsUserTables1.IsInitDefaultValue = false;
-                    string dbName = DBServerProvider.GetConnectionString().Split("Database=")[1].Split(";")[0]?.Trim();
+                    string dbName = GetDatabaseName();
+                    if (dbName.IsNullOrEmpty())
+                        return Failed("无法解析数据库名称");
+
                     dsUserTables1.Where($"A.TABLE_SCHEMA='{dbName}' AND A.TABLE_TYPE='BASE TABLE'");
                     dsUserTables1.Select("COUNT(*)");
                     count = Convert.ToInt32(DBHelper.Instance.ExecuteScalar(dsUserTables1.GetSql()));
@@ -184,6 +190,26 @@ public class SmTableCatalogServices : BaseServices<SmTableCatalog, SmTableCatalo
 
         return Success(ResponseText.EXECUTE_SUCCESS);
 
+    }
+
+    private static string GetDatabaseName()
+    {
+        var connectionString = DBServerProvider.GetConnectionString();
+        if (connectionString.IsNullOrEmpty())
+            return null;
+
+        var marker = "Database=";
+        var startIndex = connectionString.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (startIndex < 0)
+            return null;
+
+        startIndex += marker.Length;
+        var endIndex = connectionString.IndexOf(';', startIndex);
+        var dbName = endIndex >= 0
+            ? connectionString.Substring(startIndex, endIndex - startIndex)
+            : connectionString.Substring(startIndex);
+
+        return dbName?.Trim();
     }
     #endregion
 }
