@@ -237,7 +237,13 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
         if (parentNode == null || nodes == null || !nodes.Any())
             return;
 
-        var parentId = parentNode.id == StartNodeId ? (Guid?)null : Guid.Parse(parentNode.id);
+        Guid? parentId = null;
+        if (parentNode.id != StartNodeId)
+        {
+            if (!Guid.TryParse(parentNode.id, out var parsedParentId))
+                return;
+            parentId = parsedParentId;
+        }
 
         // 查找所有子节点（包括普通子节点和条件节点）
         var childNodes = nodes.Where(x => x.ParentNodeId == parentId).ToList();
