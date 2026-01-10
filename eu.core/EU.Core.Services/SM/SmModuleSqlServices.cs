@@ -82,6 +82,13 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
 
         // 获取模块基本信息
         var module = await _modulesDal.QueryById(moduleId);
+        if (module == null)
+        {
+            result.Success = false;
+            result.Data = null;
+            result.Message = "模块不存在";
+            return result;
+        }
 
         // 构建返回数据
         data.module = module;
@@ -113,6 +120,9 @@ public class SmModuleSqlServices : BaseServices<SmModuleSql, SmModuleSqlDto, Ins
     {
         // 获取模块信息
         var module = await _modulesDal.QueryById(moduleId);
+        if (module == null || module.ModuleCode.IsNullOrEmpty())
+            return Failed<string>("模块不存在");
+
         ModuleSql moduleSql = new(module.ModuleCode, Db);
 
         // 获取表名和SQL片段
