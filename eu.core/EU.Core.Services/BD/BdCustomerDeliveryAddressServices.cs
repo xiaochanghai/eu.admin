@@ -37,10 +37,8 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
             await Db.Updateable<BdCustomerDeliveryAddress>()
                 .SetColumns(it => new BdCustomerDeliveryAddress()
                 {
-                    IsDefault = false,
-                    UpdateBy = UserId,
-                    UpdateTime = Utility.GetSysDate()
-                })
+                    IsDefault = false
+                }, true)
                 .Where(x => x.CustomerId == model.CustomerId && x.ID != result && x.IsDefault == true)
                 .ExecuteCommandAsync();
 
@@ -57,7 +55,7 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
                 .SetColumns(it => new BdCustomerDeliveryAddress()
                 {
                     IsDefault = false
-                })
+                }, true)
                 .Where(x => x.CustomerId == model.CustomerId && x.ID != Id && x.IsDefault == true)
                 .ExecuteCommandAsync();
         return await base.Update(Id, entity);
@@ -69,10 +67,10 @@ public class BdCustomerDeliveryAddressServices : BaseServices<BdCustomerDelivery
         var src = Db.Queryable<BdCustomerDeliveryAddress>();
 
         var address = await src
-            .Where(x => x.CustomerId == masterId && x.IsDefault == true && x.IsActive == true && x.IsDeleted == false)
+            .Where(x => x.CustomerId == masterId && x.IsDefault == true && x.IsActive == true)
             .FirstAsync();
         if (address == null)
-            address = await src.Where(x => x.CustomerId == masterId && x.IsActive == true && x.IsDeleted == false).FirstAsync();
+            address = await src.Where(x => x.CustomerId == masterId && x.IsActive == true).FirstAsync();
 
         return Success(address);
 

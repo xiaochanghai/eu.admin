@@ -35,7 +35,7 @@ public class BdGoodsLocationServices : BaseServices<BdGoodsLocation, BdGoodsLoca
         var model = ConvertToEntity(entity);
         if (await Db.Queryable<BdStock>().AnyAsync(x => x.ID == model.StockId && x.IsVirtual == true))
         {
-            if (await Db.Queryable<BdGoodsLocation>().AnyAsync(x => x.StockId == model.StockId && x.IsActive == true && x.IsDeleted == false))
+            if (await Db.Queryable<BdGoodsLocation>().AnyAsync(x => x.StockId == model.StockId && x.IsActive == true))
                 throw new("虚拟仓只能新建一个货位!");
         }
         return await base.Add(entity);

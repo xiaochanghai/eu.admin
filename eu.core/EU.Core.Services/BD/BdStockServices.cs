@@ -39,11 +39,11 @@ public class BdStockServices : BaseServices<BdStock, BdStockDto, InsertBdStockIn
 
         var reult = await base.Add(entity);
 
-        var di = new DbInsert("BdGoodsLocation");
-        di.Values("LocationNo", model.StockNo + "001");
-        di.Values("StockId", reult);
-        di.Values("LocationNames", "默认仓");
-        await Db.Ado.ExecuteCommandAsync(di.GetSql());
+        var goodsLocation = new BdGoodsLocation();
+        goodsLocation.LocationNo = model.StockNo + "001";
+        goodsLocation.StockId = reult;
+        goodsLocation.LocationNames = "默认仓";
+        await Db.Insertable(goodsLocation).ExecuteCommandAsync();
 
         return reult;
     }
