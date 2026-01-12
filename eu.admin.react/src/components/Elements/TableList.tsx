@@ -116,55 +116,41 @@ export const TableList: React.FC<TableListProps> = props => {
   };
 
   // 动态操作对象，用于存储模块配置的操作函数
-  let action: Record<string, any> = {};
+  let action = {};
   if (extendAction) action = { ...action, ...extendAction };
-
-  const runFunctionJs = (code: string, label: string) => {
-    if (!code) return;
-    try {
-      const executor = new Function(
-        "context",
-        `"use strict"; const { action, moduleInfo, props, moduleCode, masterId, changePage, IsView, dispatch, setId, setModuleInfo, t, tableActionRef } = context; ${code}; return action;`
-      );
-      executor({
-        action,
-        moduleInfo,
-        props,
-        moduleCode,
-        masterId,
-        changePage,
-        IsView,
-        dispatch,
-        setId,
-        setModuleInfo,
-        t,
-        tableActionRef
-      });
-    } catch (error) {
-      console.error(`${label}: ${code}`, error);
-    }
-  };
 
   // 处理模块菜单、操作和隐藏菜单的JavaScript函数
   if (moduleInfo) {
     // 处理菜单数据
     if (moduleInfo.menuData?.length > 0) {
       moduleInfo.menuData.forEach((item: any) => {
-        runFunctionJs(item.FunctionJs, "菜单函数执行错误");
+        try {
+          eval(item.FunctionJs);
+        } catch (error) {
+          console.error(`菜单函数执行错误: ${item.FunctionJs}`, error);
+        }
       });
     }
 
     // 处理操作数据
     if (moduleInfo.actionData?.length > 0) {
       moduleInfo.actionData.forEach((item: any) => {
-        runFunctionJs(item.FunctionJs, "操作函数执行错误");
+        try {
+          eval(item.FunctionJs);
+        } catch (error) {
+          console.error(`操作函数执行错误: ${item.FunctionJs}`, error);
+        }
       });
     }
 
     // 处理隐藏菜单
     if (moduleInfo.hideMenu?.length > 0) {
       moduleInfo.hideMenu.forEach((item: any) => {
-        runFunctionJs(item.FunctionJs, "隐藏菜单函数执行错误");
+        try {
+          eval(item.FunctionJs);
+        } catch (error) {
+          console.error(`隐藏菜单函数执行错误: ${item.FunctionJs}`, error);
+        }
       });
     }
   }
