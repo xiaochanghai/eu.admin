@@ -159,9 +159,11 @@ app.UseRecordAccessLogsMiddle();
 app.UseSignalRSendMiddle();
 app.UseIpLogMiddle();
 //app.UseAllServicesMiddle(builder.Services);
+app.UseSession();
 app.UseSwaggerAuthorized();
 app.UseSwaggerMiddle(() => Assembly.GetExecutingAssembly().GetManifestResourceStream("EU.Core.Api.index.html"));
 
+app.UseCors(AppSettings.app(["Startup", "Cors", "PolicyName"]));
 DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
 defaultFilesOptions.DefaultFileNames.Clear();
 defaultFilesOptions.DefaultFileNames.Add("index.html");
@@ -176,8 +178,6 @@ app.UseSerilogRequestLogging(options =>
     options.EnrichDiagnosticContext = SerilogRequestUtility.EnrichFromRequest;
 });
 app.UseRouting();
-app.UseCors(AppSettings.app(["Startup", "Cors", "PolicyName"]));
-app.UseSession();
 
 if (builder.Configuration.GetValue<bool>("AppSettings:UseLoadTest"))
     app.UseMiddleware<ByPassAuthMiddleware>();

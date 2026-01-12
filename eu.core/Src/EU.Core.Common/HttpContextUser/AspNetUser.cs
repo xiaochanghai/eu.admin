@@ -60,7 +60,7 @@ public class AspNetUser : IUser
 
         if (_accessor.HttpContext?.IsSuccessSwagger() == true)
         {
-            token = _accessor.HttpContext.GetSwaggerJwtToken();
+            token = _accessor.HttpContext.GetSuccessSwaggerJwt();
             if (token.IsNotEmptyOrNull())
             {
                 if (_accessor.HttpContext.User.Claims.Any(s => s.Type == JwtRegisteredClaimNames.Jti))
