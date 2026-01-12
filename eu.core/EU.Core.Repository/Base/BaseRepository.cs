@@ -17,6 +17,25 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     private readonly IUnitOfWorkManage _unitOfWorkManage;
     private readonly SqlSugarScope _dbBase;
 
+    // 缓存反射结果以提升性能
+    private static readonly TenantAttribute _cachedTenantAttr = typeof(TEntity).GetCustomAttribute<TenantAttribute>();
+    private static readonly MultiTenantAttribute _cachedMultiTenantAttr = typeof(TEntity).GetCustomAttribute<MultiTenantAttribute>();
+
+    // 基础实体必须包含的列名
+    private static readonly string[] BasePocoColumns =
+    [
+        nameof(BasePoco.ID),
+        nameof(BasePoco.CreatedBy),
+        nameof(BasePoco.CreatedTime),
+        nameof(BasePoco.AuditStatus),
+        nameof(BasePoco.ModificationNum),
+        nameof(BasePoco.Tag),
+        nameof(BasePoco.IsDeleted),
+        nameof(BasePoco.IsActive),
+        nameof(BasePoco.CompanyId),
+        nameof(BasePoco.GroupId)
+    ];
+
     private ISqlSugarClient _db
     {
         get
@@ -25,32 +44,24 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
 
             //修改使用 model备注字段作为切换数据库条件，使用sqlsugar TenantAttribute存放数据库ConnId
             //参考 https://www.donet5.com/Home/Doc?typeId=2246
-            var tenantAttr = typeof(TEntity).GetCustomAttribute<TenantAttribute>();
-            if (tenantAttr != null)
+            // 使用 TenantAttribute 切换数据库
+            if (_cachedTenantAttr != null)
             {
-                //统一处理 configId 小写
-                db = _dbBase.GetConnectionScope(tenantAttr.configId.ToString().ToLower());
-                return db;
+                return _dbBase.GetConnectionScope(_cachedTenantAttr.configId.ToString().ToLower());
             }
 
-            //多租户
-            var mta = typeof(TEntity).GetCustomAttribute<MultiTenantAttribute>();
-            if (mta is { TenantType: TenantTypeEnum.Db })
+            // 多租户数据库隔离
+            if (_cachedMultiTenantAttr is { TenantType: TenantTypeEnum.Db } && App.User is { TenantId: > 0 })
             {
-                //获取租户信息 租户信息可以提前缓存下来 
-                if (App.User is { TenantId: > 0 })
+                var tenant = db.Queryable<SysTenant>().WithCache().Where(s => s.ID == App.User.TenantId).First();
+                if (tenant != null)
                 {
-                    var tenant = db.Queryable<SysTenant>().WithCache().Where(s => s.ID == App.User.TenantId).First();
-                    if (tenant != null)
+                    var iTenant = db.AsTenant();
+                    if (!iTenant.IsAnyConnection(tenant.ConfigId))
                     {
-                        var iTenant = db.AsTenant();
-                        if (!iTenant.IsAnyConnection(tenant.ConfigId))
-                        {
-                            iTenant.AddConnection(tenant.GetConnectionConfig());
-                        }
-
-                        return iTenant.GetConnectionScope(tenant.ConfigId);
+                        iTenant.AddConnection(tenant.GetConnectionConfig());
                     }
+                    return iTenant.GetConnectionScope(tenant.ConfigId);
                 }
             }
 
@@ -67,7 +78,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     }
 
     public async Task<TEntity> QueryById(object objId) => await _db.Queryable<TEntity>().In(objId).SingleAsync();
-
+  
     /// <summary>
     /// 查询实体数据是否存在
     /// </summary>
@@ -87,10 +98,8 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// </summary>
     /// <param name="whereExpression">条件表达式</param>
     /// <returns></returns>
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression)
-    {
-        return await _db.Queryable<TEntity>().WhereIF(whereExpression != null, whereExpression).AnyAsync();
-    }
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression) =>
+        await _db.Queryable<TEntity>().WhereIF(whereExpression != null, whereExpression).AnyAsync();
     /// <summary>
     /// 根据ID查询一条数据
     /// </summary>
@@ -113,16 +122,22 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <returns></returns>
     public async Task<Guid> Add(TEntity entity, Guid? id = null)
     {
-        var id1 = Guid.Empty;
-        if (id != null)
-            if (entity is RootEntityTkey<Guid> rootEntity1)
-                rootEntity1.ID = id.Value;
+        var resultId = Guid.Empty;
+        if (id != null && entity is RootEntityTkey<Guid> rootEntityForSet)
+        {
+            rootEntityForSet.ID = id.Value;
+        }
+
         var insert = _db.Insertable(entity);
         string sql = insert.ToSqlString();
+
         if (entity is RootEntityTkey<Guid> rootEntity)
-            id1 = rootEntity.ID;
+        {
+            resultId = rootEntity.ID;
+        }
+
         await _db.Ado.ExecuteCommandAsync(sql);
-        return id1;
+        return resultId;
     }
 
     /// <summary>
@@ -134,10 +149,9 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     public async Task<long> Add(TEntity entity, Expression<Func<TEntity, object>> insertColumns = null)
     {
         var insert = _db.Insertable(entity);
-        if (insertColumns == null)
-            return await insert.ExecuteReturnSnowflakeIdAsync();
-        else
-            return await insert.InsertColumns(insertColumns).ExecuteReturnSnowflakeIdAsync();
+        return insertColumns == null
+            ? await insert.ExecuteReturnSnowflakeIdAsync()
+            : await insert.InsertColumns(insertColumns).ExecuteReturnSnowflakeIdAsync();
     }
     /// <summary>
     /// 写入实体数据
@@ -147,23 +161,18 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <returns>返回自增量列</returns>
     public async Task<Guid> Add(TEntity entity, List<string> insertColumns)
     {
-        insertColumns.Add(nameof(BasePoco.ID));
-        insertColumns.Add(nameof(BasePoco.CreatedBy));
-        insertColumns.Add(nameof(BasePoco.CreatedTime));
-        insertColumns.Add(nameof(BasePoco.AuditStatus));
-        insertColumns.Add(nameof(BasePoco.ModificationNum));
-        insertColumns.Add(nameof(BasePoco.Tag));
-        insertColumns.Add(nameof(BasePoco.IsDeleted));
-        insertColumns.Add(nameof(BasePoco.IsActive));
-        insertColumns.Add(nameof(BasePoco.CompanyId));
-        insertColumns.Add(nameof(BasePoco.GroupId));
-        var id = Guid.Empty;
+        // 添加基础实体必须包含的列
+        insertColumns.AddRange(BasePocoColumns);
+
         var insert = _db.Insertable(entity);
         string sql = insert.InsertColumns(insertColumns.ToArray()).ToSqlString();
+
+        var id = Guid.Empty;
         if (entity is RootEntityTkey<Guid> rootEntity)
         {
             id = rootEntity.ID;
         }
+
         await _db.Ado.ExecuteCommandAsync(sql);
         return id;
     }
@@ -206,14 +215,14 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <summary>
     /// 更新实体数据
     /// </summary>
-    /// <param name="entitys">实体类</param>
+    /// <param name="entities">实体类</param>
     /// <param name="lstColumns">只更新某列</param>
     /// <param name="lstIgnoreColumns">不更新某列</param>
     /// <param name="where">where条件</param>
     /// <returns></returns>
-    public async Task<bool> Update(List<TEntity> entitys, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)
+    public async Task<bool> Update(List<TEntity> entities, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)
     {
-        var up = _db.Updateable(entitys);
+        var up = _db.Updateable(entities);
         if (lstIgnoreColumns != null && lstIgnoreColumns.Count > 0)
             up = up.IgnoreColumns(lstIgnoreColumns.ToArray());
 
@@ -240,7 +249,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <summary>
     /// 更新实体数据
     /// </summary>
-    /// <param name="entitys">实体类</param>
+    /// <param name="entity">实体类</param>
     /// <param name="lstColumns">只更新某列</param>
     /// <param name="lstIgnoreColumns">不更新某列</param>
     /// <param name="where">where条件</param>
@@ -615,33 +624,28 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     }
 
     /// <summary>
-    /// 更新实体数据
+    /// 更新实体数据（分表）
     /// </summary>
     /// <param name="entity">数据实体</param>
+    /// <param name="dateTime">时间参数用于定位分表</param>
     /// <returns></returns>
     public async Task<bool> UpdateSplit(TEntity entity, DateTime dateTime)
     {
-        //直接根据实体集合更新 （全自动 找表更新）
-        //return await _db.Updateable(entity).SplitTable().ExecuteCommandAsync();//,SplitTable不能少
-
-        //精准找单个表
-        var tableName = _db.SplitHelper<TEntity>().GetTableName(dateTime); //根据时间获取表名
+        // 精准定位单个表进行更新
+        var tableName = _db.SplitHelper<TEntity>().GetTableName(dateTime);
         return await _db.Updateable(entity).AS(tableName).ExecuteCommandHasChangeAsync();
     }
 
     /// <summary>
-    /// 删除数据
+    /// 删除数据（分表）
     /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="dateTime"></param>
+    /// <param name="entity">数据实体</param>
+    /// <param name="dateTime">时间参数用于定位分表</param>
     /// <returns></returns>
     public async Task<bool> DeleteSplit(TEntity entity, DateTime dateTime)
     {
-        ////直接根据实体集合删除 （全自动 找表插入）,返回受影响数
-        //return await _db.Deleteable(entity).SplitTable().ExecuteCommandAsync();//,SplitTable不能少
-
-        //精准找单个表
-        var tableName = _db.SplitHelper<TEntity>().GetTableName(dateTime); //根据时间获取表名
+        // 精准定位单个表进行删除
+        var tableName = _db.SplitHelper<TEntity>().GetTableName(dateTime);
         return await _db.Deleteable<TEntity>().AS(tableName).Where(entity).ExecuteCommandHasChangeAsync();
     }
 
@@ -655,8 +659,8 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <summary>
     /// 数据过滤用的查询表达式构建
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="T">泛型类型参数</typeparam>
+    /// <returns>过滤表达式</returns>
     protected Expression<Func<TEntity, bool>> CreateFilterExpression<T>()
         where T : class
     {
@@ -678,7 +682,12 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
 
         return expression;
     }
-    protected Expression<Func<T, bool>> CombineExpressions<T>(Expression<Func<T, bool>> expression1, Expression<Func<T, bool>> expression2) => Common.Helper.ExpressionCombiner.Combine(expression1, expression2);
+
+    /// <summary>
+    /// 组合两个表达式
+    /// </summary>
+    protected Expression<Func<T, bool>> CombineExpressions<T>(Expression<Func<T, bool>> expression1, Expression<Func<T, bool>> expression2) =>
+        Common.Helper.ExpressionCombiner.Combine(expression1, expression2);
 
     #endregion
 }
