@@ -7,5 +7,3 @@ export { useProTableData } from "./useProTableData";
 export { useProTableColumns } from "./useProTableColumns";
 export { useProTableBatchOps } from "./useProTableBatchOps";
 export { useProTableToolbar } from "./useProTableToolbar";
-export { useEditableDelete } from "./useEditableDelete";
-export { useEditableActionColumn } from "./useEditableActionColumn";
