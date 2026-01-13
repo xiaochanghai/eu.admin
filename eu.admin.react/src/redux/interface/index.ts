@@ -1,7 +1,7 @@
 import type { SizeType } from "antd/lib/config-provider/SizeContext";
 import { RouteObjectType } from "@/routers/interface";
 
-export type LayoutType = "vertical" | "classic" | "transverse" | "columns";
+export type LayoutType = "vertical" | "classic" | "transverse" | "columns" | "chat";
 
 export type LanguageType = "zh" | "en" | null;
 

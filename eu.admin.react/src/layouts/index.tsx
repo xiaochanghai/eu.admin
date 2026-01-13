@@ -14,7 +14,7 @@ const LayoutIndex: React.FC = () => {
   const layout = useSelector((state: RootState) => state.global.layout);
   const watermark = useSelector((state: RootState) => state.global.watermark);
   const userInfo = useSelector((state: RootState) => state.user.userInfo);
-  let { UserId, UserType } = userInfo;
+  let { UserId } = userInfo;
   const LayoutComponents = {
     vertical: <LayoutVertical />,
     classic: <LayoutClassic />,
@@ -77,7 +77,7 @@ const LayoutIndex: React.FC = () => {
 
   return (
     <Watermark className="watermark-content" zIndex={1001} content={watermark ? ["SuZhou", "EU Cloud"] : []}>
-      {LayoutComponents[UserType === "Admin" ? layout : "chat"]}
+      {LayoutComponents[layout]}
       <ThemeDrawer />
     </Watermark>
   );

@@ -12,7 +12,8 @@ const LayoutIndex: React.FC = () => {
     vertical: React.lazy(() => import("./LayoutVertical")),
     classic: React.lazy(() => import("./LayoutClassic")),
     transverse: React.lazy(() => import("./LayoutTransverse")),
-    columns: React.lazy(() => import("./LayoutColumns"))
+    columns: React.lazy(() => import("./LayoutColumns")),
+    chat: React.lazy(() => import("./LayoutChat"))
   };
 
   return (
