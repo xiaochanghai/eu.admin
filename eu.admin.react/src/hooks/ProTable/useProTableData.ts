@@ -42,8 +42,8 @@ export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, mast
         moduleInfo.isDetail && moduleInfo.masterColumn && masterId
           ? `A.${moduleInfo.masterColumn} = '${masterId}'`
           : moduleInfo.isDetail
-          ? "1 != 1"
-          : ""
+            ? "1 != 1"
+            : ""
     };
 
     // 保存参数到 Redux
