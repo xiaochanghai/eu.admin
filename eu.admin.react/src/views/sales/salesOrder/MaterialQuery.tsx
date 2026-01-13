@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, Badge, Tabs, Button, InputNumber, Input } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
-import { query } from "@/api/modules/module";
+import { queryByFilter } from "@/api/modules/module";
 import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo as GetModuleInfo } from "@/api/modules/module";
@@ -37,10 +37,7 @@ const QueryMaterial: React.FC<any> = props => {
       current: 1,
       pageSize: 100000
     };
-    let result = await query({
-      paramData: JSON.stringify(params),
-      moduleCode
-    });
+    let result = await queryByFilter(moduleCode, params, {});
     let tempList: any[] = [];
     let tempSelectedRowKeys: any[] = [];
     result.data.forEach((record: any) => {
@@ -209,12 +206,20 @@ const QueryMaterial: React.FC<any> = props => {
               pageSize: 10
             }}
             request={async (params, sorter, filterCondition) => {
-              return await query({
-                paramData: JSON.stringify(params),
-                sorter: JSON.stringify(sorter),
-                filter: JSON.stringify(filterCondition),
-                moduleCode
-              });
+              const filter = {
+                PageIndex: params.current,
+                PageSize: params.pageSize,
+                sorter,
+                params,
+                filterCondition
+              };
+              // return await query({
+              //   paramData: JSON.stringify(params),
+              //   sorter: JSON.stringify(sorter),
+              //   filter: JSON.stringify(filterCondition),
+              //   moduleCode
+              // });
+              return await queryByFilter(moduleCode, {}, filter);
             }}
             options={{
               fullScreen: false,
