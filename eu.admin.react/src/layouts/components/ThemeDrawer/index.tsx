@@ -1,9 +1,76 @@
+import { useCallback, useMemo } from "react";
 import { Drawer, Divider, Switch, Popover, InputNumber, Tooltip } from "antd";
 import { setGlobalState } from "@/redux/modules/global";
 import { RootState, useDispatch, useSelector } from "@/redux";
+import { LayoutType, GlobalState } from "@/redux/interface";
 import ColorPicker from "./components/ColorPicker";
 import "./index.less";
 import { Icon } from "@/components";
+
+interface LayoutConfig {
+  key: LayoutType;
+  title: string;
+  className: string;
+  renderContent: () => JSX.Element;
+}
+
+interface ThemeItemProps {
+  label: string;
+  tooltip?: string;
+  checked?: boolean;
+  disabled?: boolean;
+  onChange: (value: boolean) => void;
+  checkedChildren?: React.ReactNode;
+  unCheckedChildren?: React.ReactNode;
+  className?: string;
+}
+
+interface ThemeSectionProps {
+  icon: string;
+  title: string;
+  children: React.ReactNode;
+}
+
+const ThemeItem: React.FC<ThemeItemProps> = ({
+  label,
+  tooltip,
+  checked,
+  disabled,
+  onChange,
+  checkedChildren,
+  unCheckedChildren,
+  className
+}) => (
+  <div className={`theme-item ${className || ""}`}>
+    <span>
+      {label}
+      {tooltip && (
+        <Tooltip title={tooltip}>
+          <span>
+            <Icon name="QuestionCircleOutlined" />
+          </span>
+        </Tooltip>
+      )}
+    </span>
+    <Switch
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      checkedChildren={checkedChildren}
+      unCheckedChildren={unCheckedChildren}
+    />
+  </div>
+);
+
+const ThemeSection: React.FC<ThemeSectionProps> = ({ icon, title, children }) => (
+  <>
+    <Divider className="divider">
+      <Icon name={icon} />
+      {title}
+    </Divider>
+    {children}
+  </>
+);
 
 const ThemeDrawer: React.FC = () => {
   const dispatch = useDispatch();
@@ -30,6 +97,97 @@ const ThemeDrawer: React.FC = () => {
     themeDrawerVisible
   } = useSelector((state: RootState) => state.global);
 
+  const handleCloseDrawer = useCallback(() => {
+    dispatch(setGlobalState({ key: "themeDrawerVisible", value: false }));
+  }, [dispatch]);
+
+  const handleLayoutChange = useCallback(
+    (value: LayoutType) => {
+      dispatch(setGlobalState({ key: "layout", value }));
+    },
+    [dispatch]
+  );
+
+  const handleStateChange = useCallback(
+    <K extends keyof GlobalState>(key: K, value: GlobalState[K]) => {
+      dispatch(setGlobalState({ key, value } as any));
+    },
+    [dispatch]
+  );
+
+  const handleGreyModeChange = useCallback(
+    (value: boolean) => {
+      if (isWeak) handleStateChange("isWeak", false);
+      handleStateChange("isGrey", value);
+    },
+    [isWeak, handleStateChange]
+  );
+
+  const handleWeakModeChange = useCallback(
+    (value: boolean) => {
+      if (isGrey) handleStateChange("isGrey", false);
+      handleStateChange("isWeak", value);
+    },
+    [isGrey, handleStateChange]
+  );
+
+  const layoutConfigs: LayoutConfig[] = useMemo(
+    () => [
+      {
+        key: "vertical",
+        title: "纵向",
+        className: "layout-vertical",
+        renderContent: () => (
+          <>
+            <div className="layout-dark"></div>
+            <div className="layout-container">
+              <div className="layout-light"></div>
+              <div className="layout-content"></div>
+            </div>
+          </>
+        )
+      },
+      {
+        key: "classic",
+        title: "经典",
+        className: "layout-classic",
+        renderContent: () => (
+          <>
+            <div className="layout-dark"></div>
+            <div className="layout-container">
+              <div className="layout-light"></div>
+              <div className="layout-content"></div>
+            </div>
+          </>
+        )
+      },
+      {
+        key: "transverse",
+        title: "横向",
+        className: "layout-transverse",
+        renderContent: () => (
+          <>
+            <div className="layout-dark"></div>
+            <div className="layout-content"></div>
+          </>
+        )
+      },
+      {
+        key: "columns",
+        title: "分栏",
+        className: "layout-columns",
+        renderContent: () => (
+          <>
+            <div className="layout-dark"></div>
+            <div className="layout-light"></div>
+            <div className="layout-content"></div>
+          </>
+        )
+      }
+    ],
+    []
+  );
+
   return (
     <Drawer
       title="主题配置"
@@ -39,205 +197,102 @@ const ThemeDrawer: React.FC = () => {
       maskClosable={true}
       open={themeDrawerVisible}
       className="theme-drawer"
-      onClose={() => dispatch(setGlobalState({ key: "themeDrawerVisible", value: false }))}
+      onClose={handleCloseDrawer}
     >
-      {/* layout switching */}
-      <Divider className="divider">
-        <Icon name="LayoutOutlined" />
-        布局样式
-      </Divider>
-      <div className="layout-box">
-        <Tooltip placement="top" title="纵向" arrow={true} mouseEnterDelay={0.2}>
-          <div
-            className={`layout-item mb22 layout-vertical ${layout === "vertical" && "layout-active"}`}
-            onClick={() => dispatch(setGlobalState({ key: "layout", value: "vertical" }))}
-          >
-            <div className="layout-dark"></div>
-            <div className="layout-container">
-              <div className="layout-light"></div>
-              <div className="layout-content"></div>
-            </div>
-            {layout === "vertical" && <Icon name="CheckCircleFilled" />}
-          </div>
-        </Tooltip>
-        <Tooltip placement="top" title="经典" arrow={true} mouseEnterDelay={0.2}>
-          <div
-            className={`layout-item mb22 layout-classic ${layout === "classic" && "layout-active"}`}
-            onClick={() => dispatch(setGlobalState({ key: "layout", value: "classic" }))}
-          >
-            <div className="layout-dark"></div>
-            <div className="layout-container">
-              <div className="layout-light"></div>
-              <div className="layout-content"></div>
-            </div>
-            {layout === "classic" && <Icon name="CheckCircleFilled" />}
-          </div>
-        </Tooltip>
-        <Tooltip placement="top" title="横向" arrow={true} mouseEnterDelay={0.2}>
-          <div
-            className={`layout-item layout-transverse ${layout === "transverse" && "layout-active"}`}
-            onClick={() => dispatch(setGlobalState({ key: "layout", value: "transverse" }))}
-          >
-            <div className="layout-dark"></div>
-            <div className="layout-content"></div>
-            {layout === "transverse" && <Icon name="CheckCircleFilled" />}
-          </div>
-        </Tooltip>
-        <Tooltip placement="top" title="分栏" arrow={true} mouseEnterDelay={0.2}>
-          <div
-            className={`layout-item layout-columns ${layout === "columns" && "layout-active"}`}
-            onClick={() => dispatch(setGlobalState({ key: "layout", value: "columns" }))}
-          >
-            <div className="layout-dark"></div>
-            <div className="layout-light"></div>
-            <div className="layout-content"></div>
-            {layout === "columns" && <Icon name="CheckCircleFilled" />}
-          </div>
-        </Tooltip>
-      </div>
-      <div className="theme-item mt30">
-        <span>
-          菜单分割
-          <Tooltip title="经典模式下生效">
-            <span>
-              <Icon name="QuestionCircleOutlined" />
-            </span>
-          </Tooltip>
-        </span>
-        <Switch
-          disabled={layout !== "classic"}
-          checked={menuSplit}
-          onChange={value => dispatch(setGlobalState({ key: "menuSplit", value }))}
-        />
-      </div>
-      <div className="theme-item">
-        <span>
-          侧边栏反转色
-          <Tooltip title="侧边栏颜色变为深色模式">
-            <span>
-              <Icon name="QuestionCircleOutlined" />
-            </span>
-          </Tooltip>
-        </span>
-        <Switch checked={siderInverted} onChange={value => dispatch(setGlobalState({ key: "siderInverted", value }))} />
-      </div>
-      <div className="theme-item mb35">
-        <span>
-          头部反转色
-          <Tooltip title="头部颜色变为深色模式">
-            <span>
-              <Icon name="QuestionCircleOutlined" />
-            </span>
-          </Tooltip>
-        </span>
-        <Switch checked={headerInverted} onChange={value => dispatch(setGlobalState({ key: "headerInverted", value }))} />
-      </div>
+      {/* Layout Switching */}
+      <ThemeSection icon="LayoutOutlined" title="布局样式">
+        <div className="layout-box">
+          {layoutConfigs.map(config => (
+            <Tooltip key={config.key} placement="top" title={config.title} arrow={true} mouseEnterDelay={0.2}>
+              <div
+                className={`layout-item ${config.className} ${
+                  config.key === "transverse" || config.key === "columns" ? "" : "mb22"
+                } ${layout === config.key ? "layout-active" : ""}`}
+                onClick={() => handleLayoutChange(config.key)}
+              >
+                {config.renderContent()}
+                {layout === config.key && <Icon name="CheckCircleFilled" />}
+              </div>
+            </Tooltip>
+          ))}
+        </div>
 
-      {/* theme settings */}
-      <Divider className="divider">
-        <Icon name="FireOutlined" />
-        全局主题
-      </Divider>
-      <div className="theme-item">
-        <span>主题颜色</span>
-        <Popover placement="left" trigger="click" content={ColorPicker}>
-          <label className="primary"></label>
-        </Popover>
-      </div>
-      <div className="theme-item">
-        <span>暗黑模式</span>
-        <Switch
+        <ThemeItem
+          label="菜单分割"
+          tooltip="经典模式下生效"
+          checked={menuSplit}
+          disabled={layout !== "classic"}
+          onChange={value => handleStateChange("menuSplit", value)}
+          className="mt30"
+        />
+        <ThemeItem
+          label="侧边栏反转色"
+          tooltip="侧边栏颜色变为深色模式"
+          checked={siderInverted}
+          onChange={value => handleStateChange("siderInverted", value)}
+        />
+        <ThemeItem
+          label="头部反转色"
+          tooltip="头部颜色变为深色模式"
+          checked={headerInverted}
+          onChange={value => handleStateChange("headerInverted", value)}
+          className="mb35"
+        />
+      </ThemeSection>
+
+      {/* Theme Settings */}
+      <ThemeSection icon="FireOutlined" title="全局主题">
+        <div className="theme-item">
+          <span>主题颜色</span>
+          <Popover placement="left" trigger="click" content={ColorPicker}>
+            <label className="primary"></label>
+          </Popover>
+        </div>
+        <ThemeItem
+          label="暗黑模式"
           checked={isDark}
+          onChange={value => handleStateChange("isDark", value)}
           checkedChildren={<span className="dark-icon dark-icon-sun">🌞</span>}
           unCheckedChildren={<span className="dark-icon dark-icon-moon">🌛</span>}
-          onChange={value => dispatch(setGlobalState({ key: "isDark", value }))}
         />
-      </div>
-      <div className="theme-item">
-        <span>灰色模式</span>
-        <Switch
-          checked={isGrey}
-          onChange={value => {
-            if (isWeak) dispatch(setGlobalState({ key: "isWeak", value: false }));
-            dispatch(setGlobalState({ key: "isGrey", value }));
-          }}
+        <ThemeItem label="灰色模式" checked={isGrey} onChange={handleGreyModeChange} />
+        <ThemeItem label="色弱模式" checked={isWeak} onChange={handleWeakModeChange} />
+        <ThemeItem label="快乐模式" checked={isHappy} onChange={value => handleStateChange("isHappy", value)} />
+        <ThemeItem
+          label="紧凑主题"
+          checked={compactAlgorithm}
+          onChange={value => handleStateChange("compactAlgorithm", value)}
         />
-      </div>
-      <div className="theme-item">
-        <span>色弱模式</span>
-        <Switch
-          checked={isWeak}
-          onChange={value => {
-            if (isGrey) dispatch(setGlobalState({ key: "isGrey", value: false }));
-            dispatch(setGlobalState({ key: "isWeak", value }));
-          }}
-        />
-      </div>
-      <div className="theme-item">
-        <span>快乐模式</span>
-        <Switch checked={isHappy} onChange={value => dispatch(setGlobalState({ key: "isHappy", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>紧凑主题</span>
-        <Switch checked={compactAlgorithm} onChange={value => dispatch(setGlobalState({ key: "compactAlgorithm", value }))} />
-      </div>
-      <div className="theme-item mb35">
-        <span>圆角大小</span>
-        <InputNumber
-          min={1}
-          max={20}
-          style={{ width: 80 }}
-          defaultValue={borderRadius}
-          formatter={value => `${value}px`}
-          parser={value => (value ? value!.replace("px", "") : 6) as number}
-          onChange={value => {
-            const newValue = value || 6;
-            dispatch(setGlobalState({ key: "borderRadius", value: newValue }));
-          }}
-        />
-      </div>
+        <div className="theme-item mb35">
+          <span>圆角大小</span>
+          <InputNumber
+            min={1}
+            max={20}
+            style={{ width: 80 }}
+            defaultValue={borderRadius}
+            formatter={value => `${value}px`}
+            parser={value => (value ? value!.replace("px", "") : 6) as number}
+            onChange={value => handleStateChange("borderRadius", value || 6)}
+          />
+        </div>
+      </ThemeSection>
 
-      {/* interface settings */}
-      <Divider className="divider">
-        <Icon name="SettingOutlined" />
-        界面设置
-      </Divider>
-      <div className="theme-item">
-        <span>菜单折叠</span>
-        <Switch checked={isCollapse} onChange={value => dispatch(setGlobalState({ key: "isCollapse", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>菜单手风琴</span>
-        <Switch checked={accordion} onChange={value => dispatch(setGlobalState({ key: "accordion", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>水印</span>
-        <Switch checked={watermark} onChange={value => dispatch(setGlobalState({ key: "watermark", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>面包屑</span>
-        <Switch checked={breadcrumb} onChange={value => dispatch(setGlobalState({ key: "breadcrumb", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>面包屑图标</span>
-        <Switch checked={breadcrumbIcon} onChange={value => dispatch(setGlobalState({ key: "breadcrumbIcon", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>标签栏</span>
-        <Switch checked={tabs} onChange={value => dispatch(setGlobalState({ key: "tabs", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>标签栏图标</span>
-        <Switch checked={tabsIcon} onChange={value => dispatch(setGlobalState({ key: "tabsIcon", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>标签栏拖拽</span>
-        <Switch checked={tabsDrag} onChange={value => dispatch(setGlobalState({ key: "tabsDrag", value }))} />
-      </div>
-      <div className="theme-item">
-        <span>页脚</span>
-        <Switch checked={footer} onChange={value => dispatch(setGlobalState({ key: "footer", value }))} />
-      </div>
+      {/* Interface Settings */}
+      <ThemeSection icon="SettingOutlined" title="界面设置">
+        <ThemeItem label="菜单折叠" checked={isCollapse} onChange={value => handleStateChange("isCollapse", value)} />
+        <ThemeItem label="菜单手风琴" checked={accordion} onChange={value => handleStateChange("accordion", value)} />
+        <ThemeItem label="水印" checked={watermark} onChange={value => handleStateChange("watermark", value)} />
+        <ThemeItem label="面包屑" checked={breadcrumb} onChange={value => handleStateChange("breadcrumb", value)} />
+        <ThemeItem
+          label="面包屑图标"
+          checked={breadcrumbIcon}
+          onChange={value => handleStateChange("breadcrumbIcon", value)}
+        />
+        <ThemeItem label="标签栏" checked={tabs} onChange={value => handleStateChange("tabs", value)} />
+        <ThemeItem label="标签栏图标" checked={tabsIcon} onChange={value => handleStateChange("tabsIcon", value)} />
+        <ThemeItem label="标签栏拖拽" checked={tabsDrag} onChange={value => handleStateChange("tabsDrag", value)} />
+        <ThemeItem label="页脚" checked={footer} onChange={value => handleStateChange("footer", value)} />
+      </ThemeSection>
     </Drawer>
   );
 };
