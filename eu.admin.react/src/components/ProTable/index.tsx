@@ -205,7 +205,7 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
           return {
             key: `dropAction${item.id}`,
             label: customAction.FunctionName,
-            icon: customAction.Icon ? <Icon name={customAction.Icon} /> : undefined,
+            icon: customAction.Icon && <Icon name={customAction.Icon} style={{ marginRight: 7 }} />,
             onClick: () => restProps[customAction.FunctionCode](record.ID, action, record)
           };
         }
