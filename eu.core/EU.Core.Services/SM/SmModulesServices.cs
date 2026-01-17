@@ -975,7 +975,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 data.CreatedBy = dt1.CreatedBy;
                 if (dt1.CreatedTime != null)
                 {
-                    var createdTime = (DateTime)dt1.UpdateTime;
+                    var createdTime = (DateTime)dt1.CreatedTime;
                     data.CreatedTime = createdTime.ConvertToSecondString();
                 }
                 data.UpdateBy = dt1.UpdateBy;
