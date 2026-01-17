@@ -200,7 +200,18 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
           );
         }
         if (fieldsConf[key].type === "comboGrid") {
-          return <ComboGrid value={field[key]} code={fieldsConf[key].comboGridCode} />;
+          return (
+            <ComboGrid
+              value={field[key]}
+              code={fieldsConf[key].comboGridCode}
+              onChange={(val: any) => {
+                onDataChange({
+                  ...field,
+                  [key]: val
+                });
+              }}
+            />
+          );
         }
         const items = fieldsConf[key]?.items;
         if (fieldsConf[key].type === "buttonGroup" && items !== undefined && items.length > 0) {
