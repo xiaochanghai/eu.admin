@@ -13,7 +13,7 @@ export const UploadExcelModal: React.FC<UploadExcelModalProps> = React.memo(
 
     return (
       <Modal
-        destroyOnClose
+        destroyOnHidden
         title={`${moduleInfo.moduleName}-导入`}
         open={visible}
         maskClosable={false}
