@@ -7,8 +7,8 @@ const FormItem = Form.Item;
  * 1.组件选择
  * 2.组件属性设置
  */
-export default ({ field, compDatas, onDataChange }: any) => {
-  const options = compDatas?.map((item: any) => ({
+export default ({ field, componentData, onDataChange }: any) => {
+  const options = componentData?.map((item: any) => ({
     value: item.ID,
     label: (
       <>
@@ -23,7 +23,7 @@ export default ({ field, compDatas, onDataChange }: any) => {
         <Select
           value={field.FieldType}
           onChange={(value, option) => {
-            const r = compDatas?.find((s: any) => s.ID === value);
+            const r = componentData?.find((s: any) => s.ID === value);
             onDataChange(value, option, r);
           }}
           options={options}
