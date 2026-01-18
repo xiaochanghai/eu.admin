@@ -2,7 +2,7 @@ import { ReactNode, useCallback, useMemo } from "react";
 import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio, ColorPicker } from "antd";
 import FieldSetting from "./FieldSetting";
 import { FormComponents } from "./CompDatas";
-import { Mode } from "./dsl/base";
+import { Mode, FormFieldVo } from "./dsl/base";
 import { ComboGrid, Icon } from "@/components";
 import schemaDef, { deps, SchemaClz, formTypes, listTypes } from "./fieldSettingSchema";
 
@@ -10,11 +10,6 @@ const { TextArea } = Input;
 const FormItem = Form.Item;
 
 // 类型定义
-interface FormFieldVo {
-  DataIndex?: string;
-  FieldType?: string;
-  [key: string]: any;
-}
 
 interface FormVo {
   formTabDtos?: Array<{ code: string; name: string }>;
@@ -40,7 +35,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
     schemaDefCopy["formTabCode"] = { ...schemaDefCopy["formTabCode"], items: [] };
 
     if (form.formTabDtos && form.formTabDtos.length > 0) {
-      form.formTabDtos.forEach((tab) => {
+      form.formTabDtos.forEach(tab => {
         schemaDefCopy["formTabCode"].items?.push({
           value: tab.code,
           label: tab.name || ""
@@ -146,7 +141,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
                 allowClear
                 key={`select_${key}`}
                 value={field[key]}
-                onChange={(value) => handleFieldChange(key, value)}
+                onChange={value => handleFieldChange(key, value)}
                 style={{ width: "100%" }}
                 options={optionList.filter(Boolean)}
               />
@@ -161,7 +156,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
               key={`input_${key}`}
               value={field[key]}
               style={{ width: "100%" }}
-              onChange={(e) => handleFieldChange(key, e.target.value)}
+              onChange={e => handleFieldChange(key, e.target.value)}
             />
           );
 
@@ -171,7 +166,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
               key={`inputNumber_${key}`}
               value={field[key]}
               style={{ width: "100%" }}
-              onChange={(value) => handleFieldChange(key, value)}
+              onChange={value => handleFieldChange(key, value)}
             />
           );
 
@@ -181,18 +176,12 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
               key={`textArea_${key}`}
               value={field[key]}
               style={{ width: "100%" }}
-              onChange={(e) => handleFieldChange(key, e.target.value)}
+              onChange={e => handleFieldChange(key, e.target.value)}
             />
           );
 
         case "switch":
-          return (
-            <Switch
-              checked={field[key]}
-              onChange={(value) => handleFieldChange(key, value)}
-              key={`switch_${key}`}
-            />
-          );
+          return <Switch checked={field[key]} onChange={value => handleFieldChange(key, value)} key={`switch_${key}`} />;
 
         case "colorPicker":
           return (
@@ -206,27 +195,16 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
 
         case "comboGrid":
           return (
-            <ComboGrid
-              value={field[key]}
-              code={fieldConf.comboGridCode}
-              onChange={(val: any) => handleFieldChange(key, val)}
-            />
+            <ComboGrid value={field[key]} code={fieldConf.comboGridCode} onChange={(val: any) => handleFieldChange(key, val)} />
           );
 
         case "buttonGroup": {
           const items = fieldConf?.items;
           if (!items || items.length === 0) return null;
           return (
-            <Radio.Group
-              value={field[key]}
-              buttonStyle="solid"
-              onChange={(e) => handleFieldChange(key, e.target.value)}
-            >
+            <Radio.Group value={field[key]} buttonStyle="solid" onChange={e => handleFieldChange(key, e.target.value)}>
               {items?.map((item, index) => (
-                <Radio.Button
-                  key={`subButton_${key}_${index}`}
-                  value={item.value}
-                >
+                <Radio.Button key={`subButton_${key}_${index}`} value={item.value}>
                   {item.label}
                 </Radio.Button>
               ))}

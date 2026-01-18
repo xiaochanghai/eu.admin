@@ -5,7 +5,7 @@ import { Switch, ComboGrid, ComBoBox, InputNumber, Input } from "@/components";
 
 export const FormComponents = [
   {
-    key: 1,
+    ID: "Input",
     fieldType: "Input",
     component: Input,
     icon: "Input",
@@ -15,65 +15,65 @@ export const FormComponents = [
     }
   },
   {
-    key: 2,
+    ID: "InputNumber",
     component: InputNumber,
     icon: "InputNumber",
     fieldType: "InputNumber",
     label: "数字输入框"
   },
   {
-    key: 3,
+    ID: "ComboBox",
     component: ComBoBox,
     icon: "ComBoBox",
     fieldType: "ComboBox",
     label: "下拉选择(字典)"
   },
   {
-    key: 4,
+    ID: "ComboGrid",
     component: ComboGrid,
     icon: "ComBoBox",
     fieldType: "ComboGrid",
     label: "下拉选择(接口)"
   },
   {
-    key: 5,
+    ID: "Switch",
     icon: "Switch",
     component: Switch,
     fieldType: "Switch",
     label: "开关"
   },
   {
-    key: 6,
+    ID: "TextArea",
     icon: "TextArea",
     fieldType: "TextArea",
     label: "多行文字"
   },
   {
-    key: 7,
+    ID: "DatePicker",
     icon: "DatePicker",
     fieldType: "DatePicker",
     label: "日期选择器"
   },
   {
-    key: 8,
+    ID: "TimePicker",
     icon: "TimePicker",
     fieldType: "TimePicker",
     label: "时间选择器"
   },
   {
-    key: 9,
+    ID: "DateTimePicker",
     icon: "DateTimePicker",
     fieldType: "DateTimePicker",
     label: "日期时间选择器"
   },
   {
-    key: 10,
+    ID: "ColorPicker",
     icon: "BgColorsOutlined",
     fieldType: "ColorPicker",
     label: "颜色选择器"
   },
   {
-    key: 11,
+    ID: "ImageCover",
     icon: "FileImageOutlined",
     fieldType: "ImageCover",
     label: "封面上传"

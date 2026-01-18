@@ -4,13 +4,13 @@ import SiderSetting from "./SiderSetting";
 import FormPage from "./FormPage";
 import { Mode } from "./dsl/base";
 import { FormSetDiv } from "./style";
-import { Button, Card, Row, Col, Space, Skeleton, Descriptions } from "antd";
+import { Button, Card, Row, Col, Space, Skeleton, Descriptions, DescriptionsProps } from "antd";
 import http from "@/api";
 import { Icon } from "@/components";
 import { message } from "@/hooks/useMessage";
 import { getModuleInfoById } from "@/api/modules/module";
 
-const Index: React.FC<any> = props => {
+const FormDesign: React.FC<any> = props => {
   const { ModuleId, changePage } = props;
   let [currentField, setCurrentField] = useState<any>(null);
   let [moduleCode, setModuleCode] = useState<any>(null);
@@ -41,6 +41,19 @@ const Index: React.FC<any> = props => {
     if (Success) message.success(Message);
   };
 
+  const descriptionItems: DescriptionsProps["items"] = [
+    {
+      key: "1",
+      label: "模块代码",
+      children: moduleCode
+    },
+    {
+      key: "2",
+      label: "模块名称",
+      children: moduleName
+    }
+  ];
+
   return (
     <>
       {/* <div style={{ height: 10 }}></div> */}
@@ -58,10 +71,9 @@ const Index: React.FC<any> = props => {
           </Space>
           <div style={{ height: 10 }}></div>
           <Card>
-            <Descriptions title="表单配置">
-              <Descriptions.Item label="模块代码">{moduleCode}</Descriptions.Item>
-              <Descriptions.Item label="模块名称">{moduleName}</Descriptions.Item>
-            </Descriptions>
+            <Descriptions title="表单配置" items={descriptionItems} />
+
+            <div style={{ height: 10 }}></div>
             <FormSetDiv className={"bg-white"}>
               <div className="fieldSet-main">
                 <Row className={"bg-white"}>
@@ -104,11 +116,7 @@ const Index: React.FC<any> = props => {
                         setColumns(fields);
                       }}
                       onPlus={field => {
-                        columns = columns.map(f => {
-                          if (f.ID === field.ID) return field;
-                          return f;
-                        });
-                        setColumns(columns);
+                        setColumns(columns.map(f => (f.ID === field.ID ? field : f)));
                       }}
                       onSelect={field => {
                         setCurrentField(field);
@@ -131,13 +139,8 @@ const Index: React.FC<any> = props => {
                           form={currModel}
                           field={currentField}
                           onDataChange={data => {
-                            currentField = data;
-                            columns = columns.map(f => {
-                              if (f.ID === currentField.ID) return data;
-                              return f;
-                            });
-                            setCurrentField(currentField);
-                            setColumns(columns);
+                            setCurrentField(data);
+                            setColumns(columns.map(f => (f.ID === data.ID ? data : f)));
                           }}
                         />
                       </>
@@ -153,4 +156,4 @@ const Index: React.FC<any> = props => {
   );
 };
 
-export default Index;
+export default FormDesign;

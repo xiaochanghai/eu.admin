@@ -24,3 +24,9 @@ export enum DataModel {
   image = "image", //图像类型
   icon = "icon" //图像类型
 }
+export interface FormFieldVo {
+  ID?: string;
+  DataIndex?: string;
+  FieldType?: string;
+  [key: string]: any;
+}

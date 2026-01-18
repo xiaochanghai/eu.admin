@@ -1,5 +1,5 @@
 import React from "react";
-import FormDesign from "./components/FormDesign";
+// import FormDesign from "./components/FormDesign";
 // import { FormVo } from "@/api/Form";
 import { ItemType } from "@/api/base";
 import FlowDesign from "./FlowDesign";
@@ -72,7 +72,7 @@ const Index: React.FC = () => {
         }}
       />
       <div> 表单设计</div>
-      <FormDesign />
+      {/* <FormDesign /> */}
     </>
   );
 };
