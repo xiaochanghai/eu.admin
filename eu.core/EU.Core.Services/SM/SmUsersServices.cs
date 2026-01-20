@@ -122,7 +122,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     public override async Task<SmUsersDto> QueryDto(object objId, bool blnUseCache = false)
     {
         var userId = objId.ObjToString();
-        var data = _redis.Get<SmUsers>(userId);
+        var data = await _redis.GetAsync<SmUsers>(userId);
 
         if (data == null)
         {
@@ -285,7 +285,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         try
         {
-            var user = _redis.Get<SmUsers>(UserId);
+            var user = await _redis.GetAsync<SmUsers>(UserId);
 
             if (user == null)
             {

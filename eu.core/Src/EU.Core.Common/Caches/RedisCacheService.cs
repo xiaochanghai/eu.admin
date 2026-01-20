@@ -168,6 +168,21 @@ public class RedisCacheService : IDisposable
 
     }
 
+    /// <summary>
+    /// 异步验证缓存项是否存在
+    /// </summary>
+    /// <param name="key">缓存键</param>
+    /// <returns>是否存在</returns>
+    /// <exception cref="ArgumentNullException">键为空时抛出异常</exception>
+    public async Task<bool> ExistsAsync(string key)
+    {
+        if (string.IsNullOrEmpty(key))
+            throw new ArgumentNullException(nameof(key));
+
+        key = _redisKeyPrefix + key;
+        return await _cache.KeyExistsAsync(key);
+    }
+
     //public List<string> Exists1(string key)
     //{
     //    if (string.IsNullOrEmpty(key))
@@ -350,6 +365,37 @@ public class RedisCacheService : IDisposable
     /// <param name="key">缓存键</param>
     /// <returns>缓存值</returns>
     public string Get(string key) => _cache.StringGet(_redisKeyPrefix + key).ToString();
+
+    /// <summary>
+    /// 异步获取缓存并反序列化为指定类型
+    /// </summary>
+    /// <typeparam name="T">目标类型</typeparam>
+    /// <param name="key">缓存键</param>
+    /// <returns>缓存值</returns>
+    public async Task<T> GetAsync<T>(string key) where T : class
+    {
+        key = _redisKeyPrefix + key;
+        var value = await _cache.StringGetAsync(key);
+
+        if (!value.HasValue)
+            return null;
+
+        return JsonConvert.DeserializeObject<T>(value);
+    }
+
+    /// <summary>
+    /// 异步获取缓存并反序列化为指定类型
+    /// </summary>
+    /// <typeparam name="T">目标类型</typeparam>
+    /// <param name="key">缓存键（Guid类型）</param>
+    /// <returns>缓存值</returns>
+    public async Task<T> GetAsync<T>(Guid? key) where T : class
+    {
+        if (key is null)
+            return null;
+
+        return await GetAsync<T>(key.ObjToString());
+    }
 
     /// <summary>
     /// 获取缓存集合

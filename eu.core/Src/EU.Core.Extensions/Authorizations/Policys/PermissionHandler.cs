@@ -141,7 +141,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                             return;
                         }
                         else
-                        if (!Redis.Exists(sessionId.ObjToString()))
+                        if (!await Redis.ExistsAsync(sessionId.ObjToString()))
                         {
                             _user.MessageModel = new ApiResponse(StatusCode.CODE401).MessageModel;
                             context.Fail(new AuthorizationFailureReason(this, _user.MessageModel.Message));
