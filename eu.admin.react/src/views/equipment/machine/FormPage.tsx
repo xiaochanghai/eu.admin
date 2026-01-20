@@ -7,7 +7,7 @@ import { RootState, useSelector, useDispatch } from "@/redux";
 import { ModuleInfo } from "@/api/interface/index";
 import { SaveTypeEnum, EditOpenType, ModifyType } from "@/typings";
 import http from "@/api";
-import { Element, UploadImage, Attachment, Loading } from "@/components";
+import { Element, UploadImage, Attachment, Skeleton } from "@/components";
 import { STANDARD_FORM_LAYOUT } from "@/config";
 
 const FormItem = Form.Item;
@@ -41,6 +41,7 @@ const FormPage: React.FC<any> = props => {
   const querySingleData = async () => {
     let { Data, Success } = await querySingle({ Id, moduleCode, url });
     if (Success) {
+      setIsLoading(false);
       dispatch(setId({ moduleCode, id: Id }));
       form.setFieldsValue(Data);
       if (Data.MaterialClassId) getAllMaterialType(Data.MaterialClassId);
@@ -51,12 +52,12 @@ const FormPage: React.FC<any> = props => {
       setModifyType(ModifyType.Edit);
       setViewId(Id);
       querySingleData();
-      setIsLoading(false);
+      // setIsLoading(false);
       setDisabled(false);
     } else {
       // getAllMaterialType();
       setDisabled(false);
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   }, []);
 
@@ -221,9 +222,15 @@ const FormPage: React.FC<any> = props => {
     <>
       {openType === EditOpenType.Modal || openType === EditOpenType.Drawer ? (
         <Form {...STANDARD_FORM_LAYOUT} labelWrap onFinish={onFinish} onValuesChange={onValuesChange} form={form}>
-          {isLoading ? <Loading /> : component()}
-          <div style={{ height: 20 }}></div>
-          <Tabs items={items} />
+          {isLoading ? (
+            <Skeleton type="form" />
+          ) : (
+            <>
+              {component()}
+              <div style={{ height: 20 }}></div>
+              <Tabs items={items} />
+            </>
+          )}
         </Form>
       ) : null}
     </>
