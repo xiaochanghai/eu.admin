@@ -46,7 +46,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
     const modelSize = form.modelSize ?? 4;
     const gridSpanMap: Record<string, number> =
       modelSize === 4
-        ? { "25": 25, "50": 50, "75": 75, "100": 100 }
+        ? { "25": 25, "33": 33, "50": 50, "75": 75, "100": 100 }
         : modelSize === 3
           ? { "33": 1, "66": 2, "100": 3 }
           : modelSize === 2
@@ -261,7 +261,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
               {index === 0 && mode === Mode.form && (
                 <FieldSetting
                   field={field}
-                  compDatas={FormComponents}
+                  componentData={FormComponents}
                   onDataChange={(data: any) => {
                     onDataChange({
                       ...field,

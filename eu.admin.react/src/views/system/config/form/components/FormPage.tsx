@@ -1,5 +1,5 @@
 import { Tabs, Card, Form, Flex, Tag, Button, Modal, Input } from "antd";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
@@ -36,54 +36,119 @@ const FieldSetCenter = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mode, setMode] = useState<Mode>(Mode.list);
   const [form] = Form.useForm(); // 表单实例
+  const fieldListRef = useRef(fieldList);
+
+  // 同步最新的 fieldList 到 ref
+  useEffect(() => {
+    fieldListRef.current = fieldList;
+  }, [fieldList]);
+
+  // 保存函数
+  const saveFormColumnTaxisNo = useCallback(async (columns: any[]) => {
+    const items1 = columns.map(x => {
+      return { ID: x.ID, FormTaxisNo: x.FormTaxisNo };
+    });
+    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/form`, items1);
+  }, [moduleCode]);
+
+  const saveListColumnTaxisNo = useCallback(async (items: any[]) => {
+    const items1 = items.map(x => {
+      return { ID: x.ID, TaxisNo: x.TaxisNo };
+    });
+    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/list`, items1);
+  }, [moduleCode]);
 
   // 使用 useCallback 优化拖动函数
   const moveFormHideItem = useCallback(
     (fromIndex: number, toIndex: number) => {
-      let updatedItems = [...fieldList.filter(f => f.HideInForm != false)];
+      // 先排序再拖拽
+      let updatedItems = [...fieldList.filter(f => f.HideInForm != false && f.ColumnMode != Mode.list)].sort((a, b) => (a.FormTaxisNo || 0) - (b.FormTaxisNo || 0));
       const [movedItem] = updatedItems.splice(fromIndex, 1);
       updatedItems.splice(toIndex, 0, movedItem);
-      let items = [...fieldList.filter(f => f.HideInForm == false), ...updatedItems];
-      saveFormColumnTaxisNo(items);
-      onDataChange(items);
+
+      // 更新序号
+      updatedItems.forEach((x, i) => {
+        x.FormTaxisNo = 100 * (i + 1);
+      });
+
+      // 合并所有字段
+      const visibleItems = fieldList.filter(f => f.HideInForm === false && f.ColumnMode != Mode.list);
+      const otherItems = fieldList.filter(f => !(f.HideInForm === false && f.ColumnMode != Mode.list) && !(f.HideInForm != false && f.ColumnMode != Mode.list));
+      const allItems = [...visibleItems, ...updatedItems, ...otherItems];
+
+      fieldListRef.current = allItems;
+      onDataChange(allItems);
     },
     [fieldList, onDataChange]
   );
 
   const moveFormItem = useCallback(
     (fromIndex: number, toIndex: number) => {
-      let updatedItems = [...fieldList.filter(f => f.HideInForm === false)];
+      // 先排序再拖拽
+      let updatedItems = [...fieldList.filter(f => f.HideInForm === false && f.ColumnMode != Mode.list)].sort((a, b) => (a.FormTaxisNo || 0) - (b.FormTaxisNo || 0));
       const [movedItem] = updatedItems.splice(fromIndex, 1);
       updatedItems.splice(toIndex, 0, movedItem);
 
-      let items = [...fieldList.filter(f => f.HideInForm != false), ...updatedItems];
-      saveFormColumnTaxisNo(items);
-      onDataChange(items);
+      // 更新序号
+      updatedItems.forEach((x, i) => {
+        x.FormTaxisNo = 100 * (i + 1);
+      });
+
+      // 合并所有字段
+      const hiddenItems = fieldList.filter(f => f.HideInForm != false && f.ColumnMode != Mode.list);
+      const otherItems = fieldList.filter(f => f.ColumnMode == Mode.list);
+      const allItems = [...updatedItems, ...hiddenItems, ...otherItems];
+
+      fieldListRef.current = allItems;
+      onDataChange(allItems);
     },
     [fieldList, onDataChange]
   );
 
   const moveListHideItem = useCallback(
     (fromIndex: number, toIndex: number) => {
-      let updatedItems = [...fieldList.filter(f => f.HideInTable != false)];
+      // 先排序再拖拽
+      let updatedItems = [...fieldList.filter(f => f.HideInTable != false && f.ColumnMode != Mode.form)].sort((a, b) => (a.TaxisNo || 0) - (b.TaxisNo || 0));
       const [movedItem] = updatedItems.splice(fromIndex, 1);
       updatedItems.splice(toIndex, 0, movedItem);
-      let items = [...fieldList.filter(f => f.HideInTable == false), ...updatedItems];
-      saveListColumnTaxisNo(items);
+
+      // 更新序号
+      updatedItems.forEach((x, i) => {
+        x.TaxisNo = 100 * (i + 1);
+      });
+
+      // 合并所有字段
+      const visibleItems = fieldList.filter(f => f.HideInTable === false && f.ColumnMode != Mode.form);
+      const otherItems = fieldList.filter(f => f.ColumnMode == Mode.form);
+      const allItems = [...visibleItems, ...updatedItems, ...otherItems];
+
+      fieldListRef.current = allItems;
+      onDataChange(allItems);
     },
-    [fieldList]
+    [fieldList, onDataChange]
   );
 
   const moveListItem = useCallback(
     (fromIndex: number, toIndex: number) => {
-      let updatedItems = [...fieldList.filter(f => f.HideInTable === false)];
+      // 先排序再拖拽
+      let updatedItems = [...fieldList.filter(f => f.HideInTable === false && f.ColumnMode != Mode.form)].sort((a, b) => (a.TaxisNo || 0) - (b.TaxisNo || 0));
       const [movedItem] = updatedItems.splice(fromIndex, 1);
       updatedItems.splice(toIndex, 0, movedItem);
 
-      let items = [...fieldList.filter(f => f.HideInTable != false), ...updatedItems];
-      saveListColumnTaxisNo(items);
+      // 更新序号
+      updatedItems.forEach((x, i) => {
+        x.TaxisNo = 100 * (i + 1);
+      });
+
+      // 合并所有字段
+      const hiddenItems = fieldList.filter(f => f.HideInTable != false && f.ColumnMode != Mode.form);
+      const otherItems = fieldList.filter(f => f.ColumnMode == Mode.form);
+      const allItems = [...updatedItems, ...hiddenItems, ...otherItems];
+
+      fieldListRef.current = allItems;
+      onDataChange(allItems);
     },
-    [fieldList]
+    [fieldList, onDataChange]
   );
 
   const DragFormHideItem = ({ id, text, index, moveItem, field }: any) => {
@@ -92,6 +157,10 @@ const FieldSetCenter = ({
     const [{ isDragging }, drag] = useDrag({
       type: "form-hide-item",
       item: () => ({ id, index }),
+      end: () => {
+        // 拖拽结束后保存数据
+        saveFormColumnTaxisNo(fieldListRef.current);
+      },
       collect: monitor => ({
         isDragging: monitor.isDragging()
       })
@@ -112,7 +181,6 @@ const FieldSetCenter = ({
 
         const hoverBoundingRect = ref.current.getBoundingClientRect();
         const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-        const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
         const clientOffset = monitor.getClientOffset();
 
         if (!clientOffset) {
@@ -120,13 +188,14 @@ const FieldSetCenter = ({
         }
 
         const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-        const hoverClientX = clientOffset.x - hoverBoundingRect.left;
 
-        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY && hoverClientX < hoverMiddleX) {
+        // 向下拖动
+        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
           return;
         }
 
-        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY && hoverClientX > hoverMiddleX) {
+        // 向上拖动
+        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
           return;
         }
 
@@ -192,6 +261,10 @@ const FieldSetCenter = ({
     const [{ isDragging }, drag] = useDrag({
       type: "form-item",
       item: () => ({ id, index }),
+      end: () => {
+        // 拖拽结束后保存数据
+        saveFormColumnTaxisNo(fieldListRef.current);
+      },
       collect: monitor => ({
         isDragging: monitor.isDragging()
       })
@@ -220,10 +293,12 @@ const FieldSetCenter = ({
 
         const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
+        // 向下拖动
         if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
           return;
         }
 
+        // 向上拖动
         if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
           return;
         }
@@ -259,19 +334,16 @@ const FieldSetCenter = ({
     );
   };
 
-  const saveFormColumnTaxisNo = async (columns: any[]) => {
-    let items1 = columns.map(x => {
-      return { ID: x.ID, FromTaxisNo: x.FromTaxisNo };
-    });
-    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/form`, items1);
-  };
-
   const DragListItem = ({ id, index, moveItem, field }: any) => {
     const ref = useRef<HTMLDivElement>(null);
 
     const [{ isDragging }, drag] = useDrag({
       type: "list-item",
       item: () => ({ id, index }),
+      end: () => {
+        // 拖拽结束后保存数据
+        saveListColumnTaxisNo(fieldListRef.current);
+      },
       collect: monitor => ({
         isDragging: monitor.isDragging()
       })
@@ -292,7 +364,6 @@ const FieldSetCenter = ({
 
         const hoverBoundingRect = ref.current.getBoundingClientRect();
         const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-        const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
         const clientOffset = monitor.getClientOffset();
 
         if (!clientOffset) {
@@ -300,13 +371,14 @@ const FieldSetCenter = ({
         }
 
         const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-        const hoverClientX = clientOffset.x - hoverBoundingRect.left;
 
-        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY && hoverClientX < hoverMiddleX) {
+        // 向下拖动
+        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
           return;
         }
 
-        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY && hoverClientX > hoverMiddleX) {
+        // 向上拖动
+        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
           return;
         }
 
@@ -367,19 +439,6 @@ const FieldSetCenter = ({
       </div>
     );
   };
-
-  const saveListColumnTaxisNo = async (items: any[]) => {
-    let i = 1;
-    items.map(x => {
-      x.TaxisNo = 100 * i;
-      i++;
-    });
-    onDataChange(items);
-    let items1 = items.map(x => {
-      return { ID: x.ID, TaxisNo: x.TaxisNo };
-    });
-    await http.put<any>(`/api/SmModule/UpdateTaxisNo/${moduleCode}/list`, items1);
-  };
   const add = async (data: any) => {
     let { Success, Message } = await http.post<any>(`/api/SmModule/AddColumn/${moduleCode}`, {
       ...data,
@@ -421,7 +480,7 @@ const FieldSetCenter = ({
               <Flex wrap>
                 {fieldList
                   .filter(f => f.HideInTable === false && f.ColumnMode != Mode.form)
-                  .sort((a, b) => a.TaxisNo - b.TaxisNo)
+                  .sort((a, b) => (a.TaxisNo || 0) - (b.TaxisNo || 0))
                   .map((item, index) => (
                     <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListItem} />
                   ))}
@@ -432,7 +491,7 @@ const FieldSetCenter = ({
               <Flex wrap gap="small">
                 {fieldList
                   .filter(f => f.HideInTable != false && f.ColumnMode != Mode.form)
-                  .sort((a, b) => a.TaxisNo - b.TaxisNo)
+                  .sort((a, b) => (a.TaxisNo || 0) - (b.TaxisNo || 0))
                   .map((item, index) => (
                     <DragListItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveListHideItem} />
                   ))}
@@ -458,6 +517,7 @@ const FieldSetCenter = ({
                 <Flex wrap>
                   {fieldList
                     .filter(f => f.HideInForm === false && f.ColumnMode != Mode.list)
+                    .sort((a, b) => (a.FormTaxisNo || 0) - (b.FormTaxisNo || 0))
                     .map((item, index) => (
                       <DragFormItem key={item.ID} id={item.ID} index={index} field={item} moveItem={moveFormItem} />
                     ))}
@@ -468,6 +528,7 @@ const FieldSetCenter = ({
                 <Flex wrap gap="small">
                   {fieldList
                     .filter(f => f.HideInForm != false && f.ColumnMode != Mode.list)
+                    .sort((a, b) => (a.FormTaxisNo || 0) - (b.FormTaxisNo || 0))
                     .map((item, index) => (
                       <DragFormHideItem
                         key={item.ID}

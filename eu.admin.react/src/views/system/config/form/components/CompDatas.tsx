@@ -15,6 +15,12 @@ export const FormComponents = [
     }
   },
   {
+    ID: "TextArea",
+    icon: "TextArea",
+    fieldType: "TextArea",
+    label: "多行文字"
+  },
+  {
     ID: "InputNumber",
     component: InputNumber,
     icon: "InputNumber",
@@ -43,28 +49,22 @@ export const FormComponents = [
     label: "开关"
   },
   {
-    ID: "TextArea",
-    icon: "TextArea",
-    fieldType: "TextArea",
-    label: "多行文字"
-  },
-  {
     ID: "DatePicker",
     icon: "DatePicker",
     fieldType: "DatePicker",
     label: "日期选择器"
   },
   {
-    ID: "TimePicker",
-    icon: "TimePicker",
-    fieldType: "TimePicker",
-    label: "时间选择器"
-  },
-  {
     ID: "DateTimePicker",
     icon: "DateTimePicker",
     fieldType: "DateTimePicker",
     label: "日期时间选择器"
+  },
+  {
+    ID: "TimePicker",
+    icon: "TimePicker",
+    fieldType: "TimePicker",
+    label: "时间选择器"
   },
   {
     ID: "ColorPicker",
