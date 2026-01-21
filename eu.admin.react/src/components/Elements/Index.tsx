@@ -6,7 +6,11 @@ import ComboBox from "./ComBoBox"; // 下拉框
 import ComboGrid from "./ComboGrid"; // 下拉网格
 import Switch from "./Switch"; // 开关
 import TextArea from "./TextArea"; // 多行文本框
-import DatePicker from "./DatePicker"; // 日期选择器
+import {
+  DatePickerField as DatePicker,
+  DateTimePickerField as DateTimePicker,
+  TimePickerField as TimePicker
+} from "./DatePicker"; // 日期选择器
 import ColorPicker from "./ColorPicker"; // 颜色选择器
 import ImageCover from "./ImageCover"; // 封面图
 import { FieldProps, ModifyType } from "@/typings";
@@ -46,7 +50,9 @@ export const SUPPORTED_FIELD_TYPES = [
   "TextArea",
   "DatePicker",
   "ColorPicker",
-  "ImageCover"
+  "ImageCover",
+  "DateTimePicker",
+  "TimePicker"
 ] as const;
 
 /**
@@ -60,6 +66,8 @@ const FIELD_MAP: Record<string, React.ComponentType<any>> = {
   Switch,
   TextArea,
   DatePicker,
+  DateTimePicker,
+  TimePicker,
   ColorPicker,
   ImageCover
   // TODO: 待实现的组件
