@@ -231,7 +231,17 @@ public class LogLock : IDisposable
                 requestInfo.Filter = WebUtility.UrlDecode(requestInfo.Filter);
             }
 
-            var dbInsert = new DbInsert("SmApiLog");
+            var dbInsert = new DbInsert("SmApiLog")
+            {
+                // Avoid resolving scoped services (App.User/UserContext) in a background task.
+                IsInitDefaultValue = false
+            };
+            if (Guid.TryParse(requestInfo.User, out var userId))
+                dbInsert.Values("CreatedBy", userId);
+            dbInsert.Values("CreatedTime", DateTime.Now);
+            dbInsert.Values("Tag", 1);
+            dbInsert.Values("IsDeleted", 0);
+            dbInsert.Values("IsActive", 1);
             dbInsert.Values("UserId", requestInfo.User);
             dbInsert.Values("IP", ip == "::1" ? "localhost" : ip);
             dbInsert.Values("Path", requestInfo.API);

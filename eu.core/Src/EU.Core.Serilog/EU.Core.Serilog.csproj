@@ -3,8 +3,10 @@
 	<Import Project="..\..\build\common.targets" />
 
 	<ItemGroup>
-		<PackageReference Include="Mapster" Version="7.4.0" />
-		<PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="5.0.0" />
+		<PackageReference Include="Mapster" Version="10.0.0-pre01" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="5.0.1-dev-00860" />
 	</ItemGroup>
 
 	<ItemGroup>

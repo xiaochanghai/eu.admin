@@ -502,7 +502,7 @@ public class RedisCacheService : IDisposable
     /// <returns>是否添加成功</returns>
     public bool AddObject(string key, object value, TimeSpan? expiresIn = null, bool isSliding = false)
     {
-        return _cache.StringSet(_redisKeyPrefix + key, JsonConvert.SerializeObject(value), expiresIn);
+        return _cache.StringSet(_redisKeyPrefix + key, JsonConvert.SerializeObject(value), expiresIn, false);
     }
 
     /// <summary>
@@ -530,7 +530,7 @@ public class RedisCacheService : IDisposable
     /// <returns>是否添加成功</returns>
     public bool Add(string key, string value, TimeSpan? expiresIn = null, bool isSliding = false)
     {
-        return _cache.StringSet(_redisKeyPrefix + key, value, expiresIn);
+        return _cache.StringSet(_redisKeyPrefix + key, value, expiresIn, false);
     }
 
     public bool Add(Guid key, string value, TimeSpan? expiresIn = null, bool isSliding = false) => Add(key.ObjToString(), value, expiresIn, isSliding);
