@@ -23,8 +23,7 @@ public static class RabbitMQSetup
 
                    var factory = new ConnectionFactory()
                    {
-                       HostName = AppSettings.app(new string[] { "RabbitMQ", "Connection" }),
-                       DispatchConsumersAsync = true
+                       HostName = AppSettings.app(new string[] { "RabbitMQ", "Connection" })
                    };
 
                    if (!string.IsNullOrEmpty(AppSettings.app(new string[] { "RabbitMQ", "UserName" })))

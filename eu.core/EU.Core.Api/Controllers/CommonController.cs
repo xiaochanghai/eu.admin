@@ -1,5 +1,6 @@
 ﻿using EU.Core.Common.Const;
 using EU.Core.Common.Seed;
+using EU.Core.Tasks;
 
 namespace EU.Core.Controllers;
 
@@ -188,20 +189,20 @@ public class CommonController : Controller
     [HttpGet("Test"), AllowAnonymous]
     public async Task<ServiceResult> Test()
     {
-        //for (int i = 0; i < 100; i++)
-        //{
-        //    TaskMsg msg = new TaskMsg();
+        for (int i = 0; i < 10; i++)
+        {
+            TaskMsg msg = new TaskMsg();
 
-        //    msg.MsgId = Guid.NewGuid();
-        //    msg.Time = DateTime.Now;
-        //    RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
-        //    Thread.Sleep(2000);
-        //}
+            msg.MsgId = Guid.NewGuid();
+            msg.Time = DateTime.Now;
+            RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
+            Thread.Sleep(2000);
+        }
         //DBHelper.ExecuteDML("UPDATE  SmModules set UpdateTime=getdate() where ID='402d1606-286a-47ec-8e45-346a12450e9a'");
 
         //var aa = Guid.NewGuid().ToString("N");
         //var aa1 = Guid.NewGuid();
-        DBSeed.MigrationLogs1(_myContext);
+        //DBSeed.MigrationLogs1(_myContext);
 
 
         return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);

@@ -42,7 +42,7 @@ public class TaskCenter
         if (AppSettings.app(["RabbitMQ", "Enabled"]).ObjToBool())
         {
             Logger.WriteLog("[Task]启动消息订阅");
-            RabbitMQHelper.ConsumeMsg<TaskMsg>(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg =>
+            await RabbitMQHelper.ConsumeMsgAsync<TaskMsg>(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg =>
             {
                 ThreadPool.QueueUserWorkItem(TaskHelper.TaskHandleAsync, msg);
                 return ConsumeAction.Accept;

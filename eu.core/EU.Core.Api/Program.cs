@@ -67,7 +67,6 @@ builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
 //builder.Services.AddDataContextSetup();
 builder.Services.AddDbSetup();
-DBHelper.CheckServiceAvailable();
 builder.Services.AddInitializationHostServiceSetup();
 
 builder.Host.AddSerilogSetup();

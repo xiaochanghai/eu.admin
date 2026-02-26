@@ -1,4 +1,4 @@
-﻿using RabbitMQ.Client;
+using RabbitMQ.Client;
 
 namespace EU.Core.EventBus;
 
@@ -6,8 +6,7 @@ namespace EU.Core.EventBus;
 /// RabbitMQ持久连接
 /// 接口
 /// </summary>
-public interface IRabbitMQPersistentConnection
-    : IDisposable
+public interface IRabbitMQPersistentConnection : IDisposable
 {
     /// <summary>
     /// 是否已经连接
@@ -17,26 +16,20 @@ public interface IRabbitMQPersistentConnection
     /// <summary>
     /// 尝试重连
     /// </summary>
-    /// <returns></returns>
-    bool TryConnect();
+    Task<bool> TryConnectAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 创建Model
+    /// 创建 Channel（RabbitMQ.Client v7 由 IModel 升级为 IChannel）
     /// </summary>
-    /// <returns></returns>
-    IModel CreateModel();
+    Task<IChannel> CreateChannelAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 发布消息
     /// </summary>
-    /// <param name="message"></param>
-    /// <param name="exchangeName"></param>
-    /// <param name="routingKey"></param>
-    void PublishMessage(string message, string exchangeName, string routingKey);
+    Task PublishMessageAsync(string message, string exchangeName, string routingKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 订阅消息
     /// </summary>
-    /// <param name="queueName"></param>
-    void StartConsuming(string queueName);
+    Task StartConsumingAsync(string queueName, CancellationToken cancellationToken = default);
 }

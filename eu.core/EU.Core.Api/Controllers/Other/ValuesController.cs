@@ -57,13 +57,13 @@ public class ValuesController : BaseApiController
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult TestRabbitMqPublish()
+    public async Task<IActionResult> TestRabbitMqPublish()
     {
         if (!_persistentConnection.IsConnected)
         {
-            _persistentConnection.TryConnect();
+            await _persistentConnection.TryConnectAsync();
         }
-        _persistentConnection.PublishMessage("Hello, RabbitMQ!", exchangeName: "Tioboncore", routingKey: "myRoutingKey");
+        await _persistentConnection.PublishMessageAsync("Hello, RabbitMQ!", exchangeName: "Tioboncore", routingKey: "myRoutingKey");
         return Ok();
     }
 
@@ -72,14 +72,14 @@ public class ValuesController : BaseApiController
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult TestRabbitMqSubscribe()
+    public async Task<IActionResult> TestRabbitMqSubscribe()
     {
         if (!_persistentConnection.IsConnected)
         {
-            _persistentConnection.TryConnect();
+            await _persistentConnection.TryConnectAsync();
         }
 
-        _persistentConnection.StartConsuming("myQueue");
+        await _persistentConnection.StartConsumingAsync("myQueue");
         return Ok();
     }
 

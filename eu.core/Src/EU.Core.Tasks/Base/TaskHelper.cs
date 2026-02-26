@@ -157,7 +157,7 @@ public class TaskHelper
 
                                          list.Add(fname.Name);
                                      });
-                                RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK,
+                                await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK,
                                     new TaskCallbackMsg
                                     {
                                         MsgId = msg.MsgId,
@@ -184,7 +184,7 @@ public class TaskHelper
                                     content = sr.ReadToEnd();
                                 }
                             }
-                            RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
+                            await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
                             {
                                 MsgId = msg.MsgId,
                                 Content = content
@@ -277,7 +277,7 @@ public class TaskHelper
                             var m_Logs = new List<string>();
                             if (m_ClientQuartzLogs.ContainsKey(msg.TaskCode))
                                 m_Logs = m_ClientQuartzLogs[msg.TaskCode];
-                            var flag = RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
+                            var flag = await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
                             {
                                 MsgId = msg.MsgId,
                                 Content = string.Join("<br />", m_Logs)
@@ -315,7 +315,7 @@ public class TaskHelper
                                 AddQuartzLog(msg.TaskCode, $"获取日志文件列表失败：{ex.Message}");
                             }
 
-                            RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
+                            await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
                             {
                                 MsgId = msg.MsgId,
                                 Content = list
@@ -347,7 +347,7 @@ public class TaskHelper
                             //    }
                             //}
                             m_Logs.ForEach(l => sb.AppendLine(l));
-                            RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
+                            await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, new TaskCallbackMsg
                             {
                                 MsgId = msg.MsgId,
                                 Content = sb.ToString()
@@ -394,35 +394,44 @@ public class TaskHelper
     ///// <returns></returns>
 
     public static void PostMsg(TaskMsg msg)
+        => PostMsgAsync(msg).GetAwaiter().GetResult();
+
+    public static async Task PostMsgAsync(TaskMsg msg)
     {
         lock (m_MsgClients)
         {
             m_MsgClients.Add(msg.MsgId);
         }
+
         switch (msg.TaskType)
         {
             case JobConsts.TASK_TYPE_JOB:
                 {
-                    RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
+                    await RabbitMQHelper.SendMsgAsync(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg).ConfigureAwait(false);
                     break;
                 }
             default:
                 Logger.WriteLog($"发送Task消息失败，不支持的任务类型 {msg.TaskType}");
                 return;
         }
+
         Logger.WriteLog($"发送Task消息成功 {msg.ToString()}");
     }
+
     /// <summary>
     /// 发送消息并等待消息回传
     /// </summary>
     /// <param name="msg"></param>
     /// <returns></returns>
-
     public static (bool, object) SendMsg(TaskMsg msg)
+        => SendMsgAsync(msg).GetAwaiter().GetResult();
+
+    public static async Task<(bool, object)> SendMsgAsync(TaskMsg msg)
     {
         bool suc = false;
+
         //发送消息
-        PostMsg(msg);
+        await PostMsgAsync(msg).ConfigureAwait(false);
 
         #region  等待消息回传
         int timeout = 5;
@@ -443,7 +452,7 @@ public class TaskHelper
                 }
             }
 
-            Thread.Sleep(100);
+            await Task.Delay(100).ConfigureAwait(false);
 
             if (sum-- <= 0)
             {

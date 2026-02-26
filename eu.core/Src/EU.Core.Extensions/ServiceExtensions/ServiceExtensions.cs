@@ -1,8 +1,4 @@
-﻿using EU.Core.Common;
-using EU.Core.Common.Const;
-using EU.Core.Common.Helper;
-using EU.Core.Common.LogHelper;
-using EU.Core.Tasks;
+﻿using EU.Core.Common.Helper;
 
 namespace EU.Core.Extensions;
 
@@ -14,15 +10,16 @@ public static class ServiceExtensions
     {
 
         //TaskCallback消息订阅
-        if (AppSettings.app(["RabbitMQ", "Enabled"]).ObjToBool())
-        {
-            Logger.WriteLog("[TaskCallback]启动消息订阅");
-            RabbitMQHelper.ConsumeMsg<TaskCallbackMsg>(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, msg =>
-            {
-                ThreadPool.QueueUserWorkItem(TaskHelper.TaskCallback, msg);
-                return ConsumeAction.Accept;
-            });
-        }
+        //if (AppSettings.app(["RabbitMQ", "Enabled"]).ObjToBool())
+        //{
+        //    Logger.WriteLog("[TaskCallback]启动消息订阅");
+        //    RabbitMQHelper.ConsumeMsg<TaskCallbackMsg>(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, msg =>
+        //    {
+        //        ThreadPool.QueueUserWorkItem(TaskHelper.TaskCallback, msg);
+        //        return ConsumeAction.Accept;
+        //    });
+        //}
+        DBHelper.CheckServiceAvailable();
 
 
     }

@@ -1,6 +1,6 @@
-﻿using Autofac;
-using EU.Core.Common.Extensions;
+using Autofac;
 using EU.Core.Common;
+using EU.Core.Common.Extensions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,7 +19,13 @@ namespace EU.Core.EventBus;
 /// </summary>
 public class EventBusRabbitMQ : IEventBus, IDisposable
 {
-    const string BROKER_NAME = "Tioboncore_event_bus";
+    private const string BROKER_NAME = "Tioboncore_event_bus";
+
+    private static readonly CreateChannelOptions DefaultChannelOptions = new(
+        publisherConfirmationsEnabled: false,
+        publisherConfirmationTrackingEnabled: false,
+        outstandingPublisherConfirmationsRateLimiter: null,
+        consumerDispatchConcurrency: 1);
 
     private readonly IRabbitMQPersistentConnection _persistentConnection;
     private readonly ILogger<EventBusRabbitMQ> _logger;
@@ -28,169 +34,187 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
     private readonly string AUTOFAC_SCOPE_NAME = "Tioboncore_event_bus";
     private readonly int _retryCount;
 
-    private IModel _consumerChannel;
+    private IChannel? _consumerChannel;
     private string _queueName;
 
-    /// <summary>
-    /// RabbitMQ事件总线
-    /// </summary>
-    /// <param name="persistentConnection">RabbitMQ持久连接</param>
-    /// <param name="logger">日志</param>
-    /// <param name="autofac">autofac容器</param>
-    /// <param name="subsManager">事件总线订阅管理器</param>
-    /// <param name="queueName">队列名称</param>
-    /// <param name="retryCount">重试次数</param>
-    public EventBusRabbitMQ(IRabbitMQPersistentConnection persistentConnection, ILogger<EventBusRabbitMQ> logger,
-        ILifetimeScope autofac, 
-        IEventBusSubscriptionsManager subsManager, 
-        string queueName = null, 
+    private readonly SemaphoreSlim _consumerChannelLock = new(1, 1);
+    private bool _consuming;
+    private bool _disposed;
+
+    // consumer channel 重建的退避/降噪参数
+    private int _recreateAttempts;
+    private DateTimeOffset _nextRecreateAttemptAt = DateTimeOffset.MinValue;
+    private DateTimeOffset _lastRecreateLogAt = DateTimeOffset.MinValue;
+
+    public EventBusRabbitMQ(
+        IRabbitMQPersistentConnection persistentConnection,
+        ILogger<EventBusRabbitMQ> logger,
+        ILifetimeScope autofac,
+        IEventBusSubscriptionsManager subsManager,
+        string? queueName = null,
         int retryCount = 5)
     {
         _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _subsManager = subsManager ?? new InMemoryEventBusSubscriptionsManager();
-        _queueName = queueName;
-        _consumerChannel = CreateConsumerChannel();
+        _queueName = queueName ?? string.Empty;
         _autofac = autofac;
         _retryCount = retryCount;
+
+        // ctor 里不能 await，启动消费通道改为 lazy
         _subsManager.OnEventRemoved += SubsManager_OnEventRemoved;
     }
 
-    /// <summary>
-    /// 订阅管理器事件
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="eventName"></param>
-    private void SubsManager_OnEventRemoved(object sender, string eventName)
+    private void SubsManager_OnEventRemoved(object? sender, string eventName)
     {
-        if (!_persistentConnection.IsConnected)
-        {
-            _persistentConnection.TryConnect();
-        }
+        _ = SubsManager_OnEventRemovedAsync(eventName);
+    }
 
-        using (var channel = _persistentConnection.CreateModel())
+    private async Task SubsManager_OnEventRemovedAsync(string eventName)
+    {
+        try
         {
-            channel.QueueUnbind(queue: _queueName,
-                exchange: BROKER_NAME,
-                routingKey: eventName);
+            if (!_persistentConnection.IsConnected)
+            {
+                await _persistentConnection.TryConnectAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            await using var channel = await _persistentConnection.CreateChannelAsync(CancellationToken.None).ConfigureAwait(false);
+            await channel.QueueUnbindAsync(queue: _queueName,
+                    exchange: BROKER_NAME,
+                    routingKey: eventName,
+                    arguments: null,
+                    cancellationToken: CancellationToken.None)
+                .ConfigureAwait(false);
 
             if (_subsManager.IsEmpty)
             {
                 _queueName = string.Empty;
-                _consumerChannel.Close();
+                // 0 不是一个“正常关闭”的 replyCode；这里用 200 表示正常关闭
+                if (_consumerChannel != null)
+                {
+                    try { await _consumerChannel.CloseAsync(200, "OK", false, CancellationToken.None).ConfigureAwait(false); } catch { }
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "SubsManager_OnEventRemovedAsync failed");
         }
     }
 
     /// <summary>
-    /// 发布
+    /// 发布（同步包装，兼容 IEventBus）
     /// </summary>
-    /// <param name="event">事件模型</param>
     public void Publish(IntegrationEvent @event)
+        => PublishAsync(@event).GetAwaiter().GetResult();
+
+    public async Task PublishAsync(IntegrationEvent @event, CancellationToken cancellationToken = default)
     {
         if (!_persistentConnection.IsConnected)
         {
-            _persistentConnection.TryConnect();
+            await _persistentConnection.TryConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var policy = RetryPolicy.Handle<BrokerUnreachableException>()
+        AsyncRetryPolicy policy = Policy
+            .Handle<BrokerUnreachableException>()
             .Or<SocketException>()
-            .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
-            {
-                _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
-            });
+            .Or<AlreadyClosedException>()
+            .Or<OperationInterruptedException>()
+            .WaitAndRetryAsync(
+                _retryCount,
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                async (ex, time) =>
+                {
+                    _logger.LogWarning(ex, "Could not publish event: {EventId} after {Timeout}s ({ExceptionMessage})", @event.Id, $"{time.TotalSeconds:n1}", ex.Message);
+                    // 让下一次重试尽量在“已连接”状态下发生
+                    if (!_persistentConnection.IsConnected)
+                    {
+                        try { await _persistentConnection.TryConnectAsync(CancellationToken.None).ConfigureAwait(false); } catch { /* ignore */ }
+                    }
+                });
 
         var eventName = @event.GetType().Name;
 
         _logger.LogTrace("Creating RabbitMQ channel to publish event: {EventId} ({EventName})", @event.Id, eventName);
 
-        using (var channel = _persistentConnection.CreateModel())
+        await using var channel = await _persistentConnection.CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+
+        _logger.LogTrace("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
+
+        await channel.ExchangeDeclareAsync(exchange: BROKER_NAME, type: "direct", durable: true, autoDelete: false,
+                arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        var message = JsonConvert.SerializeObject(@event);
+        var body = Encoding.UTF8.GetBytes(message);
+
+        await policy.ExecuteAsync(async ct =>
         {
+            var properties = new BasicProperties { DeliveryMode = DeliveryModes.Persistent };
 
-            _logger.LogTrace("Declaring RabbitMQ exchange to publish event: {EventId}", @event.Id);
+            _logger.LogTrace("Publishing event to RabbitMQ: {EventId}", @event.Id);
 
-            channel.ExchangeDeclare(exchange: BROKER_NAME, type: "direct");
-
-            var message = JsonConvert.SerializeObject(@event);
-            var body = Encoding.UTF8.GetBytes(message);
-
-            policy.Execute(() =>
-            {
-                var properties = channel.CreateBasicProperties();
-                properties.DeliveryMode = 2; // persistent
-
-                _logger.LogTrace("Publishing event to RabbitMQ: {EventId}", @event.Id);
-
-                channel.BasicPublish(
-                    exchange: BROKER_NAME,
+            await channel.BasicPublishAsync(exchange: BROKER_NAME,
                     routingKey: eventName,
                     mandatory: true,
                     basicProperties: properties,
-                    body: body);
-            });
-        }
+                    body: body,
+                    cancellationToken: ct)
+                .ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 订阅
-    /// 动态
-    /// </summary>
-    /// <typeparam name="TH">事件处理器</typeparam>
-    /// <param name="eventName">事件名</param>
-    public void SubscribeDynamic<TH>(string eventName)
-        where TH : IDynamicIntegrationEventHandler
+    public void SubscribeDynamic<TH>(string eventName) where TH : IDynamicIntegrationEventHandler
+        => SubscribeDynamicAsync<TH>(eventName).GetAwaiter().GetResult();
+
+    public async Task SubscribeDynamicAsync<TH>(string eventName, CancellationToken cancellationToken = default) where TH : IDynamicIntegrationEventHandler
     {
         _logger.LogInformation("Subscribing to dynamic event {EventName} with {EventHandler}", eventName, typeof(TH).GetGenericTypeName());
 
-        DoInternalSubscription(eventName);
+        await DoInternalSubscriptionAsync(eventName, cancellationToken).ConfigureAwait(false);
         _subsManager.AddDynamicSubscription<TH>(eventName);
-        StartBasicConsume();
+        await StartBasicConsumeAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 订阅
-    /// </summary>
-    /// <typeparam name="T">约束：事件模型</typeparam>
-    /// <typeparam name="TH">约束：事件处理器<事件模型></typeparam>
     public void Subscribe<T, TH>()
+        where T : IntegrationEvent
+        where TH : IIntegrationEventHandler<T>
+        => SubscribeAsync<T, TH>().GetAwaiter().GetResult();
+
+    public async Task SubscribeAsync<T, TH>(CancellationToken cancellationToken = default)
         where T : IntegrationEvent
         where TH : IIntegrationEventHandler<T>
     {
         var eventName = _subsManager.GetEventKey<T>();
-        DoInternalSubscription(eventName);
+        await DoInternalSubscriptionAsync(eventName, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Subscribing to event {EventName} with {EventHandler}", eventName, typeof(TH).GetGenericTypeName());
-
         ConsoleHelper.WriteSuccessLine($"Subscribing to event {eventName} with {typeof(TH).GetGenericTypeName()}");
 
         _subsManager.AddSubscription<T, TH>();
-        StartBasicConsume();
+        await StartBasicConsumeAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private void DoInternalSubscription(string eventName)
+    private async Task DoInternalSubscriptionAsync(string eventName, CancellationToken cancellationToken)
     {
         var containsKey = _subsManager.HasSubscriptionsForEvent(eventName);
-        if (!containsKey)
-        {
-            if (!_persistentConnection.IsConnected)
-            {
-                _persistentConnection.TryConnect();
-            }
+        if (containsKey) return;
 
-            using (var channel = _persistentConnection.CreateModel())
-            {
-                channel.QueueBind(queue: _queueName,
-                                  exchange: BROKER_NAME,
-                                  routingKey: eventName);
-            }
+        if (!_persistentConnection.IsConnected)
+        {
+            await _persistentConnection.TryConnectAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        await using var channel = await _persistentConnection.CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+        await channel.QueueBindAsync(queue: _queueName,
+                exchange: BROKER_NAME,
+                routingKey: eventName,
+                arguments: null,
+                cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 取消订阅
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TH"></typeparam>
     public void Unsubscribe<T, TH>()
         where T : IntegrationEvent
         where TH : IIntegrationEventHandler<T>
@@ -198,56 +222,62 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
         var eventName = _subsManager.GetEventKey<T>();
 
         _logger.LogInformation("Unsubscribing from event {EventName}", eventName);
-
         _subsManager.RemoveSubscription<T, TH>();
     }
 
-    public void UnsubscribeDynamic<TH>(string eventName)
-        where TH : IDynamicIntegrationEventHandler
+    public void UnsubscribeDynamic<TH>(string eventName) where TH : IDynamicIntegrationEventHandler
     {
         _subsManager.RemoveDynamicSubscription<TH>(eventName);
     }
 
     public void Dispose()
     {
-        if (_consumerChannel != null)
-        {
-            _consumerChannel.Dispose();
-        }
+        if (_disposed) return;
+        _disposed = true;
 
+        _consumerChannel?.Dispose();
         _subsManager.Clear();
+
+        _consumerChannelLock.Dispose();
     }
 
-    /// <summary>
-    /// 开始基本消费
-    /// </summary>
-    private void StartBasicConsume()
+    private async Task StartBasicConsumeAsync(CancellationToken cancellationToken)
     {
         _logger.LogTrace("Starting RabbitMQ basic consume");
 
-        if (_consumerChannel != null)
+        if (_disposed) return;
+
+        if (string.IsNullOrEmpty(_queueName))
         {
-            var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
-
-            consumer.Received += Consumer_Received;
-
-            _consumerChannel.BasicConsume(
-                queue: _queueName,
-                autoAck: false,
-                consumer: consumer);
+            _logger.LogWarning("StartBasicConsume skipped because queue name is empty");
+            return;
         }
-        else
+
+        // 防止重复启动消费（重连/重复订阅场景）
+        if (_consuming) return;
+
+        // consumer channel lazy init
+        if (_consumerChannel == null)
         {
-            _logger.LogError("StartBasicConsume can't call on _consumerChannel == null");
+            _consumerChannel = await CreateConsumerChannelAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
+        consumer.ReceivedAsync += Consumer_Received;
+
+        try
+        {
+            await _consumerChannel.BasicConsumeAsync(queue: _queueName, autoAck: false, consumer: consumer, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            _consuming = true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "StartBasicConsume failed. Will try to recreate consumer channel.");
+            _ = TryRecreateConsumerChannelAsync();
         }
     }
 
-    /// <summary>
-    /// 消费者接受到
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="eventArgs"></param>
-    /// <returns></returns>
     private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
     {
         var eventName = eventArgs.RoutingKey;
@@ -260,7 +290,7 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
                 throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
             }
 
-            await ProcessEvent(eventName, message);
+            await ProcessEvent(eventName, message).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -268,84 +298,184 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
         }
 
         // Even on exception we take the message off the queue.
-        // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
-        // For more information see: https://www.rabbitmq.com/dlx.html
-        _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+        try
+        {
+            if (_consumerChannel != null)
+            {
+                await _consumerChannel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancellationToken: CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+        }
+        catch (AlreadyClosedException ex)
+        {
+            _logger.LogWarning(ex, "Ack failed because consumer channel is closed. Will try to recreate channel.");
+            _ = TryRecreateConsumerChannelAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Ack failed. Will try to recreate channel.");
+            _ = TryRecreateConsumerChannelAsync();
+        }
     }
 
-    /// <summary>
-    /// 创造消费通道
-    /// </summary>
-    /// <returns></returns>
-    private IModel CreateConsumerChannel()
+    private async Task<IChannel> CreateConsumerChannelAsync(CancellationToken cancellationToken)
     {
         if (!_persistentConnection.IsConnected)
         {
-            _persistentConnection.TryConnect();
+            await _persistentConnection.TryConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogTrace("Creating RabbitMQ consumer channel");
 
-        var channel = _persistentConnection.CreateModel();
+        var channel = await _persistentConnection.CreateChannelAsync(cancellationToken).ConfigureAwait(false);
 
-        channel.ExchangeDeclare(exchange: BROKER_NAME,
-                                type: "direct");
+        await channel.ExchangeDeclareAsync(exchange: BROKER_NAME, type: "direct", durable: true, autoDelete: false,
+                arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
-        channel.QueueDeclare(queue: _queueName,
-                             durable: true,
-                             exclusive: false,
-                             autoDelete: false,
-                             arguments: null);
+        await channel.QueueDeclareAsync(queue: _queueName, durable: true, exclusive: false, autoDelete: false,
+                arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
-        channel.CallbackException += (sender, ea) =>
+        // RabbitMQ.Client v7: Channel 事件改为 Async 版本；用于触发“重建 consumer channel”。
+        try
         {
-            _logger.LogWarning(ea.Exception, "Recreating RabbitMQ consumer channel");
-
-            _consumerChannel.Dispose();
-            _consumerChannel = CreateConsumerChannel();
-            StartBasicConsume();
-        };
+            channel.ChannelShutdownAsync += OnConsumerChannelShutdownAsync;
+            channel.CallbackExceptionAsync += OnConsumerChannelCallbackExceptionAsync;
+        }
+        catch
+        {
+            // 事件不可用时不阻塞创建；用 try/catch + 业务调用路径兜底。
+        }
 
         return channel;
+    }
+
+    private Task OnConsumerChannelShutdownAsync(object? sender, ShutdownEventArgs e)
+    {
+        _logger.LogWarning("RabbitMQ consumer channel shutdown. ReplyText: {ReplyText}", e.ReplyText);
+        _ = TryRecreateConsumerChannelAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task OnConsumerChannelCallbackExceptionAsync(object? sender, CallbackExceptionEventArgs e)
+    {
+        _logger.LogWarning(e.Exception, "RabbitMQ consumer channel threw an exception (callback). Recreating channel...");
+        _ = TryRecreateConsumerChannelAsync();
+        return Task.CompletedTask;
+    }
+
+    private async Task TryRecreateConsumerChannelAsync()
+    {
+        if (_disposed) return;
+
+        // 退避：避免 RabbitMQ 不可用时疯狂重建 + 刷屏
+        var now = DateTimeOffset.UtcNow;
+        if (now < _nextRecreateAttemptAt)
+        {
+            // 降噪：最多每 30s 打一次“跳过”日志
+            if (now - _lastRecreateLogAt > TimeSpan.FromSeconds(30))
+            {
+                _lastRecreateLogAt = now;
+                _logger.LogWarning("Skip recreating consumer channel due to backoff. Next attempt at {NextAttemptAt:O}", _nextRecreateAttemptAt);
+            }
+            return;
+        }
+
+        await _consumerChannelLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_disposed) return;
+
+            // double-check backoff inside lock
+            now = DateTimeOffset.UtcNow;
+            if (now < _nextRecreateAttemptAt) return;
+
+            try
+            {
+                _consuming = false;
+
+                try { _consumerChannel?.Dispose(); } catch { }
+                _consumerChannel = null;
+
+                // 确保连接在线（如果断线，先重连）
+                if (!_persistentConnection.IsConnected)
+                {
+                    await _persistentConnection.TryConnectAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+
+                _consumerChannel = await CreateConsumerChannelAsync(CancellationToken.None).ConfigureAwait(false);
+
+                // 成功则重置退避计数
+                _recreateAttempts = 0;
+                _nextRecreateAttemptAt = DateTimeOffset.MinValue;
+
+                // 只有在确实有订阅时才重启消费，避免空订阅时的无意义重建。
+                if (!_subsManager.IsEmpty)
+                {
+                    await StartBasicConsumeAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+
+                _logger.LogInformation("RabbitMQ consumer channel recreated successfully");
+            }
+            catch (Exception ex)
+            {
+                // 失败：指数退避（封顶 30s）
+                _recreateAttempts = Math.Min(_recreateAttempts + 1, 10);
+                var delaySeconds = Math.Min(Math.Pow(2, _recreateAttempts), 30);
+                _nextRecreateAttemptAt = DateTimeOffset.UtcNow.AddSeconds(delaySeconds);
+
+                // 降噪：失败也别刷屏（同样 30s 一次）
+                now = DateTimeOffset.UtcNow;
+                if (now - _lastRecreateLogAt > TimeSpan.FromSeconds(30))
+                {
+                    _lastRecreateLogAt = now;
+                    _logger.LogWarning(ex, "Failed to recreate RabbitMQ consumer channel. Backing off for {DelaySeconds}s", delaySeconds);
+                }
+            }
+        }
+        finally
+        {
+            _consumerChannelLock.Release();
+        }
     }
 
     private async Task ProcessEvent(string eventName, string message)
     {
         _logger.LogTrace("Processing RabbitMQ event: {EventName}", eventName);
 
-        if (_subsManager.HasSubscriptionsForEvent(eventName))
-        {
-            using (var scope = _autofac.BeginLifetimeScope(AUTOFAC_SCOPE_NAME))
-            {
-                var subscriptions = _subsManager.GetHandlersForEvent(eventName);
-                foreach (var subscription in subscriptions)
-                {
-                    if (subscription.IsDynamic)
-                    {
-                        var handler = scope.ResolveOptional(subscription.HandlerType) as IDynamicIntegrationEventHandler;
-                        if (handler == null) continue;
-                        dynamic eventData = JObject.Parse(message);
-
-                        await Task.Yield();
-                        await handler.Handle(eventData);
-                    }
-                    else
-                    {
-                        var handler = scope.ResolveOptional(subscription.HandlerType);
-                        if (handler == null) continue;
-                        var eventType = _subsManager.GetEventTypeByName(eventName);
-                        var integrationEvent = JsonConvert.DeserializeObject(message, eventType);
-                        var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-
-                        await Task.Yield();
-                        await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { integrationEvent });
-                    }
-                }
-            }
-        }
-        else
+        if (!_subsManager.HasSubscriptionsForEvent(eventName))
         {
             _logger.LogWarning("No subscription for RabbitMQ event: {EventName}", eventName);
+            return;
+        }
+
+        using var scope = _autofac.BeginLifetimeScope(AUTOFAC_SCOPE_NAME);
+        var subscriptions = _subsManager.GetHandlersForEvent(eventName);
+
+        foreach (var subscription in subscriptions)
+        {
+            if (subscription.IsDynamic)
+            {
+                var handler = scope.ResolveOptional(subscription.HandlerType) as IDynamicIntegrationEventHandler;
+                if (handler == null) continue;
+
+                dynamic eventData = JObject.Parse(message);
+                await Task.Yield();
+                await handler.Handle(eventData);
+            }
+            else
+            {
+                var handler = scope.ResolveOptional(subscription.HandlerType);
+                if (handler == null) continue;
+
+                var eventType = _subsManager.GetEventTypeByName(eventName);
+                var integrationEvent = JsonConvert.DeserializeObject(message, eventType);
+                var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
+
+                await Task.Yield();
+                await (Task)concreteType.GetMethod("Handle")!.Invoke(handler, new object[] { integrationEvent! })!;
+            }
         }
     }
 }

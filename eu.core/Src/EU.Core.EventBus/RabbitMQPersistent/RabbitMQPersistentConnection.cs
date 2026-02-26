@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
 
@@ -12,16 +13,25 @@ namespace EU.Core.EventBus;
 /// <summary>
 /// RabbitMQ持久连接
 /// </summary>
-public class RabbitMQPersistentConnection
- : IRabbitMQPersistentConnection
+public class RabbitMQPersistentConnection : IRabbitMQPersistentConnection
 {
+    private static readonly CreateChannelOptions DefaultChannelOptions = new(
+        publisherConfirmationsEnabled: false,
+        publisherConfirmationTrackingEnabled: false,
+        outstandingPublisherConfirmationsRateLimiter: null,
+        consumerDispatchConcurrency: 1);
+
     private readonly IConnectionFactory _connectionFactory;
     private readonly ILogger<RabbitMQPersistentConnection> _logger;
     private readonly int _retryCount;
-    IConnection _connection;
-    bool _disposed;
 
-    object sync_root = new object();
+    private IConnection? _connection;
+    private bool _disposed;
+
+    private readonly SemaphoreSlim _syncRoot = new(1, 1);
+
+    // StartConsumingAsync 需要长生命周期 channel，避免 using 立即 dispose
+    private readonly ConcurrentDictionary<string, IChannel> _consumerChannels = new();
 
     public RabbitMQPersistentConnection(IConnectionFactory connectionFactory, ILogger<RabbitMQPersistentConnection> logger, int retryCount = 5)
     {
@@ -33,175 +43,182 @@ public class RabbitMQPersistentConnection
     /// <summary>
     /// 是否已连接
     /// </summary>
-    public bool IsConnected
-    {
-        get
-        {
-            return _connection != null && _connection.IsOpen && !_disposed;
-        }
-    }
+    public bool IsConnected => _connection != null && _connection.IsOpen && !_disposed;
 
     /// <summary>
-    /// 创建Model
+    /// 创建 Channel
     /// </summary>
-    /// <returns></returns>
-    public IModel CreateModel()
+    public async Task<IChannel> CreateChannelAsync(CancellationToken cancellationToken = default)
     {
+        if (!IsConnected)
+        {
+            // 尽量自愈：调用方大多期望“能连上就继续”，否则抛错。
+            await TryConnectAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         if (!IsConnected)
         {
             throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
         }
 
-        return _connection.CreateModel();
+        return await _connection!.CreateChannelAsync(DefaultChannelOptions, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 释放
-    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;
-
         _disposed = true;
+
+        foreach (var kv in _consumerChannels)
+        {
+            try { kv.Value.Dispose(); } catch { /* ignore */ }
+        }
+        _consumerChannels.Clear();
 
         try
         {
-            _connection.Dispose();
+            _connection?.Dispose();
         }
         catch (IOException ex)
         {
             _logger.LogCritical(ex.ToString());
+        }
+        catch
+        {
+            // ignore
         }
     }
 
     /// <summary>
     /// 连接
     /// </summary>
-    /// <returns></returns>
-    public bool TryConnect()
+    public async Task<bool> TryConnectAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("RabbitMQ Client is trying to connect");
 
-        lock (sync_root)
+        await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            var policy = RetryPolicy.Handle<SocketException>()
-                .Or<BrokerUnreachableException>()
-                .WaitAndRetry(_retryCount,
-                    retryAttempt =>
-                        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
-                        {
-                            _logger.LogWarning(ex, "RabbitMQ Client could not connect after {TimeOut}s ({ExceptionMessage})", $"{time.TotalSeconds:n1}", ex.Message);
-                        }
-            );
+            if (IsConnected) return true;
 
-            policy.Execute(() =>
+            AsyncRetryPolicy policy = Policy
+                .Handle<SocketException>()
+                .Or<BrokerUnreachableException>()
+                .WaitAndRetryAsync(
+                    _retryCount,
+                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                    (ex, time) =>
+                    {
+                        _logger.LogWarning(ex, "RabbitMQ Client could not connect after {TimeOut}s ({ExceptionMessage})", $"{time.TotalSeconds:n1}", ex.Message);
+                        return Task.CompletedTask;
+                    });
+
+            await policy.ExecuteAsync(async ct =>
             {
-                _connection = _connectionFactory
-                      .CreateConnection();
-            });
+                _connection = await _connectionFactory.CreateConnectionAsync(ct).ConfigureAwait(false);
+            }, cancellationToken).ConfigureAwait(false);
 
             if (IsConnected)
             {
-                _connection.ConnectionShutdown += OnConnectionShutdown;
-                _connection.CallbackException += OnCallbackException;
-                _connection.ConnectionBlocked += OnConnectionBlocked;
+                // RabbitMQ.Client v7: 事件接口调整为 Async 版本（如果当前版本存在这些事件）。
+                try
+                {
+                    _connection!.ConnectionShutdownAsync += OnConnectionShutdownAsync;
+                    _connection.CallbackExceptionAsync += OnCallbackExceptionAsync;
+                    _connection.ConnectionBlockedAsync += OnConnectionBlockedAsync;
+                }
+                catch
+                {
+                    // 某些版本/目标框架下事件可能不可用：不阻塞连接成功，交由上层异常/重试兜底。
+                }
 
-                _logger.LogInformation("RabbitMQ Client acquired a persistent connection to '{HostName}' and is subscribed to failure events", _connection.Endpoint.HostName);
+                _logger.LogInformation(
+                    "RabbitMQ Client acquired a persistent connection to '{HostName}'",
+                    _connection!.Endpoint.HostName);
 
                 return true;
             }
-            else
-            {
-                _logger.LogCritical("FATAL ERROR: RabbitMQ connections could not be created and opened");
 
-                return false;
-            }
+            _logger.LogCritical("FATAL ERROR: RabbitMQ connections could not be created and opened");
+            return false;
+        }
+        finally
+        {
+            _syncRoot.Release();
         }
     }
 
-    /// <summary>
-    /// 连接被阻断
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+    // ---- v7 Async 事件：用于触发更高层的“断线重连”策略（仅做日志 + 标记，核心重连在调用路径中完成） ----
+    private Task OnConnectionBlockedAsync(object? sender, ConnectionBlockedEventArgs e)
     {
-        if (_disposed) return;
-
-        _logger.LogWarning("A RabbitMQ connection is shutdown. Trying to re-connect...");
-
-        TryConnect();
+        if (_disposed) return Task.CompletedTask;
+        _logger.LogWarning("RabbitMQ connection is blocked. Reason: {Reason}", e.Reason);
+        return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// 连接出现异常
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+    private async Task OnCallbackExceptionAsync(object? sender, CallbackExceptionEventArgs e)
     {
         if (_disposed) return;
+        _logger.LogWarning(e.Exception, "RabbitMQ connection threw an exception (callback). Trying to reconnect...");
 
-        _logger.LogWarning("A RabbitMQ connection throw exception. Trying to re-connect...");
-
-        TryConnect();
+        // 不在事件线程里做重连风暴：只尝试一次，失败留给下一次业务调用触发重连。
+        try { await TryConnectAsync(CancellationToken.None).ConfigureAwait(false); } catch { /* ignore */ }
     }
 
-    /// <summary>
-    /// 连接被关闭
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="reason"></param>
-    void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+    private async Task OnConnectionShutdownAsync(object? sender, ShutdownEventArgs e)
     {
         if (_disposed) return;
-
-        _logger.LogWarning("A RabbitMQ connection is on shutdown. Trying to re-connect...");
-
-        TryConnect();
+        _logger.LogWarning("RabbitMQ connection is shutdown. ReplyText: {ReplyText}", e.ReplyText);
+        try { await TryConnectAsync(CancellationToken.None).ConfigureAwait(false); } catch { /* ignore */ }
     }
 
-    /// <summary>
-    /// 发布消息
-    /// </summary>
-    /// <param name="message"></param>
-    /// <param name="exchangeName"></param>
-    /// <param name="routingKey"></param>
-    public void PublishMessage(string message, string exchangeName, string routingKey)
+    public async Task PublishMessageAsync(string message, string exchangeName, string routingKey, CancellationToken cancellationToken = default)
     {
-        using var channel = CreateModel();
-        channel.ExchangeDeclare(exchange: exchangeName, type: ExchangeType.Direct, true);
+        await using var channel = await CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+
+        await channel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Direct, durable: true, autoDelete: false,
+                arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
         var body = Encoding.UTF8.GetBytes(message);
-        channel.BasicPublish(exchange: exchangeName, routingKey: routingKey, basicProperties: null, body: body);
+        // v7: BasicPublishAsync<TProperties> 为泛型；这里使用扩展方法的便捷重载
+        await channel.BasicPublishAsync(exchangeName, routingKey, body, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// 订阅消息
-    /// </summary>
-    /// <param name="queueName"></param>
-    public void StartConsuming(string queueName)
+    public async Task StartConsumingAsync(string queueName, CancellationToken cancellationToken = default)
     {
-        using var channel = CreateModel();
-        channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+        // 已经在消费就不重复创建
+        if (_consumerChannels.ContainsKey(queueName))
+            return;
 
-        var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.Received += new AsyncEventHandler<BasicDeliverEventArgs>(
-            async (a, b) =>
+        var channel = await CreateChannelAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await channel.QueueDeclareAsync(queue: queueName, durable: true, exclusive: false, autoDelete: false,
+                    arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.ReceivedAsync += async (_, b) =>
             {
-                var Headers = b.BasicProperties.Headers;
                 var msgBody = b.Body.ToArray();
-                var message = Encoding.UTF8.GetString(msgBody);
+                var received = Encoding.UTF8.GetString(msgBody);
+                Console.WriteLine("Received message: {0}", received);
                 await Task.CompletedTask;
-                Console.WriteLine("Received message: {0}", message);
+            };
 
-                //bool Dealresult = await Dealer(b.Exchange, b.RoutingKey, msgBody, Headers);
-                //if (Dealresult) channel.BasicAck(b.DeliveryTag, false);
-                //else channel.BasicNack(b.DeliveryTag, false, true);
-            }
-            );
+            await channel.BasicConsumeAsync(queue: queueName, autoAck: true, consumer: consumer, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
-        channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            _consumerChannels[queueName] = channel;
 
-        Console.WriteLine("Consuming messages...");
+            Console.WriteLine("Consuming messages...");
+        }
+        catch
+        {
+            try { channel.Dispose(); } catch { /* ignore */ }
+            throw;
+        }
     }
 }

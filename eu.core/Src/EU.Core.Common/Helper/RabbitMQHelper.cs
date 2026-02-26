@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json;
-using RabbitMQ.Client.Events;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using EU.Core.Common.Const;
 using EU.Core.Common.LogHelper;
 
@@ -14,131 +14,181 @@ namespace EU.Core.Common.Helper;
 public class RabbitMQHelper
 {
     #region 初始化参数
-    //public static Func<string, ConsumeAction> ReceiveMessageCallback { get; set; }
-    private readonly static ConcurrentQueue<IConnection> m_FreeConnectionQueue;//空闲连接对象队列
-    private readonly static ConcurrentDictionary<IConnection, bool> m_BusyConnectionDic;//使用中（忙）连接对象集合
-    private readonly static ConcurrentDictionary<IConnection, int> m_MQConnectionPoolUsingDicNew;//连接池使用率
-    private readonly static object m_FreeConnLock = new object();
-    private readonly static object m_AddConnLock = new object();
-    private readonly static string m_HostName = AppSettings.app(["RabbitMQ", "Connection"]);
-     private readonly static int m_Port = AppSettings.app(["RabbitMQ", "Port"]).ObjToInt();
-    private readonly static string m_UserName = AppSettings.app(["RabbitMQ", "UserName"]);
-    private readonly static string m_Password = AppSettings.app(["RabbitMQ", "Password"]);
-    //private readonly static int m_MaxConnectionCount = AppSetting.RabbitMQConfiguration.MaxConnectionCount;
-    //private readonly static int m_MaxConnectionUsingCount = AppSetting.RabbitMQConfiguration.MaxConnectionUsingCount;
 
-    private readonly static int m_MaxConnectionCount = 20;//默认最大保持可用连接数
-    private readonly static int m_MaxConnectionUsingCount = 1000;//默认最大连接可访问次数
-    static RabbitMQHelper()
-    {
-        m_FreeConnectionQueue = new ConcurrentQueue<IConnection>();
-        m_BusyConnectionDic = new ConcurrentDictionary<IConnection, bool>();
-        m_MQConnectionPoolUsingDicNew = new ConcurrentDictionary<IConnection, int>();
-    }
+    private static readonly string m_HostName = AppSettings.app(["RabbitMQ", "Connection"]);
+    private static readonly int m_Port = AppSettings.app(["RabbitMQ", "Port"]).ObjToInt();
+    private static readonly string m_UserName = AppSettings.app(["RabbitMQ", "UserName"]);
+    private static readonly string m_Password = AppSettings.app(["RabbitMQ", "Password"]);
+
+    // 单连接：连接是重资源；Channel 轻量，按需创建即可。
+    private static IConnection? s_connection;
+    private static readonly SemaphoreSlim s_connectionLock = new(1, 1);
+
+    internal static readonly CreateChannelOptions DefaultChannelOptions = new(
+        publisherConfirmationsEnabled: false,
+        publisherConfirmationTrackingEnabled: false,
+        outstandingPublisherConfirmationsRateLimiter: null,
+        consumerDispatchConcurrency: 1);
+
     #endregion
 
-    #region MQ连接池管理
-    internal static IConnection CreateMQConnectionInPoolNew()
+    // ---- 消费线程防重复启动标记（同一队列/同一泛型消费者仅允许启动一次） ----
+    internal static readonly ConcurrentDictionary<string, byte> ConsumeStarted = new();
+
+    // ---- 消费线程可停机：每个消费者一个 CTS（StopConsume 时 Cancel） ----
+    internal static readonly ConcurrentDictionary<string, CancellationTokenSource> ConsumeCts = new();
+
+    internal static bool TryRegisterConsumer(string key)
     {
-        IConnection mqConnection;
-        if (m_FreeConnectionQueue.Count + m_BusyConnectionDic.Count < m_MaxConnectionCount)//如果已有连接数小于最大可用连接数，则直接创建新连接
-        {
-            lock (m_AddConnLock)
-            {
-                if (m_FreeConnectionQueue.Count + m_BusyConnectionDic.Count < m_MaxConnectionCount)
-                {
-                    mqConnection = CreateMQConnection();
-                    m_BusyConnectionDic[mqConnection] = true;//加入到忙连接集合中
-                    m_MQConnectionPoolUsingDicNew[mqConnection] = 1;
-                    return mqConnection;
-                }
-            }
-        }
-        //如果没有可用空闲连接，则重新进入等待排队
-        while (!m_FreeConnectionQueue.TryDequeue(out mqConnection))
-        {
-            System.Threading.Thread.Sleep(10);
-            continue;
-        }
-        //如果取到空闲连接，判断是否使用次数是否超过最大限制,超过则释放连接并重新创建
-        if (m_MQConnectionPoolUsingDicNew[mqConnection] + 1 > m_MaxConnectionUsingCount || !mqConnection.IsOpen)
-        {
-            mqConnection.Close();
-            mqConnection.Dispose();
-            mqConnection = CreateMQConnection();
-            m_MQConnectionPoolUsingDicNew[mqConnection] = 0;
-        }
-        m_BusyConnectionDic[mqConnection] = true;//加入到忙连接集合中
-        m_MQConnectionPoolUsingDicNew[mqConnection] = m_MQConnectionPoolUsingDicNew[mqConnection] + 1;//使用次数加1
-        return mqConnection;
+        if (!ConsumeStarted.TryAdd(key, 1)) return false;
+
+        // 仅在成功“抢到启动权”时创建 CTS
+        var cts = new CancellationTokenSource();
+        ConsumeCts[key] = cts;
+        return true;
     }
-    internal static void ResetMQConnectionToFree(IConnection connection)
+
+    internal static CancellationToken GetConsumerToken(string key)
     {
-        lock (m_FreeConnLock)
+        return ConsumeCts.TryGetValue(key, out var cts) ? cts.Token : CancellationToken.None;
+    }
+
+    internal static void UnregisterConsumer(string key)
+    {
+        ConsumeStarted.TryRemove(key, out _);
+        if (ConsumeCts.TryRemove(key, out var cts))
         {
-            m_BusyConnectionDic.TryRemove(connection, out bool result); //从忙队列中取出
-            if (m_FreeConnectionQueue.Count + m_BusyConnectionDic.Count > m_MaxConnectionCount)//如果因为高并发出现极少概率的>MaxConnectionCount，则直接释放该连接
-            {
-                connection.Close();
-                connection.Dispose();
-            }
-            else
-            {
-                m_FreeConnectionQueue.Enqueue(connection);//加入到空闲队列，以便持续提供连接服务
-            }
+            try { cts.Dispose(); } catch { /* ignore */ }
         }
     }
-    internal static IConnection CreateMQConnection()
+
+    private static ConnectionFactory CreateFactory()
     {
-        var factory = new ConnectionFactory
+        return new ConnectionFactory
         {
             HostName = m_HostName,
             Port = m_Port,
             UserName = m_UserName,
             Password = m_Password,
-            AutomaticRecoveryEnabled = true//自动重连
+            AutomaticRecoveryEnabled = true // 自动重连
         };
-        return factory.CreateConnection();
     }
 
-    #endregion
+    internal static Task<IConnection> GetConnectionAsync(CancellationToken cancellationToken)
+        => GetOrCreateConnectionAsync(cancellationToken);
+
+    private static async Task<IConnection> GetOrCreateConnectionAsync(CancellationToken cancellationToken)
+    {
+        if (s_connection is { IsOpen: true })
+            return s_connection;
+
+        await s_connectionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (s_connection is { IsOpen: true })
+                return s_connection;
+
+            // 如果旧连接已关闭，尽量释放
+            if (s_connection != null)
+            {
+                try { s_connection.Dispose(); } catch { /* ignore */ }
+                s_connection = null;
+            }
+
+            var factory = CreateFactory();
+            s_connection = await factory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
+            return s_connection;
+        }
+        finally
+        {
+            s_connectionLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// 停止 RabbitMQ 消费线程（string 消费者）
+    /// </summary>
+    public static void StopConsume(string queueName)
+    {
+        StopConsume(queueName, "string");
+    }
+
+    /// <summary>
+    /// 停止 RabbitMQ 消费线程（泛型消费者）
+    /// </summary>
+    public static void StopConsume<T>(string queueName) where T : class
+    {
+        StopConsume(queueName, typeof(T).FullName ?? typeof(T).Name);
+    }
+
+    private static void StopConsume(string queueName, string typeKey)
+    {
+        var key = $"{queueName}|{typeKey}";
+        if (ConsumeCts.TryGetValue(key, out var cts))
+        {
+            try { cts.Cancel(); } catch { /* ignore */ }
+        }
+        else
+        {
+            // 没启动过就别吵
+        }
+    }
 
     #region 发送消息
+
+    /// <summary>
+    /// 发送消息（同步包装，兼容旧调用）
+    /// </summary>
+    /// <param name="queueName">队列名称</param>
+    /// <param name="msg">消息</param>
+    /// <returns></returns>
+    public static bool SendMsg(string queueName, string msg)
+        => SendMsgAsync(queueName, msg).GetAwaiter().GetResult();
+
     /// <summary>
     /// 发送消息
     /// </summary>
     /// <param name="queueName">队列名称</param>
     /// <param name="msg">消息</param>
     /// <returns></returns>
-    public static bool SendMsg(string queueName, string msg)
+    public static async Task<bool> SendMsgAsync(string queueName, string msg, CancellationToken cancellationToken = default)
     {
-        bool durable = true;
-        var connection = CreateMQConnectionInPoolNew();
+        var durable = true;
         try
         {
-            using (var channel = connection.CreateModel())//建立通讯信道
-            {
-                // 参数从前面开始分别意思为：队列名称，是否持久化，独占的队列，不使用时是否自动删除，其他参数
-                channel.QueueDeclare(queueName, durable, false, false, null);
-                var properties = channel.CreateBasicProperties();
-                properties.DeliveryMode = 2;//1表示不持久,2.表示持久化
-                if (!durable)
-                    properties = null;
-                var body = Encoding.UTF8.GetBytes(msg);
-                channel.BasicPublish(string.Empty, queueName, properties, body);
-            }
+            var connection = await GetConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+            await using var channel = await connection.CreateChannelAsync(DefaultChannelOptions, cancellationToken).ConfigureAwait(false);
+
+            await channel.QueueDeclareAsync(queueName, durable, exclusive: false, autoDelete: false,
+                arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            BasicProperties? properties = new() { DeliveryMode = DeliveryModes.Persistent };
+            if (!durable)
+                properties = null;
+
+            var body = Encoding.UTF8.GetBytes(msg);
+            await channel.BasicPublishAsync(string.Empty, queueName, mandatory: false, basicProperties: properties, body: body, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
             return true;
         }
-        catch (Exception)
+        catch
         {
-            //LoggerHelper.SendLog(ex.ToString());
             return false;
         }
-        finally
-        {
-            ResetMQConnectionToFree(connection);
-        }
     }
+
+    /// <summary>
+    /// 发送消息（同步包装，兼容旧调用）
+    /// </summary>
+    /// <typeparam name="T">消息类型</typeparam>
+    /// <param name="queueName">队列名称</param>
+    /// <param name="msg">消息</param>
+    /// <returns></returns>
+    public static bool SendMsg<T>(string queueName, T msg) where T : class
+        => SendMsgAsync(queueName, msg).GetAwaiter().GetResult();
+
     /// <summary>
     /// 发送消息
     /// </summary>
@@ -146,132 +196,68 @@ public class RabbitMQHelper
     /// <param name="queueName">队列名称</param>
     /// <param name="msg">消息</param>
     /// <returns></returns>
-    public static bool SendMsg<T>(string queueName, T msg) where T : class
+    public static async Task<bool> SendMsgAsync<T>(string queueName, T msg, CancellationToken cancellationToken = default) where T : class
     {
-        bool durable = true;
-        var connection = CreateMQConnectionInPoolNew();
-        try
-        {
-            using (var channel = connection.CreateModel())//建立通讯信道
-            {
-                // 参数从前面开始分别意思为：队列名称，是否持久化，独占的队列，不使用时是否自动删除，其他参数
-                channel.QueueDeclare(queueName, durable, false, false, null);
-                var properties = channel.CreateBasicProperties();
-                properties.DeliveryMode = 2;//1表示不持久,2.表示持久化
-                if (!durable)
-                    properties = null;
-                var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg ?? default));
-                channel.BasicPublish(string.Empty, queueName, properties, body);
-            }
-            return true;
-        }
-        catch (Exception)
-        {
-            //LoggerHelper.SendLog(ex.ToString());
-            throw;
-        }
-        finally
-        {
-            ResetMQConnectionToFree(connection);
-        }
+        var durable = true;
+        var connection = await GetConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+        await using var channel = await connection.CreateChannelAsync(DefaultChannelOptions, cancellationToken).ConfigureAwait(false);
+
+        await channel.QueueDeclareAsync(queueName, durable, exclusive: false, autoDelete: false,
+            arguments: null, passive: false, noWait: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        BasicProperties? properties = new() { DeliveryMode = DeliveryModes.Persistent };
+        if (!durable)
+            properties = null;
+
+        var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg ?? default));
+        await channel.BasicPublishAsync(string.Empty, queueName, mandatory: false, basicProperties: properties, body: body, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return true;
     }
+
     #endregion
 
     #region 消费消息
+
     /// <summary>
-    /// 消费消息
+    /// 消费消息（同步包装，兼容旧调用）
     /// </summary>
     /// <param name="queueName">队列名称</param>
     public static void ConsumeMsg(string queueName, Func<string, ConsumeAction> func)
-    {
-        var consumer = new RabbitMQConsume();
-        consumer.ReceiveMessageCallback += func;
-        consumer.ConsumeMsg(queueName);
-    }
+        => ConsumeMsgAsync(queueName, func).GetAwaiter().GetResult();
+
     /// <summary>
     /// 消费消息
     /// </summary>
     /// <param name="queueName">队列名称</param>
+    public static Task ConsumeMsgAsync(string queueName, Func<string, ConsumeAction> func, CancellationToken cancellationToken = default)
+    {
+        var consumer = new RabbitMQConsume();
+        consumer.ReceiveMessageCallback += func;
+        return consumer.ConsumeMsgAsync(queueName, cancellationToken);
+    }
+
+    /// <summary>
+    /// 消费消息（同步包装，兼容旧调用）
+    /// </summary>
+    /// <param name="queueName">队列名称</param>
     public static void ConsumeMsg<T>(string queueName, Func<T, ConsumeAction> func) where T : class
+        => ConsumeMsgAsync(queueName, func).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// 消费消息
+    /// </summary>
+    /// <param name="queueName">队列名称</param>
+    public static Task ConsumeMsgAsync<T>(string queueName, Func<T, ConsumeAction> func, CancellationToken cancellationToken = default) where T : class
     {
         var consumer = new RabbitMQConsume<T>();
         consumer.ReceiveMessageCallback += func;
-        consumer.ConsumeMsg(queueName);
+        return consumer.ConsumeMsgAsync(queueName, cancellationToken);
     }
+
     #endregion
-
-    //https://www.cnblogs.com/wei325/p/15174212.html
-    //private static ConnectionFactory factory;
-    //private static object lockObj = new object();
-    ///// <summary>
-    ///// 获取单个RabbitMQ连接
-    ///// </summary>
-    ///// <returns></returns>
-    //public static IConnection GetConnection()
-    //{
-    //    if (factory == null)
-    //    {
-    //        lock (lockObj)
-    //        {
-    //            if (factory == null)
-    //            {
-    //                factory = new ConnectionFactory
-    //                {
-    //                    HostName = "xxxxx",//ip
-    //                    Port = 5672,//端口
-    //                    UserName = "hhmed",//账号
-    //                    Password = "hhmed",//密码
-    //                    VirtualHost = "develop" //虚拟主机
-    //                };
-    //            }
-    //        }
-    //    }
-    //    return factory.CreateConnection();
-    //}
-    //public static void SimpleSendMsg()
-    //{
-    //    string queueName = "simple_order";//队列名
-    //    //创建连接
-    //    using (var connection = RabbitMQHelper.GetConnection())
-    //    {
-    //        //创建信道
-    //        using (var channel = connection.CreateModel())
-    //        {//创建队列
-    //            channel.QueueDeclare(queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-    //            for (var i = 0; i < 10; i++)
-    //            {
-    //                string message = $"Hello RabbitMQ MessageHello,{i + 1}";
-    //                var body = Encoding.UTF8.GetBytes(message);//发送消息
-    //                channel.BasicPublish(exchange: "", routingKey: queueName, mandatory: false, basicProperties: null, body);
-    //                Console.WriteLine($"发送消息到队列:{queueName},内容:{message}");
-    //            }
-    //        }
-    //    }
-    //}
-    //public static void SimpleConsumer()
-    //{
-    //    string queueName = "simple_order";
-    //    var connection = RabbitMQHelper.GetConnection();
-    //    {
-    //        //创建信道
-    //        var channel = connection.CreateModel();
-    //        {
-    //            //创建队列
-    //            channel.QueueDeclare(queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-    //            var consumer = new EventingBasicConsumer(channel);
-    //            int i = 0;
-    //            consumer.Received += (model, ea) =>
-    //            {
-    //                //消费者业务处理
-    //                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-    //                Console.WriteLine($"{i},队列{queueName}消费消息长度:{message.Length}");
-    //                i++;
-    //            };
-    //            channel.BasicConsume(queueName, true, consumer);
-    //        }
-    //    }
-    //}
-
 }
 
 /// <summary>
@@ -279,36 +265,46 @@ public class RabbitMQHelper
 /// </summary>
 internal class RabbitMQConsume
 {
-    internal Func<string, ConsumeAction> ReceiveMessageCallback { get; set; }
+    internal Func<string, ConsumeAction> ReceiveMessageCallback { get; set; } = _ => ConsumeAction.Retry;
 
-    #region 消费消息
     /// <summary>
     /// 消费消息
     /// </summary>
     /// <param name="queueName">队列名称</param>
-    internal void ConsumeMsg(string queueName)
+    internal Task ConsumeMsgAsync(string queueName, CancellationToken cancellationToken = default)
     {
-        new System.Threading.Thread(() =>
+        var key = $"{queueName}|string";
+        if (!RabbitMQHelper.TryRegisterConsumer(key))
         {
-            while (true)
+            Logger.WriteLog("RabbitMQ", $"队列{queueName}消费者已启动，跳过重复启动");
+            return Task.CompletedTask;
+        }
+
+        var token = RabbitMQHelper.GetConsumerToken(key);
+
+        // 用 Task.Run 替代 Thread，确保不会阻塞调用线程
+        _ = Task.Run(async () =>
+        {
+            try
             {
-                try
+                while (!token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                 {
-                    bool durable = true;
-                    var connection = RabbitMQHelper.CreateMQConnectionInPoolNew();
+                    IChannel? channel = null;
                     try
                     {
-                        using var channel = connection.CreateModel();
-                        channel.QueueDeclare(queueName, durable, false, false, null); //获取队列 
-                        channel.BasicQos(0, 1, false); //分发机制为触发式
+                        var durable = true;
+                        var connection = await RabbitMQHelper.GetConnectionAsync(token).ConfigureAwait(false);
+                        channel = await connection.CreateChannelAsync(RabbitMQHelper.DefaultChannelOptions, token).ConfigureAwait(false);
 
-                        var consumer = new EventingBasicConsumer(channel); //建立消费者
-                                                                           //consumer.Received += Consumer_Received;
+                        await channel.QueueDeclareAsync(queueName, durable, exclusive: false, autoDelete: false,
+                            arguments: null, passive: false, noWait: false, cancellationToken: token).ConfigureAwait(false);
 
-                        consumer.Received += (model, e) =>
+                        await channel.BasicQosAsync(0, 1, false, token).ConfigureAwait(false);
+
+                        var consumer = new AsyncEventingBasicConsumer(channel);
+                        consumer.ReceivedAsync += async (_, e) =>
                         {
-                            ConsumeAction consumeResult = ConsumeAction.Retry;
-                            //处理业务
+                            var consumeResult = ConsumeAction.Retry;
                             var message = Encoding.UTF8.GetString(e.Body.ToArray());
                             Logger.WriteLog("RabbitMQ", $"队列{queueName}消费消息:{message},不做ack确认");
 
@@ -316,207 +312,179 @@ internal class RabbitMQConsume
                             {
                                 consumeResult = ReceiveMessageCallback(message);
                             }
-                            catch (Exception)
+                            catch
                             {
-                                throw;
+                                consumeResult = ConsumeAction.Retry;
                             }
+
                             if (consumeResult == ConsumeAction.Accept)
                             {
-                                channel.BasicAck(e.DeliveryTag, false);  //消息从队列中删除
+                                await channel.BasicAckAsync(e.DeliveryTag, false, token).ConfigureAwait(false);
                             }
                             else if (consumeResult == ConsumeAction.Retry)
                             {
-                                channel.BasicNack(e.DeliveryTag, false, true); //消息重回队列
+                                await channel.BasicNackAsync(e.DeliveryTag, false, true, token).ConfigureAwait(false);
                             }
                             else
                             {
-                                channel.BasicNack(e.DeliveryTag, false, false); //消息直接丢弃
+                                await channel.BasicNackAsync(e.DeliveryTag, false, false, token).ConfigureAwait(false);
                             }
                         };
 
-                        channel.BasicConsume(queueName, false, consumer);// 从左到右参数意思分别是：队列名称、是否读取消息后直接删除消息，消费者
-                        while (channel.IsOpen)
+                        await channel.BasicConsumeAsync(queueName, autoAck: false, consumer: consumer, cancellationToken: token).ConfigureAwait(false);
+
+                        // StopConsume 时能立刻退出
+                        while (channel.IsOpen && !token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                         {
-                            System.Threading.Thread.Sleep(2000);
+                            await Task.Delay(2000, token).ConfigureAwait(false);
                         }
                     }
-                    catch (Exception)
+                    catch (OperationCanceledException)
                     {
-                        throw;
+                        // 正常取消
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.WriteLog("RabbitMQ", $" Error:{ex}");
                     }
                     finally
                     {
-                        RabbitMQHelper.ResetMQConnectionToFree(connection);
+                        if (channel != null)
+                        {
+                            try { await channel.CloseAsync(200, "OK", false, CancellationToken.None).ConfigureAwait(false); } catch { }
+                            try { await channel.DisposeAsync().ConfigureAwait(false); } catch { }
+                        }
+
+                        // 与MQ连接断开或者报错的情况下重连（可被 StopConsume 立即打断）
+                        try
+                        {
+                            await Task.Delay(5000, token).ConfigureAwait(false);
+                        }
+                        catch { /* ignore */ }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Logger.WriteLog("RabbitMQ", $" Error:{ex}");
-                }
-                finally
-                {
-                    //与MQ连接断开或者报错的情况下重连
-                    System.Threading.Thread.Sleep(5000);
-                }
             }
-        })
-        .Start();
-    }
+            finally
+            {
+                RabbitMQHelper.UnregisterConsumer(key);
+            }
+        }, CancellationToken.None);
 
-    /// <summary>
-    /// 自定义消息处理
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void Consumer_Received(object sender, BasicDeliverEventArgs e)
-    {
-        var channel = (IModel)sender;
-        ConsumeAction consumeResult = ConsumeAction.Retry;
-        try
-        {
-            consumeResult = ReceiveMessageCallback(e.Body.ToString());
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-        if (consumeResult == ConsumeAction.Accept)
-        {
-            channel.BasicAck(e.DeliveryTag, false);  //消息从队列中删除
-        }
-        else if (consumeResult == ConsumeAction.Retry)
-        {
-            channel.BasicNack(e.DeliveryTag, false, true); //消息重回队列
-        }
-        else
-        {
-            channel.BasicNack(e.DeliveryTag, false, false); //消息直接丢弃
-        }
+        return Task.CompletedTask;
     }
-    #endregion
 }
 
 /// <summary>
 /// 消费消息
 /// </summary>
-internal class RabbitMQConsume<T>
+internal class RabbitMQConsume<T> where T : class
 {
-    internal Func<T, ConsumeAction> ReceiveMessageCallback { get; set; }
+    internal Func<T, ConsumeAction> ReceiveMessageCallback { get; set; } = _ => ConsumeAction.Retry;
 
-    #region 消费消息
     /// <summary>
     /// 消费消息
     /// </summary>
     /// <param name="queueName">队列名称</param>
-    internal void ConsumeMsg(string queueName)
+    internal Task ConsumeMsgAsync(string queueName, CancellationToken cancellationToken = default)
     {
-        new System.Threading.Thread(() =>
+        var key = $"{queueName}|{typeof(T).FullName}";
+        if (!RabbitMQHelper.TryRegisterConsumer(key))
         {
-            while (true)
+            Logger.WriteLog("RabbitMQ", $"队列{queueName}消费者<{typeof(T).Name}>已启动，跳过重复启动");
+            return Task.CompletedTask;
+        }
+
+        var token = RabbitMQHelper.GetConsumerToken(key);
+
+        _ = Task.Run(async () =>
+        {
+            try
             {
-                try
+                while (!token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                 {
-                    bool durable = true;
-                    var connection = RabbitMQHelper.CreateMQConnectionInPoolNew();
+                    IChannel? channel = null;
                     try
                     {
-                        var channel = connection.CreateModel();
-                        channel.QueueDeclare(queueName, durable, false, false, null); //获取队列 
-                        channel.BasicQos(0, 1, false); //分发机制为触发式
-                        var consumer = new EventingBasicConsumer(channel); //建立消费者
-                                                                           //consumer.Received += Consumer_Received;
+                        var durable = true;
+                        var connection = await RabbitMQHelper.GetConnectionAsync(token).ConfigureAwait(false);
+                        channel = await connection.CreateChannelAsync(RabbitMQHelper.DefaultChannelOptions, token).ConfigureAwait(false);
 
-                        consumer.Received += (model, e) =>
+                        await channel.QueueDeclareAsync(queueName, durable, exclusive: false, autoDelete: false,
+                            arguments: null, passive: false, noWait: false, cancellationToken: token).ConfigureAwait(false);
+
+                        await channel.BasicQosAsync(0, 1, false, token).ConfigureAwait(false);
+
+                        var consumer = new AsyncEventingBasicConsumer(channel);
+                        consumer.ReceivedAsync += async (_, e) =>
                         {
-                            ConsumeAction consumeResult = ConsumeAction.Retry;
-                            //处理业务
-                            var message = Encoding.UTF8.GetString(e.Body.ToArray());
-                            Logger.WriteLog("RabbitMQ", $"队列{queueName}消费消息:{message},不做ack确认");
+                            var consumeResult = ConsumeAction.Retry;
+                            var inputString = Encoding.UTF8.GetString(e.Body.ToArray());
+                            Logger.WriteLog("RabbitMQ", $"队列{queueName}消费消息:{inputString},不做ack确认");
 
                             try
                             {
-                                var inputString = System.Text.UTF8Encoding.UTF8.GetString(e.Body.ToArray());
                                 var input = JsonConvert.DeserializeObject<T>(inputString);
-                                consumeResult = ReceiveMessageCallback(input);
+                                if (input != null)
+                                {
+                                    consumeResult = ReceiveMessageCallback(input);
+                                }
                             }
-                            catch (Exception)
+                            catch
                             {
-                                throw;
+                                consumeResult = ConsumeAction.Retry;
                             }
+
                             if (consumeResult == ConsumeAction.Accept)
                             {
-                                channel.BasicAck(e.DeliveryTag, false);  //消息从队列中删除
+                                await channel.BasicAckAsync(e.DeliveryTag, false, token).ConfigureAwait(false);
                             }
                             else if (consumeResult == ConsumeAction.Retry)
                             {
-                                channel.BasicNack(e.DeliveryTag, false, true); //消息重回队列
+                                await channel.BasicNackAsync(e.DeliveryTag, false, true, token).ConfigureAwait(false);
                             }
                             else
                             {
-                                channel.BasicNack(e.DeliveryTag, false, false); //消息直接丢弃
+                                await channel.BasicNackAsync(e.DeliveryTag, false, false, token).ConfigureAwait(false);
                             }
-
                         };
 
-                        channel.BasicConsume(queueName, false, consumer);// 从左到右参数意思分别是：队列名称、是否读取消息后直接删除消息，消费者
-                        while (channel.IsOpen)
+                        await channel.BasicConsumeAsync(queueName, autoAck: false, consumer: consumer, cancellationToken: token).ConfigureAwait(false);
+
+                        while (channel.IsOpen && !token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
                         {
-                            System.Threading.Thread.Sleep(2000);
+                            await Task.Delay(2000, token).ConfigureAwait(false);
                         }
                     }
-                    catch (Exception)
+                    catch (OperationCanceledException)
                     {
-                        throw;
+                        // 正常取消
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.WriteLog("RabbitMQ", $"RabbitMQ Error:{ex}");
                     }
                     finally
                     {
-                        RabbitMQHelper.ResetMQConnectionToFree(connection);
+                        if (channel != null)
+                        {
+                            try { await channel.CloseAsync(200, "OK", false, CancellationToken.None).ConfigureAwait(false); } catch { }
+                            try { await channel.DisposeAsync().ConfigureAwait(false); } catch { }
+                        }
+
+                        try
+                        {
+                            await Task.Delay(5000, token).ConfigureAwait(false);
+                        }
+                        catch { /* ignore */ }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Logger.WriteLog("RabbitMQ", $"RabbitMQ Error:{ex.ToString()}");
-                }
-                finally
-                {
-                    //与MQ连接断开或者报错的情况下重连
-                    System.Threading.Thread.Sleep(5000);
-                }
             }
-        })
-        .Start();
+            finally
+            {
+                RabbitMQHelper.UnregisterConsumer(key);
+            }
+        }, CancellationToken.None);
+
+        return Task.CompletedTask;
     }
-    /// <summary>
-    /// 自定义消息处理
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void Consumer_Received(object sender, BasicDeliverEventArgs e)
-    {
-        var channel = ((EventingBasicConsumer)sender).Model;
-        ConsumeAction consumeResult = ConsumeAction.Retry;
-        try
-        {
-            var inputString = System.Text.UTF8Encoding.UTF8.GetString(e.Body.ToArray());
-            var model = JsonConvert.DeserializeObject<T>(inputString);
-            consumeResult = ReceiveMessageCallback(model);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-        if (consumeResult == ConsumeAction.Accept)
-        {
-            channel.BasicAck(e.DeliveryTag, false);  //消息从队列中删除
-        }
-        else if (consumeResult == ConsumeAction.Retry)
-        {
-            channel.BasicNack(e.DeliveryTag, false, true); //消息重回队列
-        }
-        else
-        {
-            channel.BasicNack(e.DeliveryTag, false, false); //消息直接丢弃
-        }
-    }
-    #endregion
 }
