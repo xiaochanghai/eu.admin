@@ -78,7 +78,7 @@ public class ChatHelper
         IList<McpClientTool> tools,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-
+        InitChat();
         var id = Utility.GetGUID();
 
         //bool isHistory = Messages
@@ -214,18 +214,18 @@ You will select appropriate tools and call them to solve user queries
                             // 工具返回的数据在这里
                             string oneToolResult = ConvertResultToString(frc.Result);
 
-                            var toolResult = JsonHelper.JsonToObj<Root>(oneToolResult);
+                            var toolResult = JsonHelper.JsonToObj<ContentItem>(oneToolResult);
                             toolResults.Add(oneToolResult);
                             id = Utility.GetGUID();
                             string messageId = Utility.GetGUID();
                             AddChatMessage(chatId, ChatRole.Tool.ObjToString(), oneToolResult, "message", messageId.ObjToGuid(), parentId);
-                            if (toolResult.content.Count > 0)
+                            if (toolResult.text.IsNotEmptyOrNull())
                             {
-                                if (toolResult.content[0].type == "text")
+                                //if (toolResult.type == "text")
                                     yield return new McpStreamEvent
                                     {
                                         EventType = "message",
-                                        Data = toolResult.content[0].text,
+                                        Data = toolResult.text,
                                         Id = messageId
                                     };
                             }

@@ -1,0 +1,6 @@
+@EU.Core.Api.MCP.API_HostAddress = http://localhost:5196
+
+GET {{EU.Core.Api.MCP.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

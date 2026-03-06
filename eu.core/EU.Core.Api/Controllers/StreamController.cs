@@ -40,10 +40,11 @@ public class StreamController : ControllerBase
             Response.Headers.Append("Access-Control-Allow-Origin", "*");
             Response.Headers.Append("Access-Control-Allow-Headers", "Cache-Control");
 
+            var url = ComputerHelper.IsUnix() ? "http://mcp" : "http://localhost:8020";
             var config = new HttpClientTransport(
                 new HttpClientTransportOptions()
                 {
-                    Endpoint = new Uri("http://localhost:8020/Supplier/mcp"),
+                    Endpoint = new Uri(url + "/Supplier/mcp"),
                 }
             );
 
