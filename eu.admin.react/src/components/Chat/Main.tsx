@@ -11,8 +11,6 @@ import "@ant-design/x-markdown/themes/light.css";
 import "@ant-design/x-markdown/themes/dark.css";
 import { useMarkdownTheme } from "./x-markdown/_utils";
 import {
-  Logo,
-  AvatarIcon,
   Welcome,
   DEFAULT_CONVERSATIONS_ITEMS,
   HOT_TOPICS,
@@ -71,9 +69,6 @@ class CustomChatProvider<
   transformMessage(info: TransformMessage<ChatMessage, Output>): ChatMessage {
     const { originMessage, chunk, status } = info || {};
 
-    console.log("transformMessage called:", { chunk, status });
-
-    // 获取原始 content
     const getContent = (msg?: ChatMessage): string => {
       if (!msg) return "";
       if (typeof msg.content === "string") return msg.content;
@@ -81,40 +76,29 @@ class CustomChatProvider<
       return "";
     };
 
-    // 如果没有 chunk，返回原始消息
     if (!chunk) {
-      return {
-        content: getContent(originMessage),
-        role: "assistant"
-      } as ChatMessage;
+      return { content: getContent(originMessage), role: "assistant" } as ChatMessage;
     }
 
     try {
-      // 解析 SSE 数据
-      const event = (chunk as any)?.event;
+      const event = (chunk as any)?.event?.trim();
       const data = (chunk as any)?.data;
 
-      console.log("transformMessage SSE data:", { event, data });
-
-      if ((event === "message" || event === " message") && data) {
+      if (event === "message" && data) {
         const trimmedData = data.trim();
 
-        // 跳过 [DONE] 标记
         if (trimmedData.includes("[DONE]")) {
-          console.log("Received [DONE], keeping originMessage");
           return {
             content: getContent(originMessage),
             role: "assistant"
           } as ChatMessage;
         }
 
-        // 解析数据
         const parsed = JSON.parse(trimmedData);
-        const newContent = parsed?.content || "";
+        const raw = parsed?.content;
+        // 后端返回的 content 可能是字符串（文本消息）或对象（工具调用结果）
+        const newContent = typeof raw === "object" ? JSON.stringify(raw) : raw || "";
 
-        console.log("Parsed content:", newContent);
-
-        // 累积内容（如果是流式传输，需要累积）
         const accumulatedContent = getContent(originMessage);
         const finalContent = status === "updating" ? accumulatedContent + newContent : newContent;
 
@@ -127,11 +111,7 @@ class CustomChatProvider<
       console.error("transformMessage error:", error);
     }
 
-    // 默认返回原始消息
-    return {
-      content: getContent(originMessage),
-      role: "assistant"
-    } as ChatMessage;
+    return { content: getContent(originMessage), role: "assistant" } as ChatMessage;
   }
 }
 
@@ -188,10 +168,8 @@ const getRole = (className: string): BubbleListProps["role"] => ({
     //   <Footer content={content} status={status} extraInfo={extraInfo as ChatMessage["extraInfo"]} id={key as string} />
     // ),
     contentRender: (content: any, { status }) => {
-      console.log("content:" + content);
       if (!content) return null;
 
-      // 检查是否是 JSON 格式
       let isJSON = false;
       let jsonContent = null;
       try {
@@ -201,13 +179,11 @@ const getRole = (className: string): BubbleListProps["role"] => ({
         // 不是 JSON，继续使用 markdown 渲染
       }
 
-      // 如果是 JSON 格式，直接显示
       if (isJSON && jsonContent) {
         return <ChatContent content={content} />;
       }
 
-      // 否则使用 markdown 渲染
-      const newContent = content.replace("/\n\n/g", "<br/><br/>");
+      const newContent = content.replace(/\n\n/g, "<br/><br/>");
       return (
         <XMarkdown
           paragraphTag="div"
@@ -282,7 +258,6 @@ export const ChatMain: React.FC = () => {
       };
     }
   });
-  console.log(messages);
   // ==================== Event ====================
   const onSubmit = (val: string) => {
     if (!val) return;
@@ -365,8 +340,7 @@ export const ChatMain: React.FC = () => {
   );
   // ==================== Nodes ====================
   const chatSide = (
-    <div className={styles.side} style={{ display: "none" }}>
-      <Logo />
+    <div className={styles.side} >
       <Conversations
         creation={{
           onClick: () => {
@@ -383,11 +357,11 @@ export const ChatMain: React.FC = () => {
             setActiveConversationKey(now);
           }
         }}
-        items={conversations.map(({ key, label, ...other }) => ({
-          key,
-          label: key === activeConversationKey ? `[${t("chat.curConversation")}]${label}` : label,
-          ...other
-        }))}
+        // items={conversations.map(({ key, label, ...other }) => ({
+        //   key,
+        //   label: key === activeConversationKey ? `[${t("chat.curConversation")}]${label}` : label,
+        //   ...other
+        // }))}
         className={styles.conversations}
         activeKey={activeConversationKey}
         onActiveChange={setActiveConversationKey}
@@ -417,11 +391,6 @@ export const ChatMain: React.FC = () => {
           ]
         })}
       />
-
-      <div className={styles.sideFooter}>
-        <AvatarIcon height={24} />
-        <Button type="text" icon={<Icon name="QuestionCircleOutlined" />} />
-      </div>
     </div>
   );
 
@@ -439,7 +408,7 @@ export const ChatMain: React.FC = () => {
           }))}
           styles={{
             bubble: {
-              maxWidth: 1000
+              minWidth: 900
             }
           }}
           role={getRole(className)}
@@ -516,10 +485,10 @@ export const ChatMain: React.FC = () => {
           type === "drop"
             ? { title: t("chat.senderHeaderAttachmentDropTitle") }
             : {
-                icon: <Icon name="CloudUploadOutlined" />,
-                title: t("chat.senderHeaderAttachmentTitle"),
-                description: t("chat.senderHeaderAttachmentDesc")
-              }
+              icon: <Icon name="CloudUploadOutlined" />,
+              title: t("chat.senderHeaderAttachmentTitle"),
+              description: t("chat.senderHeaderAttachmentDesc")
+            }
         }
       />
     </Sender.Header>

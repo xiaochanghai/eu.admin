@@ -75,7 +75,7 @@ const ChatContent: React.FC<MarkdownProps> = React.memo(({ content }) => {
       if (moduleInfo.type) {
         if (moduleInfo.type === "module_list" || moduleInfo.type === "module_edit")
           return (
-            <div style={{ maxWidth: 1000 }}>
+            <div style={{ minWidth: 1000, maxWidth: 1200 }}>
               {moduleInfo.type === "module_list" && <TableList moduleCode={moduleInfo.moduleCode} />}
               {moduleInfo.type === "module_edit" && <FormPage moduleCode={moduleInfo.moduleCode} id={moduleInfo.id ?? ""} />}
             </div>

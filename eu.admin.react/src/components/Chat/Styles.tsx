@@ -84,7 +84,8 @@ export const useStyle = createStyles(({ token, css }) => {
       height: calc(100% - 120px);
       flex-direction: column;
       align-items: center;
-      width: 100%;
+      width: 1200px;
+      margin: 0 auto;
     `,
     placeholder: css`
       padding-top: 32px;
