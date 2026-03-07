@@ -238,7 +238,7 @@ public class LogLock : IDisposable
             };
             if (Guid.TryParse(requestInfo.User, out var userId))
                 dbInsert.Values("CreatedBy", userId);
-            dbInsert.Values("CreatedTime", DateTime.Now);
+            dbInsert.Values("CreatedTime", Utility.GetSysDateString());
             dbInsert.Values("Tag", 1);
             dbInsert.Values("IsDeleted", 0);
             dbInsert.Values("IsActive", 1);

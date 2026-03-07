@@ -169,6 +169,13 @@ public static class Utility
     /// </summary>
     /// <returns>返回当前系统DateTime</returns>
     public static DateTime GetSysDate() => DateTime.Now;
+
+    /// <summary>
+    /// 获取系统当前日期时间
+    /// </summary>
+    /// <returns>返回当前系统String</returns>
+    public static string GetSysDateString() => DateTime.Now.ConvertToSecondString();
+
     #endregion
 
     #region 求系统唯一字符串
