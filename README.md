@@ -3,7 +3,7 @@
   <h3>EU（一优） 一心一意 做好每件事</h3>
 
   [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+  [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
   [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
   [![Ant Design](https://img.shields.io/badge/Ant%20Design-6.0-0170FE?logo=ant-design)](https://ant.design/)
@@ -28,7 +28,7 @@
 - **AI 集成**: Ant Design X (AI Chat 组件)
 
 **后端技术栈**
-- **核心框架**: .NET 9
+- **核心框架**: .NET 10
 - **ORM 框架**: SqlSugar + EF Core + Dapper
 - **数据库支持**: SQL Server / MySQL / PostgreSQL / Oracle / SQLite / 达梦 / 人大金仓
 - **认证授权**: JWT + Cookie Authentication
@@ -62,7 +62,7 @@
 ### 前置要求
 
 - **前端**: Node.js >= 16.0.0
-- **后端**: .NET 9 SDK
+- **后端**: .NET 10 SDK
 - **数据库**: SQL Server 2014+ / MySQL / PostgreSQL 等
 - **缓存**: Redis（可选）
 
@@ -94,7 +94,9 @@
 
 5. **访问应用**
    - 前端：http://localhost:9527
-   - API：http://localhost:5000/swagger
+   - API：http://localhost:8015/swagger
+   - 网关：http://localhost:9000
+   - MCP API：http://localhost:8020/swagger
 
 ## ⚡ 核心功能
 
