@@ -370,7 +370,7 @@ healthchecksdb
 
 
 # wwwroot/images
-*images/
+# *images/
 .1YourProject
 .PublishFiles
 !.template.config/*.nupkg
