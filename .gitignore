@@ -387,3 +387,5 @@ eu.core/EU.Core.Api/Logs
 *.db
 /EU.Core.Api/WMBlog.db-journal
 .docs/.vuepress/dist/
+.claude.json
+.cursor
