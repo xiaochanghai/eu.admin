@@ -99,7 +99,6 @@ const FormPage: React.FC<FormPageProps> = props => {
         {formColumns.filter((f: { HideInForm: boolean; FromFieldGroup: any }) => f.HideInForm === false)?.length === 0
           ? null
           : formColumns
-            // .filter((f: any) => f.HideInForm === false)
             .filter((f: any) => {
               if (f.HideInForm !== false) return false;
               if (modifyType === ModifyType.Add && f.CreateHide === true) return false;
