@@ -12,7 +12,7 @@ interface DatePickerFieldProps {
   field: FieldProps;
   disabled?: boolean;
   modifyType?: ModifyType;
-  onChange?: (date: Dayjs | null, dateString: string | string[]) => void;
+  onChange?: (date: Dayjs | null, dateString: string | null) => void;
 }
 
 /**
@@ -70,9 +70,9 @@ const useValidator = (Required: boolean | undefined, FormTitle: string | undefin
 /**
  * 共享的 hooks：创建变化处理函数
  */
-const useChangeHandler = (onChange?: (date: Dayjs | null, dateString: string | string[]) => void) => {
+const useChangeHandler = (onChange?: (date: Dayjs | null, dateString: string | null) => void) => {
   return useCallback(
-    (date: Dayjs | null, dateString: string | string[]) => {
+    (date: Dayjs | null, dateString: string | null) => {
       onChange?.(date, dateString);
     },
     [onChange]
