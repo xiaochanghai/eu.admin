@@ -99,94 +99,99 @@ const FormPage: React.FC<FormPageProps> = props => {
         {formColumns.filter((f: { HideInForm: boolean; FromFieldGroup: any }) => f.HideInForm === false)?.length === 0
           ? null
           : formColumns
-              .filter((f: any) => f.HideInForm === false)
-              .map((item: any, index: any) => {
-                const width = (item.GridSpan != null ? item?.GridSpan : 50) + "%";
-                if (item.DataIndex === "CustomerId")
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Element
-                        field={item}
-                        disabled={disabled ?? IsView}
-                        modifyType={modifyType}
-                        onChange={async (value: any) => {
-                          if (value) {
-                            let { Data, Success } = await http.get<any>("/api/Customer/" + value);
-                            if (Success)
-                              form.setFieldsValue({
-                                TaxType: Data.TaxType,
-                                TaxRate: Data.TaxRate,
-                                CurrencyId: Data.CurrencyId,
-                                SettlementWayId: Data.SettlementWayId,
-                                SalesmanId: Data.EmployeeId
-                              });
-                            let result = await http.get<any>("/api/CustomerDeliveryAddress/GetDefaultData/" + value);
-                            if (result.Success && result.Data)
-                              form.setFieldsValue({
-                                Contact: result.Data.Contact,
-                                Phone: result.Data.Phone,
-                                Address: result.Data.Address
-                              });
-                          }
-                        }}
-                      />
-                    </div>
-                  );
-                else if (item.DataIndex === "TaxType")
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Element
-                        field={item}
-                        disabled={disabled ?? IsView}
-                        modifyType={modifyType}
-                        onChange={(value: any) => {
-                          if (value == "ZeroTax")
+            // .filter((f: any) => f.HideInForm === false)
+            .filter((f: any) => {
+              if (f.HideInForm !== false) return false;
+              if (modifyType === ModifyType.Add && f.CreateHide === true) return false;
+              return true;
+            })
+            .map((item: any, index: any) => {
+              const width = (item.GridSpan != null ? item?.GridSpan : 50) + "%";
+              if (item.DataIndex === "CustomerId")
+                return (
+                  <div
+                    style={{
+                      width
+                    }}
+                    key={index}
+                  >
+                    <Element
+                      field={item}
+                      disabled={disabled ?? IsView}
+                      modifyType={modifyType}
+                      onChange={async (value: any) => {
+                        if (value) {
+                          let { Data, Success } = await http.get<any>("/api/Customer/" + value);
+                          if (Success)
                             form.setFieldsValue({
-                              TaxRate: 0
+                              TaxType: Data.TaxType,
+                              TaxRate: Data.TaxRate,
+                              CurrencyId: Data.CurrencyId,
+                              SettlementWayId: Data.SettlementWayId,
+                              SalesmanId: Data.EmployeeId
                             });
+                          let result = await http.get<any>("/api/CustomerDeliveryAddress/GetDefaultData/" + value);
+                          if (result.Success && result.Data)
+                            form.setFieldsValue({
+                              Contact: result.Data.Contact,
+                              Phone: result.Data.Phone,
+                              Address: result.Data.Address
+                            });
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              else if (item.DataIndex === "TaxType")
+                return (
+                  <div
+                    style={{
+                      width
+                    }}
+                    key={index}
+                  >
+                    <Element
+                      field={item}
+                      disabled={disabled ?? IsView}
+                      modifyType={modifyType}
+                      onChange={(value: any) => {
+                        if (value == "ZeroTax")
+                          form.setFieldsValue({
+                            TaxRate: 0
+                          });
 
-                          setTaxType(value);
-                        }}
-                      />
-                    </div>
-                  );
-                else if (item.DataIndex === "TaxRate")
-                  return (
-                    <div
-                      style={{
-                        width
+                        setTaxType(value);
                       }}
-                      key={index}
-                    >
-                      <Element
-                        field={item}
-                        disabled={disabled ?? IsView}
-                        modifyType={taxType === "ZeroTax" ? ModifyType.Add : modifyType}
-                      />
-                    </div>
-                  );
-                else
-                  return (
-                    <div
-                      style={{
-                        width
-                      }}
-                      key={index}
-                    >
-                      <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
-                    </div>
-                  );
-              })}
+                    />
+                  </div>
+                );
+              else if (item.DataIndex === "TaxRate")
+                return (
+                  <div
+                    style={{
+                      width
+                    }}
+                    key={index}
+                  >
+                    <Element
+                      field={item}
+                      disabled={disabled ?? IsView}
+                      modifyType={taxType === "ZeroTax" ? ModifyType.Add : modifyType}
+                    />
+                  </div>
+                );
+              else
+                return (
+                  <div
+                    style={{
+                      width
+                    }}
+                    key={index}
+                  >
+                    <Element field={item} disabled={disabled ?? IsView} modifyType={modifyType} />
+                  </div>
+                );
+            })}
       </Flex>
     );
   };
@@ -308,71 +313,71 @@ const FormPage: React.FC<FormPageProps> = props => {
                 changePage(ViewType.INDEX);
               }}
               onReload={() => querySingleData()}
-              // expendAction={
-              //   moduleInfo &&
-              //   auditStatus == "CompleteAudit" &&
-              //   // modifyType == ModifyType.Edit &&
-              //   moduleInfo.menuData &&
-              //   moduleInfo.menuData.map((item: any) => {
-              //     return (
-              //       <Button
-              //         onClick={() => {
-              //           props[item.FunctionCode]();
-              //         }}
-              //       >
-              //         {item.FunctionName}
-              //       </Button>
-              //     );
-              //   })
-              // }
-              // expendAction={() => [
-              //   modifyType == ModifyType.AuditPass &&
-              //   (orderStatus == "WaitShip" || orderStatus == "InShip") &&
-              //   actionAuthButton.SalesOrderShippingNotice ? (
-              //     <Button
-              //       onClick={() => {
-              //         setWaitShipSelectVisible(true);
-              //         setWaitShipSelectType("Ship");
-              //       }}
-              //     >
-              //       出货通知
-              //     </Button>
-              //   ) : null,
-              //   modifyType == ModifyType.AuditPass &&
-              //   (orderStatus == "WaitShip" || orderStatus == "InOut") &&
-              //   actionAuthButton.SalesOrderDelivery ? (
-              //     <Button
-              //       onClick={() => {
-              //         setWaitShipSelectVisible(true);
-              //         setWaitShipSelectType("Out");
-              //       }}
-              //     >
-              //       发货
-              //     </Button>
-              //   ) : null,
-              //   modifyType == ModifyType.AuditPass &&
-              //   (orderStatus == "InOut" || orderStatus == "InShip") &&
-              //   actionAuthButton.SalesOrderChange ? (
-              //     <Button
-              //       onClick={() => {
-              //         SalesOrderChange();
-              //       }}
-              //     >
-              //       订单变更
-              //     </Button>
-              //   ) : null,
-              //   modifyType == ModifyType.AuditPass &&
-              //   (orderStatus == "WaitShip" || orderStatus == "InOut" || orderStatus == "InShip") &&
-              //   actionAuthButton.SalesOrderCompleted ? (
-              //     <Button
-              //       onClick={() => {
-              //         SalesOrderCompleted();
-              //       }}
-              //     >
-              //       订单完结
-              //     </Button>
-              //   ) : null
-              // ]}
+            // expendAction={
+            //   moduleInfo &&
+            //   auditStatus == "CompleteAudit" &&
+            //   // modifyType == ModifyType.Edit &&
+            //   moduleInfo.menuData &&
+            //   moduleInfo.menuData.map((item: any) => {
+            //     return (
+            //       <Button
+            //         onClick={() => {
+            //           props[item.FunctionCode]();
+            //         }}
+            //       >
+            //         {item.FunctionName}
+            //       </Button>
+            //     );
+            //   })
+            // }
+            // expendAction={() => [
+            //   modifyType == ModifyType.AuditPass &&
+            //   (orderStatus == "WaitShip" || orderStatus == "InShip") &&
+            //   actionAuthButton.SalesOrderShippingNotice ? (
+            //     <Button
+            //       onClick={() => {
+            //         setWaitShipSelectVisible(true);
+            //         setWaitShipSelectType("Ship");
+            //       }}
+            //     >
+            //       出货通知
+            //     </Button>
+            //   ) : null,
+            //   modifyType == ModifyType.AuditPass &&
+            //   (orderStatus == "WaitShip" || orderStatus == "InOut") &&
+            //   actionAuthButton.SalesOrderDelivery ? (
+            //     <Button
+            //       onClick={() => {
+            //         setWaitShipSelectVisible(true);
+            //         setWaitShipSelectType("Out");
+            //       }}
+            //     >
+            //       发货
+            //     </Button>
+            //   ) : null,
+            //   modifyType == ModifyType.AuditPass &&
+            //   (orderStatus == "InOut" || orderStatus == "InShip") &&
+            //   actionAuthButton.SalesOrderChange ? (
+            //     <Button
+            //       onClick={() => {
+            //         SalesOrderChange();
+            //       }}
+            //     >
+            //       订单变更
+            //     </Button>
+            //   ) : null,
+            //   modifyType == ModifyType.AuditPass &&
+            //   (orderStatus == "WaitShip" || orderStatus == "InOut" || orderStatus == "InShip") &&
+            //   actionAuthButton.SalesOrderCompleted ? (
+            //     <Button
+            //       onClick={() => {
+            //         SalesOrderCompleted();
+            //       }}
+            //     >
+            //       订单完结
+            //     </Button>
+            //   ) : null
+            // ]}
             />
             <Card size="small" variant="borderless">
               {component()}
