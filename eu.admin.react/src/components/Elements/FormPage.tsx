@@ -34,7 +34,12 @@ export interface FormPageProps {
  * 根据模块配置的表单列生成对应的表单项
  */
 export const renderFormComponent = (formColumns: any[], disabled: boolean, modifyType: ModifyType) => {
-  const visibleColumns = formColumns?.filter((f: any) => f.HideInForm === false);
+  debugger
+  const visibleColumns = formColumns?.filter((f: any) => {
+    if (f.HideInForm !== false) return false;
+    if (modifyType === ModifyType.Add && f.CreateHide === true) return false;
+    return true;
+  });
 
   if (!visibleColumns || visibleColumns.length === 0)
     return (
