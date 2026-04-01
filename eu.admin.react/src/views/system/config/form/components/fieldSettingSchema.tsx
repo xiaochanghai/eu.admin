@@ -363,6 +363,14 @@ export const schemaDef: SchemaClz = {
     mode: Mode.list,
     tag: "basic"
   },
+  DataSource: {
+    name: "数据来源",
+    type: "comboGrid",
+    tag: "basic",
+    comboGridCode: "SmLov",
+    deps: { field: "FieldType", value: ["Radio", "Checkbox"] },
+    mode: Mode.form
+  },
   ColumnMode: {
     name: "栏位模式",
     type: "select",

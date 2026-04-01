@@ -1,10 +1,12 @@
-import React, { useMemo, useCallback } from "react";
+﻿import React, { useMemo, useCallback } from "react";
 import { Alert } from "antd";
 import Input from "./Input"; // 单行文本框
 import InputNumber from "./InputNumber"; // 数字输入框
 import ComboBox from "./ComBoBox"; // 下拉框
 import ComboGrid from "./ComboGrid"; // 下拉网格
 import Switch from "./Switch"; // 开关
+import Checkbox from "./Checkbox"; // 多选框
+import Radio from "./Radio"; // 单选框
 import TextArea from "./TextArea"; // 多行文本框
 import {
   DatePickerField as DatePicker,
@@ -14,10 +16,6 @@ import {
 import ColorPicker from "./ColorPicker"; // 颜色选择器
 import ImageCover from "./ImageCover"; // 封面图
 import { FieldProps, ModifyType } from "@/typings";
-
-// 暂未实现的组件
-// import Radio from "./Radio"; // 单选框
-// import Checkbox from "./Checkbox"; // 多选框
 
 /**
  * 字段布局组件属性接口
@@ -47,6 +45,8 @@ export const SUPPORTED_FIELD_TYPES = [
   "ComboBox",
   "ComboGrid",
   "Switch",
+  "Checkbox",
+  "Radio",
   "TextArea",
   "DatePicker",
   "ColorPicker",
@@ -64,15 +64,14 @@ const FIELD_MAP: Record<string, React.ComponentType<any>> = {
   ComboBox,
   ComboGrid,
   Switch,
+  Checkbox,
+  Radio,
   TextArea,
   DatePicker,
   DateTimePicker,
   TimePicker,
   ColorPicker,
   ImageCover
-  // TODO: 待实现的组件
-  // Radio,
-  // Checkbox,
 };
 
 /**

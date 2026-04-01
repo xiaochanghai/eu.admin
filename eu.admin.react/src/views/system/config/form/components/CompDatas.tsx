@@ -67,6 +67,18 @@ export const FormComponents = [
     label: "时间选择器"
   },
   {
+    ID: "Radio",
+    icon: "Radio",
+    fieldType: "Radio",
+    label: "单选框"
+  },
+  {
+    ID: "Checkbox",
+    icon: "Checkbox",
+    fieldType: "Checkbox",
+    label: "多选框"
+  },
+  {
     ID: "ColorPicker",
     icon: "BgColorsOutlined",
     fieldType: "ColorPicker",

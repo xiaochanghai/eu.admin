@@ -127,6 +127,7 @@ const FormDesign: React.FC<any> = props => {
                       }}
                       onReload={() => {
                         querySingleData();
+                        queryFormColumn();
                       }}
                     />
                   </Col>

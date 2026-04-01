@@ -71,7 +71,7 @@ export enum SaveTypeEnum {
 export type { ActionType } from "@ant-design/pro-components";
 export type { CollapseProps, CheckboxProps, TabsProps, MenuProps } from "antd";
 export interface SmLovData {
-  key: string;
+  label: string;
   value: string;
 }
 /**
