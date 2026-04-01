@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:58  SahHsiao   初版
+* V0.01  2026/4/1 20:56:36  SahHsiao   初版
 *
-* Copyright(c) 2025 EU Corporation. All Rights Reserved.
+* Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SahHsiao                                                  │
@@ -135,8 +135,8 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 表別名
     /// </summary>
-    [Display(Name = "TableAlias"), Description("表別名"), SugarColumn(IsNullable = true, Length = 32)]
-    public string TableAlias { get; set; }
+    [Display(Name = "TableAlias"), Description("表別名"), SugarColumn(IsNullable = true, Length = 32, DefaultValue = "A")]
+    public string TableAlias { get; set; } = "A";
 
     /// <summary>
     /// 是否合计
@@ -353,4 +353,16 @@ public class SmModuleColumn : BasePoco
     /// </summary>
     [Display(Name = "AllowClear"), Description("清空内容"), SugarColumn(IsNullable = true)]
     public bool? AllowClear { get; set; }
+
+    /// <summary>
+    /// 是否多选
+    /// </summary>
+    [Display(Name = "IsMultiple"), Description("是否多选"), SugarColumn(IsNullable = true)]
+    public bool? IsMultiple { get; set; }
+
+    /// <summary>
+    /// 多选最大选择数量
+    /// </summary>
+    [Display(Name = "MultipleMaxCount"), Description("多选最大选择数量"), SugarColumn(IsNullable = true)]
+    public int? MultipleMaxCount { get; set; }
 }

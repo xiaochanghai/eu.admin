@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:58  SahHsiao   初版
+* V0.01  2026/4/1 20:56:36  SahHsiao   初版
 *
-* Copyright(c) 2025 EU Corporation. All Rights Reserved.
+* Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SahHsiao                                                  │
@@ -135,7 +135,7 @@ public class SmModuleColumnBase : BasePoco
     /// 表別名
     /// </summary>
     [Display(Name = "TableAlias"), Description("表別名"), MaxLength(32, ErrorMessage = "表別名 不能超过 32 个字符")]
-    public string TableAlias { get; set; }
+    public string TableAlias { get; set; } = "A";
 
     /// <summary>
     /// 是否合计
@@ -352,4 +352,16 @@ public class SmModuleColumnBase : BasePoco
     /// </summary>
     [Display(Name = "AllowClear"), Description("清空内容")]
     public bool? AllowClear { get; set; }
+
+    /// <summary>
+    /// 是否多选
+    /// </summary>
+    [Display(Name = "IsMultiple"), Description("是否多选")]
+    public bool? IsMultiple { get; set; }
+
+    /// <summary>
+    /// 多选最大选择数量
+    /// </summary>
+    [Display(Name = "MultipleMaxCount"), Description("多选最大选择数量")]
+    public int? MultipleMaxCount { get; set; }
 }

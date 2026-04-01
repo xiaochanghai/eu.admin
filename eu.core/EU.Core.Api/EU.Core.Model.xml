@@ -5217,6 +5217,16 @@
             清空内容
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.IsMultiple">
+            <summary>
+            是否多选
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.MultipleMaxCount">
+            <summary>
+            多选最大选择数量
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -12085,6 +12095,16 @@
         <member name="P:EU.Core.Model.Entity.SmModuleColumn.AllowClear">
             <summary>
             清空内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.IsMultiple">
+            <summary>
+            是否多选
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.MultipleMaxCount">
+            <summary>
+            多选最大选择数量
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModules">

@@ -1186,7 +1186,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.AllowClear,
                     x.Remark,
                     x.UpdateBy,
-                    x.UpdateTime
+                    x.UpdateTime,
+                    x.IsMultiple,
+                    x.MultipleMaxCount
                 }, true)
                 .ExecuteCommandAsync();
         }

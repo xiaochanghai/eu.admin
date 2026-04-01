@@ -363,6 +363,20 @@ export const schemaDef: SchemaClz = {
     mode: Mode.list,
     tag: "basic"
   },
+  IsMultiple: {
+    name: "是否多选",
+    type: "switch",
+    mode: Mode.form,
+    tag: "basic",
+    deps: { field: "FieldType", value: ['ComboBox'] },
+  },
+  MultipleMaxCount: {
+    name: "多选最大选择数量",
+    type: "inputNumber",
+    tag: "basic",
+    deps: { field: "IsMultiple", value: [true] },
+    mode: Mode.form
+  },
   DataSource: {
     name: "数据来源",
     type: "comboGrid",
