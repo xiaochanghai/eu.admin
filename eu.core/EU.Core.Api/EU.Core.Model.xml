@@ -15105,6 +15105,16 @@
             提示内容
             </summary>
         </member>
+        <member name="P:EU.Core.Model.SmModuleForm.IsMultiple">
+            <summary>
+            是否多选
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.MultipleMaxCount">
+            <summary>
+            多选最大选择数量
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.GridListReturn">
             <summary>
             服务层分页响应实体(泛型)

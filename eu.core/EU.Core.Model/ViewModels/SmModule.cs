@@ -216,6 +216,18 @@ public class SmModuleForm
     /// 提示内容
     /// </summary>
     public string TooltipContent { get; set; }
+
+    /// <summary>
+    /// 是否多选
+    /// </summary>
+    [Display(Name = "IsMultiple"), Description("是否多选"), SugarColumn(IsNullable = true)]
+    public bool? IsMultiple { get; set; }
+
+    /// <summary>
+    /// 多选最大选择数量
+    /// </summary>
+    [Display(Name = "MultipleMaxCount"), Description("多选最大选择数量"), SugarColumn(IsNullable = true)]
+    public int? MultipleMaxCount { get; set; }
 }
 
 public class SmModuleFormOption : SmModuleColumn
