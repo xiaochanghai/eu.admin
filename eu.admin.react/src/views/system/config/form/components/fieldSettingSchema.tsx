@@ -368,7 +368,7 @@ export const schemaDef: SchemaClz = {
     type: "switch",
     mode: Mode.form,
     tag: "basic",
-    deps: { field: "FieldType", value: ['ComboBox'] },
+    deps: { field: "FieldType", value: ['ComboBox', 'ComboGrid'] },
   },
   MultipleMaxCount: {
     name: "多选最大选择数量",

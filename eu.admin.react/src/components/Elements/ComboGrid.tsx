@@ -45,7 +45,7 @@ const ComboGridField: React.FC<ComboGridFieldProps> = ({
   parentId,
   modifyType = ModifyType.Edit
 }) => {
-  const { DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
+  const { DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle, IsMultiple, MultipleMaxCount } = field;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -85,6 +85,8 @@ const ComboGridField: React.FC<ComboGridFieldProps> = ({
         parentColumn={parentColumn} // 父级列名，用于联动查询
         parentId={parentId} // 父级ID，用于联动查询
         placeholder={Placeholder ?? "请选择"}
+        mode={IsMultiple ? "multiple" : undefined} // 如果是多选，则设置mode为multiple
+        maxCount={IsMultiple && MultipleMaxCount ? MultipleMaxCount : undefined} // 如果是多选且指定了最大选择数量，则设置maxCount
       />
     </FormItem>
   );

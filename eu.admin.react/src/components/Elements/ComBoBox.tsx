@@ -34,7 +34,7 @@ interface ComboBoxFieldProps {
  * @returns React组件
  */
 const ComboBoxField: React.FC<ComboBoxFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
-  const { DefaultValue, DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
+  const { DefaultValue, DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle, IsMultiple, MultipleMaxCount } = field;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -64,7 +64,6 @@ const ComboBoxField: React.FC<ComboBoxFieldProps> = ({ field, disabled, modifyTy
     ],
     [Required, FormTitle]
   );
-
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <ComBoBox
@@ -72,6 +71,8 @@ const ComboBoxField: React.FC<ComboBoxFieldProps> = ({ field, disabled, modifyTy
         placeholder={Placeholder ?? "请选择"}
         disabled={isDisabled}
         onChange={handleChange}
+        mode={IsMultiple ? "multiple" : undefined} // 如果是多选，则设置mode为multiple
+        maxCount={IsMultiple && MultipleMaxCount ? MultipleMaxCount : undefined} // 如果是多选且指定了最大选择数量，则设置maxCount
       />
     </FormItem>
   );

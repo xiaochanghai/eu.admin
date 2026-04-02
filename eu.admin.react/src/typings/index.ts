@@ -53,7 +53,12 @@ export interface FieldProps {
   Maximum?: number;
   LabelCol?: number;
   WrapperCol?: number;
+
   MinRows?: number;
+  /** 是否多选 */
+  IsMultiple?: boolean;
+  /** 多选时的最大选择数量 */
+  MultipleMaxCount?: number;
 }
 /**
  * 子项类型定义

@@ -37,12 +37,11 @@ const RadioField: React.FC<RadioFieldProps> = ({ field, disabled = false, modify
       setLoading(true);
       try {
         const { Data } = await getLovData(sourceId);
-        debugger
         if (mounted) {
           setOptions(Data || []);
         }
       } catch (error) {
-        console.error(`Radio ���ݼ���ʧ�� [${sourceId}]`, error);
+        console.error(`Radio 获取数据失败 [${sourceId}]`, error);
         if (mounted) {
           setOptions([]);
         }
@@ -78,7 +77,6 @@ const RadioField: React.FC<RadioFieldProps> = ({ field, disabled = false, modify
     },
     [onChange, options]
   );
-  debugger
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <Radio.Group disabled={isDisabled || loading} options={options} optionType="default" onChange={handleChange} />
