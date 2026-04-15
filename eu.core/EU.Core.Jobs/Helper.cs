@@ -2,10 +2,12 @@
 using EU.Core.Common;
 using EU.Core.Common.DB;
 using EU.Core.Common.Seed;
+using EU.Core.Extensions;
 using EU.Core.Repository.UnitOfWorks;
 using EU.Core.Services.Extensions;
 using EU.Core.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace EU.Core.Jobs;
@@ -54,7 +56,13 @@ public class Helper
 
         // 注入事件服务
         services.AddLogging();
+        services.AddSingleton<IHostApplicationLifetime, ConsoleHostApplicationLifetime>();
         services.AddJobSetup();
+
+        var mqttOptions = AppSettings.appSingle<MqttBrokerSetting>("MqttBroker");
+        if (mqttOptions.Enabled)
+            services.AddMqttSetup(mqttOptions);
+
         builder.Build();
     }
 }

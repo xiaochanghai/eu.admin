@@ -67,6 +67,19 @@ public class AppSettings
         return list;
     }
 
+    /// <summary>
+    /// 获取配置信息对象（单条）
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="sections"></param>
+    /// <returns></returns>
+    public static T appSingle<T>(params string[] sections) where T : class, new()
+    {
+        T result = new();
+        Configuration.Bind(string.Join(":", sections), result);
+        return result;
+    }
+
 
     /// <summary>
     /// 根据路径  configuration["App:Name"];

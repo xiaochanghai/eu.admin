@@ -24,6 +24,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.5" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="9.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1-dev-02330" />
+    <PackageReference Include="MQTTnet" Version="5.0.1.1416" />
+    <PackageReference Include="MQTTnet.AspNetCore" Version="5.0.1.1416" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
 
     <PackageReference Include="nacos-sdk-csharp-unofficial" Version="1.0.0-alpha20201122023427" />

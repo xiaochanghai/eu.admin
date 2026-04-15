@@ -124,6 +124,10 @@ builder.Services.AddRabbitMQSetup();
 builder.Services.AddKafkaSetup(builder.Configuration);
 builder.Services.AddEventBusSetup();
 
+var mqttOptions = AppSettings.appSingle<EU.Core.Common.MqttBrokerSetting>("MqttBroker");
+if (mqttOptions != null && mqttOptions.Enabled)
+    builder.Services.AddMqttSetup(mqttOptions);
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
@@ -176,6 +180,9 @@ app.UseSerilogRequestLogging(options =>
     options.GetLevel = SerilogRequestUtility.GetRequestLevel;
     options.EnrichDiagnosticContext = SerilogRequestUtility.EnrichFromRequest;
 });
+if (mqttOptions.Enabled)
+    app.UseMqttSetup();
+
 app.UseRouting();
 
 if (builder.Configuration.GetValue<bool>("AppSettings:UseLoadTest"))
@@ -189,6 +196,7 @@ app.UseMiniProfilerMiddleware();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/chat");
+app.MapMqttWebSocketEndpoint();
 
 // 4、运行
 app.Run();
