@@ -477,7 +477,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var (tableName, dict) = PrepareEntityData(moduleCode, entity);
 
         // 数据格式校验
-        CheckForm(Db, moduleCode, dict);
+        await CheckForm(Db, moduleCode, dict);
 
         // 添加系统字段
         var id = Utility.GuidId;
@@ -487,7 +487,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict.Add("ModificationNum", 0);
         dict.Add("GroupId", Utility.GetGroupId());
         dict.Add("CompanyId", Utility.GetCompanyId());
-        dict.Add("IsActive", true);
+        if (!dict.ContainsKey("IsActive"))
+            dict.Add("IsActive", true);
         dict.Add("IsDeleted", false);
 
         // 执行插入操作
@@ -513,7 +514,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var (tableName, dict) = PrepareEntityData(moduleCode, entity);
 
         // 数据唯一性校验
-        CheckForm(Db, moduleCode, dict, OperateType.Update, id);
+        await CheckForm(Db, moduleCode, dict, OperateType.Update, id);
 
         // 添加更新时间和更新人
         dict.Add("UpdateTime", Utility.GetSysDate());

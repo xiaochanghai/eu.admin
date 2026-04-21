@@ -802,7 +802,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 item.Add(new JProperty("tooltip", column.TooltipContent));
 
             // 添加颜色配置
-            if (column.IsThemeColor != true)
+            if (column.IsThemeColor != null && column.IsThemeColor == true)
             {
                 if (column.Color.IsNotEmptyOrNull())
                     item.Add(new JProperty("color", column.Color));
@@ -813,7 +813,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 item.Add(new JProperty("isFollowThemeColor", true));
 
             // 处理布尔类型
-            if (column.IsBool == true)
+            if (column.IsBool != null && column.IsBool == true)
             {
                 var trueObj = new JObject
                 {
@@ -834,14 +834,16 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 item.Add(new JProperty("filters", false));
             }
             // 处理枚举类型（Lov代码）
-            else if (column.IsLovCode == true)
+            else if (column.IsLovCode != null && column.IsLovCode == true)
             {
                 JObject enumobj = new();
 
+                var dataSource = column.DataSource ?? column.DataIndex;
+
                 // 获取枚举数据
-                var enumData = await LovHelper.GetLovList(Db, column.DataIndex);
-                if (column.DataSource.IsNotEmptyOrNull())
-                    enumData = await LovHelper.GetLovList(Db, column.DataSource);
+                var enumData = new List<LovInfo>();
+                if (dataSource.IsNotEmptyOrNull())
+                    enumData = await LovHelper.GetLovListAsync(Db, dataSource);
 
                 if (enumData.Count() > 0)
                 {
@@ -864,7 +866,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             }
 
             // 隐藏搜索
-            if (column.HideInSearch == true)
+            if (column.HideInSearch.IsNotEmptyOrNull() && column.HideInSearch == true)
                 item.Add(new JProperty("hideInSearch", true));
 
             columns.Add(item);
@@ -1188,7 +1190,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.UpdateBy,
                     x.UpdateTime,
                     x.IsMultiple,
-                    x.MultipleMaxCount
+                    x.MultipleMaxCount,
+                    x.IsAutoCode
                 }, true)
                 .ExecuteCommandAsync();
         }
@@ -1277,7 +1280,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         // 获取模块信息
         //var module = ModuleInfo.GetModuleInfo(moduleCode);
-        var module = await AnyAsync(x => x.ID == id);
+        var module = await base.AnyAsync(x => x.ID == id);
 
         if (!module)
             throw new Exception("未查询到模块相关配置信息！");

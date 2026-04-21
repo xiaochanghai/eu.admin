@@ -418,8 +418,15 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
             return false;
 
         // 1. 一次性查询所有数据（只需1次数据库访问）
-        var entities = await BaseDal.Query(x =>
-            ids.Contains(((BasePoco)(object)x).ID));
+        var idProperty = typeof(TEntity).GetProperty("ID");
+        var param = Expression.Parameter(typeof(TEntity), "x");
+        var body = Expression.Call(
+            typeof(Enumerable), "Contains", [typeof(Guid)],
+            Expression.Constant(ids),
+            Expression.Property(param, idProperty!));
+        var predicate = Expression.Lambda<Func<TEntity, bool>>(body, param);
+
+        var entities = await BaseDal.Query(predicate);
 
         if (!entities.Any())
             return false;
@@ -1099,7 +1106,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="entity">实体</param>
     /// <param name="id">主键ID</param>
-    public static void CheckForm(ISqlSugarClient _Db, string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
+    public static async Task CheckForm(ISqlSugarClient _Db, string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
     {
         var module = ModuleInfo.GetModuleInfo(moduleCode);
         var moduleSql = new ModuleSql(moduleCode, _Db);
@@ -1129,8 +1136,11 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
                             {
                                 if (autoCodes[i].DataSource.IsNotEmptyOrNull())
                                 {
-                                    var no = Utility.GenerateContinuousSequence(autoCodes[i].DataSource);
-                                    SetFormDicValue(dict, autoCodes[i].DataIndex, no);
+                                    var no = await Utility.GenerateContinuousSequence(_Db, autoCodes[i].DataSource);
+                                    if (dict.ContainsKey(autoCodes[i].DataIndex))
+                                        SetFormDicValue(dict, autoCodes[i].DataIndex, no);
+                                    else
+                                        dict.Add(autoCodes[i].DataIndex, no);
                                 }
                             }
                     }
