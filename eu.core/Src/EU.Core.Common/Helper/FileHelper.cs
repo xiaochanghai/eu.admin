@@ -182,7 +182,7 @@ public class FileHelper : IDisposable
             fileName = fileName.ReplacePath();
             CreateDirectory(path);
 
-            using (FileStream stream = File.Open(path + fileName, FileMode.OpenOrCreate, FileAccess.Write))
+            using (FileStream stream = File.Open(path + "/" + fileName, FileMode.OpenOrCreate, FileAccess.Write))
             {
                 byte[] by = Encoding.Default.GetBytes($"-- {DateTime.Now:yyyy-MM-dd HH:mm:ss}" + "\r\n" + content);
                 if (appendToLast)
