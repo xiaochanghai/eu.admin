@@ -17,7 +17,7 @@ interface ComBoGridProps {
 const ComBoGrid: React.FC<ComBoGridProps> = props => {
   const { onChange, code, parentColumn, id, parentId, pageSize = 1000, value, ...restProps } = props;
   const [loading, setLoading] = useState<boolean>(false);
-  const [comboValue, setComboValue] = useState<string | null>("");
+  const [comboValue, setComboValue] = useState<string | null | undefined>("");
   const [dropDownData, setDropDownData] = useState<SmLovData[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [cachedData, setCachedData] = useState<SmLovData[]>([]);
@@ -31,7 +31,7 @@ const ComBoGrid: React.FC<ComBoGridProps> = props => {
 
   // 当 parentId 变化时重置组件状态
   useEffect(() => {
-    setComboValue(value ?? "");
+    setComboValue(value ?? null);
     setCurrentPage(1);
     setCachedData([]);
     queryLoadData("", false, 1);
