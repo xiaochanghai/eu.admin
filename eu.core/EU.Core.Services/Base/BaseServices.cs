@@ -108,7 +108,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </remarks>
     public virtual async Task<Guid> Add(TEntity entity, Guid? id = null)
     {
-        CheckForm(entity, OperateType.Add);
+        await CheckForm(entity, OperateType.Add);
         return await BaseDal.Add(entity, id);
     }
 
@@ -131,7 +131,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         // 获取需要插入的列（排除ID字段）
         var lstColumns = dic.Keys.Where(x => x != nameof(BasePoco.ID) && x != "Id").ToList();
 
-        CheckForm(model, OperateType.Add);
+        await CheckForm(model, OperateType.Add);
         return await BaseDal.Add(model, lstColumns);
     }
 
@@ -150,9 +150,9 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var list = Mapper.Map(listEntity).ToANew<List<TEntity>>();
 
         // 对每个实体执行新增前验证
-        list.ForEach(entity =>
+        list.ForEach(async entity =>
         {
-            CheckForm(entity, OperateType.Add);
+            await CheckForm(entity, OperateType.Add);
         });
 
         return await BaseDal.Add(list);
@@ -170,9 +170,9 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     public virtual async Task<List<Guid>> Add(List<TEntity> list)
     {
         // 对每个实体执行新增前验证
-        list.ForEach(entity =>
+        list.ForEach(async entity =>
         {
-            CheckForm(entity, OperateType.Add);
+            await CheckForm(entity, OperateType.Add);
         });
 
         return await BaseDal.Add(list);
@@ -211,7 +211,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
             rootEntity1.ID = Id;
 
         // 校验唯一性字段
-        CheckOnly(entity, Id);
+        await CheckOnly(entity, Id);
 
         return await BaseDal.Update(entity);
     }
@@ -241,7 +241,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var model = ConvertToEntity(entity);
 
         // 校验唯一性
-        CheckOnly(model, Id);
+        await CheckOnly(model, Id);
 
         // 设置主键ID
         if (model is RootEntityTkey<Guid> rootEntity1)
@@ -307,7 +307,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
             ConvertTEditDto2TEntity(keyValuePairs.Value, entity);
 
             // 校验唯一性
-            CheckOnly(entity, keyValuePairs.Key);
+            await CheckOnly(entity, keyValuePairs.Key);
 
             entities.Add(entity);
         }
@@ -1039,14 +1039,14 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="entity">实体</param>
     /// <param name="id">主键ID</param>
-    public static void CheckOnly(TEntity entity, Guid? id = null) => CheckForm(entity, id == null ? OperateType.Add : OperateType.Update, id);
+    public async Task CheckOnly(TEntity entity, Guid? id = null) => await CheckForm(entity, id == null ? OperateType.Add : OperateType.Update, id);
 
     /// <summary>
     /// 验证表单
     /// </summary>
     /// <param name="entity">实体</param>
     /// <param name="id">主键ID</param>
-    public static void CheckForm(TEntity entity, OperateType operateType = OperateType.Add, Guid? id = null)
+    public async Task CheckForm(TEntity entity, OperateType operateType = OperateType.Add, Guid? id = null)
     {
         var entityType = typeof(TEntity);
         var tableName = entityType.GetEntityTableName();
@@ -1080,7 +1080,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
                             {
                                 if (autoCodes[i].DataSource.IsNotEmptyOrNull())
                                 {
-                                    var no = Utility.GenerateContinuousSequence(autoCodes[i].DataSource);
+                                    var no = await Utility.GenerateContinuousSequence(Db, autoCodes[i].DataSource);
                                     entity.SetPropertyValue(autoCodes[i].DataIndex, no);
                                 }
                             }
@@ -1106,10 +1106,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </summary>
     /// <param name="entity">实体</param>
     /// <param name="id">主键ID</param>
-    public static async Task CheckForm(ISqlSugarClient _Db, string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
+    public async Task CheckForm(string moduleCode, Dictionary<string, object> dict, OperateType operateType = OperateType.Add, Guid? id = null)
     {
         var module = ModuleInfo.GetModuleInfo(moduleCode);
-        var moduleSql = new ModuleSql(moduleCode, _Db);
+        var moduleSql = new ModuleSql(moduleCode, Db);
         string tableName = moduleSql.GetTableName();
 
         if (tableName == "SmModules")
@@ -1136,7 +1136,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
                             {
                                 if (autoCodes[i].DataSource.IsNotEmptyOrNull())
                                 {
-                                    var no = await Utility.GenerateContinuousSequence(_Db, autoCodes[i].DataSource);
+                                    var no = await Utility.GenerateContinuousSequence(Db, autoCodes[i].DataSource);
                                     if (dict.ContainsKey(autoCodes[i].DataIndex))
                                         SetFormDicValue(dict, autoCodes[i].DataIndex, no);
                                     else

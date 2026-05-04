@@ -8,6 +8,7 @@ export interface ProTableProps {
   IsView?: boolean | null;
   onEdit?: (id: string | null, isView?: boolean) => void;
   masterId?: string | null;
+  customConditions?: string; // 自定义SQL WHERE条件
   formRef?: React.RefObject<any>;
   expendHideAction?: (action: any, selectedRows: any[]) => React.ReactNode;
   expendAction?: (action: any, selectedRows: any[], selectedRowKeys: any[]) => React.ReactNode;

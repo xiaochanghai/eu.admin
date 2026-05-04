@@ -36,7 +36,7 @@ public class SdChangeOrderDetailServices : BaseServices<SdChangeOrderDetail, SdC
         var model = ConvertToEntity(entity);
 
         #region 检查是否存在相同值
-        CheckOnly(model, Id);
+        await CheckOnly(model, Id);
         #endregion
 
         var orderTax = await Db.Queryable<SdChangeOrder>()

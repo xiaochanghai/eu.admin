@@ -38,7 +38,7 @@ public class PoArrivalOrderDetailServices : BaseServices<PoArrivalOrderDetail, P
             var model = ConvertToEntity(entity1);
 
             #region 检查是否存在相同值
-            CheckOnly(model, Id);
+            await CheckOnly(model, Id);
             #endregion
 
             var entity = await Query(Id);

@@ -749,7 +749,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         var moduleColumnInfo = new ModuleSqlColumn(moduleInfo.ModuleCode);
         var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();
 
-        var data = moduleColumns;
+        var data = moduleColumns.Where(x => x.ColumnMode != "form").ToList();
 
         // 如果SQL配置的列为空，则从数据库查询
         if ((moduleColumns != null && !moduleColumns.Any()) || moduleColumns == null)

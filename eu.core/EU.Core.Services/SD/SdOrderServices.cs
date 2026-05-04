@@ -42,7 +42,7 @@ public class SdOrderServices : BaseServices<SdOrder, SdOrderDto, InsertSdOrderIn
         lstColumns.Add("SalesOrderStatus");
 
         #region 检查是否存在相同值
-        CheckOnly(model);
+        await CheckOnly(model);
         #endregion
 
         model.OrderNo = Utility.GenerateContinuousSequence("SdOrderNo");

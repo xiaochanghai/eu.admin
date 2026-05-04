@@ -12,7 +12,7 @@ import { ModuleInfo } from "@/api/interface/index";
  * @param masterId 主表ID（用于明细表过滤）
  * @returns 数据请求相关的状态和函数
  */
-export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, masterId?: string | null) => {
+export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, masterId?: string | null, customConditions?: string) => {
   const dispatch = useDispatch();
   const searchVisibles = useSelector((state: RootState) => state.module.searchVisibles);
   const tableParams = useSelector((state: RootState) => state.module.tableParams);
@@ -32,18 +32,25 @@ export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, mast
       sorter = { ...tableParam.sorter, ...sorter };
     }
 
-    // 构建过滤条件
+    // 构建基础过滤条件
+    let baseConditions = "";
+    if (moduleInfo.isDetail && moduleInfo.masterColumn && masterId) {
+      baseConditions = `A.${moduleInfo.masterColumn} = '${masterId}'`;
+    } else if (moduleInfo.isDetail) {
+      baseConditions = "1 != 1";
+    }
+
+    // 拼接自定义条件
+    const Conditions = customConditions
+      ? baseConditions ? `${baseConditions} AND ${customConditions}` : customConditions
+      : baseConditions;
+
     const filter = {
       PageIndex: params.current,
       PageSize: params.pageSize,
       sorter,
       params,
-      Conditions:
-        moduleInfo.isDetail && moduleInfo.masterColumn && masterId
-          ? `A.${moduleInfo.masterColumn} = '${masterId}'`
-          : moduleInfo.isDetail
-            ? "1 != 1"
-            : ""
+      Conditions
     };
 
     // 保存参数到 Redux

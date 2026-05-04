@@ -37,7 +37,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
 
         #region 检查是否存在相同值
-        CheckOnly(model);
+        await CheckOnly(model);
         #endregion
 
         var enumData = await LovHelper.GetLovListAsync(Db, "SettlementAccountType");
@@ -65,7 +65,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
         var model = ConvertToEntity(entity);
 
         #region 检查是否存在相同值
-        CheckOnly(model, Id);
+        await CheckOnly(model, Id);
         #endregion
 
         var enumData = await LovHelper.GetLovListAsync(Db, "SettlementAccountType");

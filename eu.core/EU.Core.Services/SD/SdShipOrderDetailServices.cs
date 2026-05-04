@@ -41,7 +41,7 @@ public class SdShipOrderDetailServices : BaseServices<SdShipOrderDetail, SdShipO
                 throw new Exception($"出货通知数量不能小于0！");
 
             #region 检查是否存在相同值
-            CheckOnly(model, Id);
+            await CheckOnly(model, Id);
             #endregion
 
             var entity = await QueryDto(Id);

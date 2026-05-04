@@ -38,7 +38,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
 
         #region 检查是否存在相同值
-        CheckOnly(model);
+        await CheckOnly(model);
         #endregion 
 
         var order = await Db.Queryable<SdOrder>().FirstAsync(x => x.ID == model.OrderId);
@@ -118,7 +118,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         var model = ConvertToEntity(entity);
 
         #region 检查是否存在相同值
-        CheckOnly(model, Id);
+        await CheckOnly(model, Id);
         #endregion
 
         if (model.QTY <= 0)
@@ -143,7 +143,7 @@ public class SdOrderDetailServices : BaseServices<SdOrderDetail, SdOrderDetailDt
         var model = ConvertToEntity(entity);
 
         #region 检查是否存在相同值
-        CheckOnly(model, Id);
+        await CheckOnly(model, Id);
         #endregion
 
         if (model.QTY <= 0)

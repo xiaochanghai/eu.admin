@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 interface TableListProps {
   moduleCode: string; // 模块代码
   masterId?: string | null; // 主表ID
+  customConditions?: string; // 自定义SQL WHERE条件
   changePage?: (page: ViewType, id?: any, isView?: boolean) => void; // 页面切换回调
   IsView?: boolean | null; // 是否为查看模式
   DynamicFormPage?: React.ComponentType<any>; // 动态表单页面组件

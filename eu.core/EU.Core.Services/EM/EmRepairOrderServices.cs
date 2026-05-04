@@ -104,7 +104,7 @@ public class EmRepairOrderServices : BaseServices<EmRepairOrder, EmRepairOrderDt
         lstColumns.Add("Status");
 
         #region 检查是否存在相同值
-        CheckOnly(model);
+        await CheckOnly(model);
         #endregion
 
         model.OrderNo = Utility.GenerateContinuousSequence("EmRepairOrderNo");

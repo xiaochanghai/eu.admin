@@ -56,7 +56,7 @@ const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, d
  * 提供模块化的表格功能，包括数据请求、操作列、工具栏、批量操作等
  */
 const SmProTable: React.FC<ProTableProps> = React.memo(props => {
-  const { moduleInfo, IsView, onEdit, masterId, formRef, expendHideAction, expendAction, ...restProps } = props;
+  const { moduleInfo, IsView, onEdit, masterId, customConditions, formRef, expendHideAction, expendAction, ...restProps } = props;
 
   const { moduleCode, columns, url, beforeActions, dropActions } = moduleInfo;
   const actionRef = useRef<ActionType>();
@@ -67,7 +67,8 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
   const { searchVisible, tableParam, handleRequest, handleReset, onSearchToggle } = useProTableData(
     moduleCode,
     moduleInfo,
-    masterId
+    masterId,
+    customConditions
   );
 
   // 列配置增强

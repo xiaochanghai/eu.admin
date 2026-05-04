@@ -477,7 +477,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var (tableName, dict) = PrepareEntityData(moduleCode, entity);
 
         // 数据格式校验
-        await CheckForm(Db, moduleCode, dict);
+        await CheckForm(moduleCode, dict);
 
         // 添加系统字段
         var id = Utility.GuidId;
@@ -514,7 +514,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var (tableName, dict) = PrepareEntityData(moduleCode, entity);
 
         // 数据唯一性校验
-        await CheckForm(Db, moduleCode, dict, OperateType.Update, id);
+        await CheckForm(moduleCode, dict, OperateType.Update, id);
 
         // 添加更新时间和更新人
         dict.Add("UpdateTime", Utility.GetSysDate());

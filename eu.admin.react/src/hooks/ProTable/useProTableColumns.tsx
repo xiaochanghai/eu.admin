@@ -78,7 +78,7 @@ export const useProTableColumns = (
 
         case "switch":
           columnEnhancements.render = (_: any, record: any) => {
-            return <Switch disabled checked={record[item.dataIndex] === "true"} />;
+            return <Switch disabled checked={record[item.dataIndex] === "true" || record[item.dataIndex] === "True" || record[item.dataIndex] === "1"} />;
           };
           break;
 
