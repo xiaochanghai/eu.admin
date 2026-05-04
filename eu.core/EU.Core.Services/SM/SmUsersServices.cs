@@ -218,6 +218,40 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         var token = JwtToken.BuildJwtToken(claims.ToArray(), _requirement, sessionId);
         return (token.token, sessionId);
     }
+
+    private LoginReturn BuildLoginReturn(SmUsers user, string token)
+    {
+        return new LoginReturn
+        {
+            Token = token,
+            UserId = user.ID,
+            Modules = new List<SmModules>(),
+            UserInfo = new CurrentUser
+            {
+                UserName = user.UserName,
+                UserId = user.ID,
+                AvatarFileId = user.AvatarFileId,
+                UserType = user.UserType,
+                WeekName = DateTime.Now.GetWeekNameOfDay()
+            }
+        };
+    }
+
+    private async Task<ServiceResult<LoginReturn>> CompleteLoginAsync(SmUsers user, string platform)
+    {
+        if (user == null)
+            return ServiceResult<LoginReturn>.OprateFailed("用户不存在");
+
+        user.LastLoginTime = DateTime.Now;
+        await Update(user, [nameof(SmUsers.LastLoginTime)]);
+        RefreshUserCache(user.ID, user);
+
+        var (token, _) = GenerateJwtToken(user);
+        var result = BuildLoginReturn(user, token);
+
+        _ = Task.Run(() => Utility.RecordEntryLog(Db, user.ID, string.IsNullOrWhiteSpace(platform) ? "Web" : platform));
+        return Success(result, ResponseText.LOGIN_SUCCESS);
+    }
     #endregion
 
     #region 用户登录
@@ -239,32 +273,58 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
             if (user == null)
                 return ServiceResult<LoginReturn>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
 
-            // 更新用户缓存
-            RefreshUserCache(user.ID, user);
+            return await CompleteLoginAsync(user, App.User.GetPlatform() ?? "Web");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<LoginReturn>.OprateFailed($"登录失败: {ex.Message}");
+        }
+    }
 
-            // 生成Token
-            var (token, sessionId) = GenerateJwtToken(user);
+    public async Task<ServiceResult<LoginReturn>> LoginByWeComIdentityAsync(string userAccount, string mobile = null, string platform = "WeCom")
+    {
+        if (string.IsNullOrWhiteSpace(userAccount) && string.IsNullOrWhiteSpace(mobile))
+            return ServiceResult<LoginReturn>.OprateFailed("企业微信身份信息不能为空");
 
-            var result = new LoginReturn
+        try
+        {
+            SmUsers user = null;
+            if (!string.IsNullOrWhiteSpace(userAccount))
             {
-                Token = token,
-                UserId = user.ID,
-                Modules = new List<SmModules>(),
-                UserInfo = new CurrentUser
-                {
-                    UserName = user.UserName,
-                    UserId = user.ID,
-                    AvatarFileId = user.AvatarFileId,
-                    UserType = user.UserType,
-                    WeekName = DateTime.Now.GetWeekNameOfDay()
-                }
-            };
+                user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == userAccount);
+            }
 
-            // 记录用户登录日志（异步执行，不阻塞主流程）
-            var platform = App.User.GetPlatform() ?? "Web";
-            _ = Task.Run(() => Utility.RecordEntryLog(Db, user.ID, platform));
+            if (user == null && !string.IsNullOrWhiteSpace(mobile))
+            {
+                user = await Db.Queryable<SmUsers, SmEmployee>((u, e) => new JoinQueryInfos(JoinType.Left, u.EmployeeId == e.ID))
+                    .Where((u, e) => u.IsDeleted == false && e.IsDeleted == false && e.Phone == mobile)
+                    .Select((u, e) => u)
+                    .FirstAsync();
+            }
 
-            return Success(result, ResponseText.LOGIN_SUCCESS);
+            if (user == null)
+                return ServiceResult<LoginReturn>.OprateFailed("未找到与企业微信身份匹配的系统用户");
+
+            return await CompleteLoginAsync(user, platform);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<LoginReturn>.OprateFailed($"企业微信登录失败: {ex.Message}");
+        }
+    }
+
+    public async Task<ServiceResult<LoginReturn>> LoginByUserIdAsync(Guid userId, string platform = "Weixin")
+    {
+        if (userId == Guid.Empty)
+            return ServiceResult<LoginReturn>.OprateFailed("用户ID不能为空");
+
+        try
+        {
+            var user = await Query(userId);
+            if (user == null || user.IsDeleted)
+                return ServiceResult<LoginReturn>.OprateFailed("用户不存在");
+
+            return await CompleteLoginAsync(user, platform);
         }
         catch (Exception ex)
         {

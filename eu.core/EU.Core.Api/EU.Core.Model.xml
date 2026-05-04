@@ -12912,6 +12912,66 @@
             备注
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.WxPayNotifyLog">
+            <summary>
+            微信支付通知日志 (Model)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.WxUserBinding">
+            <summary>
+            微信用户绑定 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.Channel">
+            <summary>
+            渠道类型 mp/wxopen/work
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.WeixinId">
+            <summary>
+            微信账号标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.AppId">
+            <summary>
+            AppId
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.OpenId">
+            <summary>
+            OpenId
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.UnionId">
+            <summary>
+            UnionId
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.WorkUserId">
+            <summary>
+            企业微信用户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.UserId">
+            <summary>
+            系统用户ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.BindTime">
+            <summary>
+            绑定时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.LastLoginTime">
+            <summary>
+            最近登录时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.WxUserBinding.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Models.RootTkey.BaseEntity.IsDeleted">
             <summary>
             中立字段，某些表可使用某些表不使用   <br/>

@@ -53,6 +53,7 @@ builder.ConfigureApplication();
 // 2、配置服务
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
 builder.Services.AddAllOptionRegister();
+builder.Services.AddSenparcSetup(builder.Configuration);
 
 //builder.Services.AddUiFilesZipSetup(builder.Environment);
 ServiceExtensions.Init();
@@ -140,6 +141,7 @@ IdentityModelEventSource.ShowPII = true;
 
 app.ConfigureApplication();
 app.UseApplicationSetup();
+app.UseSenparcSetup();
 app.UseResponseBodyRead();
 
 if (app.Environment.IsDevelopment())

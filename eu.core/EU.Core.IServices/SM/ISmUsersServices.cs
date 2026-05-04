@@ -29,6 +29,8 @@ public interface ISmUsersServices : IBaseServices<SmUsers, SmUsersDto, InsertSmU
     ServiceResult LogOutAsync();
 
     Task<ServiceResult<LoginReturn>> LoginAsync(LoginRequest request);
+    Task<ServiceResult<LoginReturn>> LoginByUserIdAsync(Guid userId, string platform = "Weixin");
+    Task<ServiceResult<LoginReturn>> LoginByWeComIdentityAsync(string userAccount, string mobile = null, string platform = "WeCom");
     Task<ServiceResult<CurrentUser>> CurrentUserAsync();
 
     Task<ServiceResult<LoginReturn>> GetAccessToken();
