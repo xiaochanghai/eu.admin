@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Tag, Switch } from "antd";
+import { Tag, Switch, Button } from "antd";
 import { useDispatch } from "@/redux";
 import { setModuleInfo } from "@/redux/modules/module";
 import { recordUserModuleColumn } from "@/api/modules/module";
@@ -25,6 +25,7 @@ export const useProTableColumns = (
   const dispatch = useDispatch();
   const [columnsStateMap, setColumnsStateMap] = useState(() => userModuleColumn);
 
+
   /**
    * 处理列状态变更
    */
@@ -39,6 +40,7 @@ export const useProTableColumns = (
    * 增强列配置
    */
   const enhancedColumns = useMemo(() => {
+
     if (!columns) return [];
 
     return columns.map((item: any) => {
@@ -88,6 +90,14 @@ export const useProTableColumns = (
           } else if (item.color) {
             columnEnhancements.renderText = (val: string) => <span style={{ color: item.color }}>{val}</span>;
           }
+          break;
+        case "link":
+          columnEnhancements.render = (_: any, record: any) => {
+            return <Button type="link" block onClick={() => window.$navigate(`${item.redirectUrl}/${record["ID"]}`)}>
+              {record[item.dataIndex]}
+            </Button>;
+          };
+
           break;
       }
 

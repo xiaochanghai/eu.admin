@@ -59,6 +59,10 @@ export interface FieldProps {
   IsMultiple?: boolean;
   /** 多选时的最大选择数量 */
   MultipleMaxCount?: number;
+  /** 是否跳转 */
+  IsRedirect?: boolean;
+  /** 跳转链接 */
+  RedirectUrl?: string;
 }
 /**
  * 子项类型定义
