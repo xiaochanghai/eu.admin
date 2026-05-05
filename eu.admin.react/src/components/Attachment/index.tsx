@@ -213,14 +213,14 @@ const Attachment: React.FC<AttachmentProps> = React.memo(props => {
   const columns = [
     {
       title: "创建时间",
-      hideInSearch: true,
+      search: false,
       dataIndex: "CreatedTime",
       width: 180
     },
     {
       title: "文件名",
       width: 180,
-      hideInSearch: true,
+      search: false,
       dataIndex: "OriginalFileName",
       render: (_: string, item: AttachmentItem) => [
         <a onClick={() => onDownload(item)} key="link">
