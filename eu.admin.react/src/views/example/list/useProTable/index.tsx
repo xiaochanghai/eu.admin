@@ -32,12 +32,12 @@ const columns: ProColumns<UserList>[] = [
   {
     title: "邮箱",
     dataIndex: "email",
-    hideInSearch: true
+    search: false
   },
   {
     title: "地址",
     dataIndex: "address",
-    hideInSearch: true
+    search: false
   },
   {
     title: "创建时间",
@@ -45,7 +45,7 @@ const columns: ProColumns<UserList>[] = [
     dataIndex: "createTime",
     valueType: "date",
     sorter: true,
-    hideInSearch: true
+    search: false
   },
   {
     title: "创建时间",
@@ -59,7 +59,7 @@ const columns: ProColumns<UserList>[] = [
     key: "option",
     fixed: "right",
     width: 250,
-    hideInSearch: true,
+    search: false,
     render: () => action()
   }
 ];

@@ -4,7 +4,7 @@ import { DragSortTable } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
 
 const columns: ProColumns[] = [
-  { title: "排序", dataIndex: "sort", width: 60, className: "drag-visible", hideInSearch: true },
+  { title: "排序", dataIndex: "sort", width: 60, className: "drag-visible", search: false },
   { title: "姓名", dataIndex: "name", className: "drag-visible" },
   { title: "年龄", dataIndex: "age" },
   { title: "地址", dataIndex: "address" }

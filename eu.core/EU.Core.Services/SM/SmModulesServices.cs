@@ -871,7 +871,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             // 隐藏搜索
             if (column.HideInSearch.IsNotEmptyOrNull() && column.HideInSearch == true)
-                item.Add(new JProperty("hideInSearch", true));
+                item.Add(new JProperty("search", false));
 
             columns.Add(item);
         }
