@@ -405,7 +405,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         // 构建菜单树
         var treeMenuData = new TreeAuthMenu();
         var moduleList = ModuleInfo.GetModuleList();
-        var smModules = moduleList.Where(x => x.IsDeleted == false && x.IsActive == true).ToList();
+        var smModules = moduleList.Where(x => x.IsDeleted == false).ToList();
         LoopToAppendChildren1(smRoleList, smModules, treeMenuData);
 
         // 定义系统固定菜单
@@ -778,7 +778,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 new JProperty("required", column.Required == true),
                 new JProperty("align", column.Align.IsNullOrEmpty() ? "center" : column.Align),
                 new JProperty("sorter", column.Sorter),
-                new JProperty("editable", column.IsTableEditable == true),
+                new JProperty("editable", column.IsTableEditable == true)
             };
 
             // 添加列宽
@@ -800,6 +800,10 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             // 添加提示信息
             if (column.IsTooltip == true)
                 item.Add(new JProperty("tooltip", column.TooltipContent));
+
+            // 添加提示信息
+            if (column.IsRedirect == true)
+                item.Add(new JProperty("redirectUrl", column.RedirectUrl));
 
             // 添加颜色配置
             if (column.IsThemeColor != null && column.IsThemeColor == true)
@@ -1154,6 +1158,10 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             else if (column.FieldType == "ComboBox")
             {
                 entity.DataSource = column.ComboBoxDataSource;
+
+                if (column.DataSource.IsNotEmptyOrNull())
+                    entity.IsLovCode = true;
+
                 if (column.DataSource.IsNullOrEmpty() && column.IsLovCode == true)
                     entity.DataSource = entity.DataIndex;
             }
@@ -1191,7 +1199,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.UpdateTime,
                     x.IsMultiple,
                     x.MultipleMaxCount,
-                    x.IsAutoCode
+                    x.IsAutoCode,
+                    x.IsRedirect,
+                    x.RedirectUrl
                 }, true)
                 .ExecuteCommandAsync();
         }
@@ -1224,7 +1234,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.Color,
                     x.IsThemeColor,
                     x.UpdateBy,
-                    x.UpdateTime
+                    x.UpdateTime,
+                    x.IsRedirect,
+                    x.RedirectUrl
                 }, true)
                 .ExecuteCommandAsync();
         }

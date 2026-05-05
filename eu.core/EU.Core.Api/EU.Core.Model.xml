@@ -5227,6 +5227,16 @@
             多选最大选择数量
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.IsRedirect">
+            <summary>
+            是否跳转
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.RedirectUrl">
+            <summary>
+            跳转URL
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -12105,6 +12115,16 @@
         <member name="P:EU.Core.Model.Entity.SmModuleColumn.MultipleMaxCount">
             <summary>
             多选最大选择数量
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.IsRedirect">
+            <summary>
+            是否跳转
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.RedirectUrl">
+            <summary>
+            跳转URL
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModules">

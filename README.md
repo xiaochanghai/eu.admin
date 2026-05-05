@@ -2,11 +2,12 @@
   <h1>EU-Admin</h1>
   <h3>EU（一优） 一心一意 做好每件事</h3>
 
-  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-  [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-  [![Ant Design](https://img.shields.io/badge/Ant%20Design-6.0-0170FE?logo=ant-design)](https://ant.design/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Ant Design](https://img.shields.io/badge/Ant%20Design-6.0-0170FE?logo=ant-design)](https://ant.design/)
+
 </div>
 
 ## 📖 项目简介
@@ -18,6 +19,7 @@
 ### 🎯 技术栈
 
 **前端技术栈**
+
 - **核心框架**: React 19 + TypeScript 5.7
 - **构建工具**: Vite 7
 - **UI 框架**: Ant Design 6 + Ant Design Pro Components
@@ -28,6 +30,7 @@
 - **AI 集成**: Ant Design X (AI Chat 组件)
 
 **后端技术栈**
+
 - **核心框架**: .NET 10
 - **ORM 框架**: SqlSugar + EF Core + Dapper
 - **数据库支持**: SQL Server / MySQL / PostgreSQL / Oracle / SQLite / 达梦 / 人大金仓
@@ -43,11 +46,12 @@
 ### 演示地址
 
 #### 标准版
+
 - 地址：http://8.136.42.224:60000/
 - 账号：`Admin` 密码：`1`
 - 右上角切换到AI对话
-![AI对话功能](./doc/images/18.png)
-![AI对话功能](./doc/images/17.png)
+  ![AI对话功能](./doc/images/18.png)
+  ![AI对话功能](./doc/images/17.png)
 
 ### 相关项目
 
@@ -66,16 +70,18 @@
 ### 安装步骤
 
 1. **克隆项目**
+
    ```bash
    git clone https://github.com/xiaochanghai/eu.admin
    cd eu-Admin
    ```
 
 2. **配置数据库**
-   - 下载数据库文件：[夸克网盘](https://pan.quark.cn/s/12c4cd21cd14)
-   - 使用 SQL Server 2014+ 导入数据库
+   - 下载数据库文件：[db 目录](./db)
+   - 使用 SQL Server 2014+ 导入数据库 or mysql
 
 3. **启动后端**
+
    ```bash
    cd eu.core
    dotnet restore
@@ -83,6 +89,7 @@
    ```
 
 4. **启动前端**
+
    ```bash
    cd eu.admin.react
    pnpm install
@@ -171,6 +178,7 @@
 ### 开发环境部署
 
 **前端部署**
+
 ```bash
 cd eu.admin.react
 pnpm install
@@ -178,6 +186,7 @@ pnpm dev
 ```
 
 **后端部署**
+
 ```bash
 cd eu.core
 dotnet restore
@@ -190,21 +199,20 @@ dotnet run --project EU.Core.Api
 - **后端**: IIS / Docker 容器化部署
 - **容器化**: 详见 [Docker 部署文档](./doc/Docker部署.md)
 
-
 ## 📚 技术文档
 
 ### 核心技术文档
 
-| 技术 | 官方文档 |
-|------|---------|
-| TypeScript | https://www.tslang.cn/docs/home.html |
-| React | https://react.docschina.org/docs/getting-started.html |
-| Ant Design | https://ant.design/components/overview-cn/ |
-| Ant Design Pro | https://pro.ant.design/zh-CN/docs/overview |
-| Ant Design Charts | https://charts.ant.design/zh |
-| .NET | https://learn.microsoft.com/zh-cn/dotnet/ |
-| EF Core | https://docs.microsoft.com/zh-cn/ef/core/ |
-| SqlSugar | https://www.donet5.com/Home/Doc |
+| 技术              | 官方文档                                              |
+| ----------------- | ----------------------------------------------------- |
+| TypeScript        | https://www.tslang.cn/docs/home.html                  |
+| React             | https://react.docschina.org/docs/getting-started.html |
+| Ant Design        | https://ant.design/components/overview-cn/            |
+| Ant Design Pro    | https://pro.ant.design/zh-CN/docs/overview            |
+| Ant Design Charts | https://charts.ant.design/zh                          |
+| .NET              | https://learn.microsoft.com/zh-cn/dotnet/             |
+| EF Core           | https://docs.microsoft.com/zh-cn/ef/core/             |
+| SqlSugar          | https://www.donet5.com/Home/Doc                       |
 
 ### 项目文档
 

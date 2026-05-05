@@ -288,7 +288,8 @@ export const schemaDef: SchemaClz = {
       { value: "switch", label: "开关" },
       { value: "fontColor", label: "字体颜色" },
       { value: "color", label: "颜色选择器" },
-      { value: "icon", label: "图标" }
+      { value: "icon", label: "图标" },
+      { value: "link", label: "链接" }
     ]
   },
   Width: {
@@ -376,6 +377,18 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     deps: { field: "IsMultiple", value: [true] },
     mode: Mode.form
+  },
+  IsRedirect: {
+    name: "是否跳转",
+    type: "switch",
+    tag: "basic",
+    // deps: { field: "FieldType", value: ['ComboBox', 'ComboGrid'] },
+  },
+  RedirectUrl: {
+    name: "跳转链接",
+    type: "input",
+    tag: "basic",
+    deps: { field: "IsRedirect", value: [true] },
   },
   DataSource: {
     name: "数据来源",

@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/4/1 20:56:36  SahHsiao   初版
+* V0.01  2026/5/4 16:11:05  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -365,4 +365,16 @@ public class SmModuleColumn : BasePoco
     /// </summary>
     [Display(Name = "MultipleMaxCount"), Description("多选最大选择数量"), SugarColumn(IsNullable = true)]
     public int? MultipleMaxCount { get; set; }
+
+    /// <summary>
+    /// 是否跳转
+    /// </summary>
+    [Display(Name = "IsRedirect"), Description("是否跳转"), SugarColumn(IsNullable = true)]
+    public bool? IsRedirect { get; set; }
+
+    /// <summary>
+    /// 跳转URL
+    /// </summary>
+    [Display(Name = "RedirectUrl"), Description("跳转URL"), SugarColumn(IsNullable = true, Length = 64)]
+    public string RedirectUrl { get; set; }
 }
