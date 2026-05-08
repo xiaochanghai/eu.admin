@@ -8,7 +8,7 @@ namespace EU.Core.Api.Controllers;
 /// </summary>
 [Route("api/[controller]/[action]")]
 [ApiController]
-[Authorize, ApiExplorerSettings(GroupName = Grouping.GroupName_Other)]
+[Authorize, ApiExplorerSettings(GroupName = Grouping.GroupName_Hidden)]
 public class SignalRTestController : BaseApiController
 {
     //private readonly IHubContext<ChatHub, IChatClient> _hubContext;

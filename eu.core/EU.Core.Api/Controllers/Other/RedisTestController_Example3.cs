@@ -5,7 +5,7 @@ namespace EU.Core.Api.Controllers;
 /// <summary>
 /// Redis 测试控制器 - 方式三：使用工厂模式（最优雅）
 /// </summary>
-[Route("api/[controller]")]
+[Route("api/[controller]"), ApiExplorerSettings(GroupName = Grouping.GroupName_Hidden)]
 [ApiController]
 public class RedisTestController_Example3 : ControllerBase
 {

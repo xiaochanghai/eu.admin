@@ -6,8 +6,7 @@ namespace EU.Core.Api.Controllers;
 /// <summary>
 /// Redis 服务测试控制器
 /// </summary>
-[Route("api/[controller]")]
-[ApiController]
+[Route("api/[controller]"), ApiController, ApiExplorerSettings(GroupName = Grouping.GroupName_Hidden)]
 public class RedisTestController : ControllerBase
 {
     private readonly RedisCacheService _redisCache;

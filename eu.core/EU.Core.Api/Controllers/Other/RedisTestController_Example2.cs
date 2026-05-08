@@ -6,7 +6,7 @@ namespace EU.Core.Api.Controllers;
 /// Redis 测试控制器 - 方式二：使用静态工厂方法（向后兼容）
 /// </summary>
 [Route("api/[controller]")]
-[ApiController]
+[ApiController, ApiExplorerSettings(GroupName = Grouping.GroupName_Hidden)]
 public class RedisTestController_Example2 : ControllerBase
 {
     /// <summary>

@@ -399,9 +399,9 @@ public static class SwaggerSetup
         public const string GroupName_Other = "other";
 
         /// <summary>
-        /// Ghra
+        /// 隐藏
         /// </summary>
-        public const string GroupName_Ghra = "Ghra";
+        public const string GroupName_Hidden = "hidden";
         /// <summary>
         /// 辅助工具
         /// </summary>
@@ -409,12 +409,12 @@ public static class SwaggerSetup
         /// <summary>
         /// 微信
         /// </summary>
-        public const string GroupName_WX = " wechat";
+        public const string GroupName_WX = "wechat";
 
         /// <summary>
         /// 电商
         /// </summary>
-        public const string GroupName_EC = " ec";
+        public const string GroupName_EC = "ec";
     }
 }
 

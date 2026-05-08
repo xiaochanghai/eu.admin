@@ -11,7 +11,7 @@ namespace EU.Core.Api.Controllers;
 /// Redis 测试控制器 - 方式一：注入依赖手动创建（推荐）
 /// </summary>
 [Route("api/[controller]")]
-[ApiController]
+[ApiController, ApiExplorerSettings(GroupName = Grouping.GroupName_Hidden)]
 public class RedisTestController_Example1 : ControllerBase
 {
     private readonly IConnectionMultiplexer _connection;
