@@ -548,6 +548,20 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         return list.Any() ? list.FirstOrDefault() : default;
     }
 
+    /// <summary>
+    /// 根据条件查询多条数据（返回DTO集合）
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>实体DTO集合</returns>
+    /// <example>
+    /// var user = await QueryDto(x => x.Code == "ADMIN");
+    /// </example>
+    public async Task<List<TEntityDto>> QueryDto(Expression<Func<TEntity, bool>> whereExpression)
+    {
+        var list = await BaseDal.Query(whereExpression);
+        return list.Any() ? Mapper.Map(list).ToANew<List<TEntityDto>>() : default;
+    }
+
     #endregion
 
     #region 批量查询

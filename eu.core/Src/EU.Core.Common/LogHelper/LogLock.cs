@@ -72,7 +72,7 @@ public class LogLock : IDisposable
         {
             _logWriteLock.EnterWriteLock();
 
-                var folderPath = Path.Combine(_contentRoot, LogFolderName, DateTime.Now.ToString(DateFormat));
+            var folderPath = Path.Combine(_contentRoot, LogFolderName, DateTime.Now.ToString(DateFormat));
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
@@ -193,7 +193,8 @@ public class LogLock : IDisposable
 
             case "RecordAccessLogs":
                 Log.Information(logContent);
-                Task.Run(() => ProcessAccessLog(logContent));
+                var capturedIp = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+                Task.Run(() => ProcessAccessLog(logContent, capturedIp));
                 break;
 
             case "SqlLog":
@@ -206,11 +207,10 @@ public class LogLock : IDisposable
         }
     }
 
-    private static void ProcessAccessLog(string logContent)
+    private static void ProcessAccessLog(string logContent, string ip)
     {
         try
         {
-            var ip = HttpContextExtension.GetUserIp(HttpUseContext.Current);
             var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
 
             if (requestInfo?.RequestData == null)
@@ -243,7 +243,7 @@ public class LogLock : IDisposable
             dbInsert.Values("IsDeleted", 0);
             dbInsert.Values("IsActive", 1);
             dbInsert.Values("UserId", requestInfo.User);
-            dbInsert.Values("IP", ip == "::1" ? "localhost" : ip);
+            dbInsert.Values("IP", ip == "::1" ? "localhost" : (ip ?? "unknown"));
             dbInsert.Values("Path", requestInfo.API);
             dbInsert.Values("Method", requestInfo.RequestMethod);
             dbInsert.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);
@@ -539,13 +539,13 @@ public class LogLock : IDisposable
         {
             var logs = GetRequestInfo(ReadType.Prefix);
             var apiWeeks = (from n in logs
-                           group n by new { n.Week, n.Url } into g
-                           select new ApiWeek
-                           {
-                               week = g.Key.Week,
-                               url = g.Key.Url,
-                               count = g.Count(),
-                           }).ToList();
+                            group n by new { n.Week, n.Url } into g
+                            select new ApiWeek
+                            {
+                                week = g.Key.Week,
+                                url = g.Key.Url,
+                                count = g.Count(),
+                            }).ToList();
 
             var weeks = apiWeeks.GroupBy(x => x.week).Select(s => s.First()).ToList();
             var isFirstWeek = true;
@@ -596,12 +596,12 @@ public class LogLock : IDisposable
         {
             var logs = GetRequestInfo(ReadType.Prefix);
             var apiDates = (from n in logs
-                           group n by n.Date into g
-                           select new ApiDate
-                           {
-                               date = g.Key,
-                               count = g.Count(),
-                           })
+                            group n by n.Date into g
+                            select new ApiDate
+                            {
+                                date = g.Key,
+                                count = g.Count(),
+                            })
                            .OrderByDescending(d => d.date)
                            .Take(MaxDateEntries)
                            .OrderBy(d => d.date)
@@ -630,13 +630,13 @@ public class LogLock : IDisposable
         {
             var logs = GetRequestInfo(ReadType.Prefix);
             var apiDates = (from n in logs
-                           where n.Datetime.ObjToDate() >= DateTime.Today
-                           group n by n.Datetime.ObjToDate().Hour into g
-                           select new ApiDate
-                           {
-                               date = g.Key.ToString("00"),
-                               count = g.Count(),
-                           })
+                            where n.Datetime.ObjToDate() >= DateTime.Today
+                            group n by n.Datetime.ObjToDate().Hour into g
+                            select new ApiDate
+                            {
+                                date = g.Key.ToString("00"),
+                                count = g.Count(),
+                            })
                            .OrderBy(d => d.date)
                            .Take(MaxHourEntries)
                            .ToList();

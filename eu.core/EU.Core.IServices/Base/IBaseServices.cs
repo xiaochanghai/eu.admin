@@ -503,6 +503,16 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     Task<TEntity> QuerySingle(Expression<Func<TEntity, bool>> whereExpression);
 
     /// <summary>
+    /// 根据条件查询多条数据（返回DTO集合）
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>实体DTO集合</returns>
+    /// <example>
+    /// var user = await QueryDto(x => x.Code == "ADMIN");
+    /// </example>
+    Task<List<TEntityDto>> QueryDto(Expression<Func<TEntity, bool>> whereExpression);
+
+    /// <summary>
     /// 三表联查
     /// </summary>
     /// <typeparam name="T">第一个表的实体类型</typeparam>
