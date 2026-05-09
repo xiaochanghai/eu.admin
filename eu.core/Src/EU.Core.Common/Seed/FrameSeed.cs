@@ -10,9 +10,9 @@ public class FrameSeed
 
     public static string path = AppDomain.CurrentDomain.BaseDirectory
         .Replace("EU.Core.Api\\bin\\Debug\\net10.0\\", null)
-        .Replace("EU.Core.Api\\bin\\Release\\net10.0\\", null) 
+        .Replace("EU.Core.Api\\bin\\Release\\net10.0\\", null)
         .Replace("Src\\EU.CodeGenerator\\bin\\Debug\\net10.0\\", null)
-        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net10.0\\", null); 
+        .Replace("Src\\EU.CodeGenerator\\bin\\Release\\net10.0\\", null);
     /// <summary>
     /// 生成Controller层
     /// </summary>
@@ -24,7 +24,7 @@ public class FrameSeed
     public static bool CreateControllers(SqlSugarScope sqlSugarClient, string ConnId = null, bool isMuti = false, string[] tableNames = null)
     {
         Create_Controller_ClassFileByDBTalbe(sqlSugarClient, ConnId, path + $@"EU.Core.Api\Controllers", "EU.Core.Api.Controllers", tableNames, "", isMuti);
-        return true; 
+        return true;
     }
 
     /// <summary>
@@ -279,13 +279,21 @@ public class FrameSeed
         //                  .ToClassStringList(strNameSpace);
 
         #region 获取表中文名
-        string sql = @"SELECT f.value TableName
+        var dbType = sqlSugarClient.CurrentConnectionConfig.DbType;
+        string tableCommentSql;
+        if (dbType == SqlSugar.DbType.MySql)
+        {
+            tableCommentSql = $"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{tableName}' AND TABLE_SCHEMA = DATABASE()";
+        }
+        else
+        {
+            tableCommentSql = $@"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
-                            WHERE d.name = '{0}'";
-        sql = string.Format(sql, tableName);
-        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
+                            WHERE d.name = '{tableName}'";
+        }
+        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql, null));
         if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = tableName;
         #endregion
 
@@ -382,7 +390,43 @@ namespace " + strNameSpace + @"
         StringBuilder build = new StringBuilder();
         var tableName = lstTableNames[0];
         var groupName = GetGroupName(tableName);
-        string sql = @"SELECT A.name AS table_name,
+
+        // 获取数据库类型
+        var dbType = sqlSugarClient.CurrentConnectionConfig.DbType;
+        string columnSql;
+        string tableCommentSql;
+        string TableCnName;
+
+        if (dbType == SqlSugar.DbType.MySql)
+        {
+            #region MySQL查询列信息
+            columnSql = @"SELECT
+                        C.TABLE_NAME AS table_name,
+                        C.COLUMN_NAME AS column_name,
+                        C.DATA_TYPE AS data_type,
+                        C.COLUMN_COMMENT AS column_description,
+                        C.NUMERIC_PRECISION,
+                        C.NUMERIC_SCALE,
+                        C.CHARACTER_MAXIMUM_LENGTH,
+                        C.COLUMN_DEFAULT,
+                        C.IS_NULLABLE
+                    FROM information_schema.COLUMNS C
+                    WHERE C.TABLE_NAME = '{0}' AND C.TABLE_SCHEMA = DATABASE()
+                    ORDER BY C.ORDINAL_POSITION";
+            columnSql = string.Format(columnSql, tableName);
+            #endregion
+
+            #region 获取表中文名
+            tableCommentSql = @"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{0}' AND TABLE_SCHEMA = DATABASE()";
+            tableCommentSql = string.Format(tableCommentSql, tableName);
+            TableCnName = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql, null));
+            if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = tableName;
+            #endregion
+        }
+        else
+        {
+            #region SQL Server查询列信息
+            columnSql = @"SELECT A.name AS table_name,
                                        B.name AS column_name,
                                        D.data_type,
                                        C.value AS column_description,
@@ -394,19 +438,22 @@ namespace " + strNameSpace + @"
                                      LEFT JOIN information_schema.columns D
                                         ON D.column_name = B.name AND D.TABLE_NAME = '{0}'
                                 WHERE A.name = '{0}' ORDER BY B.column_id ASC";
-        sql = string.Format(sql, tableName);
-        var dtColumn = sqlSugarClient.Ado.GetDataTable(sql);
+            columnSql = string.Format(columnSql, tableName);
+            #endregion
 
-        #region 获取表中文名
-        sql = @"SELECT f.value TableName
+            #region 获取表中文名
+            tableCommentSql = @"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
                             WHERE d.name = '{0}'";
-        sql = string.Format(sql, tableName);
-        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
-        if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = tableName;
-        #endregion
+            tableCommentSql = string.Format(tableCommentSql, tableName);
+            TableCnName = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql, null));
+            if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = tableName;
+            #endregion
+        }
+
+        var dtColumn = sqlSugarClient.Ado.GetDataTable(columnSql);
 
         build.Append("/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。\r\n");
         build.Append("* " + tableName + ".cs\r\n");
@@ -463,9 +510,24 @@ namespace " + strNameSpace + @"
             NUMERIC_SCALE = dtColumn.Rows[i]["NUMERIC_SCALE"].ToString();
             CHARACTER_MAXIMUM_LENGTH = dtColumn.Rows[i]["CHARACTER_MAXIMUM_LENGTH"].ToString();
             COLUMN_DEFAULT = dtColumn.Rows[i]["COLUMN_DEFAULT"].ToString();
-            IS_NULLABLE = dtColumn.Rows[i]["is_nullable"].ObjToBool();
+            // MySQL使用IS_NULLABLE (YES/NO)，SQL Server使用is_nullable (0/1)
+            var nullableValue = dbType == SqlSugar.DbType.MySql
+                ? dtColumn.Rows[i]["IS_NULLABLE"]?.ToString()
+                : dtColumn.Rows[i]["is_nullable"]?.ToString();
+            if (dbType == SqlSugar.DbType.MySql)
+                IS_NULLABLE = nullableValue == "YES";
+            else
+                IS_NULLABLE = nullableValue.ObjToBool();
             if (COLUMN_DEFAULT.IsNotEmptyOrNull())
-                COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
+            {
+                // SQL Server格式: ('value')
+                if (COLUMN_DEFAULT.StartsWith("('") && COLUMN_DEFAULT.EndsWith("')"))
+                    COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
+                // MySQL格式: 'value' 或 "value"
+                else if ((COLUMN_DEFAULT.StartsWith("'") && COLUMN_DEFAULT.EndsWith("'")) ||
+                         (COLUMN_DEFAULT.StartsWith("\"") && COLUMN_DEFAULT.EndsWith("\"")))
+                    COLUMN_DEFAULT = COLUMN_DEFAULT.Substring(1, COLUMN_DEFAULT.Length - 2);
+            }
 
             if (string.IsNullOrWhiteSpace(column_description))
                 column_description = columnCode;
@@ -478,14 +540,27 @@ namespace " + strNameSpace + @"
             build.Append("    /// " + column_description + "\r\n");
             build.Append("    /// </summary>\r\n");
             if (dataType == "decimal")
-                build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({NUMERIC_PRECISION},{NUMERIC_SCALE})\"), SugarColumn(IsNullable = true, Length = {NUMERIC_PRECISION}, DecimalDigits = {NUMERIC_SCALE})]\r\n");
-            else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
             {
+                // 处理 MySQL 中 numeric/decimal 的 precision/scale 可能为空的情况
+                var precision = string.IsNullOrWhiteSpace(NUMERIC_PRECISION) ? "18" : NUMERIC_PRECISION;
+                var scale = string.IsNullOrWhiteSpace(NUMERIC_SCALE) ? "2" : NUMERIC_SCALE;
+                build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), Column(TypeName = \"decimal({precision},{scale})\"), SugarColumn(IsNullable = true, Length = {precision}, DecimalDigits = {scale})]\r\n");
+            }
+            else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text" ||
+                     dataType == "longtext" || dataType == "mediumtext" || dataType == "tinytext" || dataType == "ntext")
+            {
+                // 处理 MySQL 文本类型没有明确长度的情况
+                var hasLength = !string.IsNullOrEmpty(CHARACTER_MAXIMUM_LENGTH) && CHARACTER_MAXIMUM_LENGTH != "0";
+                var lengthArgument = hasLength ? $", Length = {CHARACTER_MAXIMUM_LENGTH}" : string.Empty;
                 if (COLUMN_DEFAULT.IsNullOrEmpty())
-                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH})]\r\n");
+                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true{lengthArgument})]\r\n");
                 else
-                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true, Length = {CHARACTER_MAXIMUM_LENGTH}, DefaultValue = \"{COLUMN_DEFAULT}\")]\r\n");
+                    build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true{lengthArgument}, DefaultValue = \"{COLUMN_DEFAULT}\")]\r\n");
 
+                if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
+                {
+                    dataType = "uniqueidentifier";
+                }
             }
             //build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true, Length = 256)]\r\n");
             else
@@ -498,18 +573,25 @@ namespace " + strNameSpace + @"
                 case "nvarchar":
                 case "char":
                 case "text":
+                case "longtext":
+                case "mediumtext":
+                case "tinytext":
+                case "ntext":
                     {
-                        if (COLUMN_DEFAULT.IsNullOrEmpty())
-                            build.Append("    public string " + columnCode + " { get; set; }\r\n");
-                        else
-                            build.Append($"    public string " + columnCode + " { get; set; } = \"" + COLUMN_DEFAULT + "\";\r\n");
+                        if (dataType == "varchar")
+                            if (COLUMN_DEFAULT.IsNullOrEmpty())
+                                build.Append("    public string " + columnCode + " { get; set; }\r\n");
+                            else
+                                build.Append($"    public string " + columnCode + " { get; set; } = \"" + COLUMN_DEFAULT + "\";\r\n");
                         break;
                     }
                 #endregion
 
                 #region 日期
                 case "datetime":
+                case "datetime2":
                 case "date":
+                case "timestamp":
                     {
                         build.Append("    public DateTime? " + columnCode + " { get; set; }\r\n");
                         break;
@@ -518,40 +600,55 @@ namespace " + strNameSpace + @"
 
                 #region 数字
                 case "decimal":
+                case "numeric":
                     {
-
                         build.Append("    public decimal? " + columnCode + " { get; set; }\r\n");
+                        break;
                     }
-                    break;
                 case "int":
+                case "integer":
                     {
-
                         build.Append("    public int? " + columnCode + " { get; set; }\r\n");
-
+                        break;
+                    }
+                case "smallint":
+                    {
+                        build.Append("    public short? " + columnCode + " { get; set; }\r\n");
+                        break;
+                    }
+                case "tinyint":
+                case "bit":
+                    {
+                        // MySQL tinyint(1) 通常作为布尔值处理，numeric_precision=1 表示 tinyint(1)
+                        build.Append("    public bool? " + columnCode + " { get; set; }\r\n");
                         break;
                     }
                 case "uniqueidentifier":
                     {
-
                         build.Append("    public Guid? " + columnCode + " { get; set; }\r\n");
-
-                        break;
-                    }
-                case "bit":
-                    {
-
-                        build.Append("    public bool? " + columnCode + " { get; set; }\r\n");
-
                         break;
                     }
                 case "bigint":
                     {
-
                         build.Append("    public long? " + columnCode + " { get; set; }\r\n");
-
                         break;
                     }
-                    #endregion
+                case "float":
+                    {
+                        build.Append("    public float? " + columnCode + " { get; set; }\r\n");
+                        break;
+                    }
+                case "double":
+                    {
+                        build.Append("    public double? " + columnCode + " { get; set; }\r\n");
+                        break;
+                    }
+                case "real":
+                    {
+                        build.Append("    public float? " + columnCode + " { get; set; }\r\n");
+                        break;
+                    }
+                #endregion
             }
         }
         #endregion
@@ -609,7 +706,15 @@ namespace " + strNameSpace + @"
 
             COLUMN_DEFAULT = dtColumn.Rows[i]["COLUMN_DEFAULT"].ToString();
             if (COLUMN_DEFAULT.IsNotEmptyOrNull())
-                COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
+            {
+                // SQL Server格式: ('value')
+                if (COLUMN_DEFAULT.StartsWith("('") && COLUMN_DEFAULT.EndsWith("')"))
+                    COLUMN_DEFAULT = COLUMN_DEFAULT.Replace("('", null).Replace("')", null);
+                // MySQL格式: 'value' 或 "value"
+                else if ((COLUMN_DEFAULT.StartsWith("'") && COLUMN_DEFAULT.EndsWith("'")) ||
+                         (COLUMN_DEFAULT.StartsWith("\"") && COLUMN_DEFAULT.EndsWith("\"")))
+                    COLUMN_DEFAULT = COLUMN_DEFAULT.Substring(1, COLUMN_DEFAULT.Length - 2);
+            }
 
             if (string.IsNullOrWhiteSpace(column_description))
                 column_description = columnCode;
@@ -627,6 +732,13 @@ namespace " + strNameSpace + @"
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\")]\r\n");
             else
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\")]\r\n");
+
+            var hasLength = !string.IsNullOrEmpty(CHARACTER_MAXIMUM_LENGTH) && CHARACTER_MAXIMUM_LENGTH != "0";
+            if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
+            {
+                dataType = "uniqueidentifier";
+            }
+
             switch (dataType)
             {
                 #region 字符串
@@ -673,6 +785,7 @@ namespace " + strNameSpace + @"
 
                         break;
                     }
+                case "tinyint":
                 case "bit":
                     {
 
@@ -680,10 +793,15 @@ namespace " + strNameSpace + @"
 
                         break;
                     }
-                    #endregion
+                case "bigint":
+                    {
+                        build.Append("    public long? " + columnCode + " { get; set; }\r\n");
+                        break;
+                    }
+                #endregion
             }
         }
-        #endregion 
+        #endregion
 
         #endregion
 
@@ -918,14 +1036,22 @@ namespace " + strNameSpace + @"
         var groupName = GetGroupName(lstTableNames[0]);
 
         #region 获取表中文名
-        string sql = @"SELECT f.value TableName
+        var dbType0 = sqlSugarClient.CurrentConnectionConfig.DbType;
+        string tableCommentSql0;
+        if (dbType0 == SqlSugar.DbType.MySql)
+        {
+            tableCommentSql0 = $"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{lstTableNames[0]}' AND TABLE_SCHEMA = DATABASE()";
+        }
+        else
+        {
+            tableCommentSql0 = $@"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
-                            WHERE d.name = '{0}'";
-        sql = string.Format(sql, lstTableNames[0]);
-        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
-        if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = lstTableNames[0];
+                            WHERE d.name = '{lstTableNames[0]}'";
+        }
+        string TableCnName0 = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql0, null));
+        if (string.IsNullOrWhiteSpace(TableCnName0)) TableCnName0 = lstTableNames[0];
         #endregion
         var ls = IDbFirst.IsCreateDefaultValue().IsCreateAttribute()
 
@@ -935,7 +1061,7 @@ GetCopyRight(lstTableNames[0]) +
 @"namespace " + strNameSpace + @";
 
 /// <summary>
-/// " + TableCnName + @"(自定义服务接口)
+/// " + TableCnName0 + @"(自定义服务接口)
 /// </summary>	
 public interface I{ClassName}Services : IBaseServices<{ClassName}, {ClassName}Dto, Insert{ClassName}Input, Edit{ClassName}Input>" + (string.IsNullOrEmpty(strInterface) ? "" : (" , " + strInterface)) + @"
 {
@@ -989,14 +1115,22 @@ public interface I{ClassName}Services : IBaseServices<{ClassName}, {ClassName}Dt
         }
 
         #region 获取表中文名
-        string sql = @"SELECT f.value TableName
+        var dbType2 = sqlSugarClient.CurrentConnectionConfig.DbType;
+        string tableCommentSql2;
+        if (dbType2 == SqlSugar.DbType.MySql)
+        {
+            tableCommentSql2 = $"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{lstTableNames[0]}' AND TABLE_SCHEMA = DATABASE()";
+        }
+        else
+        {
+            tableCommentSql2 = $@"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
-                            WHERE d.name = '{0}'";
-        sql = string.Format(sql, lstTableNames[0]);
-        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
-        if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = lstTableNames[0];
+                            WHERE d.name = '{lstTableNames[0]}'";
+        }
+        string TableCnName2 = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql2, null));
+        if (string.IsNullOrWhiteSpace(TableCnName2)) TableCnName2 = lstTableNames[0];
         #endregion
 
         var ls = IDbFirst.IsCreateDefaultValue().IsCreateAttribute()
@@ -1010,7 +1144,7 @@ using EU.Core.Repository.Base;
 namespace " + strNameSpace + @"
 {
 	/// <summary>
-	/// " + TableCnName + @"Repository
+	/// " + TableCnName2 + @"Repository
 	/// </summary>
     public class {ClassName}Repository : BaseRepository<{ClassName}>, I{ClassName}Repository" + (string.IsNullOrEmpty(strInterface) ? "" : (" , " + strInterface)) + @"
     {
@@ -1062,14 +1196,22 @@ namespace " + strNameSpace + @"
         }
 
         #region 获取表中文名
-        string sql = @"SELECT f.value TableName
+        var dbType3 = sqlSugarClient.CurrentConnectionConfig.DbType;
+        string tableCommentSql3;
+        if (dbType3 == SqlSugar.DbType.MySql)
+        {
+            tableCommentSql3 = $"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{lstTableNames[0]}' AND TABLE_SCHEMA = DATABASE()";
+        }
+        else
+        {
+            tableCommentSql3 = $@"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
-                            WHERE d.name = '{0}'";
-        sql = string.Format(sql, lstTableNames[0]);
-        string TableCnName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
-        if (string.IsNullOrWhiteSpace(TableCnName)) TableCnName = lstTableNames[0];
+                            WHERE d.name = '{lstTableNames[0]}'";
+        }
+        string TableCnName3 = Convert.ToString(DBHelper.ExecuteScalar(tableCommentSql3, null));
+        if (string.IsNullOrWhiteSpace(TableCnName3)) TableCnName3 = lstTableNames[0];
         #endregion
         var groupName = GetGroupName(lstTableNames[0]);
 
@@ -1080,7 +1222,7 @@ GetCopyRight(lstTableNames[0]) + @"
 namespace " + strNameSpace + @";
 
 /// <summary>
-/// " + TableCnName + @" (服务)
+/// " + TableCnName3 + @" (服务)
 /// </summary>
 public class {ClassName}Services : BaseServices<{ClassName}, {ClassName}Dto, Insert{ClassName}Input, Edit{ClassName}Input>, I{ClassName}Services" + (string.IsNullOrEmpty(strInterface) ? "" : (" , " + strInterface)) + @"
 {
