@@ -1207,6 +1207,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
         else
         {
+            if (entity.IsLovCode == true)
+                entity.DataSource = column.ComboBoxDataSource;
             // 更新表格列配置
             await Db.Updateable(entity)
                 .UpdateColumns(x => new
@@ -1233,8 +1235,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.TooltipContent,
                     x.Color,
                     x.IsThemeColor,
-                    x.UpdateBy,
-                    x.UpdateTime,
+                    //x.UpdateBy,
+                    x.DataSource,
                     x.IsRedirect,
                     x.RedirectUrl
                 }, true)
@@ -1316,7 +1318,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             // 根据字段类型设置对应的数据源
             if (x.FieldType == "ComboGrid")
                 x.ComboGridDataSource = x.DataSource;
-            else if (x.FieldType == "ComboBox")
+            else if (x.FieldType == "ComboBox" || x.IsLovCode == true)
             {
                 if (x.DataSource.IsNullOrEmpty() && x.IsLovCode == true)
                     x.DataSource = x.DataIndex;

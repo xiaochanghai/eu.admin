@@ -68,12 +68,21 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
 
   const types = mode === Mode.list ? listTypes : formTypes;
 
-  /** 检查依赖项是否满足 */
+  /** 检查依赖项是否满足（AND逻辑：数组需全部满足） */
   const check = useCallback(
     (_fieldName: string, dd: deps | deps[] | undefined): boolean => {
       if (dd === undefined) return true;
       const arr = Array.isArray(dd) ? dd : [dd];
       return arr.every(a => a.value.includes(field[a.field]));
+    },
+    [field]
+  );
+
+  /** 检查依赖项是否满足（OR逻辑：满足数组中任意一项即可） */
+  const checkAnyOf = useCallback(
+    (_fieldName: string, dd: deps[] | undefined): boolean => {
+      if (dd === undefined || dd.length === 0) return true;
+      return dd.some(a => a.value.includes(field[a.field]));
     },
     [field]
   );
@@ -89,41 +98,39 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
   /** 检查字段配置是否满足显示条件 */
   const shouldShowField = useCallback(
     (fieldConf: SchemaClz[string]): boolean => {
-      const { deps: fieldDeps, mode: fieldMode } = fieldConf;
+      const { deps: fieldDeps, anyOfDeps: fieldAnyOfDeps, mode: fieldMode } = fieldConf;
 
-      // 无依赖且无模式限制
-      if (!fieldDeps && !fieldMode) return true;
-
-      // 同时满足模式和依赖
-      if (fieldMode && fieldDeps) {
-        return fieldMode === mode && check("", fieldDeps);
+      // 检查模式
+      let modeOk = true;
+      if (fieldMode) {
+        const modes = Array.isArray(fieldMode) ? fieldMode : [fieldMode];
+        modeOk = modes.includes(mode);
       }
+      // 检查 deps（AND逻辑：数组需全部满足）
+      const depsOk = !fieldDeps || check("", fieldDeps);
+      // 检查 anyOfDeps（OR逻辑：满足任意一项即可）
+      const anyOfOk = !fieldAnyOfDeps || fieldAnyOfDeps.length === 0 || checkAnyOf("", fieldAnyOfDeps);
 
-      // 仅满足模式
-      if (fieldMode && !fieldDeps) {
-        return fieldMode === mode;
-      }
-
-      // 仅满足依赖
-      if (!fieldMode && fieldDeps) {
-        return check("", fieldDeps);
-      }
-
-      return false;
+      return modeOk && depsOk && anyOfOk;
     },
-    [mode, check]
+    [mode, check, checkAnyOf]
   );
 
   /** 检查选项是否满足显示条件 */
   const shouldShowOption = useCallback(
     (item: any): boolean => {
-      if (!item.deps && !item.mode) return true;
-      if (item.deps && item.mode) return check("", item.deps) && mode === item.mode;
-      if (item.deps && !item.mode) return check("", item.deps);
-      if (!item.deps && item.mode) return mode === item.mode;
-      return false;
+      const { deps, anyOfDeps, mode: itemMode } = item;
+
+      // 检查模式
+      const modeOk = !itemMode || mode === itemMode;
+      // 检查 deps（AND逻辑）
+      const depsOk = !deps || check("", deps);
+      // 检查 anyOfDeps（OR逻辑）
+      const anyOfOk = !anyOfDeps || anyOfDeps.length === 0 || checkAnyOf("", anyOfDeps);
+
+      return modeOk && depsOk && anyOfOk;
     },
-    [mode, check]
+    [mode, check, checkAnyOf]
   );
 
   const render = useCallback(
@@ -134,7 +141,7 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
 
       switch (fieldConf.type) {
         case "select": {
-          const optionList = fieldConf.items?.filter(shouldShowOption);
+          const optionList = fieldConf.items;
           if (optionList && optionList.length > 0) {
             return (
               <Select

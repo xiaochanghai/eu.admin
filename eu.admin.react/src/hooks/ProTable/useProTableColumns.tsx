@@ -5,6 +5,7 @@ import { setModuleInfo } from "@/redux/modules/module";
 import { recordUserModuleColumn } from "@/api/modules/module";
 import { ModuleInfo } from "@/api/interface/index";
 import { ComboGrid, Icon } from "@/components";
+import { downloadFile } from "@/utils";
 
 /**
  * ProTable 列配置管理 Hook
@@ -96,6 +97,15 @@ export const useProTableColumns = (
             return <Button type="link" block onClick={() => window.$navigate(`${item.redirectUrl}/${record["ID"]}`)}>
               {record[item.dataIndex]}
             </Button>;
+          };
+
+          break;
+
+        case "fileLink":
+          columnEnhancements.render = (_: any, record: any) => {
+            return <a style={{ cursor: "pointer" }} onClick={() => downloadFile(record[item.dataIndex], record[item.dataIndex])} key="link">
+              <Icon name='LinkOutlined' /> 链接
+            </a>;
           };
 
           break;

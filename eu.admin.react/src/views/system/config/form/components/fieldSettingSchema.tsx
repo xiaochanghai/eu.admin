@@ -4,7 +4,7 @@ import { Mode } from "./dsl/base";
 //显示的依赖定义
 export type deps = {
   field: string; //依赖的属性
-  value: any[]; //依赖的值 满足其中之一即可
+  value: any[]; //依赖的值 满足其中之一即可 
 };
 export interface designProp {
   name: string; //title
@@ -15,6 +15,7 @@ export interface designProp {
   deps?: deps | deps[]; //字段显示依赖,如果是数组都需要满足
   tooltip?: string; //提示语 label
   comboGridCode?: string; //提示语 label
+  anyOfDeps?: deps[];        // 【新增】代表 OR 逻辑（满足数组中的任意一项即可）
   items?: {
     //多选时的内容
     icon?: any;
@@ -23,7 +24,8 @@ export interface designProp {
     default?: boolean; //是否默认值
     value?: any; //嵌套一个，尤它进行值得选择
     mode?: Mode;
-    deps?: deps | deps[]; // 满足得一项，或者多项都满足
+    deps?: deps | deps[]; // 满足得一项，或者多项都满足 anyOfDeps?: deps[];
+    anyOfDeps?: deps[];        // 【新增】代表 OR 逻辑（满足数组中的任意一项即可）
   }[]; //子项显示依赖
 }
 export interface SchemaClz {
@@ -237,8 +239,7 @@ export const schemaDef: SchemaClz = {
     type: "comboGrid",
     tag: "basic",
     comboGridCode: "SmLov",
-    deps: { field: "FieldType", value: ["ComboBox"] },
-    mode: Mode.form
+    anyOfDeps: [{ field: "FieldType", value: ["ComboBox"] }, { field: "IsLovCode", value: [true] }],
   },
   ComboGridDataSource: {
     name: "数据来源",
@@ -289,7 +290,8 @@ export const schemaDef: SchemaClz = {
       { value: "fontColor", label: "字体颜色" },
       { value: "color", label: "颜色选择器" },
       { value: "icon", label: "图标" },
-      { value: "link", label: "链接" }
+      { value: "link", label: "链接" },
+      { value: "fileLink", label: "文件链接" }
     ]
   },
   Width: {
@@ -297,7 +299,7 @@ export const schemaDef: SchemaClz = {
     type: "inputNumber",
     tag: "basic",
     mode: Mode.list,
-    deps: { field: "FieldType", value: ["InputNumber"] }
+    // deps: { field: "FieldType", value: ["InputNumber"] }
   },
   HideInTable: {
     name: "列表中隐藏",
