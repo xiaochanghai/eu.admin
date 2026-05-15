@@ -192,9 +192,7 @@ public class LogLock : IDisposable
                 break;
 
             case "RecordAccessLogs":
-                Log.Information(logContent);
-                var capturedIp = HttpContextExtension.GetUserIp(HttpUseContext.Current);
-                Task.Run(() => ProcessAccessLog(logContent, capturedIp));
+                Task.Run(() => ProcessAccessLog(logContent));
                 break;
 
             case "SqlLog":
@@ -202,15 +200,18 @@ public class LogLock : IDisposable
                 break;
 
             case "RequestResponseLog":
-                Log.Information(logContent);
+                var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
+                if (requestInfo.Path.IsNullOrEmpty() || (requestInfo.Path.IsNotEmptyOrNull() && !requestInfo.Path.Contains("/Upload")))
+                    Log.Information(logContent);
                 break;
         }
     }
 
-    private static void ProcessAccessLog(string logContent, string ip)
+    private static void ProcessAccessLog(string logContent)
     {
         try
         {
+            var ip = HttpContextExtension.GetUserIp(HttpUseContext.Current);
             var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
 
             if (requestInfo?.RequestData == null)
@@ -221,10 +222,14 @@ public class LogLock : IDisposable
             // 过滤特定的API
             if (requestInfo.API == "/api/Authorize/Login" ||
                 requestInfo.API.Contains("SM_SYSTEM_API_LOG_MNG") ||
+                requestInfo.API.Contains("/Upload") ||
                 requestInfo.RequestData.Contains("SM_SYSTEM_LOGIN_LOG_MNG"))
             {
                 return;
             }
+
+            Log.Information(logContent);
+
 
             if (requestInfo.Filter.IsNotEmptyOrNull())
             {
@@ -243,7 +248,7 @@ public class LogLock : IDisposable
             dbInsert.Values("IsDeleted", 0);
             dbInsert.Values("IsActive", 1);
             dbInsert.Values("UserId", requestInfo.User);
-            dbInsert.Values("IP", ip == "::1" ? "localhost" : (ip ?? "unknown"));
+            dbInsert.Values("IP", ip == "::1" ? "localhost" : ip);
             dbInsert.Values("Path", requestInfo.API);
             dbInsert.Values("Method", requestInfo.RequestMethod);
             dbInsert.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);

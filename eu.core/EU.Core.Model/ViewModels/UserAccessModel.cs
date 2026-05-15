@@ -11,4 +11,5 @@ public class UserAccessModel
     public string RequestData { get; set; }
     public string Agent { get; set; }
     public string Filter { get; set; }
+    public string Path { get; set; }
 }

@@ -35,6 +35,11 @@ public class ExceptionHandlerMiddleware
 
     private static async Task WriteExceptionAsync(HttpContext context, Exception e)
     {
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
         var message = e.Message;
         switch (e)
         {
