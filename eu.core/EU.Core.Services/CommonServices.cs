@@ -86,6 +86,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         if (keyWordCondition.IsNotEmptyOrNull())
             sqlDefaultCondition += " AND (" + keyWordCondition + ")";
 
+        if (sqlDefaultCondition.IsNotEmptyOrNull() && sqlDefaultCondition.Contains("[USER_ID]"))
+            sqlDefaultCondition = sqlDefaultCondition.Replace("[USER_ID]", userId);
+
         // 设置网格查询参数
         grid.FullSql = moduleSql.GetFullSql();
         grid.SqlSelect = sqlSelectBrwAndTable;
