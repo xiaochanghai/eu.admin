@@ -78,6 +78,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         if (tableName.IsNotEmptyOrNull())
             sqlSelectBrwAndTable = string.Format(sqlSelectBrwAndTable, tableName);
 
+        if (sqlSelectBrwAndTable.IsNotEmptyOrNull() && sqlSelectBrwAndTable.Contains("[USER_ID]"))
+            sqlSelectBrwAndTable = sqlSelectBrwAndTable.Replace("[USER_ID]", userId);
+
         // 获取默认查询条件并添加关键字搜索
         var sqlDefaultCondition = moduleSql.GetSqlDefaultCondition();
         if (keyWordCondition.IsNotEmptyOrNull())
