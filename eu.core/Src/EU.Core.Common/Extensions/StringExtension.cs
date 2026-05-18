@@ -718,7 +718,7 @@ public static class StringExtension
     /// </summary>
     /// <param name="length"></param>
     /// <returns></returns>
-    public static string GenerateRandomNumber(this int length)
+    public static string GenerateRandomNumber(int length)
     {
         System.Text.StringBuilder newRandom = new System.Text.StringBuilder(62);
         Random rd = new Random();
