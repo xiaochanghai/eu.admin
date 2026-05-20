@@ -552,15 +552,18 @@ namespace " + strNameSpace + @"
                 // 处理 MySQL 文本类型没有明确长度的情况
                 var hasLength = !string.IsNullOrEmpty(CHARACTER_MAXIMUM_LENGTH) && CHARACTER_MAXIMUM_LENGTH != "0";
                 var lengthArgument = hasLength ? $", Length = {CHARACTER_MAXIMUM_LENGTH}" : string.Empty;
+
+                if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
+                {
+                    dataType = "uniqueidentifier";
+                    lengthArgument = string.Empty;
+                }
                 if (COLUMN_DEFAULT.IsNullOrEmpty())
                     build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true{lengthArgument})]\r\n");
                 else
                     build.Append($"    [Display(Name = \"{columnCode}\"), Description(\"{column_description}\"), SugarColumn(IsNullable = true{lengthArgument}, DefaultValue = \"{COLUMN_DEFAULT}\")]\r\n");
 
-                if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
-                {
-                    dataType = "uniqueidentifier";
-                }
+
             }
             //build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), MaxLength(" + CHARACTER_MAXIMUM_LENGTH + ", ErrorMessage = \"" + column_description + " 不能超过 " + CHARACTER_MAXIMUM_LENGTH + " 个字符\"), SugarColumn(IsNullable = true, Length = 256)]\r\n");
             else
@@ -726,6 +729,13 @@ namespace " + strNameSpace + @"
             build.Append("    /// <summary>\r\n");
             build.Append("    /// " + column_description + "\r\n");
             build.Append("    /// </summary>\r\n");
+
+            var hasLength = !string.IsNullOrEmpty(CHARACTER_MAXIMUM_LENGTH) && CHARACTER_MAXIMUM_LENGTH != "0";
+            if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
+            {
+                dataType = "uniqueidentifier";
+            }
+
             if (dataType == "decimal")
                 build.Append($"    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\"), Column(TypeName = \"decimal(" + NUMERIC_PRECISION + "," + NUMERIC_SCALE + ")\")]\r\n");
             else if (dataType == "varchar" || dataType == "nvarchar" || dataType == "char" || dataType == "text")
@@ -733,11 +743,6 @@ namespace " + strNameSpace + @"
             else
                 build.Append("    [Display(Name = \"" + columnCode + "\"), Description(\"" + column_description + "\")]\r\n");
 
-            var hasLength = !string.IsNullOrEmpty(CHARACTER_MAXIMUM_LENGTH) && CHARACTER_MAXIMUM_LENGTH != "0";
-            if (hasLength && CHARACTER_MAXIMUM_LENGTH == "36")
-            {
-                dataType = "uniqueidentifier";
-            }
 
             switch (dataType)
             {
