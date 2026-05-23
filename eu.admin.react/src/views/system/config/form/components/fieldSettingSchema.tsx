@@ -284,7 +284,7 @@ export const schemaDef: SchemaClz = {
       { value: "dateWeek", label: "周" },
       { value: "dateMonth", label: "月" },
       { value: "dateQuarter", label: "季度输入" },
-      { value: "dateYear", label: "金额" },
+      { value: "dateYear", label: "年" },
       { value: "money", label: "金额" },
       { value: "switch", label: "开关" },
       { value: "fontColor", label: "字体颜色" },
