@@ -103,9 +103,10 @@ export const useProTableColumns = (
 
         case "fileLink":
           columnEnhancements.render = (_: any, record: any) => {
-            return <a style={{ cursor: "pointer" }} onClick={() => downloadFile(record[item.dataIndex], record[item.dataIndex])} key="link">
-              <Icon name='LinkOutlined' /> 链接
-            </a>;
+            if (record[item.dataIndex])
+              return <a style={{ cursor: "pointer" }} onClick={() => downloadFile(record[item.dataIndex], record[item.dataIndex])} key="link">
+                <Icon name='LinkOutlined' /> 链接
+              </a>;
           };
 
           break;
