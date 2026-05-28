@@ -194,7 +194,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// 3. 执行唯一性校验
     /// 4. 更新到数据库
     /// </remarks>
-    public async Task<bool> Update(Guid Id, TEditDto editModel)
+    public virtual async Task<bool> Update(Guid Id, TEditDto editModel)
     {
         // 验证参数有效性和数据存在性
         if (editModel == null || !await AnyAsync(Id))
@@ -214,6 +214,41 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         await CheckOnly(entity, Id);
 
         return await BaseDal.Update(entity);
+    }
+    /// <summary>
+    /// 更新数据（使用DTO）
+    /// </summary>
+    /// <param name="Id">要更新的数据主键ID</param>
+    /// <param name="editModel">编辑DTO对象</param>
+    /// <param name="lstColumns">要更新的列名集合（为空则更新所有列）</param>
+    /// <param name="lstIgnoreColumns">要忽略的列名集合</param>
+    /// <returns>更新成功返回true，否则返回false</returns>
+    /// <remarks>
+    /// 1. 先查询原有数据
+    /// 2. 将DTO的属性值复制到实体
+    /// 3. 执行唯一性校验
+    /// 4. 更新到数据库
+    /// </remarks>
+    public virtual async Task<bool> Update(Guid Id, TEditDto editModel, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)
+    {
+        // 验证参数有效性和数据存在性
+        if (editModel == null || !await AnyAsync(Id))
+            return false;
+
+        // 查询原有实体数据
+        var entity = await Query(Id);
+
+        // 将DTO属性值复制到实体
+        ConvertTEditDto2TEntity(editModel, entity);
+
+        // 设置主键ID
+        if (entity is RootEntityTkey<Guid> rootEntity1)
+            rootEntity1.ID = Id;
+
+        // 校验唯一性字段
+        await CheckOnly(entity, Id);
+
+        return await BaseDal.Update(entity, lstColumns, lstIgnoreColumns, where);
     }
 
     /// <summary>
@@ -253,6 +288,46 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         columns = lstColumns?.Any() == true ? lstColumns : columns;
 
         var result = await Update(model, columns, null);
+
+
+        //#region 回写修改次数
+        //string sql = $"UPDATE {entityType.GetEntityTableName()} SET ModificationNum = isnull (ModificationNum, 0) + 1, Tag = 1 where ID='{Id}'";
+        //await Db.Ado.ExecuteCommandAsync(sql);
+        //#endregion
+
+        return result;
+    }
+
+    /// <summary>
+    /// 更新数据（使用动态对象，可指定更新列）
+    /// </summary>
+    /// <param name="Id">主键ID</param>
+    /// <param name="entity">动态对象</param>
+    /// <param name="lstColumns">要更新的列名集合（为空则更新所有列）</param>
+    /// <param name="lstIgnoreColumns">要忽略的列名集合</param>
+    /// <returns>更新成功返回true</returns>
+    /// <remarks>
+    /// 1. 将动态对象转换为实体
+    /// 2. 校验唯一性字段
+    /// 3. 只更新指定的列（如果lstColumns为空则更新除ID外的所有列）
+    /// </remarks>
+    public virtual async Task<bool> Update(Guid Id, object entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null)
+    {
+        var model = ConvertToEntity(entity);
+
+        // 校验唯一性
+        await CheckOnly(model, Id);
+
+        // 设置主键ID
+        if (model is RootEntityTkey<Guid> rootEntity1)
+            rootEntity1.ID = Id;
+
+        // 提取要更新的列名（排除ID字段）
+        var dic = ConvertToDic(entity);
+        var columns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
+        columns = lstColumns?.Any() == true ? lstColumns : columns;
+
+        var result = await Update(model, columns, lstIgnoreColumns);
 
 
         //#region 回写修改次数
@@ -1099,17 +1174,17 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
                                 }
                             }
                         #endregion
-
-                        #region 判断唯一性
-                        var uniques = moduleColumns.Where(x => x.HideInForm == false && x.IsUnique == true).ToList();
-                        if (uniques.Any())
-                            for (int i = 0; i < uniques.Count; i++)
-                            {
-                                var value = entity.GetPropertyValue(uniques[i].DataIndex);
-                                CheckCodeExist(tableName, uniques[i].DataIndex, value, id != null ? ModifyType.Edit : ModifyType.Add, uniques[i].Title, id);
-                            }
-                        #endregion
                     }
+
+                    #region 判断唯一性
+                    var uniques = moduleColumns.Where(x => x.HideInForm == false && x.IsUnique == true).ToList();
+                    if (uniques.Any())
+                        for (int i = 0; i < uniques.Count; i++)
+                        {
+                            var value = entity.GetPropertyValue(uniques[i].DataIndex);
+                            CheckCodeExist(tableName, uniques[i].DataIndex, value, id != null ? ModifyType.Edit : ModifyType.Add, uniques[i].Title, id);
+                        }
+                    #endregion
                 }
             }
         }

@@ -34,7 +34,7 @@ public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEdit
     /// </summary>
     /// <param name="filter">条件</param>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet("QueryByFilter")]
     public virtual async Task<ServicePageResult<TEntityDto>> QueryByFilter([FromFilter] QueryFilter filter)
     {
         var data = (await InvokeServiceAsync("QueryFilterPage", [filter])) as ServicePageResult<TEntityDto>;

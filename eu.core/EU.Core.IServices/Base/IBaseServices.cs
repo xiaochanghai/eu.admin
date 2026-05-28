@@ -250,6 +250,22 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     Task<bool> Update(Guid Id, TEditDto model);
 
     /// <summary>
+    /// 更新数据（使用DTO）
+    /// </summary>
+    /// <param name="Id">要更新的数据主键ID</param>
+    /// <param name="editModel">编辑DTO对象</param>
+    /// <param name="lstColumns">要更新的列名集合（为空则更新所有列）</param>
+    /// <param name="lstIgnoreColumns">要忽略的列名集合</param>
+    /// <returns>更新成功返回true，否则返回false</returns>
+    /// <remarks>
+    /// 1. 先查询原有数据
+    /// 2. 将DTO的属性值复制到实体
+    /// 3. 执行唯一性校验
+    /// 4. 更新到数据库
+    /// </remarks>
+    Task<bool> Update(Guid Id, TEditDto editModel, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null);
+
+    /// <summary>
     /// 更新数据（使用动态对象，不指定列）
     /// </summary>
     /// <param name="Id">主键ID</param>
@@ -270,6 +286,21 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     /// 3. 只更新指定的列（如果lstColumns为空则更新除ID外的所有列）
     /// </remarks>
     Task<bool> Update(Guid Id, object entity, List<string> lstColumns);
+
+    /// <summary>
+    /// 更新数据（使用动态对象，可指定更新列）
+    /// </summary>
+    /// <param name="Id">主键ID</param>
+    /// <param name="entity">动态对象</param>
+    /// <param name="lstColumns">要更新的列名集合（为空则更新所有列）</param>
+    /// <param name="lstIgnoreColumns">要忽略的列名集合</param>
+    /// <returns>更新成功返回true</returns>
+    /// <remarks>
+    /// 1. 将动态对象转换为实体
+    /// 2. 校验唯一性字段
+    /// 3. 只更新指定的列（如果lstColumns为空则更新除ID外的所有列）
+    /// </remarks>
+    Task<bool> Update(Guid Id, object entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null);
 
     /// <summary>
     /// 更新数据并返回DTO
