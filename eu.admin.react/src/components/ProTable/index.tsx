@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from "react";
 import { ProTable } from "@ant-design/pro-components";
-import { Button, Dropdown, Modal } from "antd";
+import { Button, Dropdown, Modal, Flex } from "antd";
 import type { MenuProps } from "antd";
 import { ActionType } from "@/typings";
 import { pagination } from "@/config/proTable";
@@ -215,6 +215,41 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
       })
       .filter(Boolean);
   };
+  /**
+   * 获取 beforeActions 操作按钮（不含已内置的 Update/View/Delete）
+   */
+  const getBeforeActionActions = (record: any, action: any) => {
+    return beforeActions
+      ?.map((item: ModuleInfoBeforeAction) => {
+        const { id } = item;
+
+        // Update/View/Delete 已在上方单独渲染，此处跳过
+        if (id === "View" || id === "Update" || id === "Delete") {
+          return null;
+        }
+
+        // 处理自定义操作
+        const customAction = moduleInfo.actionData?.find((data: any) => data.ID === id);
+        if (customAction && restProps[customAction.FunctionCode]) {
+          const handler = restProps[customAction.FunctionCode];
+          return (
+            <Button
+              key={`${customAction.FunctionCode}${record.ID}`}
+              type="text"
+              size="small"
+              icon={customAction.Icon ? <Icon name={customAction.Icon} /> : null}
+              onClick={() => handler(record.ID, action, record)}
+              style={{ color: customAction.Color ?? "inherit" }}
+            >
+              {customAction.FunctionName}
+            </Button>
+          );
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  };
 
   /**
    * 构建操作列
@@ -222,54 +257,57 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
   const actionColumn: any =
     moduleInfo?.Success === true && moduleInfo.actionCount > 0
       ? {
-          title: "操作",
-          dataIndex: "option",
-          fixed: "left",
-          valueType: "option",
-          width: 100,
-          align: "center",
-          render: (_: any, record: { ID: string }, index: number, action: any) => (
-            <>
-              {record.ID !== SUM_ROW_ID && (
-                <>
-                  {optionAuthButton.Update && !IsView && (
-                    <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
-                  )}
-                  {optionAuthButton.View && (
+        title: "操作",
+        dataIndex: "option",
+        fixed: "left",
+        valueType: "option",
+        width: 100,
+        align: "center",
+        render: (_: any, record: { ID: string }, index: number, action: any) => (
+          <>
+            {record.ID !== SUM_ROW_ID && (
+              <>
+                {optionAuthButton.Update && !IsView && (
+                  <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
+                )}
+                {optionAuthButton.View && (
+                  <Button
+                    type="dashed"
+                    key={"View" + index}
+                    size="small"
+                    icon={<Icon name="EyeOutlined" />}
+                    onClick={() => onOptionView(record)}
+                    style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                  />
+                )}
+                {optionAuthButton.Delete && !IsView && (
+                  <Button
+                    key={"Delete" + index}
+                    type="dashed"
+                    size="small"
+                    icon={<Icon name="DeleteOutlined" />}
+                    onClick={() => onOptionDelete(action, record)}
+                    style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                  />
+                )}
+                <Flex gap="small" wrap>
+                  {getBeforeActionActions(record, action)}
+                </Flex>
+                {dropActions && dropActions.length > 0 && (
+                  <Dropdown placement="bottom" arrow menu={{ items: getDropActions(record, action) }}>
                     <Button
                       type="dashed"
-                      key={"View" + index}
                       size="small"
-                      icon={<Icon name="EyeOutlined" />}
-                      onClick={() => onOptionView(record)}
+                      icon={<Icon name="MoreOutlined" />}
                       style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
                     />
-                  )}
-                  {optionAuthButton.Delete && !IsView && (
-                    <Button
-                      key={"Delete" + index}
-                      type="dashed"
-                      size="small"
-                      icon={<Icon name="DeleteOutlined" />}
-                      onClick={() => onOptionDelete(action, record)}
-                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                    />
-                  )}
-                  {dropActions && dropActions.length > 0 && (
-                    <Dropdown placement="bottom" arrow menu={{ items: getDropActions(record, action) }}>
-                      <Button
-                        type="dashed"
-                        size="small"
-                        icon={<Icon name="MoreOutlined" />}
-                        style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                      />
-                    </Dropdown>
-                  )}
-                </>
-              )}
-            </>
-          )
-        }
+                  </Dropdown>
+                )}
+              </>
+            )}
+          </>
+        )
+      }
       : [];
 
   /**
