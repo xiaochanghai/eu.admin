@@ -1,6 +1,4 @@
-﻿using EU.Core.Common.Enums;
-using EU.Core.Common.Extensions;
-using EU.Core.Model;
+﻿using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using NPOI.HPSF;
@@ -12,7 +10,6 @@ using SqlSugar;
 using System.Collections;
 using System.Data;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace EU.Core.Common.Helper;
 
@@ -320,6 +317,49 @@ public class NPOIHelper
         }
         return dt;
 
+    }
+    #endregion
+
+    #region DataTable 导出为 SQLite
+    /// <summary>
+    /// 将 DataTable 导出为 SQLite 数据库文件
+    /// </summary>
+    /// <param name="dt">数据表</param>
+    /// <param name="sqliteDir">SQLite 目录路径</param>
+    /// <param name="sqliteFileName">SQLite 文件名（如 Barcode.db）</param>
+    /// <param name="tableName">表名</param>
+    /// <returns>写入的行数</returns>
+    public static int DataTableToSqlite(DataTable dt, string sqliteDir, string sqliteFileName, string tableName)
+    {
+        if (dt.Columns.Count == 0)
+            throw new Exception("数据表为空或无有效列");
+
+        // 确保目录存在
+        if (!string.IsNullOrEmpty(sqliteDir) && !Directory.Exists(sqliteDir))
+            Directory.CreateDirectory(sqliteDir);
+
+        string sqliteFilePath = Path.Combine(sqliteDir, sqliteFileName);
+
+        // 如果数据库已存在则删除，重新生成
+        if (File.Exists(sqliteFilePath))
+            File.Delete(sqliteFilePath);
+
+        var db = new SqlSugarClient(new ConnectionConfig()
+        {
+            DbType = SqlSugar.DbType.Sqlite,
+            ConnectionString = $"DataSource={sqliteFilePath}",
+            IsAutoCloseConnection = true
+        });
+
+        // 根据列头创建表
+        var columns = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToList();
+        var createTableSql = $"CREATE TABLE [{tableName}] ({string.Join(", ", columns.Select(c => $"[{c}] TEXT"))})";
+        db.Ado.ExecuteCommand(createTableSql);
+
+        // 批量插入
+        db.Fastest<DataTable>().AS(tableName).BulkCopy(dt);
+
+        return dt.Rows.Count;
     }
     #endregion
 
@@ -722,6 +762,39 @@ public class NPOIHelper
         }
     }
 
+
+    #region DataTable 转换为 JSON 对象列表
+    /// <summary>
+    /// 将 DataTable 转换为 JSON 对象列表（每行一个字典，跳过空值，自动识别数字类型）
+    /// </summary>
+    public static List<Dictionary<string, object>> DataTableToJsonList(DataTable dt)
+    {
+        var list = new List<Dictionary<string, object>>();
+        foreach (DataRow row in dt.Rows)
+        {
+            var item = new Dictionary<string, object>();
+            foreach (DataColumn col in dt.Columns)
+            {
+                if (row[col] != DBNull.Value)
+                {
+                    var val = row[col];
+                    if (val is string str)
+                    {
+                        if (string.IsNullOrWhiteSpace(str))
+                            continue;
+                        if (int.TryParse(str, out int intVal))
+                            val = intVal;
+                        else if (double.TryParse(str, out double doubleVal))
+                            val = doubleVal;
+                    }
+                    item[col.ColumnName] = val;
+                }
+            }
+            list.Add(item);
+        }
+        return list;
+    }
+    #endregion
 
     #region 导出到Excel模板文件
     /// <summary>
