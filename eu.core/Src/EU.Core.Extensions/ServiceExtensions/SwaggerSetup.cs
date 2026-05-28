@@ -13,7 +13,7 @@ namespace EU.Core.Extensions;
 /// </summary>
 public static class SwaggerSetup
 {
-    public static void AddSwaggerSetup(this IServiceCollection services)
+    public static void AddSwaggerSetup(this IServiceCollection services, string[] files)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -38,8 +38,14 @@ public static class SwaggerSetup
             try
             {
 
-                c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.xml"), true);
-                c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.Model.xml"), true);
+                foreach (string file in files)
+                {
+                    c.IncludeXmlComments(Path.Combine(basePath, file), true);
+
+                }
+                //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.xml"), true);
+                //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.Model.xml"), true);
+                //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.EFS.Api.xml"), true);
             }
             catch (Exception ex)
             {
@@ -409,12 +415,12 @@ public static class SwaggerSetup
         /// <summary>
         /// 微信
         /// </summary>
-        public const string GroupName_WX = "wechat";
+        public const string GroupName_WX = " wechat";
 
         /// <summary>
         /// 电商
         /// </summary>
-        public const string GroupName_EC = "ec";
+        public const string GroupName_EC = " ec";
     }
 }
 

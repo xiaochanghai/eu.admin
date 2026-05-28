@@ -74,7 +74,7 @@ builder.Host.AddSerilogSetup();
 //builder.Services.AddAutoMapperSetup();
 builder.Services.AddCorsSetup();
 builder.Services.AddMiniProfilerSetup();
-builder.Services.AddSwaggerSetup();
+builder.Services.AddSwaggerSetup(["EU.Core.xml", "EU.Core.Model.xml"]);
 builder.Services.AddJobSetup();
 
 builder.Services.AddHttpContextSetup();
