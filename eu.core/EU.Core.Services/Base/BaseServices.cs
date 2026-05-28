@@ -310,6 +310,9 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// 1. 将动态对象转换为实体
     /// 2. 校验唯一性字段
     /// 3. 只更新指定的列（如果lstColumns为空则更新除ID外的所有列）
+    /// 4.lstColumns和lstIgnoreColumns不能同时使用
+    /// - 指定lstColumns：只更新这些列
+    /// - 指定lstIgnoreColumns：更新除这些列外的所有列
     /// </remarks>
     public virtual async Task<bool> Update(Guid Id, object entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null)
     {

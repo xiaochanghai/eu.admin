@@ -29,6 +29,16 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     Task<bool> AnyAsync(object objId);
 
     /// <summary>
+    /// 根据条件表达式检查数据是否存在
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>存在返回true，否则返回false</returns>
+    /// <example>
+    /// bool exists = await AnyAsync(x => x.Code == "USER001" && x.IsDeleted == false);
+    /// </example>
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression);
+
+    /// <summary>
     /// 根据主键ID查询单条数据（返回DTO）
     /// </summary>
     /// <param name="objId">主键ID</param>
@@ -299,6 +309,9 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     /// 1. 将动态对象转换为实体
     /// 2. 校验唯一性字段
     /// 3. 只更新指定的列（如果lstColumns为空则更新除ID外的所有列）
+    /// 4.lstColumns和lstIgnoreColumns不能同时使用
+    /// - 指定lstColumns：只更新这些列
+    /// - 指定lstIgnoreColumns：更新除这些列外的所有列
     /// </remarks>
     Task<bool> Update(Guid Id, object entity, List<string> lstColumns = null, List<string> lstIgnoreColumns = null);
 
