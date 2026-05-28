@@ -234,7 +234,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         try
         {
             var hashedPassword = HashPassword(request.PassWord);
-            var user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == request.UserAccount && x.PassWord == hashedPassword);
+            var user = await QuerySingle(x => x.UserAccount == request.UserAccount && x.PassWord == hashedPassword);
 
             if (user == null)
                 return ServiceResult<LoginReturn>.OprateFailed(ResponseText.LOGIN_USER_PWD_FAIL);
@@ -416,7 +416,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         try
         {
-            var user = await QuerySingle(x => x.IsDeleted == false && x.UserAccount == SYSTEM_ADMIN_ACCOUNT);
+            var user = await QuerySingle(x => x.UserAccount == SYSTEM_ADMIN_ACCOUNT);
 
             if (user == null)
                 return ServiceResult<LoginReturn>.OprateFailed($"系统账号 {SYSTEM_ADMIN_ACCOUNT} 不存在");
