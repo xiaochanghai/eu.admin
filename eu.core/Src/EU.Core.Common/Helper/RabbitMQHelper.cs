@@ -1,10 +1,11 @@
-using System.Collections.Concurrent;
-using System.Text;
+using EU.Core.Common.Const;
+using EU.Core.Common.LogHelper;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using EU.Core.Common.Const;
-using EU.Core.Common.LogHelper;
+using System.Collections.Concurrent;
+using System.Net.Sockets;
+using System.Text;
 
 namespace EU.Core.Common.Helper;
 
@@ -257,6 +258,99 @@ public class RabbitMQHelper
         return consumer.ConsumeMsgAsync(queueName, cancellationToken);
     }
 
+    #endregion
+
+    #region MyRegion
+    /// <summary>
+    /// 检查 RabbitMQ 服务是否可用
+    /// 先判断是否启用，再通过 TCP 端口探测验证服务连通性
+    /// </summary>
+    public static void CheckRabbitMQServiceAvailable()
+    {
+        var rabbitEnabled = AppSettings.app(["RabbitMQ", "Enabled"]).ObjToBool();
+        if (!rabbitEnabled)
+        {
+            Logger.WriteLog("[RabbitMQ] 未启用，跳过检查");
+            return;
+        }
+
+        var hostName = AppSettings.app(["RabbitMQ", "Connection"]);
+        var port = AppSettings.app(["RabbitMQ", "Port"]).ObjToInt(5672);
+
+        if (string.IsNullOrWhiteSpace(hostName))
+        {
+            Logger.WriteLog("[RabbitMQ] 未配置 Connection 地址");
+            return;
+        }
+
+        Logger.WriteLog($"[RabbitMQ] 开始检测服务连通性: {hostName}:{port}");
+
+        while (true)
+        {
+            if (IsRabbitMQAvailable(hostName, port))
+            {
+                Logger.WriteLog($"[RabbitMQ] 服务状态正常 ({hostName}:{port})");
+                break;
+            }
+            else
+            {
+                Logger.WriteLog($"[RabbitMQ] 服务状态异常 ({hostName}:{port}), 等待 5 秒后重试");
+                Thread.Sleep(5000);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 通过 TCP 端口探测 + 短暂连接尝试判断 RabbitMQ 是否可用
+    /// </summary>
+    private static bool IsRabbitMQAvailable(string hostName, int port)
+    {
+        try
+        {
+            // 先探测端口是否开放
+            using var tcpClient = new TcpClient();
+            var connectResult = tcpClient.BeginConnect(hostName, port, null, null);
+            var success = connectResult.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(3));
+            if (!success)
+            {
+                tcpClient.Close();
+                return false;
+            }
+            tcpClient.EndConnect(connectResult);
+
+            // 端口开放，尝试建立短暂连接确认服务正常
+            var factory = new ConnectionFactory
+            {
+                HostName = hostName,
+                Port = port,
+                RequestedConnectionTimeout = TimeSpan.FromSeconds(3),
+                SocketReadTimeout = TimeSpan.FromSeconds(3),
+                SocketWriteTimeout = TimeSpan.FromSeconds(3),
+                AutomaticRecoveryEnabled = false,
+                TopologyRecoveryEnabled = false
+            };
+
+            var connStr = AppSettings.app(["RabbitMQ", "UserName"]);
+            var pwdStr = AppSettings.app(["RabbitMQ", "Password"]);
+            if (!string.IsNullOrEmpty(connStr))
+                factory.UserName = connStr;
+            if (!string.IsNullOrEmpty(pwdStr))
+                factory.Password = pwdStr;
+
+            var connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+            if (connection.IsOpen)
+            {
+                var channel = connection.CreateChannelAsync(null, CancellationToken.None).GetAwaiter().GetResult();
+                connection.CloseAsync(0, "", TimeSpan.Zero, false, CancellationToken.None).GetAwaiter().GetResult();
+                return true;
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
     #endregion
 }
 

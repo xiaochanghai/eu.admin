@@ -6,7 +6,6 @@ using EU.Core.Jobs;
 using EU.Core.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MQTTnet.Server;
 
 class Program
 {
@@ -17,6 +16,9 @@ class Program
         Helper.Init(services);
 
         DBHelper.CheckServiceAvailable();
+
+        // 检查 RabbitMQ
+        RabbitMQHelper.CheckRabbitMQServiceAvailable();
         DBHelper.Init();
 
         var sp = services.BuildServiceProvider();

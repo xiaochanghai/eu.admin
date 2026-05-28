@@ -20,6 +20,8 @@ public static class ServiceExtensions
         //    });
         //}
         DBHelper.CheckServiceAvailable();
+        // 检查 RabbitMQ
+        RabbitMQHelper.CheckRabbitMQServiceAvailable();
 
 
     }
