@@ -59,7 +59,7 @@ public static class AuthorizationSetup
             Issuer,//发行人
             Audience,//听众
             signingCredentials,//签名凭据
-            expiration: TimeSpan.FromSeconds(240 * 60)//接口的过期时间
+            expiration: TimeSpan.FromDays(7)//接口的过期时间
             );
         #endregion
         // 3、自定义复杂的策略授权
