@@ -68,7 +68,8 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
     moduleCode,
     moduleInfo,
     masterId,
-    customConditions
+    customConditions,
+    formRef
   );
 
   // 列配置增强
@@ -391,6 +392,7 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
         }}
         onReset={handleReset}
         actionRef={actionRef}
+        formRef={formRef}
         scroll={{
           scrollToFirstRowOnChange: TABLE_SCROLL_CONFIG.scrollToFirstRowOnChange,
           x: calculateScrollWidth(finalColumns.length),

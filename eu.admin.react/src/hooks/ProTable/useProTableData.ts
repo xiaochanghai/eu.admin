@@ -3,6 +3,23 @@ import { setTableParam, setSearchVisible } from "@/redux/modules/module";
 import { queryByFilter } from "@/api/modules/module";
 import { ModuleInfo } from "@/api/interface/index";
 
+type FormRefLike = {
+  current?: {
+    getFieldsValue?: (...args: any[]) => Record<string, any>;
+    isFieldsTouched?: (...args: any[]) => boolean;
+  } | null;
+};
+
+const getSearchParamKeys = (moduleInfo: ModuleInfo) => {
+  return (moduleInfo.columns ?? [])
+    .filter((column: any) => !column.hideInSearch)
+    .map((column: any) => column.dataIndex)
+    .filter((dataIndex: any) => dataIndex !== undefined && dataIndex !== null)
+    .map((dataIndex: any) => (Array.isArray(dataIndex) ? dataIndex.join(".") : String(dataIndex)));
+};
+
+const isEmptySearchValue = (value: any) => value === undefined || value === null || value === "";
+
 /**
  * ProTable 数据管理 Hook
  * 负责数据请求、分页、排序、筛选和状态管理
@@ -12,7 +29,13 @@ import { ModuleInfo } from "@/api/interface/index";
  * @param masterId 主表ID（用于明细表过滤）
  * @returns 数据请求相关的状态和函数
  */
-export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, masterId?: string | null, customConditions?: string) => {
+export const useProTableData = (
+  moduleCode: string,
+  moduleInfo: ModuleInfo,
+  masterId?: string | null,
+  customConditions?: string,
+  formRef?: FormRefLike
+) => {
   const dispatch = useDispatch();
   const searchVisibles = useSelector((state: RootState) => state.module.searchVisibles);
   const tableParams = useSelector((state: RootState) => state.module.tableParams);
@@ -24,12 +47,30 @@ export const useProTableData = (moduleCode: string, moduleInfo: ModuleInfo, mast
    * 处理表格数据请求
    */
   const handleRequest = async (params: any, sorter: any, _filterCondition: any) => {
+    const form = formRef?.current;
+    const formValues = form?.getFieldsValue?.(true);
+    const hasUserChangedSearchForm = form?.isFieldsTouched?.() ?? true;
     // 合并表格参数
     if (tableParam?.params && !params._timestamp) {
-      params = { ...tableParam.params, ...params };
+      if (formValues && hasUserChangedSearchForm) {
+        const nextParams = { ...tableParam.params };
+        getSearchParamKeys(moduleInfo).forEach(key => delete nextParams[key]);
+        params = { ...nextParams, ...params, ...formValues };
+      } else {
+        params = { ...tableParam.params, ...params };
+      }
     }
     if (tableParam?.sorter) {
       sorter = { ...tableParam.sorter, ...sorter };
+    }
+
+    if (formValues && hasUserChangedSearchForm) {
+      params = { ...params, ...formValues };
+      Object.entries(formValues).forEach(([key, value]) => {
+        if (isEmptySearchValue(value)) {
+          delete params[key];
+        }
+      });
     }
 
     // 构建基础过滤条件
