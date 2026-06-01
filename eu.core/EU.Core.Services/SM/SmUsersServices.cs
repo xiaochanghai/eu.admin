@@ -62,6 +62,23 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
         _redis = new RedisCacheService(_connection, _configuration, 4);
     }
 
+    #region 新增
+    public override async Task<Guid> Add(object entity)
+    {
+        var model = ConvertToEntity(entity);
+
+        var dic = ConvertToDic(entity);
+        var lstColumns = dic.Keys.Where(x => x != "ID" && x != "Id").ToList();
+
+        #region 检查是否存在相同值
+        await CheckOnly(model);
+        #endregion
+
+        model.PassWord = HashPassword(model.PassWord);
+        return await BaseDal.Add(model, lstColumns);
+    }
+    #endregion
+
     #region 上传头像
     /// <summary>
     /// 上传头像
@@ -383,7 +400,7 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
                   .SetColumns(it => it.PassWord == passWord)
                   .Where(it => it.ID == id)
                   .ExecuteCommandAsync();
-             
+
             return Success(ResponseText.UPDATE_SUCCESS);
         }
         catch (Exception ex)

@@ -5237,6 +5237,11 @@
             跳转URL
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.ModifyHide">
+            <summary>
+            修改时隐藏
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -12127,6 +12132,11 @@
             跳转URL
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.ModifyHide">
+            <summary>
+            修改时隐藏
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmModules">
             <summary>
             系统模板 (Model)
@@ -15053,6 +15063,11 @@
         <member name="P:EU.Core.Model.SmModuleForm.CreateHide">
             <summary>
             新增时隐藏
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.ModifyHide">
+            <summary>
+            修改时隐藏
             </summary>
         </member>
         <member name="P:EU.Core.Model.SmModuleForm.ModifyDisabled">
