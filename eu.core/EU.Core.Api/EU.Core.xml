@@ -1827,6 +1827,14 @@
             <param name="file">文件</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmUserController.ResetPassword(System.Guid,EU.Core.Model.Insert.InsertSmUsersInput)">
+            <summary>
+            重置指定用户密码
+            </summary>
+            <param name="id">用户ID</param>
+            <param name="input">密码信息</param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmWorkFlowController">
             <summary>
             工作流(Controller)

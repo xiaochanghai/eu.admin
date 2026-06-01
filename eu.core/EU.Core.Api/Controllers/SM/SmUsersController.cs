@@ -37,4 +37,16 @@ public class SmUserController : BaseController<ISmUsersServices, SmUsers, SmUser
     [HttpPost("UploadAvatar")]
     public async Task<ServiceResult<Guid>> UploadAvatarAsync(IFormFile file) => await _service.UploadAvatarAsync(file);
     #endregion
+
+    #region 重置密码
+    /// <summary>
+    /// 重置指定用户密码
+    /// </summary>
+    /// <param name="id">用户ID</param>
+    /// <param name="input">密码信息</param>
+    /// <returns></returns>
+    [HttpPut("ResetPassword/{id}")]
+    public async Task<ServiceResult> ResetPassword(Guid id, [FromBody] InsertSmUsersInput input)
+        => await _service.ResetPasswordAsync(id, input.PassWord);
+    #endregion
 }

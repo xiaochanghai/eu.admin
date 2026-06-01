@@ -16,7 +16,8 @@ const MODULE_CODES = {
   TABLE_CATALOG: "SM_TABLE_CATALOG_MNG",
   JOB: "SM_JOB_MNG",
   MODULE: "SM_MODULE_MNG",
-  ROLE: "SM_ROLE_MNG"
+  ROLE: "SM_ROLE_MNG",
+  USER: "SM_USER_MNG"
 } as const;
 
 /**
@@ -53,6 +54,7 @@ export interface ExtendPageRef {
   ModifyJobCron: (value: string, action: ActionRef) => void;
   SysModuleCopy: (value: string, action: ActionRef) => void;
   SysRolePermissionSet: (value: string, action: ActionRef, record: RoleRecord) => void;
+  UserPasswordReset: (value: string, action: ActionRef, record: RoleRecord) => void;
 }
 
 /**
@@ -218,11 +220,38 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
     });
   }, [id, form, closeCronModal]);
 
+  const handleUserPasswordReset = useCallback(() => {
+    form.validateFields().then(async values => {
+      message.loading("数据处理中...", 0);
+      const { Success, Message } = await http.put<any>(`/api/SmUser/ResetPassword/${id}`, {
+        PassWord: values.PassWord
+      });
+      message.destroy();
+
+      if (Success) {
+        closeCronModal();
+        message.success(Message);
+        actionRef.current.reload?.();
+      }
+    });
+  }, [id, form, closeCronModal]);
+
   /**
    * 用户角色功能
    */
   // 设置角色权限
   const SysRolePermissionSet = useCallback((value: string, action: ActionRef, roleRecord: RoleRecord) => {
+    actionRef.current = action;
+    setId(value);
+    setIsCronModalVisible(true);
+    setRecord(roleRecord);
+  }, []);
+
+  /**
+ * 用户管理功能
+ */
+  // 重置密码
+  const UserPasswordReset = useCallback((value: string, action: ActionRef, roleRecord: RoleRecord) => {
     actionRef.current = action;
     setId(value);
     setIsCronModalVisible(true);
@@ -240,7 +269,8 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
       jobExecute,
       ModifyJobCron,
       SysModuleCopy,
-      SysRolePermissionSet
+      SysRolePermissionSet,
+      UserPasswordReset
     }),
     [
       onSaveAdd,
@@ -250,7 +280,8 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
       jobExecute,
       ModifyJobCron,
       SysModuleCopy,
-      SysRolePermissionSet
+      SysRolePermissionSet,
+      UserPasswordReset
     ]
   );
 
@@ -360,6 +391,48 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         >
           <PermissionSet id={id} />
         </Drawer>
+      )}
+
+      {moduleCode === MODULE_CODES.USER && (
+        <Modal
+          destroyOnHidden
+          title={`${record.UserName} - 重置密码`}
+          open={isCronModalVisible}
+          onOk={handleUserPasswordReset}
+          onCancel={closeCronModal}
+        >
+          <Form {...FORM_LAYOUT} form={form}>
+            <Row gutter={24} justify="center">
+              <Col span={24}>
+                <FormItem name="PassWord" label="新密码" rules={[{ required: true, message: "请输入新密码" }]}>
+                  <Input.Password placeholder="请输入新密码" />
+                </FormItem>
+              </Col>
+            </Row>
+            <Row gutter={24} justify="center">
+              <Col span={24}>
+                <FormItem
+                  name="ConfirmPassWord"
+                  label="确认密码"
+                  dependencies={["PassWord"]}
+                  rules={[
+                    { required: true, message: "请再次输入新密码" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("PassWord") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error("两次输入的密码不一致"));
+                      }
+                    })
+                  ]}
+                >
+                  <Input.Password placeholder="请再次输入新密码" />
+                </FormItem>
+              </Col>
+            </Row>
+          </Form>
+        </Modal>
       )}
     </>
   );

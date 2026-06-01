@@ -61,16 +61,23 @@ const FormPage: React.FC<any> = props => {
       };
       getRoleModule();
 
-      const getAllModuleList = async () => {
-        let { Data, Success } = await http.get<any>("/api/SmUserRole/QueryRole");
-        if (Success) setTreeData([Data]);
-      };
-      getAllModuleList();
+
 
       setIsLoading(false);
 
       setDisabled(false);
-    } else setIsLoading(false);
+    } else {
+
+      setIsLoading(false);
+
+      setDisabled(false);
+    }
+
+    const getAllModuleList = async () => {
+      let { Data, Success } = await http.get<any>("/api/SmUserRole/QueryRole");
+      if (Success) setTreeData([Data]);
+    };
+    getAllModuleList();
   }, []);
 
   const onFinish = async (data: any, type = SaveTypeEnum.Save) => {
@@ -102,7 +109,8 @@ const FormPage: React.FC<any> = props => {
 
   const onModuleCheck = async (keys: any) => {
     setCheckedModuleKeys(keys);
-    let param = { roleList: keys, UserId: Id };
+    debugger
+    let param = { roleList: keys, UserId: id };
     await http.post<any>("/api/SmUserRole/BatchInsertUserRole", param);
   };
   useImperativeHandle(formPageRef, function () {
@@ -125,8 +133,6 @@ const FormPage: React.FC<any> = props => {
       )
     }
   ];
-  items.push();
-  items.push();
   return (
     <>
       {openType === EditOpenType.Modal || openType === EditOpenType.Drawer ? (
@@ -134,19 +140,22 @@ const FormPage: React.FC<any> = props => {
           {isLoading ? <Loading /> : renderFormComponent(formColumns, disabled, modifyType)}
         </Form>
       ) : null}
+      {id ? <>
+        <div style={{ height: 20 }}> </div>
+        <Card>
+          {treeData.length == 0 ? (
+            <>
+              <Skeleton active />
+              <Skeleton active />
+              <Skeleton active />
+            </>
+          ) : (
+            <Tabs items={items} />
+          )}
+        </Card>
+      </> : null}
       {/* Tabs Begin */}
-      <div style={{ height: 20 }}></div>
-      <Card>
-        {treeData.length == 0 ? (
-          <>
-            <Skeleton active />
-            <Skeleton active />
-            <Skeleton active />
-          </>
-        ) : (
-          <Tabs items={items} />
-        )}
-      </Card>
+
 
       {/* Tabs Begin */}
     </>

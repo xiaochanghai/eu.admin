@@ -359,6 +359,38 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     /// </summary>
     [Obsolete("建议使用 ResetPasswordAsync 方法")]
     public async Task<ServiceResult> RestPasswordAsync(RestPassword password) => await ResetPasswordAsync(password);
+
+    /// <summary>
+    /// 重置指定用户密码
+    /// </summary>
+    public async Task<ServiceResult> ResetPasswordAsync(Guid id, string password)
+    {
+        if (id == Guid.Empty)
+            return ServiceResult.OprateFailed("用户ID不能为空");
+
+        if (string.IsNullOrWhiteSpace(password))
+            return ServiceResult.OprateFailed("密码不能为空");
+
+        try
+        {
+            if (!await AnyAsync(id))
+                return ServiceResult.OprateFailed("用户不存在");
+
+            string passWord = HashPassword(password);
+
+
+            await Db.Updateable<SmUsers>()
+                  .SetColumns(it => it.PassWord == passWord)
+                  .Where(it => it.ID == id)
+                  .ExecuteCommandAsync();
+             
+            return Success(ResponseText.UPDATE_SUCCESS);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult.OprateFailed($"重置密码失败: {ex.Message}");
+        }
+    }
     #endregion
 
     #region 退出登录
