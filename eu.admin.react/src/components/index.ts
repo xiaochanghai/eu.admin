@@ -13,6 +13,7 @@ export { default as Attachment } from "@/components/Attachment";
 export { default as Switch } from "@/components/Elements/Switch";
 export { default as Input } from "@/components/Elements/Input";
 export { default as InputNumber } from "@/components/Elements/InputNumber";
+export { default as InputPassword } from "@/components/Elements/InputPassword";
 export { default as BaseFormPage, renderFormComponent } from "@/components/BaseFormPage";
 export { Result } from "@/components/Result";
 export * from "@/components/Elements/TableList";

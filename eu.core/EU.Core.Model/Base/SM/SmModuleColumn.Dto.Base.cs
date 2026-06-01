@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/5/4 16:11:05  SahHsiao   初版
+* V0.01  2026/6/1 11:31:54  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -376,4 +376,10 @@ public class SmModuleColumnBase : BasePoco
     /// </summary>
     [Display(Name = "RedirectUrl"), Description("跳转URL"), MaxLength(64, ErrorMessage = "跳转URL 不能超过 64 个字符")]
     public string RedirectUrl { get; set; }
+
+    /// <summary>
+    /// 修改时隐藏
+    /// </summary>
+    [Display(Name = "ModifyHide"), Description("修改时隐藏")]
+    public bool? ModifyHide { get; set; }
 }

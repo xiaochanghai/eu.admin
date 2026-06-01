@@ -1,7 +1,7 @@
 /**
  * 表单组件资产配置定义
  */
-import { Switch, ComboGrid, ComBoBox, InputNumber, Input } from "@/components";
+import { Switch, ComboGrid, ComBoBox, InputNumber, Input, InputPassword } from "@/components";
 
 export const FormComponents = [
   {
@@ -26,6 +26,13 @@ export const FormComponents = [
     icon: "InputNumber",
     fieldType: "InputNumber",
     label: "数字输入框"
+  },
+  {
+    ID: "InputPassword",
+    component: InputPassword,
+    icon: "InputPassword",
+    fieldType: "InputPassword",
+    label: "密码输入框"
   },
   {
     ID: "ComboBox",
@@ -83,6 +90,12 @@ export const FormComponents = [
     icon: "BgColorsOutlined",
     fieldType: "ColorPicker",
     label: "颜色选择器"
+  },
+  {
+    ID: "ImageCover",
+    icon: "FileImageOutlined",
+    fieldType: "ImageCover",
+    label: "封面上传"
   },
   {
     ID: "ImageCover",

@@ -1187,6 +1187,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.Minimum,
                     x.Placeholder,
                     x.CreateHide,
+                    x.ModifyHide,
                     x.ModifyDisabled,
                     x.GridSpan,
                     x.DataSource,

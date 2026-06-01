@@ -2,6 +2,7 @@
 import { Alert } from "antd";
 import Input from "./Input"; // 单行文本框
 import InputNumber from "./InputNumber"; // 数字输入框
+import InputPassword from "./InputPassword"; // 数字输入框
 import ComboBox from "./ComBoBox"; // 下拉框
 import ComboGrid from "./ComboGrid"; // 下拉网格
 import Switch from "./Switch"; // 开关
@@ -52,7 +53,8 @@ export const SUPPORTED_FIELD_TYPES = [
   "ColorPicker",
   "ImageCover",
   "DateTimePicker",
-  "TimePicker"
+  "TimePicker",
+  "InputPassword"
 ] as const;
 
 /**
@@ -71,7 +73,8 @@ const FIELD_MAP: Record<string, React.ComponentType<any>> = {
   DateTimePicker,
   TimePicker,
   ColorPicker,
-  ImageCover
+  ImageCover,
+  InputPassword
 };
 
 /**

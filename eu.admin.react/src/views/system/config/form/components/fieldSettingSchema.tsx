@@ -160,6 +160,14 @@ export const schemaDef: SchemaClz = {
     mode: Mode.form,
     tag: "basic"
   },
+  ModifyHide: {
+    //保存时才会触发数据产生，无法实时预览
+    name: "修改时隐藏",
+    tooltip: "保存后生效",
+    type: "switch",
+    mode: Mode.form,
+    tag: "basic"
+  },
   ModifyDisabled: {
     name: "修改时只读",
     tooltip: "保存后生效",

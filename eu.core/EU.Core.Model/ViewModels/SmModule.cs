@@ -147,6 +147,11 @@ public class SmModuleForm
     public bool? CreateHide { get; set; }
 
     /// <summary>
+    /// 修改时隐藏
+    /// </summary>
+    public bool? ModifyHide { get; set; }
+
+    /// <summary>
     /// 修改时只读
     /// </summary>
     public bool? ModifyDisabled { get; set; }

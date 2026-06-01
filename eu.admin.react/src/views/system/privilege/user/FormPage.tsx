@@ -4,7 +4,8 @@ import { querySingle, add, update } from "@/api/modules/module";
 import { setId } from "@/redux/modules/module";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import http from "@/api";
-import { Loading, renderFormComponent } from "@/components";
+import { Loading } from "@/components";
+import { renderFormComponent } from "@/components/Elements/FormPage";
 import { ModuleInfo } from "@/api/interface";
 import { SaveTypeEnum, EditOpenType, ModifyType } from "@/typings";
 import { STANDARD_FORM_LAYOUT } from "@/config";
@@ -16,7 +17,7 @@ const FormPage: React.FC<any> = props => {
   const [id, setViewId] = useState(null);
   const [treeData, setTreeData] = useState<any>([]);
   const [checkedModuleKeys, setCheckedModuleKeys] = useState<any>([]);
-  const [modifyType] = useState(ModifyType.Add);
+  const [modifyType, setModifyType] = useState(ModifyType.Add);
 
   const [form] = Form.useForm();
 
@@ -60,8 +61,7 @@ const FormPage: React.FC<any> = props => {
         }
       };
       getRoleModule();
-
-
+      setModifyType(ModifyType.Edit);
 
       setIsLoading(false);
 

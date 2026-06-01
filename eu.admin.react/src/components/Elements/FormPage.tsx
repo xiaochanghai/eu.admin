@@ -37,6 +37,7 @@ export const renderFormComponent = (formColumns: any[], disabled: boolean, modif
   const visibleColumns = formColumns?.filter((f: any) => {
     if (f.HideInForm !== false) return false;
     if (modifyType === ModifyType.Add && f.CreateHide === true) return false;
+    if (modifyType === ModifyType.Edit && f.ModifyHide === true) return false;
     return true;
   });
 
