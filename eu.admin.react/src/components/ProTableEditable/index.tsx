@@ -9,6 +9,7 @@ import { pagination1 } from "@/config/proTable";
 import { queryByFilter } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import { UploadExcel, ModuleLog, Icon, Loading } from "@/components";
+import { shouldResetToFirstPage } from "@/components/ProTable/utils";
 import { setTableParam, setModuleInfo } from "@/redux/modules/module";
 import { ModifyType } from "@/typings";
 
@@ -97,7 +98,8 @@ const Index: React.FC<any> = React.memo(props => {
           const { Success, Message } = await http.delete<any>(`${url}/${record.ID}`);
           if (Success) {
             message.success(Message);
-            if (tableRef?.current) tableRef.current.reload();
+            // 仅当删除后当前页变空且不在第一页时回退到第一页，否则原地刷新
+            if (tableRef?.current) tableRef.current.reload(shouldResetToFirstPage(tableRef.current.pageInfo, 1));
           }
         }}
         okType="danger"
@@ -276,7 +278,7 @@ const Index: React.FC<any> = React.memo(props => {
                 }}
                 pagination={
                   tableParam?.params
-                    ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize }
+                    ? { ...pagination1, current: tableParam.params.current, pageSize: tableParam.params.pageSize }
                     : pagination1
                 }
                 options={{

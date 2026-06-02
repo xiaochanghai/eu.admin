@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useDispatch, useSelector, RootState } from "@/redux";
 import { setTableParam, setSearchVisible } from "@/redux/modules/module";
 import { queryByFilter } from "@/api/modules/module";
@@ -40,6 +41,10 @@ export const useProTableData = (
   const searchVisibles = useSelector((state: RootState) => state.module.searchVisibles);
   const tableParams = useSelector((state: RootState) => state.module.tableParams);
 
+  // 记录最近一次请求实际使用的参数（含分页/排序/筛选），供 onLoad 同步回填表单。
+  // 用 ref 而非 Redux tableParam，避免读取到慢一拍的 render 闭包导致输入框回退到上一次的值。
+  const latestParamsRef = useRef<Record<string, any> | null>(null);
+
   const tableParam = tableParams[moduleCode] as any;
   const searchVisible = searchVisibles[moduleCode] ?? false;
 
@@ -50,6 +55,14 @@ export const useProTableData = (
     const form = formRef?.current;
     const formValues = form?.getFieldsValue?.(true);
     const hasUserChangedSearchForm = form?.isFieldsTouched?.() ?? true;
+
+    // 分页以 ProTable 本次请求传入的 params 为准（ProTable 内部 pageInfo 是页码的唯一来源）。
+    // onLoad 回填表单时会把 current/pageSize 一起 setFieldsValue，导致下面 getFieldsValue(true)
+    // 读到的 formValues 里残留着上一次的旧分页值；若让它参与合并（formValues 在最后 spread），
+    // 会把真实页码覆盖掉，表现为翻页时请求始终发送旧页码、翻不动页。先捕获、最后强制写回。
+    const requestedCurrent = params.current;
+    const requestedPageSize = params.pageSize;
+
     // 合并表格参数
     if (tableParam?.params && !params._timestamp) {
       if (formValues && hasUserChangedSearchForm) {
@@ -73,6 +86,10 @@ export const useProTableData = (
       });
     }
 
+    // 强制还原本次请求的真实分页值，避免被表单残留的旧 current/pageSize 覆盖导致翻页失效
+    params.current = requestedCurrent;
+    params.pageSize = requestedPageSize;
+
     // 构建基础过滤条件
     let baseConditions = "";
     if (moduleInfo.isDetail && moduleInfo.masterColumn && masterId) {
@@ -83,7 +100,9 @@ export const useProTableData = (
 
     // 拼接自定义条件
     const Conditions = customConditions
-      ? baseConditions ? `${baseConditions} AND ${customConditions}` : customConditions
+      ? baseConditions
+        ? `${baseConditions} AND ${customConditions}`
+        : customConditions
       : baseConditions;
 
     const filter = {
@@ -93,6 +112,10 @@ export const useProTableData = (
       params,
       Conditions
     };
+
+    // 同步记录本次请求实际使用的参数（必须在 dispatch 之前/同时，且不依赖 render 闭包），
+    // 供组件的 onLoad 回填表单使用，避免读取慢一拍的 Redux tableParam
+    latestParamsRef.current = params;
 
     // 保存参数到 Redux
     dispatch(setTableParam({ params, sorter, moduleCode, filter }));
@@ -123,6 +146,7 @@ export const useProTableData = (
   return {
     searchVisible,
     tableParam,
+    latestParamsRef,
     handleRequest,
     handleReset,
     onSearchToggle

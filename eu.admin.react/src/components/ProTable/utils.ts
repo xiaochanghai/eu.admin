@@ -128,3 +128,27 @@ export const hasUpdatePermission = (moduleInfo: ModuleInfo): boolean => {
 export const calculateScrollWidth = (columnCount: number): number => {
   return columnCount * 100;
 };
+
+/**
+ * 判断删除后是否应回退到第一页。
+ *
+ * 仅当「删除后剩余总数」已不足以填满当前页之前的页（即当前页会变空）、且当前不在第一页时，
+ * 才需要回退。例如：25 条、每页 10、在第 3 页（21-25）删光 5 条 → 剩 20 条，第 3 页变空 → 回退；
+ * 而在第 2 页（11-20）删光 10 条 → 剩 15 条，第 2 页仍有数据（上移后的 11-15）→ 不回退。
+ *
+ * @param pageInfo ProTable 删除前的分页信息（action.pageInfo）
+ * @param deletedCount 本次删除的条数（单删=1，批删=选中行数）
+ * @returns true 表示应 reload(true) 回第一页，false 表示原地 reload()
+ */
+export const shouldResetToFirstPage = (
+  pageInfo: { current?: number; pageSize?: number; total?: number } | undefined,
+  deletedCount: number
+): boolean => {
+  if (!pageInfo) return false;
+  const current = pageInfo.current ?? 1;
+  const pageSize = pageInfo.pageSize ?? 10;
+  const total = pageInfo.total ?? 0;
+  if (current <= 1) return false;
+  const remaining = total - deletedCount;
+  return remaining <= (current - 1) * pageSize;
+};

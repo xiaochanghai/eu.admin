@@ -60,13 +60,11 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
 
   const { moduleCode, columns, url, beforeActions, dropActions } = moduleInfo;
   const actionRef = useRef<ActionType>();
-  // 标记是否已完成首次表单回填，避免每次搜索后用滞后的 tableParam 覆盖用户输入
-  const hasRestoredFormRef = useRef(false);
 
   // ==================== 自定义 Hooks ====================
 
   // 数据请求和状态管理
-  const { searchVisible, tableParam, handleRequest, handleReset, onSearchToggle } = useProTableData(
+  const { searchVisible, tableParam, latestParamsRef, handleRequest, handleReset, onSearchToggle } = useProTableData(
     moduleCode,
     moduleInfo,
     masterId,
@@ -401,15 +399,19 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
           y: TABLE_SCROLL_CONFIG.y
         }}
         onLoad={() => {
-          // 仅在首次加载时用已保存的筛选条件还原表单（如从其他页返回时），
-          // 之后用户每次搜索都不再回填，避免滞后的 tableParam 覆盖最新输入
-          if (!hasRestoredFormRef.current && formRef?.current && tableParam?.params) {
-            formRef.current.setFieldsValue({ ...tableParam.params });
+          if (!formRef?.current) return;
+          // 优先用最近一次请求实际使用的参数（同步 ref，永远最新）回填表单，
+          // 避免读取慢一拍的 Redux tableParam 导致输入框回退到上一次的值；
+          // 首次加载尚无请求时，回退到已保存的历史筛选条件（如从其他页返回）
+          const restoreParams = latestParamsRef.current ?? tableParam?.params;
+          if (restoreParams) {
+            formRef.current.setFieldsValue({ ...restoreParams });
           }
-          hasRestoredFormRef.current = true;
         }}
         pagination={
-          tableParam?.params ? { current: tableParam.params.current, pageSize: tableParam.params.pageSize } : pagination
+          tableParam?.params
+            ? { ...pagination, current: tableParam.params.current, pageSize: tableParam.params.pageSize }
+            : pagination
         }
         request={handleRequest}
         search={searchVisible}

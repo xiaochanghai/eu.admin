@@ -3,6 +3,7 @@ import { message } from "@/hooks/useMessage";
 import { batchDelete, batchAudit, batchRevocation } from "@/api/modules/module";
 import { Icon } from "@/components";
 import { CONFIRM_MESSAGES, CONFIRM_BUTTON_TEXT, LOADING_MESSAGES } from "@/components/ProTable/constants";
+import { shouldResetToFirstPage } from "@/components/ProTable/utils";
 import { BatchOperationParams } from "@/components/ProTable/types";
 
 const { confirm } = Modal;
@@ -47,7 +48,10 @@ export const useProTableBatchOps = (moduleCode: string, url: string, customBatch
             });
             if (Success) {
               action.clearSelected();
-              action.reload();
+              // 删除会减少行数，仅当删空当前页且不在第一页时回退到第一页；
+              // 审核/撤销不改变行数，保持原地刷新
+              const resetPage = operationType === "delete" && shouldResetToFirstPage(action.pageInfo, selectedRows.length);
+              action.reload(resetPage);
               message.success(Message);
             }
           }

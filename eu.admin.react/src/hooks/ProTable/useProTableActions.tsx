@@ -4,7 +4,7 @@ import { singleDelete } from "@/api/modules/module";
 import { ModuleInfo } from "@/api/interface/index";
 import { Icon } from "@/components";
 import { CONFIRM_MESSAGES, CONFIRM_BUTTON_TEXT, LOADING_MESSAGES, SUM_ROW_ID } from "@/components/ProTable/constants";
-import { hasUpdatePermission } from "@/components/ProTable/utils";
+import { hasUpdatePermission, shouldResetToFirstPage } from "@/components/ProTable/utils";
 
 const { confirm } = Modal;
 
@@ -44,7 +44,8 @@ export const useProTableActions = (
           } else {
             const { Success, Message } = await singleDelete({ moduleCode, Id: record.ID, url });
             if (Success) {
-              action.reload();
+              // 仅当删除后当前页变空且不在第一页时回退到第一页，否则原地刷新
+              action.reload(shouldResetToFirstPage(action.pageInfo, 1));
               message.success(Message);
             }
           }
