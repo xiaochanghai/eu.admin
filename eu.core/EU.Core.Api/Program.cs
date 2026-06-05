@@ -9,6 +9,7 @@ using EU.Core.Filter;
 using EU.Core.Hubs;
 using EU.Core.Serilog.Utility;
 using EU.Core.Tasks;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -98,9 +99,16 @@ else
 }
 
 builder.Services.AddScoped<UseServiceDIAttribute>();
-builder.Services.Configure<KestrelServerOptions>(x => x.AllowSynchronousIO = true)
-    .Configure<IISServerOptions>(x => x.AllowSynchronousIO = true);
-
+builder.Services.Configure<KestrelServerOptions>(x =>
+{
+    x.AllowSynchronousIO = true;
+    x.Limits.MaxRequestBodySize = 200 * 1024 * 1024;
+})
+    .Configure<IISServerOptions>(x => x.AllowSynchronousIO = true)
+    .Configure<FormOptions>(x =>
+    {
+        x.MultipartBodyLengthLimit = 200 * 1024 * 1024;
+    });
 builder.Services.AddSession();
 builder.Services.AddControllers(o =>
 {

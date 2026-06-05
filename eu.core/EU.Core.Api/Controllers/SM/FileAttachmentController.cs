@@ -194,27 +194,31 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     [AllowAnonymous, HttpGet("Download/{id}")]
     public async Task<IActionResult> Download(Guid id)
     {
-        //string sql = $"SELECT * FROM FileAttachment where ID='{id}' and IsDeleted='false'";
-        //var attachment = DBHelper.QueryFirst<FileAttachment>(sql);
-
         var attachment = await _service.QueryById(id);
 
         if (attachment != null)
         {
             var fileName = attachment.OriginalFileName;
-            string path = FileHelper.GetPhysicsPath() + attachment.Path + attachment.FileName;
+            // Linux 兼容：统一路径分隔符为正斜杠
+            string normalizedPath = attachment.Path.Replace('\\', '/');
+            string physicalPath = $"{FileHelper.GetPhysicsPath()}/{normalizedPath.TrimStart('/')}{attachment.FileName}";
 
-            if (!FileHelper.Exists(path))
-                return Ok("文件不存在");
-            //if (!Directory.Exists(path))
-            //    return Ok("文件不存在！");
+            if (!System.IO.File.Exists(physicalPath))
+                return NotFound("文件不存在");
 
-            FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
-            fs.Close();
-            return File(new FileStream(path, FileMode.Open), "application/octet-stream", fileName);
+            // Asynchronous + SequentialScan：大文件异步流式读取，不占线程池、不触发预读放大
+            var stream = new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                bufferSize: 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            return new FileStreamResult(stream, "application/octet-stream")
+            {
+                FileDownloadName = fileName,
+            };
         }
         else
-            return Ok("无效ID");
+        {
+            return BadRequest("无效ID");
+        }
     }
     #endregion
 }

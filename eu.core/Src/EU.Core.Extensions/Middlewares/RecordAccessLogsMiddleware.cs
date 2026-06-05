@@ -9,7 +9,7 @@ using EU.Core.Common.LogHelper;
 using EU.Core.Model;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging; 
+using Microsoft.Extensions.Logging;
 
 namespace EU.Core.Extensions.Middlewares;
 
@@ -70,15 +70,20 @@ public class RecordAccessLogsMiddleware
                 // 获取请求body内容
                 if (request.Method.ToLower().Equals("post") || request.Method.ToLower().Equals("put"))
                 {
-                    // 启用倒带功能，就可以让 Request.Body 可以再次读取
-                    request.EnableBuffering();
+                    if (IsMultipartRequest(request))
+                    {
+                        userAccessModel.RequestData = "[multipart/form-data skipped]";
+                    }
+                    else
+                    {
+                        // 启用倒带功能，就可以让 Request.Body 可以再次读取
+                        request.EnableBuffering();
 
-                    Stream stream = request.Body;
-                    byte[] buffer = new byte[request.ContentLength.Value];
-                    stream.Read(buffer, 0, buffer.Length);
-                    userAccessModel.RequestData = Encoding.UTF8.GetString(buffer);
+                        using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
+                        userAccessModel.RequestData = await reader.ReadToEndAsync();
 
-                    request.Body.Position = 0;
+                        request.Body.Position = 0;
+                    }
                 }
                 else if (request.Method.ToLower().Equals("get") || request.Method.ToLower().Equals("delete"))
                 {
@@ -117,6 +122,9 @@ public class RecordAccessLogsMiddleware
             await _next(context);
         }
     }
+
+    private static bool IsMultipartRequest(HttpRequest request) =>
+        request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
 
 }
 

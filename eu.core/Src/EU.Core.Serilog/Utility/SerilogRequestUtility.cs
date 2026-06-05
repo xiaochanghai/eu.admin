@@ -63,7 +63,7 @@ public class SerilogRequestUtility
         else
         {
             diagnosticContext.Set("QueryString", request.QueryString.HasValue ? request.QueryString.Value : string.Empty);
-            diagnosticContext.Set("Body", request.ContentLength > 0 ? request.GetRequestBody() : string.Empty);
+            diagnosticContext.Set("Body", IsMultipartRequest(request) ? "[multipart/form-data skipped]" : request.ContentLength > 0 ? request.GetRequestBody() : string.Empty);
         }
 
         diagnosticContext.Set("ContentType", httpContext.Response.ContentType);
@@ -74,4 +74,7 @@ public class SerilogRequestUtility
             diagnosticContext.Set("EndpointName", endpoint.DisplayName);
         }
     }
+
+    private static bool IsMultipartRequest(HttpRequest request) =>
+        request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
 }

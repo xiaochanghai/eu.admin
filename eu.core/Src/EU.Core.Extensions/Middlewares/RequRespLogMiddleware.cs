@@ -64,7 +64,6 @@ public class RequRespLogMiddleware
     private async Task RequestDataLog(HttpContext context)
     {
         var request = context.Request;
-        var sr = new StreamReader(request.Body);
 
         var headers = request.Headers;
 
@@ -79,11 +78,13 @@ public class RequRespLogMiddleware
         if (filter.IsNotEmptyOrNull())
             filter = WebUtility.UrlDecode(filter);
 
+        var bodyData = IsMultipartRequest(request) ? "[multipart/form-data skipped]" : await ReadRequestBodyAsync(request);
+
         RequestLogInfo requestResponse = new RequestLogInfo()
         {
             Path = request.Path,
             QueryString = request.QueryString.ToString(),
-            BodyData = await sr.ReadToEndAsync(),
+            BodyData = bodyData,
             filter = filter
         };
         var content = JsonConvert.SerializeObject(requestResponse);
@@ -103,6 +104,15 @@ public class RequRespLogMiddleware
         }
     }
 
+    private static async Task<string> ReadRequestBodyAsync(HttpRequest request)
+    {
+        using var sr = new StreamReader(request.Body, leaveOpen: true);
+        return await sr.ReadToEndAsync();
+    }
+
+    private static bool IsMultipartRequest(HttpRequest request) =>
+        request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
+
     private void ResponseDataLog(HttpResponse response)
     {
         var responseBody = response.GetResponseBody();
@@ -114,13 +124,13 @@ public class RequRespLogMiddleware
         {
             var isHtml = Regex.IsMatch(responseBody, reg);
             Parallel.For(0, 1, e =>
-        {
-            //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
+            {
+                //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
 
-            if (!response.ContentType.Contains("image/"))
-                LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
-                    new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
-        });
+                if (!response.ContentType.Contains("image/"))
+                    LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
+                        new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
+            });
             //SerilogServer.WriteLog("RequestResponseLog", new string[] { "Response Data:", responseBody });
         }
     }
