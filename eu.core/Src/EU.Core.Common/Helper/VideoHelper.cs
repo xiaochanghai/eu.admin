@@ -12,30 +12,24 @@ public class VideoHelper
         try
         {
             string wwwroot = "E:\\EU\\EU.Core\\Admin\\EU.Core.Api\\wwwroot\\files\\upload\\";
-            //wwwroot = $"{Directory.GetCurrentDirectory()}/wwwroot/";
+            wwwroot = $"{Directory.GetCurrentDirectory()}/wwwroot/files/upload/";
             var temporary = Path.Combine(wwwroot, lastModified);//临时文件夹
                                                                 //fileName = Request.Form["fileName"];//文件名
             string fileExt = fileExts;//获取文件后缀
             var files = Directory.GetFiles(temporary);//获得下面的所有文件
-            DirectoryInfo di = new DirectoryInfo(wwwroot + NewfileName + "/");
-            if (!di.Exists)
-            {
-                di.Create();
-            }
-            var finalPath = Path.Combine(wwwroot + lastModified + "/", NewfileName + fileExt);//最终的文件名（demo中保存的是它上传时候的文件名，实际操作肯定不能这样）
+            var finalPath = Path.Combine(wwwroot + "/", NewfileName + fileExt);//最终的文件名（demo中保存的是它上传时候的文件名，实际操作肯定不能这样）
             var fs = new FileStream(finalPath, FileMode.Create);
             foreach (var part in files.OrderBy(x => x.Length).ThenBy(x => x))//排一下序，保证从0-N Write
             {
                 var bytes = File.ReadAllBytes(part);
                 await fs.WriteAsync(bytes, 0, bytes.Length);
                 bytes = null;
-                //System.IO.File.Delete(part);//删除分块
+                System.IO.File.Delete(part);//删除分块
             }
             fs.Close();
 
-            SplitVideo(finalPath, wwwroot);
 
-            //Directory.Delete(temporary);//删除文件夹
+            Directory.Delete(temporary);//删除文件夹
             ok = true;
         }
         catch (Exception ex)
@@ -82,7 +76,7 @@ public class VideoHelper
 
     public static void SplitVideo(string inputVideoPath, string outputDirectory)
     {
-          inputVideoPath = @"E:\EU\EU.Core\Admin\EU.Core.Api\wwwroot\files\upload\diA74tZENm59rWP3rY5tRfj9fVpJLJKB\2405261413315635680043040733927.mp4";
+        inputVideoPath = @"E:\EU\EU.Core\Admin\EU.Core.Api\wwwroot\files\upload\diA74tZENm59rWP3rY5tRfj9fVpJLJKB\2405261413315635680043040733927.mp4";
         int Threads = 1; //线程数
         //string InputFile = "";//要切割的视频文件
         string OutputRuler = @"E:\EU\EU.Core\Admin\EU.Core.Api\wwwroot\files\upload\diA74tZENm59rWP3rY5tRfj9fVpJLJKB\" + Utility.GetSysID() + ".mp4";//输出文件名
@@ -114,12 +108,12 @@ public class VideoHelper
     {
         if (!string.IsNullOrEmpty(e.Data))
         {
-            
+
         }
     }
 
     private static void P_Exited(object sender, EventArgs e)
-    { 
+    {
     }
 }
 

@@ -178,7 +178,7 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         }
     }
 
-    public async Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload)
+    public async Task<ServiceResult<Guid?>> UploadVideoAsync(ChunkUpload upload)
     {
         var path = $"{$"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}files{Path.DirectorySeparatorChar}upload{Path.DirectorySeparatorChar}{upload.id}{Path.DirectorySeparatorChar}"}";
 
@@ -198,21 +198,23 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
                 var dotPos = upload.fileName.LastIndexOf('.');
                 ext = upload.fileName.Substring(dotPos + 1);
             }
-            string id = Utility.GetSysID();
-            await VideoHelper.FileMerge(upload.id, "." + ext, id);
+            string fileId = Utility.SnowID().ObjToString();
+            await VideoHelper.FileMerge(upload.id, "." + ext, fileId);
 
-            InsertFileAttachmentInput fileAttachment = new();
-            fileAttachment.OriginalFileName = file.FileName;
-            fileAttachment.FileName = upload.fileName;
-            fileAttachment.FileExt = ext;
-            //fileAttachment.MasterId = upload.masterId;
-            fileAttachment.Length = file.Length;
-            fileAttachment.Path = $"/files/upload/{id}.{ext}";
-            await base.Add(fileAttachment);
+            InsertFileAttachmentInput fileAttachment = new()
+            {
+                OriginalFileName = upload.fileName,
+                FileName = $"{fileId}.{ext}",
+                FileExt = ext,
+                //fileAttachment.MasterId = upload.masterId;
+                Length = file.Length,
+                Path = $"/files/upload/"
+            };
+            Guid? id = await base.Add(fileAttachment);
 
-            return Success<string>(null, "上传成功！");
+            return Success(id, "上传成功！");
         }
-        return Success<string>(null, "上传成功！");
+        return Success<Guid?>(null, "上传成功！");
     }
 
     public async Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null)

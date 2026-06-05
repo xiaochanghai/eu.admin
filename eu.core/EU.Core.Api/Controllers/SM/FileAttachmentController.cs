@@ -14,8 +14,6 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
-using SharpCompress.Common;
-
 namespace EU.Core.Api.Controllers;
 
 /// <summary>
@@ -73,7 +71,7 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     /// <param name="upload"></param> 
     /// <returns></returns>
     [HttpPost("UploadVideo")]
-    public async Task<ServiceResult<string>> UploadVideoAsync([FromForm] ChunkUpload upload) => await _service.UploadVideoAsync(upload);
+    public async Task<ServiceResult<Guid?>> UploadVideoAsync([FromForm] ChunkUpload upload) => await _service.UploadVideoAsync(upload);
     #endregion
 
     #region 获取图片

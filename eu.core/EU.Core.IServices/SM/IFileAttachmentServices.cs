@@ -30,7 +30,7 @@ public interface IFileAttachmentServices : IBaseServices<FileAttachment, FileAtt
 
     Task<ServiceResult<Guid>> UploadImageAsync(UploadForm upload);
 
-    Task<ServiceResult<string>> UploadVideoAsync(ChunkUpload upload);
+    Task<ServiceResult<Guid?>> UploadVideoAsync(ChunkUpload upload);
 
     Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null);
 
