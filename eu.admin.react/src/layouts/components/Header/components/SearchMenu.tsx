@@ -10,6 +10,7 @@ const SearchMenu: React.FC = () => {
   const navigate = useNavigate();
 
   const flatMenuList = useSelector((state: RootState) => state.auth.flatMenuList);
+  const language = useSelector((state: RootState) => state.global.language);
 
   const inputRef = useRef<InputRef>(null);
   const menuListRef = useRef<HTMLDivElement>(null);
@@ -27,12 +28,19 @@ const SearchMenu: React.FC = () => {
     setSearchValue(event.target.value);
   };
 
+  // 根据当前语言获取菜单标题
+  const getMenuTitle = (item: RouteObjectType) => {
+    if (language === "en" && item.meta?.titleEn) return item.meta.titleEn;
+    return item.meta?.title;
+  };
+
   const searchList = useMemo(() => {
     return debouncedSearchValue
       ? flatMenuList.filter(
           item =>
             (item.path!.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
-              item.meta!.title!.toLowerCase().includes(debouncedSearchValue.toLowerCase())) &&
+              item.meta!.title!.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
+              (item.meta?.titleEn?.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ?? false)) &&
             !item.meta?.isHide
         )
       : [];
@@ -116,7 +124,7 @@ const SearchMenu: React.FC = () => {
                 onClick={() => selectMenuItem()}
               >
                 <Icon className="menu-icon" name={item.meta!.icon!} />
-                <span className="menu-title">{item.meta?.title}</span>
+                <span className="menu-title">{getMenuTitle(item)}</span>
                 <Icon className="menu-enter" name="EnterOutlined" />
               </div>
             ))}

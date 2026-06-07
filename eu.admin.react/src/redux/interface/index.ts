@@ -37,6 +37,7 @@ export interface GlobalState {
 export interface TabsListProp {
   icon: string;
   title: string;
+  titleEn?: string;
   path: string;
   closable: boolean;
 }

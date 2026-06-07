@@ -233,6 +233,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         key = y.ModuleCode,
                         icon = y.Icon,
                         title = y.ModuleName,
+                        titleEn = y.ModuleName + "_EN",
                         isFull = y.IsFull == true,
                         isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                     }
@@ -260,6 +261,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         key = y.ModuleCode,
                         icon = y.Icon,
                         title = y.ModuleName,
+                        titleEn = y.ModuleName + "_EN",
                         isFull = y.IsFull == true,
                         isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                     }
@@ -422,6 +424,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = "home",
                     icon = "HomeOutlined",
                     title = "首页",
+                    titleEn = "Home",
                     isAffix = true
                 },
                 children = default
@@ -437,6 +440,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = "account_setting",
                     icon = "UserOutlined",
                     title = "个人信息",
+                    titleEn = "Profile",
                     isHide = true
                 },
                 children = default
@@ -452,6 +456,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = "form_setting",
                     icon = "UserOutlined",
                     title = "表单配置",
+                    titleEn = "Form Settings",
                     isHide = true,
                     isFull = true
                 },
@@ -468,6 +473,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = "workflow_setting",
                     icon = "UserOutlined",
                     title = "工作流",
+                    titleEn = "Workflow",
                     isHide = true,
                     isFull = true
                 },
@@ -484,6 +490,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     key = "about_setting",
                     icon = "InfoCircleOutlined",
                     title = "关于系统",
+                    titleEn = "About",
                     isHide = true
                 },
                 children = default

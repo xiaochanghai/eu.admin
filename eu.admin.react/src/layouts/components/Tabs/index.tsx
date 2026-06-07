@@ -55,6 +55,7 @@ const LayoutTabs: React.FC = () => {
   const tabsDrag = useSelector((state: RootState) => state.global.tabsDrag);
   const tabsList = useSelector((state: RootState) => state.tabs.tabsList);
   const flatMenuList = useSelector((state: RootState) => state.auth.flatMenuList);
+  const language = useSelector((state: RootState) => state.global.language);
 
   const sensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } });
 
@@ -66,6 +67,7 @@ const LayoutTabs: React.FC = () => {
         const tabValue = {
           icon: item.meta.icon!,
           title: item.meta.title!,
+          titleEn: item.meta.titleEn,
           path: item.path!,
           closable: !item.meta.isAffix
         };
@@ -81,6 +83,7 @@ const LayoutTabs: React.FC = () => {
       const tabValue = {
         icon: meta.icon!,
         title: meta.title!,
+        titleEn: meta.titleEn,
         path: path,
         closable: !meta.isAffix
       };
@@ -165,12 +168,13 @@ const LayoutTabs: React.FC = () => {
     return opts;
   };
   const renderTabTitle = (item: any, index: number) => {
+    const tabTitle = language === "en" && item.titleEn ? item.titleEn : item.title;
     return (
       <Dropdown menu={{ items: getMenuItems(item, index) }} trigger={["contextMenu"]}>
         <div style={{ margin: "-12px 0", padding: "12px 0" }}>
           <React.Fragment>
             {tabsIcon && <Icon name={item.icon} />}
-            {item.title}
+            {tabTitle}
           </React.Fragment>
         </div>
       </Dropdown>

@@ -19,7 +19,7 @@ const LayoutMenu: React.FC<LayoutMenuProps> = ({ mode, menuList, menuSplit }) =>
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const { layout, isDark, accordion, isCollapse, siderInverted, headerInverted, showMenuList, flatMenuList } = useSelector(
+  const { layout, isDark, accordion, isCollapse, siderInverted, headerInverted, showMenuList, flatMenuList, language } = useSelector(
     (state: RootState) => ({
       layout: state.global.layout,
       isDark: state.global.isDark,
@@ -28,7 +28,8 @@ const LayoutMenu: React.FC<LayoutMenuProps> = ({ mode, menuList, menuSplit }) =>
       siderInverted: state.global.siderInverted,
       headerInverted: state.global.headerInverted,
       showMenuList: state.auth.showMenuList,
-      flatMenuList: state.auth.flatMenuList
+      flatMenuList: state.auth.flatMenuList,
+      language: state.global.language
     }),
     shallowEqual
   );
@@ -55,15 +56,21 @@ const LayoutMenu: React.FC<LayoutMenuProps> = ({ mode, menuList, menuSplit }) =>
     } as MenuItem;
   }
 
+  // 根据当前语言获取菜单标题
+  const getMenuTitle = (item: RouteObjectType) => {
+    if (language === "en" && item.meta?.titleEn) return item.meta.titleEn;
+    return item.meta?.title;
+  };
+
   const handleMenuAsAntdFormat = (list: RouteObjectType[]): MenuItem[] => {
     return list.map(item => {
       return !item?.children?.length
-        ? getItem(item.meta?.title, item.path, <Icon name={item.meta!.icon!} />)
-        : getItem(item.meta?.title, item.path, <Icon name={item.meta!.icon!} />, handleMenuAsAntdFormat(item.children!));
+        ? getItem(getMenuTitle(item), item.path, <Icon name={item.meta!.icon!} />)
+        : getItem(getMenuTitle(item), item.path, <Icon name={item.meta!.icon!} />, handleMenuAsAntdFormat(item.children!));
     });
   };
 
-  const antdMenuList = useMemo(() => handleMenuAsAntdFormat(menuList ?? showMenuList), [menuList, showMenuList]);
+  const antdMenuList = useMemo(() => handleMenuAsAntdFormat(menuList ?? showMenuList), [menuList, showMenuList, language]);
 
   useEffect(() => {
     const meta = matches[matches.length - 1].data as MetaProps;

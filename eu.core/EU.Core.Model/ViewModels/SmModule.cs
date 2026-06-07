@@ -34,6 +34,7 @@ public class TreeAuthMenuMeta
     public string key { get; set; }
     public string icon { get; set; }
     public string title { get; set; }
+    public string titleEn { get; set; }
     public string isLink { get; set; } = "";
     public bool? isHide { get; set; } = false;
     public bool? isFull { get; set; } = false;

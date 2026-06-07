@@ -4,6 +4,7 @@ export interface MetaProps {
   key?: string;
   icon?: string;
   title?: string;
+  titleEn?: string;
   activeMenu?: string;
   isLink?: string;
   isHide?: boolean;

@@ -23,12 +23,14 @@ const RouterGuard: React.FC<RouterGuardProps> = props => {
 
   const token = useSelector((state: RootState) => state.user.token);
   const authMenuList = useSelector((state: RootState) => state.auth.authMenuList);
+  const language = useSelector((state: RootState) => state.global.language);
 
   useEffect((): void => {
     const meta = loader as MetaProps;
     if (meta) {
       const title = import.meta.env.VITE_GLOB_APP_TITLE;
-      document.title = meta?.title ? `${meta.title} - ${title}` : title;
+      const menuTitle = language === "en" && meta.titleEn ? meta.titleEn : meta.title;
+      document.title = menuTitle ? `${menuTitle} - ${title}` : title;
     }
 
     // Routing whitelist
@@ -48,7 +50,7 @@ const RouterGuard: React.FC<RouterGuardProps> = props => {
       navigate(LOGIN_URL, { replace: true });
       return;
     }
-  }, [loader]);
+  }, [loader, language]);
 
   return props.children;
 };

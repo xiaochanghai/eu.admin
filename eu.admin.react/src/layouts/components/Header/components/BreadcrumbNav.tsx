@@ -14,13 +14,20 @@ const BreadcrumbNav: React.FC = () => {
   const authMenuList = useSelector((state: RootState) => state.auth.authMenuList);
   const breadcrumb = useSelector((state: RootState) => state.global.breadcrumb);
   const breadcrumbIcon = useSelector((state: RootState) => state.global.breadcrumbIcon);
+  const language = useSelector((state: RootState) => state.global.language);
   const breadcrumbAllList = useMemo(() => getAllBreadcrumbList(authMenuList), [authMenuList]);
 
   const [curBreadcrumbList, setCurBreadcrumbList] = useState<ItemType[]>([]);
 
+  // 根据当前语言获取菜单标题
+  const getMenuTitle = (item: RouteObjectType) => {
+    if (language === "en" && item.meta?.titleEn) return item.meta.titleEn;
+    return item.meta?.title;
+  };
+
   // Render Title
   const renderTitle = (item: RouteObjectType, isLink: boolean) => {
-    const { icon, title } = item.meta || {};
+    const { icon } = item.meta || {};
     const content = (
       <React.Fragment>
         {breadcrumbIcon && icon && (
@@ -28,7 +35,7 @@ const BreadcrumbNav: React.FC = () => {
             <Icon name={icon!} />
           </span>
         )}
-        <span>{title}</span>
+        <span>{getMenuTitle(item)}</span>
       </React.Fragment>
     );
     return isLink ? <Link to={item.path!}>{content}</Link> : content;
@@ -42,7 +49,10 @@ const BreadcrumbNav: React.FC = () => {
 
     // You don’t need breadcrumbs on the home page, you can delete the following judgments
     if (breadcrumbList[0]?.path !== HOME_URL) {
-      breadcrumbList.unshift({ path: HOME_URL, meta: { icon: "HomeOutlined", title: "首页" } });
+      breadcrumbList.unshift({
+        path: HOME_URL,
+        meta: { icon: "HomeOutlined", title: "首页", titleEn: "Home" }
+      });
     }
 
     // Processed into the format required by antd breadcrumbs
@@ -73,7 +83,7 @@ const BreadcrumbNav: React.FC = () => {
     });
 
     setCurBreadcrumbList(antdBreadcrumbList);
-  }, [matches, breadcrumbIcon]);
+  }, [matches, breadcrumbIcon, language]);
 
   return <React.Fragment>{breadcrumb && <Breadcrumb items={curBreadcrumbList}></Breadcrumb>}</React.Fragment>;
 };
