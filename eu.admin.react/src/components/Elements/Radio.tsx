@@ -4,6 +4,8 @@ import type { RadioChangeEvent } from "antd";
 import { getLovData } from "@/api/modules/module";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType, SmLovData } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 const FormItem = Form.Item;
 
@@ -15,7 +17,10 @@ interface RadioFieldProps {
 }
 
 const RadioField: React.FC<RadioFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit, onChange }) => {
-  const { DefaultValue, DataIndex, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
+  const { DefaultValue, DataIndex, Required, DataSource, Disabled, ModifyDisabled, FormTitle, FormTitle_EN } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
+  const { t } = useTranslation();
 
   const [options, setOptions] = useState<SmLovData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,10 +68,10 @@ const RadioField: React.FC<RadioFieldProps> = ({ field, disabled = false, modify
     () => [
       {
         required: Required ?? false,
-        message: `请输入${FormTitle ?? "该字段"}!`
+        message: `${t("formOption.inputPlaceholder")}${formTitle ?? null}!`
       }
     ],
-    [Required, FormTitle]
+    [Required, formTitle]
   );
 
   const handleChange = useCallback(

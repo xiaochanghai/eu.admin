@@ -80,6 +80,13 @@ export default {
     add: "Add",
     edit: "Edit",
     save: "Save",
-    saveAndAdd: "Save and Add"
+    saveAndAdd: "Save and Add",
+    inputPlaceholder: "Please enter",
+    selectPlaceholder: "Please select",
+    selectTimePlaceholder: "Please select time",
+    selectDateTimePlaceholder: "Please select date time",
+    selectDatePlaceholder: "Please select date",
+    date: "date",
+    time: "time"
   }
 };

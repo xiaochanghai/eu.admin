@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import { InputNumber, Form } from "antd";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 const FormItem = Form.Item;
 
@@ -21,19 +23,13 @@ interface InputNumberFieldProps {
 
 /**
  * 数字输入框组件
- * 功能：封装Antd InputNumber组件，提供统一的表单字段样式和验证规则
- * 特性：
- * 1. 支持最小值/最大值验证
- * 2. 内置表单验证规则
- * 3. 支持禁用状态
- * 4. 自动处理字段标题和提示信息
- * 5. 使用 React.memo 优化性能
- *
- * @param props - 组件属性
- * @returns React组件
  */
 const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
-  const { FormTitle, DefaultValue, DataIndex, Placeholder, Required, Minimum, Maximum, Disabled, ModifyDisabled } = field;
+  const { FormTitle, FormTitle_EN, DefaultValue, DataIndex, Placeholder, Placeholder_EN, Required, Minimum, Maximum, Disabled, ModifyDisabled } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const { t } = useTranslation();
+  const placeholder = (language === "en" ? Placeholder_EN : Placeholder) || t("formOption.inputPlaceholder");
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -52,7 +48,7 @@ const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, mo
   const validationRules = useMemo(() => {
     const rules: any[] = [
       // 必填验证
-      { required: Required ?? false, message: `请输入${FormTitle}!` }
+      { required: Required ?? false, message: `请输入${formTitle}!` }
     ];
 
     // 添加最小值验证规则
@@ -60,7 +56,7 @@ const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, mo
       rules.push({
         type: "number",
         min: Minimum,
-        message: `${FormTitle}最小值为${Minimum}!`
+        message: `${formTitle}最小值为${Minimum}!`
       });
     }
 
@@ -69,12 +65,12 @@ const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, mo
       rules.push({
         type: "number",
         max: Maximum,
-        message: `${FormTitle}最大值为${Maximum}!`
+        message: `${formTitle}最大值为${Maximum}!`
       });
     }
 
     return rules;
-  }, [Required, FormTitle, Minimum, Maximum]);
+  }, [Required, formTitle, Minimum, Maximum]);
 
   // 处理默认值
   const initialValue = useMemo(() => {
@@ -86,7 +82,7 @@ const InputNumberField: React.FC<InputNumberFieldProps> = ({ field, disabled, mo
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={initialValue}>
       <InputNumber
-        placeholder={Placeholder ?? "请输入"}
+        placeholder={placeholder}
         disabled={isDisabled}
         min={Minimum ?? undefined}
         max={Maximum ?? undefined}

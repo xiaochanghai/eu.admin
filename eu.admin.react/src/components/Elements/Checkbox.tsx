@@ -3,6 +3,7 @@ import { Checkbox, Form } from "antd";
 import { getLovData } from "@/api/modules/module";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType, SmLovData } from "@/typings";
+import { RootState, useSelector } from "@/redux";
 
 const FormItem = Form.Item;
 type CheckboxGroupValue = React.ComponentProps<typeof Checkbox.Group>["value"];
@@ -28,7 +29,9 @@ const parseCheckboxValue = (value?: FieldProps["DefaultValue"]): CheckboxValueTy
 };
 
 const CheckboxField: React.FC<CheckboxFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit, onChange }) => {
-  const { DefaultValue, DataIndex, Required, DataSource, Disabled, ModifyDisabled, FormTitle } = field;
+  const { DefaultValue, DataIndex, Required, DataSource, Disabled, ModifyDisabled, FormTitle, FormTitle_EN } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
 
   const [options, setOptions] = useState<SmLovData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -71,11 +74,11 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({ field, disabled = false, 
       {
         validator: async (_: unknown, value?: CheckboxValueType[]) => {
           if (!Required || (Array.isArray(value) && value.length > 0)) return;
-          throw new Error(`请选择${FormTitle}!`);
+          throw new Error(`请选择${formTitle}!`);
         }
       }
     ],
-    [Required, FormTitle]
+    [Required, formTitle]
   );
 
   const handleChange = useCallback(

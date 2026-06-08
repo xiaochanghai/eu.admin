@@ -80,6 +80,13 @@ export default {
     add: "新增",
     edit: "编辑",
     save: "保存",
-    saveAndAdd: "保存并新建"
+    saveAndAdd: "保存并新建",
+    inputPlaceholder: "请输入",
+    selectPlaceholder: "请选择",
+    selectTimePlaceholder: "请选择时间",
+    selectDateTimePlaceholder: "请选择日期时间",
+    selectDatePlaceholder: "请选择日期",
+    date: "日期",
+    time: "时间"
   }
 };

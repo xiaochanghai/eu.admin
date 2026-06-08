@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 /**
  * DatePicker组件属性接口定义
@@ -124,11 +126,14 @@ const BasePickerField: React.FC<DatePickerFieldProps & BasePickerConfig> = ({
   defaultPlaceholder,
   showTime
 }) => {
-  const { DataIndex, Placeholder, Required, Disabled, ModifyDisabled, AllowClear, FormTitle } = field;
+  const { DataIndex, Placeholder, Placeholder_EN, Required, Disabled, ModifyDisabled, AllowClear, FormTitle } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const placeholder = (language === "en" ? Placeholder_EN : Placeholder) || defaultPlaceholder;
 
   const isDisabled = useDisabledState(modifyType, ModifyDisabled, Disabled, disabled);
   const isAllowClear = useAllowClear(AllowClear);
-  const customValidator = useValidator(Required, FormTitle, pickerType === "date" ? "日期" : "时间");
+  const formTitle = language === "en" ? field.FormTitle_EN || FormTitle : FormTitle;
+  const customValidator = useValidator(Required, formTitle, pickerType === "date" ? "日期" : "时间");
   const handleChange = useChangeHandler(onChange);
   const validationRules = useValidationRules(customValidator);
   const format = useMemo(() => field.DataFormate ?? defaultFormat, [field.DataFormate, defaultFormat]);
@@ -146,7 +151,7 @@ const BasePickerField: React.FC<DatePickerFieldProps & BasePickerConfig> = ({
       <PickerComponent
         disabled={isDisabled}
         format={format}
-        placeholder={Placeholder ?? defaultPlaceholder}
+        placeholder={placeholder}
         allowClear={isAllowClear}
         onChange={handleChange}
         showTime={showTime}
@@ -160,8 +165,9 @@ const BasePickerField: React.FC<DatePickerFieldProps & BasePickerConfig> = ({
  * Date picker field.
  */
 export const DatePickerField: React.FC<DatePickerFieldProps> = props => {
+  const { t } = useTranslation();
   return (
-    <BasePickerField {...props} pickerType="date" defaultFormat="YYYY-MM-DD" defaultPlaceholder="请选择日期" showTime={false} />
+    <BasePickerField {...props} pickerType="date" defaultFormat="YYYY-MM-DD" defaultPlaceholder={t("formOption.selectDatePlaceholder")} showTime={false} />
   );
 };
 
@@ -169,12 +175,13 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = props => {
  * Date time picker field.
  */
 export const DateTimePickerField: React.FC<DatePickerFieldProps> = props => {
+  const { t } = useTranslation();
   return (
     <BasePickerField
       {...props}
       pickerType="date"
       defaultFormat="YYYY-MM-DD HH:mm:ss"
-      defaultPlaceholder="请选择日期时间"
+      defaultPlaceholder={t("formOption.selectDateTimePlaceholder")}
       showTime={true}
     />
   );
@@ -184,5 +191,6 @@ export const DateTimePickerField: React.FC<DatePickerFieldProps> = props => {
  * Time picker field.
  */
 export const TimePickerField: React.FC<DatePickerFieldProps> = props => {
-  return <BasePickerField {...props} pickerType="time" defaultFormat="HH:mm:ss" defaultPlaceholder="请选择时间" />;
+  const { t } = useTranslation();
+  return <BasePickerField {...props} pickerType="time" defaultFormat="HH:mm:ss" defaultPlaceholder={t("formOption.selectTimePlaceholder")} />;
 };

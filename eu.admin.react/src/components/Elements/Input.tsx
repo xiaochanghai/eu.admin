@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import { Input, Form } from "antd";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 const FormItem = Form.Item;
 
@@ -34,8 +36,11 @@ interface InputFieldProps {
  */
 const InputField: React.FC<InputFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit, onChange }) => {
   // 解构字段属性
-  const { DefaultValue, DataIndex, Placeholder, Required, Disabled, MaxLength, ModifyDisabled, AllowClear, FormTitle } = field;
+  const { DefaultValue, DataIndex, Placeholder, Placeholder_EN, Required, Disabled, MaxLength, ModifyDisabled, AllowClear, FormTitle } = field;
+  const language = useSelector((state: RootState) => state.global.language);
 
+  const { t } = useTranslation();
+  const placeholder = (language === "en" ? Placeholder_EN : Placeholder) || t("formOption.inputPlaceholder");
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
     return (modifyType === ModifyType.Edit && ModifyDisabled) || modifyType === ModifyType.View || Disabled || disabled;
@@ -66,7 +71,7 @@ const InputField: React.FC<InputFieldProps> = ({ field, disabled = false, modify
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <Input
-        placeholder={Placeholder ?? "请输入"}
+        placeholder={placeholder}
         disabled={isDisabled}
         maxLength={MaxLength ?? undefined}
         allowClear={showClear}

@@ -52,6 +52,11 @@ public class SmModuleColumnExtend : SmModuleColumn
     /// 模块代码
     /// </summary>
     public override string ModuleCode { get; set; }
+
+    public string Title_EN { get; set; }
+    public string FormTitle_EN { get; set; }
+    public string TooltipContent_EN { get; set; }
+    public string Placeholder_EN { get; set; }
 }
 /// <summary>
 /// 系统模块扩展类
@@ -234,12 +239,16 @@ public class SmModuleForm
     /// </summary>
     [Display(Name = "MultipleMaxCount"), Description("多选最大选择数量"), SugarColumn(IsNullable = true)]
     public int? MultipleMaxCount { get; set; }
+
+    public string FormTitle_EN { get; set; }
+    public string TooltipContent_EN { get; set; }
+    public string Placeholder_EN { get; set; }
 }
 
 public class SmModuleFormOption : SmModuleColumn
 {
     public string ComboBoxDataSource { get; set; }
-    
+
     public string ComboGridDataSource { get; set; }
     public string AutoCodeDataSource { get; set; }
 }

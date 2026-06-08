@@ -1,5 +1,6 @@
 ﻿using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
+using EU.Core.Common.Helper;
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using SqlSugar;
@@ -14,6 +15,7 @@ public class ModuleSqlColumn
     /// </summary>
     private string moduleCode;
     private static RedisCacheService _redisInstance;
+    private static readonly SemaphoreSlim _redisLock = new(1, 1);
     private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(2);
     private static string code = CacheKeys.SmModuleColumn.ToString();
     private static ISqlSugarClient Db => App.GetService<ISqlSugarClient>(false);
@@ -38,16 +40,46 @@ public class ModuleSqlColumn
                 .Select((a, b) => new { a, b.ModuleCode })
                 .Select<SmModuleColumnExtend>()
                 .ToList();
+            // 当前请求直接返回，不阻塞等待 Redis 写入
+            var result = cache.Where(x => x.ModuleCode == moduleCode).ToList();
+            // 后台异步写入 Redis 缓存，避免 sync 操作堆积堵塞请求线程
+            _ = WarmUpCacheAsync(moduleList, cache);
+            return result;
+        }
+        return cache;
+    }
+
+    private async Task WarmUpCacheAsync(List<SmModules> moduleList, List<SmModuleColumnExtend> allColumns)
+    {
+        await Task.Yield(); // 切到线程池
+        try
+        {
             Redis.Remove(code);
             foreach (var item in moduleList)
             {
-                var columns = cache.Where(x => x.ModuleCode == item.ModuleCode).ToList();
+                var columns = allColumns.Where(x => x.ModuleCode == item.ModuleCode).ToList();
                 if (columns.Any())
+                {
+                    for (int i = 0; i < columns.Count; i++)
+                    {
+                        var configs = await LanguageHelper.GetListAsync(Db, "ModuleColumn", columns[i].ID);
+                        for (int j = 0; j < configs.Count; j++)
+                        {
+                            if (configs[j].RefField == "Title")
+                                columns[i].Title_EN = configs[j].Value_EN;
+                            else if (configs[j].RefField == "FormTitle")
+                                columns[i].FormTitle_EN = configs[j].Value_EN;
+                            else if (configs[j].RefField == "TooltipContent")
+                                columns[i].TooltipContent_EN = configs[j].Value_EN;
+                            else if (configs[j].RefField == "Placeholder")
+                                columns[i].Placeholder_EN = configs[j].Value_EN;
+                        }
+                    }
                     Redis.AddObject(code, item.ModuleCode, columns);
+                }
             }
-            cache = cache.Where(x => x.ModuleCode == moduleCode).ToList();
         }
-        return cache;
+        catch { /* 缓存写入失败不影响主流程 */ }
     }
 
     public List<SmModuleColumnExtend> GetModuleSqlFormColumn()

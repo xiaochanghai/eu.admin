@@ -63,6 +63,12 @@ export interface FieldProps {
   IsRedirect?: boolean;
   /** 跳转链接 */
   RedirectUrl?: string;
+  /** 表单标题 */
+  FormTitle_EN?: string;
+  /** 占位符文本 */
+  Placeholder_EN?: string;
+  /** 提示内容 */
+  TooltipContent_EN?: string;
 }
 /**
  * 子项类型定义

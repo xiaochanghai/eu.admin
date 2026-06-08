@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import { Input, Form } from "antd";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 const FormItem = Form.Item;
@@ -21,21 +23,15 @@ interface InputPasswordFieldProps {
 }
 
 /**
- * 输入框表单组件
- * 功能：封装Antd Input组件，提供统一的表单字段样式和验证规则
- * 特性：
- * 1. 支持多种修改类型（新增/编辑/查看）
- * 2. 内置表单验证规则
- * 3. 支持禁用状态和清除功能
- * 4. 自动处理字段标题和提示信息
- * 5. 使用 React.memo 优化性能
- *
- * @param props - 组件属性
- * @returns React组件
+ * 密码输入框组件
  */
 const InputPasswordField: React.FC<InputPasswordFieldProps> = ({ field, disabled = false, modifyType = ModifyType.Edit, onChange }) => {
   // 解构字段属性
-  const { DefaultValue, DataIndex, Placeholder, Required, Disabled, MaxLength, ModifyDisabled, AllowClear, FormTitle } = field;
+  const { DefaultValue, DataIndex, Placeholder, Placeholder_EN, Required, Disabled, MaxLength, ModifyDisabled, AllowClear, FormTitle, FormTitle_EN } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const { t } = useTranslation();
+  const placeholder = (language === "en" ? Placeholder_EN : Placeholder) || t("formOption.inputPlaceholder");
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -58,22 +54,21 @@ const InputPasswordField: React.FC<InputPasswordFieldProps> = ({ field, disabled
     () => [
       {
         required: Required ?? false,
-        message: `请输入${FormTitle ?? "该字段"}!`
+        message: `请输入${formTitle ?? "该字段"}!`
       }
     ],
-    [Required, FormTitle]
+    [Required, formTitle]
   );
 
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules} initialValue={DefaultValue ?? undefined}>
       <Input.Password
-        placeholder={Placeholder ?? "请输入"}
+        placeholder={placeholder}
         disabled={isDisabled}
         maxLength={MaxLength ?? undefined}
         allowClear={showClear}
         onChange={handleChange}
         style={{ width: "100%" }} iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-
       />
     </FormItem>
   );

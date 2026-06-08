@@ -212,7 +212,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <remarks>
     /// 根据角色权限递归构建菜单树结构，包含meta元数据
     /// </remarks>
-    public static void LoopToAppendChildren1(List<Guid?> roleModule, List<SmModules> smModules, TreeAuthMenu moduleTree)
+    public static async Task LoopToAppendChildren1(ISqlSugarClient db, List<Guid?> roleModule, List<SmModules> smModules, TreeAuthMenu moduleTree)
     {
         var subItems = new List<TreeAuthMenu>();
 
@@ -220,10 +220,14 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (string.IsNullOrEmpty(moduleTree.id))
         {
             // 获取顶级父模块
-            subItems = smModules
+            var rootModules = smModules
                 .Where(x => x.IsParent == true && x.ParentId == null && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
-                .Select(y => new TreeAuthMenu
+                .ToList();
+            foreach (var y in rootModules)
+            {
+                var titleEn = await LanguageHelper.Get(db, "Module", y.ID, "ModuleName");
+                subItems.Add(new TreeAuthMenu
                 {
                     id = y.ID.ToString(),
                     path = y.RoutePath,
@@ -233,11 +237,12 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         key = y.ModuleCode,
                         icon = y.Icon,
                         title = y.ModuleName,
-                        titleEn = y.ModuleName + "_EN",
+                        titleEn = titleEn?.Value_EN ?? y.ModuleName,
                         isFull = y.IsFull == true,
                         isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                     }
-                }).ToList();
+                });
+            }
         }
         else
         {
@@ -248,10 +253,14 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             }
 
             // 获取子模块
-            subItems = smModules
+            var childModules = smModules
                 .Where(x => x.ParentId == parentId && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
-                .Select(y => new TreeAuthMenu
+                .ToList();
+            foreach (var y in childModules)
+            {
+                var titleEn = await LanguageHelper.Get(db, "Module", y.ID, "ModuleName");
+                subItems.Add(new TreeAuthMenu
                 {
                     id = y.ID.ToString(),
                     path = y.RoutePath,
@@ -261,11 +270,12 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                         key = y.ModuleCode,
                         icon = y.Icon,
                         title = y.ModuleName,
-                        titleEn = y.ModuleName + "_EN",
+                        titleEn = titleEn?.Value_EN,
                         isFull = y.IsFull == true,
                         isHide = (y.ParentId == null || y.IsActive == true) ? false : true
                     }
-                }).ToList();
+                });
+            }
         }
 
         // 设置重定向到第一个子节点
@@ -278,7 +288,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         // 递归处理每个子节点
         foreach (var subItem in subItems)
         {
-            LoopToAppendChildren1(roleModule, smModules, subItem);
+            await LoopToAppendChildren1(db, roleModule, smModules, subItem);
         }
     }
 
@@ -408,7 +418,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         var treeMenuData = new TreeAuthMenu();
         var moduleList = ModuleInfo.GetModuleList();
         var smModules = moduleList.Where(x => x.IsDeleted == false).ToList();
-        LoopToAppendChildren1(smRoleList, smModules, treeMenuData);
+        await LoopToAppendChildren1(Db, smRoleList, smModules, treeMenuData);
 
         // 定义系统固定菜单
         var data = new List<TreeAuthMenu>
@@ -775,6 +785,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             var item = new JObject
             {
                 new JProperty("title", column.Title),
+                new JProperty("title_en", column.Title_EN),
                 new JProperty("id", column.ID),
                 new JProperty("dataIndex", column.DataIndex),
                 new JProperty("hideInTable", column.HideInTable),
@@ -806,7 +817,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             // 添加提示信息
             if (column.IsTooltip == true)
+            {
                 item.Add(new JProperty("tooltip", column.TooltipContent));
+                item.Add(new JProperty("tooltip_en", column.TooltipContent_EN));
+
+            }
 
             // 添加提示信息
             if (column.IsRedirect == true)

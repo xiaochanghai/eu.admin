@@ -479,7 +479,7 @@ export const schemaDef: SchemaClz = {
     deps: [{ field: "IsTooltip", value: [true] }]
   },
   TooltipContentLangConfig: {
-    name: "占位符多语设置",
+    name: "提示内容多语设置",
     icon: GlobalOutlined,
     type: "langConfig",
     tag: "basic",

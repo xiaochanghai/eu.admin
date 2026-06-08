@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import { Switch, Form } from "antd";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 const FormItem = Form.Item;
 
@@ -21,19 +23,12 @@ interface SwitchFieldProps {
 
 /**
  * 开关组件
- * 功能：封装Antd Switch组件，提供统一的表单字段样式和验证规则
- * 特性：
- * 1. 支持必填验证
- * 2. 支持默认值设置
- * 3. 支持禁用状态
- * 4. 自动处理字段标题和提示信息
- * 5. 使用 React.memo 优化性能
- *
- * @param props - 组件属性
- * @returns React组件
  */
 const SwitchField: React.FC<SwitchFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
-  const { DefaultValue, DataIndex, Required, Disabled, ModifyDisabled, FormTitle } = field;
+  const { DefaultValue, DataIndex, Required, Disabled, ModifyDisabled, FormTitle, FormTitle_EN } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
+  const { t } = useTranslation();
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -64,10 +59,10 @@ const SwitchField: React.FC<SwitchFieldProps> = ({ field, disabled, modifyType =
     () => [
       {
         required: Required ?? false,
-        message: `请选择${FormTitle}!`
+        message: `${t("formOption.selectPlaceholder")}${formTitle ?? null}!`
       }
     ],
-    [Required, FormTitle]
+    [Required, formTitle]
   );
 
   return (

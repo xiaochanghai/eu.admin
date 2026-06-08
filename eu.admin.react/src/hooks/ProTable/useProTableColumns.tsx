@@ -6,6 +6,7 @@ import { recordUserModuleColumn } from "@/api/modules/module";
 import { ModuleInfo } from "@/api/interface/index";
 import { ComboGrid, Icon } from "@/components";
 import { downloadFile } from "@/utils";
+import { RootState } from "@/redux";
 
 /**
  * 图片预览触发器组件
@@ -43,7 +44,8 @@ export const useProTableColumns = (
   columns: any[],
   userModuleColumn: any,
   moduleId: string,
-  moduleInfo: ModuleInfo
+  moduleInfo: ModuleInfo,
+  language: RootState["global"]["language"]
 ) => {
   const dispatch = useDispatch();
   const [columnsStateMap, setColumnsStateMap] = useState(() => userModuleColumn);
@@ -68,6 +70,10 @@ export const useProTableColumns = (
 
     return columns.map((item: any) => {
       const columnEnhancements: any = {};
+      if (language === "en") {
+        columnEnhancements.title = item.title_en || item.title; // 确保 title 存在
+        columnEnhancements.tooltip = item.tooltip_en || item.tooltip; // 确保 tooltip 存在
+      }
 
       // 处理 ComboGrid 类型
       if (!item.hideInSearch && item.fieldType === "ComboGrid") {
@@ -149,7 +155,7 @@ export const useProTableColumns = (
       // 如果有任何增强，合并到原列配置中
       return Object.keys(columnEnhancements).length > 0 ? { ...item, ...columnEnhancements } : item;
     });
-  }, [columns]);
+  }, [columns, language]);
 
   return {
     enhancedColumns,

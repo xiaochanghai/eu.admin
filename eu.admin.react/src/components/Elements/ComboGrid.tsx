@@ -3,6 +3,8 @@ import { Form } from "antd";
 import { ComboGrid } from "@/components";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, SmLovData, ModifyType } from "@/typings";
+import { RootState, useSelector } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 const FormItem = Form.Item;
 
@@ -26,16 +28,6 @@ interface ComboGridFieldProps {
 
 /**
  * 下拉表格选择框组件
- * 功能：封装ComboGrid组件，提供统一的表单字段样式和验证规则
- * 特性：
- * 1. 支持必填验证
- * 2. 支持禁用状态
- * 3. 支持父子级联动查询
- * 4. 自动处理字段标题和提示信息
- * 5. 使用 React.memo 优化性能
- *
- * @param props - 组件属性
- * @returns React组件
  */
 const ComboGridField: React.FC<ComboGridFieldProps> = ({
   field,
@@ -45,7 +37,11 @@ const ComboGridField: React.FC<ComboGridFieldProps> = ({
   parentId,
   modifyType = ModifyType.Edit
 }) => {
-  const { DataIndex, Placeholder, Required, DataSource, Disabled, ModifyDisabled, FormTitle, IsMultiple, MultipleMaxCount } = field;
+  const { DataIndex, Placeholder, Placeholder_EN, Required, DataSource, Disabled, ModifyDisabled, FormTitle, FormTitle_EN, IsMultiple, MultipleMaxCount } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const { t } = useTranslation();
+  const placeholder = (language === "en" ? Placeholder_EN : Placeholder) || t("formOption.selectPlaceholder");
+  const formTitle = language === "en" ? FormTitle_EN || FormTitle : FormTitle;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -54,9 +50,6 @@ const ComboGridField: React.FC<ComboGridFieldProps> = ({
 
   /**
    * 处理值变更事件
-   * @param value - 选中的值
-   * @param option - 选中的选项
-   * @param record - 选中的记录数据
    */
   const handleChange = useCallback(
     (value: string | null, option: any, record?: SmLovData[] | null) => {
@@ -70,23 +63,23 @@ const ComboGridField: React.FC<ComboGridFieldProps> = ({
     () => [
       {
         required: Required ?? false,
-        message: `请选择${FormTitle}!`
+        message: `${placeholder}${formTitle}!`
       }
     ],
-    [Required, FormTitle]
+    [Required, formTitle]
   );
 
   return (
     <FormItem name={DataIndex} label={<FieldTitle {...field} />} rules={validationRules}>
       <ComboGrid
-        code={DataSource} // 数据源代码，用于获取下拉选项
+        code={DataSource}
         disabled={isDisabled}
         onChange={handleChange}
-        parentColumn={parentColumn} // 父级列名，用于联动查询
-        parentId={parentId} // 父级ID，用于联动查询
-        placeholder={Placeholder ?? "请选择"}
-        mode={IsMultiple ? "multiple" : undefined} // 如果是多选，则设置mode为multiple
-        maxCount={IsMultiple && MultipleMaxCount ? MultipleMaxCount : undefined} // 如果是多选且指定了最大选择数量，则设置maxCount
+        parentColumn={parentColumn}
+        parentId={parentId}
+        placeholder={placeholder}
+        mode={IsMultiple ? "multiple" : undefined}
+        maxCount={IsMultiple && MultipleMaxCount ? MultipleMaxCount : undefined}
       />
     </FormItem>
   );

@@ -22,6 +22,7 @@ public enum CacheKeys
     Sm_Interface_Config,
     SmLov,
     CommonListSql,
+    SmLanguageConfig,
     ProvinceCity,
     /// <summary>
     /// 系统参数

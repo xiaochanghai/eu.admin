@@ -19,6 +19,7 @@ import { Toolbar, RecordLogModal, UploadExcelModal } from "./components";
 import { ProTableProps } from "./types";
 import { calculateScrollWidth } from "./utils";
 import { TABLE_SCROLL_CONFIG, SUM_ROW_ID } from "./constants";
+import { RootState, useSelector } from "@/redux";
 
 const { confirm } = Modal;
 
@@ -55,12 +56,12 @@ const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, d
  * 基于 @ant-design/pro-components 的 ProTable 封装
  * 提供模块化的表格功能，包括数据请求、操作列、工具栏、批量操作等
  */
-const SmProTable: React.FC<ProTableProps> = React.memo(props => {
+const SmProTable: React.FC<ProTableProps> = props => {
   const { moduleInfo, IsView, onEdit, masterId, customConditions, formRef, expendHideAction, expendAction, ...restProps } = props;
 
   const { moduleCode, columns, url, beforeActions, dropActions } = moduleInfo;
   const actionRef = useRef<ActionType>();
-
+  const language = useSelector((state: RootState) => state.global.language);
   // ==================== 自定义 Hooks ====================
 
   // 数据请求和状态管理
@@ -77,7 +78,8 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
     columns,
     moduleInfo.UserModuleColumn,
     moduleInfo.moduleId,
-    moduleInfo
+    moduleInfo,
+    language
   );
 
   // 批量操作
@@ -324,7 +326,7 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
     }
     // 添加操作列到末尾
     return [...enhancedColumns, actionColumn];
-  }, [enhancedColumns, actionColumn]);
+  }, [enhancedColumns, actionColumn, language]);
 
   // ==================== 工具栏渲染器 ====================
 
@@ -439,8 +441,8 @@ const SmProTable: React.FC<ProTableProps> = React.memo(props => {
       )}
     </>
   );
-});
+};
 
 SmProTable.displayName = "SmProTable";
 
-export default React.memo(SmProTable);
+export default SmProTable;
