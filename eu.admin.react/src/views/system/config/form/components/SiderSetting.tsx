@@ -1,10 +1,12 @@
-import { ReactNode, useCallback, useMemo } from "react";
-import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio, ColorPicker } from "antd";
+import { ReactNode, useCallback, useMemo, useState } from "react";
+import { Input, Tabs, Form, Select, Switch, Tooltip, InputNumber, Radio, ColorPicker, Modal, Button, Space, Skeleton, Row, Col } from "antd";
 import FieldSetting from "./FieldSetting";
 import { FormComponents } from "./CompDatas";
 import { Mode, FormFieldVo } from "./dsl/base";
 import { ComboGrid, Icon } from "@/components";
 import schemaDef, { deps, SchemaClz, formTypes, listTypes } from "./fieldSettingSchema";
+import { getColumnLanguageConfig, addLanguageConfig, updateLanguageConfig } from "@/api/modules/smLanguageConfig";
+import { message } from "@/hooks/useMessage";
 
 const { TextArea } = Input;
 const FormItem = Form.Item;
@@ -94,6 +96,64 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
     },
     [field, onDataChange]
   );
+
+  // 多语配置状态
+  const [langForm] = Form.useForm();
+  const [langModalOpen, setLangModalOpen] = useState(false);
+  const [langLoading, setLangLoading] = useState(false);
+  const [currentRefField, setCurrentRefField] = useState<string>("");
+
+  /** 打开多语弹框 */
+  const openLangModal = useCallback(async (refField: string) => {
+    if (!field?.ID) return;
+    setCurrentRefField(refField);
+    setLangModalOpen(true);
+    setLangLoading(true);
+    try {
+      const { Data, Success } = await getColumnLanguageConfig(field.ID, refField);
+      if (Success && Data) {
+        const langValues: Record<string, any> = {};
+        langValues.value_EN = Data.Value_EN || "";
+        langValues.value_ZH = Data.Value_ZH || "";
+        langValues.remark = Data.Remark || "";
+        langValues.id = Data.Id || Data.ID || "";
+        langForm.setFieldsValue(langValues);
+      }
+    } catch (error) {
+      console.error("获取栏位多语配置失败:", error);
+    }
+    setLangLoading(false);
+  }, [field, langForm]);
+
+  /** 保存多语配置 */
+  const saveLangConfig = useCallback(async () => {
+    if (!field?.ID || !currentRefField) return;
+    try {
+      const values = langForm.getFieldsValue();
+      const valueZH = field[currentRefField] || "";
+      const config: Record<string, any> = {
+        Id: values.id || undefined,
+        RefId: field.ID,
+        RefType: "ModuleColumn",
+        RefField: currentRefField,
+        Value_ZH: valueZH,
+        Value_EN: values.value_EN || "",
+        Remark: values.remark || undefined,
+      };
+      const { Success, Message } = config.Id
+        ? await updateLanguageConfig({ ...config, Id: config.Id })
+        : await addLanguageConfig(config);
+      if (Success) {
+        message.success("多语配置保存成功");
+        setLangModalOpen(false);
+      } else {
+        message.error(Message || "保存失败");
+      }
+    } catch (error) {
+      console.error("保存多语配置失败:", error);
+      message.error("保存多语配置失败");
+    }
+  }, [field, currentRefField, langForm]);
 
   /** 检查字段配置是否满足显示条件 */
   const shouldShowField = useCallback(
@@ -219,11 +279,18 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
           );
         }
 
+        case "langConfig":
+          return (
+            <Button type="default" block icon={<Icon name="GlobalOutlined" />} onClick={() => openLangModal(fieldConf.comboGridCode ?? "")} style={{ width: "100%" }}>
+              多语设置
+            </Button>
+          );
+
         default:
           return null;
       }
     },
-    [fieldsConf, field, shouldShowField, shouldShowOption, handleFieldChange]
+    [fieldsConf, field, shouldShowField, shouldShowOption, handleFieldChange, openLangModal]
   );
 
   return (
@@ -308,6 +375,59 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
           )
         }))}
       />
+
+      {/* 多语配置弹框 */}
+      <Modal
+        title={`多语设置 - ${field[currentRefField] || currentRefField}`}
+        open={langModalOpen}
+        onCancel={() => setLangModalOpen(false)}
+        destroyOnHidden
+        width={600}
+        footer={null}
+      >
+        {langLoading ? (
+          <Skeleton active />
+        ) : (
+          <Form form={langForm} labelCol={{ span: 6 }} wrapperCol={{ span: 16 }} style={{ marginTop: 16 }}>
+            <Form.Item label="id" name="id" hidden>
+              <Input />
+            </Form.Item>
+            <Row gutter={24}>
+              <Col span={24}>
+                <Form.Item label="中文值" name="value_ZH">
+                  <Input disabled />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={24}>
+              <Col span={24}>
+                <Form.Item label="English" name="value_EN">
+                  <Input placeholder="请输入英文翻译" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={24}>
+              <Col span={24}>
+                <Form.Item label="备注" name="remark">
+                  <Input.TextArea placeholder="请输入备注" autoSize={{ minRows: 1 }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            {/* 底部按钮 */}
+            <Row>
+              <Col span={24}>
+                <Space style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+                  <Button onClick={() => setLangModalOpen(false)}>取消</Button>
+                  <Button type="primary" icon={<Icon name="SaveOutlined" />} onClick={saveLangConfig}>
+                    确认
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Form>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -45,22 +45,39 @@ public class SmLanguageConfigServices : BaseServices<SmLanguageConfig, SmLanguag
     /// </remarks>
     public async Task<ServiceResult<SmLanguageConfig>> ByRefId(Guid refId, string refType, string refField)
     {
-        var config = await Db.Queryable<SmLanguageConfig>().Where(x => x.RefId == refId).FirstAsync();
+        var config = await Db.Queryable<SmLanguageConfig>()
+            .Where(x => x.RefId == refId && x.RefType == refType && x.RefField == refField)
+            .FirstAsync();
 
         if (config is null)
         {
-            var module = await Db.Queryable<SmModules>().Where(x => x.ID == refId).Select(x => x.ModuleName).FirstAsync();
+            string valueZH = null;
+            if (refType == "ModuleColumn")
+            {
+                var column = await Db.Queryable<SmModuleColumn>()
+                    .Where(x => x.ID == refId)
+                    .FirstAsync();
+                valueZH = column?.GetType().GetProperty(refField)?.GetValue(column)?.ToString();
+            }
+            else
+            {
+                var module = await Db.Queryable<SmModules>()
+                    .Where(x => x.ID == refId)
+                    .Select(x => x.ModuleName)
+                    .FirstAsync();
+                valueZH = module;
+            }
+
             config = new SmLanguageConfig()
             {
                 RefId = refId,
-                RefType = "Module",
-                RefField = "ModuleName",
-                Value_ZH = module
+                RefType = refType,
+                RefField = refField,
+                Value_ZH = valueZH
             };
 
             await Db.Insertable(config).ExecuteCommandAsync();
         }
-        config = await Db.Queryable<SmLanguageConfig>().Where(x => x.RefId == refId).FirstAsync();
         return Success(config);
     }
 

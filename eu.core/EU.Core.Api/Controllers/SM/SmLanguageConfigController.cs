@@ -27,9 +27,6 @@ public class SmLanguageConfigController : BaseController<ISmLanguageConfigServic
     {
     }
 
-
-
-
     #region 获取左侧菜单
     /// <summary>
     /// 获取左侧菜单
@@ -37,5 +34,14 @@ public class SmLanguageConfigController : BaseController<ISmLanguageConfigServic
     /// <returns></returns>
     [HttpGet("ByModule/{refId}")]
     public async Task<ServiceResult<SmLanguageConfig>> ByModule(Guid refId) => await _service.ByRefId(refId, "Module", "ModuleName");
+    #endregion
+
+    #region 获取栏位多语配置
+    /// <summary>
+    /// 获取栏位的多语配置
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("ByColumn/{refId}/{refField}")]
+    public async Task<ServiceResult<SmLanguageConfig>> ByColumn(Guid refId,string refField) => await _service.ByRefId(refId, "ModuleColumn", refField);
     #endregion
 }

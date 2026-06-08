@@ -1,4 +1,4 @@
-import { DatabaseOutlined, ProductOutlined } from "@ant-design/icons";
+import { GlobalOutlined, DatabaseOutlined, ProductOutlined } from "@ant-design/icons";
 import { Mode } from "./dsl/base";
 
 //显示的依赖定义
@@ -9,7 +9,7 @@ export type deps = {
 export interface designProp {
   name: string; //title
   icon?: any;
-  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea" | "comboGrid" | "inputNumber" | "colorPicker"; //设置组件的类型
+  type: "select" | "input" | "switch" | "buttonGroup" | "form" | "textArea" | "comboGrid" | "inputNumber" | "colorPicker" | "button" | "langConfig"; //设置组件的类型
   tag?: "basic" | "layout"; //所在分组标签
   mode?: Mode[] | Mode; //使用场景
   deps?: deps | deps[]; //字段显示依赖,如果是数组都需要满足
@@ -40,11 +40,34 @@ export const listTypes: { title: string; value: string; icon?: any }[] = [
 ];
 
 export const schemaDef: SchemaClz = {
+
+  Title: {
+    name: "标题",
+    type: "input",
+    tag: "basic",
+    mode: Mode.list
+  },
+  TitleLangConfig: {
+    name: "标题多语设置",
+    icon: GlobalOutlined,
+    type: "langConfig",
+    tag: "basic",
+    mode: Mode.list,
+    comboGridCode: "Title"
+  },
   FormTitle: {
     name: "标题",
     type: "input",
     mode: Mode.form,
     tag: "basic"
+  },
+  FormTitleLangConfig: {
+    name: "标题多语设置",
+    icon: GlobalOutlined,
+    type: "langConfig",
+    tag: "basic",
+    mode: Mode.form,
+    comboGridCode: "FormTitle"
   },
   DataIndex: {
     name: "表栏位字段",
@@ -152,6 +175,14 @@ export const schemaDef: SchemaClz = {
     tag: "basic",
     deps: { field: "FieldType", value: ["Input", "InputNumber", "TextArea"] }
   },
+  PlaceholderLangConfig: {
+    name: "占位符多语设置",
+    icon: GlobalOutlined,
+    type: "langConfig",
+    tag: "basic",
+    mode: Mode.form,
+    comboGridCode: "Placeholder"
+  },
   CreateHide: {
     //保存时才会触发数据产生，无法实时预览
     name: "新增时隐藏",
@@ -257,12 +288,6 @@ export const schemaDef: SchemaClz = {
     deps: { field: "FieldType", value: ["ComboGrid"] },
     mode: Mode.form
   },
-  Title: {
-    name: "标题",
-    type: "input",
-    tag: "basic",
-    mode: Mode.list
-  },
   // ValueType: {
   //   name: "列表数据类型",
   //   type: "buttonGroup",
@@ -299,7 +324,8 @@ export const schemaDef: SchemaClz = {
       { value: "color", label: "颜色选择器" },
       { value: "icon", label: "图标" },
       { value: "link", label: "链接" },
-      { value: "fileLink", label: "文件链接" }
+      { value: "fileLink", label: "文件链接" },
+      { value: "imagePreview", label: "图片预览" }
     ]
   },
   Width: {
@@ -450,6 +476,14 @@ export const schemaDef: SchemaClz = {
     name: "提示内容",
     type: "input",
     tag: "basic",
+    deps: [{ field: "IsTooltip", value: [true] }]
+  },
+  TooltipContentLangConfig: {
+    name: "占位符多语设置",
+    icon: GlobalOutlined,
+    type: "langConfig",
+    tag: "basic",
+    comboGridCode: "TooltipContent",
     deps: [{ field: "IsTooltip", value: [true] }]
   },
   AllowClear: {

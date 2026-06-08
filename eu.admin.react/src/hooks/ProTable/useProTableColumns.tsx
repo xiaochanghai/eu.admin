@@ -1,11 +1,33 @@
 import { useState, useMemo } from "react";
-import { Tag, Switch, Button } from "antd";
+import { Tag, Switch, Button, Image } from "antd";
 import { useDispatch } from "@/redux";
 import { setModuleInfo } from "@/redux/modules/module";
 import { recordUserModuleColumn } from "@/api/modules/module";
 import { ModuleInfo } from "@/api/interface/index";
 import { ComboGrid, Icon } from "@/components";
 import { downloadFile } from "@/utils";
+
+/**
+ * 图片预览触发器组件
+ * 显示"图片"文字，点击后弹出 antd Image 内置预览
+ */
+const ImagePreviewTrigger: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
+  const [visible, setVisible] = useState(false);
+  return (
+    <>
+      <a style={{ cursor: "pointer" }} onClick={() => setVisible(true)}>
+        图片
+      </a>
+      {visible && (
+        <Image
+          src={imageUrl}
+          preview={{ visible, onVisibleChange: setVisible }}
+          style={{ display: "none" }}
+        />
+      )}
+    </>
+  );
+};
 
 /**
  * ProTable 列配置管理 Hook
@@ -107,6 +129,18 @@ export const useProTableColumns = (
               return <a style={{ cursor: "pointer" }} onClick={() => downloadFile(record[item.dataIndex], record[item.dataIndex])} key="link">
                 <Icon name='LinkOutlined' /> 链接
               </a>;
+          };
+
+          break;
+
+        case "imagePreview":
+          columnEnhancements.render = (_: any, record: any) => {
+            if (record[item.dataIndex]) {
+              const baseURL = import.meta.env.VITE_API_URL as string;
+              const imageUrl = (baseURL == "/" ? "" : baseURL) + `/api/File/Download/${record[item.dataIndex]}`;
+              return <ImagePreviewTrigger key="imagePreview" imageUrl={imageUrl} />;
+            }
+            return null;
           };
 
           break;
