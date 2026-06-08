@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using Dm;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -26,4 +28,41 @@ public class SmLanguageConfigServices : BaseServices<SmLanguageConfig, SmLanguag
     {
         BaseDal = dal;
     }
+
+
+
+    #region 复制模块
+
+    /// <summary>
+    /// 复制模块及其配置
+    /// </summary>
+    /// <param name="moduleId">源模块ID</param>
+    /// <param name="module1">新模块信息</param>
+    /// <returns>复制结果</returns>
+    /// <remarks>
+    /// 复制模块的基本信息、SQL配置和列配置
+    /// 新模块使用新的ID和代码
+    /// </remarks>
+    public async Task<ServiceResult<SmLanguageConfig>> ByRefId(Guid refId, string refType, string refField)
+    {
+        var config = await Db.Queryable<SmLanguageConfig>().Where(x => x.RefId == refId).FirstAsync();
+
+        if (config is null)
+        {
+            var module = await Db.Queryable<SmModules>().Where(x => x.ID == refId).Select(x => x.ModuleName).FirstAsync();
+            config = new SmLanguageConfig()
+            {
+                RefId = refId,
+                RefType = "Module",
+                RefField = "ModuleName",
+                Value_ZH = module
+            };
+
+            await Db.Insertable(config).ExecuteCommandAsync();
+        }
+        config = await Db.Queryable<SmLanguageConfig>().Where(x => x.RefId == refId).FirstAsync();
+        return Success(config);
+    }
+
+    #endregion
 }

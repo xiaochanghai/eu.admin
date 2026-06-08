@@ -4847,6 +4847,41 @@
             序号
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmLanguageConfigBase">
+            <summary>
+            多语配置 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.RefType">
+            <summary>
+            关联实体类型 (Module/ModuleColumn)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.RefId">
+            <summary>
+            关联实体ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.RefField">
+            <summary>
+            关联字段名 (ModuleName/Title/FormTitle/Placeholder/TooltipContent)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.Value_ZH">
+            <summary>
+            中文值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.Value_EN">
+            <summary>
+            英文值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmLanguageConfigBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmLovBase">
             <summary>
             字典管理 (Dto.Base)
@@ -6815,6 +6850,11 @@
         <member name="T:EU.Core.Model.Edit.EditSmImpTemplateDetailInput">
             <summary>
             导入模板定义明细 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmLanguageConfigInput">
+            <summary>
+            多语配置 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmLovInput">
@@ -11742,6 +11782,41 @@
             序号
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Entity.SmLanguageConfig">
+            <summary>
+            多语配置 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.RefType">
+            <summary>
+            关联实体类型 (Module/ModuleColumn)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.RefId">
+            <summary>
+            关联实体ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.RefField">
+            <summary>
+            关联字段名 (ModuleName/Title/FormTitle/Placeholder/TooltipContent)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.Value_ZH">
+            <summary>
+            中文值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.Value_EN">
+            <summary>
+            英文值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmLanguageConfig.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmLov">
             <summary>
             字典管理 (Model)
@@ -13808,6 +13883,11 @@
             导入模板定义明细(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmLanguageConfigDto">
+            <summary>
+            多语配置(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmLovDto">
             <summary>
             SmLov(Dto.View)
@@ -14363,6 +14443,11 @@
         <member name="T:EU.Core.Model.Insert.InsertSmImpTemplateDetailInput">
             <summary>
             导入模板定义明细 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmLanguageConfigInput">
+            <summary>
+            多语配置 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmLovInput">

@@ -26,4 +26,16 @@ public class SmLanguageConfigController : BaseController<ISmLanguageConfigServic
     public SmLanguageConfigController(ISmLanguageConfigServices service) : base(service)
     {
     }
+
+
+
+
+    #region 获取左侧菜单
+    /// <summary>
+    /// 获取左侧菜单
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("ByModule/{refId}")]
+    public async Task<ServiceResult<SmLanguageConfig>> ByModule(Guid refId) => await _service.ByRefId(refId, "Module", "ModuleName");
+    #endregion
 }

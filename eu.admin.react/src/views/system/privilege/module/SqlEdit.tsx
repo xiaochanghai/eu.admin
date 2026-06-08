@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button, Tabs, Input, Card, Form, Row, Col, Space, Modal, Skeleton } from "antd";
-import type {} from "antd";
+import type { } from "antd";
 import { getModuleFullSql, add, update, getModuleSqlInfo } from "@/api/modules/module";
+import {
+  getModuleLanguageConfig,
+  addLanguageConfig,
+  updateLanguageConfig,
+} from "@/api/modules/smLanguageConfig";
 import { TableList, Icon } from "@/components";
 import { message } from "@/hooks/useMessage";
 import ColumnFormPage from "./ColumnFormPage";
@@ -214,6 +219,11 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
   const [id, setId] = useState<string>("");
   const [form] = Form.useForm<ModuleSqlInfo>();
 
+  // 多语配置状态
+  const [langForm] = Form.useForm();
+  const [langConfigId, setLangConfigId] = useState<string>("");
+  const [langIsLoad, setLangIsLoad] = useState<boolean>(true);
+
   /**
    * 获取模块SQL信息
    */
@@ -247,6 +257,44 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
       fetchModuleSqlInfo();
     }
   }, [ModuleId, fetchModuleSqlInfo]);
+
+  /**
+   * 获取模块多语配置
+   */
+  const fetchLanguageConfig = useCallback(async () => {
+    try {
+      setLangIsLoad(true);
+      const { Data, Success } = await getModuleLanguageConfig(ModuleId);
+      if (Success && Data) {
+        setLangConfigId(Data.Id || Data.ID || "");
+        langForm.setFieldsValue({
+          Value_ZH: Data.Value_ZH || "",
+          Value_EN: Data.Value_EN || "",
+          Remark: Data.Remark || "",
+        });
+      } else {
+        langForm.setFieldsValue({
+          Value_ZH: "",
+          Value_EN: "",
+          Remark: "",
+        });
+        setLangConfigId("");
+      }
+      setLangIsLoad(false);
+    } catch (error) {
+      console.error("获取多语配置失败:", error);
+      setLangIsLoad(false);
+    }
+  }, [ModuleId, langForm]);
+
+  /**
+   * 多语配置Tab切换时加载数据
+   */
+  useEffect(() => {
+    if (tabKey === "4" && ModuleId && langIsLoad) {
+      fetchLanguageConfig();
+    }
+  }, [tabKey, ModuleId, langIsLoad, fetchLanguageConfig]);
 
   /**
    * 获取并显示完整SQL
@@ -299,6 +347,38 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
   );
 
   /**
+   * 多语配置表单提交
+   */
+  const handleLangFormSubmit = useCallback(
+    async (data: Record<string, any>) => {
+      debugger
+      try {
+        data.RefId = ModuleId;
+
+        // 将undefined值转换为null
+        Object.keys(data).forEach(key => {
+          if (data[key] === undefined) {
+            data[key] = null;
+          }
+        });
+
+        const { Data, Success, Message } = langConfigId
+          ? await updateLanguageConfig({ ...data, Id: langConfigId })
+          : await addLanguageConfig(data);
+
+        if (Success) {
+          message.success(Message);
+          if (!langConfigId && Data) setLangConfigId(Data);
+        }
+      } catch (error) {
+        console.error("保存多语配置失败:", error);
+        message.error("保存多语配置失败");
+      }
+    },
+    [langConfigId, ModuleId]
+  );
+
+  /**
    * 返回按钮处理
    */
   const handleGoBack = () => {
@@ -314,7 +394,7 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
       key: "1",
       label: "模块SQL",
       children: (
-        <Space orientation="vertical"  size="middle" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
           {/* 表信息字段集 */}
           <Fieldset title="表信息" isLoad={isLoad}>
             <FormFields fields={TABLE_INFO_FIELDS} isView={IsView} isLoad={isLoad} />
@@ -372,6 +452,73 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
           DynamicFormPage={ColumnFormPage}
         />
       )
+    },
+    {
+      key: "4",
+      label: "多语设置",
+      children: (
+        <div style={{ padding: "16px 0" }}>
+          {langIsLoad ? (
+            <Skeleton active />
+          ) : (
+            <Form
+              form={langForm}
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 14 }}
+              style={{ maxWidth: 700, margin: "0 auto" }}
+            >
+              {/* 简体中文 */}
+              <Row gutter={24}>
+                <Col span={24}>
+                  <Form.Item label="简体中文" name="Value_ZH">
+                    <Input placeholder="请输入" disabled />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* English */}
+              <Row gutter={24}>
+                <Col span={24}>
+                  <Form.Item label="English" name="Value_EN">
+                    <Input placeholder="请输入" disabled={IsView} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* 备注 */}
+              <Row gutter={24}>
+                <Col span={24}>
+                  <Form.Item label="备注" name="Remark">
+                    <TextArea placeholder="请输入" autoSize={{ minRows: 3 }} disabled={IsView} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* 底部按钮 */}
+              {!IsView && (
+                <Row>
+                  <Col span={24}>
+                    <Space style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+                      <Button onClick={() => langForm.resetFields()}>取消</Button>
+                      <Button
+                        type="primary"
+                        icon={<Icon name="SaveOutlined" />}
+                        onClick={() => {
+                          langForm.validateFields().then(values => {
+                            handleLangFormSubmit(values);
+                          });
+                        }}
+                      >
+                        确认
+                      </Button>
+                    </Space>
+                  </Col>
+                </Row>
+              )}
+            </Form>
+          )}
+        </div>
+      )
     }
   ];
 
@@ -418,8 +565,8 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
         <Card className="mt-10">
           <Tabs activeKey={tabKey} onChange={setTabKey} items={tabItems} />
 
-          {/* 底部按钮区域 - 仅在非模块列标签页显示 */}
-          {tabKey !== "3" && (
+          {/* 底部按钮区域 - 仅在非模块列和多语设置标签页显示 */}
+          {tabKey !== "3" && tabKey !== "4" && (
             <Space style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
               {!IsView && (
                 <Button type="primary" htmlType="submit" icon={<Icon name="SaveOutlined" />}>

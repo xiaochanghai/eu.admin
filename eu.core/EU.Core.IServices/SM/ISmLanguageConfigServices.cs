@@ -21,4 +21,5 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface ISmLanguageConfigServices : IBaseServices<SmLanguageConfig, SmLanguageConfigDto, InsertSmLanguageConfigInput, EditSmLanguageConfigInput>
 {
+    Task<ServiceResult<SmLanguageConfig>> ByRefId(Guid refId, string refType, string refField);
 }
