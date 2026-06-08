@@ -141,12 +141,10 @@ const ComBoGrid: React.FC<ComBoGridProps> = props => {
   return (
     <Select
       allowClear
-      showSearch
-      filterOption={false}
+      showSearch={{ filterOption: false, onSearch: handleSearch }}
       value={comboValue}
       notFoundContent={loading ? <Spin size="small" /> : null}
       style={{ width: "100%" }}
-      onSearch={handleSearch}
       onChange={handleChange}
       onClear={handleClear}
       options={dropDownData}
