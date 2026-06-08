@@ -1584,6 +1584,23 @@
             导入模板定义明细(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmLanguageConfigController">
+            <summary>
+            多语配置(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmLanguageConfigController.ByModule(System.Guid)">
+            <summary>
+            获取左侧菜单
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmLanguageConfigController.ByColumn(System.Guid,System.String)">
+            <summary>
+            获取栏位的多语配置
+            </summary>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmLovController">
             <summary>
             SmLov(Controller)
