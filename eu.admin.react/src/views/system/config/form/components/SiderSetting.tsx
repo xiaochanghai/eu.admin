@@ -75,7 +75,13 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
     (_fieldName: string, dd: deps | deps[] | undefined): boolean => {
       if (dd === undefined) return true;
       const arr = Array.isArray(dd) ? dd : [dd];
-      return arr.every(a => a.value.includes(field[a.field]));
+      return arr.every(a => {
+        if (a.notEmpty) {
+          const v = field[a.field];
+          return v !== null && v !== undefined && v !== "";
+        }
+        return a.value!.includes(field[a.field]);
+      });
     },
     [field]
   );
@@ -84,7 +90,13 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
   const checkAnyOf = useCallback(
     (_fieldName: string, dd: deps[] | undefined): boolean => {
       if (dd === undefined || dd.length === 0) return true;
-      return dd.some(a => a.value.includes(field[a.field]));
+      return dd.some(a => {
+        if (a.notEmpty) {
+          const v = field[a.field];
+          return v !== null && v !== undefined && v !== "";
+        }
+        return a.value!.includes(field[a.field]);
+      });
     },
     [field]
   );

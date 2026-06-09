@@ -4,7 +4,8 @@ import { Mode } from "./dsl/base";
 //显示的依赖定义
 export type deps = {
   field: string; //依赖的属性
-  value: any[]; //依赖的值 满足其中之一即可 
+  value?: any[]; //依赖的值 满足其中之一即可
+  notEmpty?: boolean; //为true时，依赖字段不为空(null/undefined/"")即满足，忽略value
 };
 export interface designProp {
   name: string; //title
@@ -181,7 +182,12 @@ export const schemaDef: SchemaClz = {
     type: "langConfig",
     tag: "basic",
     mode: Mode.form,
-    comboGridCode: "Placeholder"
+    comboGridCode: "Placeholder",
+    deps: [
+      { field: "FieldType", value: ["Input", "InputNumber", "TextArea"] },
+      { field: "Placeholder", notEmpty: true }
+    ]
+
   },
   CreateHide: {
     //保存时才会触发数据产生，无法实时预览
@@ -484,7 +490,7 @@ export const schemaDef: SchemaClz = {
     type: "langConfig",
     tag: "basic",
     comboGridCode: "TooltipContent",
-    deps: [{ field: "IsTooltip", value: [true] }]
+    deps: [{ field: "IsTooltip", value: [true] }, { field: "TooltipContent", notEmpty: true }]
   },
   AllowClear: {
     name: "允许清除",
