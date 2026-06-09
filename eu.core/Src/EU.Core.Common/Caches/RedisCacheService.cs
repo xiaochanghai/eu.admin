@@ -271,11 +271,26 @@ public class RedisCacheService : IDisposable
     /// <exception cref="ArgumentNullException">键为空时抛出异常</exception>
     public bool Remove(string key)
     {
-        if (string.IsNullOrEmpty(key))
+        if (key.IsNullOrEmpty())
             throw new ArgumentNullException(nameof(key));
 
         key = _redisKeyPrefix + key;
         return _cache.KeyDelete(key);
+    }
+
+    /// <summary>
+    /// 异步删除缓存
+    /// </summary>
+    /// <param name="key">缓存键</param>
+    /// <returns>是否删除成功</returns>
+    /// <exception cref="ArgumentNullException">键为空时抛出异常</exception>
+    public async Task<bool> RemoveAsync(string key)
+    {
+        if (key.IsNullOrEmpty())
+            throw new ArgumentNullException(nameof(key));
+
+        key = _redisKeyPrefix + key;
+        return await _cache.KeyDeleteAsync(key);
     }
 
     /// <summary>

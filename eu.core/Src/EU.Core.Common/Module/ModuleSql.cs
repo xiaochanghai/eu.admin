@@ -1,4 +1,4 @@
-using Dm.util;
+﻿using Dm.util;
 using EU.Core.Common.Caches;
 using EU.Core.Common.Enums;
 using EU.Core.Common.Helper;
@@ -33,11 +33,25 @@ public class ModuleSql
         if (module == null)
         {
             var cache = GetModuleSqlList();
-            Redis.Remove(key);
-            cache.ForEach(item => Redis.AddObject(key, item.ModuleCode, item));
-            module = cache.FirstOrDefault(x => x.ModuleCode == moduleCode);
+            var result = cache.FirstOrDefault(x => x.ModuleCode == moduleCode);
+            // 后台异步写入 Redis 缓存，避免 sync 操作堆积堵塞请求线程
+            _ = WarmUpCacheAsync(cache);
+            return result;
         }
         return module;
+    }
+
+    private async Task WarmUpCacheAsync(List<SmModuleSqlExtend> allSqlConfigs)
+    {
+        try
+        {
+            await Redis.RemoveAsync(key);
+            foreach (var item in allSqlConfigs)
+            {
+                await Redis.AddObjectAsync(key, item.ModuleCode, item);
+            }
+        }
+        catch { /* 缓存写入失败不影响主流程 */ }
     }
 
     public List<SmModuleSqlExtend> GetModuleSqlList()
@@ -83,11 +97,7 @@ public class ModuleSql
     #region 获取Select语句
     public string GetModuleSqlSelect()
     {
-        var result = GetModuleSql()?.SqlSelect ?? string.Empty;
-
-        if (string.IsNullOrEmpty(result))
-            result = GetModuleSqlSelect();
-        return result;
+        return GetModuleSql()?.SqlSelect ?? string.Empty;
     }
     #endregion
 
@@ -236,7 +246,7 @@ public class ModuleSql
 
     public static string GetCountString1(string moduleCode, string sqlSelect, string sqlDefaultCondition, string SqlQueryCondition)
     {
-        string queryString = "SELECT COUNT(1) FROM (" + sqlSelect + " ";
+        string queryString = "SELECT COUNT(1) FROM (" + sqlSelect + ") Z WHERE 1=1";
 
         if (!string.IsNullOrEmpty(sqlDefaultCondition))
             queryString += " AND " + sqlDefaultCondition;
@@ -246,7 +256,6 @@ public class ModuleSql
         else if (ModuleInfo.GetIsExecQuery(moduleCode) == false)
             queryString += " AND 1<>1";
 
-        queryString += " ) Z";
         return queryString;
     }
 
@@ -431,7 +440,6 @@ public class ModuleSql
         else
             countString = GetCountString1(moduleCode, SqlSelectBrwAndTable, SqlDefaultCondition, SqlQueryCondition);
 
-        countString = string.Format(countString, innerCondition);
         countString = string.Format(countString, innerCondition);
         if (database == "first")
             totalCount = Convert.ToInt32(DBHelper.ExecuteScalar(countString));
