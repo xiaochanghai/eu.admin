@@ -20,6 +20,8 @@ public class ModuleInfo
     private static RedisCacheService _redisInstance;
     private static RedisCacheService Redis => _redisInstance ??= RedisCacheService.Create(2);
 
+    private static string key = "SM_MODULE";
+
     /// <summary>
     /// 数据库上下文
     /// </summary>
@@ -40,20 +42,30 @@ public class ModuleInfo
         if (string.IsNullOrWhiteSpace(moduleCode))
             return null;
 
-        var module = Redis.Get<SmModules>("SM_MODULE", moduleCode);
+        var module = Redis.Get<SmModules>(key, moduleCode);
         if (module == null)
         {
             var moduleList = GetModuleList();
             module = moduleList.FirstOrDefault(x => x.ModuleCode == moduleCode);
 
-            // 重新缓存所有模块信息
-            Redis.Remove("SM_MODULE");
-            foreach (var item in moduleList)
-            {
-                Redis.AddObject("SM_MODULE", item.ModuleCode, item);
-            }
+            // 后台异步写入 Redis 缓存，避免 sync 操作堆积堵塞请求线程
+            _ = WarmUpModuleCacheAsync(moduleList);
         }
         return module;
+    }
+
+    private static async Task WarmUpModuleCacheAsync(List<SmModules> moduleList)
+    {
+        try
+        {
+            await Redis.RemoveAsync(key);
+            for (int i = 0; i < moduleList.Count; i++)
+            {
+                var item = moduleList[i];
+                await Redis.AddObjectAsync(key, item.ModuleCode, item);
+            }
+        }
+        catch { /* 缓存写入失败不影响主流程 */ }
     }
 
     /// <summary>

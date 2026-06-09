@@ -1,7 +1,7 @@
-﻿using System.Data;
-using EU.Core.Common.Const;
+﻿using EU.Core.Common.Const;
 using EU.Core.Common.DB;
 using EU.Core.Common.Enums;
+using System.Data;
 
 namespace EU.Core.Common.Helper;
 
@@ -25,18 +25,28 @@ public class TableManager
 
             typeCode = typeCode == "U" ? "TABLE" : "VIEW";
 
+            bool isMySql = DBType.Name == DbCurrentType.MySql.ToString();
+
             #endregion
             #region 处理表
             sql = "SELECT COUNT(0) FROM SmTableCatalog A WHERE (A.TableCode='{0}' OR A.TableCode='{1}') AND A.IsDeleted='false' AND A.IsActive='true'";
             sql = string.Format(sql, tableCode, tableCode.ToUpper());
             count = int.Parse(Convert.ToString(DBHelper.ExecuteScalar(sql)));
-            sql = @"SELECT f.value TableName
+            if (isMySql)
+            {
+                sql = $"SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_NAME = '{tableCode}' AND TABLE_SCHEMA = '{GetMysqlTableSchema()}'";
+            }
+            else
+            {
+                sql = @"SELECT f.value TableName
                             FROM sysobjects d
                                  LEFT JOIN sys.extended_properties f
                                     ON d.id = f.major_id AND f.minor_id = 0
                             WHERE d.name = '{0}'";
-            sql = string.Format(sql, tableCode);
+                sql = string.Format(sql, tableCode);
+            }
             string tableName = Convert.ToString(DBHelper.ExecuteScalar(sql, null));
+            if (string.IsNullOrEmpty(tableName)) tableName = tableCode;
             if (count == 0)
             {
                 DbInsert di = new("SmTableCatalog", "InitTableAndField");
@@ -48,7 +58,8 @@ public class TableManager
             }
             else
             {
-                sql = $"UPDATE A  SET A.TableCode='{tableCode}' ,A.TableName='{tableName}',A.UpdateTime=getdate() FROM SmTableCatalog A WHERE (A.TableCode='{tableCode}' OR A.TableCode='{tableCode.ToUpper()}') AND A.IsDeleted='false' AND A.IsActive='true'";
+                var nowFunc = isMySql ? "NOW()" : "getdate()";
+                sql = $"UPDATE A  SET A.TableCode='{tableCode}' ,A.TableName='{tableName}',A.UpdateTime={nowFunc} FROM SmTableCatalog A WHERE (A.TableCode='{tableCode}' OR A.TableCode='{tableCode.ToUpper()}') AND A.IsDeleted='false' AND A.IsActive='true'";
 
                 DBHelper.ExecuteDML(sql);
             }
@@ -56,7 +67,6 @@ public class TableManager
             #region 处理新增列
             DataTable dtFieldCatalog = new();
             DataTable dtUserTabColumns = null;
-            bool isMySql = DBType.Name == DbCurrentType.MySql.ToString();
             if (isMySql)
             {
                 sql = @"SELECT A.COLUMN_NAME,
@@ -215,7 +225,8 @@ public class TableManager
                     }
                     else
                     {
-                        sql = $"UPDATE A SET A.TableCode='{tableCode}' ,A.UpdateTime=getdate() ,A.ColumnCode='{columnCode}'," +
+                        var nowFunc2 = isMySql ? "NOW()" : "getdate()";
+                        sql = $"UPDATE A SET A.TableCode='{tableCode}' ,A.UpdateTime={nowFunc2} ,A.ColumnCode='{columnCode}'," +
                             $"A.ColumnName='{description}' FROM SmFieldCatalog A " +
                             $"WHERE (A.TableCode='{tableCode}' OR A.TableCode='{tableCode.ToUpper()}') AND(A.ColumnCode='{columnCode}' OR A.ColumnCode='{columnCode.ToUpper()}') AND A.IsDeleted='false' AND A.IsActive='true'";
                         DBHelper.ExecuteDML(sql);

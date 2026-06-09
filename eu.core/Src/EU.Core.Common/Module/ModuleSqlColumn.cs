@@ -51,10 +51,9 @@ public class ModuleSqlColumn
 
     private async Task WarmUpCacheAsync(List<SmModules> moduleList, List<SmModuleColumnExtend> allColumns)
     {
-        await Task.Yield(); // 切到线程池
         try
         {
-            Redis.Remove(code);
+            await Redis.RemoveAsync(code);
             foreach (var item in moduleList)
             {
                 var columns = allColumns.Where(x => x.ModuleCode == item.ModuleCode).ToList();
@@ -75,7 +74,7 @@ public class ModuleSqlColumn
                                 columns[i].Placeholder_EN = configs[j].Value_EN;
                         }
                     }
-                    Redis.AddObject(code, item.ModuleCode, columns);
+                    await Redis.AddObjectAsync(code, item.ModuleCode, columns);
                 }
             }
         }

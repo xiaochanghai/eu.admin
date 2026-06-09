@@ -46,9 +46,9 @@ public class ModuleSql
         try
         {
             await Redis.RemoveAsync(key);
-            foreach (var item in allSqlConfigs)
+            for (int i = 0; i < allSqlConfigs.Count; i++)
             {
-                await Redis.AddObjectAsync(key, item.ModuleCode, item);
+                await Redis.AddObjectAsync(key, allSqlConfigs[i].ModuleCode, allSqlConfigs[i]);
             }
         }
         catch { /* 缓存写入失败不影响主流程 */ }
