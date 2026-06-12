@@ -397,7 +397,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
         formRef={formRef}
         scroll={{
           scrollToFirstRowOnChange: TABLE_SCROLL_CONFIG.scrollToFirstRowOnChange,
-          x: calculateScrollWidth(finalColumns.length),
+          x: calculateScrollWidth(finalColumns),
           y: TABLE_SCROLL_CONFIG.y
         }}
         onLoad={() => {

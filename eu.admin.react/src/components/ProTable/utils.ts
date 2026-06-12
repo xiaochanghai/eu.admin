@@ -122,11 +122,25 @@ export const hasUpdatePermission = (moduleInfo: ModuleInfo): boolean => {
 
 /**
  * 计算表格滚动宽度
- * @param columnCount 列数量
- * @returns 滚动宽度
+ * @param columns 列配置数组
+ * @returns 滚动宽度（所有可见列宽之和）
  */
-export const calculateScrollWidth = (columnCount: number): number => {
-  return columnCount * 100;
+export const calculateScrollWidth = (columns: any[]): number => {
+  if (!columns || columns.length === 0) return 0;
+
+  const DEFAULT_COLUMN_WIDTH = 100;
+
+  return columns.reduce((total, col) => {
+    // 跳过隐藏列
+    if (col.hideInTable) return total;
+
+    if (col.width) {
+      // 处理数字和字符串格式（如 "100px"）
+      const width = typeof col.width === "string" ? parseInt(col.width, 10) : col.width;
+      return total + (isNaN(width) ? DEFAULT_COLUMN_WIDTH : width);
+    }
+    return total + DEFAULT_COLUMN_WIDTH;
+  }, 0);
 };
 
 /**
