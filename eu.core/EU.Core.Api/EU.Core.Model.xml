@@ -5432,6 +5432,11 @@
             是否导入Excel
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsDisplayRowSelection">
+            <summary>
+            表格行是否可选择
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12365,6 +12370,11 @@
         <member name="P:EU.Core.Model.Entity.SmModules.IsImportExcel">
             <summary>
             是否导入Excel
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsDisplayRowSelection">
+            <summary>
+            表格行是否可选择
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
