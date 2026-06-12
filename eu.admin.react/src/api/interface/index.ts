@@ -83,7 +83,7 @@ export interface ModuleInfo {
   openType: string;
   url: string;
   customActionData: any[];
-  isDisplayRowSelection?: boolean;
+  IsShowRowSelection?: boolean;
 }
 export interface ModuleInfo1 {
   ModuleName: string;

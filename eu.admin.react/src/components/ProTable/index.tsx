@@ -59,7 +59,7 @@ const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, d
 const SmProTable: React.FC<ProTableProps> = props => {
   const { moduleInfo, IsView, onEdit, masterId, customConditions, formRef, expendHideAction, expendAction, ...restProps } = props;
 
-  const { moduleCode, columns, url, beforeActions, dropActions, isDisplayRowSelection } = moduleInfo;
+  const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection } = moduleInfo;
   const actionRef = useRef<ActionType>();
   const language = useSelector((state: RootState) => state.global.language);
   // ==================== 自定义 Hooks ====================
@@ -386,7 +386,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
           onDoubleClick: () => handleDoubleClick(record)
         })}
         className="ant-pro-table-scroll"
-        rowSelection={isDisplayRowSelection === false ? undefined : {
+        rowSelection={IsShowRowSelection === false ? undefined : {
           fixed: "left",
           getCheckboxProps: (record: any) => ({
             disabled: record.ID === SUM_ROW_ID

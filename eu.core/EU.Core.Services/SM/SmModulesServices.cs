@@ -731,7 +731,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             obj.url = module.ApiUrl; // API地址
             obj.IsShowAudit = module.IsShowAudit; // 是否显示审核
             obj.UserModuleColumn = await GetUserModuleColumn(moduleCode); // 用户自定义列配置
-            obj.isDisplayRowSelection = module.IsDisplayRowSelection;
+            obj.IsShowRowSelection = module.IsShowRowSelection;
 
             message = "获取成功！";
         }

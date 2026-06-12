@@ -207,6 +207,6 @@ public class SmModules : BasePoco
     /// <summary>
     /// 表格行是否可选择
     /// </summary>
-    [Display(Name = "IsDisplayRowSelection"), Description("表格行是否可选择"), SugarColumn(IsNullable = true)]
-    public bool? IsDisplayRowSelection { get; set; }
+    [Display(Name = "IsShowRowSelection"), Description("表格行是否可选择"), SugarColumn(IsNullable = true)]
+    public bool? IsShowRowSelection { get; set; }
 }

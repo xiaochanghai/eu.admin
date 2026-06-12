@@ -5432,7 +5432,7 @@
             是否导入Excel
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Base.SmModulesBase.IsDisplayRowSelection">
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsShowRowSelection">
             <summary>
             表格行是否可选择
             </summary>
@@ -12372,7 +12372,7 @@
             是否导入Excel
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Entity.SmModules.IsDisplayRowSelection">
+        <member name="P:EU.Core.Model.Entity.SmModules.IsShowRowSelection">
             <summary>
             表格行是否可选择
             </summary>
