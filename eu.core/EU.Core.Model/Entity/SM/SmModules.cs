@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/6/13 0:21:02  SahHsiao   初版
+* V0.01  2025/6/4 11:12:45  SahHsiao   初版
 *
-* Copyright(c) 2026 EU Corporation. All Rights Reserved.
+* Copyright(c) 2025 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SahHsiao                                                  │
@@ -28,11 +28,13 @@ public class SmModules : BasePoco
     /// 模块代码
     /// </summary>
     [Display(Name = "ModuleCode"), Description("模块代码"), SugarColumn(IsNullable = true, Length = 50)]
+    public string ModuleCode { get; set; }
 
     /// <summary>
     /// 模块名称
     /// </summary>
     [Display(Name = "ModuleName"), Description("模块名称"), SugarColumn(IsNullable = true, Length = 50)]
+    public string ModuleName { get; set; }
 
     /// <summary>
     /// 排序号
@@ -44,11 +46,13 @@ public class SmModules : BasePoco
     /// 图标
     /// </summary>
     [Display(Name = "Icon"), Description("图标"), SugarColumn(IsNullable = true, Length = -1)]
+    public string Icon { get; set; }
 
     /// <summary>
     /// 路由
     /// </summary>
     [Display(Name = "RoutePath"), Description("路由"), SugarColumn(IsNullable = true, Length = 50)]
+    public string RoutePath { get; set; }
 
     /// <summary>
     /// 上级模块ID
@@ -66,6 +70,7 @@ public class SmModules : BasePoco
     /// 请求地址
     /// </summary>
     [Display(Name = "ApiUrl"), Description("请求地址"), SugarColumn(IsNullable = true, Length = 64)]
+    public string ApiUrl { get; set; }
 
     /// <summary>
     /// 是否允许新建
@@ -119,11 +124,13 @@ public class SmModules : BasePoco
     /// DefaultSort
     /// </summary>
     [Display(Name = "DefaultSort"), Description("DefaultSort"), SugarColumn(IsNullable = true, Length = 50)]
+    public string DefaultSort { get; set; }
 
     /// <summary>
     /// DefaultSortOrder
     /// </summary>
     [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), SugarColumn(IsNullable = true, Length = 50)]
+    public string DefaultSortOrder { get; set; }
 
     /// <summary>
     /// 是否允许审核
@@ -153,16 +160,19 @@ public class SmModules : BasePoco
     /// 打开方式
     /// </summary>
     [Display(Name = "OpenType"), Description("打开方式"), SugarColumn(IsNullable = true, Length = 32)]
+    public string OpenType { get; set; }
 
     /// <summary>
     /// 编辑页路径
     /// </summary>
     [Display(Name = "FormPage"), Description("编辑页路径"), SugarColumn(IsNullable = true, Length = 128)]
+    public string FormPage { get; set; }
 
     /// <summary>
     /// 模块类型，Form表单/FormGroup表单集
     /// </summary>
     [Display(Name = "ModuleType"), Description("模块类型，Form表单/FormGroup表单集"), SugarColumn(IsNullable = true, Length = 32)]
+    public string ModuleType { get; set; }
 
     /// <summary>
     /// 编辑页宽度
@@ -174,6 +184,7 @@ public class SmModules : BasePoco
     /// 路由文件地址
     /// </summary>
     [Display(Name = "Element"), Description("路由文件地址"), SugarColumn(IsNullable = true, Length = 64)]
+    public string Element { get; set; }
 
     /// <summary>
     /// 是否全屏
