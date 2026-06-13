@@ -50,6 +50,10 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <returns>分页列表数据</returns>
     public async Task<GridListReturn> QueryByFilter(QueryFilter filter, string moduleCode)
     {
+        var module = ModuleInfo.GetModuleInfo(moduleCode);
+        if (module is null)
+            return new GridListReturn(filter.PageSize, filter.PageIndex, 0, null, ResponseText.QUERY_SUCCESS);
+
         // 获取模块列配置信息
         var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
         var moduleColumns = moduleColumnInfo.GetModuleSqlColumn();

@@ -277,7 +277,7 @@ public class GridListReturn
     /// <summary>
     /// 总页数
     /// </summary>
-    public int pageCount => (int)Math.Ceiling((decimal)total / pageSize);
+    public int pageCount => pageSize > 0 ? (int)Math.Ceiling((decimal)total / pageSize) : 0;
     /// <summary>
     /// 数据总数
     /// </summary>
