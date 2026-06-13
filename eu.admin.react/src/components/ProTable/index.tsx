@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { ProTable } from "@ant-design/pro-components";
 import { Button, Dropdown, Modal, Flex } from "antd";
 import type { MenuProps } from "antd";
@@ -62,6 +62,12 @@ const SmProTable: React.FC<ProTableProps> = props => {
   const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection } = moduleInfo;
   const actionRef = useRef<ActionType>();
   const language = useSelector((state: RootState) => state.global.language);
+
+  // ==================== 跨页选中状态管理 ====================
+  // Ant Design onChange 返回的是跨页完整选中状态，直接用即可
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+
   // ==================== 自定义 Hooks ====================
 
   // 数据请求和状态管理
@@ -89,6 +95,12 @@ const SmProTable: React.FC<ProTableProps> = props => {
     restProps.batchDelete
   );
 
+  // 重置搜索时同时清空选中
+  const handleResetWithClearSelection = () => {
+    clearSelection();
+    handleReset();
+  };
+
   // 工具栏状态管理
   const {
     moreToolBarVisible,
@@ -102,6 +114,12 @@ const SmProTable: React.FC<ProTableProps> = props => {
     handleLogClose,
     handleExportExcel
   } = useProTableToolbar(moduleCode, tableParam);
+
+  // 清空选中状态（用于重置搜索或批量操作后）
+  const clearSelection = () => {
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+  };
 
   // ==================== 操作列相关 ====================
 
@@ -330,10 +348,26 @@ const SmProTable: React.FC<ProTableProps> = props => {
 
   // ==================== 工具栏渲染器 ====================
 
+  // 批量操作后清空选中
+  const handleBatchDelete = (action: any, rows: any[]) => {
+    batchDeleteConfirm(action, rows);
+    setTimeout(clearSelection, 0);
+  };
+
+  const handleBatchAudit = (action: any, rows: any[], keys: any[]) => {
+    batchAuditConfirm(action, rows, keys);
+    setTimeout(clearSelection, 0);
+  };
+
+  const handleBatchRevocation = (action: any, rows: any[], keys: any[]) => {
+    batchRevocationConfirm(action, rows, keys);
+    setTimeout(clearSelection, 0);
+  };
+
   /**
    * 渲染工具栏
    */
-  const toolBarRender = (action: any, { selectedRows, selectedRowKeys }: any) =>
+  const toolBarRender = (action: any) =>
     Toolbar({
       moduleInfo,
       IsView,
@@ -345,9 +379,9 @@ const SmProTable: React.FC<ProTableProps> = props => {
       onUploadExcel: handleUploadExcelOpen,
       onExportExcel: handleExportExcel,
       onShowLog: () => handleShowLog(selectedRows),
-      onBatchDelete: () => batchDeleteConfirm(action, selectedRows),
-      onBatchAudit: () => batchAuditConfirm(action, selectedRows, selectedRowKeys),
-      onBatchRevocation: () => batchRevocationConfirm(action, selectedRows, selectedRowKeys),
+      onBatchDelete: () => handleBatchDelete(action, selectedRows),
+      onBatchAudit: () => handleBatchAudit(action, selectedRows, selectedRowKeys),
+      onBatchRevocation: () => handleBatchRevocation(action, selectedRows, selectedRowKeys),
       onSearchToggle,
       moreToolBarVisible,
       onMoreToolBarVisibleChange: handleMoreToolBarVisibleChange,
@@ -388,11 +422,17 @@ const SmProTable: React.FC<ProTableProps> = props => {
         className="ant-pro-table-scroll"
         rowSelection={IsShowRowSelection === false ? undefined : {
           fixed: "left",
+          selectedRowKeys,
+          preserveSelectedRowKeys: true,
+          onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedRowKeys(keys);
+            setSelectedRows(rows);
+          },
           getCheckboxProps: (record: any) => ({
             disabled: record.ID === SUM_ROW_ID
           })
         }}
-        onReset={handleReset}
+        onReset={handleResetWithClearSelection}
         actionRef={actionRef}
         formRef={formRef}
         scroll={{
