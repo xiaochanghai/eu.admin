@@ -1291,7 +1291,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         if (column is null)
             return Success();
 
-        var module = ModuleInfo.GetModuleInfo(moduleCode);
+        var module = await Db.Queryable<SmModules>().Where(x => x.ModuleCode == moduleCode).FirstAsync();
         column.SmModuleId = module.ID;
         column.FieldType = "Input";
         column.FormTitle = column.Title;
