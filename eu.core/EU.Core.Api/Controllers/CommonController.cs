@@ -186,6 +186,101 @@ public class CommonController : Controller
     #endregion
 
     #region 测试
+    [HttpGet("InitLanguage"), AllowAnonymous]
+    public async Task<ServiceResult> InitLanguage()
+    {
+        var moduleId = await _service.Db.Queryable<SmModules>().Select(x => x.ID).ToListAsync();
+        var colums = await _service.Db.Queryable<SmModuleColumn>()
+            .Where(x => x.SmModuleId != null && moduleId.Contains(x.SmModuleId.Value)).ToListAsync();
+
+        var fields = new List<string>
+        {
+            "Title",
+            "FormTitle"
+        };
+        for (int i = 0; i < colums.Count; i++)
+        {
+            var refId = colums[i].ID;
+            var refType = "ModuleColumn";
+
+            var configs = new List<SmLanguageConfig>();
+
+            for (int j = 0; j < fields.Count; j++)
+            {
+                var refField = fields[j];
+
+                var config = await _service.Db.Queryable<SmLanguageConfig>()
+                    .Where(x => x.RefId == refId && x.RefType == refType && x.RefField == refField)
+                    .AnyAsync();
+
+                if (!config)
+                {
+                    string valueZH = colums[i].Title;
+                    if (colums[i].ColumnMode.IsNullOrEmpty())
+                    {
+                        var config1 = new SmLanguageConfig()
+                        {
+                            RefId = refId,
+                            RefType = refType,
+                            RefField = refField,
+                            Value_ZH = refField == "Title" ? colums[i].Title : colums[i].FormTitle,
+                            Value_EN = colums[i].DataIndex
+                        };
+                        configs.Add(config1);
+
+                        //config1 = new SmLanguageConfig()
+                        //{
+                        //    RefId = refId,
+                        //    RefType = refType,
+                        //    RefField = refField,
+                        //    Value_ZH = colums[i].FormTitle,
+                        //    Value_EN = colums[i].DataIndex
+                        //};
+                        //configs.Add(config1);
+                    }
+                    else if (colums[i].ColumnMode == "list")
+                    {
+                        valueZH = colums[i].FormTitle;
+
+                        var config1 = new SmLanguageConfig()
+                        {
+                            RefId = refId,
+                            RefType = refType,
+                            RefField = refField,
+                            Value_ZH = valueZH,
+                            Value_EN = colums[i].DataIndex
+                        };
+                        configs.Add(config1);
+
+                    }
+                    else if (colums[i].ColumnMode == "form")
+                    {
+                        valueZH = colums[i].FormTitle;
+
+                        var config1 = new SmLanguageConfig()
+                        {
+                            RefId = refId,
+                            RefType = refType,
+                            RefField = refField,
+                            Value_ZH = valueZH,
+                            Value_EN = colums[i].DataIndex
+                        };
+                        configs.Add(config1);
+
+                    }
+
+                }
+            }
+
+            await _service.Db.Insertable(configs).ExecuteCommandAsync();
+
+        }
+        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
+
+    }
+    #endregion
+
+    #region 测试
     [HttpGet("Test"), AllowAnonymous]
     public async Task<ServiceResult> Test()
     {
@@ -209,6 +304,7 @@ public class CommonController : Controller
 
     }
     #endregion
+
 
 
 
