@@ -88,5 +88,27 @@ export default {
     selectDatePlaceholder: "Please select date",
     date: "date",
     time: "time"
+  },
+  proTable: {
+    operation: "Action",
+    deleteConfirmTitle: "Are you sure you want to delete this record?",
+    okText: "OK",
+    cancelText: "Cancel",
+    submitting: "Submitting...",
+    edit: "Edit",
+    view: "View",
+    delete: "Delete",
+    add: "Add",
+    audit: "Audit",
+    revocation: "Revocation",
+    more: "More",
+    log: "Log",
+    submit: "Submit",
+    batchDelete: "Batch Delete",
+    search: "Search",
+    exportExcel: "Export Excel",
+    importExcel: "Import Excel",
+    importTitle: "Import",
+    logTitle: "Log"
   }
 };

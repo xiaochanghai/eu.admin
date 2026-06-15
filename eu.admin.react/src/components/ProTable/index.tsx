@@ -8,6 +8,7 @@ import { Icon } from "@/components";
 import { ModuleInfoBeforeAction } from "@/api/interface/index";
 import { message } from "@/hooks/useMessage";
 import { singleDelete } from "@/api/modules/module";
+import { useTranslation } from "react-i18next";
 
 // Hooks
 import { useProTableData, useProTableColumns, useProTableBatchOps, useProTableToolbar } from "@/hooks/ProTable";
@@ -62,6 +63,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
   const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection } = moduleInfo;
   const actionRef = useRef<ActionType>();
   const language = useSelector((state: RootState) => state.global.language);
+  const { t } = useTranslation();
 
   // ==================== 跨页选中状态管理 ====================
   // Ant Design onChange 返回的是跨页完整选中状态，直接用即可
@@ -134,13 +136,13 @@ const SmProTable: React.FC<ProTableProps> = props => {
    */
   const showDeleteConfirm = async (action: any, record: any) => {
     confirm({
-      title: "是否确定删除记录?",
+      title: t("proTable.deleteConfirmTitle"),
       icon: <Icon name="ExclamationCircleOutlined" />,
-      okText: "确定",
+      okText: t("proTable.okText"),
       okType: "danger",
-      cancelText: "取消",
+      cancelText: t("proTable.cancelText"),
       async onOk() {
-        const hideLoading = message.loading("数据提交中...", 0);
+        const hideLoading = message.loading(t("proTable.submitting"), 0);
         try {
           if (restProps.delete) {
             restProps.delete(record);
@@ -196,7 +198,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
         if (item.id === "Update" && !IsView) {
           return {
             key: "dropActionUpdate",
-            label: "修改",
+            label: t("proTable.edit"),
             onClick: () => onOptionEdit(record)
           };
         }
@@ -205,7 +207,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
         if (item.id === "View") {
           return {
             key: "dropActionView",
-            label: "查看",
+            label: t("proTable.view"),
             icon: <Icon name="EyeOutlined" />,
             onClick: () => onOptionView(record)
           };
@@ -215,7 +217,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
         if (item.id === "Delete" && !IsView) {
           return {
             key: "dropActionDelete",
-            label: "删除",
+            label: t("proTable.delete"),
             icon: <Icon name="DeleteOutlined" />,
             onClick: () => onOptionDelete(action, record)
           };
@@ -278,7 +280,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
   const actionColumn: any =
     moduleInfo?.Success === true && moduleInfo.actionCount > 0
       ? {
-        title: "操作",
+        title: t("proTable.operation"),
         dataIndex: "option",
         fixed: "left",
         valueType: "option",

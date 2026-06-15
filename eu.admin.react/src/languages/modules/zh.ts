@@ -88,5 +88,27 @@ export default {
     selectDatePlaceholder: "请选择日期",
     date: "日期",
     time: "时间"
+  },
+  proTable: {
+    operation: "操作",
+    deleteConfirmTitle: "是否确定删除记录?",
+    okText: "确定",
+    cancelText: "取消",
+    submitting: "数据提交中...",
+    edit: "修改",
+    view: "查看",
+    delete: "删除",
+    add: "新建",
+    audit: "审核",
+    revocation: "撤销",
+    more: "更多",
+    log: "日志",
+    submit: "提交",
+    batchDelete: "批量删除",
+    search: "查询",
+    exportExcel: "导出Excel",
+    importExcel: "Excel导入",
+    importTitle: "导入",
+    logTitle: "日志"
   }
 };
