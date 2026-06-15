@@ -367,12 +367,12 @@ public static class Utility
             new RedisCacheService(connection, configuration, 4).Clear();
 
             #region 初始化缓存
+            await LanguageHelper.Init(_Db);
             ModuleInfo.Init();
             ModuleSql.Init(_Db);
             ModuleSqlColumn.Init();
             await LovHelper.Init(_Db);
             await LovHelper.InitCommonListSql(_Db);
-            await LanguageHelper.Init(_Db);
             await ConfigCache.InitAsync(_Db);
             FunctionPrivilege.ClearCache();
             #endregion
