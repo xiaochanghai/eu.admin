@@ -468,13 +468,13 @@ const SqlEdit: React.FC<SqlEditProps> = ({ IsView = false, ModuleId, changePage,
               style={{ maxWidth: 700, margin: "0 auto" }}
             >
               {/* 简体中文 */}
-              <Row gutter={24}>
+              {/* <Row gutter={24}>
                 <Col span={24}>
                   <Form.Item label="简体中文" name="Value_ZH">
                     <Input placeholder="请输入" disabled />
                   </Form.Item>
                 </Col>
-              </Row>
+              </Row> */}
 
               {/* English */}
               <Row gutter={24}>

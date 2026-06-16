@@ -404,13 +404,13 @@ const SiderSetting = ({ field, form, onDataChange, mode }: SiderSettingProps) =>
             <Form.Item label="id" name="id" hidden>
               <Input />
             </Form.Item>
-            <Row gutter={24}>
+            {/* <Row gutter={24}>
               <Col span={24}>
                 <Form.Item label="中文值" name="value_ZH">
                   <Input disabled />
                 </Form.Item>
               </Col>
-            </Row>
+            </Row> */}
             <Row gutter={24}>
               <Col span={24}>
                 <Form.Item label="English" name="value_EN">
