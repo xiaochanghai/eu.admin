@@ -130,5 +130,16 @@ export default {
     problem1: "Data not updated in time",
     problem2: "Permission changes not effective",
     problem3: "Need to refresh after system configuration changes"
+  },
+  about: {
+    title: "About",
+    description:
+      "A general management platform framework based on .NET8, React18, React-RouterV6, React-Hooks, Redux-Toolkit, Zustand, TypeScript, Vite7, Ant-Design5, MCP. Ready to use out of the box. Integrates SqlSugar, cache, communication, remote request, task scheduling and other open source backend management frameworks.",
+    projectInfo: "Project Info",
+    version: "Version",
+    releaseTime: "Release Time",
+    previewUrl: "Preview",
+    prodDependencies: "Production Dependencies",
+    devDependencies: "Development Dependencies"
   }
 };

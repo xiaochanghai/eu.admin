@@ -130,5 +130,16 @@ export default {
     problem1: "数据更新不及时",
     problem2: "权限变更未生效",
     problem3: "系统配置修改后需要刷新"
+  },
+  about: {
+    title: "关于",
+    description:
+      "一款基于.NET8、React18、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5、MCP 的实现的通用管理平台框架，开箱即用。集成SqlSugar、缓存、通讯、远程请求、任务调度等 开源的后台管理框架。",
+    projectInfo: "项目信息",
+    version: "版本号",
+    releaseTime: "发布时间",
+    previewUrl: "预览地址",
+    prodDependencies: "生产环境依赖",
+    devDependencies: "开发环境依赖"
   }
 };

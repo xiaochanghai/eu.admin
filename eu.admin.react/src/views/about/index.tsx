@@ -1,11 +1,13 @@
 import React from "react";
 import { Card, Descriptions, Tag, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import "./index.less";
 
 const { Link, Title } = Typography;
 const style = { width: "280px" };
 
 const About: React.FC = () => {
+  const { t } = useTranslation();
   const { pkg, lastBuildTime } = __APP_INFO__;
   const { dependencies, devDependencies, version } = pkg;
 
@@ -13,26 +15,25 @@ const About: React.FC = () => {
     <div className="about-content">
       <Card className="mb10">
         <Title level={4} className="mb15">
-          关于
+          {t("about.title")}
         </Title>
         <span className="text">
           <Link href="https://github.com/xiaochanghai/eu-admin" target="_blank">
             EU-Admin
           </Link>
-          一款基于.NET8、React18、React-RouterV6、React-Hooks、Redux-Toolkit、Zustand、TypeScript、Vite7、Ant-Design5、MCP
-          的实现的通用管理平台框架，开箱即用。集成SqlSugar、缓存、 通讯、远程请求、任务调度等 开源的后台管理框架。
+          {t("about.description")}
         </span>
       </Card>
 
       <Card className="mb10">
         <Title level={4} className="mb15">
-          项目信息
+          {t("about.projectInfo")}
         </Title>
-        <Descriptions column={2} bordered size="middle" labelStyle={style}>
-          <Descriptions.Item label="版本号">
+        <Descriptions column={2} bordered size="middle" styles={{ label: style }}>
+          <Descriptions.Item label={t("about.version")}>
             <Tag color="processing">{version}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="发布时间">
+          <Descriptions.Item label={t("about.releaseTime")}>
             <Tag color="processing">{lastBuildTime}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Gitee">
@@ -50,9 +51,9 @@ const About: React.FC = () => {
               Issues
             </Link>
           </Descriptions.Item>
-          <Descriptions.Item label="预览地址">
+          <Descriptions.Item label={t("about.previewUrl")}>
             <Link href="http://116.204.98.209:9527/" target="_blank">
-              预览地址
+              {t("about.previewUrl")}
             </Link>
           </Descriptions.Item>
         </Descriptions>
@@ -60,9 +61,9 @@ const About: React.FC = () => {
 
       <Card className="mb10">
         <Title level={4} className="mb15">
-          生产环境依赖
+          {t("about.prodDependencies")}
         </Title>
-        <Descriptions column={3} bordered size="middle" labelStyle={style}>
+        <Descriptions column={3} bordered size="middle" styles={{ label: style }}>
           {Object.keys(dependencies).map(key => {
             return (
               <React.Fragment key={key}>
@@ -77,9 +78,9 @@ const About: React.FC = () => {
 
       <Card>
         <Title level={4} className="mb15">
-          开发环境依赖
+          {t("about.devDependencies")}
         </Title>
-        <Descriptions column={3} bordered size="middle" labelStyle={style}>
+        <Descriptions column={3} bordered size="middle" styles={{ label: style }}>
           {Object.keys(devDependencies).map(key => {
             return (
               <React.Fragment key={key}>
