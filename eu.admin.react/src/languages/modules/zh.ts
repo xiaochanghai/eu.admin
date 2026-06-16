@@ -162,5 +162,14 @@ export default {
     confirmPassword: "确认密码",
     enterNewPasswordAgain: "请再次输入新密码",
     passwordMismatch: "两次输入的密码不一致"
+  },
+  imageCover: {
+    loadFailed: "加载图片失败",
+    uploading: "上传中...",
+    uploadSuccess: "上传成功",
+    uploadFailed: "上传失败",
+    uploadImageFailed: "上传图片失败",
+    coverImageAlt: "封面图",
+    uploadCover: "上传封面"
   }
 };

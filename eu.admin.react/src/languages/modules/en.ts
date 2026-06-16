@@ -162,5 +162,14 @@ export default {
     confirmPassword: "Confirm Password",
     enterNewPasswordAgain: "Please enter new password again",
     passwordMismatch: "Passwords do not match"
+  },
+  imageCover: {
+    loadFailed: "Failed to load image",
+    uploading: "Uploading...",
+    uploadSuccess: "Upload successful",
+    uploadFailed: "Upload failed",
+    uploadImageFailed: "Failed to upload image",
+    coverImageAlt: "Cover Image",
+    uploadCover: "Upload Cover"
   }
 };

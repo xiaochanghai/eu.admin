@@ -4,6 +4,7 @@ import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
 import { Icon } from "@/components";
 import { RcFile, UploadChangeParam, UploadFile } from "antd/lib/upload/interface";
+import { useTranslation } from "react-i18next";
 
 // 环境变量
 const baseURL = import.meta.env.VITE_API_URL as string;
@@ -37,6 +38,7 @@ interface ImageCoverProps {
  */
 const ImageCover: React.FC<ImageCoverProps> = props => {
   const { value, disabled = false, accept = ".png,.jpeg,.jpg", filePath = "equipment", imageType, onChange } = props;
+  const { t } = useTranslation();
 
   // 组件状态
   const [loading, setLoading] = useState<boolean>(false);
@@ -57,22 +59,25 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
   /**
    * 获取图片URL
    */
-  const loadImageUrl = useCallback(async (id: string) => {
-    if (!id) {
-      setImageUrl("");
-      return;
-    }
+  const loadImageUrl = useCallback(
+    async (id: string) => {
+      if (!id) {
+        setImageUrl("");
+        return;
+      }
 
-    try {
-      // 根据文件ID构建图片URL
-      const url = `${VITE_USER_NODE_ENV === "development" ? baseURL : ""}/api/File/Img/${id}`;
-      setImageUrl(url);
-      setFileId(id);
-    } catch (error) {
-      console.error("加载图片失败:", error);
-      message.error("加载图片失败");
-    }
-  }, []);
+      try {
+        // 根据文件ID构建图片URL
+        const url = `${VITE_USER_NODE_ENV === "development" ? baseURL : ""}/api/File/Img/${id}`;
+        setImageUrl(url);
+        setFileId(id);
+      } catch (error) {
+        console.error("加载图片失败:", error);
+        message.error(t("imageCover.loadFailed"));
+      }
+    },
+    [t]
+  );
 
   /**
    * 上传文件
@@ -101,7 +106,7 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
         });
 
         // 准备上传
-        message.loading("上传中..", 0);
+        message.loading(t("imageCover.uploading"), 0);
         const formData = new FormData();
 
         formData.append("file", fileInfo.file.originFileObj);
@@ -113,18 +118,18 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
         const { Data, Success, Message } = await uploadFile("/api/File/UploadImage", formData);
 
         if (Success && Data) {
-          message.success(Message || "上传成功");
+          message.success(Message || t("imageCover.uploadSuccess"));
           setFileId(Data.ID || Data);
 
           // 通知父组件文件ID已变更
           onChange?.(Data.ID || Data);
         } else {
-          message.error(Message || "上传失败");
+          message.error(Message || t("imageCover.uploadFailed"));
           setImageUrl("");
         }
       } catch (error) {
         console.error("上传图片失败:", error);
-        message.error("上传图片失败");
+        message.error(t("imageCover.uploadImageFailed"));
         setImageUrl("");
       } finally {
         uploadFlag = true;
@@ -132,7 +137,7 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
         setLoading(false);
       }
     },
-    [filePath, imageType, getBase64, onChange]
+    [filePath, imageType, getBase64, onChange, t]
   );
 
   // 监听外部value变化
@@ -143,11 +148,11 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
   return (
     <Upload accept={accept} listType="picture-card" showUploadList={false} onChange={uploadFileAttachment} disabled={disabled}>
       {imageUrl ? (
-        <img src={imageUrl} alt="封面图" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={imageUrl} alt={t("imageCover.coverImageAlt")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
         <div>
           <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} className="font-size24" />
-          <div className="ant-upload-text">上传封面</div>
+          <div className="ant-upload-text">{t("imageCover.uploadCover")}</div>
         </div>
       )}
     </Upload>
