@@ -94,7 +94,7 @@ const FileUploadField: React.FC<ImageCoverFieldProps> = ({ field, disabled, modi
       <FileUpload
         filePath="upload"
         accept=".zip"
-        maxFileSize={5}
+        maxFileSize={100}
         disabled={isDisabled}
         onChange={handleChange}
       />

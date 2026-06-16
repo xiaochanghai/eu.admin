@@ -138,6 +138,9 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       if (!uploadFlag) return;
       uploadFlag = false;
 
+      // 保存 loading 实例引用
+      let hideLoading: (() => void) | undefined;
+
       try {
         if (!file.originFileObj) {
           uploadFlag = true;
@@ -151,7 +154,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         }
 
         setLoading(true);
-        message.loading(t("fileUpload.uploading"), 0);
+        hideLoading = message.loading(t("fileUpload.uploading"), 0) as unknown as () => void;
 
         const formData = new FormData();
         formData.append("file", file.originFileObj);
@@ -164,6 +167,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         if (Success && Data) {
           const newFileId = Data.ID || Data;
           const newFileName = file.originFileObj.name;
+          hideLoading?.();
           message.success(Message || t("fileUpload.uploadSuccess"));
           setFileId(newFileId);
           setFileName(newFileName);
@@ -177,16 +181,17 @@ const FileUpload: React.FC<FileUploadProps> = props => {
           ]);
           onChange?.(newFileId, newFileName);
         } else {
+          hideLoading?.();
           message.error(Message || t("fileUpload.uploadFailed"));
           setFileList([]);
         }
       } catch (error) {
+        hideLoading?.();
         console.error("上传文件失败:", error);
         message.error(t("fileUpload.uploadFileFailed"));
         setFileList([]);
       } finally {
         uploadFlag = true;
-        message.destroy();
         setLoading(false);
       }
     },
