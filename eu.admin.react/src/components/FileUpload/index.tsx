@@ -211,13 +211,23 @@ const FileUpload: React.FC<FileUploadProps> = props => {
   }, [propFileName, fileName]);
 
   /**
+   * 删除已上传文件
+   */
+  const handleDelete = useCallback(() => {
+    setFileId("");
+    setFileName("");
+    setFileList([]);
+    onChange?.("", "");
+  }, [onChange]);
+
+  /**
    * 渲染已上传文件信息
    */
   const renderFileInfo = () => {
     if (!fileId || !fileName) return null;
 
     return (
-      <Space style={{ marginTop: 8 }}>
+      <div><Space style={{ marginTop: 8 }}>
         <Icon name="FileOutlined" style={{ color: "#1890ff" }} />
         {showFileLink ? (
           <a href={getFileUrl(fileId)} target="_blank" rel="noopener noreferrer">
@@ -226,7 +236,12 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         ) : (
           <Text>{fileName}</Text>
         )}
-      </Space>
+        {!disabled && (
+          <span onClick={handleDelete} style={{ cursor: "pointer" }}>
+            <Icon name="DeleteOutlined" style={{ color: "#ff4d4f" }} />
+          </span>
+        )}
+      </Space></div>
     );
   };
 
@@ -239,6 +254,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         onChange={handleUpload}
         disabled={disabled || !!fileId}
         beforeUpload={beforeUpload}
+        showUploadList={false}
       >
         <Button icon={<Icon name="UploadOutlined" />} loading={loading} disabled={disabled || !!fileId}>
           {buttonText || t("fileUpload.uploadButton")}
