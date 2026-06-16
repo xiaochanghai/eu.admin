@@ -98,10 +98,10 @@ export const FormComponents = [
     label: "封面上传"
   },
   {
-    ID: "ImageCover",
+    ID: "FileUpload",
     icon: "FileImageOutlined",
-    fieldType: "ImageCover",
-    label: "封面上传"
+    fieldType: "FileUpload",
+    label: "文件上传"
   }
   // VfCheckbox: {
   //   component: VfCheckbox,

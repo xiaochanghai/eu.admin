@@ -9,6 +9,7 @@ export { default as FormToolbar } from "@/components/FormToolbar/index";
 export { default as Element } from "@/components/Elements/Index";
 export { default as UploadImage } from "@/components/UploadImage";
 export { default as ImageCover } from "@/components/ImageCover";
+export { default as FileUpload } from "@/components/FileUpload";
 export { default as Attachment } from "@/components/Attachment";
 export { default as Switch } from "@/components/Elements/Switch";
 export { default as Input } from "@/components/Elements/Input";

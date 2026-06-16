@@ -171,5 +171,15 @@ export default {
     uploadImageFailed: "Failed to upload image",
     coverImageAlt: "Cover Image",
     uploadCover: "Upload Cover"
+  },
+  fileUpload: {
+    loadFailed: "Failed to load file",
+    uploading: "Uploading file...",
+    uploadSuccess: "File uploaded successfully",
+    uploadFailed: "File upload failed",
+    uploadFileFailed: "Failed to upload file",
+    uploadButton: "Upload File",
+    defaultFileName: "Attachment",
+    fileSizeExceeded: "File size cannot exceed {size}MB"
   }
 };

@@ -171,5 +171,15 @@ export default {
     uploadImageFailed: "上传图片失败",
     coverImageAlt: "封面图",
     uploadCover: "上传封面"
+  },
+  fileUpload: {
+    loadFailed: "加载文件失败",
+    uploading: "文件上传中...",
+    uploadSuccess: "文件上传成功",
+    uploadFailed: "文件上传失败",
+    uploadFileFailed: "上传文件失败",
+    uploadButton: "上传文件",
+    defaultFileName: "附件",
+    fileSizeExceeded: "文件大小不能超过 {size}MB"
   }
 };

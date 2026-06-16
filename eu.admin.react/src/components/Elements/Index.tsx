@@ -16,6 +16,7 @@ import {
 } from "./DatePicker"; // 日期选择器
 import ColorPicker from "./ColorPicker"; // 颜色选择器
 import ImageCover from "./ImageCover"; // 封面图
+import FileUpload from "./FileUpload"; // 封面图
 import { FieldProps, ModifyType } from "@/typings";
 
 /**
@@ -52,6 +53,7 @@ export const SUPPORTED_FIELD_TYPES = [
   "DatePicker",
   "ColorPicker",
   "ImageCover",
+  "FileUpload",
   "DateTimePicker",
   "TimePicker",
   "InputPassword"
@@ -74,6 +76,7 @@ const FIELD_MAP: Record<string, React.ComponentType<any>> = {
   TimePicker,
   ColorPicker,
   ImageCover,
+  FileUpload,
   InputPassword
 };
 
