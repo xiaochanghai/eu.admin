@@ -1,5 +1,6 @@
 import { useImperativeHandle, useState, useCallback, useRef } from "react";
 import { Form, Input, Modal, Button, Row, Col, Drawer } from "antd";
+import { useTranslation } from "react-i18next";
 import PermissionSet from "../../privilege/role/PermissionSet";
 import { exportModuleSqlScript } from "@/api/modules/module";
 import { downloadFile } from "@/utils";
@@ -85,6 +86,7 @@ interface RoleRecord {
  * 根据不同的moduleCode展示不同的功能界面
  */
 const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
+  const { t } = useTranslation();
   // 状态定义
   const [modalVisible, setModalVisible] = useState(false); // 主模态框可见性
   const [isCronModalVisible, setIsCronModalVisible] = useState(false); // Cron/抽屉可见性
@@ -103,22 +105,22 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
   // 初始化指定表
   const InitAssignmentTable = useCallback(async () => {
     if (!tableCode) {
-      message.error("请选择表代码!");
+      message.error(t("extend.selectTableCode"));
       return false;
     }
-    message.loading("数据处理中...", 0);
+    message.loading(t("extend.dataProcessing"), 0);
     const { Success, Message } = await http.post<any>(`/api/SmTableCatalog/InitAssignmentTable/${tableCode}`);
     message.destroy();
     if (Success) message.success(Message);
-  }, [tableCode]);
+  }, [tableCode, t]);
 
   // 初始化所有表
   const InitAllTable = useCallback(async () => {
-    message.loading("数据处理中...", 0);
+    message.loading(t("extend.dataProcessing"), 0);
     const { Success, Message } = await http.post<any>(`/api/SmTableCatalog/InitAllTable`);
     message.destroy();
     if (Success) message.success(Message);
-  }, []);
+  }, [t]);
 
   /**
    * 模块管理功能
@@ -161,7 +163,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
    */
   // 执行任务操作
   const jobExecute = useCallback(async (jobId: string, type = "LOG.CURRENT") => {
-    message.loading("日志获取中...", 0);
+    message.loading(t("extend.gettingLogs"), 0);
     const { Success, Data } = await http.post<any>(`/api/SmQuartzJob/Operate/${jobId}/${type}`, {});
     message.destroy();
 
@@ -169,7 +171,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
       setModalVisible(true);
       setLogContent(Data);
     }
-  }, []);
+  }, [t]);
 
   // 修改任务Cron表达式
   const ModifyJobCron = useCallback((value: string, action: ActionRef) => {
@@ -181,7 +183,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
   // 处理Cron表达式修改确认
   const handleCronOk = useCallback(() => {
     form.validateFields().then(async values => {
-      message.loading("数据处理中...", 0);
+      message.loading(t("extend.dataProcessing"), 0);
       const { Success, Message } = await http.post<any>(`/api/SmQuartzJob/Operate/${id}/ARGS`, {
         ScheduleRule: values.args
       });
@@ -193,7 +195,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         actionRef.current.reload?.();
       }
     });
-  }, [id, form, closeCronModal]);
+  }, [id, form, closeCronModal, t]);
 
   /**
    * 系统模块功能
@@ -208,7 +210,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
   // 处理模块复制确认
   const handleModuleCopy = useCallback(() => {
     form.validateFields().then(async values => {
-      message.loading("数据处理中...", 0);
+      message.loading(t("extend.dataProcessing"), 0);
       const { Success, Message } = await http.post<any>(`/api/SmModule/Copy/${id}`, values);
       message.destroy();
 
@@ -218,11 +220,11 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         actionRef.current.reload?.();
       }
     });
-  }, [id, form, closeCronModal]);
+  }, [id, form, closeCronModal, t]);
 
   const handleUserPasswordReset = useCallback(() => {
     form.validateFields().then(async values => {
-      message.loading("数据处理中...", 0);
+      message.loading(t("extend.dataProcessing"), 0);
       const { Success, Message } = await http.put<any>(`/api/SmUser/ResetPassword/${id}`, {
         PassWord: values.PassWord
       });
@@ -234,7 +236,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         actionRef.current.reload?.();
       }
     });
-  }, [id, form, closeCronModal]);
+  }, [id, form, closeCronModal, t]);
 
   /**
    * 用户角色功能
@@ -294,7 +296,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
       {moduleCode === MODULE_CODES.TABLE_CATALOG && (
         <Modal
           destroyOnHidden
-          title="初始化表"
+          title={t("extend.initTable")}
           open={modalVisible}
           maskClosable={false}
           width={1000}
@@ -313,12 +315,12 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
             <Col span={6} />
             <Col span={6} style={{ textAlign: "right" }}>
               <Button type="primary" onClick={InitAllTable}>
-                初始化所有表
+                {t("extend.initAllTables")}
               </Button>
             </Col>
             <Col span={6}>
               <Button type="primary" onClick={InitAssignmentTable}>
-                初始化指定表
+                {t("extend.initSpecifiedTable")}
               </Button>
             </Col>
             <Col span={6} />
@@ -331,7 +333,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         <>
           {/* 日志查看模态框 */}
           <Modal
-            title="当前日志"
+            title={t("extend.currentLog")}
             open={modalVisible}
             width={1200}
             destroyOnHidden
@@ -342,12 +344,12 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
           </Modal>
 
           {/* Cron表达式修改模态框 */}
-          <Modal title="修改参数" open={isCronModalVisible} onOk={handleCronOk} onCancel={closeCronModal}>
+          <Modal title={t("extend.modifyParams")} open={isCronModalVisible} onOk={handleCronOk} onCancel={closeCronModal}>
             <Form {...FORM_LAYOUT} form={form}>
               <Row gutter={24} justify="center">
                 <Col span={24}>
-                  <FormItem name="args" label="Cron表达式" rules={[{ required: true }]}>
-                    <Input placeholder="请输入" />
+                  <FormItem name="args" label={t("extend.cronExpression")} rules={[{ required: true }]}>
+                    <Input placeholder={t("formOption.inputPlaceholder")} />
                   </FormItem>
                 </Col>
               </Row>
@@ -358,19 +360,19 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
 
       {/* 系统模块管理 */}
       {moduleCode === MODULE_CODES.MODULE && (
-        <Modal destroyOnHidden title="复制模块" open={isCronModalVisible} onOk={handleModuleCopy} onCancel={closeCronModal}>
+        <Modal destroyOnHidden title={t("extend.copyModule")} open={isCronModalVisible} onOk={handleModuleCopy} onCancel={closeCronModal}>
           <Form {...FORM_LAYOUT} form={form}>
             <Row gutter={24} justify="center">
               <Col span={24}>
-                <FormItem name="ModuleCode" label="模块代码" rules={[{ required: true }]}>
-                  <Input placeholder="请输入" />
+                <FormItem name="ModuleCode" label={t("extend.moduleCode")} rules={[{ required: true }]}>
+                  <Input placeholder={t("formOption.inputPlaceholder")} />
                 </FormItem>
               </Col>
             </Row>
             <Row gutter={24} justify="center">
               <Col span={24}>
-                <FormItem name="ModuleName" label="模块名称" rules={[{ required: true }]}>
-                  <Input placeholder="请输入" />
+                <FormItem name="ModuleName" label={t("extend.moduleName")} rules={[{ required: true }]}>
+                  <Input placeholder={t("formOption.inputPlaceholder")} />
                 </FormItem>
               </Col>
             </Row>
@@ -383,7 +385,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
         <Drawer
           closable
           destroyOnHidden
-          title={`${record.RoleName} - 权限设置`}
+          title={`${record.RoleName} - ${t("extend.permissionSettings")}`}
           placement="right"
           open={isCronModalVisible}
           size={1000}
@@ -396,7 +398,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
       {moduleCode === MODULE_CODES.USER && (
         <Modal
           destroyOnHidden
-          title={`${record.UserName} - 重置密码`}
+          title={`${record.UserName} - ${t("extend.resetPassword")}`}
           open={isCronModalVisible}
           onOk={handleUserPasswordReset}
           onCancel={closeCronModal}
@@ -404,8 +406,8 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
           <Form {...FORM_LAYOUT} form={form}>
             <Row gutter={24} justify="center">
               <Col span={24}>
-                <FormItem name="PassWord" label="新密码" rules={[{ required: true, message: "请输入新密码" }]}>
-                  <Input.Password placeholder="请输入新密码" />
+                <FormItem name="PassWord" label={t("extend.newPassword")} rules={[{ required: true, message: t("extend.enterNewPassword") }]}>
+                  <Input.Password placeholder={t("extend.enterNewPassword")} />
                 </FormItem>
               </Col>
             </Row>
@@ -413,21 +415,21 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
               <Col span={24}>
                 <FormItem
                   name="ConfirmPassWord"
-                  label="确认密码"
+                  label={t("extend.confirmPassword")}
                   dependencies={["PassWord"]}
                   rules={[
-                    { required: true, message: "请再次输入新密码" },
+                    { required: true, message: t("extend.enterNewPasswordAgain") },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue("PassWord") === value) {
                           return Promise.resolve();
                         }
-                        return Promise.reject(new Error("两次输入的密码不一致"));
+                        return Promise.reject(new Error(t("extend.passwordMismatch")));
                       }
                     })
                   ]}
                 >
-                  <Input.Password placeholder="请再次输入新密码" />
+                  <Input.Password placeholder={t("extend.enterNewPasswordAgain")} />
                 </FormItem>
               </Col>
             </Row>

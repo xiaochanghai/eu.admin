@@ -141,5 +141,26 @@ export default {
     previewUrl: "Preview",
     prodDependencies: "Production Dependencies",
     devDependencies: "Development Dependencies"
+  },
+  extend: {
+    selectTableCode: "Please select table code!",
+    dataProcessing: "Processing...",
+    gettingLogs: "Getting logs...",
+    initTable: "Initialize Table",
+    initAllTables: "Initialize All Tables",
+    initSpecifiedTable: "Initialize Specified Table",
+    currentLog: "Current Log",
+    modifyParams: "Modify Parameters",
+    cronExpression: "Cron Expression",
+    copyModule: "Copy Module",
+    moduleCode: "Module Code",
+    moduleName: "Module Name",
+    permissionSettings: "Permission Settings",
+    resetPassword: "Reset Password",
+    newPassword: "New Password",
+    enterNewPassword: "Please enter new password",
+    confirmPassword: "Confirm Password",
+    enterNewPasswordAgain: "Please enter new password again",
+    passwordMismatch: "Passwords do not match"
   }
 };

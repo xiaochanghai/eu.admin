@@ -141,5 +141,26 @@ export default {
     previewUrl: "预览地址",
     prodDependencies: "生产环境依赖",
     devDependencies: "开发环境依赖"
+  },
+  extend: {
+    selectTableCode: "请选择表代码!",
+    dataProcessing: "数据处理中...",
+    gettingLogs: "日志获取中...",
+    initTable: "初始化表",
+    initAllTables: "初始化所有表",
+    initSpecifiedTable: "初始化指定表",
+    currentLog: "当前日志",
+    modifyParams: "修改参数",
+    cronExpression: "Cron表达式",
+    copyModule: "复制模块",
+    moduleCode: "模块代码",
+    moduleName: "模块名称",
+    permissionSettings: "权限设置",
+    resetPassword: "重置密码",
+    newPassword: "新密码",
+    enterNewPassword: "请输入新密码",
+    confirmPassword: "确认密码",
+    enterNewPasswordAgain: "请再次输入新密码",
+    passwordMismatch: "两次输入的密码不一致"
   }
 };
