@@ -78,6 +78,7 @@ export interface ModuleInfo {
   menuData: any[];
   moduleId: string;
   moduleName: string;
+  moduleName_EN: string;
   moduleCode: string;
   moduleType: string;
   openType: string;

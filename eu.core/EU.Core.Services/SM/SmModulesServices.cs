@@ -727,6 +727,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             obj.formPageWidth = module.FormPageWidth ?? DEFAULT_FORM_PAGE_WIDTH; // 编辑页宽度
             obj.moduleCode = moduleCode; // 模块代码
             obj.moduleName = module.ModuleName; // 模块名称
+            var titleEn = await LanguageHelper.Get(Db, "Module", module.ID, "ModuleName");
+            obj.moduleName_EN = titleEn?.Value_EN; // 模块名称
+
             obj.moduleType = module.ModuleType; // 模块类型
             obj.url = module.ApiUrl; // API地址
             obj.IsShowAudit = module.IsShowAudit; // 是否显示审核

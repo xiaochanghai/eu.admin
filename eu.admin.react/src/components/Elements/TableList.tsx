@@ -10,6 +10,7 @@ import Extend from "@/views/system/common/components/Extend";
 import { FormPage } from "./FormPage";
 import { ViewType, EditOpenType, ActionType } from "@/typings";
 import { useTranslation } from "react-i18next";
+import { getModuleName } from "@/components/ProTable/utils";
 
 /**
  * 模块表格组件接口定义
@@ -34,6 +35,7 @@ interface TableListProps {
 export const TableList: React.FC<TableListProps> = props => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const language = useSelector((state: RootState) => state.global.language);
 
   // 状态管理
   const [drawerOpen, setDrawerOpen] = useState(false); // 抽屉是否打开
@@ -195,7 +197,7 @@ export const TableList: React.FC<TableListProps> = props => {
           {moduleInfo.openType === EditOpenType.Modal && (
             <Modal
               destroyOnHidden
-              title={`${moduleInfo.moduleName}->${id ? t("formOption.edit") : t("formOption.add")}`}
+              title={`${getModuleName(moduleInfo, language)}->${id ? t("formOption.edit") : t("formOption.add")}`}
               open={modalVisible}
               width={moduleInfo.formPageWidth}
               footer={null}
@@ -208,7 +210,7 @@ export const TableList: React.FC<TableListProps> = props => {
           {/* 抽屉表单 */}
           {moduleInfo.openType === EditOpenType.Drawer && (
             <Drawer
-              title={`${moduleInfo.moduleName}->${id ? t("formOption.edit") : t("formOption.add")}`}
+              title={`${getModuleName(moduleInfo, language)}->${id ? t("formOption.edit") : t("formOption.add")}`}
               size={moduleInfo.formPageWidth}
               onClose={onClose}
               open={drawerOpen}

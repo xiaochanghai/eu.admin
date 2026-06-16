@@ -48,6 +48,7 @@ export const buildDropActionAuthMap = (dropActions?: any[]): Record<string, bool
  * @param onDelete 删除回调
  * @param moduleInfo 模块信息
  * @param customActionHandlers 自定义操作处理函数映射
+ * @param t 国际化翻译函数
  * @returns 菜单项数组
  */
 export const getDropActionItems = (
@@ -59,7 +60,8 @@ export const getDropActionItems = (
   onView: (record: any) => void,
   onDelete: (action: any, record: any) => void,
   moduleInfo: ModuleInfo,
-  customActionHandlers: Record<string, (id: string, action: any, record: any) => void>
+  customActionHandlers: Record<string, (id: string, action: any, record: any) => void>,
+  t: (key: string) => string
 ) => {
   return dropActions
     .map((item: ModuleInfoBeforeAction) => {
@@ -67,7 +69,7 @@ export const getDropActionItems = (
       if (item.id === "Update" && !IsView) {
         return {
           key: "dropActionUpdate",
-          label: "修改",
+          label: t("proTable.edit"),
           onClick: () => onEdit(record)
         };
       }
@@ -76,7 +78,7 @@ export const getDropActionItems = (
       if (item.id === "View") {
         return {
           key: "dropActionView",
-          label: "查看",
+          label: t("proTable.view"),
           icon: createElement(Icon, { name: "EyeOutlined" }),
           onClick: () => onView(record)
         };
@@ -86,7 +88,7 @@ export const getDropActionItems = (
       if (item.id === "Delete" && !IsView) {
         return {
           key: "dropActionDelete",
-          label: "删除",
+          label: t("proTable.delete"),
           icon: createElement(Icon, { name: "DeleteOutlined" }),
           onClick: () => onDelete(action, record)
         };
@@ -165,4 +167,18 @@ export const shouldResetToFirstPage = (
   if (current <= 1) return false;
   const remaining = total - deletedCount;
   return remaining <= (current - 1) * pageSize;
+};
+
+/**
+ * 根据语言获取模块名称
+ * @param moduleInfo 模块信息对象
+ * @param language 当前语言 ("zh" | "en" | null)
+ * @returns 当前语言对应的模块名称
+ */
+export const getModuleName = (
+  moduleInfo: { moduleName?: string; moduleName_EN?: string } | null | undefined,
+  language: string | null
+): string => {
+  if (!moduleInfo) return "";
+  return language === "en" ? (moduleInfo.moduleName_EN ?? moduleInfo.moduleName ?? "") : (moduleInfo.moduleName ?? "");
 };
