@@ -110,5 +110,25 @@ export default {
     importExcel: "Excel导入",
     importTitle: "导入",
     logTitle: "日志"
+  },
+  cacheClear: {
+    title: "系统缓存管理",
+    clearButton: "清空缓存",
+    confirmTitle: "确认清除缓存",
+    confirmContent: "此操作将清除系统中的所有缓存数据，包括：",
+    userPermissionCache: "用户权限缓存",
+    dataDictCache: "数据字典缓存",
+    configCache: "配置信息缓存",
+    otherTempData: "其他临时数据",
+    okText: "确定清除",
+    cancelText: "取消",
+    clearing: "缓存清理中，请稍候...",
+    clearSuccess: "缓存清理成功",
+    clearFailed: "缓存清理失败",
+    clearFailedRetry: "清除缓存失败，请稍后重试",
+    solveProblems: "清除系统缓存可以解决以下问题：",
+    problem1: "数据更新不及时",
+    problem2: "权限变更未生效",
+    problem3: "系统配置修改后需要刷新"
   }
 };

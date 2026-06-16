@@ -4,6 +4,7 @@ import { ExclamationCircleOutlined, DeleteOutlined } from "@ant-design/icons";
 import { clearCache } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import NProgress from "@/config/nprogress";
+import { useTranslation } from "react-i18next";
 
 const { Paragraph, Text } = Typography;
 
@@ -19,6 +20,7 @@ interface ClearCacheResponse {
  */
 const CacheClear: React.FC = () => {
   const { modal } = App.useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
 
   /**
@@ -28,7 +30,7 @@ const CacheClear: React.FC = () => {
   const handleClearCache = async () => {
     try {
       // 开始加载状态
-      message.loading("缓存清理中，请稍候...", 0) as unknown as string;
+      message.loading(t("cacheClear.clearing"), 0) as unknown as string;
       NProgress.start();
       setLoading(true);
 
@@ -37,15 +39,15 @@ const CacheClear: React.FC = () => {
       message.destroy();
 
       // 显示操作结果
-      if (Success) message.success(Message || "缓存清理成功");
-      else message.error(Message || "缓存清理失败");
+      if (Success) message.success(Message || t("cacheClear.clearSuccess"));
+      else message.error(Message || t("cacheClear.clearFailed"));
     } catch (error) {
       // 销毁加载消息
       message.destroy();
 
       // 错误处理
       console.error("清除缓存时发生错误:", error);
-      message.error("清除缓存失败，请稍后重试");
+      message.error(t("cacheClear.clearFailedRetry"));
     } finally {
       NProgress.done();
       setLoading(false);
@@ -57,46 +59,46 @@ const CacheClear: React.FC = () => {
    */
   const showConfirm = () => {
     modal.confirm({
-      title: "确认清除缓存",
+      title: t("cacheClear.confirmTitle"),
       icon: <ExclamationCircleOutlined />,
       content: (
         <Space orientation="vertical" size="small">
-          <Text>此操作将清除系统中的所有缓存数据，包括：</Text>
+          <Text>{t("cacheClear.confirmContent")}</Text>
           <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
-            <li>用户权限缓存</li>
-            <li>数据字典缓存</li>
-            <li>配置信息缓存</li>
-            <li>其他临时数据</li>
+            <li>{t("cacheClear.userPermissionCache")}</li>
+            <li>{t("cacheClear.dataDictCache")}</li>
+            <li>{t("cacheClear.configCache")}</li>
+            <li>{t("cacheClear.otherTempData")}</li>
           </ul>
           {/* <Text type="warning" strong style={{ marginTop: 8, display: "block" }}>
             清除后可能需要重新登录，确定要继续吗？
           </Text> */}
         </Space>
       ),
-      okText: "确定清除",
+      okText: t("cacheClear.okText"),
       okType: "danger",
-      cancelText: "取消",
+      cancelText: t("cacheClear.cancelText"),
       onOk: handleClearCache
     });
   };
 
   return (
-    <Card size="small" variant="outlined" title="系统缓存管理">
+    <Card size="small" variant="outlined" title={t("cacheClear.title")}>
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <Space>
           <Button type="primary" danger icon={<DeleteOutlined />} onClick={showConfirm} loading={loading}>
-            清空缓存
+            {t("cacheClear.clearButton")}
           </Button>
         </Space>
 
         <Space orientation="vertical" size="small">
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            清除系统缓存可以解决以下问题：
+            {t("cacheClear.solveProblems")}
           </Paragraph>
           <ul style={{ marginTop: 8, marginBottom: 0, color: "rgba(0, 0, 0, 0.45)" }}>
-            <li>数据更新不及时</li>
-            <li>权限变更未生效</li>
-            <li>系统配置修改后需要刷新</li>
+            <li>{t("cacheClear.problem1")}</li>
+            <li>{t("cacheClear.problem2")}</li>
+            <li>{t("cacheClear.problem3")}</li>
           </ul>
           {/* <Paragraph type="warning" style={{ marginTop: 12, marginBottom: 0 }}>
             <Text strong>注意：</Text>清除缓存后，所有用户可能需要重新登录系统。

@@ -110,5 +110,25 @@ export default {
     importExcel: "Import Excel",
     importTitle: "Import",
     logTitle: "Log"
+  },
+  cacheClear: {
+    title: "System Cache Management",
+    clearButton: "Clear Cache",
+    confirmTitle: "Confirm Clear Cache",
+    confirmContent: "This operation will clear all cache data in the system, including:",
+    userPermissionCache: "User Permission Cache",
+    dataDictCache: "Data Dictionary Cache",
+    configCache: "Configuration Cache",
+    otherTempData: "Other Temporary Data",
+    okText: "Confirm Clear",
+    cancelText: "Cancel",
+    clearing: "Clearing cache, please wait...",
+    clearSuccess: "Cache cleared successfully",
+    clearFailed: "Cache clear failed",
+    clearFailedRetry: "Failed to clear cache, please try again later",
+    solveProblems: "Clearing system cache can solve the following problems:",
+    problem1: "Data not updated in time",
+    problem2: "Permission changes not effective",
+    problem3: "Need to refresh after system configuration changes"
   }
 };
