@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Upload, Button, Space, Typography } from "antd";
+import { Upload, Typography } from "antd";
 import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
 import { Icon } from "@/components";
@@ -33,35 +33,20 @@ interface FileUploadProps {
   maxFileSize?: number;
   /** 值变更回调 */
   onChange?: (fileId: string, fileName?: string) => void;
-  /** 自定义按钮文字 */
-  buttonText?: string;
-  /** 是否显示文件链接 */
-  showFileLink?: boolean;
 }
 
 /**
  * 文件上传组件
- * 用于在表单中上传单个文件
+ * 用于在表单中上传单个文件，采用 picture-card 样式
  */
 const FileUpload: React.FC<FileUploadProps> = props => {
-  const {
-    value,
-    fileName: propFileName,
-    disabled = false,
-    accept,
-    filePath = "default",
-    maxFileSize = 50,
-    onChange,
-    buttonText,
-    showFileLink = true
-  } = props;
+  const { value, fileName: propFileName, disabled = false, accept, filePath = "default", maxFileSize = 50, onChange } = props;
   const { t } = useTranslation();
 
   // 组件状态
   const [loading, setLoading] = useState<boolean>(false);
   const [fileId, setFileId] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   /**
    * 获取文件下载URL
@@ -78,7 +63,6 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       if (!id) {
         setFileId("");
         setFileName("");
-        setFileList([]);
         return;
       }
 
@@ -86,14 +70,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         setFileId(id);
         const name = propFileName || t("fileUpload.defaultFileName");
         setFileName(name);
-        setFileList([
-          {
-            uid: id,
-            name,
-            status: "done",
-            url: getFileUrl(id)
-          }
-        ]);
+
       } catch (error) {
         console.error("加载文件失败:", error);
         message.error(t("fileUpload.loadFailed"));
@@ -107,7 +84,6 @@ const FileUpload: React.FC<FileUploadProps> = props => {
    */
   const beforeUpload = useCallback(
     (file: RcFile): boolean => {
-      // 检查文件大小
       const fileSizeMB = file.size / 1024 / 1024;
       if (fileSizeMB > maxFileSize) {
         message.error(t("fileUpload.fileSizeExceeded").replace("{size}", String(maxFileSize)));
@@ -116,6 +92,19 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       return true;
     },
     [maxFileSize, t]
+  );
+
+  /**
+   * 删除已上传文件
+   */
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFileId("");
+      setFileName("");
+      onChange?.("", "");
+    },
+    [onChange]
   );
 
   /**
@@ -129,7 +118,6 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       if (file.status === "removed") {
         setFileId("");
         setFileName("");
-        setFileList([]);
         onChange?.("", "");
         return;
       }
@@ -171,25 +159,17 @@ const FileUpload: React.FC<FileUploadProps> = props => {
           message.success(Message || t("fileUpload.uploadSuccess"));
           setFileId(newFileId);
           setFileName(newFileName);
-          setFileList([
-            {
-              uid: newFileId,
-              name: newFileName,
-              status: "done",
-              url: getFileUrl(newFileId)
-            }
-          ]);
+
           onChange?.(newFileId, newFileName);
         } else {
           hideLoading?.();
           message.error(Message || t("fileUpload.uploadFailed"));
-          setFileList([]);
         }
       } catch (error) {
         hideLoading?.();
         console.error("上传文件失败:", error);
         message.error(t("fileUpload.uploadFileFailed"));
-        setFileList([]);
+
       } finally {
         uploadFlag = true;
         setLoading(false);
@@ -211,57 +191,72 @@ const FileUpload: React.FC<FileUploadProps> = props => {
   }, [propFileName, fileName]);
 
   /**
-   * 删除已上传文件
+   * 截断过长的文件名
    */
-  const handleDelete = useCallback(() => {
-    setFileId("");
-    setFileName("");
-    setFileList([]);
-    onChange?.("", "");
-  }, [onChange]);
-
-  /**
-   * 渲染已上传文件信息
-   */
-  const renderFileInfo = () => {
-    if (!fileId || !fileName) return null;
-
-    return (
-      <div><Space style={{ marginTop: 8 }}>
-        <Icon name="FileOutlined" style={{ color: "#1890ff" }} />
-        {showFileLink ? (
-          <a href={getFileUrl(fileId)} target="_blank" rel="noopener noreferrer">
-            {fileName}
-          </a>
-        ) : (
-          <Text>{fileName}</Text>
-        )}
-        {!disabled && (
-          <span onClick={handleDelete} style={{ cursor: "pointer" }}>
-            <Icon name="DeleteOutlined" style={{ color: "#ff4d4f" }} />
-          </span>
-        )}
-      </Space></div>
-    );
+  const truncateFileName = (name: string, maxLength = 10) => {
+    if (name.length <= maxLength) return name;
+    const ext = name.lastIndexOf(".") > -1 ? name.slice(name.lastIndexOf(".")) : "";
+    const baseName = name.lastIndexOf(".") > -1 ? name.slice(0, name.lastIndexOf(".")) : name;
+    const truncateLen = maxLength - ext.length - 1;
+    return `${baseName.slice(0, truncateLen)}...${ext}`;
   };
 
   return (
-    <div>
-      <Upload
-        accept={accept}
-        maxCount={1}
-        fileList={fileList}
-        onChange={handleUpload}
-        disabled={disabled || !!fileId}
-        beforeUpload={beforeUpload}
-        showUploadList={false}
-      >
-        <Button icon={<Icon name="UploadOutlined" />} loading={loading} disabled={disabled || !!fileId}>
-          {buttonText || t("fileUpload.uploadButton")}
-        </Button>
-      </Upload>
-      {renderFileInfo()}
-    </div>
+    <Upload
+      accept={accept}
+      listType="picture-card"
+      showUploadList={false}
+      onChange={handleUpload}
+      disabled={disabled || !!fileId}
+      beforeUpload={beforeUpload}
+    >
+      {fileId && fileName ? (
+        <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 8 }}>
+          {/* 右上角删除按钮 */}
+          {!disabled && (
+            <span
+              onClick={handleDelete}
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                cursor: "pointer",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                borderRadius: "50%",
+                padding: 4,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              <Icon name="DeleteOutlined" style={{ color: "#fff", fontSize: 14 }} />
+            </span>
+          )}
+          {/* 文件图标 */}
+          <Icon name="FileOutlined" style={{ fontSize: 32, color: "#1890ff" }} />
+          {/* 文件名 */}
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 12,
+              textAlign: "center",
+              maxWidth: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap"
+            }}
+            title={fileName}
+          >
+            {truncateFileName(fileName)}
+          </Text>
+        </div>
+      ) : (
+        <div>
+          <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} style={{ fontSize: 24 }} />
+          <div className="ant-upload-text">{t("fileUpload.uploadButton")}</div>
+        </div>
+      )}
+    </Upload>
   );
 };
 

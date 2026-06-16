@@ -85,12 +85,20 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
    */
   const uploadFileAttachment = useCallback(
     async (fileInfo: UploadChangeParam<UploadFile>) => {
-      // 如果是删除操作，直接返回
-      if (fileInfo.file.status === "removed") return;
+      // 如果是删除操作
+      if (fileInfo.file.status === "removed") {
+        setFileId("");
+        setImageUrl("");
+        onChange?.("");
+        return;
+      }
 
       // 防止重复上传
       if (!uploadFlag) return false;
       uploadFlag = false;
+
+      // 保存 loading 实例引用
+      let hideLoading: (() => void) | undefined;
 
       try {
         // 如果没有文件对象，直接返回
@@ -106,7 +114,8 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
         });
 
         // 准备上传
-        message.loading(t("imageCover.uploading"), 0);
+        setLoading(true);
+        hideLoading = message.loading(t("imageCover.uploading"), 0) as unknown as () => void;
         const formData = new FormData();
 
         formData.append("file", fileInfo.file.originFileObj);
@@ -118,22 +127,24 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
         const { Data, Success, Message } = await uploadFile("/api/File/UploadImage", formData);
 
         if (Success && Data) {
+          hideLoading?.();
           message.success(Message || t("imageCover.uploadSuccess"));
           setFileId(Data.ID || Data);
 
           // 通知父组件文件ID已变更
           onChange?.(Data.ID || Data);
         } else {
+          hideLoading?.();
           message.error(Message || t("imageCover.uploadFailed"));
           setImageUrl("");
         }
       } catch (error) {
+        hideLoading?.();
         console.error("上传图片失败:", error);
         message.error(t("imageCover.uploadImageFailed"));
         setImageUrl("");
       } finally {
         uploadFlag = true;
-        message.destroy();
         setLoading(false);
       }
     },
@@ -145,10 +156,50 @@ const ImageCover: React.FC<ImageCoverProps> = props => {
     if (value !== fileId) loadImageUrl(value || "");
   }, [value, fileId, loadImageUrl]);
 
+  /**
+   * 删除已上传图片
+   */
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFileId("");
+      setImageUrl("");
+      onChange?.("");
+    },
+    [onChange]
+  );
+
   return (
-    <Upload accept={accept} listType="picture-card" showUploadList={false} onChange={uploadFileAttachment} disabled={disabled}>
+    <Upload
+      accept={accept}
+      listType="picture-card"
+      showUploadList={false}
+      onChange={uploadFileAttachment}
+      disabled={disabled || !!fileId}
+    >
       {imageUrl ? (
-        <img src={imageUrl} alt={t("imageCover.coverImageAlt")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+          <img src={imageUrl} alt={t("imageCover.coverImageAlt")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          {!disabled && (
+            <span
+              onClick={handleDelete}
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                cursor: "pointer",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                borderRadius: "50%",
+                padding: "2px 4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              <Icon name="DeleteOutlined" style={{ color: "#fff", fontSize: 14 }} />
+            </span>
+          )}
+        </div>
       ) : (
         <div>
           <Icon name={loading ? "LoadingOutlined" : "PlusOutlined"} className="font-size24" />
