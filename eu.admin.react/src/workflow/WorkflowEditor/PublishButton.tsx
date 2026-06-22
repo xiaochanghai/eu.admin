@@ -58,6 +58,7 @@ export const PublishButton = memo(
     const t = useTranslate();
     // const editorStore = useEditorEngine();
     const startNode = useSelector((state: RootState) => state.workflow.startNode);
+    const formId = useSelector((state: RootState) => state.workflow.formId);
 
     useUpdateEffect(() => {
       if (iWorkFlowNode && iWorkFlowNode.childNode) {
@@ -71,31 +72,36 @@ export const PublishButton = memo(
     }, [iWorkFlowNode]);
 
     const handleValidate = async () => {
-      if (startNode) {
-        let id = "99fe490e-e022-49d7-a8ba-b82133cfccfc";
-        let { Success, Message } = await http.post<any>(`/api/SmWorkFlow/Publish/${id}`, startNode);
-        if (Success) message.success(Message);
+      if (!formId) {
+        message.warning("无法发布：表单信息未加载");
+        return;
       }
-      // const result = editorStore?.validate();
-      // if (result !== true && result !== undefined) {
-      //   const errs: IErrorItem[] = [];
-      //   for (const nodeId of Object.keys(result)) {
-      //     const msg = result[nodeId];
-      //     const node = editorStore?.getNode(nodeId);
-      //     errs.push({
-      //       category: t("flowDesign"),
-      //       message: node?.name + ": " + msg
-      //     });
-      //   }
-      //   setErrors(errs);
-      // } else {
-      //   Notification.success({
-      //     content: `验证成功`,
-      //     position: "bottomRight"
-      //   });
-      //   // message.info("验证成功");
-      // }
-      // return result;
+      if (!startNode || !startNode.childNode) {
+        message.warning("流程为空，请先配置流程节点");
+        return;
+      }
+      // 先执行前端校验
+      const validateResult = workFlow.validate();
+      if (validateResult !== true && validateResult !== undefined) {
+        // 校验失败，收集错误信息展示给用户
+        const errs: IErrorItem[] = [];
+        for (const nodeId of Object.keys(validateResult)) {
+          const msg = validateResult[nodeId];
+          errs.push({
+            category: t("flowDesign"),
+            message: `${nodeId}: ${msg}`
+          });
+        }
+        setErrors(errs);
+        onValidate?.(false);
+        return;
+      }
+      // 校验通过，调用发布接口
+      const { Success, Message } = await http.post<any>(`/api/SmWorkFlow/Publish/${formId}`, startNode);
+      if (Success) {
+        message.success(Message || "发布成功");
+        onValidate?.(true);
+      }
     };
 
     const handleOk = () => {

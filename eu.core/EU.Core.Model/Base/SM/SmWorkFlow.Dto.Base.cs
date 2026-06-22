@@ -70,4 +70,16 @@ public class SmWorkFlowBase : BasePoco
     /// </summary>
     [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark4 { get; set; }
+
+    /// <summary>
+    /// 已发布的流程节点 JSON（完整树，发布时写入）
+    /// </summary>
+    [Display(Name = "FlowJson"), Description("已发布的流程节点JSON")]
+    public string FlowJson { get; set; }
+
+    /// <summary>
+    /// 未发布的草稿 JSON（设计器实时保存，发布后清空）
+    /// </summary>
+    [Display(Name = "DraftJson"), Description("未发布的草稿JSON")]
+    public string DraftJson { get; set; }
 }

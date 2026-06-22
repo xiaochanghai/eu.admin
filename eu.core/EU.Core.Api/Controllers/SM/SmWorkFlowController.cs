@@ -48,4 +48,37 @@ public class SmWorkFlowController : BaseController<ISmWorkFlowServices, SmWorkFl
     [HttpGet("QueryNode/{id}")]
     public Task<ServiceResult<WorkFlowNode>> QueryNode(Guid id) => _service.QueryNode(id);
     #endregion
+
+    #region 按模块获取工作流
+    /// <summary>
+    /// 按模块ID获取工作流（不存在则自动初始化）
+    /// 用于流程设计器页面加载时，根据当前模块找到对应的 SmWorkFlow 记录
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <returns>工作流实体（含 FlowJson / DraftJson）</returns>
+    [HttpGet("ForModule/{moduleId}")]
+    public Task<ServiceResult<SmWorkFlow>> ForModule(Guid moduleId) => _service.GetByModuleId(moduleId);
+    #endregion
+
+    #region 按模块获取流程节点
+    /// <summary>
+    /// 按模块ID获取流程节点树
+    /// 加载优先级：草稿 JSON → 已发布 JSON → 从节点表重建
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <returns>流程节点树</returns>
+    [HttpGet("QueryNodeByModule/{moduleId}")]
+    public Task<ServiceResult<WorkFlowNode>> QueryNodeByModule(Guid moduleId) => _service.QueryNodeByModuleId(moduleId);
+    #endregion
+
+    #region 保存草稿
+    /// <summary>
+    /// 保存未发布的草稿 JSON（设计器实时自动保存，发布后清空）
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <param name="draftJson">草稿节点树 JSON</param>
+    /// <returns></returns>
+    [HttpPut("SaveDraft/{moduleId}")]
+    public Task<ServiceResult> SaveDraft(Guid moduleId, [FromBody] string draftJson) => _service.SaveDraft(moduleId, draftJson);
+    #endregion
 }
