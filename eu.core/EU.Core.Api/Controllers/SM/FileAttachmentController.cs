@@ -74,6 +74,16 @@ public class FileController : BaseController<IFileAttachmentServices, FileAttach
     public async Task<ServiceResult<Guid?>> UploadVideoAsync([FromForm] ChunkUpload upload) => await _service.UploadVideoAsync(upload);
     #endregion
 
+    #region 分片上传文件
+    /// <summary>
+    /// 分片上传文件
+    /// </summary>
+    /// <param name="upload"></param>
+    /// <returns></returns>
+    [HttpPost("UploadChunk")]
+    public async Task<ServiceResult<Guid?>> UploadChunkAsync([FromForm] ChunkUpload upload) => await _service.UploadChunkAsync(upload);
+    #endregion
+
     #region 获取图片
     /// <summary>
     /// 获取图片

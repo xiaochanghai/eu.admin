@@ -17,6 +17,7 @@ public class SerilogRequestUtility
         "/api/File/Upload",
         "/api/File/UploadImage",
         "/api/File/UploadVideo",
+        "/api/File/UploadChunk",
         "api/SmUser/UploadAvatar",
     };
 

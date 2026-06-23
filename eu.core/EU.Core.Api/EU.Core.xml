@@ -1395,6 +1395,13 @@
             <param name="upload"></param> 
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.UploadChunkAsync(EU.Core.Model.ChunkUpload)">
+            <summary>
+            分片上传文件
+            </summary>
+            <param name="upload"></param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Api.Controllers.FileController.GetByUrl(System.String)">
             <summary>
             获取图片

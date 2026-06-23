@@ -17,7 +17,6 @@
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 
 namespace EU.Core.Services;
 
@@ -180,41 +179,13 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
 
     public async Task<ServiceResult<Guid?>> UploadVideoAsync(ChunkUpload upload)
     {
-        var path = $"{$"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}wwwroot{Path.DirectorySeparatorChar}files{Path.DirectorySeparatorChar}upload{Path.DirectorySeparatorChar}{upload.id}{Path.DirectorySeparatorChar}"}";
+        upload.filePath ??= "upload";
+        return await UploadChunkInternalAsync(upload);
+    }
 
-        FileHelper.CreateDirectory(path);
-
-        using (var stream = File.Create(path + $"{upload.chunkIndex}"))
-        {
-            await upload.file.CopyToAsync(stream);
-        }
-
-        if (upload.chunkIndex == upload.totalChunks - 1)
-        {
-            var ext = string.Empty;
-            var file = upload.file;
-            if (file.FileName.IsNotEmptyOrNull())
-            {
-                var dotPos = upload.fileName.LastIndexOf('.');
-                ext = upload.fileName.Substring(dotPos + 1);
-            }
-            string fileId = Utility.SnowID().ObjToString();
-            await VideoHelper.FileMerge(upload.id, "." + ext, fileId);
-
-            InsertFileAttachmentInput fileAttachment = new()
-            {
-                OriginalFileName = upload.fileName,
-                FileName = $"{fileId}.{ext}",
-                FileExt = ext,
-                //fileAttachment.MasterId = upload.masterId;
-                Length = file.Length,
-                Path = $"/files/upload/"
-            };
-            Guid? id = await base.Add(fileAttachment);
-
-            return Success(id, "上传成功！");
-        }
-        return Success<Guid?>(null, "上传成功！");
+    public async Task<ServiceResult<Guid?>> UploadChunkAsync(ChunkUpload upload)
+    {
+        return await UploadChunkInternalAsync(upload);
     }
 
     public async Task<ServiceResult<List<FileAttachment>>> GetFileListAsync(Guid masterId, string imageType = null)
@@ -338,6 +309,109 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
             return Failed("文件名不能为空");
 
         return Success();
+    }
+
+    private ServiceResult ValidateChunkUpload(ChunkUpload upload)
+    {
+        var fileValidation = ValidateUploadFile(upload?.file);
+        if (!fileValidation.Success)
+            return fileValidation;
+
+        if (string.IsNullOrWhiteSpace(upload.fileName))
+            return Failed("文件名不能为空");
+
+        if (string.IsNullOrWhiteSpace(upload.id))
+            return Failed("分片上传ID不能为空");
+
+        if (upload.id.Contains("..") || upload.id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            return Failed("分片上传ID格式不正确");
+
+        if (upload.totalChunks <= 0)
+            return Failed("分片总数不正确");
+
+        if (upload.chunkIndex < 0 || upload.chunkIndex >= upload.totalChunks)
+            return Failed("分片序号不正确");
+
+        return Success();
+    }
+
+    private async Task<ServiceResult<Guid?>> UploadChunkInternalAsync(ChunkUpload upload)
+    {
+        var validationResult = ValidateChunkUpload(upload);
+        if (!validationResult.Success)
+            return Failed<Guid?>(validationResult.Message);
+
+        try
+        {
+            var originalFileName = Path.GetFileName(upload.fileName);
+            var ext = GetFileExtension(originalFileName);
+            var imageType = upload.imageType ?? upload.filePath;
+            var uploadPath = GetUploadPath(upload.filePath);
+            var fullPath = $"{PATH_SEPARATOR}{uploadPath.Trim(PATH_SEPARATOR.ToCharArray())}{PATH_SEPARATOR}";
+
+            FileHelper.CreateRootDirectory(fullPath);
+
+            var physicalRoot = FileHelper.GetPhysicsPath();
+            var relativeUploadPath = uploadPath.Replace("/", Path.DirectorySeparatorChar.ToString()).Trim(Path.DirectorySeparatorChar);
+            var tempPath = Path.Combine(physicalRoot, relativeUploadPath, upload.id);
+
+            FileHelper.CreateDirectory(tempPath);
+
+            var chunkPath = Path.Combine(tempPath, upload.chunkIndex.ToString());
+            using (var stream = File.Create(chunkPath))
+            {
+                await upload.file.CopyToAsync(stream);
+            }
+
+            if (Directory.GetFiles(tempPath).Length < upload.totalChunks)
+                return Success<Guid?>(null, "上传成功！");
+
+            var fileId = Utility.SnowID().ObjToString();
+            var fileName = ext.IsNotEmptyOrNull() ? $"{fileId}.{ext}" : fileId;
+            var finalPath = Path.Combine(physicalRoot, relativeUploadPath, fileName);
+
+            await MergeChunkFilesAsync(tempPath, finalPath, upload.totalChunks);
+
+            var fileInfo = new FileInfo(finalPath);
+            var fileAttachment = new InsertFileAttachmentInput
+            {
+                OriginalFileName = originalFileName,
+                FileName = fileName,
+                FileExt = ext,
+                MasterId = upload.masterId,
+                Length = fileInfo.Length,
+                Path = fullPath,
+                ImageType = imageType
+            };
+
+            Guid? id = await base.Add(fileAttachment);
+
+            return Success(id, "上传成功！");
+        }
+        catch (Exception ex)
+        {
+            return Failed<Guid?>($"文件分片上传失败: {ex.Message}");
+        }
+    }
+
+    private static async Task MergeChunkFilesAsync(string tempPath, string finalPath, int totalChunks)
+    {
+        using (var finalStream = new FileStream(finalPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            for (var index = 0; index < totalChunks; index++)
+            {
+                var chunkPath = Path.Combine(tempPath, index.ToString());
+                if (!File.Exists(chunkPath))
+                    throw new FileNotFoundException($"分片 {index} 不存在", chunkPath);
+
+                using (var chunkStream = new FileStream(chunkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    await chunkStream.CopyToAsync(finalStream);
+                }
+            }
+        }
+
+        Directory.Delete(tempPath, true);
     }
 
     /// <summary>

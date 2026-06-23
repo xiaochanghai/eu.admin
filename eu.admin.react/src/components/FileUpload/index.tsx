@@ -14,6 +14,9 @@ const VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
 let uploadFlag = true;
 
 const { Text } = Typography;
+const CHUNK_SIZE = 5 * 1024 * 1024;
+
+const createChunkUploadId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 /**
  * 文件上传组件属性接口
@@ -107,6 +110,36 @@ const FileUpload: React.FC<FileUploadProps> = props => {
     [onChange]
   );
 
+  const uploadChunkFile = useCallback(
+    async (file: RcFile) => {
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const uploadId = createChunkUploadId();
+      let fileId: any = null;
+
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const chunk = file.slice(start, end);
+        const formData = new FormData();
+
+        formData.append("file", chunk, file.name);
+        formData.append("fileName", file.name);
+        formData.append("chunkIndex", String(chunkIndex));
+        formData.append("totalChunks", String(totalChunks));
+        formData.append("id", uploadId);
+        formData.append("masterId", "");
+        formData.append("filePath", filePath);
+
+        const { Data, Success, Message } = await uploadFile("/api/File/UploadChunk", formData);
+        if (!Success) throw new Error(Message || t("fileUpload.uploadFailed"));
+        if (Data) fileId = Data.ID || Data;
+      }
+
+      return fileId;
+    },
+    [filePath, t]
+  );
+
   /**
    * 上传文件
    */
@@ -144,13 +177,26 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         setLoading(true);
         hideLoading = message.loading(t("fileUpload.uploading"), 0) as unknown as () => void;
 
-        const formData = new FormData();
-        formData.append("file", file.originFileObj);
-        formData.append("masterId", "");
-        formData.append("filePath", filePath);
+        const isChunkUpload = file.originFileObj.size > CHUNK_SIZE;
+        let Data: any = null;
+        let Success = true;
+        let Message = "";
 
-        // 执行上传
-        const { Data, Success, Message } = await uploadFile("/api/File/Upload", formData);
+        if (isChunkUpload) {
+          Data = await uploadChunkFile(file.originFileObj);
+          Success = !!Data;
+        } else {
+          const formData = new FormData();
+          formData.append("file", file.originFileObj);
+          formData.append("masterId", "");
+          formData.append("filePath", filePath);
+
+          // 执行上传
+          const result = await uploadFile("/api/File/Upload", formData);
+          Data = result.Data;
+          Success = result.Success;
+          Message = result.Message;
+        }
 
         if (Success && Data) {
           const newFileId = Data.ID || Data;
@@ -175,7 +221,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         setLoading(false);
       }
     },
-    [filePath, beforeUpload, onChange, getFileUrl, t]
+    [filePath, beforeUpload, onChange, getFileUrl, t, uploadChunkFile]
   );
 
   // 监听外部value变化

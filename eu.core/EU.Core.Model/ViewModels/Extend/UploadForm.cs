@@ -18,6 +18,9 @@ public class ChunkUpload
 {
     public IFormFile file { get; set; }
 
+    public Guid? masterId { get; set; }
+    public string filePath { get; set; } = null;
+    public string imageType { get; set; } = null;
     public string fileName { get; set; } = null;
     public int chunkIndex { get; set; }
     public int totalChunks { get; set; }
