@@ -180,6 +180,7 @@ export default {
     uploadFileFailed: "Failed to upload file",
     uploadButton: "Upload File",
     defaultFileName: "Attachment",
-    fileSizeExceeded: "File size cannot exceed {size}MB"
+    fileSizeExceeded: "File size cannot exceed {size}MB",
+    fileTypeNotAllowed: "Unsupported file type. Please upload {accept} files"
   }
 };

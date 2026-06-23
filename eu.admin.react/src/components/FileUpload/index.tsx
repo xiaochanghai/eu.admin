@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Upload, Typography } from "antd";
 import { message } from "@/hooks/useMessage";
 import { uploadFile } from "@/api/modules/module";
@@ -6,17 +6,43 @@ import { Icon } from "@/components";
 import { RcFile, UploadChangeParam, UploadFile } from "antd/lib/upload/interface";
 import { useTranslation } from "react-i18next";
 
-// 环境变量
-const baseURL = import.meta.env.VITE_API_URL as string;
-const VITE_USER_NODE_ENV = import.meta.env.VITE_USER_NODE_ENV as string;
-
-// 上传状态标志，防止重复上传
-let uploadFlag = true;
-
 const { Text } = Typography;
 const CHUNK_SIZE = 5 * 1024 * 1024;
 
 const createChunkUploadId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const isAcceptedFile = (file: RcFile, accept?: string) => {
+  if (!accept) return true;
+
+  const acceptedTypes = accept
+    .split(",")
+    .map(item => item.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (acceptedTypes.length === 0) return true;
+
+  const fileName = file.name.toLowerCase();
+  const fileType = file.type.toLowerCase();
+
+  return acceptedTypes.some(type => {
+    if (type.startsWith(".")) return fileName.endsWith(type);
+    if (type.endsWith("/*")) return fileType.startsWith(type.slice(0, -1));
+    return fileType === type;
+  });
+};
+
+const getUploadErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object") {
+    const resultMessage = (error as { Message?: string }).Message;
+    const responseMessage = (error as { response?: { data?: { Message?: string } } }).response?.data?.Message;
+    if (resultMessage) return resultMessage;
+    if (responseMessage) return responseMessage;
+  }
+
+  if (error instanceof Error && error.message) return error.message;
+
+  return fallback;
+};
 
 /**
  * 文件上传组件属性接口
@@ -50,13 +76,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
   const [loading, setLoading] = useState<boolean>(false);
   const [fileId, setFileId] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
-
-  /**
-   * 获取文件下载URL
-   */
-  const getFileUrl = useCallback((id: string): string => {
-    return `${VITE_USER_NODE_ENV === "development" ? baseURL : ""}/api/File/Download/${id}`;
-  }, []);
+  const uploadFlagRef = useRef(true);
 
   /**
    * 加载文件信息
@@ -79,7 +99,7 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         message.error(t("fileUpload.loadFailed"));
       }
     },
-    [propFileName, getFileUrl, t]
+    [propFileName, t]
   );
 
   /**
@@ -92,9 +112,15 @@ const FileUpload: React.FC<FileUploadProps> = props => {
         message.error(t("fileUpload.fileSizeExceeded").replace("{size}", String(maxFileSize)));
         return false;
       }
+
+      if (!isAcceptedFile(file, accept)) {
+        message.error(t("fileUpload.fileTypeNotAllowed").replace("{accept}", accept || ""));
+        return false;
+      }
+
       return true;
     },
-    [maxFileSize, t]
+    [accept, maxFileSize, t]
   );
 
   /**
@@ -156,21 +182,21 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       }
 
       // 防止重复上传
-      if (!uploadFlag) return;
-      uploadFlag = false;
+      if (!uploadFlagRef.current) return;
+      uploadFlagRef.current = false;
 
       // 保存 loading 实例引用
       let hideLoading: (() => void) | undefined;
 
       try {
         if (!file.originFileObj) {
-          uploadFlag = true;
+          uploadFlagRef.current = true;
           return;
         }
 
         // 上传前校验
         if (!beforeUpload(file.originFileObj)) {
-          uploadFlag = true;
+          uploadFlagRef.current = true;
           return;
         }
 
@@ -214,14 +240,14 @@ const FileUpload: React.FC<FileUploadProps> = props => {
       } catch (error) {
         hideLoading?.();
         console.error("上传文件失败:", error);
-        message.error(t("fileUpload.uploadFileFailed"));
+        message.error(getUploadErrorMessage(error, t("fileUpload.uploadFileFailed")));
 
       } finally {
-        uploadFlag = true;
+        uploadFlagRef.current = true;
         setLoading(false);
       }
     },
-    [filePath, beforeUpload, onChange, getFileUrl, t, uploadChunkFile]
+    [filePath, beforeUpload, onChange, t, uploadChunkFile]
   );
 
   // 监听外部value变化

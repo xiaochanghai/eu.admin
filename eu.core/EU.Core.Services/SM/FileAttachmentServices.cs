@@ -50,6 +50,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         if (!validationResult.Success)
             return Failed<Guid>(validationResult.Message);
 
+        var pathValidationResult = ValidateUploadPath(upload.filePath);
+        if (!pathValidationResult.Success)
+            return Failed<Guid>(pathValidationResult.Message);
+
         try
         {
             var file = upload.file;
@@ -103,6 +107,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         var validationResult = ValidateUploadFile(upload?.file);
         if (!validationResult.Success)
             return Failed<Guid>(validationResult.Message);
+
+        var pathValidationResult = ValidateUploadPath(upload.filePath);
+        if (!pathValidationResult.Success)
+            return Failed<Guid>(pathValidationResult.Message);
 
         try
         {
@@ -332,6 +340,10 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
         if (upload.chunkIndex < 0 || upload.chunkIndex >= upload.totalChunks)
             return Failed("分片序号不正确");
 
+        var pathValidationResult = ValidateUploadPath(upload.filePath);
+        if (!pathValidationResult.Success)
+            return pathValidationResult;
+
         return Success();
     }
 
@@ -363,7 +375,7 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
                 await upload.file.CopyToAsync(stream);
             }
 
-            if (Directory.GetFiles(tempPath).Length < upload.totalChunks)
+            if (!HasUploadedAllChunks(tempPath, upload.totalChunks))
                 return Success<Guid?>(null, "上传成功！");
 
             var fileId = Utility.SnowID().ObjToString();
@@ -396,22 +408,65 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
 
     private static async Task MergeChunkFilesAsync(string tempPath, string finalPath, int totalChunks)
     {
-        using (var finalStream = new FileStream(finalPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        try
         {
-            for (var index = 0; index < totalChunks; index++)
+            using (var finalStream = new FileStream(finalPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                var chunkPath = Path.Combine(tempPath, index.ToString());
-                if (!File.Exists(chunkPath))
-                    throw new FileNotFoundException($"分片 {index} 不存在", chunkPath);
-
-                using (var chunkStream = new FileStream(chunkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                for (var index = 0; index < totalChunks; index++)
                 {
-                    await chunkStream.CopyToAsync(finalStream);
+                    var chunkPath = Path.Combine(tempPath, index.ToString());
+                    if (!File.Exists(chunkPath))
+                        throw new FileNotFoundException($"分片 {index} 不存在", chunkPath);
+
+                    using (var chunkStream = new FileStream(chunkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        await chunkStream.CopyToAsync(finalStream);
+                    }
                 }
             }
+
+            Directory.Delete(tempPath, true);
+        }
+        catch
+        {
+            if (File.Exists(finalPath))
+                File.Delete(finalPath);
+
+            throw;
+        }
+    }
+
+    private static bool HasUploadedAllChunks(string tempPath, int totalChunks)
+    {
+        for (var index = 0; index < totalChunks; index++)
+        {
+            if (!File.Exists(Path.Combine(tempPath, index.ToString())))
+                return false;
         }
 
-        Directory.Delete(tempPath, true);
+        return true;
+    }
+
+    private ServiceResult ValidateUploadPath(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return Success();
+
+        var normalizedPath = NormalizeUploadPath(filePath);
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+            return Failed("文件路径格式不正确");
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var segments = normalizedPath.Split(PATH_SEPARATOR, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => segment == "." || segment == ".." || segment.IndexOfAny(invalidChars) >= 0))
+            return Failed("文件路径格式不正确");
+
+        return Success();
+    }
+
+    private static string NormalizeUploadPath(string filePath)
+    {
+        return filePath?.Replace('\\', '/').Trim('/') ?? string.Empty;
     }
 
     /// <summary>
@@ -421,8 +476,8 @@ public class FileAttachmentServices : BaseServices<FileAttachment, FileAttachmen
     /// <returns>上传路径</returns>
     private string GetUploadPath(string filePath)
     {
-        return !string.IsNullOrEmpty(filePath)
-            ? "files/" + filePath
+        return !string.IsNullOrWhiteSpace(filePath)
+            ? "files/" + NormalizeUploadPath(filePath)
             : _configuration[DEFAULT_UPLOAD_DIR_CONFIG_KEY] ?? "upload";
     }
 

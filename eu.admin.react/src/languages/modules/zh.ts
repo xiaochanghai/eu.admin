@@ -180,6 +180,7 @@ export default {
     uploadFileFailed: "上传文件失败",
     uploadButton: "上传文件",
     defaultFileName: "附件",
-    fileSizeExceeded: "文件大小不能超过 {size}MB"
+    fileSizeExceeded: "文件大小不能超过 {size}MB",
+    fileTypeNotAllowed: "文件类型不支持，请上传 {accept} 格式的文件"
   }
 };
