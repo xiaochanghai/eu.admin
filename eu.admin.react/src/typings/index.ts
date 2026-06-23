@@ -63,6 +63,12 @@ export interface FieldProps {
   IsRedirect?: boolean;
   /** 跳转链接 */
   RedirectUrl?: string;
+  /** 修改时隐藏 */
+  ModifyHide?: boolean;
+  /** 接受的文件类型 */
+  Accept?: string;
+  /** 最大文件大小(MB) */
+  MaxFileSize?: number;
   /** 表单标题 */
   FormTitle_EN?: string;
   /** 占位符文本 */

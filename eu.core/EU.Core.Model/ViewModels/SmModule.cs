@@ -158,6 +158,16 @@ public class SmModuleForm
     public bool? ModifyHide { get; set; }
 
     /// <summary>
+    /// 接受的文件类型
+    /// </summary>
+    public string Accept { get; set; }
+
+    /// <summary>
+    /// 最大文件大小 (MB)
+    /// </summary>
+    public int? MaxFileSize { get; set; }
+
+    /// <summary>
     /// 修改时只读
     /// </summary>
     public bool? ModifyDisabled { get; set; }

@@ -33,7 +33,7 @@ interface ImageCoverFieldProps {
  * @returns React组件
  */
 const FileUploadField: React.FC<ImageCoverFieldProps> = ({ field, disabled, modifyType = ModifyType.Edit, onChange }) => {
-  const { DefaultValue, DataIndex, Required, Disabled, ModifyDisabled, FormTitle, LabelCol, WrapperCol } = field;
+  const { DefaultValue, DataIndex, Required, Disabled, ModifyDisabled, FormTitle, LabelCol, WrapperCol, Accept, MaxFileSize } = field;
 
   // 根据修改类型和字段属性设置禁用状态
   const isDisabled = useMemo(() => {
@@ -93,8 +93,8 @@ const FileUploadField: React.FC<ImageCoverFieldProps> = ({ field, disabled, modi
     >
       <FileUpload
         filePath="upload"
-        accept=".zip"
-        maxFileSize={100}
+        accept={Accept ?? ".zip"}
+        maxFileSize={MaxFileSize ?? 100}
         disabled={isDisabled}
         onChange={handleChange}
       />

@@ -39,6 +39,14 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// </summary>
     private const int DEFAULT_FORM_PAGE_WIDTH = 720;
 
+    private const string ACCEPT_FORMAT_PATTERN = @"^\.[A-Za-z0-9]+(,\.[A-Za-z0-9]+)*$";
+
+    private static bool IsValidAcceptFormat(string accept)
+    {
+        return string.IsNullOrWhiteSpace(accept)
+            || System.Text.RegularExpressions.Regex.IsMatch(accept.Trim(), ACCEPT_FORMAT_PATTERN);
+    }
+
     /// <summary>
     /// 排序号增量
     /// </summary>
@@ -1177,6 +1185,12 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
         if (type == "form")
         {
+            if (!IsValidAcceptFormat(column.Accept))
+                return Failed("接受的文件类型格式不正确，请使用 .zip,.pdf 格式");
+
+            if (column.Accept.IsNotEmptyOrNull())
+                entity.Accept = column.Accept.Trim();
+
             // 更新表单列配置
             // 根据字段类型设置数据源
             if (column.FieldType == "ComboGrid")
@@ -1214,6 +1228,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.Placeholder,
                     x.CreateHide,
                     x.ModifyHide,
+                    x.Accept,
+                    x.MaxFileSize,
                     x.ModifyDisabled,
                     x.GridSpan,
                     x.DataSource,

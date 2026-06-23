@@ -212,6 +212,21 @@ export const schemaDef: SchemaClz = {
     mode: Mode.form,
     tag: "basic"
   },
+  Accept: {
+    name: "接受的文件类型",
+    tooltip: "多个类型用逗号分隔，例如 .pdf,.docx,.xlsx",
+    type: "input",
+    mode: Mode.form,
+    tag: "basic",
+    deps: { field: "FieldType", value: ["FileUpload"] }
+  },
+  MaxFileSize: {
+    name: "最大文件大小(MB)",
+    type: "inputNumber",
+    mode: Mode.form,
+    tag: "basic",
+    deps: { field: "FieldType", value: ["FileUpload"] }
+  },
   // hideLabel: {
   //   name: "标签隐藏",
   //   type: "switch",

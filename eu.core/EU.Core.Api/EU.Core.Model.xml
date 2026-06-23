@@ -5277,6 +5277,16 @@
             修改时隐藏
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.Accept">
+            <summary>
+            接受的文件类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.MaxFileSize">
+            <summary>
+            最大文件大小 (MB)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModulesBase">
             <summary>
             系统模板 (Dto.Base)
@@ -12217,6 +12227,16 @@
             修改时隐藏
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.Accept">
+            <summary>
+            接受的文件类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.MaxFileSize">
+            <summary>
+            最大文件大小 (MB)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmModules">
             <summary>
             系统模板 (Model)
@@ -15163,6 +15183,16 @@
         <member name="P:EU.Core.Model.SmModuleForm.ModifyHide">
             <summary>
             修改时隐藏
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.Accept">
+            <summary>
+            接受的文件类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.SmModuleForm.MaxFileSize">
+            <summary>
+            最大文件大小 (MB)
             </summary>
         </member>
         <member name="P:EU.Core.Model.SmModuleForm.ModifyDisabled">

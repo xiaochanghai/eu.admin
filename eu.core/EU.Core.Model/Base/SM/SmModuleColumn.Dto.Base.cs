@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/6/1 11:31:54  SahHsiao   初版
+* V0.01  2026/6/23 9:17:11  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -382,4 +382,16 @@ public class SmModuleColumnBase : BasePoco
     /// </summary>
     [Display(Name = "ModifyHide"), Description("修改时隐藏")]
     public bool? ModifyHide { get; set; }
+
+    /// <summary>
+    /// 接受的文件类型
+    /// </summary>
+    [Display(Name = "Accept"), Description("接受的文件类型"), MaxLength(64, ErrorMessage = "接受的文件类型 不能超过 64 个字符")]
+    public string Accept { get; set; }
+
+    /// <summary>
+    /// 最大文件大小 (MB)
+    /// </summary>
+    [Display(Name = "MaxFileSize"), Description("最大文件大小 (MB)")]
+    public int? MaxFileSize { get; set; }
 }
