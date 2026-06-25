@@ -18,7 +18,6 @@
 using EU.Core.Common.Caches;
 using EU.Core.Model;
 using EU.Core.Model.Entity;
-using MySqlX.XDevAPI.Common;
 using SqlSugar;
 
 namespace EU.Core.Common.Helper;
@@ -35,7 +34,7 @@ public class DataScopeHelper
 
 
 
-    public async Task<UserDataScopeModel> GetUserDataScope(ISqlSugarClient db, Guid userId)
+    public static async Task<UserDataScopeModel> GetUserDataScope(ISqlSugarClient db, Guid userId)
     {
         try
         {
