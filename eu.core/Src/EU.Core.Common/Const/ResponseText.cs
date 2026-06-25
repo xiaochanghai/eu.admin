@@ -40,7 +40,7 @@ public static class ResponseText
     /// 删除失败
     /// </summary>
     public const string DELETE_FAIL = "删除失败！";
-     
+
     /// <summary>
     /// 审核成功
     /// </summary>
@@ -80,6 +80,12 @@ public static class ResponseText
     /// 执行 -- 成功
     /// </summary>
     public const string EXECUTE_SUCCESS = "执行成功！";
+    
+
+    /// <summary>
+    /// 执行 -- 失败
+    /// </summary>
+    public const string EXECUTE_FAIL = "执行失败！";
 
     /// <summary>
     /// 模块代码不存在

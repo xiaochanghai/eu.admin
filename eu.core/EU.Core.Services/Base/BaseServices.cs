@@ -1344,7 +1344,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     {
         return new ServiceResult<T>() { Success = true, Message = message, Data = data };
     }
-    public ServiceResult Success(string message = "成功")
+    public ServiceResult Success(string message = ResponseText.EXECUTE_SUCCESS)
     {
         return new ServiceResult() { Success = true, Message = message, Data = null };
     }
@@ -1353,12 +1353,12 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     {
         return new ServiceResult<T>() { Success = false, Message = message, Data = data };
     }
-    public ServiceResult Failed(string message = "失败", int status = 500)
+    public ServiceResult Failed(string message = ResponseText.EXECUTE_FAIL, int status = 500)
     {
         return new ServiceResult() { Success = false, Status = status, Message = message, Data = null };
     }
 
-    public ServiceResult<T> Failed<T>(string message = "失败", int status = 500)
+    public ServiceResult<T> Failed<T>(string message = ResponseText.EXECUTE_FAIL, int status = 500)
     {
         return new ServiceResult<T>() { Success = false, Status = status, Message = message, Data = default };
     }
