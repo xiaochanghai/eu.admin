@@ -81,6 +81,18 @@ public class LovHelper
         return cache ?? string.Empty;
     }
 
+
+    public static async Task<SmCommonListSql> GetCommonListSqlEntity(ISqlSugarClient db, string code)
+    {
+        var cache = redis.Get<SmCommonListSql>(commonListCacheCode, code + "_Entity");
+        if (cache == null)
+        {
+            await InitCommonListSql(db);
+            cache = redis.Get<SmCommonListSql>(commonListCacheCode, code + "_Entity");
+        }
+        return cache ?? null;
+    }
+
     /// <summary>
     /// 根据 ID 获取通用列表 SQL
     /// </summary>
@@ -133,6 +145,7 @@ public class LovHelper
         {
             redis.AddObject(commonListCacheCode, item.CommonCode, item.SelectSql);
             redis.AddObject(commonListCacheCode, item.ID.ObjToString(), item.SelectSql);
+            redis.AddObject(commonListCacheCode, item.CommonCode + "_Entity", item);
         });
     }
 

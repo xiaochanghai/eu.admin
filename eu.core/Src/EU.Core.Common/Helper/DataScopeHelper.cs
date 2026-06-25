@@ -46,6 +46,7 @@ public class DataScopeHelper
             if (model != null)
                 return model;
 
+            model = new UserDataScopeModel();
             // 1. 获取用户的所有角色
             var userRoles = await db.Queryable<SmUserRole>()
                 .Where(x => x.SmUserId == userId)

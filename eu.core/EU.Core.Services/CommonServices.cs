@@ -739,7 +739,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var data = new List<ComboGridData>();
 
         // 获取数据字典对应的SQL
-        var sql = await LovHelper.GetCommonListSql(Db, code);
+        var entity = await LovHelper.GetCommonListSqlEntity(Db, code);
+        var sql = entity.SelectSql;
         if (string.IsNullOrWhiteSpace(sql))
             return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, 0);
 
@@ -748,6 +749,16 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         {
             var escapedParentId = parentId.Replace("'", "''");
             sql += $" AND {parentColumn} = '{escapedParentId}'";
+        }
+        if (entity.IsRoleDataScope == true && UserId != null)
+        {
+            var UserDataScope = await DataScopeHelper.GetUserDataScope(Db, UserId.Value);
+            if (UserDataScope != null && UserDataScope.CompanyIds != null && UserDataScope.CompanyIds.Any())
+            {
+                string joinKeys = $"'{string.Join("','", UserDataScope.CompanyIds)}'";
+
+                sql += $" AND CompanyId in ({joinKeys})";
+            }
         }
 
         sql = $"SELECT * FROM ({sql}) A";
