@@ -109,7 +109,7 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
    */
   const fetchRoleDataScope = useCallback(async (): Promise<void> => {
     if (!id) return;
-    const { Data, Success } = await http.get<any>(`${DATA_SCOPE_API_URL}/GetRoleDataScope/${id}`);
+    const { Data, Success } = await http.get<any>(`${DATA_SCOPE_API_URL}/QueryRole/${id}`);
     if (Success) setCheckedDataScopeKeys(Data || []);
   }, [id]);
 
