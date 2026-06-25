@@ -5472,6 +5472,11 @@
             表格行是否可选择
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsRoleDataScope">
+            <summary>
+            是否过滤角色数据权限
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12465,6 +12470,11 @@
         <member name="P:EU.Core.Model.Entity.SmModules.IsShowRowSelection">
             <summary>
             表格行是否可选择
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsRoleDataScope">
+            <summary>
+            是否过滤角色数据权限
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">

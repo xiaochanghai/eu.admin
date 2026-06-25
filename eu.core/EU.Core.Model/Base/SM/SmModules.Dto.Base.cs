@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/6/13 0:21:02  SahHsiao   初版
+* V0.01  2026/6/26 1:18:55  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -208,4 +208,10 @@ public class SmModulesBase : BasePoco
     /// </summary>
     [Display(Name = "IsShowRowSelection"), Description("表格行是否可选择")]
     public bool? IsShowRowSelection { get; set; }
+
+    /// <summary>
+    /// 是否过滤角色数据权限
+    /// </summary>
+    [Display(Name = "IsRoleDataScope"), Description("是否过滤角色数据权限")]
+    public bool? IsRoleDataScope { get; set; }
 }
