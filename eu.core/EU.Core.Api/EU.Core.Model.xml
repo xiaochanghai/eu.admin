@@ -3557,6 +3557,11 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmCommonListSqlBase.IsRoleDataScope">
+            <summary>
+            是否过滤角色数据权限
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmCompanyBase">
             <summary>
             组织 (Dto.Base)
@@ -10545,6 +10550,11 @@
         <member name="P:EU.Core.Model.Entity.SmCommonListSql.Remark">
             <summary>
             备注
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmCommonListSql.IsRoleDataScope">
+            <summary>
+            是否过滤角色数据权限
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmCompany">

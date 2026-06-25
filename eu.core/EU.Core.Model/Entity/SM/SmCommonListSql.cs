@@ -6,9 +6,9 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2025/2/27 18:30:36  SahHsiao   初版
+* V0.01  2026/6/26 0:01:36  SahHsiao   初版
 *
-* Copyright(c) 2025 EU Corporation. All Rights Reserved.
+* Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
 *│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
 *│　作者：SahHsiao                                                  │
@@ -47,4 +47,10 @@ public class SmCommonListSql : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 是否过滤角色数据权限
+    /// </summary>
+    [Display(Name = "IsRoleDataScope"), Description("是否过滤角色数据权限"), SugarColumn(IsNullable = true)]
+    public bool? IsRoleDataScope { get; set; }
 }
