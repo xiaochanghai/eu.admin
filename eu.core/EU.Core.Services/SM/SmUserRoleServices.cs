@@ -156,7 +156,7 @@ public class SmUserRoleServices : BaseServices<SmUserRole, SmUserRoleDto, Insert
                 await Db.Ado.CommitTranAsync();
 
                 // 重新初始化缓存
-                Utility.ReInitCache(Db);
+                await Utility.ReInitCache(Db);
 
                 return Success("用户角色保存成功！");
             }
