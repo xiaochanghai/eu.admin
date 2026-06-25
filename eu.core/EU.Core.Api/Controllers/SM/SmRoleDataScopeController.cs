@@ -67,7 +67,7 @@ public class SmRoleDataScopeController : BaseController<ISmRoleDataScopeServices
     /// </summary>
     /// <param name="roleId">角色ID</param>
     /// <returns>键值列表（All / Group_{id} / Company_{id}）</returns>
-    [HttpGet("GetRoleDataScope/{roleId}")]
+    [HttpGet("QueryRole/{roleId}")]
     public async Task<ServiceResult<List<Guid>>> GetRoleDataScope(Guid roleId)
     {
         return await _service.GetRoleDataScope(roleId);
