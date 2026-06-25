@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据权限设计文档 - 树形结构版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1890ff;
+            font-size: 32px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1890ff;
+        }
+
+        h2 {
+            color: #1890ff;
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 12px;
+            border-left: 4px solid #1890ff;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .version-info {
+            background: #f0f5ff;
+            border-left: 4px solid #1890ff;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+        }
+
+        .version-info p {
+            margin: 5px 0;
+        }
+
+        .version-info strong {
+            color: #1890ff;
+        }
+
+        .toc {
+            background: #fafafa;
+            border: 1px solid #d9d9d9;
+            padding: 20px 30px;
+            margin: 30px 0;
+            border-radius: 6px;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            color: #1890ff;
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+        }
+
+        .toc li {
+            counter-increment: toc-counter;
+            margin: 10px 0;
+        }
+
+        .toc li:before {
+            content: counter(toc-counter) ". ";
+            color: #1890ff;
+            font-weight: bold;
+        }
+
+        .toc a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: #1890ff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            border: 1px solid #d9d9d9;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            border: 1px solid #d9d9d9;
+            padding: 12px;
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 14px;
+            color: #d63384;
+        }
+
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .success {
+            background: #f6ffed;
+            border-left: 4px solid #52c41a;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .info {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: #fff7e6;
+            border-left: 4px solid #fa8c16;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #d9d9d9;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #d9d9d9;
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 数据权限设计文档</h1>
+
+        <div class="version-info">
+            <p><strong>版本</strong>: 树形结构版（参考 SmRoleModule 模式）</p>
+            <p><strong>日期</strong>: 2025-06-23</p>
+            <p><strong>作者</strong>: EU.Core 开发团队</p>
+            <p><strong>设计思路</strong>: 参考 SmRoleModule 的树形勾选模式，后端构建树形结构，前端渲染树形控件，用户勾选后提交键值列表，后端展开并保存为具体的公司 ID 列表。</p>
+        </div>
+
+        <div class="toc">
+            <h3>📑 目录</h3>
+            <ol>
+                <li><a href="#section-1">设计概述</a></li>
+                <li><a href="#section-2">核心设计模式</a></li>
+                <li><a href="#section-3">实体设计</a></li>
+                <li><a href="#section-4">树形结构构建</a></li>
+                <li><a href="#section-5">权限保存逻辑</a></li>
+                <li><a href="#section-6">权限查询逻辑</a></li>
+                <li><a href="#section-7">DataScopeHelper 工具类</a></li>
+                <li><a href="#section-8">数据一致性</a></li>
+                <li><a href="#section-9">数据库脚本</a></li>
+                <li><a href="#section-10">前端实现</a></li>
+                <li><a href="#section-11">实施计划</a></li>
+            </ol>
+        </div>
+
+        <h2 id="section-1">1. 设计概述</h2>
+
+        <h3>1.1 核心思想</h3>
+        <p><strong>参考 SmRoleModule 的树形勾选模式</strong>，实现数据权限的树形配置界面。</p>
+
+        <h3>1.2 设计对比</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>特性</th>
+                    <th>SmRoleModule（菜单权限）</th>
+                    <th>数据权限（本次设计）</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>树形结构</strong></td>
+                    <td>模块树（父子关系）</td>
+                    <td>集团-公司树（两层结构）</td>
+                </tr>
+                <tr>
+                    <td><strong>键值编码</strong></td>
+                    <td>ModuleId, CommonOption_*, functionPrivileges_*</td>
+                    <td>All, Group_{id}, Company_{id}</td>
+                </tr>
+                <tr>
+                    <td><strong>前端渲染</strong></td>
+                    <td>Ant Design Tree + Checkbox</td>
+                    <td>Ant Design Tree + Checkbox</td>
+                </tr>
+                <tr>
+                    <td><strong>保存方式</strong></td>
+                    <td>提交 checkedKeys 列表</td>
+                    <td>提交 checkedKeys 列表</td>
+                </tr>
+                <tr>
+                    <td><strong>后端处理</strong></td>
+                    <td>解析键值，保存到 SmRoleModule/SmRoleFunction</td>
+                    <td>解析键值，展开为具体公司 ID，保存到 SmRoleDataScope</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>1.3 树形结构示例</h3>
+        <pre><code>All (全部)
+├── Group_A (集团 A)
+│   ├── Company_A1 (公司 A1)
+│   ├── Company_A2 (公司 A2)
+│   └── Company_A3 (公司 A3)
+├── Group_B (集团 B)
+│   ├── Company_B1 (公司 B1)
+│   └── Company_B2 (公司 B2)
+└── Group_C (集团 C)
+    └── Company_C1 (公司 C1)</code></pre>
+
+        <hr>
+
+        <h2 id="section-2">2. 核心设计模式</h2>
+
+        <h3>2.1 键值编码规则</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>键值格式</th>
+                    <th>含义</th>
+                    <th>后端展开逻辑</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>All</code></td>
+                    <td>全部数据</td>
+                    <td>查询所有集团下的所有公司，插入所有公司 ID</td>
+                </tr>
+                <tr>
+                    <td><code>Group_{groupId}</code></td>
+                    <td>指定集团</td>
+                    <td>查询该集团下的所有公司，插入所有公司 ID</td>
+                </tr>
+                <tr>
+                    <td><code>Company_{companyId}</code></td>
+                    <td>指定公司</td>
+                    <td>直接插入该公司 ID</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>2.2 数据流程</h3>
+        <pre><code>┌─────────────────────────────────────────────────────────────────┐
+│ 1. 后端构建树形结构                                              │
+│    GET /api/SmRoleDataScope/GetAllDataScopeTree                 │
+│    → 返回 DataScopeTree（集团-公司树）                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. 前端渲染树形控件                                              │
+│    - 渲染集团节点（可勾选）                                       │
+│    - 渲染公司节点（可勾选）                                       │
+│    - 勾选集团 → 自动勾选该集团下所有公司                          │
+│    - 勾选"全部" → 勾选所有集团和公司                              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. 用户勾选后提交                                                │
+│    POST /api/SmRoleDataScope/UpdateDataScope/{roleId}           │
+│    Body: ["All"] 或 ["Group_A", "Company_B1", ...]              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. 后端解析并展开                                                │
+│    - "All" → 查询所有公司，插入所有公司 ID                        │
+│    - "Group_A" → 查询集团 A 下所有公司，插入公司 ID               │
+│    - "Company_B1" → 直接插入公司 B1 的 ID                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. 保存到数据库                                                  │
+│    INSERT INTO SmRoleDataScope (SmRoleId, CompanyId) VALUES     │
+│    ('role-guid', 'company-1'),                                  │
+│    ('role-guid', 'company-2'),                                  │
+│    ...                                                          │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+
+        <hr>
+
+        <h2 id="section-3">3. 实体设计</h2>
+
+        <h3>3.0 IDataScopeEntity 接口（重要）</h3>
+        <p><strong>所有需要进行数据权限控制的实体都必须实现此接口：</strong></p>
+        <pre><code>/// &lt;summary&gt;
+/// 数据权限实体接口
+/// 所有需要进行数据权限控制的实体都必须实现此接口
+/// &lt;/summary&gt;
+public interface IDataScopeEntity
+{
+    /// &lt;summary&gt;
+    /// 公司ID
+    /// &lt;/summary&gt;
+    Guid? CompanyId { get; set; }
+}
+
+// 示例：订单实体实现数据权限接口
+public class SdOrder : BasePoco, IDataScopeEntity
+{
+    // ... 其他字段
+
+    /// &lt;summary&gt;
+    /// 公司ID（继承自 BasePoco 或单独定义）
+    /// &lt;/summary&gt;
+    public Guid? CompanyId { get; set; }
+}</code></pre>
+
+        <div class="warning">
+            <strong>⚠️ 注意：</strong> 如果实体没有实现 IDataScopeEntity 接口，DataScopeHelper 的方法将无法编译。
+        </div>
+
+        <h3>3.0.1 SmGroup 实体定义</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 集团实体
+/// &lt;/summary&gt;
+[SugarTable("SmGroup", "集团")]
+[Entity(TableCnName = "集团", TableName = "SmGroup")]
+public class SmGroup : BasePoco
+{
+    /// &lt;summary&gt;
+    /// 集团代码
+    /// &lt;/summary&gt;
+    [Display(Name = "GroupCode"), Description("集团代码")]
+    [SugarColumn(IsNullable = false, Length = 50)]
+    public string GroupCode { get; set; }
+
+    /// &lt;summary&gt;
+    /// 集团名称
+    /// &lt;/summary&gt;
+    [Display(Name = "GroupName"), Description("集团名称")]
+    [SugarColumn(IsNullable = false, Length = 100)]
+    public string GroupName { get; set; }
+
+    // ... 其他字段（继承自 BasePoco）
+}</code></pre>
+
+        <h3>3.1 SmRoleDataScope 实体</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 角色数据权限实体
+/// &lt;/summary&gt;
+[SugarTable("SmRoleDataScope", "角色数据权限")]
+[Entity(TableCnName = "角色数据权限", TableName = "SmRoleDataScope")]
+public class SmRoleDataScope : BasePoco
+{
+    /// &lt;summary&gt;
+    /// 角色ID
+    /// &lt;/summary&gt;
+    [Display(Name = "SmRoleId"), Description("角色ID")]
+    [SugarColumn(IsNullable = false)]
+    public Guid SmRoleId { get; set; }
+
+    /// &lt;summary&gt;
+    /// 公司ID
+    /// &lt;/summary&gt;
+    [Display(Name = "CompanyId"), Description("公司ID")]
+    [SugarColumn(IsNullable = false)]
+    public Guid CompanyId { get; set; }
+}</code></pre>
+
+        <h3>3.2 DataScopeTree 视图模型</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 数据权限树节点（参考 ModuleTree）
+/// &lt;/summary&gt;
+public class DataScopeTree
+{
+    /// &lt;summary&gt;
+    /// 节点标题（显示名称）
+    /// &lt;/summary&gt;
+    public string title { get; set; }
+
+    /// &lt;summary&gt;
+    /// 节点键值（编码后的标识）
+    /// 格式：All / Group_{groupId} / Company_{companyId}
+    /// &lt;/summary&gt;
+    public string key { get; set; }
+
+    /// &lt;summary&gt;
+    /// 节点值（实际 ID）
+    /// &lt;/summary&gt;
+    public string value { get; set; }
+
+    /// &lt;summary&gt;
+    /// 是否叶子节点
+    /// &lt;/summary&gt;
+    public bool? isLeaf { get; set; }
+
+    /// &lt;summary&gt;
+    /// 子节点列表
+    /// &lt;/summary&gt;
+    public List&lt;DataScopeTree&gt; children { get; set; }
+}</code></pre>
+
+        <h3>3.3 SmRoleDataScopeAudit 审计日志实体</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 角色数据权限审计日志
+/// &lt;/summary&gt;
+[SugarTable("SmRoleDataScopeAudit", "角色数据权限审计日志")]
+[Entity(TableCnName = "角色数据权限审计日志", TableName = "SmRoleDataScopeAudit")]
+public class SmRoleDataScopeAudit : BasePoco
+{
+    public Guid SmRoleId { get; set; }
+    public string Action { get; set; }
+    [SugarColumn(ColumnDataType = "text")]
+    public string OldValue { get; set; }
+    [SugarColumn(ColumnDataType = "text")]
+    public string NewValue { get; set; }
+    public Guid? OperatedBy { get; set; }
+    public DateTime OperatedTime { get; set; }
+    public string Remark { get; set; }
+    public string IpAddress { get; set; }
+    public string UserAgent { get; set; }
+    public bool IsSuccess { get; set; }
+    public string ErrorMessage { get; set; }
+    public string Reason { get; set; }
+}</code></pre>
+
+        <h3>3.4 SmRole 实体扩展</h3>
+        <pre><code>public partial class SmRoles
+{
+    /// &lt;summary&gt;
+    /// 数据权限版本号（用于并发控制）
+    /// &lt;/summary&gt;
+    public int DataScopeVersion { get; set; } = 0;
+}</code></pre>
+
+        <hr>
+
+        <h2 id="section-4">4. 树形结构构建</h2>
+
+        <h3>4.1 后端 API：获取树形结构</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 获取所有数据权限树（集团-公司树形结构）
+/// 直接返回集团列表，每个集团包含下属公司
+/// &lt;/summary&gt;
+[HttpGet("GetAllDataScopeTree")]
+public async Task&lt;ServiceResult&lt;List&lt;DataScopeTree&gt;&gt;&gt; GetAllDataScopeTree()
+{
+    // 1. 查询所有集团
+    var groups = await Db.Queryable&lt;SmGroup&gt;()
+        .Where(x =&gt; x.IsDeleted == false)
+        .OrderBy(x =&gt; x.GroupCode)
+        .ToListAsync();
+
+    // 2. 查询所有公司
+    var companies = await Db.Queryable&lt;SmCompany&gt;()
+        .Where(x =&gt; x.IsDeleted == false)
+        .OrderBy(x =&gt; x.CompanyCode)
+        .ToListAsync();
+
+    // 3. 构建树形结构（直接返回集团列表）
+    var tree = new List&lt;DataScopeTree&gt;();
+    foreach (var group in groups)
+    {
+        var groupNode = new DataScopeTree
+        {
+            key = group.ID.ToString(),  // 直接用 GUID
+            title = $"[集团] {group.GroupName}",
+            value = group.ID.ToString(),
+            isLeaf = false,
+            children = new List&lt;DataScopeTree&gt;()
+        };
+
+        var groupCompanies = companies.Where(c =&gt; c.GroupId == group.ID).ToList();
+        foreach (var company in groupCompanies)
+        {
+            groupNode.children.Add(new DataScopeTree
+            {
+                key = company.ID.ToString(),  // 直接用 GUID
+                title = company.CompanyName,
+                value = company.ID.ToString(),
+                isLeaf = true
+            });
+        }
+
+        tree.Add(groupNode);
+    }
+
+    return Success(tree);
+}</code></pre>
+
+        <h3>4.2 前端渲染（参考 PermissionSet.tsx）</h3>
+        <pre><code>// DataScopeSet.tsx
+import { Tabs, Card, Button, Checkbox, Collapse } from 'antd';
+import http from '@/api';
+
+const DATA_SCOPE_API_URL = "/api/SmRoleDataScope";
+
+/**
+ * 数据权限项类型定义
+ */
+interface DataScopeItem {
+  key: string;      // 集团或公司的 GUID
+  title: string;
+  isLeaf?: boolean; // 公司节点为 true
+  children?: DataScopeItem[];
+}
+
+const DataScopeSet: React.FC&lt;{ roleId: string }&gt; = ({ roleId }) =&gt; {
+  const [dataScopes, setDataScopes] = useState&lt;DataScopeItem[]&gt;([]);
+  const [checkedDataScopeKeys, setCheckedDataScopeKeys] = useState&lt;string[]&gt;([]);
+
+  // 加载树形结构（后端直接返回集团列表）
+  const fetchAllDataScopeTree = async () =&gt; {
+    const { Data, Success } = await http.get&lt;any&gt;(`${DATA_SCOPE_API_URL}/GetAllDataScopeTree`);
+    if (Success) setDataScopes(Data || []);  // 直接使用 Data
+  };
+
+  // 加载角色已有权限（直接返回公司 ID 列表）
+  const fetchRoleDataScope = async () =&gt; {
+    const { Data, Success } = await http.get&lt;any&gt;(`${DATA_SCOPE_API_URL}/GetRoleDataScope/${roleId}`);
+    if (Success) setCheckedDataScopeKeys(Data || []);
+  };
+
+  // 保存权限（直接发送公司 ID 列表）
+  const handleSave = async () =&gt; {
+    await http.post(`${DATA_SCOPE_API_URL}/UpdateDataScope/${roleId}`, checkedDataScopeKeys);
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;Collapse items={...} /&gt;
+      &lt;Button onClick={handleSave}&gt;保存&lt;/Button&gt;
+    &lt;/div&gt;
+  );
+};</code></pre>
+
+        <hr>
+
+        <h2 id="section-5">5. 权限保存逻辑</h2>
+
+        <h3>5.1 后端 API：更新数据权限</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 更新数据权限请求模型
+/// &lt;/summary&gt;
+public class UpdateDataScopeRequest
+{
+    /// &lt;summary&gt;
+    /// 权限键值列表
+    /// &lt;/summary&gt;
+    public List&lt;string&gt; ScopeKeys { get; set; }
+
+    /// &lt;summary&gt;
+    /// 期望版本号（用于并发控制）
+    /// &lt;/summary&gt;
+    public int? ExpectedVersion { get; set; }
+}
+
+/// &lt;summary&gt;
+/// 更新角色数据权限
+/// &lt;/summary&gt;
+[HttpPost("UpdateDataScope/{roleId}")]
+public async Task&lt;ServiceResult&gt; UpdateDataScope(Guid roleId, [FromBody] UpdateDataScopeRequest request)
+{
+    try
+    {
+        // 0. 输入验证
+        if (request == null || request.ScopeKeys == null)
+        {
+            return Failed("请求参数不能为空");
+        }
+
+        // 验证键值格式
+        foreach (var key in request.ScopeKeys)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return Failed("键值不能为空");
+            }
+
+            if (key != "All" &amp;&amp; !key.StartsWith("Group_") &amp;&amp; !key.StartsWith("Company_"))
+            {
+                return Failed($"无效的键值格式: {key}");
+            }
+
+            // 验证 GUID 格式
+            if (key.StartsWith("Group_") || key.StartsWith("Company_"))
+            {
+                var idPart = key.Substring(key.IndexOf('_') + 1);
+                if (!Guid.TryParse(idPart, out _))
+                {
+                    return Failed($"无效的 GUID 格式: {key}");
+                }
+            }
+        }
+
+        // 1. 并发控制检查
+        var role = await Db.Queryable&lt;SmRoles&gt;()
+            .Where(x =&gt; x.ID == roleId)
+            .FirstAsync();
+
+        if (role == null)
+            return Failed("角色不存在");
+
+        // 检查版本号是否匹配
+        if (request.ExpectedVersion.HasValue &amp;&amp; role.DataScopeVersion != request.ExpectedVersion.Value)
+        {
+            return Failed($"数据已被其他用户修改（当前版本: {role.DataScopeVersion}，您提交的版本: {request.ExpectedVersion.Value}），请刷新页面后重试");
+        }
+
+        // 2. 获取旧值（用于审计日志）
+        var oldValue = await GetRoleDataScope(roleId);
+
+        // 3. 开启事务
+        await Db.Ado.BeginTranAsync();
+
+        try
+        {
+            // 4. 删除旧权限
+            await Db.Deleteable&lt;SmRoleDataScope&gt;()
+                .Where(x =&gt; x.SmRoleId == roleId)
+                .ExecuteCommandAsync();
+
+            // 5. 插入新权限（直接插入公司 ID）
+            if (companyIds.Any())
+            {
+                var newScopes = companyIds.Select(companyId =&gt; new SmRoleDataScope
+                {
+                    SmRoleId = roleId,
+                    CompanyId = companyId,
+                    CreatedBy = UserContext.Current.User_Id,
+                    CreatedTime = DateTime.Now
+                }).ToList();
+
+                await Db.Insertable(newScopes).ExecuteCommandAsync();
+            }
+
+            // 7. 更新角色版本号
+            role.DataScopeVersion++;
+            await Db.Updateable(role)
+                .UpdateColumns(x =&gt; x.DataScopeVersion)
+                .ExecuteCommandAsync();
+
+            // 8. 提交事务
+            await Db.Ado.CommitTranAsync();
+
+            // 9. 记录审计日志
+            await AddAuditLog(new SmRoleDataScopeAudit
+            {
+                SmRoleId = roleId,
+                Action = "Update",
+                OldValue = JsonConvert.SerializeObject(oldValue.Data),
+                NewValue = JsonConvert.SerializeObject(request.ScopeKeys),
+                OperatedBy = UserContext.Current.User_Id,
+                OperatedTime = DateTime.Now,
+                IpAddress = HttpContextExtension.GetUserIp(HttpContext.Current),
+                UserAgent = HttpContext.Current?.Request?.Headers["User-Agent"],
+                IsSuccess = true,
+                Reason = "更新数据权限"
+            });
+
+            // 10. 清除受影响用户的缓存
+            await ClearAffectedUsersCache(roleId);
+
+            return Success("更新成功");
+        }
+        catch (Exception ex)
+        {
+            await Db.Ado.RollbackTranAsync();
+            throw;
+        }
+    }
+    catch (Exception ex)
+    {
+        return Failed($"更新失败: {ex.Message}");
+    }
+}
+
+/// &lt;summary&gt;
+/// 展开键值为具体的公司 ID 列表（优化版：批量查询）
+/// &lt;/summary&gt;
+private async Task&lt;List&lt;Guid&gt;&gt; ExpandScopeKeysOptimized(List&lt;string&gt; scopeKeys)
+{
+    var companyIds = new HashSet&lt;Guid&gt;();
+
+    // 分类键值
+    var groupIds = new List&lt;Guid&gt;();
+    var companyIdsDirect = new List&lt;Guid&gt;();
+    bool needAll = false;
+
+    foreach (var key in scopeKeys)
+    {
+        if (key == "All")
+        {
+            needAll = true;
+            break;
+        }
+        else if (key.StartsWith("Group_"))
+        {
+            var groupId = Guid.Parse(key.Replace("Group_", ""));
+            groupIds.Add(groupId);
+        }
+        else if (key.StartsWith("Company_"))
+        {
+            var companyId = Guid.Parse(key.Replace("Company_", ""));
+            companyIdsDirect.Add(companyId);
+        }
+    }
+
+    // 批量查询
+    if (needAll)
+    {
+        // 查询所有公司
+        var allCompanies = await Db.Queryable&lt;SmCompany&gt;()
+            .Where(x =&gt; x.IsDeleted == false)
+            .Select(x =&gt; x.ID)
+            .ToListAsync();
+
+        companyIds.UnionWith(allCompanies);
+    }
+    else
+    {
+        // 查询指定集团下的所有公司
+        if (groupIds.Any())
+        {
+            var groupCompanies = await Db.Queryable&lt;SmCompany&gt;()
+                .Where(x =&gt; groupIds.Contains(x.GroupId) &amp;&amp; x.IsDeleted == false)
+                .Select(x =&gt; x.ID)
+                .ToListAsync();
+
+            companyIds.UnionWith(groupCompanies);
+        }
+
+        // 添加直接指定的公司
+        companyIds.UnionWith(companyIdsDirect);
+    }
+
+    return companyIds.ToList();
+}</code></pre>
+
+        <h3>5.2 后端 API：获取角色数据权限</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 获取角色的数据权限（返回键值列表）
+/// &lt;/summary&gt;
+[HttpGet("GetRoleDataScope/{roleId}")]
+public async Task&lt;ServiceResult&lt;List&lt;string&gt;&gt;&gt; GetRoleDataScope(Guid roleId)
+{
+    // 查询该角色的所有公司权限
+    var scopes = await Db.Queryable&lt;SmRoleDataScope&gt;()
+        .Where(x =&gt; x.SmRoleId == roleId)
+        .Select(x =&gt; x.CompanyId)
+        .ToListAsync();
+
+    // 如果没有权限，返回空列表
+    if (!scopes.Any())
+    {
+        return Success(new List&lt;string&gt;());
+    }
+
+    // 查询所有集团
+    var groups = await Db.Queryable&lt;SmGroup&gt;()
+        .Where(x =&gt; x.IsDeleted == false)
+        .ToListAsync();
+
+    // 查询所有未删除的公司
+    var companies = await Db.Queryable&lt;SmCompany&gt;()
+        .Where(x =&gt; x.IsDeleted == false)
+        .ToListAsync();
+
+    var keys = new List&lt;string&gt;();
+
+    // 判断是否是"全部"（所有未删除的公司都有权限）
+    if (scopes.Count == companies.Count)
+    {
+        keys.Add("All");
+    }
+    else
+    {
+        // 判断是否可以合并为集团
+        foreach (var group in groups)
+        {
+            // 获取该集团下所有未删除的公司ID
+            var groupCompanies = companies
+                .Where(c =&gt; c.GroupId == group.ID)
+                .Select(c =&gt; c.ID)
+                .ToList();
+
+            // 如果集团下没有公司，跳过
+            if (!groupCompanies.Any())
+            {
+                continue;
+            }
+
+            // 获取该角色在该集团下有权限的公司
+            var scopedGroupCompanies = scopes
+                .Where(s =&gt; groupCompanies.Contains(s))
+                .ToList();
+
+            // 如果该集团下所有公司都有权限，则添加集团键值
+            if (scopedGroupCompanies.Count == groupCompanies.Count)
+            {
+                keys.Add($"Group_{group.ID}");
+            }
+            else if (scopedGroupCompanies.Any())
+            {
+                // 否则添加具体的公司键值
+                foreach (var companyId in scopedGroupCompanies)
+                {
+                    keys.Add($"Company_{companyId}");
+                }
+            }
+        }
+    }
+
+    return Success(keys);
+}</code></pre>
+
+        <hr>
+
+        <h2 id="section-6">6. 权限查询逻辑</h2>
+
+        <h3>6.0 无权限场景说明（重要）</h3>
+
+        <div class="warning">
+            <strong>⚠️ 默认行为定义：</strong> 当用户没有任何数据权限时，<strong>无法访问任何数据</strong>（拒绝访问）。
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>场景</th>
+                    <th>CompanyIds</th>
+                    <th>行为</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>用户没有角色</td>
+                    <td>[] (空列表)</td>
+                    <td><strong>拒绝访问</strong></td>
+                    <td>用户未分配任何角色</td>
+                </tr>
+                <tr>
+                    <td>用户有角色但无数据权限</td>
+                    <td>[] (空列表)</td>
+                    <td><strong>拒绝访问</strong></td>
+                    <td>角色未配置数据权限</td>
+                </tr>
+                <tr>
+                    <td>用户有数据权限</td>
+                    <td>[guid1, guid2, ...]</td>
+                    <td><strong>允许访问指定公司</strong></td>
+                    <td>只能访问列表中的公司数据</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>6.0.1 代码实现</h4>
+        <pre><code>/// &lt;summary&gt;
+/// 获取用户的实际数据范围
+/// &lt;/summary&gt;
+public async Task&lt;ServiceResult&lt;UserDataScopeModel&gt;&gt; GetUserDataScope(Guid userId)
+{
+    var model = new UserDataScopeModel();
+
+    // 1. 获取用户的所有角色
+    var userRoles = await Db.Queryable&lt;SmUserRole&gt;()
+        .Where(x =&gt; x.SmUserId == userId)
+        .Select(x =&gt; x.SmRoleId)
+        .ToListAsync();
+
+    // 场景1：用户没有角色 → 返回空列表（拒绝访问）
+    if (!userRoles.Any())
+    {
+        return Success(model); // model.CompanyIds = []
+    }
+
+    // 2. 获取这些角色的数据权限（公司 ID 列表）
+    var companyIds = await Db.Queryable&lt;SmRoleDataScope&gt;()
+        .Where(x =&gt; userRoles.Contains(x.SmRoleId))
+        .Select(x =&gt; x.CompanyId)
+        .Distinct()
+        .ToListAsync();
+
+    // 场景2：有角色但无数据权限 → 返回空列表（拒绝访问）
+    // 场景3：有数据权限 → 返回公司ID列表
+    model.CompanyIds = companyIds;
+
+    return Success(model);
+}
+
+/// &lt;summary&gt;
+/// 构建查询过滤表达式
+/// &lt;/summary&gt;
+public static Expression&lt;Func&lt;T, bool&gt;&gt; BuildFilterExpression&lt;T&gt;(UserDataScopeModel scope)
+    where T : class, IDataScopeEntity
+{
+    // 如果没有权限，返回 false（拒绝访问）
+    if (!scope.CompanyIds.Any())
+    {
+        return x =&gt; false; // 永远返回 false，查询结果为空
+    }
+
+    // 有权限，返回 IN 条件
+    return x =&gt; scope.CompanyIds.Contains(x.CompanyId);
+}
+
+/// &lt;summary&gt;
+/// 检查用户是否有权限访问指定数据
+/// &lt;/summary&gt;
+public static async Task&lt;bool&gt; HasPermission&lt;T&gt;(Guid userId, T entity)
+    where T : class, IDataScopeEntity
+{
+    var scope = await GetUserDataScope(userId);
+
+    // 如果没有权限，直接返回 false
+    if (!scope.CompanyIds.Any())
+    {
+        return false;
+    }
+
+    // 检查是否在权限列表中
+    return scope.CompanyIds.Contains(entity.CompanyId);
+}</code></pre>
+
+        <h4>6.0.2 使用示例</h4>
+        <pre><code>// 示例1：查询订单列表（应用数据权限）
+public async Task&lt;List&lt;SdOrder&gt;&gt; GetOrders()
+{
+    var query = Db.Queryable&lt;SdOrder&gt;();
+
+    // 应用数据权限过滤
+    query = await DataScopeHelper.ApplyDataScope(query, UserContext.Current.User_Id.Value);
+
+    // 如果用户无权限，query 会自动添加 WHERE 1=0 条件，返回空列表
+    var orders = await query.ToListAsync();
+
+    return orders; // 无权限时返回 []
+}
+
+// 示例2：检查单个订单的访问权限
+public async Task&lt;SdOrder&gt; GetOrderById(Guid orderId)
+{
+    var order = await Db.Queryable&lt;SdOrder&gt;()
+        .Where(x =&gt; x.ID == orderId)
+        .FirstAsync();
+
+    if (order == null)
+    {
+        throw new Exception("订单不存在");
+    }
+
+    // 检查数据权限
+    var hasPermission = await DataScopeHelper.HasPermission(
+        UserContext.Current.User_Id.Value,
+        order
+    );
+
+    if (!hasPermission)
+    {
+        throw new Exception("您没有权限访问此订单");
+    }
+
+    return order;
+}</code></pre>
+
+        <div class="info">
+            <strong>💡 设计原则：</strong>
+            <ul style="margin-top: 10px;">
+                <li><strong>最小权限原则</strong>：默认拒绝所有访问，除非明确授权</li>
+                <li><strong>安全性优先</strong>：无权限时返回空结果，而不是抛出异常（避免信息泄露）</li>
+                <li><strong>一致性</strong>：所有数据权限检查都遵循相同的规则</li>
+                <li><strong>可审计</strong>：可以通过日志追踪权限检查的结果</li>
+            </ul>
+        </div>
+
+        <h3>6.1 获取用户数据权限</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 获取用户的实际数据范围
+/// &lt;/summary&gt;
+public async Task&lt;ServiceResult&lt;UserDataScopeModel&gt;&gt; GetUserDataScope(Guid userId)
+{
+    var model = new UserDataScopeModel();
+
+    // 1. 获取用户的所有角色
+    var userRoles = await Db.Queryable&lt;SmUserRole&gt;()
+        .Where(x =&gt; x.SmUserId == userId)
+        .Select(x =&gt; x.SmRoleId)
+        .ToListAsync();
+
+    if (!userRoles.Any())
+    {
+        return Success(model);
+    }
+
+    // 2. 获取这些角色的数据权限（公司 ID 列表）
+    var companyIds = await Db.Queryable&lt;SmRoleDataScope&gt;()
+        .Where(x =&gt; userRoles.Contains(x.SmRoleId))
+        .Select(x =&gt; x.CompanyId)
+        .Distinct()
+        .ToListAsync();
+
+    model.CompanyIds = companyIds;
+
+    return Success(model);
+}
+
+/// &lt;summary&gt;
+/// 用户数据权限模型
+/// &lt;/summary&gt;
+public class UserDataScopeModel
+{
+    /// &lt;summary&gt;
+    /// 可访问的公司ID列表
+    /// &lt;/summary&gt;
+    public List&lt;Guid&gt; CompanyIds { get; set; } = new List&lt;Guid&gt;();
+}</code></pre>
+
+        <h3>6.2 权限检查</h3>
+        <pre><code>/// &lt;summary&gt;
+/// 检查用户是否有权限访问指定数据
+/// &lt;/summary&gt;
+public static async Task&lt;bool&gt; HasPermission&lt;T&gt;(Guid userId, T entity)
+    where T : class, IDataScopeEntity
+{
+    var scope = await GetUserDataScope(userId);
+
+    if (scope.CompanyIds.Contains(entity.CompanyId))
+        return true;
+
+    return false;
+}</code></pre>
+
+        <hr>
+
+        <h2 id="section-7">7. DataScopeHelper 工具类</h2>
+
+        <pre><code>/// &lt;summary&gt;
+/// 数据权限验证工具类
+/// &lt;/summary&gt;
+public static class DataScopeHelper
+{
+    private static readonly ISmRoleDataScopeServices _service =
+        App.GetService&lt;ISmRoleDataScopeServices&gt;();
+
+    /// &lt;summary&gt;
+    /// 获取用户的实际数据范围（带缓存）
+    /// &lt;/summary&gt;
+    public static async Task&lt;UserDataScopeModel&gt; GetUserDataScope(Guid userId)
+    {
+        var cacheKey = $"UserDataScope_{userId}";
+        var cached = await Redis.GetAsync&lt;UserDataScopeModel&gt;(cacheKey);
+
+        if (cached != null)
+            return cached;
+
+        var result = await _service.GetUserDataScope(userId);
+        if (result.Success)
+        {
+            await Redis.SetAsync(cacheKey, result.Data, TimeSpan.FromMinutes(30));
+            return result.Data;
+        }
+
+        return new UserDataScopeModel();
+    }
+
+    /// &lt;summary&gt;
+    /// 构建查询过滤表达式
+    /// &lt;/summary&gt;
+    public static Expression&lt;Func&lt;T, bool&gt;&gt; BuildFilterExpression&lt;T&gt;(UserDataScopeModel scope)
+        where T : class, IDataScopeEntity
+    {
+        if (scope.CompanyIds.Any())
+        {
+            return x =&gt; scope.CompanyIds.Contains(x.CompanyId);
+        }
+
+        return x =&gt; false;
+    }
+
+    /// &lt;summary&gt;
+    /// 应用数据权限过滤到查询
+    /// &lt;/summary&gt;
+    public static async Task&lt;ISugarQueryable&lt;T&gt;&gt; ApplyDataScope&lt;T&gt;(
+        ISugarQueryable&lt;T&gt; query, Guid userId)
+        where T : class, IDataScopeEntity
+    {
+        var scope = await GetUserDataScope(userId);
+        var filter = BuildFilterExpression&lt;T&gt;(scope);
+        return query.Where(filter);
+    }
+
+    /// &lt;summary&gt;
+    /// 检查用户是否有权限访问指定数据
+    /// &lt;/summary&gt;
+    public static async Task&lt;bool&gt; HasPermission&lt;T&gt;(Guid userId, T entity)
+        where T : class, IDataScopeEntity
+    {
+        var scope = await GetUserDataScope(userId);
+        return scope.CompanyIds.Contains(entity.CompanyId);
+    }
+
+    /// &lt;summary&gt;
+    /// 清除用户数据范围缓存
+    /// &lt;/summary&gt;
+    public static async Task ClearCache(Guid userId)
+    {
+        var cacheKey = $"UserDataScope_{userId}";
+        await Redis.RemoveAsync(cacheKey);
+    }
+}</code></pre>
+
+        <hr>
+
+        <h2 id="section-8">8. 数据一致性</h2>
+
+        <h3>8.0 缓存失效机制（重要）</h3>
+        <div class="warning">
+            <strong>⚠️ 缓存一致性：</strong> 数据权限缓存在以下场景必须清除，否则会导致权限不生效：
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>场景</th>
+                    <th>需要清除的缓存</th>
+                    <th>实现位置</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>更新角色数据权限</td>
+                    <td>该角色所有用户的缓存</td>
+                    <td>SmRoleDataScopeServices.UpdateDataScope</td>
+                </tr>
+                <tr>
+                    <td>删除公司</td>
+                    <td>使用该公司权限的所有用户缓存</td>
+                    <td>SmCompanyServices.Delete</td>
+                </tr>
+                <tr>
+                    <td>用户角色变更</td>
+                    <td>该用户的缓存</td>
+                    <td>SmUserRoleServices（需新增）</td>
+                </tr>
+                <tr>
+                    <td>删除角色</td>
+                    <td>该角色所有用户的缓存</td>
+                    <td>SmRolesServices（需新增）</td>
+                </tr>
+                <tr>
+                    <td>删除用户</td>
+                    <td>该用户的缓存</td>
+                    <td>SmUsersServices（需新增）</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>8.0.1 SmUserRole 变更时清除缓存</h4>
+        <pre><code>public class SmUserRoleServices : BaseServices&lt;SmUserRole, ...&gt;
+{
+    /// &lt;summary&gt;
+    /// 分配角色给用户后，清除用户缓存
+    /// &lt;/summary&gt;
+    public async Task AssignRoleToUser(Guid userId, Guid roleId)
+    {
+        // 1. 分配角色
+        var userRole = new SmUserRole
+        {
+            SmUserId = userId,
+            SmRoleId = roleId
+        };
+        await Add(userRole);
+
+        // 2. 清除用户的数据权限缓存
+        await DataScopeHelper.ClearCache(userId);
+    }
+
+    /// &lt;summary&gt;
+    /// 移除用户角色后，清除用户缓存
+    /// &lt;/summary&gt;
+    public async Task RemoveRoleFromUser(Guid userId, Guid roleId)
+    {
+        // 1. 移除角色
+        await Delete(x =&gt; x.SmUserId == userId &amp;&amp; x.SmRoleId == roleId);
+
+        // 2. 清除用户的数据权限缓存
+        await DataScopeHelper.ClearCache(userId);
+    }
+
+    /// &lt;summary&gt;
+    /// 批量更新用户角色后，清除用户缓存
+    /// &lt;/summary&gt;
+    public async Task UpdateUserRoles(Guid userId, List&lt;Guid&gt; roleIds)
+    {
+        // 1. 删除旧角色
+        await Delete(x =&gt; x.SmUserId == userId);
+
+        // 2. 添加新角色
+        var newUserRoles = roleIds.Select(roleId =&gt; new SmUserRole
+        {
+            SmUserId = userId,
+            SmRoleId = roleId
+        }).ToList();
+
+        if (newUserRoles.Any())
+            await Add(newUserRoles);
+
+        // 3. 清除用户的数据权限缓存
+        await DataScopeHelper.ClearCache(userId);
+    }
+}</code></pre>
+
+        <h4>8.0.2 删除角色时清除缓存</h4>
+        <pre><code>public class SmRolesServices : BaseServices&lt;SmRoles, ...&gt;
+{
+    public override async Task&lt;bool&gt; Delete(Guid[] ids)
+    {
+        // 1. 获取受影响的用户
+        var affectedUserIds = await Db.Queryable&lt;SmUserRole&gt;()
+            .Where(x =&gt; ids.Contains(x.SmRoleId))
+            .Select(x =&gt; x.SmUserId)
+            .Distinct()
+            .ToListAsync();
+
+        // 2. 删除角色
+        var result = await base.Delete(ids);
+
+        if (result)
+        {
+            // 3. 删除角色关联的数据权限
+            await Db.Deleteable&lt;SmRoleDataScope&gt;()
+                .Where(x =&gt; ids.Contains(x.SmRoleId))
+                .ExecuteCommandAsync();
+
+            // 4. 清除受影响用户的缓存
+            foreach (var userId in affectedUserIds)
+            {
+                await DataScopeHelper.ClearCache(userId);
+            }
+
+            Utility.ReInitCache(Db);
+        }
+
+        return result;
+    }
+}</code></pre>
+
+        <h4>8.0.3 删除用户时清除缓存</h4>
+        <pre><code>public class SmUsersServices : BaseServices&lt;SmUsers, ...&gt;
+{
+    public override async Task&lt;bool&gt; Delete(Guid[] ids)
+    {
+        var result = await base.Delete(ids);
+
+        if (result)
+        {
+            // 清除被删除用户的缓存
+            foreach (var userId in ids)
+            {
+                await DataScopeHelper.ClearCache(userId);
+            }
+
+            Utility.ReInitCache(Db);
+        }
+
+        return result;
+    }
+}</code></pre>
+
+        <div class="info">
+            <strong>💡 最佳实践：</strong>
+            <ul style="margin-top: 10px;">
+                <li>所有涉及用户角色变更的操作都必须清除该用户的数据权限缓存</li>
+                <li>缓存清除应该在事务提交后执行</li>
+                <li>如果清除缓存失败，不应影响主业务流程（可以记录日志但不抛出异常）</li>
+            </ul>
+        </div>
+
+        <h3>8.1 SmCompany 删除时级联清理</h3>
+        <pre><code>public class SmCompanyServices : BaseServices&lt;SmCompany, SmCompanyDto, InsertSmCompanyInput, EditSmCompanyInput&gt;
+{
+    public override async Task&lt;bool&gt; Delete(Guid[] ids)
+    {
+        var result = await base.Delete(ids);
+
+        if (result)
+        {
+            // 级联删除权限记录
+            await Db.Deleteable&lt;SmRoleDataScope&gt;()
+                .Where(x =&gt; ids.Contains(x.CompanyId))
+                .ExecuteCommandAsync();
+
+            // 清除相关用户缓存
+            await ClearAffectedUsersCache(ids);
+
+            Utility.ReInitCache(Db);
+        }
+
+        return result;
+    }
+
+    private async Task ClearAffectedUsersCache(Guid[] companyIds)
+    {
+        var roleIds = await Db.Queryable&lt;SmRoleDataScope&gt;()
+            .Where(x =&gt; companyIds.Contains(x.CompanyId))
+            .Select(x =&gt; x.SmRoleId)
+            .Distinct()
+            .ToListAsync();
+
+        if (!roleIds.Any()) return;
+
+        var userIds = await Db.Queryable&lt;SmUserRole&gt;()
+            .Where(x =&gt; roleIds.Contains(x.SmRoleId))
+            .Select(x =&gt; x.SmUserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var userId in userIds)
+        {
+            await DataScopeHelper.ClearCache(userId);
+        }
+    }
+}</code></pre>
+
+        <h3>8.2 SmGroup 删除时的处理</h3>
+        <div class="info">
+            <strong>💡 设计说明：</strong>
+            <ul style="margin-top: 10px;">
+                <li>删除集团时，<strong>不需要</strong>删除 <code>SmRoleDataScope</code> 记录，因为权限是基于公司ID的</li>
+                <li>删除集团后，<code>GetAllDataScopeTree</code> 会自动过滤已删除的集团，树形结构不会显示已删除的集团</li>
+                <li>如果集团下有公司，建议先删除或转移公司，再删除集团</li>
+            </ul>
+        </div>
+
+        <pre><code>public class SmGroupServices : BaseServices&lt;SmGroup, SmGroupDto, InsertSmGroupInput, EditSmGroupInput&gt;
+{
+    public override async Task&lt;bool&gt; Delete(Guid[] ids)
+    {
+        // 检查集团下是否还有公司
+        var hasCompanies = await Db.Queryable&lt;SmCompany&gt;()
+            .Where(x =&gt; ids.Contains(x.GroupId) &amp;&amp; x.IsDeleted == false)
+            .AnyAsync();
+
+        if (hasCompanies)
+        {
+            return Failed("该集团下还有公司，请先删除或转移公司后再删除集团");
+        }
+
+        // 删除集团
+        var result = await base.Delete(ids);
+
+        if (result)
+        {
+            Utility.ReInitCache(Db);
+        }
+
+        return result;
+    }
+}</code></pre>
+
+        <div class="warning">
+            <strong>⚠️ 注意：</strong> 删除集团后，如果之前有角色配置了该集团下公司的权限，这些权限记录仍然保留。但由于公司已被删除或转移，这些权限在查询时会自动被过滤掉（因为 <code>GetUserDataScope</code> 只返回有效的公司ID）。
+        </div>
+
+        <hr>
+
+        <h2 id="section-9">9. 数据库脚本</h2>
+
+        <pre><code>-- ========================================
+-- 数据权限系统数据库脚本
+-- ========================================
+
+BEGIN TRANSACTION;
+
+-- 1. 创建 SmRoleDataScope 表
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'SmRoleDataScope')
+BEGIN
+    CREATE TABLE SmRoleDataScope (
+        ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+        SmRoleId UNIQUEIDENTIFIER NOT NULL,
+        CompanyId UNIQUEIDENTIFIER NOT NULL,
+
+        -- 审计字段
+        IsDeleted BIT NULL DEFAULT 0,
+        IsActive BIT NULL DEFAULT 1,
+        CreatedBy UNIQUEIDENTIFIER NULL,
+        CreatedTime DATETIME NULL DEFAULT GETDATE(),
+        UpdateBy UNIQUEIDENTIFIER NULL,
+        UpdateTime DATETIME NULL,
+
+        -- 唯一约束：防止重复记录
+        CONSTRAINT UQ_SmRoleDataScope_RoleId_CompanyId UNIQUE (SmRoleId, CompanyId)
+    );
+
+    PRINT '✓ 创建 SmRoleDataScope 表';
+END
+
+-- 2. 创建索引
+CREATE INDEX IX_SmRoleDataScope_RoleId
+ON SmRoleDataScope(SmRoleId);
+
+CREATE INDEX IX_SmRoleDataScope_CompanyId
+ON SmRoleDataScope(CompanyId);
+
+CREATE INDEX IX_SmRoleDataScope_RoleId_CompanyId
+ON SmRoleDataScope(SmRoleId, CompanyId);
+
+PRINT '✓ 创建索引';
+
+-- 3. 创建审计日志表
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'SmRoleDataScopeAudit')
+BEGIN
+    CREATE TABLE SmRoleDataScopeAudit (
+        ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+        SmRoleId UNIQUEIDENTIFIER NOT NULL,
+        Action NVARCHAR(32) NOT NULL,
+        OldValue NVARCHAR(MAX) NULL,
+        NewValue NVARCHAR(MAX) NULL,
+        OperatedBy UNIQUEIDENTIFIER NULL,
+        OperatedTime DATETIME NOT NULL DEFAULT GETDATE(),
+        Remark NVARCHAR(2000) NULL,
+        IpAddress NVARCHAR(50) NULL,
+        UserAgent NVARCHAR(500) NULL,
+        IsSuccess BIT NOT NULL DEFAULT 1,
+        ErrorMessage NVARCHAR(MAX) NULL,
+        Reason NVARCHAR(2000) NULL,
+
+        -- 审计字段
+        IsDeleted BIT NULL DEFAULT 0,
+        CreatedBy UNIQUEIDENTIFIER NULL,
+        CreatedTime DATETIME NULL DEFAULT GETDATE()
+    );
+
+    PRINT '✓ 创建 SmRoleDataScopeAudit 表';
+END
+
+CREATE INDEX IX_SmRoleDataScopeAudit_RoleId
+ON SmRoleDataScopeAudit(SmRoleId);
+
+CREATE INDEX IX_SmRoleDataScopeAudit_OperatedTime
+ON SmRoleDataScopeAudit(OperatedTime);
+
+PRINT '✓ 创建审计日志索引';
+
+-- 4. 添加版本号字段到 SmRoles
+IF NOT EXISTS (SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('SmRoles') AND name = 'DataScopeVersion')
+BEGIN
+    ALTER TABLE SmRoles ADD DataScopeVersion INT NOT NULL DEFAULT 0;
+    PRINT '✓ 添加 DataScopeVersion 字段';
+END
+
+COMMIT TRANSACTION;
+PRINT '';
+PRINT '========================================';
+PRINT '✓ 数据权限系统数据库脚本执行完成！';
+PRINT '========================================';</code></pre>
+
+        <hr>
+
+        <h2 id="section-10">10. 前端实现</h2>
+
+        <h3>10.1 DataScopeSet.tsx 组件</h3>
+        <p>参考 <code>PermissionSet.tsx</code> 的实现模式，创建了 <code>DataScopeSet.tsx</code> 组件用于数据权限配置。</p>
+        <p><strong>文件位置：</strong> <code>src/views/system/privilege/role/DataScopeSet.tsx</code></p>
+
+        <h4>核心功能</h4>
+        <ul>
+            <li>✅ 加载集团-公司树形结构</li>
+            <li>✅ 获取角色已有数据权限</li>
+            <li>✅ 渲染可折叠的权限树（使用 Collapse 组件）</li>
+            <li>✅ 支持 Checkbox 勾选（父子联动）</li>
+            <li>✅ 支持半选状态（indeterminate）</li>
+            <li>✅ 保存权限配置</li>
+        </ul>
+
+        <h4>组件结构</h4>
+        <pre><code>Card
+  └─ Tabs
+      └─ Tab: "角色-数据权限"
+          └─ Collapse（每个集团一个面板）
+              ├─ Panel: 集团 A
+              │   ├─ Checkbox: 集团 A（可勾选整个集团）
+              │   └─ CheckboxGroup: 公司列表
+              │       ├─ Checkbox: 公司 A1
+              │       ├─ Checkbox: 公司 A2
+              │       └─ Checkbox: 公司 A3
+              ├─ Panel: 集团 B
+              │   └─ ...
+              └─ Panel: 集团 C
+                  └─ ...</code></pre>
+
+        <h4>关键逻辑</h4>
+
+        <h5>1. 勾选集团时的处理</h5>
+        <pre><code>// handleCheckChange - 勾选集团节点
+const handleCheckChange = (e: any, item: DataScopeItem): void =&gt; {
+    const newCheckedKeys = [...checkedKeys];
+
+    // 移除当前项及其所有子项
+    const removeCheckedKeys = (keys: string[], parent: DataScopeItem): void =&gt; {
+        const index = keys.findIndex(x =&gt; x === parent.key);
+        if (index !== -1) keys.splice(index, 1);
+
+        if (parent.children)
+            parent.children.forEach((child: DataScopeItem) =&gt; {
+                removeCheckedKeys(keys, child);
+            });
+    };
+
+    // 添加当前项及其所有子项
+    const addCheckedKeys = (keys: string[], parent: DataScopeItem): void =&gt; {
+        keys.push(parent.key);
+
+        if (parent.children)
+            parent.children.forEach((child: DataScopeItem) =&gt; {
+                addCheckedKeys(keys, child);
+            });
+    };
+
+    // 先移除所有相关项
+    removeCheckedKeys(newCheckedKeys, item);
+
+    // 如果选中，则添加所有相关项
+    if (e.target.checked) addCheckedKeys(newCheckedKeys, item);
+
+    setCheckedKeys(newCheckedKeys);
+};</code></pre>
+
+        <h5>2. 勾选公司时的处理</h5>
+        <pre><code>// handleGroupChange - 勾选公司节点（CheckboxGroup）
+const handleGroupChange = (checkedList: string[], parent: DataScopeItem): void =&gt; {
+    const newCheckedKeys = [...checkedKeys];
+
+    // 移除所有子项
+    parent.children?.forEach((item: DataScopeItem) =&gt; {
+        const index = newCheckedKeys.findIndex(x =&gt; x === item.key);
+        if (index !== -1) newCheckedKeys.splice(index, 1);
+    });
+
+    // 如果所有子项都选中，则添加父项（集团）
+    if (checkedList.length === parent.children?.length) {
+        newCheckedKeys.push(parent.key);
+    } else {
+        // 否则移除父项
+        const parentIndex = newCheckedKeys.findIndex(x =&gt; x === parent.key);
+        if (parentIndex !== -1) newCheckedKeys.splice(parentIndex, 1);
+    }
+
+    // 添加选中的子项
+    setCheckedKeys([...newCheckedKeys, ...checkedList]);
+};</code></pre>
+
+        <h5>3. 半选状态计算</h5>
+        <pre><code>// calculateIndeterminate - 计算半选状态
+const calculateIndeterminate = (item: DataScopeItem): boolean =&gt; {
+    if (checkedKeys.length === 0 || !item.children) return false;
+
+    let checkedCount = 0;
+    let totalCount = 0;
+
+    const countCheckedItems = (parent: DataScopeItem): void =&gt; {
+        if (parent.children) {
+            totalCount += parent.children.length;
+            parent.children.forEach((child: DataScopeItem) =&gt; {
+                if (some(checkedKeys, child.key)) checkedCount++;
+                if (child.children) countCheckedItems(child);
+            });
+        }
+    };
+
+    countCheckedItems(item);
+
+    // 部分选中时为半选状态
+    return checkedCount !== 0 &amp;&amp; checkedCount !== totalCount;
+};</code></pre>
+
+        <h5>4. 保存逻辑（完善错误处理）</h5>
+        <pre><code>// handleSave - 保存权限配置（带完整错误处理）
+const handleSave = async (): Promise&lt;void&gt; =&gt; {
+    message.loading("数据提交中...", 0);
+    setLoading(true);
+    NProgress.start();
+
+    try {
+        // 提交 checkedKeys 列表到后端
+        // 例如: ["Group_A", "Company_B1", "Company_B2"]
+        const { Message, Success } = await http.post&lt;any&gt;(
+            `${API_URL}/UpdateDataScope/${id}`,
+            checkedKeys
+        );
+
+        message.destroy();
+
+        if (Success) {
+            message.success(Message || "保存成功");
+            // 可选：重新加载数据以刷新界面
+            // await fetchRoleDataScope();
+        } else {
+            message.error(Message || "保存失败，请重试");
+        }
+    } catch (error: any) {
+        message.destroy();
+
+        // 处理不同类型的错误
+        if (error.response) {
+            // 服务器返回错误状态码
+            const { status, data } = error.response;
+
+            if (status === 409) {
+                // 并发冲突
+                message.error(data?.Message || "数据已被其他用户修改，请刷新页面后重试");
+            } else if (status === 400) {
+                // 请求参数错误
+                message.error(data?.Message || "请求参数错误，请检查输入");
+            } else if (status === 401 || status === 403) {
+                // 权限不足
+                message.error("您没有权限执行此操作");
+            } else if (status === 500) {
+                // 服务器内部错误
+                message.error("服务器内部错误，请联系管理员");
+            } else {
+                // 其他错误
+                message.error(data?.Message || `请求失败 (${status})，请重试`);
+            }
+        } else if (error.request) {
+            // 请求已发送但没有收到响应
+            message.error("网络请求失败，请检查网络连接");
+        } else {
+            // 其他错误
+            message.error(error.message || "保存失败，请重试");
+        }
+
+        // 记录错误日志（可选）
+        console.error("保存数据权限失败:", error);
+    } finally {
+        setLoading(false);
+        NProgress.done();
+    }
+};</code></pre>
+
+        <div class="info">
+            <strong>💡 错误处理最佳实践：</strong>
+            <ul style="margin-top: 10px;">
+                <li>始终使用 try-catch-finally 包裹异步操作</li>
+                <li>根据 HTTP 状态码提供友好的错误提示</li>
+                <li>并发冲突（409）时提示用户刷新页面</li>
+                <li>网络错误时提示检查网络连接</li>
+                <li>记录错误日志便于调试</li>
+                <li>在 finally 中重置加载状态</li>
+            </ul>
+        </div>
+
+        <h3>10.2 使用方式</h3>
+        <p>在角色管理页面中引入 <code>DataScopeSet</code> 组件：</p>
+        <pre><code>import DataScopeSet from "./DataScopeSet";
+
+// 在角色编辑页面中
+&lt;DataScopeSet id={roleId} /&gt;</code></pre>
+
+        <h3>10.3 交互流程</h3>
+        <ol>
+            <li><strong>页面加载</strong>
+                <ul>
+                    <li>调用 <code>GET /api/SmRoleDataScope/GetAllDataScopeTree</code> 获取树形结构</li>
+                    <li>调用 <code>GET /api/SmRoleDataScope/GetRoleDataScope/{roleId}</code> 获取已有权限</li>
+                </ul>
+            </li>
+            <li><strong>用户操作</strong>
+                <ul>
+                    <li>勾选集团 → 自动勾选该集团下所有公司</li>
+                    <li>勾选所有公司 → 自动勾选集团</li>
+                    <li>取消勾选集团 → 自动取消该集团下所有公司</li>
+                    <li>部分公司勾选 → 集团显示半选状态</li>
+                </ul>
+            </li>
+            <li><strong>保存</strong>
+                <ul>
+                    <li>提交 <code>checkedKeys</code> 列表到后端</li>
+                    <li>后端解析键值，展开为具体公司 ID</li>
+                    <li>保存到 <code>SmRoleDataScope</code> 表</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>10.4 与 PermissionSet.tsx 的对比</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>特性</th>
+                    <th>PermissionSet.tsx</th>
+                    <th>DataScopeSet.tsx</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>数据结构</strong></td>
+                    <td>模块树（多层嵌套）</td>
+                    <td>集团-公司树（两层结构）</td>
+                </tr>
+                <tr>
+                    <td><strong>UI 组件</strong></td>
+                    <td>Collapse + Checkbox + CheckboxGroup</td>
+                    <td>Collapse + Checkbox + CheckboxGroup</td>
+                </tr>
+                <tr>
+                    <td><strong>勾选逻辑</strong></td>
+                    <td>父子联动（递归）</td>
+                    <td>父子联动（一层）</td>
+                </tr>
+                <tr>
+                    <td><strong>半选状态</strong></td>
+                    <td>支持（递归计算）</td>
+                    <td>支持（一层计算）</td>
+                </tr>
+                <tr>
+                    <td><strong>提交数据</strong></td>
+                    <td>checkedKeys 列表</td>
+                    <td>checkedKeys 列表</td>
+                </tr>
+                <tr>
+                    <td><strong>API 路径</strong></td>
+                    <td>/api/SmRoleModule/*</td>
+                    <td>/api/SmRoleDataScope/*</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2 id="section-11">11. 实施计划</h2>
+
+        <h3>Phase 1：数据库变更（0.5天）</h3>
+        <ul>
+            <li>执行数据库脚本</li>
+            <li>验证表和索引创建成功</li>
+        </ul>
+
+        <h3>Phase 2：后端开发（2-3天）</h3>
+        <ul>
+            <li>创建实体类（SmRoleDataScope、SmRoleDataScopeAudit）</li>
+            <li>创建视图模型（DataScopeTree）</li>
+            <li>实现 Service 层逻辑</li>
+            <li>实现 GetAllDataScopeTree（构建树形结构）</li>
+            <li>实现 UpdateDataScope（解析键值并展开）</li>
+            <li>实现 GetRoleDataScope（反向合并为键值）</li>
+            <li>实现 DataScopeHelper 工具类</li>
+            <li>实现级联清理逻辑</li>
+        </ul>
+
+        <h3>Phase 3：前端开发（1-2天）</h3>
+        <ul>
+            <li>创建 DataScopeSet.tsx 组件</li>
+            <li>实现树形控件渲染</li>
+            <li>实现勾选逻辑（参考 PermissionSet.tsx）</li>
+            <li>添加审计日志查看界面</li>
+        </ul>
+
+        <h3>Phase 4：测试验证（1天）</h3>
+        <ul>
+            <li>单元测试</li>
+            <li>集成测试</li>
+        </ul>
+
+        <h3>Phase 5：部署上线（0.5天）</h3>
+        <ul>
+            <li>生产环境部署</li>
+        </ul>
+
+        <p><strong>总计</strong>：5-7天</p>
+
+        <hr>
+
+        <div class="success">
+            <h3>✅ 设计完成</h3>
+            <p>本文档描述了参考 SmRoleModule 模式的树形结构数据权限系统：</p>
+            <ol>
+                <li>✅ <strong>树形结构</strong> - 后端构建集团-公司树</li>
+                <li>✅ <strong>键值编码</strong> - All / Group_{id} / Company_{id}</li>
+                <li>✅ <strong>前端勾选</strong> - Ant Design Tree + Checkbox</li>
+                <li>✅ <strong>后端展开</strong> - 解析键值，展开为具体公司 ID</li>
+                <li>✅ <strong>简单存储</strong> - 只保存 CompanyId 列表</li>
+                <li>✅ <strong>并发控制</strong> - 版本号机制</li>
+                <li>✅ <strong>审计日志</strong> - 完整的变更记录</li>
+                <li>✅ <strong>缓存机制</strong> - 30分钟缓存，自动清除</li>
+                <li>✅ <strong>级联清理</strong> - 删除公司时自动清理权限</li>
+            </ol>
+            <p><strong>下一步</strong>：按照实施计划开发，预计总工期 5-7 天。</p>
+        </div>
+
+        <div class="footer">
+            <p>📄 文档版本：树形结构版 | 最后更新：2025-06-23 | 作者：EU.Core 开发团队</p>
+            <p>© 2025 EU Corporation. All Rights Reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
