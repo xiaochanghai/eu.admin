@@ -29,8 +29,8 @@ public class DataScopeTree
     public string title { get; set; }
 
     /// <summary>
-    /// 节点键值（编码后的标识）
-    /// 格式：All / Group_{groupId} / Company_{companyId}
+    /// 节点键值
+    /// 集团节点为集团 GUID，公司节点为公司 GUID
     /// </summary>
     public string key { get; set; }
 

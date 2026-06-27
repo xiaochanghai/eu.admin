@@ -1395,6 +1395,13 @@
             <param name="upload"></param> 
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.FileController.UploadChunkAsync(EU.Core.Model.ChunkUpload)">
+            <summary>
+            分片上传文件
+            </summary>
+            <param name="upload"></param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Api.Controllers.FileController.GetByUrl(System.String)">
             <summary>
             获取图片
@@ -1528,6 +1535,11 @@
         <member name="T:EU.Core.Api.Controllers.SmFunctionPrivilegeController">
             <summary>
             功能权限(Controller)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmGroupController">
+            <summary>
+            集团(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmImportDataController">
@@ -1753,6 +1765,40 @@
             <summary>
             执行任务日志(Controller)
             </summary>
+        </member>
+        <member name="T:EU.Core.Api.Controllers.SmRoleDataScopeController">
+            <summary>
+            角色数据权限 (Controller)
+            提供数据权限的树形结构查询、权限保存、权限查询等 API
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleDataScopeController.GetAllDataScopeTree">
+            <summary>
+            获取所有数据权限树（集团-公司树形结构）
+            </summary>
+            <returns>集团列表（每个集团包含下属公司）</returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleDataScopeController.UpdateDataScope(System.Guid,System.Collections.Generic.List{System.Guid})">
+            <summary>
+            更新角色数据权限
+            </summary>
+            <param name="roleId">角色ID</param>
+            <param name="scopeKeys">权限键值列表</param>
+            <returns>更新结果</returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleDataScopeController.GetRoleDataScope(System.Guid)">
+            <summary>
+            获取角色的数据权限（返回公司ID列表）
+            </summary>
+            <param name="roleId">角色ID</param>
+            <returns>公司 ID 列表</returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmRoleDataScopeController.GetUserDataScope(System.Guid)">
+            <summary>
+            获取用户的实际数据范围（供业务系统调用）
+            </summary>
+            <param name="userId">用户ID</param>
+            <returns>用户可访问的公司ID列表</returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmRoleFunctionController">
             <summary>

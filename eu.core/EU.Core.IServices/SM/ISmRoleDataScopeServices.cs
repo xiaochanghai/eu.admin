@@ -32,15 +32,15 @@ public interface ISmRoleDataScopeServices : IBaseServices<SmRoleDataScope, SmRol
     /// 更新角色数据权限
     /// </summary>
     /// <param name="roleId">角色ID</param>
-    /// <param name="scopeKeys">权限键值列表（All / Group_{id} / Company_{id}）</param>
+    /// <param name="scopeKeys">公司 ID 列表</param>
     /// <returns>更新结果</returns>
     Task<ServiceResult> UpdateDataScope(Guid roleId, List<Guid> scopeKeys);
 
     /// <summary>
-    /// 获取角色的数据权限（返回键值列表）
+    /// 获取角色的数据权限（返回公司ID列表）
     /// </summary>
     /// <param name="roleId">角色ID</param>
-    /// <returns>键值列表（All / Group_{id} / Company_{id}）</returns>
+    /// <returns>公司 ID 列表</returns>
     Task<ServiceResult<List<Guid>>> GetRoleDataScope(Guid roleId);
 
     /// <summary>

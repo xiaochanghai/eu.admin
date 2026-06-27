@@ -15212,8 +15212,8 @@
         </member>
         <member name="P:EU.Core.Model.DataScopeTree.key">
             <summary>
-            节点键值（编码后的标识）
-            格式：All / Group_{groupId} / Company_{companyId}
+            节点键值
+            集团节点为集团 GUID，公司节点为公司 GUID
             </summary>
         </member>
         <member name="P:EU.Core.Model.DataScopeTree.value">

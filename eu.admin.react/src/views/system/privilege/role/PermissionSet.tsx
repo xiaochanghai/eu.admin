@@ -1,591 +1,401 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Tabs, Card, Button, Checkbox, Collapse } from "antd";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, Card, Checkbox, Collapse, Empty, Tabs } from "antd";
 import http from "@/api";
 import type { CollapseProps, CheckboxProps, TabsProps } from "@/typings";
 import { PageLoader } from "@/components";
 import { message } from "@/hooks/useMessage";
 import NProgress from "@/config/nprogress";
-import { some } from "@/utils";
 
 const CheckboxGroup = Checkbox.Group;
 
-// API 路径常量
 const MODULE_API_URL = "/api/SmRoleModule";
 const DATA_SCOPE_API_URL = "/api/SmRoleDataScope";
+const TREE_INDENT = 20;
 
-/**
- * 模块项类型定义（功能权限）
- */
-interface ModuleItem {
+interface PermissionTreeItem {
   key: string;
   title: string;
   isLeaf?: boolean;
-  children?: ModuleItem[];
+  children?: PermissionTreeItem[];
 }
 
-/**
- * 数据权限项类型定义
- */
-interface DataScopeItem {
-  key: string;
-  title: string;
-  isLeaf?: boolean;
-  children?: DataScopeItem[];
-}
-
-/**
- * 权限设置组件属性
- */
 interface PermissionSetProps {
-  /** 角色ID */
   id: string | null;
 }
 
-/**
- * 权限设置组件
- *
- * 该组件用于设置角色对应的权限，包括：
- * 1. 功能权限：模块和功能操作的权限
- * 2. 数据权限：集团和公司的数据访问权限
- *
- * @param props 组件属性
- */
+type CheckboxChangeEvent = Parameters<NonNullable<CheckboxProps["onChange"]>>[0];
+
+const TREE_ROW_STYLE: React.CSSProperties = {
+  borderBottom: "1px solid #f0f0f0",
+  paddingBottom: 2
+};
+
+const hasChildren = (item: PermissionTreeItem): boolean => (item.children?.length ?? 0) > 0;
+
+const hasNestedChildren = (items: PermissionTreeItem[]): boolean =>
+  items.some(item => hasChildren(item));
+
+const collectSelectedKeys = (item: PermissionTreeItem, leafOnly = false): string[] => {
+  const keys: string[] = [];
+
+  const visit = (node: PermissionTreeItem): void => {
+    const selectable = !leafOnly || node.isLeaf === true;
+    if (selectable) keys.push(node.key);
+    node.children?.forEach(visit);
+  };
+
+  visit(item);
+  return keys;
+};
+
+const isNodeChecked = (item: PermissionTreeItem, checkedSet: Set<string>): boolean => {
+  if (checkedSet.has(item.key)) return true;
+
+  const children = item.children ?? [];
+  return children.length > 0 && children.every(child => isNodeChecked(child, checkedSet));
+};
+
+const isNodeIndeterminate = (item: PermissionTreeItem, checkedSet: Set<string>): boolean => {
+  const children = item.children ?? [];
+  if (children.length === 0) return false;
+
+  const childChecked = children.some(
+    child => isNodeChecked(child, checkedSet) || isNodeIndeterminate(child, checkedSet)
+  );
+
+  return childChecked && !isNodeChecked(item, checkedSet);
+};
+
+const toggleTreeSelection = (
+  currentKeys: string[],
+  item: PermissionTreeItem,
+  checked: boolean,
+  leafOnly = false
+): string[] => {
+  const nextKeys = new Set(currentKeys);
+  const selectionKeys = collectSelectedKeys(item, leafOnly);
+
+  selectionKeys.forEach(key => nextKeys.delete(key));
+
+  if (checked) {
+    selectionKeys.forEach(key => nextKeys.add(key));
+  }
+
+  return Array.from(nextKeys);
+};
+
+const getCheckedChildKeys = (items: PermissionTreeItem[], checkedSet: Set<string>): string[] =>
+  items.filter(item => checkedSet.has(item.key)).map(item => item.key);
+
+interface RenderTreeConfig {
+  checkedSet: Set<string>;
+  onNodeChange: (event: CheckboxChangeEvent, item: PermissionTreeItem) => void;
+  onGroupChange: (checkedList: string[], parent: PermissionTreeItem) => void;
+}
+
+const renderTree = (
+  items: PermissionTreeItem[],
+  config: RenderTreeConfig,
+  level = 0
+): React.ReactNode => {
+  return (
+    <>
+      {items.map((item, index) => {
+        const children = item.children ?? [];
+
+        return (
+          <div key={item.key}>
+            <div
+              style={{
+                ...TREE_ROW_STYLE,
+                marginTop: index > 0 ? 10 : 0
+              }}
+            >
+              <Checkbox
+                style={{ marginLeft: level * TREE_INDENT }}
+                indeterminate={isNodeIndeterminate(item, config.checkedSet)}
+                checked={isNodeChecked(item, config.checkedSet)}
+                name={item.key}
+                onClick={event => event.stopPropagation()}
+                onChange={event => config.onNodeChange(event, item)}
+              >
+                {item.title}
+              </Checkbox>
+            </div>
+
+            {children.length > 0 &&
+              !item.isLeaf &&
+              (hasNestedChildren(children) ? (
+                renderTree(children, config, level + 2)
+              ) : (
+                <CheckboxGroup
+                  style={{ marginLeft: (level + 2) * TREE_INDENT, marginTop: 5 }}
+                  value={getCheckedChildKeys(children, config.checkedSet)}
+                  options={children.map(child => ({
+                    label: child.title,
+                    value: child.key
+                  }))}
+                  onChange={checkedList => config.onGroupChange(checkedList as string[], item)}
+                />
+              ))}
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+async function savePermissions(
+  url: string,
+  payload: string[],
+  loadingText: string,
+  successText: string,
+  failureText: string,
+  setSaving: React.Dispatch<React.SetStateAction<boolean>>
+): Promise<void> {
+  message.loading(loadingText, 0);
+  setSaving(true);
+  NProgress.start();
+
+  try {
+    const { Message, Success } = await http.post<any>(url, payload);
+    message.destroy();
+
+    if (Success) {
+      message.success(Message || successText);
+    } else {
+      message.error(Message || failureText);
+    }
+  } catch {
+    message.destroy();
+    message.error(failureText);
+  } finally {
+    setSaving(false);
+    NProgress.done();
+  }
+}
+
 const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
-  // ========== 功能权限状态 ==========
-  const [loading, setLoading] = useState<boolean>(true);
-  const [modules, setModules] = useState<ModuleItem[]>([]);
+  const [modules, setModules] = useState<PermissionTreeItem[]>([]);
   const [checkedModuleKeys, setCheckedModuleKeys] = useState<string[]>([]);
+  const [moduleTreeLoaded, setModuleTreeLoaded] = useState(false);
+  const [moduleSaving, setModuleSaving] = useState(false);
 
-  // ========== 数据权限状态 ==========
-  const [dataScopes, setDataScopes] = useState<DataScopeItem[]>([]);
+  const [dataScopes, setDataScopes] = useState<PermissionTreeItem[]>([]);
   const [checkedDataScopeKeys, setCheckedDataScopeKeys] = useState<string[]>([]);
-  const [dataScopeLoading, setDataScopeLoading] = useState<boolean>(false);
+  const [dataScopeTreeLoaded, setDataScopeTreeLoaded] = useState(false);
+  const [dataScopeSaving, setDataScopeSaving] = useState(false);
 
-  // ========== 功能权限方法 ==========
+  const moduleCheckedSet = useMemo(() => new Set(checkedModuleKeys), [checkedModuleKeys]);
+  const dataScopeCheckedSet = useMemo(() => new Set(checkedDataScopeKeys), [checkedDataScopeKeys]);
 
-  /**
-   * 获取角色模块权限
-   */
-  const fetchRoleModule = useCallback(async (): Promise<void> => {
-    if (!id) return;
-    const { Data, Success } = await http.get<any>(`${MODULE_API_URL}/GetRoleModule/${id}`);
-    if (Success) setCheckedModuleKeys(Data);
-    setLoading(false);
+  useEffect(() => {
+    let active = true;
+
+    const loadModulePermissionData = async (): Promise<void> => {
+      setModuleTreeLoaded(false);
+
+      if (!id) {
+        if (active) {
+          setModules([]);
+          setCheckedModuleKeys([]);
+          setModuleTreeLoaded(true);
+        }
+        return;
+      }
+
+      try {
+        const [moduleTreeResult, roleModuleResult] = await Promise.all([
+          http.get<any>(`${MODULE_API_URL}/GetAllModuleList`),
+          http.get<any>(`${MODULE_API_URL}/GetRoleModule/${id}`)
+        ]);
+
+        if (!active) return;
+
+        if (moduleTreeResult.Success) {
+          setModules(moduleTreeResult.Data?.children ?? []);
+        }
+
+        if (roleModuleResult.Success) {
+          setCheckedModuleKeys(roleModuleResult.Data ?? []);
+        }
+      } catch {
+        if (active) {
+          message.error("功能权限数据加载失败");
+        }
+      } finally {
+        if (active) {
+          setModuleTreeLoaded(true);
+        }
+      }
+    };
+
+    const loadDataScopePermissionData = async (): Promise<void> => {
+      setDataScopeTreeLoaded(false);
+
+      if (!id) {
+        if (active) {
+          setDataScopes([]);
+          setCheckedDataScopeKeys([]);
+          setDataScopeTreeLoaded(true);
+        }
+        return;
+      }
+
+      try {
+        const [dataScopeTreeResult, roleDataScopeResult] = await Promise.all([
+          http.get<any>(`${DATA_SCOPE_API_URL}/GetAllDataScopeTree`),
+          http.get<any>(`${DATA_SCOPE_API_URL}/QueryRole/${id}`)
+        ]);
+
+        if (!active) return;
+
+        if (dataScopeTreeResult.Success) {
+          setDataScopes(dataScopeTreeResult.Data ?? []);
+        }
+
+        if (roleDataScopeResult.Success) {
+          setCheckedDataScopeKeys(roleDataScopeResult.Data ?? []);
+        }
+      } catch {
+        if (active) {
+          message.error("数据权限加载失败");
+        }
+      } finally {
+        if (active) {
+          setDataScopeTreeLoaded(true);
+        }
+      }
+    };
+
+    void loadModulePermissionData();
+    void loadDataScopePermissionData();
+
+    return () => {
+      active = false;
+    };
   }, [id]);
 
-  /**
-   * 获取所有模块列表
-   */
-  const fetchAllModuleList = useCallback(async (): Promise<void> => {
-    const { Data, Success } = await http.get<any>(`${MODULE_API_URL}/GetAllModuleList`);
-    if (Success) setModules(Data.children);
+  const handleModuleCheckChange = useCallback((event: CheckboxChangeEvent, item: PermissionTreeItem): void => {
+    setCheckedModuleKeys(current =>
+      toggleTreeSelection(current, item, event.target.checked)
+    );
   }, []);
 
-  /**
-   * 保存功能权限
-   */
-  const handleSaveModulePermission = useCallback(async (): Promise<void> => {
-    message.loading("功能权限提交中...", 0);
-    setLoading(true);
-    NProgress.start();
+  const handleModuleGroupChange = useCallback((checkedList: string[], parent: PermissionTreeItem): void => {
+    setCheckedModuleKeys(current => {
+      const nextKeys = new Set(current);
 
-    try {
-      const { Message, Success } = await http.post<any>(`${MODULE_API_URL}/UpdateRoleModule/${id}`, checkedModuleKeys);
-      message.destroy();
-      if (Success) message.success(Message || "功能权限保存成功");
-    } catch (error) {
-      message.destroy();
-      message.error("功能权限保存失败");
-    } finally {
-      setLoading(false);
-      NProgress.done();
-    }
+      parent.children?.forEach(child => {
+        nextKeys.delete(child.key);
+      });
+
+      checkedList.forEach(key => nextKeys.add(key));
+
+      if (parent.children && checkedList.length === parent.children.length && checkedList.length > 0) {
+        nextKeys.add(parent.key);
+      } else {
+        nextKeys.delete(parent.key);
+      }
+
+      return Array.from(nextKeys);
+    });
+  }, []);
+
+  const handleDataScopeCheckChange = useCallback((event: CheckboxChangeEvent, item: PermissionTreeItem): void => {
+    setCheckedDataScopeKeys(current =>
+      toggleTreeSelection(current, item, event.target.checked, true)
+    );
+  }, []);
+
+  const handleDataScopeGroupChange = useCallback((checkedList: string[], parent: PermissionTreeItem): void => {
+    setCheckedDataScopeKeys(current => {
+      const nextKeys = new Set(current);
+
+      parent.children?.forEach(child => {
+        nextKeys.delete(child.key);
+      });
+
+      checkedList.forEach(key => nextKeys.add(key));
+
+      return Array.from(nextKeys);
+    });
+  }, []);
+
+  const handleSaveModulePermission = useCallback(() => {
+    if (!id) return;
+
+    void savePermissions(
+      `${MODULE_API_URL}/UpdateRoleModule/${id}`,
+      checkedModuleKeys,
+      "功能权限提交中...",
+      "功能权限保存成功",
+      "功能权限保存失败",
+      setModuleSaving
+    );
   }, [id, checkedModuleKeys]);
 
-  // ========== 数据权限方法 ==========
-
-  /**
-   * 获取角色数据权限
-   */
-  const fetchRoleDataScope = useCallback(async (): Promise<void> => {
+  const handleSaveDataScopePermission = useCallback(() => {
     if (!id) return;
-    const { Data, Success } = await http.get<any>(`${DATA_SCOPE_API_URL}/QueryRole/${id}`);
-    if (Success) setCheckedDataScopeKeys(Data || []);
-  }, [id]);
 
-  /**
-   * 获取所有数据权限树
-   */
-  const fetchAllDataScopeTree = useCallback(async (): Promise<void> => {
-    const { Data, Success } = await http.get<any>(`${DATA_SCOPE_API_URL}/GetAllDataScopeTree`);
-    // 后端直接返回集团列表
-    if (Success) setDataScopes(Data || []);
-  }, []);
-
-  /**
-   * 保存数据权限
-   */
-  const handleSaveDataScopePermission = useCallback(async (): Promise<void> => {
-    message.loading("数据权限提交中...", 0);
-    setDataScopeLoading(true);
-    NProgress.start();
-
-    try {
-      const { Message, Success } = await http.post<any>(`${DATA_SCOPE_API_URL}/UpdateDataScope/${id}`, checkedDataScopeKeys);
-      message.destroy();
-      if (Success) message.success(Message || "数据权限保存成功");
-    } catch (error) {
-      message.destroy();
-      message.error("数据权限保存失败");
-    } finally {
-      setDataScopeLoading(false);
-      NProgress.done();
-    }
+    void savePermissions(
+      `${DATA_SCOPE_API_URL}/UpdateDataScope/${id}`,
+      checkedDataScopeKeys,
+      "数据权限提交中...",
+      "数据权限保存成功",
+      "数据权限保存失败",
+      setDataScopeSaving
+    );
   }, [id, checkedDataScopeKeys]);
 
-  // ========== 初始化 ==========
-
-  /**
-   * 初始化数据
-   */
-  useEffect(() => {
-    fetchAllModuleList();
-    fetchRoleModule();
-    fetchAllDataScopeTree();
-    fetchRoleDataScope();
-  }, [fetchAllModuleList, fetchRoleModule, fetchAllDataScopeTree, fetchRoleDataScope]);
-
-  // ========== 功能权限辅助方法 ==========
-
-  /**
-   * 阻止Checkbox点击事件冒泡
-   */
-  const handleCheckboxClick: CheckboxProps["onClick"] = e => e.stopPropagation();
-
-  /**
-   * 检查功能权限项是否被选中
-   * 如果所有子项都被选中，也视为选中
-   */
-  const isModuleItemChecked = useCallback(
-    (item: ModuleItem): boolean => {
-      if (checkedModuleKeys.length === 0) return false;
-
-      // 检查自身是否被选中
-      if (some(checkedModuleKeys, item.key)) return true;
-
-      // 检查是否所有子项都被选中
-      if (item.children && item.children.length > 0) {
-        const allChildrenChecked = item.children.every((child: ModuleItem) => {
-          return some(checkedModuleKeys, child.key);
-        });
-        if (allChildrenChecked) return true;
-      }
-
-      return false;
-    },
-    [checkedModuleKeys]
-  );
-
-  /**
-   * 获取功能权限组内选中的项
-   */
-  const getModuleGroupCheckedItems = useCallback(
-    (items: ModuleItem[]): string[] => {
-      if (checkedModuleKeys.length === 0) return [];
-
-      const checkedItems: string[] = [];
-      items.forEach((item: ModuleItem) => {
-        if (some(checkedModuleKeys, item.key)) {
-          checkedItems.push(item.key);
-        }
-      });
-
-      return checkedItems;
-    },
-    [checkedModuleKeys]
-  );
-
-  /**
-   * 处理功能权限组内选中状态变化
-   * 当所有子项都被选中时，自动勾选父项
-   */
-  const handleModuleGroupChange = useCallback(
-    (checkedList: string[], parent: ModuleItem): void => {
-      // 使用 Set 避免重复
-      const newCheckedKeys = new Set(checkedModuleKeys);
-
-      // 移除所有子项和父项
-      parent.children?.forEach((item: ModuleItem) => {
-        newCheckedKeys.delete(item.key);
-      });
-      newCheckedKeys.delete(parent.key);
-
-      // 如果所有子项都被选中（且至少有一个子项），则添加父项
-      if (parent.children && checkedList.length === parent.children.length && checkedList.length > 0) {
-        newCheckedKeys.add(parent.key);
-      }
-
-      // 添加选中的子项
-      checkedList.forEach(key => newCheckedKeys.add(key));
-
-      setCheckedModuleKeys(Array.from(newCheckedKeys));
-    },
-    [checkedModuleKeys]
-  );
-
-  /**
-   * 计算功能权限项的半选状态
-   */
-  const calculateModuleIndeterminate = useCallback(
-    (item: ModuleItem): boolean => {
-      if (checkedModuleKeys.length === 0 || !item.children) return false;
-
-      let checkedCount = 0;
-      let totalCount = 0;
-
-      const countCheckedItems = (parent: ModuleItem): void => {
-        if (parent.children) {
-          totalCount += parent.children.length;
-          parent.children.forEach((child: ModuleItem) => {
-            if (some(checkedModuleKeys, child.key)) checkedCount++;
-            if (child.children) countCheckedItems(child);
-          });
-        }
-      };
-
-      countCheckedItems(item);
-
-      return checkedCount !== 0 && checkedCount !== totalCount;
-    },
-    [checkedModuleKeys]
-  );
-
-  /**
-   * 处理功能权限Checkbox选中状态变化
-   */
-  const handleModuleCheckChange = useCallback(
-    (e: any, item: ModuleItem): void => {
-      const newCheckedKeys = [...checkedModuleKeys];
-
-      const removeCheckedKeys = (keys: string[], parent: ModuleItem): void => {
-        const index = keys.findIndex(x => x === parent.key);
-        if (index !== -1) keys.splice(index, 1);
-
-        if (parent.children)
-          parent.children.forEach((child: ModuleItem) => {
-            removeCheckedKeys(keys, child);
-          });
-      };
-
-      const addCheckedKeys = (keys: string[], parent: ModuleItem): void => {
-        keys.push(parent.key);
-
-        if (parent.children)
-          parent.children.forEach((child: ModuleItem) => {
-            addCheckedKeys(keys, child);
-          });
-      };
-
-      removeCheckedKeys(newCheckedKeys, item);
-
-      if (e.target.checked) addCheckedKeys(newCheckedKeys, item);
-
-      setCheckedModuleKeys(newCheckedKeys);
-    },
-    [checkedModuleKeys]
-  );
-
-  /**
-   * 渲染功能权限模块树
-   */
-  const renderModuleTree = useCallback(
-    (items: ModuleItem[], level = 0) => {
-      return (
-        <>
-          {items.map((item: ModuleItem, index: number) => (
-            <div key={item.key}>
-              <div
-                style={{
-                  borderBottom: "1px solid #f0f0f0",
-                  marginTop: index > 0 ? 10 : 0,
-                  paddingBottom: 2
-                }}
-              >
-                <Checkbox
-                  style={{ marginLeft: level * 20 }}
-                  indeterminate={calculateModuleIndeterminate(item)}
-                  checked={isModuleItemChecked(item)}
-                  name={item.key}
-                  onChange={(e: any) => handleModuleCheckChange(e, item)}
-                >
-                  {item.title}
-                </Checkbox>
-              </div>
-
-              {item.children &&
-                !item.isLeaf &&
-                item.children.length > 0 &&
-                (item.children.some((child: ModuleItem) => child.isLeaf === false) ? (
-                  renderModuleTree(item.children, level + 2)
-                ) : (
-                  <CheckboxGroup
-                    style={{ marginLeft: (level + 2) * 20, marginTop: 5 }}
-                    value={getModuleGroupCheckedItems(item.children)}
-                    options={item.children.map((child: ModuleItem) => ({
-                      label: child.title,
-                      value: child.key
-                    }))}
-                    onChange={(list: string[]) => handleModuleGroupChange(list, item)}
-                  />
-                ))}
-            </div>
-          ))}
-        </>
-      );
-    },
-    [checkedModuleKeys, calculateModuleIndeterminate, isModuleItemChecked, getModuleGroupCheckedItems, handleModuleGroupChange, handleModuleCheckChange]
-  );
-
-  // ========== 数据权限辅助方法 ==========
-
-  /**
-   * 检查数据权限项是否被选中
-   * 如果所有子项都被选中，也视为选中
-   */
-  const isDataScopeItemChecked = useCallback(
-    (item: DataScopeItem): boolean => {
-      if (checkedDataScopeKeys.length === 0) return false;
-
-      // 检查是否所有子项都被选中
-      if (item.children && item.children.length > 0) {
-        const allChildrenChecked = item.children.every((child: DataScopeItem) => {
-          return some(checkedDataScopeKeys, child.key);
-        });
-        if (allChildrenChecked) return true;
-      }
-
-      // 叶子节点直接判断自身
-      if (!item.children || item.children.length === 0) {
-        return some(checkedDataScopeKeys, item.key);
-      }
-
-      return false;
-    },
-    [checkedDataScopeKeys]
-  );
-
-  /**
-   * 获取数据权限组内选中的项
-   */
-  const getDataScopeGroupCheckedItems = useCallback(
-    (items: DataScopeItem[]): string[] => {
-      if (checkedDataScopeKeys.length === 0) return [];
-
-      const checkedItems: string[] = [];
-      items.forEach((item: DataScopeItem) => {
-        if (item.isLeaf && some(checkedDataScopeKeys, item.key)) {
-          checkedItems.push(item.key);
-        }
-      });
-
-      return checkedItems;
-    },
-    [checkedDataScopeKeys]
-  );
-
-  /**
-   * 处理数据权限组内选中状态变化
-   * 当所有子项（公司）都被选中时，自动勾选父项（集团）
-   * 注意：只存储公司 ID，不存储集团 ID
-   */
-  const handleDataScopeGroupChange = useCallback(
-    (checkedList: string[], parent: DataScopeItem): void => {
-      // 使用 Set 避免重复
-      const newCheckedKeys = new Set(checkedDataScopeKeys);
-
-      // 只移除子项，父项不参与存储
-      parent.children?.forEach((item: DataScopeItem) => {
-        newCheckedKeys.delete(item.key);
-      });
-
-      // 添加选中的子项
-      checkedList.forEach(key => newCheckedKeys.add(key));
-
-      setCheckedDataScopeKeys(Array.from(newCheckedKeys));
-    },
-    [checkedDataScopeKeys]
-  );
-
-  /**
-   * 计算数据权限项的半选状态
-   */
-  const calculateDataScopeIndeterminate = useCallback(
-    (item: DataScopeItem): boolean => {
-      if (checkedDataScopeKeys.length === 0 || !item.children) return false;
-
-      let checkedCount = 0;
-      let totalCount = 0;
-
-      const countCheckedItems = (parent: DataScopeItem): void => {
-        if (parent.children) {
-          totalCount += parent.children.length;
-          parent.children.forEach((child: DataScopeItem) => {
-            if (some(checkedDataScopeKeys, child.key)) checkedCount++;
-            if (child.children) countCheckedItems(child);
-          });
-        }
-      };
-
-      countCheckedItems(item);
-
-      return checkedCount !== 0 && checkedCount !== totalCount;
-    },
-    [checkedDataScopeKeys]
-  );
-
-  /**
-   * 处理数据权限Checkbox选中状态变化
-   */
-  const handleDataScopeCheckChange = useCallback(
-    (e: any, item: DataScopeItem): void => {
-      const newCheckedKeys = [...checkedDataScopeKeys];
-
-      const removeCheckedKeys = (keys: string[], parent: DataScopeItem): void => {
-        // 只移除公司 ID（叶子节点）
-        if (parent.isLeaf) {
-          const index = keys.findIndex(x => x === parent.key);
-          if (index !== -1) keys.splice(index, 1);
-        }
-
-        if (parent.children)
-          parent.children.forEach((child: DataScopeItem) => {
-            removeCheckedKeys(keys, child);
-          });
-      };
-
-      const addCheckedKeys = (keys: string[], parent: DataScopeItem): void => {
-        // 只添加公司 ID（叶子节点）
-        if (parent.isLeaf) {
-          keys.push(parent.key);
-        }
-
-        if (parent.children)
-          parent.children.forEach((child: DataScopeItem) => {
-            addCheckedKeys(keys, child);
-          });
-      };
-
-      removeCheckedKeys(newCheckedKeys, item);
-
-      if (e.target.checked) addCheckedKeys(newCheckedKeys, item);
-
-      setCheckedDataScopeKeys(newCheckedKeys);
-    },
-    [checkedDataScopeKeys]
-  );
-
-  /**
-   * 渲染数据权限树
-   */
-  const renderDataScopeTree = useCallback(
-    (items: DataScopeItem[], level = 0) => {
-      return (
-        <>
-          {items.map((item: DataScopeItem, index: number) => (
-            <div key={item.key}>
-              <div
-                style={{
-                  borderBottom: "1px solid #f0f0f0",
-                  marginTop: index > 0 ? 10 : 0,
-                  paddingBottom: 2
-                }}
-              >
-                <Checkbox
-                  style={{ marginLeft: level * 20 }}
-                  indeterminate={calculateDataScopeIndeterminate(item)}
-                  checked={isDataScopeItemChecked(item)}
-                  name={item.key}
-                  onChange={(e: any) => handleDataScopeCheckChange(e, item)}
-                >
-                  {item.title}
-                </Checkbox>
-              </div>
-
-              {item.children &&
-                !item.isLeaf &&
-                item.children.length > 0 &&
-                (item.children.some((child: DataScopeItem) => child.isLeaf === false) ? (
-                  renderDataScopeTree(item.children, level + 2)
-                ) : (
-                  <CheckboxGroup
-                    style={{ marginLeft: (level + 2) * 20, marginTop: 5 }}
-                    value={getDataScopeGroupCheckedItems(item.children)}
-                    options={item.children.map((child: DataScopeItem) => ({
-                      label: child.title,
-                      value: child.key
-                    }))}
-                    onChange={(list: string[]) => handleDataScopeGroupChange(list, item)}
-                  />
-                ))}
-            </div>
-          ))}
-        </>
-      );
-    },
-    [checkedDataScopeKeys, calculateDataScopeIndeterminate, isDataScopeItemChecked, getDataScopeGroupCheckedItems, handleDataScopeGroupChange, handleDataScopeCheckChange]
-  );
-
-  // ========== 生成标签页 ==========
-
-  /**
-   * 生成功能权限折叠面板项
-   */
   const moduleCollapseItems: CollapseProps["items"] = useMemo(() => {
     if (modules.length === 0) return [];
 
-    return modules.map((module: ModuleItem) => ({
+    return modules.map(module => ({
       key: module.key,
       label: (
         <Checkbox
-          indeterminate={calculateModuleIndeterminate(module)}
-          onClick={handleCheckboxClick}
-          checked={isModuleItemChecked(module)}
-          onChange={e => handleModuleCheckChange(e, module)}
+          indeterminate={isNodeIndeterminate(module, moduleCheckedSet)}
+          checked={isNodeChecked(module, moduleCheckedSet)}
           name={module.key}
+          onClick={event => event.stopPropagation()}
+          onChange={event => handleModuleCheckChange(event, module)}
         >
           {module.title}
         </Checkbox>
       ),
-      children: renderModuleTree(module.children || [], 2)
+      children: renderTree(module.children ?? [], {
+        checkedSet: moduleCheckedSet,
+        onNodeChange: handleModuleCheckChange,
+        onGroupChange: handleModuleGroupChange
+      }, 2)
     }));
-  }, [modules, calculateModuleIndeterminate, isModuleItemChecked, handleCheckboxClick, handleModuleCheckChange, renderModuleTree]);
+  }, [modules, moduleCheckedSet, handleModuleCheckChange, handleModuleGroupChange]);
 
-  /**
-   * 生成数据权限折叠面板项
-   */
   const dataScopeCollapseItems: CollapseProps["items"] = useMemo(() => {
     if (dataScopes.length === 0) return [];
 
-    return dataScopes.map((scope: DataScopeItem) => ({
+    return dataScopes.map(scope => ({
       key: scope.key,
       label: (
         <Checkbox
-          indeterminate={calculateDataScopeIndeterminate(scope)}
-          onClick={handleCheckboxClick}
-          checked={isDataScopeItemChecked(scope)}
-          onChange={e => handleDataScopeCheckChange(e, scope)}
+          indeterminate={isNodeIndeterminate(scope, dataScopeCheckedSet)}
+          checked={isNodeChecked(scope, dataScopeCheckedSet)}
           name={scope.key}
+          onClick={event => event.stopPropagation()}
+          onChange={event => handleDataScopeCheckChange(event, scope)}
         >
           {scope.title}
         </Checkbox>
       ),
-      children: renderDataScopeTree(scope.children || [], 2)
+      children: renderTree(scope.children ?? [], {
+        checkedSet: dataScopeCheckedSet,
+        onNodeChange: handleDataScopeCheckChange,
+        onGroupChange: handleDataScopeGroupChange
+      }, 2)
     }));
-  }, [dataScopes, calculateDataScopeIndeterminate, isDataScopeItemChecked, handleCheckboxClick, handleDataScopeCheckChange, renderDataScopeTree]);
+  }, [dataScopes, dataScopeCheckedSet, handleDataScopeCheckChange, handleDataScopeGroupChange]);
 
-  /**
-   * 生成标签页项
-   */
   const tabItems: TabsProps["items"] = useMemo(
     () => [
       {
@@ -593,10 +403,10 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
         label: "功能权限",
         children: (
           <Card
-            title="设置角色对应的功能操作、后台管理权限"
+            title="设置角色对应的功能操作和后台管理权限"
             className="card-small card-head"
             extra={
-              <Button type="primary" onClick={handleSaveModulePermission} loading={loading}>
+              <Button type="primary" onClick={handleSaveModulePermission} loading={moduleSaving}>
                 保存
               </Button>
             }
@@ -604,14 +414,18 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
             variant="borderless"
             style={{ boxShadow: "initial" }}
           >
-            {modules.length > 0 ? (
-              <Collapse
-                bordered={false}
-                ghost
-                defaultActiveKey={modules.length > 0 ? [modules[0].key] : []}
-                size="small"
-                items={moduleCollapseItems}
-              />
+            {moduleTreeLoaded ? (
+              modules.length > 0 ? (
+                <Collapse
+                  bordered={false}
+                  ghost
+                  defaultActiveKey={modules.length > 0 ? [modules[0].key] : []}
+                  size="small"
+                  items={moduleCollapseItems}
+                />
+              ) : (
+                <Empty description="暂无功能权限数据" />
+              )
             ) : (
               <PageLoader />
             )}
@@ -626,7 +440,7 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
             title="设置角色对应的数据权限（集团和公司）"
             className="card-small card-head"
             extra={
-              <Button type="primary" onClick={handleSaveDataScopePermission} loading={dataScopeLoading}>
+              <Button type="primary" onClick={handleSaveDataScopePermission} loading={dataScopeSaving}>
                 保存
               </Button>
             }
@@ -634,14 +448,18 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
             variant="borderless"
             style={{ boxShadow: "initial" }}
           >
-            {dataScopes.length > 0 ? (
-              <Collapse
-                bordered={false}
-                ghost
-                defaultActiveKey={dataScopes.length > 0 ? [dataScopes[0].key] : []}
-                size="small"
-                items={dataScopeCollapseItems}
-              />
+            {dataScopeTreeLoaded ? (
+              dataScopes.length > 0 ? (
+                <Collapse
+                  bordered={false}
+                  ghost
+                  defaultActiveKey={dataScopes.length > 0 ? [dataScopes[0].key] : []}
+                  size="small"
+                  items={dataScopeCollapseItems}
+                />
+              ) : (
+                <Empty description="暂无数据权限数据" />
+              )
             ) : (
               <PageLoader />
             )}
@@ -650,14 +468,16 @@ const PermissionSet: React.FC<PermissionSetProps> = ({ id }) => {
       }
     ],
     [
+      moduleTreeLoaded,
+      dataScopeTreeLoaded,
       modules,
       dataScopes,
-      loading,
-      dataScopeLoading,
       moduleCollapseItems,
       dataScopeCollapseItems,
       handleSaveModulePermission,
-      handleSaveDataScopePermission
+      handleSaveDataScopePermission,
+      moduleSaving,
+      dataScopeSaving
     ]
   );
 

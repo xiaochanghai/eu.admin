@@ -93,6 +93,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         if (sqlDefaultCondition.IsNotEmptyOrNull() && sqlDefaultCondition.Contains("[USER_ID]"))
             sqlDefaultCondition = sqlDefaultCondition.Replace("[USER_ID]", userId);
 
+        sqlDefaultCondition = await AppendCompanyScopeConditionAsync(sqlDefaultCondition, module.IsRoleDataScope == true, "A.CompanyId");
+
         // 设置网格查询参数
         grid.FullSql = moduleSql.GetFullSql();
         grid.SqlSelect = sqlSelectBrwAndTable;
@@ -750,16 +752,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             var escapedParentId = parentId.Replace("'", "''");
             sql += $" AND {parentColumn} = '{escapedParentId}'";
         }
-        if (entity.IsRoleDataScope == true && UserId != null)
-        {
-            var UserDataScope = await DataScopeHelper.GetUserDataScope(Db, UserId.Value);
-            if (UserDataScope != null && UserDataScope.CompanyIds != null && UserDataScope.CompanyIds.Any())
-            {
-                string joinKeys = $"'{string.Join("','", UserDataScope.CompanyIds)}'";
-
-                sql += $" AND CompanyId in ({joinKeys})";
-            }
-        }
+        sql = await AppendCompanyScopeConditionAsync(sql, entity.IsRoleDataScope == true, "CompanyId");
 
         sql = $"SELECT * FROM ({sql}) A";
 
@@ -773,6 +766,26 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         data = await Db.Ado.SqlQueryAsync<ComboGridData>(sql);
 
         return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, data.Count);
+    }
+
+    /// <summary>
+    /// 为 SQL 片段追加当前用户的数据权限公司范围条件
+    /// </summary>
+    private async Task<string> AppendCompanyScopeConditionAsync(string sql, bool enableScope, string companyColumn)
+    {
+        if (!enableScope || UserId == null || string.IsNullOrWhiteSpace(sql))
+            return sql;
+
+        var userDataScope = await DataScopeHelper.GetUserDataScope(Db, UserId.Value);
+        var companyIds = userDataScope?.CompanyIds;
+        if (companyIds == null || !companyIds.Any())
+            return sql;
+
+        var joinKeys = string.Join("','", companyIds);
+        if (joinKeys.Any())
+            return $"{sql} AND {companyColumn} IN ('{joinKeys}')";
+        else
+            return $"{sql} AND 1!=1";
     }
 
     #endregion

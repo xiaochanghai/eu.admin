@@ -63,10 +63,10 @@ public class SmRoleDataScopeController : BaseController<ISmRoleDataScopeServices
     #region 获取角色数据权限
 
     /// <summary>
-    /// 获取角色的数据权限（返回键值列表）
+    /// 获取角色的数据权限（返回公司ID列表）
     /// </summary>
     /// <param name="roleId">角色ID</param>
-    /// <returns>键值列表（All / Group_{id} / Company_{id}）</returns>
+    /// <returns>公司 ID 列表</returns>
     [HttpGet("QueryRole/{roleId}")]
     public async Task<ServiceResult<List<Guid>>> GetRoleDataScope(Guid roleId)
     {
