@@ -779,13 +779,10 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         var userDataScope = await DataScopeHelper.GetUserDataScope(Db, UserId.Value);
         var companyIds = userDataScope?.CompanyIds;
         if (companyIds == null || !companyIds.Any())
-            return sql;
+            return $"{sql} AND 1!=1";
 
         var joinKeys = string.Join("','", companyIds);
-        if (joinKeys.Any())
-            return $"{sql} AND {companyColumn} IN ('{joinKeys}')";
-        else
-            return $"{sql} AND 1!=1";
+        return $"{sql} AND {companyColumn} IN ('{joinKeys}')";
     }
 
     #endregion

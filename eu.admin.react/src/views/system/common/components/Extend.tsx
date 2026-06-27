@@ -298,7 +298,7 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
           destroyOnHidden
           title={t("extend.initTable")}
           open={modalVisible}
-          maskClosable={false}
+          mask={{ closable: false }}
           width={1000}
           onCancel={() => setModalVisible(false)}
           footer={null}
