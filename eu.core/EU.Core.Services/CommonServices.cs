@@ -742,6 +742,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
 
         // 获取数据字典对应的SQL
         var entity = await LovHelper.GetCommonListSqlEntity(Db, code);
+        if (entity == null)
+            return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, 0);
         var sql = entity.SelectSql;
         if (string.IsNullOrWhiteSpace(sql))
             return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, 0);

@@ -975,9 +975,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     {
         dynamic data = new ExpandoObject();
 
-        // 获取模块信息
-        var module = await base.QuerySingle(x => x.IsDeleted == false && x.ModuleCode == moduleCode);
-        if (module == null)
+        // 获取模块信息 
+        if (!await AnyAsync(x => x.IsDeleted == false && x.ModuleCode == moduleCode))
             throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
 
         var moduleSql = new ModuleSql(moduleCode, Db);
@@ -1000,8 +999,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                 .AS(tableName, "A")
                 .AddJoinInfo("SmUsers", "B", ObjectFuncModel.Create("Equals", "A.CreatedBy", "B.id"), JoinType.Left)
                 .AddJoinInfo("SmUsers", "C", ObjectFuncModel.Create("Equals", "A.UpdateBy", "C.id"), JoinType.Left)
+                .Where("A.ID=@id", new { id })
                 .Select(new List<SelectModel>(){
-                    new SelectModel { AsName = "ID", FieldName = "A.ID" },
+                    //new SelectModel { AsName = "ID", FieldName = "A.ID" },
                     new SelectModel { AsName = "CreatedBy", FieldName = "B.UserName" },
                     new SelectModel { AsName = "CreatedTime", FieldName = "A.CreatedTime" },
                     new SelectModel { AsName = "UpdateBy", FieldName = "C.UserName" },
