@@ -69,10 +69,9 @@ const ComBoGrid: React.FC<ComBoGridProps> = props => {
         };
 
         const { Data, Success } = await getComboGridData(paramData);
-
         if (Success && Data && Data.length > 0) {
           // 搜索时使用新数据，否则追加数据
-          const newData = isSearch ? Data : [...cachedData, ...Data];
+          const newData = isSearch || pageToLoad === 1 ? Data : [...cachedData, ...Data];
           setCachedData(newData);
           setDropDownData(newData);
 
@@ -80,7 +79,7 @@ const ComBoGrid: React.FC<ComBoGridProps> = props => {
           if (!isSearch) {
             setCurrentPage(prev => prev + 1);
           }
-        } else if (isSearch) {
+        } else if (isSearch || targetPage === 1) {
           // 搜索无结果时清空
           setCachedData([]);
           setDropDownData([]);
