@@ -458,7 +458,13 @@ const SmProTable: React.FC<ProTableProps> = props => {
             : pagination
         }
         request={handleRequest}
-        search={searchVisible}
+        search={
+          searchVisible
+            ? {
+              labelWidth: "auto"
+            }
+            : false
+        }
         columnsState={{
           value: columnsStateMap,
           onChange: handleOnChangeColumn
