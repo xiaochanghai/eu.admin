@@ -15,7 +15,7 @@
 *└──────────────────────────────────┘
 */
 
-using EU.Core.AuthHelper;
+using EU.Core.AuthHelper; 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System.IdentityModel.Tokens.Jwt;
@@ -164,14 +164,17 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
     public override async Task<bool> Update(Guid Id, object entity)
     {
         var result = await base.Update(Id, entity);
+        var model = ConvertToEntity(entity);
 
         if (result)
         {
+            await Db.Updateable<SmUsers>()
+                .SetColumns(it => new SmUsers() { CompanyId = model.CompanyId, GroupId = model.GroupId })
+                .Where(it => it.ID == Id)
+                .ExecuteCommandAsync();
             var user = await Query(Id);
             if (user != null)
-            {
                 RefreshUserCache(Id, user);
-            }
         }
 
         return result;
