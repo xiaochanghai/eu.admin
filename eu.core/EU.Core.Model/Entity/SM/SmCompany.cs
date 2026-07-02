@@ -25,6 +25,12 @@ public class SmCompany : BasePoco
 {
 
     /// <summary>
+    /// 集团ID
+    /// </summary>
+    [Display(Name = "集团ID"), SugarColumn(IsNullable = true)]
+    public override Guid? GroupId { get; set; }
+
+    /// <summary>
     /// 代码
     /// </summary>
     [Display(Name = "CompanyCode"), Description("代码"), SugarColumn(IsNullable = true, Length = 50)]
