@@ -26,8 +26,9 @@ export const useProTableBatchOps = (moduleCode: string, url: string, customBatch
     selectedRows,
     operationType,
     confirmTitle,
-    apiFunc
-  }: BatchOperationParams) => {
+    apiFunc,
+    onSuccess
+  }: BatchOperationParams & { onSuccess?: () => void }) => {
     confirm({
       title: confirmTitle,
       icon: <Icon name="ExclamationCircleOutlined" />,
@@ -40,6 +41,8 @@ export const useProTableBatchOps = (moduleCode: string, url: string, customBatch
           if (operationType === "delete" && customBatchDelete) {
             const ids = selectedRows.map((item: any) => item.ID);
             await customBatchDelete(ids);
+            action.clearSelected();
+            onSuccess?.();
           } else {
             const { Success, Message } = await apiFunc({
               moduleCode,
@@ -48,6 +51,7 @@ export const useProTableBatchOps = (moduleCode: string, url: string, customBatch
             });
             if (Success) {
               action.clearSelected();
+              onSuccess?.();
               // 删除会减少行数，仅当删空当前页且不在第一页时回退到第一页；
               // 审核/撤销不改变行数，保持原地刷新
               const resetPage = operationType === "delete" && shouldResetToFirstPage(action.pageInfo, selectedRows.length);
@@ -68,13 +72,14 @@ export const useProTableBatchOps = (moduleCode: string, url: string, customBatch
   /**
    * 批量删除确认
    */
-  const batchDeleteConfirm = (action: any, selectedRows: any) =>
+  const batchDeleteConfirm = (action: any, selectedRows: any, onSuccess?: () => void) =>
     handleBatchOperation({
       action,
       selectedRows,
       operationType: "delete",
       confirmTitle: CONFIRM_MESSAGES.DELETE_BATCH,
-      apiFunc: batchDelete
+      apiFunc: batchDelete,
+      onSuccess
     });
 
   /**

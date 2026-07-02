@@ -352,8 +352,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
 
   // 批量操作后清空选中
   const handleBatchDelete = (action: any, rows: any[]) => {
-    batchDeleteConfirm(action, rows);
-    setTimeout(clearSelection, 0);
+    batchDeleteConfirm(action, rows, clearSelection);
   };
 
   const handleBatchAudit = (action: any, rows: any[], keys: any[]) => {
