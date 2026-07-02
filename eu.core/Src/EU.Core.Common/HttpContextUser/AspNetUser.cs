@@ -1,5 +1,8 @@
-﻿using EU.Core.Common.Swagger;
+﻿using EU.Core.Common.Caches;
+using EU.Core.Common.Helper;
+using EU.Core.Common.Swagger;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,12 +13,13 @@ namespace EU.Core.Common.HttpContextUser;
 public class AspNetUser : IUser
 {
     private readonly IHttpContextAccessor _accessor;
-    private readonly ILogger<AspNetUser> _logger;
-
+    //private readonly ILogger<AspNetUser> _logger;
+    private static RedisCacheService _redis;
+    private static RedisCacheService Redis => _redis ??= RedisCacheService.Create(4);
     public AspNetUser(IHttpContextAccessor accessor, ILogger<AspNetUser> logger)
     {
         _accessor = accessor;
-        _logger = logger;
+        //_logger = logger;
     }
 
     public string Name => GetName();
@@ -84,6 +88,51 @@ public class AspNetUser : IUser
             return platform;
 
         return null;
+    }
+
+    private SmUsers _userInfo;
+    public SmUsers UserInfo
+    {
+        get
+        {
+            if (_userInfo != null)
+                return _userInfo;
+
+            _userInfo = GetUserInfo(ID);
+            return _userInfo;
+        }
+    }
+
+    public SmUsers GetUserInfo(Guid? userId)
+    {
+        if (userId is null || userId == Guid.Empty)
+            return new SmUsers();
+
+        var userInfo = Redis.Get<SmUsers>(userId);
+        if (userInfo == null)
+        {
+            string sql = $"SELECT A.* FROM SmUsers A WHERE A.IsDeleted='false' AND ID='{userId}'";
+            userInfo = DBHelper.QueryFirst<SmUsers>(sql);
+            if (userInfo != null)
+                Redis.AddObject(userId, userInfo, TimeSpan.FromHours(1));
+        }
+        return userInfo ?? new SmUsers();
+    }
+
+    /// <summary>
+    /// 公司ID
+    /// </summary>
+    public Guid? CompanyId
+    {
+        get { return UserInfo.CompanyId ?? Utility.GetCompanyGuidId(); }
+    }
+
+    /// <summary>
+    /// 集团ID
+    /// </summary>
+    public Guid? GroupId
+    {
+        get { return UserInfo.GroupId ?? Utility.GetGroupGuidId(); }
     }
 
     public List<string> GetUserInfoFromToken(string ClaimType)
