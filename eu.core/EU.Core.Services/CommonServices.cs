@@ -497,8 +497,8 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         dict.Add("CreatedTime", Utility.GetSysDate());
         dict.Add("CreatedBy", App.User.ID);
         dict.Add("ModificationNum", 0);
-        dict.Add("GroupId", Utility.GetGroupId());
-        dict.Add("CompanyId", Utility.GetCompanyId());
+        dict.Add("GroupId", App.User?.GroupId);
+        dict.Add("CompanyId", App.User?.CompanyId);
         if (!dict.ContainsKey("IsActive"))
             dict.Add("IsActive", true);
         dict.Add("IsDeleted", false);

@@ -15,9 +15,6 @@
 *└──────────────────────────────────┘
 */
 
-using EU.Core.Common.Helper;
-using EU.Core.Common.UserManager;
-using MathNet.Numerics.Distributions;
 using Newtonsoft.Json;
 
 namespace EU.Core.Services;
@@ -172,7 +169,7 @@ public class SmRoleDataScopeServices : BaseServices<SmRoleDataScope, SmRoleDataS
                     Action = "Update",
                     OldValue = JsonConvert.SerializeObject(oldValue.Data),
                     NewValue = JsonConvert.SerializeObject(companyIds),
-                    OperatedBy = UserContext.Current.User_Id,
+                    OperatedBy = App.User?.ID,
                     OperatedTime = DateTime.Now,
                     IpAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current),
                     UserAgent = HttpUseContext.Current?.Request?.Headers["User-Agent"].ToString(),
