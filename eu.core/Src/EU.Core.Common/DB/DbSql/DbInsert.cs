@@ -1,5 +1,4 @@
 ﻿using EU.Core.Common.Helper;
-using EU.Core.Common.UserManager;
 namespace EU.Core.Common;
 
 /// <summary>
@@ -272,8 +271,8 @@ public class DbInsert
 
         //create_date 
         Values("CreatedTime", Utility.GetSysDate().ConvertToSecondString());
-        Values("GroupId", UserContext.Current.GroupId);
-        Values("CompanyId", UserContext.Current.CompanyId);
+        Values("GroupId", App.User?.GroupId);
+        Values("CompanyId", App.User?.CompanyId);
 
         //create_program
         //Values("CREATED_PROGRAM", createProgram);

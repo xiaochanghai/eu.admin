@@ -1,5 +1,4 @@
 ﻿using EU.Core.Common.Helper;
-using EU.Core.Common.UserManager;
 
 namespace EU.Core.Common;
 
@@ -472,7 +471,7 @@ public class DbUpdate
         //}
         //catch { } 
 
-        var lastUpdBy = UserContext.Current.User_Id;
+        var lastUpdBy = App.User?.ID;
         if (lastUpdBy != null)
             Set("UpdateBy", lastUpdBy);
 
