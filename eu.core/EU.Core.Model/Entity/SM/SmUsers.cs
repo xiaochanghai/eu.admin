@@ -23,7 +23,17 @@ namespace EU.Core.Model.Entity;
 [SugarTable("SmUsers", "系统用户"), Entity(TableCnName = "系统用户", TableName = "SmUsers")]
 public class SmUsers : BasePoco
 {
+    /// <summary>
+    /// 集团ID
+    /// </summary>
+    [Display(Name = "集团ID"), SugarColumn(IsNullable = true)]
+    public override Guid? GroupId { get; set; }
 
+    /// <summary>
+    /// 公司ID
+    /// </summary>
+    [Display(Name = "公司ID"), SugarColumn(IsNullable = true)]
+    public override Guid? CompanyId { get; set; }
     /// <summary>
     /// 用户代码
     /// </summary>
