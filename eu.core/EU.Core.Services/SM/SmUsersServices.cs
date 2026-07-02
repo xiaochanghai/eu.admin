@@ -168,10 +168,10 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         if (result)
         {
-            await Db.Updateable<SmUsers>()
-                .SetColumns(it => new SmUsers() { CompanyId = model.CompanyId, GroupId = model.GroupId })
-                .Where(it => it.ID == Id)
-                .ExecuteCommandAsync();
+            //await Db.Updateable<SmUsers>()
+            //    .SetColumns(it => new SmUsers() { CompanyId = model.CompanyId, GroupId = model.GroupId })
+            //    .Where(it => it.ID == Id)
+            //    .ExecuteCommandAsync();
             var user = await Query(Id);
             if (user != null)
                 RefreshUserCache(Id, user);
