@@ -44,13 +44,13 @@ public class BaseEntity : RootEntityTkey<Guid>, IDeleteFilter
     /// 集团ID
     /// </summary>
     [Display(Name = "集团ID"), SugarColumn(IsOnlyIgnoreUpdate = true, IsNullable = true)]
-    public Guid? GroupId { get; set; }
+    public virtual Guid? GroupId { get; set; }
 
     /// <summary>
     /// 公司ID
     /// </summary>
     [Display(Name = "公司ID"), SugarColumn(IsOnlyIgnoreUpdate = true, IsNullable = true)]
-    public Guid? CompanyId { get; set; }
+    public virtual Guid? CompanyId { get; set; }
 
     /// <summary>
     /// 审核状态
