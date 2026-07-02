@@ -211,7 +211,7 @@ public class LogLock : IDisposable
     {
         try
         {
-            var ip = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+            var ip = HttpContextExtension.GetUserIp(App.HttpContext);
             var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
 
             if (requestInfo?.RequestData == null)
@@ -238,7 +238,7 @@ public class LogLock : IDisposable
 
             var dbInsert = new DbInsert("SmApiLog")
             {
-                // Avoid resolving scoped services (App.User/UserContext) in a background task.
+                // Avoid resolving scoped services in a background task.
                 IsInitDefaultValue = false
             };
             if (Guid.TryParse(requestInfo.User, out var userId))

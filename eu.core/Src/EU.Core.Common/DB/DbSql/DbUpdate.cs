@@ -462,15 +462,6 @@ public class DbUpdate
     private void InitDefaultValues()
     {
         string tempSql = sql;
-        //try
-        //{
-        //    if (UserContext.Current != null)
-        //    {
-        //        lastUpdBy = UserContext.Current.User_Id;
-        //    }
-        //}
-        //catch { } 
-
         var lastUpdBy = App.User?.ID;
         if (lastUpdBy != null)
             Set("UpdateBy", lastUpdBy);

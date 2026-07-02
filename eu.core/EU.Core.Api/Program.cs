@@ -195,9 +195,6 @@ app.UseRouting();
 
 if (builder.Configuration.GetValue<bool>("AppSettings:UseLoadTest"))
     app.UseMiddleware<ByPassAuthMiddleware>();
-//配置HttpContext
-app.UseStaticHttpContext();
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiniProfilerMiddleware();

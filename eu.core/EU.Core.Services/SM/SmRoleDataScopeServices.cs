@@ -171,8 +171,8 @@ public class SmRoleDataScopeServices : BaseServices<SmRoleDataScope, SmRoleDataS
                     NewValue = JsonConvert.SerializeObject(companyIds),
                     OperatedBy = App.User?.ID,
                     OperatedTime = DateTime.Now,
-                    IpAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current),
-                    UserAgent = HttpUseContext.Current?.Request?.Headers["User-Agent"].ToString(),
+                    IpAddress = HttpContextExtension.GetUserIp(App.HttpContext),
+                    UserAgent = App.HttpContext?.Request?.Headers["User-Agent"].ToString(),
                     IsSuccess = true,
                     Reason = "更新数据权限"
                 });

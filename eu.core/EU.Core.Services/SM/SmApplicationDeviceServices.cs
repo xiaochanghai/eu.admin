@@ -45,7 +45,7 @@ public class SmApplicationDeviceServices : BaseServices<SmApplicationDevice, SmA
         if (device == null || device.UUID.IsNullOrEmpty())
             return Task.FromResult(Failed("设备信息不能为空"));
 
-        var ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+        var ipAddress = HttpContextExtension.GetUserIp(App.HttpContext);
 
         // 在后台线程异步执行，不阻塞主线程
         _ = Task.Run(async () =>

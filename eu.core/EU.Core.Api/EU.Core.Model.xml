@@ -12959,6 +12959,16 @@
             系统用户 (Model)
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmUsers.GroupId">
+            <summary>
+            集团ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmUsers.CompanyId">
+            <summary>
+            公司ID
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Entity.SmUsers.UserAccount">
             <summary>
             用户代码

@@ -965,7 +965,6 @@ public static class Utility
         {
             DbInsert di = new("SmOperateLog", "RecordOperateLog");
             di.Values("UserId", userId);
-            //di.Values("OperateUser", UserContext.Current.UserName);
             di.Values("OperateProgram", programName);
             di.Values("ModuleCode", moduleCode);
             di.Values("TableCode", tableCode);
@@ -1004,15 +1003,15 @@ public static class Utility
             if (string.IsNullOrEmpty(companyId))
                 companyId = GetCompanyId();
 
-            ipAddress = HttpContextExtension.GetUserIp(HttpUseContext.Current);
+            ipAddress = HttpContextExtension.GetUserIp(App.HttpContext);
 
             #region 求IP地址归属地
             // 定义解析结果信息对象
             ClientInfo clientInfo = null;
 
             // 尝试从头部里面获取User-Agent字符串
-            if (HttpUseContext.Current != null)
-                if (HttpUseContext.Current.Request.Headers.TryGetValue("User-Agent", out var requestUserAgent) && !string.IsNullOrEmpty(requestUserAgent))
+            if (App.HttpContext != null)
+                if (App.HttpContext.Request.Headers.TryGetValue("User-Agent", out var requestUserAgent) && !string.IsNullOrEmpty(requestUserAgent))
                 {
                     // 获取UaParser实例
                     var uaParser = Parser.GetDefault();
