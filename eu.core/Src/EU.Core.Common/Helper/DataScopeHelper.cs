@@ -139,7 +139,7 @@ public class DataScopeHelper
     public static void ClearCache(Guid userId)
     {
         var cacheKey = $"UserDataScope_{userId}";
-        RedisCacheService.Create(4).Remove(cacheKey);
+        redis.Remove(cacheKey);
     }
 
     /// <summary>
@@ -147,6 +147,18 @@ public class DataScopeHelper
     /// </summary>
     /// <param name="userIds">用户ID列表</param>
     public static void ClearCacheBatch(List<Guid> userIds)
+    {
+        foreach (var userId in userIds)
+        {
+            ClearCache(userId);
+        }
+    }
+
+    /// <summary>
+    /// 批量清除用户数据范围缓存
+    /// </summary>
+    /// <param name="userIds">用户ID列表</param>
+    public static void Clear(List<Guid> userIds)
     {
         foreach (var userId in userIds)
         {

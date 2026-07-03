@@ -93,7 +93,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         if (sqlDefaultCondition.IsNotEmptyOrNull() && sqlDefaultCondition.Contains("[USER_ID]"))
             sqlDefaultCondition = sqlDefaultCondition.Replace("[USER_ID]", userId);
 
-        sqlDefaultCondition = await AppendCompanyScopeConditionAsync(sqlDefaultCondition, module.IsRoleDataScope == true, "A.CompanyId");
+        var userType = App.User?.UserInfo?.UserType;
+        if (userType != "Admin")
+            sqlDefaultCondition = await AppendCompanyScopeConditionAsync(sqlDefaultCondition, module.IsRoleDataScope == true, "A.CompanyId");
 
         // 设置网格查询参数
         grid.FullSql = moduleSql.GetFullSql();
@@ -754,7 +756,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             var escapedParentId = parentId.Replace("'", "''");
             sql += $" AND {parentColumn} = '{escapedParentId}'";
         }
-        sql = await AppendCompanyScopeConditionAsync(sql, entity.IsRoleDataScope == true, "CompanyId");
+        var userType = App.User?.UserInfo?.UserType;
+        if (userType != "Admin")
+            sql = await AppendCompanyScopeConditionAsync(sql, entity.IsRoleDataScope == true, "CompanyId");
 
         sql = $"SELECT * FROM ({sql}) A";
 
