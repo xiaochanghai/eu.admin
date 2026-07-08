@@ -131,10 +131,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var lstColumns = dic.Keys.Where(x => x != nameof(BasePoco.ID) && x != "Id").ToList();
 
         var moduleCode = model.GetModuleCode();
-        var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
-        var moduleColumns = moduleColumnInfo.GetModuleSqlFormColumn();
-        var formColumns = moduleColumns.Select(x => x.DataIndex).ToList();
-        lstColumns.AddRange(formColumns);
+        if (moduleCode.IsNotEmptyOrNull())
+        {
+            var moduleColumnInfo = new ModuleSqlColumn(moduleCode);
+            var moduleColumns = moduleColumnInfo.GetModuleSqlFormColumn();
+            var formColumns = moduleColumns.Select(x => x.DataIndex).ToList();
+            lstColumns.AddRange(formColumns);
+        }
         lstColumns = lstColumns.Distinct().ToList();
 
         await CheckForm(model, OperateType.Add);
