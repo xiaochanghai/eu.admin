@@ -9,15 +9,16 @@ import user from "./modules/user";
 import module from "./modules/module";
 import workflow from "./modules/workflow";
 import formDesign from "./modules/formDesign";
+import mobileEditor from "./modules/mobileEditor";
 
 // create reducer
-const reducer = combineReducers({ global, tabs, auth, user, module, workflow, formDesign });
+const reducer = combineReducers({ global, tabs, auth, user, module, workflow, formDesign, mobileEditor });
 
 // redux persist
 const persistConfig = {
   key: "redux-state",
   storage: storage,
-  blacklist: ["auth", "module", "workflow", "formDesign"]
+  blacklist: ["auth", "module", "workflow", "formDesign", "mobileEditor"]
 };
 const persistReducerConfig = persistReducer(persistConfig, reducer);
 
