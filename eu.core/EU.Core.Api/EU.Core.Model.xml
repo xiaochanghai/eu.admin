@@ -4997,6 +4997,56 @@
             标签变体
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.SmMobilePageConfigBase">
+            <summary>
+            移动端页面配置 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.PageCode">
+            <summary>
+            页面编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.PageName">
+            <summary>
+            页面名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.AppScope">
+            <summary>
+            应用范围
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.PageType">
+            <summary>
+            页面类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.Title">
+            <summary>
+            页面标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.Version">
+            <summary>
+            配置版本号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.ConfigJson">
+            <summary>
+            页面配置JSON
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.IsPublished">
+            <summary>
+            是否已发布
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.Remark">
+            <summary>
+            备注
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleColumnBase">
             <summary>
             模块列 (Dto.Base)
@@ -6925,6 +6975,11 @@
         <member name="T:EU.Core.Model.Edit.EditSmLovDetailInput">
             <summary>
             SmLovDetail (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditSmMobilePageConfigInput">
+            <summary>
+            SmMobilePageConfig (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmModuleColumnInput">
@@ -10567,6 +10622,11 @@
             组织 (Model)
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmCompany.GroupId">
+            <summary>
+            集团ID
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Entity.SmCompany.CompanyCode">
             <summary>
             代码
@@ -11995,6 +12055,56 @@
         <member name="P:EU.Core.Model.Entity.SmLovDetail.TagVariant">
             <summary>
             标签变体
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.SmMobilePageConfig">
+            <summary>
+            移动端页面配置 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.PageCode">
+            <summary>
+            页面编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.PageName">
+            <summary>
+            页面名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.AppScope">
+            <summary>
+            应用范围
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.PageType">
+            <summary>
+            页面类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.Title">
+            <summary>
+            页面标题
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.Version">
+            <summary>
+            配置版本号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.ConfigJson">
+            <summary>
+            页面配置JSON
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.IsPublished">
+            <summary>
+            是否已发布
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.Remark">
+            <summary>
+            备注
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleColumn">
@@ -14100,6 +14210,11 @@
             SmLovDetail(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.SmMobilePageConfigDto">
+            <summary>
+            SmMobilePageConfig(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumnDto">
             <summary>
             模块列(Dto.View)
@@ -14687,6 +14802,11 @@
         <member name="T:EU.Core.Model.Insert.InsertSmLovDetailInput">
             <summary>
             SmLovDetail (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertSmMobilePageConfigInput">
+            <summary>
+            SmMobilePageConfig (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmModuleColumnInput">

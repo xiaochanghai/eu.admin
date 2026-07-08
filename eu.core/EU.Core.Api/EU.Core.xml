@@ -1630,6 +1630,18 @@
             SmLovDetail(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.SmMobilePageConfigController">
+            <summary>
+            移动端页面配置(Controller)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmMobilePageConfigController.Publish(System.Guid)">
+            <summary>
+            发布页面配置
+            </summary>
+            <param name="id">配置ID</param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmModuleColumnController">
             <summary>
             SmModuleColumn(Controller)
