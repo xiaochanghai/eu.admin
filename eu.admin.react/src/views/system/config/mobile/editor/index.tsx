@@ -49,7 +49,6 @@ export default function MobileEditor() {
     if (!configId) return;
     setPublishing(true);
     try {
-      // 先保存再发布
       const configJson = JSON.stringify({
         type: state.type,
         props: state.props,
@@ -74,56 +73,82 @@ export default function MobileEditor() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-screen flex flex-col bg-gray-50">
+      <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f0f2f5" }}>
         {/* 顶部工具栏 */}
-        <header className="h-14 px-4 bg-white border-b border-gray-200 flex-shrink-0 flex justify-between items-center">
+        <header style={{
+          height: 56,
+          padding: "0 20px",
+          background: "#fff",
+          borderBottom: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexShrink: 0,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+        }}>
           {/* 左侧：返回 + 标题 */}
-          <div className="flex items-center gap-3">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Tooltip title="返回列表">
               <Button
                 type="text"
-                icon={<ArrowLeftOutlined />}
+                icon={<ArrowLeftOutlined style={{ fontSize: 18 }} />}
                 onClick={() => navigate("/system/config/mobile")}
+                style={{ borderRadius: 8 }}
               />
             </Tooltip>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <div style={{ width: 1, height: 24, background: "#e5e7eb" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                   <line x1="12" y1="18" x2="12.01" y2="18" />
                 </svg>
               </div>
-              <span className="text-base font-medium text-gray-800">{pageTitle}</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827", lineHeight: 1.2 }}>{pageTitle}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>移动端列表页配置</div>
+              </div>
             </div>
           </div>
 
           {/* 中间：操作按钮 */}
-          <Space size="small">
+          <Space size={8}>
             <SaveBtn configId={configId} />
             <JsonPreviewBtn />
-            <Tooltip title="发布配置">
-              <Button
-                icon={<SendOutlined />}
-                loading={publishing}
-                onClick={handlePublish}
-              >
-                发布
-              </Button>
-            </Tooltip>
+            <Button
+              icon={<SendOutlined />}
+              loading={publishing}
+              onClick={handlePublish}
+              style={{ borderRadius: 6, borderColor: "#059669", color: "#059669" }}
+            >
+              发布
+            </Button>
             <Divider orientation="vertical" style={{ height: 24, margin: "0 4px" }} />
             <Tooltip title="清空画布">
-              <Button icon={<DeleteOutlined />} danger onClick={handleClear}>
-                清空
-              </Button>
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                type="text"
+                onClick={handleClear}
+                style={{ borderRadius: 6 }}
+              />
             </Tooltip>
           </Space>
 
-          {/* 右侧占位 */}
-          <div style={{ width: 120 }} />
+          {/* 右侧占位保持居中 */}
+          <div style={{ width: 200 }} />
         </header>
 
         {/* 主内容区 */}
-        <main className="flex-1 overflow-hidden flex">
+        <main style={{ flex: 1, overflow: "hidden", display: "flex" }}>
           <Left />
           <Canvas />
           <Right />

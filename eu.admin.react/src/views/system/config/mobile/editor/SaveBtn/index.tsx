@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, message } from "antd";
-import { SaveOutlined } from "@ant-design/icons";
+import { SaveOutlined, CheckOutlined } from "@ant-design/icons";
 import { useSelector } from "@/redux";
 import { RootState } from "@/redux";
 import { updateMobilePage } from "@/api/modules/mobileConfig";
@@ -12,6 +12,7 @@ interface Props {
 export default function SaveBtn({ configId }: Props) {
   const state = useSelector((s: RootState) => s.mobileEditor);
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     if (!configId) {
@@ -28,6 +29,8 @@ export default function SaveBtn({ configId }: Props) {
       const res = await updateMobilePage(configId, { ConfigJson: configJson });
       if (res?.Success) {
         message.success("保存成功");
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
       } else {
         message.error(res?.Message || "保存失败");
       }
@@ -40,8 +43,18 @@ export default function SaveBtn({ configId }: Props) {
   };
 
   return (
-    <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
-      保存
+    <Button
+      type="primary"
+      icon={saved ? <CheckOutlined /> : <SaveOutlined />}
+      loading={loading}
+      onClick={handleSave}
+      style={{
+        borderRadius: 6,
+        background: saved ? "#059669" : undefined,
+        borderColor: saved ? "#059669" : undefined
+      }}
+    >
+      {saved ? "已保存" : "保存"}
     </Button>
   );
 }

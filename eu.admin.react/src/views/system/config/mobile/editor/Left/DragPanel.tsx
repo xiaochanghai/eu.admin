@@ -7,7 +7,11 @@ interface Props {
 
 export default function DragPanel({ data }: Props) {
   return (
-    <div className="space-y-2">
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8
+    }}>
       {data.map((item, index) => (
         <DragItem key={index} data={item} />
       ))}

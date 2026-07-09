@@ -20,6 +20,46 @@ interface DragData {
   dragParentId: string;
 }
 
+/** 组件显示名映射 */
+const typeLabels: Record<string, string> = {
+  searchBar: "搜索框",
+  tabs: "筛选标签",
+  statRow: "统计条",
+  list: "列表",
+  emptyState: "空状态",
+  floatingAction: "悬浮按钮",
+  text: "文本",
+  image: "图片",
+  statusTag: "状态标签",
+  metric: "指标",
+  iconText: "图标文本",
+  divider: "分割线",
+  spacer: "间距",
+  actionButton: "操作按钮",
+  row: "横向布局",
+  column: "纵向布局"
+};
+
+/** 组件类型颜色 */
+const typeColors: Record<string, string> = {
+  searchBar: "#0ea5e9",
+  tabs: "#8b5cf6",
+  statRow: "#f59e0b",
+  list: "#2563eb",
+  emptyState: "#6b7280",
+  floatingAction: "#10b981",
+  text: "#6366f1",
+  image: "#ec4899",
+  statusTag: "#14b8a6",
+  metric: "#f97316",
+  iconText: "#06b6d4",
+  divider: "#94a3b8",
+  spacer: "#94a3b8",
+  actionButton: "#3b82f6",
+  row: "#a855f7",
+  column: "#a855f7"
+};
+
 export default function Item({ data, parentId, index }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [positionDown, setPosition] = useState(true);
@@ -107,6 +147,7 @@ export default function Item({ data, parentId, index }: Props) {
   };
 
   const isFocused = state.focusId === data.id;
+  const accentColor = typeColors[data.type] || "#2563eb";
 
   const content = (
     <CurrentTag {...data.props}>
@@ -122,35 +163,71 @@ export default function Item({ data, parentId, index }: Props) {
       ref={ref}
       onClick={handleFocus}
       onDoubleClick={handleDoubleClick}
-      className={cl(
-        "relative border border-dashed rounded transition-colors",
-        {
-          "opacity-30": isDragging,
-          "border-blue-500 bg-blue-50/30": isFocused,
-          "border-gray-300 hover:border-blue-300": !isFocused
-        }
-      )}
-      style={{ margin: "2px 0" }}
+      className={cl("transition-all duration-150", {
+        "opacity-30": isDragging
+      })}
+      style={{
+        position: "relative",
+        margin: "1px 0",
+        borderLeft: isFocused ? `3px solid ${accentColor}` : "3px solid transparent",
+        background: isFocused ? `${accentColor}08` : "transparent",
+        borderRadius: isFocused ? "0 6px 6px 0" : 0
+      }}
     >
       {/* 选中时的标签和操作 */}
       {isFocused && (
-        <div className="-top-5 left-0 right-0 flex justify-between items-center z-10">
-          <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">
-            {data.type}
-            {data.type === "list" && " (双击编辑Item)"}
+        <div style={{
+          position: "absolute",
+          top: -1,
+          right: 4,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          zIndex: 10
+        }}>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 600,
+            color: accentColor,
+            background: `${accentColor}15`,
+            padding: "1px 6px",
+            borderRadius: 4,
+            border: `1px solid ${accentColor}30`
+          }}>
+            {typeLabels[data.type] || data.type}
+            {data.type === "list" && " · 双击编辑Item"}
           </span>
           <span
             onClick={handleRemove}
-            className="px-1.5 py-0.5 bg-red-500 rounded cursor-pointer text-xs hover:bg-red-600"
+            style={{
+              width: 18,
+              height: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#ef4444",
+              color: "#fff",
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 10,
+              lineHeight: 1,
+              transition: "background 0.15s"
+            }}
+            onMouseEnter={e => { (e.target as HTMLElement).style.background = "#dc2626"; }}
+            onMouseLeave={e => { (e.target as HTMLElement).style.background = "#ef4444"; }}
           >
             ✕
           </span>
         </div>
       )}
       {/* 拖拽指示线 */}
-      {isOver && canDrop && !positionDown && <div className="border-t-2 border-blue-500" />}
+      {isOver && canDrop && !positionDown && (
+        <div style={{ height: 2, background: "#3b82f6", borderRadius: 1, margin: "0 8px" }} />
+      )}
       {content}
-      {isOver && canDrop && positionDown && <div className="border-b-2 border-blue-500" />}
+      {isOver && canDrop && positionDown && (
+        <div style={{ height: 2, background: "#3b82f6", borderRadius: 1, margin: "0 8px" }} />
+      )}
     </div>
   );
 }
