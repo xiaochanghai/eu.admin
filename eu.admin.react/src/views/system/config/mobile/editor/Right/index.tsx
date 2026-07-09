@@ -8,6 +8,7 @@ import { SettingOutlined } from "@ant-design/icons";
 
 /** 组件图标映射 */
 const typeIcons: Record<string, string> = {
+  page: "P",
   searchBar: "🔍",
   tabs: "📑",
   statRow: "📊",
@@ -28,6 +29,7 @@ const typeIcons: Record<string, string> = {
 
 /** 组件中文名 */
 const typeLabels: Record<string, string> = {
+  page: "页面配置",
   searchBar: "搜索框",
   tabs: "筛选标签",
   statRow: "统计条",
@@ -64,6 +66,11 @@ export default function Right() {
     dispatch(updateTree({ key, value }));
   };
 
+  const getValueByPath = (source: Record<string, any> | undefined, path: string) => {
+    if (!source) return undefined;
+    return path.split(".").reduce<any>((current, key) => current?.[key], source);
+  };
+
   const renderField = (item: MobileEditField) => {
     const { key, name, type, ...rest } = item;
     const fieldType = type as EditFieldType;
@@ -82,20 +89,20 @@ export default function Right() {
         </div>
         {fieldType === "OptionEditor" ? (
           <Field
-            value={focusComponent?.props[key]}
+            value={getValueByPath(focusComponent?.props, key)}
             onChange={(val: any) => handleChange(val, key)}
           />
         ) : fieldType === "Select" ? (
           <Field
             style={{ width: "100%" }}
             options={rest.options}
-            value={focusComponent?.props[key]}
+            value={getValueByPath(focusComponent?.props, key)}
             onChange={(val: any) => handleChange(val, key)}
           />
         ) : (
           <Field
             {...rest}
-            value={focusComponent?.props[key]}
+            value={getValueByPath(focusComponent?.props, key)}
             onChange={(e: any) => {
               const val = e?.target ? e.target.value : e;
               handleChange(val, key);

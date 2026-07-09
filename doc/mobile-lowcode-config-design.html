@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>移动端低代码页面配置方案</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-2: #f9fafb;
+      --text: #111827;
+      --muted: #6b7280;
+      --soft: #9ca3af;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --neutral: #6b7280;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      padding: 28px 22px;
+      overflow: auto;
+    }
+
+    .brand {
+      margin-bottom: 32px;
+    }
+
+    .brand .label {
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      margin: 6px 0 0;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    nav a {
+      display: block;
+      padding: 9px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    main {
+      padding: 40px;
+    }
+
+    section {
+      max-width: 1180px;
+      margin: 0 auto 34px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
+      gap: 28px;
+      align-items: stretch;
+      min-height: 520px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 46px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 42px;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .hero-copy p {
+      max-width: 620px;
+      font-size: 17px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .visual {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0f172a;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .builder {
+      display: grid;
+      grid-template-columns: 0.86fr 1.25fr 0.95fr;
+      height: 100%;
+      min-height: 520px;
+    }
+
+    .builder-panel {
+      padding: 20px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e5e7eb;
+    }
+
+    .builder-panel:last-child {
+      border-right: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .builder-title {
+      margin-bottom: 16px;
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .component-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #d1d5db;
+      font-size: 13px;
+    }
+
+    .phone-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: linear-gradient(180deg, #111827, #020617);
+    }
+
+    .phone {
+      width: 245px;
+      min-height: 455px;
+      border: 8px solid #020617;
+      border-radius: 28px;
+      background: #f9fafb;
+      overflow: hidden;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+    }
+
+    .phone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 15px 10px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .phone-search {
+      margin: 12px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: #eef2f7;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+
+    .phone-tabs {
+      display: flex;
+      gap: 7px;
+      padding: 0 12px 10px;
+      overflow: hidden;
+    }
+
+    .phone-tab {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #e0ecff;
+      color: #2563eb;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .phone-card {
+      margin: 0 12px 12px;
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    .status-line {
+      height: 3px;
+      background: var(--success);
+    }
+
+    .phone-card-body {
+      padding: 12px;
+    }
+
+    .phone-card-top {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #e5e7eb;
+    }
+
+    .phone-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .phone-sub {
+      margin-top: 2px;
+      color: #6b7280;
+      font-size: 11px;
+    }
+
+    .phone-status {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #059669;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .phone-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #eef2f7;
+      text-align: center;
+    }
+
+    .metric strong {
+      display: block;
+      color: #111827;
+      font-size: 14px;
+    }
+
+    .metric span {
+      color: #9ca3af;
+      font-size: 10px;
+    }
+
+    .prop-row {
+      margin-bottom: 12px;
+    }
+
+    .prop-row label {
+      display: block;
+      margin-bottom: 5px;
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    .input-mock {
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e5e7eb;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .panel.alt {
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .panel.alt p,
+    .panel.alt li {
+      color: #d1d5db;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .flow-step {
+      position: relative;
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .flow-step b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .table th,
+    .table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    .table th {
+      background: var(--surface-2);
+      color: #374151;
+      font-weight: 700;
+    }
+
+    .table td {
+      color: var(--muted);
+    }
+
+    .code {
+      margin: 0;
+      padding: 18px;
+      border-radius: var(--radius);
+      background: #0f172a;
+      color: #dbeafe;
+      overflow: auto;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .tone-list {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tone {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      padding: 13px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 7px;
+      border-radius: 999px;
+      vertical-align: -1px;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 19px;
+      color: var(--muted);
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .footer {
+      margin: 44px auto 0;
+      max-width: 1180px;
+      color: var(--soft);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+        height: auto;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      main {
+        padding: 24px;
+      }
+
+      .hero,
+      .grid-2,
+      .grid-3,
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .builder {
+        grid-template-columns: 1fr;
+      }
+
+      .builder-panel {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .tone-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <div class="label">Mobile Low-code</div>
+        <h1>移动端页面配置方案</h1>
+      </div>
+      <nav>
+        <a href="#goal">目标定位</a>
+        <a href="#builder">拖拽配置器</a>
+        <a href="#runtime">运行时架构</a>
+        <a href="#reference-editor">编辑器参考</a>
+        <a href="#schema">配置模型</a>
+        <a href="#templates">组件模板</a>
+        <a href="#custom-item">Item 自定义</a>
+        <a href="#list-form-pages">列表与表单</a>
+        <a href="#visual">视觉规范</a>
+        <a href="#api">接口设计</a>
+        <a href="#roadmap">落地步骤</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="hero" id="goal">
+        <div class="hero-copy">
+          <p class="eyebrow">方案建议</p>
+          <h2>做模板化低代码，而不是完全自由画布</h2>
+          <p>
+            后端保存页面配置，React Native 只渲染白名单组件。通过拖拽排序、字段绑定、状态映射和自定义 Item 布局，让设备、更新记录、客户、工单等列表都能复用同一套移动端配置能力。
+          </p>
+          <div class="badges">
+            <span class="badge">通用页面 DSL</span>
+            <span class="badge">拖拽组件编排</span>
+            <span class="badge">模板化 Item</span>
+            <span class="badge">字段绑定</span>
+            <span class="badge">RN 安全渲染</span>
+          </div>
+        </div>
+
+        <div class="visual" id="builder">
+          <div class="builder">
+            <div class="builder-panel">
+              <div class="builder-title">组件库</div>
+              <div class="component-chip">搜索框 <span>SearchBar</span></div>
+              <div class="component-chip">筛选 Tabs <span>Tabs</span></div>
+              <div class="component-chip">统计条 <span>StatRow</span></div>
+              <div class="component-chip">列表 <span>List</span></div>
+              <div class="component-chip">空状态 <span>Empty</span></div>
+              <div class="component-chip">悬浮按钮 <span>FAB</span></div>
+            </div>
+            <div class="phone-wrap">
+              <div class="phone">
+                <div class="phone-header">
+                  <span>设备</span>
+                  <span>+</span>
+                </div>
+                <div class="phone-search">搜索名称、编号</div>
+                <div class="phone-tabs">
+                  <span class="phone-tab">全部</span>
+                  <span class="phone-tab">运行中</span>
+                  <span class="phone-tab">故障</span>
+                </div>
+                <div class="phone-card">
+                  <div class="status-line"></div>
+                  <div class="phone-card-body">
+                    <div class="phone-card-top">
+                      <div class="thumb"></div>
+                      <div>
+                        <div class="phone-title">E4000060015</div>
+                        <div class="phone-sub">主控设备 / 上海浦东</div>
+                      </div>
+                      <div class="phone-status">运行中</div>
+                    </div>
+                    <div class="phone-metrics">
+                      <div class="metric"><strong>98%</strong><span>健康度</span></div>
+                      <div class="metric"><strong>2次</strong><span>维修</span></div>
+                      <div class="metric"><strong>1.0.5</strong><span>版本</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="phone-card">
+                  <div class="status-line" style="background: var(--warning)"></div>
+                  <div class="phone-card-body">
+                    <div class="phone-card-top">
+                      <div class="thumb"></div>
+                      <div>
+                        <div class="phone-title">更新记录</div>
+                        <div class="phone-sub">MainSoftware / rejected</div>
+                      </div>
+                      <div class="phone-status" style="background:#fffbeb;color:#d97706">待处理</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="builder-panel">
+              <div class="builder-title">属性面板</div>
+              <div class="prop-row">
+                <label>数据源</label>
+                <div class="input-mock">EM_EQUIPMENT_INFO_MNG</div>
+              </div>
+              <div class="prop-row">
+                <label>标题字段</label>
+                <div class="input-mock">MachineName</div>
+              </div>
+              <div class="prop-row">
+                <label>状态字段</label>
+                <div class="input-mock">Status</div>
+              </div>
+              <div class="prop-row">
+                <label>点击跳转</label>
+                <div class="input-mock">/equipment/{ID}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="grid-3">
+          <div class="panel">
+            <h3>为什么不做自由画布</h3>
+            <p>自由拖拽会带来移动端适配、遮挡、性能和配置错误问题。管理类 App 更适合稳定模板。</p>
+          </div>
+          <div class="panel">
+            <h3>第一版边界</h3>
+            <p>先支持列表页，包含搜索、筛选、统计、列表、空状态、点击跳转。详情页和表单页后续扩展。</p>
+          </div>
+          <div class="panel">
+            <h3>RN 安全策略</h3>
+            <p>RN 端只渲染白名单组件，不执行动态脚本。配置错误时降级为空状态或默认模板。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="runtime">
+        <div class="panel">
+          <p class="eyebrow">Runtime Architecture</p>
+          <h3>运行时架构</h3>
+          <p>后台配置页面结构，API 输出 JSON，RN 拉取配置并按组件白名单渲染。数据仍走现有接口或自定义 API。</p>
+          <div class="flow">
+            <div class="flow-step"><b>配置器</b><span>拖拽组件、绑定字段、设置状态颜色</span></div>
+            <div class="flow-step"><b>配置存储</b><span>保存 PageConfig JSON 和版本号</span></div>
+            <div class="flow-step"><b>配置接口</b><span>RN 按 PageCode 读取页面配置</span></div>
+            <div class="flow-step"><b>数据接口</b><span>QueryByFilter 或自定义 API 获取数据</span></div>
+            <div class="flow-step"><b>RN 渲染</b><span>按模板渲染列表和操作</span></div>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="reference-editor">
+        <div class="panel">
+          <p class="eyebrow">Reference Editor</p>
+          <h3>现有 React DnD 编辑器可复用点</h3>
+          <p>参考项目 <code>E:\Source\react-antd-low-code\src\components\editor</code> 已经具备低代码编辑器的基础骨架：左侧组件库、中间画布、右侧属性面板、组件树状态、schema 驱动预览和保存 JSON。这套结构适合迁移为移动端列表配置器，但组件模型需要从 HTML/Antd 改成 RN 白名单组件。</p>
+          <div class="grid-2">
+            <div>
+              <h4>可以直接借鉴</h4>
+              <ul>
+                <li><code>index.tsx</code>：三栏式编辑器布局，使用 <code>DndProvider + HTML5Backend</code> 管理拖拽上下文。</li>
+                <li><code>Left/DragItem.tsx</code>：左侧组件通过 <code>useDrag</code> 输出组件节点数据。</li>
+                <li><code>Canvas/index.tsx</code>：画布用 <code>useDrop</code> 接收新组件或已有组件移动。</li>
+                <li><code>Canvas/Item.tsx</code>：每个节点同时支持 drag/drop，通过鼠标位置判断插入到上方或下方，并递归渲染 children。</li>
+                <li><code>Right/index.tsx</code>：根据当前选中节点读取 <code>schema/edit</code>，动态渲染属性表单。</li>
+                <li><code>codeTreeSlice.ts</code>：用组件树保存页面结构，包含 append、move、focus、remove、update props 等基础操作。</li>
+              </ul>
+            </div>
+            <div>
+              <h4>需要改造</h4>
+              <ul>
+                <li>不要继续使用 HTML/Antd 组件作为最终 schema，改成移动端白名单组件。</li>
+                <li>不要允许任意 HTML 嵌套，列表页只允许纵向组件编排和受控 item 插槽。</li>
+                <li>把 <code>Grid/Form/div/Input</code> 这类 Web 组件替换为 <code>SearchBar/Tabs/StatRow/List/EmptyState/FloatingAction</code>。</li>
+                <li>列表 item 内部采用模板化插槽拖拽，例如 image、title、subtitle、description、statusTag、metrics、actions。</li>
+                <li>保存结果不生成 React 代码，而是生成 RN 运行时可消费的页面 DSL JSON。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>从现有编辑器改造成移动列表配置器</h3>
+          <table class="table">
+            <thead>
+              <tr><th>现有模块</th><th>当前职责</th><th>移动端改造方向</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>schema/fields</td><td>定义左侧可拖 HTML/Antd 组件</td><td>定义 SearchBar、Tabs、StatRow、List、EmptyState、FloatingAction</td></tr>
+              <tr><td>schema/edit</td><td>定义组件属性表单</td><td>定义字段绑定、数据源、状态映射、跳转动作、显示条件</td></tr>
+              <tr><td>schema/preview</td><td>映射画布预览组件</td><td>映射手机预览组件，样式贴近 RN 最终效果</td></tr>
+              <tr><td>codeTreeSlice</td><td>维护 HTML 组件树</td><td>维护 Page DSL 树，并限制父子关系合法性</td></tr>
+              <tr><td>Canvas/Item</td><td>递归拖拽、插入、嵌套</td><td>保留排序能力，增加 ListItem 插槽模式和非法嵌套拦截</td></tr>
+              <tr><td>SaveBtn</td><td>保存当前组件树</td><td>调用 /api/MobileConfig/Page 保存 ConfigJson 与 Version</td></tr>
+              <tr><td>ShowCodeBtn</td><td>生成代码预览</td><td>改成 JSON 预览、RN 渲染预览和配置校验结果</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="schema">
+        <div class="grid-2">
+          <div class="panel">
+            <h3>配置表设计</h3>
+            <table class="table">
+              <thead>
+                <tr><th>字段</th><th>说明</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>PageCode</td><td>页面编码，例如 EQUIPMENT_LIST、UPDATE_RECORD_LIST</td></tr>
+                <tr><td>PageName</td><td>页面名称，用于后台管理</td></tr>
+                <tr><td>AppScope</td><td>应用范围，例如 admin、repair、operator</td></tr>
+                <tr><td>Version</td><td>配置版本，每次发布递增，RN 可用于缓存</td></tr>
+                <tr><td>ConfigJson</td><td>完整页面 DSL，建议 longtext/json</td></tr>
+                <tr><td>Enabled</td><td>是否启用</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h3>后续可扩展表</h3>
+            <table class="table">
+              <thead>
+                <tr><th>表</th><th>用途</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>SmMobilePageConfig</td><td>保存页面级配置</td></tr>
+                <tr><td>SmMobilePageVersion</td><td>发布历史、回滚、灰度</td></tr>
+                <tr><td>SmMobileComponentConfig</td><td>组件级结构化存储，适合复杂配置器</td></tr>
+                <tr><td>SmMobileTheme</td><td>统一颜色、圆角、字体密度</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="templates">
+        <div class="panel">
+          <p class="eyebrow">Component White List</p>
+          <h3>组件体系：页面组件 + Item 字段组件</h3>
+          <p>方案默认直接使用 Item 自定义，不再把列表 item 固定为几种模板。页面层负责搜索、筛选、统计、列表等结构；Item 层负责单条卡片内部字段拖拽、字段绑定和显示规则。</p>
+          <div class="grid-2">
+            <div>
+              <h4>页面组件</h4>
+              <ul>
+                <li><code>searchBar</code>：搜索框，绑定一个或多个查询字段。</li>
+                <li><code>tabs</code>：顶部筛选，绑定状态、类型等枚举字段。</li>
+                <li><code>statRow</code>：统计条，用于总数、异常数、待处理数。</li>
+                <li><code>list</code>：主列表，支持分页、下拉刷新、上拉加载。</li>
+                <li><code>emptyState</code>：空状态，支持文案和图标。</li>
+                <li><code>floatingAction</code>：右下角操作按钮，支持权限控制。</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Item 字段组件</h4>
+              <ul>
+                <li><code>row</code>、<code>column</code>：受控布局容器，用于组织字段块。</li>
+                <li><code>text</code>、<code>iconText</code>：绑定文本字段，支持前缀、后缀、空值和最大行数。</li>
+                <li><code>image</code>：绑定图片或文件字段，支持预设尺寸和圆角。</li>
+                <li><code>statusTag</code>：绑定状态字段，通过状态映射显示文案、颜色和图标。</li>
+                <li><code>metric</code>：绑定数字、版本、金额等指标字段。</li>
+                <li><code>divider</code>、<code>spacer</code>、<code>actionButton</code>：用于分隔、留白和受控操作。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="custom-item">
+        <div class="panel">
+          <p class="eyebrow">Flexible Item Layout</p>
+          <h3>列表 Item 自定义字段绑定</h3>
+          <p>Item 不再只使用固定字段模板，而是升级为“受控自由布局”：外层仍由卡片模板保证移动端稳定，内部允许拖拽字段块、绑定数据字段、配置格式化和显示样式。</p>
+          <div class="grid-2">
+            <div>
+              <h4>可拖拽字段组件</h4>
+              <ul>
+                <li><code>TextField</code>：文本字段，支持前缀、后缀、空值、最大行数和格式化。</li>
+                <li><code>ImageField</code>：图片字段，支持固定尺寸、圆角和占位图标。</li>
+                <li><code>StatusTag</code>：状态标签，按状态映射显示颜色、文案和图标。</li>
+                <li><code>Metric</code>：指标字段，适合健康度、次数、金额、版本号等。</li>
+                <li><code>IconText</code>：图标 + 文本，适合位置、时间、负责人等信息。</li>
+                <li><code>Divider</code>、<code>Spacer</code>：控制分隔和间距。</li>
+                <li><code>Row</code>、<code>Column</code>：受控容器，用于横向和纵向排列字段。</li>
+                <li><code>ActionButton</code>：操作按钮，支持跳转、复制、拨号等受控动作。</li>
+              </ul>
+            </div>
+            <div>
+              <h4>必要限制</h4>
+              <ul>
+                <li>Row / Column 最多嵌套 2 层，防止配置复杂后移动端布局失控。</li>
+                <li>图片尺寸只能从预设中选择，例如 40、48、56、64。</li>
+                <li>文本默认最多 1 到 3 行，超出省略，避免撑破卡片。</li>
+                <li>ActionButton 每个 item 最多 2 个，避免列表操作过载。</li>
+                <li>只允许使用样式 token，不开放任意 CSS 或动态代码。</li>
+                <li>RN 端只渲染白名单节点，配置错误时降级为空值或默认样式。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>Item 编辑模式</h3>
+          <p>在页面编辑模式中配置 SearchBar、Tabs、List 等页面组件；选中 List 后进入 Item 编辑模式，专门编辑单条列表卡片内部结构。</p>
+          <div class="flow">
+            <div class="flow-step"><b>选择 List</b><span>进入 Item 编辑模式</span></div>
+            <div class="flow-step"><b>拖字段组件</b><span>Text、Image、Status、Metric</span></div>
+            <div class="flow-step"><b>绑定字段</b><span>MachineName、Status、VersionNo</span></div>
+            <div class="flow-step"><b>配置样式</b><span>角色、行数、tone、格式化</span></div>
+            <div class="flow-step"><b>保存 JSON</b><span>生成 RN 可渲染 DSL</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel alt">
+          <h3>自定义 Item JSON 示例</h3>
+          <pre class="code">{
+  "template": "customCard",
+  "layout": [
+    {
+      "type": "row",
+      "children": [
+        {
+          "type": "image",
+          "bind": "ImageId",
+          "style": { "size": 56, "radius": 12 }
+        },
+        {
+          "type": "column",
+          "flex": 1,
+          "children": [
+            {
+              "type": "text",
+              "bind": "MachineName",
+              "role": "title",
+              "maxLines": 1
+            },
+            {
+              "type": "text",
+              "bind": "MachineNo",
+              "prefix": "编号：",
+              "role": "subtitle",
+              "maxLines": 1
+            },
+            {
+              "type": "iconText",
+              "icon": "map-marker",
+              "bind": "Location",
+              "emptyText": "未设置位置",
+              "maxLines": 1
+            }
+          ]
+        },
+        {
+          "type": "statusTag",
+          "bind": "Status",
+          "map": "equipmentStatus"
+        }
+      ]
+    },
+    { "type": "divider" },
+    {
+      "type": "row",
+      "role": "metrics",
+      "children": [
+        { "type": "metric", "label": "健康度", "bind": "Health", "suffix": "%" },
+        { "type": "metric", "label": "维修次数", "bind": "RepairCount", "suffix": "次" },
+        { "type": "metric", "label": "版本", "bind": "VersionNo", "emptyText": "-" }
+      ]
+    }
+  ],
+  "maps": {
+    "equipmentStatus": {
+      "field": "Status",
+      "items": {
+        "running": { "label": "运行中", "tone": "success", "icon": "check-circle" },
+        "repairing": { "label": "维修中", "tone": "warning", "icon": "wrench" },
+        "fault": { "label": "故障", "tone": "danger", "icon": "exclamation-triangle" }
+      },
+      "fallback": { "label": "未知", "tone": "neutral" }
+    }
+  }
+}</pre>
+        </div>
+      </section>
+
+      <section id="list-form-pages">
+        <div class="panel">
+          <p class="eyebrow">Page Types</p>
+          <h3>移动端列表页与表单页</h3>
+          <p>移动端低代码建议明确分成两类页面：<code>ListPage</code> 和 <code>FormPage</code>。两者共用数据源、动作系统、字段格式化、权限和主题，但使用不同的渲染器。</p>
+          <div class="grid-2">
+            <div>
+              <h4>ListPage</h4>
+              <ul>
+                <li>负责查询、筛选、展示、分页、下拉刷新和点击跳转。</li>
+                <li>页面结构通常由 SearchBar、Tabs、StatRow、List、FloatingAction 组成。</li>
+                <li>List 内部默认使用 <code>customCard</code>，通过 <code>itemLayout</code> 自定义字段布局。</li>
+                <li>适合设备列表、更新记录、工单列表、客户列表、配置列表。</li>
+              </ul>
+            </div>
+            <div>
+              <h4>FormPage</h4>
+              <ul>
+                <li>负责新增、编辑、详情回显、校验、提交和提交后动作。</li>
+                <li>表单结构由 Section 和 Field 组成，支持拖拽分组和字段排序。</li>
+                <li>字段支持显隐条件、只读条件、默认值、校验规则和联动。</li>
+                <li>适合设备新增、工单处理、配置编辑、用户资料维护。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>列表页配置结构</h3>
+          <pre class="code">{
+  "pageCode": "EQUIPMENT_LIST",
+  "pageType": "list",
+  "title": "设备",
+  "dataSource": {
+    "type": "module",
+    "moduleCode": "EM_EQUIPMENT_INFO_MNG",
+    "pageSize": 10
+  },
+  "layout": [
+    {
+      "type": "searchBar",
+      "props": {
+        "placeholder": "搜索名称、编号",
+        "fields": ["MachineName", "MachineNo"]
+      }
+    },
+    {
+      "type": "tabs",
+      "props": {
+        "field": "Status",
+        "items": [
+          { "label": "全部", "value": "" },
+          { "label": "运行中", "value": "running", "tone": "success" },
+          { "label": "故障", "value": "fault", "tone": "danger" }
+        ]
+      }
+    },
+    {
+      "type": "list",
+      "props": {
+        "keyField": "ID",
+        "template": "customCard",
+        "itemLayout": []
+      }
+    }
+  ],
+  "actions": [
+    {
+      "type": "navigate",
+      "label": "新增",
+      "position": "floating",
+      "path": "/mobile-form/EQUIPMENT_FORM",
+      "params": { "mode": "create" }
+    }
+  ]
+}</pre>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>表单页配置结构</h3>
+          <pre class="code">{
+  "pageCode": "EQUIPMENT_FORM",
+  "pageType": "form",
+  "title": "设备编辑",
+  "mode": "createOrEdit",
+  "dataSource": {
+    "detailApi": "/api/EmEquipment/{id}",
+    "submitApi": "/api/EmEquipment",
+    "method": "POST"
+  },
+  "form": {
+    "keyField": "ID",
+    "sections": [
+      {
+        "title": "基础信息",
+        "fields": [
+          {
+            "type": "text",
+            "name": "EquipmentName",
+            "label": "设备名称",
+            "placeholder": "请输入设备名称",
+            "required": true,
+            "maxLength": 50
+          },
+          {
+            "type": "text",
+            "name": "EquipmentNo",
+            "label": "设备编号",
+            "required": true,
+            "readonlyWhen": "edit"
+          },
+          {
+            "type": "select",
+            "name": "EquipmentTypeId",
+            "label": "设备类型",
+            "dataSource": {
+              "type": "api",
+              "url": "/api/Common/GetComboGridData"
+            }
+          },
+          {
+            "type": "date",
+            "name": "InstallDate",
+            "label": "安装日期"
+          },
+          {
+            "type": "switch",
+            "name": "Enabled",
+            "label": "启用状态",
+            "defaultValue": true
+          }
+        ]
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "submit",
+      "label": "保存",
+      "style": "primary",
+      "successAction": { "type": "backAndRefresh" }
+    }
+  ]
+}</pre>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>列表和表单的关联</h3>
+          <p>列表页负责找到记录，表单页负责新增或编辑记录。两者通过受控动作系统关联，保存成功后返回列表并刷新。</p>
+          <div class="grid-2">
+            <div>
+              <h4>列表 item 点击编辑</h4>
+              <pre class="code">{
+  "type": "navigate",
+  "path": "/mobile-form/EQUIPMENT_FORM",
+  "params": {
+    "id": "{ID}",
+    "mode": "edit"
+  }
+}</pre>
+            </div>
+            <div>
+              <h4>表单保存后动作</h4>
+              <pre class="code">{
+  "type": "submit",
+  "successAction": {
+    "type": "backAndRefresh"
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>表单字段组件库</h3>
+          <table class="table">
+            <thead>
+              <tr><th>字段组件</th><th>用途</th><th>关键配置</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>TextInput</td><td>文本输入</td><td>required、maxLength、placeholder、readonlyWhen</td></tr>
+              <tr><td>NumberInput</td><td>数字输入</td><td>min、max、precision、unit</td></tr>
+              <tr><td>TextArea</td><td>多行文本</td><td>maxLength、rows、placeholder</td></tr>
+              <tr><td>Select</td><td>单选下拉</td><td>options、dataSource、labelField、valueField</td></tr>
+              <tr><td>DatePicker</td><td>日期选择</td><td>format、minDate、maxDate</td></tr>
+              <tr><td>Switch</td><td>布尔开关</td><td>defaultValue、trueLabel、falseLabel</td></tr>
+              <tr><td>Upload / ImagePicker</td><td>文件和图片</td><td>maxCount、fileType、uploadApi</td></tr>
+              <tr><td>UserPicker / DepartmentPicker</td><td>人员和部门选择</td><td>dataSource、multiple、searchable</td></tr>
+              <tr><td>ReadonlyText / HiddenField</td><td>只读和隐藏字段</td><td>format、defaultValue、submitVisible</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <h3>RN 渲染器拆分</h3>
+          <p>RN 端根据 <code>pageType</code> 分发到不同渲染器。共用数据源解析、动作执行、条件判断、字段格式化、主题和权限能力。</p>
+          <div class="grid-2">
+            <div>
+              <h4>主渲染器</h4>
+              <ul>
+                <li><code>DynamicListPageRenderer</code>：渲染列表页。</li>
+                <li><code>DynamicFormPageRenderer</code>：渲染表单页。</li>
+              </ul>
+            </div>
+            <div>
+              <h4>共用能力</h4>
+              <ul>
+                <li><code>DataSourceResolver</code>：统一解析 module/api/detail/submit 数据源。</li>
+                <li><code>ActionExecutor</code>：执行 navigate、submit、backAndRefresh、copy、call 等动作。</li>
+                <li><code>ConditionEvaluator</code>：处理显隐、只读、必填和联动条件。</li>
+                <li><code>FieldFormatter</code>：处理日期、数字、金额、枚举和空值显示。</li>
+                <li><code>PermissionGuard</code>：按用户权限控制组件和动作显示。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="visual">
+        <div class="panel">
+          <p class="eyebrow">Visual System</p>
+          <h3>移动端视觉规范</h3>
+          <p>采用管理工具风格：浅背景、白色列表项、语义状态色、紧凑信息密度。颜色通过 tone 管理，配置端不直接开放无限颜色。</p>
+          <div class="tone-list">
+            <div class="tone"><span class="dot" style="background:#2563eb"></span><b>primary</b><p>#2563EB</p></div>
+            <div class="tone"><span class="dot" style="background:#059669"></span><b>success</b><p>#059669</p></div>
+            <div class="tone"><span class="dot" style="background:#d97706"></span><b>warning</b><p>#D97706</p></div>
+            <div class="tone"><span class="dot" style="background:#dc2626"></span><b>danger</b><p>#DC2626</p></div>
+            <div class="tone"><span class="dot" style="background:#6b7280"></span><b>neutral</b><p>#6B7280</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="api">
+        <div class="grid-2">
+          <div class="panel">
+            <h3>接口设计</h3>
+            <pre class="code">GET /api/MobileConfig/Page/{pageCode}
+
+POST /api/MobileConfig/Page
+PUT /api/MobileConfig/Page/{id}
+POST /api/MobileConfig/Page/{id}/Publish
+POST /api/MobileConfig/Page/{id}/Rollback/{version}</pre>
+          </div>
+          <div class="panel">
+            <h3>RN 目录建议</h3>
+            <pre class="code">src/api/modules/mobile-config.ts
+src/types/mobile-config.ts
+src/components/dynamic-page/
+  renderer.tsx
+  components/search-bar.tsx
+  components/tabs.tsx
+  components/list.tsx
+  templates/media-status-card.tsx
+src/app/mobile-list/[code].tsx</pre>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel alt">
+          <h3>配置 JSON 示例</h3>
+          <pre class="code">{
+  "pageCode": "EQUIPMENT_LIST",
+  "title": "设备",
+  "dataSource": {
+    "type": "module",
+    "moduleCode": "EM_EQUIPMENT_INFO_MNG",
+    "pageSize": 10
+  },
+  "layout": [
+    {
+      "id": "search",
+      "type": "searchBar",
+      "props": {
+        "placeholder": "搜索名称、编号",
+        "fields": ["MachineName", "MachineNo"]
+      }
+    },
+    {
+      "id": "statusTabs",
+      "type": "tabs",
+      "props": {
+        "field": "Status",
+        "items": [
+          { "label": "全部", "value": "" },
+          { "label": "运行中", "value": "running", "tone": "success" },
+          { "label": "维修中", "value": "repairing", "tone": "warning" },
+          { "label": "故障", "value": "fault", "tone": "danger" }
+        ]
+      }
+    },
+    {
+      "id": "mainList",
+      "type": "list",
+      "props": {
+        "template": "customCard",
+        "keyField": "ID",
+        "itemLayout": [
+          {
+            "type": "row",
+            "children": [
+              { "type": "image", "bind": "ImageId", "style": { "size": 56, "radius": 12 } },
+              {
+                "type": "column",
+                "flex": 1,
+                "children": [
+                  { "type": "text", "bind": "MachineName", "role": "title", "maxLines": 1 },
+                  { "type": "text", "bind": "MachineNo", "prefix": "编号：", "role": "subtitle", "maxLines": 1 },
+                  { "type": "iconText", "icon": "map-marker", "bind": "Location", "emptyText": "未设置位置", "maxLines": 1 }
+                ]
+              },
+              { "type": "statusTag", "bind": "Status", "map": "equipmentStatus" }
+            ]
+          },
+          { "type": "divider" },
+          {
+            "type": "row",
+            "role": "metrics",
+            "children": [
+              { "type": "metric", "label": "健康度", "bind": "Health", "suffix": "%" },
+              { "type": "metric", "label": "本月维修", "bind": "RepairCount", "suffix": "次" }
+            ]
+          }
+        ],
+        "onPress": {
+          "type": "navigate",
+          "path": "/equipment/{ID}"
+        }
+      }
+    }
+  ],
+  "statusMap": {
+    "running": { "label": "运行中", "tone": "success", "icon": "check-circle" },
+    "repairing": { "label": "维修中", "tone": "warning", "icon": "wrench" },
+    "fault": { "label": "故障", "tone": "danger", "icon": "exclamation-triangle" }
+  }
+}</pre>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="panel">
+          <p class="eyebrow">Roadmap</p>
+          <h3>落地步骤</h3>
+          <table class="table">
+            <thead>
+              <tr><th>阶段</th><th>目标</th><th>产物</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>后端配置存储与读取</td><td>SmMobilePageConfig、读取接口、种子配置</td></tr>
+              <tr><td>2</td><td>RN 动态列表渲染</td><td>DynamicPageRenderer、组件白名单、customCard Item 渲染器</td></tr>
+              <tr><td>3</td><td>后台配置器</td><td>三栏拖拽 UI、属性面板、实时预览、发布</td></tr>
+              <tr><td>4</td><td>能力扩展</td><td>详情页、权限动作、复杂联动、配置版本回滚</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="footer">
+        设计结论：采用“通用页面配置 + 组件拖拽排序 + 自定义 Item 布局 + 字段绑定 + 状态颜色映射 + 受控跳转动作”的方式，优先覆盖移动端列表页。
+      </div>
+    </main>
+  </div>
+</body>
+</html>

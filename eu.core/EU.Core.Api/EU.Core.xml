@@ -1642,6 +1642,14 @@
             <param name="id">配置ID</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmMobilePageConfigController.GetPublishedPage(System.String,System.String)">
+            <summary>
+            Get published mobile page config by page code.
+            </summary>
+            <param name="pageCode">Page code.</param>
+            <param name="appScope">Optional app scope.</param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmModuleColumnController">
             <summary>
             SmModuleColumn(Controller)

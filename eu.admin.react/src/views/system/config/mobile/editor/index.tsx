@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button, Space, Tooltip, Divider, message } from "antd";
-import { ArrowLeftOutlined, SendOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeftOutlined, SendOutlined, DeleteOutlined, SettingOutlined } from "@ant-design/icons";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useDispatch, useSelector, RootState } from "@/redux";
-import { loadConfig, resetEditor } from "@/redux/modules/mobileEditor";
+import { loadConfig, resetEditor, setFocus } from "@/redux/modules/mobileEditor";
 import { getMobilePageById, publishMobilePage, updateMobilePage } from "@/api/modules/mobileConfig";
 import Left from "./Left";
 import Canvas from "./Canvas";
@@ -15,7 +15,8 @@ import JsonPreviewBtn from "./JsonPreviewBtn";
 
 export default function MobileEditor() {
   const [searchParams] = useSearchParams();
-  const configId = searchParams.get("id") || undefined;
+  const params = useParams();
+  const configId = searchParams.get("id") || params.id || undefined;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const state = useSelector((s: RootState) => s.mobileEditor);
@@ -121,6 +122,13 @@ export default function MobileEditor() {
 
           {/* 中间：操作按钮 */}
           <Space size={8}>
+            <Button
+              icon={<SettingOutlined />}
+              onClick={() => dispatch(setFocus({ focusId: "root" }))}
+              style={{ borderRadius: 6 }}
+            >
+              页面设置
+            </Button>
             <SaveBtn configId={configId} />
             <JsonPreviewBtn />
             <Button

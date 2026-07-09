@@ -23,4 +23,12 @@ public interface ISmMobilePageConfigServices : IBaseServices<SmMobilePageConfig,
     /// <param name="id">配置ID</param>
     /// <returns></returns>
     Task<ServiceResult> PublishAsync(Guid id);
+
+    /// <summary>
+    /// Get published page config by page code.
+    /// </summary>
+    /// <param name="pageCode">Page code.</param>
+    /// <param name="appScope">Optional app scope.</param>
+    /// <returns></returns>
+    Task<ServiceResult<SmMobilePageConfigDto>> GetPublishedByPageCodeAsync(string pageCode, string appScope = null);
 }

@@ -44,4 +44,32 @@ public class SmMobilePageConfigServices : BaseServices<SmMobilePageConfig, SmMob
             return Success("发布成功");
         return Failed("发布失败");
     }
+
+    public async Task<ServiceResult<SmMobilePageConfigDto>> GetPublishedByPageCodeAsync(string pageCode, string appScope = null)
+    {
+        if (string.IsNullOrWhiteSpace(pageCode))
+            return Failed<SmMobilePageConfigDto>("PageCode is required");
+
+        pageCode = pageCode.Trim();
+        appScope = appScope?.Trim();
+
+        var query = Db.Queryable<SmMobilePageConfig>()
+            .Where(x => x.IsDeleted == false && x.IsPublished == true && x.PageCode == pageCode);
+
+        if (string.IsNullOrWhiteSpace(appScope))
+            query = query.Where(x => string.IsNullOrEmpty(x.AppScope));
+        else
+            query = query.Where(x => x.AppScope == appScope || string.IsNullOrEmpty(x.AppScope));
+
+        var entity = await query
+            .OrderBy(x => x.AppScope == appScope ? 0 : 1)
+            .OrderByDescending(x => x.Version)
+            .OrderByDescending(x => x.UpdateTime)
+            .FirstAsync();
+
+        if (entity == null)
+            return Failed<SmMobilePageConfigDto>("Published page config not found");
+
+        return Success(Mapper.Map(entity).ToANew<SmMobilePageConfigDto>(), ResponseText.QUERY_SUCCESS);
+    }
 }

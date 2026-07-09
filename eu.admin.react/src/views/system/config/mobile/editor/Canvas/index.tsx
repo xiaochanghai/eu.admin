@@ -1,4 +1,4 @@
-import { append, moveCom, MobileNodeSchema } from "@/redux/modules/mobileEditor";
+import { append, moveCom, MobileNodeSchema, setFocus } from "@/redux/modules/mobileEditor";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { CRAD } from "../ItemTypes";
 import { useDrop } from "react-dnd";
@@ -42,10 +42,18 @@ export default function Canvas() {
   }));
 
   const pageProps = state.props || {};
+  const pageBackgroundColor = typeof pageProps.backgroundColor === "string" && pageProps.backgroundColor
+    ? pageProps.backgroundColor
+    : "#f9fafb";
+
+  const handleSelectPage = () => {
+    dispatch(setFocus({ focusId: "root" }));
+  };
 
   return (
     <div
       className="flex-1 overflow-y-auto flex justify-center"
+      onClick={handleSelectPage}
       style={{
         background: "linear-gradient(180deg, #e8ecf3 0%, #d5dbe6 100%)",
         backgroundImage: `
@@ -55,13 +63,13 @@ export default function Canvas() {
         padding: "24px 20px"
       }}
     >
-      <div ref={drop}>
+      <div ref={drop} onClick={handleSelectPage}>
         <PhoneFrame title={pageProps.title || "页面预览"}>
           <div
             className={cl("transition-colors duration-200", {
               "bg-blue-100/40": isOver && canDrop
             })}
-            style={{ minHeight: 400, position: "relative" }}
+            style={{ minHeight: 400, position: "relative", background: pageBackgroundColor }}
           >
             {state.children.map((child, index) => (
               <Item key={child.id} data={child} parentId="root" index={index} />

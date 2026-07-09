@@ -27,6 +27,23 @@ const initialState: MobileEditorState = {
   children: []
 };
 
+const setValueByPath = (target: Record<string, any>, path: string, value: any) => {
+  const keys = path.split(".");
+  let cursor = target;
+
+  keys.forEach((key, index) => {
+    if (index === keys.length - 1) {
+      cursor[key] = value;
+      return;
+    }
+
+    if (!cursor[key] || typeof cursor[key] !== "object" || Array.isArray(cursor[key])) {
+      cursor[key] = {};
+    }
+    cursor = cursor[key];
+  });
+};
+
 const mobileEditorSlice = createSlice({
   name: "mobileEditor",
   initialState,
@@ -153,7 +170,7 @@ const mobileEditorSlice = createSlice({
       const { key, value } = action.payload;
       traverse(state, sub => {
         if (sub.id === focusId) {
-          sub.props[key] = value;
+          setValueByPath(sub.props, key, value);
           return false;
         }
         return true;

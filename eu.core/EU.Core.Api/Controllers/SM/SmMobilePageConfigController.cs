@@ -36,4 +36,18 @@ public class SmMobilePageConfigController : BaseController<ISmMobilePageConfigSe
         return await _service.PublishAsync(id);
     }
     #endregion
+
+    #region Mobile runtime config
+    /// <summary>
+    /// Get published mobile page config by page code.
+    /// </summary>
+    /// <param name="pageCode">Page code.</param>
+    /// <param name="appScope">Optional app scope.</param>
+    /// <returns></returns>
+    [HttpGet("Page/{pageCode}")]
+    public async Task<ServiceResult<SmMobilePageConfigDto>> GetPublishedPage(string pageCode, [FromQuery] string appScope = null)
+    {
+        return await _service.GetPublishedByPageCodeAsync(pageCode, appScope);
+    }
+    #endregion
 }

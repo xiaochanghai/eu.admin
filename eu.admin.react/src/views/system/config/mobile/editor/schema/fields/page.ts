@@ -38,6 +38,10 @@ const pageComponents: MobileFieldNode[] = [
     props: {
       keyField: "ID",
       template: "customCard",
+      componentPath: "src/components/refresh-list-view.tsx",
+      marginBottom: 12,
+      padding: 16,
+      cardRadius: 16,
       onPress: { type: "navigate", path: "" }
     }
   },

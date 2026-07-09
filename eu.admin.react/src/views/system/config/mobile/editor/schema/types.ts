@@ -1,5 +1,5 @@
 /** 属性编辑器类型 */
-export type EditFieldType = "Text" | "Number" | "Select" | "Radio" | "TextArea" | "OptionEditor";
+export type EditFieldType = "Text" | "Number" | "Select" | "Radio" | "TextArea" | "OptionEditor" | "Json" | "Color";
 
 /** 移动端组件节点 */
 export interface MobileFieldNode {

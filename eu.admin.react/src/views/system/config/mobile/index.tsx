@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   App,
   Badge,
@@ -38,6 +38,8 @@ import {
 
 const { Text } = Typography;
 
+const QUERY_DEBOUNCE_MS = 350;
+
 type QueryFormValues = {
   keyword?: string;
   appScope?: string;
@@ -71,6 +73,12 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const normalizePageCode = (value?: string) => value?.trim().toUpperCase().replace(/\s+/g, "_") || "";
 
+const normalizeQuery = (values: QueryFormValues): QueryFormValues => ({
+  keyword: values.keyword?.trim() || undefined,
+  appScope: values.appScope || undefined,
+  publishState: values.publishState || undefined
+});
+
 const MobileConfigList: React.FC = () => {
   const navigate = useNavigate();
   const { message } = App.useApp();
@@ -86,15 +94,19 @@ const MobileConfigList: React.FC = () => {
   const [publishingId, setPublishingId] = useState<string>();
   const [deletingId, setDeletingId] = useState<string>();
   const [query, setQuery] = useState<QueryFormValues>({});
+  const requestIdRef = useRef(0);
+  const keywordTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const fetchData = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     setLoading(true);
     try {
-      const filter = {
-        keyword: query.keyword?.trim(),
-        AppScope: query.appScope,
-        IsPublished: query.publishState === "published" ? true : query.publishState === "draft" ? false : undefined
-      };
+      const normalizedQuery = normalizeQuery(query);
+      const filter: Record<string, string | boolean> = {};
+      if (normalizedQuery.keyword) filter.keyword = normalizedQuery.keyword;
+      if (normalizedQuery.appScope) filter.AppScope = normalizedQuery.appScope;
+      if (normalizedQuery.publishState) filter.IsPublished = normalizedQuery.publishState === "published";
 
       const res = await getMobilePageList({
         paramData: JSON.stringify({ page: current, limit: pageSize }),
@@ -102,19 +114,28 @@ const MobileConfigList: React.FC = () => {
         filter: JSON.stringify(filter)
       });
 
+      if (requestId !== requestIdRef.current) return;
       const rows = Array.isArray(res?.Data) ? res.Data : [];
       setData(rows);
       setTotal(rows.length);
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       message.error(getErrorMessage(error, "获取移动端页面配置失败"));
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [current, message, pageSize, query]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(
+    () => () => {
+      if (keywordTimerRef.current) clearTimeout(keywordTimerRef.current);
+    },
+    []
+  );
 
   const summary = useMemo(
     () => ({
@@ -129,13 +150,47 @@ const MobileConfigList: React.FC = () => {
       const values = await createForm.validateFields();
       setConfirmLoading(true);
       const pageCode = normalizePageCode(values.PageCode);
+      const initialConfig = {
+        type: "page",
+        props: {
+          pageCode,
+          pageType: "list",
+          title: values.Title || values.PageName,
+          dataSource: {
+            type: "module",
+            moduleCode: "",
+            pageSize: 10
+          },
+          backgroundColor: "#f9fafb",
+          paddingHorizontal: 16,
+          paddingTop: 0,
+          paddingBottom: 8,
+          statusMap: {}
+        },
+        children: [
+          {
+            type: "list",
+            displayName: "列表",
+            props: {
+              keyField: "ID",
+              template: "customCard",
+              componentPath: "src/components/refresh-list-view.tsx",
+              marginBottom: 12,
+              padding: 16,
+              cardRadius: 16,
+              onPress: { type: "navigate", path: "" }
+            },
+            children: []
+          }
+        ]
+      };
       const res = await createMobilePage({
         ...values,
         PageCode: pageCode,
         PageType: "list",
         Version: 0,
         IsPublished: false,
-        ConfigJson: "{}"
+        ConfigJson: JSON.stringify(initialConfig)
       });
 
       if (res?.Success) {
@@ -143,7 +198,7 @@ const MobileConfigList: React.FC = () => {
         setModalVisible(false);
         createForm.resetFields();
         fetchData();
-        if (res.Data) navigate(`/system/config/mobile/editor?id=${res.Data}`);
+        if (res.Data) navigate(`/system/config/mobile/editor/${res.Data}`);
       } else {
         message.error(res?.Message || "创建失败");
       }
@@ -190,18 +245,28 @@ const MobileConfigList: React.FC = () => {
   };
 
   const handleEdit = (record: SmMobilePageConfig) => {
-    navigate(`/system/config/mobile/editor?id=${record.ID}`);
+    navigate(`/system/config/mobile/editor/${record.ID}`);
   };
 
   const handleSearch = (values: QueryFormValues) => {
+    if (keywordTimerRef.current) clearTimeout(keywordTimerRef.current);
     setCurrent(1);
-    setQuery(values);
+    setQuery(normalizeQuery(values));
   };
 
   const handleReset = () => {
+    if (keywordTimerRef.current) clearTimeout(keywordTimerRef.current);
     queryForm.resetFields();
     setCurrent(1);
     setQuery({});
+  };
+
+  const handleKeywordChange = () => {
+    if (keywordTimerRef.current) clearTimeout(keywordTimerRef.current);
+    keywordTimerRef.current = setTimeout(() => {
+      setCurrent(1);
+      setQuery(normalizeQuery(queryForm.getFieldsValue()));
+    }, QUERY_DEBOUNCE_MS);
   };
 
   const columns: TableColumnsType<SmMobilePageConfig> = [
@@ -291,9 +356,9 @@ const MobileConfigList: React.FC = () => {
           </Tooltip>
           <Popconfirm
             title="发布配置"
-            description="发布后移动端会使用当前配置。"
+            description={record.IsPublished ? "将当前草稿内容重新发布到移动端。" : "发布后移动端会使用当前配置。"}
             onConfirm={() => handlePublish(record.ID)}
-            okText="发布"
+            okText={record.IsPublished ? "重新发布" : "发布"}
             cancelText="取消"
           >
             <Button
@@ -303,7 +368,7 @@ const MobileConfigList: React.FC = () => {
               loading={publishingId === record.ID}
               style={{ color: "#059669" }}
             >
-              发布
+              {record.IsPublished ? "重发" : "发布"}
             </Button>
           </Popconfirm>
           <Popconfirm
@@ -369,12 +434,19 @@ const MobileConfigList: React.FC = () => {
       <Card style={{ marginBottom: 12 }} styles={{ body: { padding: 16 } }}>
         <Form form={queryForm} layout="inline" onFinish={handleSearch} style={{ rowGap: 12 }}>
           <Form.Item name="keyword" style={{ minWidth: 260 }}>
-            <Input allowClear prefix={<SearchOutlined />} placeholder="搜索页面编码、名称或标题" />
+            <Input
+              allowClear
+              prefix={<SearchOutlined />}
+              placeholder="搜索页面编码、名称或标题"
+              onChange={handleKeywordChange}
+              onPressEnter={() => queryForm.submit()}
+            />
           </Form.Item>
           <Form.Item name="appScope" style={{ minWidth: 150 }}>
             <Select
               allowClear
               placeholder="应用范围"
+              onChange={() => queryForm.submit()}
               options={[
                 { label: "管理端", value: "admin" },
                 { label: "维修端", value: "repair" },
@@ -386,6 +458,7 @@ const MobileConfigList: React.FC = () => {
             <Select
               allowClear
               placeholder="发布状态"
+              onChange={() => queryForm.submit()}
               options={[
                 { label: "已发布", value: "published" },
                 { label: "草稿", value: "draft" }
@@ -437,6 +510,8 @@ const MobileConfigList: React.FC = () => {
             )
           }}
           onRow={record => ({
+            style: { cursor: "pointer" },
+            title: "双击进入编辑",
             onDoubleClick: () => handleEdit(record)
           })}
         />
