@@ -15,7 +15,7 @@ namespace EU.Core.Model.Edit;
 
 
 /// <summary>
-/// SmMobilePageConfig (Dto.EditInput)
+/// 移动端页面配置表 (Dto.EditInput)
 /// </summary>
 public class EditSmMobilePageConfigInput : SmMobilePageConfigBase
 {

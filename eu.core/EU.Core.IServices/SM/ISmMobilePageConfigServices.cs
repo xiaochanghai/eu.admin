@@ -13,7 +13,7 @@
 namespace EU.Core.IServices;
 
 /// <summary>
-/// SmMobilePageConfig(自定义服务接口)
+/// 移动端页面配置表(自定义服务接口)
 /// </summary>
 public interface ISmMobilePageConfigServices : IBaseServices<SmMobilePageConfig, SmMobilePageConfigDto, InsertSmMobilePageConfigInput, EditSmMobilePageConfigInput>
 {

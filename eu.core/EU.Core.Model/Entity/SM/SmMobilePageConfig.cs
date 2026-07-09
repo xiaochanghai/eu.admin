@@ -1,4 +1,4 @@
-/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
+﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * SmMobilePageConfig.cs
 *
 * 功 能： N / A
@@ -6,48 +6,52 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/7/8  Claude   初版
+* V0.01  2026/7/10 0:23:43  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
+*┌──────────────────────────────────┐
+*│　此技术信息为本公司机密信息，未经本公司书面同意禁止向第三方披露．　│
+*│　作者：SahHsiao                                                  │
+*└──────────────────────────────────┘
 */
 
 namespace EU.Core.Model.Entity;
 
 /// <summary>
-/// 移动端页面配置 (Model)
+/// 移动端页面配置表 (Model)
 /// </summary>
-[SugarTable("SmMobilePageConfig", "移动端页面配置"), Entity(TableCnName = "移动端页面配置", TableName = "SmMobilePageConfig")]
+[SugarTable("SmMobilePageConfig", "移动端页面配置表"), Entity(TableCnName = "移动端页面配置表", TableName = "SmMobilePageConfig")]
 public class SmMobilePageConfig : BasePoco
 {
 
     /// <summary>
     /// 页面编码
     /// </summary>
-    [Display(Name = "PageCode"), Description("页面编码"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "PageCode"), Description("页面编码"), SugarColumn(IsNullable = true, Length = 32)]
     public string PageCode { get; set; }
 
     /// <summary>
     /// 页面名称
     /// </summary>
-    [Display(Name = "PageName"), Description("页面名称"), SugarColumn(IsNullable = true, Length = 100)]
+    [Display(Name = "PageName"), Description("页面名称"), SugarColumn(IsNullable = true, Length = 32)]
     public string PageName { get; set; }
 
     /// <summary>
-    /// 应用范围
+    /// 应用范围 (admin/repair/operator)
     /// </summary>
-    [Display(Name = "AppScope"), Description("应用范围"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "AppScope"), Description("应用范围 (admin/repair/operator)"), SugarColumn(IsNullable = true, Length = 32)]
     public string AppScope { get; set; }
 
     /// <summary>
     /// 页面类型
     /// </summary>
-    [Display(Name = "PageType"), Description("页面类型"), SugarColumn(IsNullable = true, Length = 20)]
+    [Display(Name = "PageType"), Description("页面类型"), SugarColumn(IsNullable = true, Length = 32)]
     public string PageType { get; set; }
 
     /// <summary>
     /// 页面标题
     /// </summary>
-    [Display(Name = "Title"), Description("页面标题"), SugarColumn(IsNullable = true, Length = 100)]
+    [Display(Name = "Title"), Description("页面标题"), SugarColumn(IsNullable = true, Length = 32)]
     public string Title { get; set; }
 
     /// <summary>

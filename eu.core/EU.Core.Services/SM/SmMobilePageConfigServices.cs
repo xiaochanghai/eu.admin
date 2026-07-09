@@ -14,7 +14,7 @@
 namespace EU.Core.Services;
 
 /// <summary>
-/// SmMobilePageConfig (服务)
+/// 移动端页面配置表 (服务)
 /// </summary>
 public class SmMobilePageConfigServices : BaseServices<SmMobilePageConfig, SmMobilePageConfigDto, InsertSmMobilePageConfigInput, EditSmMobilePageConfigInput>, ISmMobilePageConfigServices
 {

@@ -15,7 +15,7 @@ namespace EU.Core.Model.Insert;
 
 
 /// <summary>
-/// SmMobilePageConfig (Dto.InsertInput)
+/// 移动端页面配置表 (Dto.InsertInput)
 /// </summary>
 public class InsertSmMobilePageConfigInput : SmMobilePageConfigBase
 {

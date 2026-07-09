@@ -15,7 +15,7 @@ namespace EU.Core.Model.Models;
 
 
 /// <summary>
-/// SmMobilePageConfig(Dto.View)
+/// 移动端页面配置表(Dto.View)
 /// </summary>
 public class SmMobilePageConfigDto : SmMobilePageConfig
 {
