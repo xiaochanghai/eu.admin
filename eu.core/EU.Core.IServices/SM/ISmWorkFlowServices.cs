@@ -48,10 +48,4 @@ public interface ISmWorkFlowServices : IBaseServices<SmWorkFlow, SmWorkFlowDto, 
     /// <param name="moduleId">模块ID</param>
     Task<ServiceResult<WorkFlowNode>> QueryNodeByModuleId(Guid moduleId);
 
-    /// <summary>
-    /// 保存未发布的草稿 JSON
-    /// </summary>
-    /// <param name="moduleId">模块ID</param>
-    /// <param name="draftJson">草稿JSON字符串</param>
-    Task<ServiceResult> SaveDraft(Guid moduleId, string draftJson);
 }

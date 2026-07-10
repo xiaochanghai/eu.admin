@@ -1872,6 +1872,22 @@
             <param name="id">流程ID</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.ForModule(System.Guid)">
+            <summary>
+            按模块ID获取工作流（不存在则自动初始化）
+            用于流程设计器页面加载时，根据当前模块找到对应的 SmWorkFlow 记录
+            </summary>
+            <param name="moduleId">模块ID（SmModules.ID）</param>
+            <returns>工作流实体</returns>
+        </member>
+        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.QueryNodeByModule(System.Guid)">
+            <summary>
+            按模块ID获取流程节点树
+            节点数据从节点表重建
+            </summary>
+            <param name="moduleId">模块ID（SmModules.ID）</param>
+            <returns>流程节点树</returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeAuditController">
             <summary>
             工作流节点审核人员(Controller)

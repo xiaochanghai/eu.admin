@@ -24,6 +24,6 @@ export interface SysUser extends DbEntity, IFkItem, IUser {
 
 /** 用户查询 */
 export const list = async (): Promise<SysUser[]> => {
-  let { Data } = await http.get<SysUser[]>(`/api/SmUser`);
+  let { Data } = await http.get<SysUser[]>(`/api/SmUser/QueryByFilter`);
   return Data;
 };

@@ -18,7 +18,6 @@
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using MongoDB.Bson;
-using Newtonsoft.Json;
 
 namespace EU.Core.Services;
 
@@ -50,7 +49,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
 
     #region 流程节点保存
     /// <summary>
-    /// 流程节点保存（发布），将工作流节点树保存到数据库并更新 FlowJson，同时清空 DraftJson
+    /// 流程节点保存（发布），将工作流节点树保存到数据库
     /// </summary>
     /// <param name="node">工作流节点树（start 之后的第一个节点）</param>
     /// <param name="id">工作流ID</param>
@@ -63,15 +62,6 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
         try
         {
             var (nodes, audits) = ConvertTreeToList(node);
-
-            // 构建包含 start 根节点的完整流程树 JSON（用于 FlowJson）
-            var rootForJson = new WorkFlowNode
-            {
-                id = StartNodeId,
-                nodeType = StartNodeType,
-                childNode = node
-            };
-            var flowJson = JsonConvert.SerializeObject(rootForJson);
 
             if (!nodes.Any())
                 return Failed("工作流节点数据无效");
@@ -93,13 +83,6 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
 
                 if (audits.Any())
                     await _smWorkFlowNodeAuditServices.Add(audits);
-
-                // 发布时同步写入 FlowJson，并清空 DraftJson（草稿已转为正式）
-                await Db.Updateable<SmWorkFlow>()
-                    .SetColumns(x => x.FlowJson == flowJson)
-                    .SetColumns(x => x.DraftJson == null)
-                    .Where(x => x.ID == id)
-                    .ExecuteCommandAsync();
 
                 await Db.Ado.CommitTranAsync();
                 return Success();
@@ -332,7 +315,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
     }
     #endregion
 
-    #region 按模块查询工作流 / 草稿保存
+    #region 按模块查询工作流
 
     /// <summary>
     /// 根据模块ID获取工作流；若该模块尚未创建工作流，则自动初始化一条
@@ -364,7 +347,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
 
     /// <summary>
     /// 根据模块ID获取流程节点树
-    /// 加载优先级：DraftJson（草稿） → FlowJson（已发布） → 从节点表重建
+    /// 节点数据从节点表重建
     /// </summary>
     /// <param name="moduleId">模块ID</param>
     /// <returns>流程节点树</returns>
@@ -379,23 +362,6 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
                 return Success(new WorkFlowNode { id = StartNodeId, nodeType = StartNodeType });
             }
 
-            // 优先级 1：有草稿时直接返回草稿
-            if (!string.IsNullOrWhiteSpace(workflow.DraftJson))
-            {
-                var draftNode = JsonConvert.DeserializeObject<WorkFlowNode>(workflow.DraftJson);
-                if (draftNode != null)
-                    return Success(draftNode);
-            }
-
-            // 优先级 2：有已发布 JSON 时直接返回
-            if (!string.IsNullOrWhiteSpace(workflow.FlowJson))
-            {
-                var flowNode = JsonConvert.DeserializeObject<WorkFlowNode>(workflow.FlowJson);
-                if (flowNode != null)
-                    return Success(flowNode);
-            }
-
-            // 优先级 3：从节点表重建
             return await QueryNode(workflow.ID);
         }
         catch (Exception ex)
@@ -404,40 +370,5 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
         }
     }
 
-    /// <summary>
-    /// 保存未发布的草稿 JSON（设计器实时保存，发布时清空）
-    /// </summary>
-    /// <param name="moduleId">模块ID</param>
-    /// <param name="draftJson">草稿JSON字符串</param>
-    /// <returns>操作结果</returns>
-    public async Task<ServiceResult> SaveDraft(Guid moduleId, string draftJson)
-    {
-        try
-        {
-            var workflow = await _dal.QuerySingle(x => x.SmModuleId == moduleId);
-            if (workflow == null)
-            {
-                // 不存在则自动创建
-                workflow = new SmWorkFlow
-                {
-                    SmModuleId = moduleId,
-                    FlowName = string.Empty,
-                    FlowCode = string.Empty,
-                };
-                workflow.ID = await _dal.Add(workflow);
-            }
-
-            await Db.Updateable<SmWorkFlow>()
-                .SetColumns(x => x.DraftJson == draftJson)
-                .Where(x => x.ID == workflow.ID)
-                .ExecuteCommandAsync();
-
-            return Success();
-        }
-        catch (Exception ex)
-        {
-            return Failed($"保存草稿失败: {ex.Message}");
-        }
-    }
     #endregion
 }
