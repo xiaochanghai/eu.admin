@@ -4999,7 +4999,7 @@
         </member>
         <member name="T:EU.Core.Model.Base.SmMobilePageConfigBase">
             <summary>
-            移动端页面配置 (Dto.Base)
+            移动端页面配置表 (Dto.Base)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.PageCode">
@@ -5014,7 +5014,7 @@
         </member>
         <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.AppScope">
             <summary>
-            应用范围
+            应用范围 (admin/repair/operator)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmMobilePageConfigBase.PageType">
@@ -6979,7 +6979,7 @@
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmMobilePageConfigInput">
             <summary>
-            SmMobilePageConfig (Dto.EditInput)
+            移动端页面配置表 (Dto.EditInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Edit.EditSmModuleColumnInput">
@@ -12059,7 +12059,7 @@
         </member>
         <member name="T:EU.Core.Model.Entity.SmMobilePageConfig">
             <summary>
-            移动端页面配置 (Model)
+            移动端页面配置表 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.PageCode">
@@ -12074,7 +12074,7 @@
         </member>
         <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.AppScope">
             <summary>
-            应用范围
+            应用范围 (admin/repair/operator)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmMobilePageConfig.PageType">
@@ -14212,7 +14212,7 @@
         </member>
         <member name="T:EU.Core.Model.Models.SmMobilePageConfigDto">
             <summary>
-            SmMobilePageConfig(Dto.View)
+            移动端页面配置表(Dto.View)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Models.SmModuleColumnDto">
@@ -14806,7 +14806,7 @@
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmMobilePageConfigInput">
             <summary>
-            SmMobilePageConfig (Dto.InsertInput)
+            移动端页面配置表 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertSmModuleColumnInput">

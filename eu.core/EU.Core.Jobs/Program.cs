@@ -21,14 +21,17 @@ class Program
         RabbitMQHelper.CheckRabbitMQServiceAvailable();
         DBHelper.Init();
 
-        var sp = services.BuildServiceProvider();
+        using var sp = services.BuildServiceProvider();
+        var lifetime = sp.GetRequiredService<IHostApplicationLifetime>();
+        using var stoppingCts = new CancellationTokenSource();
+        lifetime.ApplicationStopping.Register(() => stoppingCts.Cancel());
+
+        (lifetime as ConsoleHostApplicationLifetime)?.RegisterConsoleCancel();
 
         var mqttEnabled = AppSettings.app("MqttBroker", "Enabled");
 
         if (mqttEnabled.ObjToBool())
         {
-            var lifetime = sp.GetRequiredService<IHostApplicationLifetime>() as ConsoleHostApplicationLifetime;
-            lifetime?.RegisterConsoleCancel();
             sp.ConfigureMqttEvents();
             await StartHostedServicesAsync(sp);
         }
@@ -37,7 +40,14 @@ class Program
         // 任务处理中心
         TaskCenter taskCenter = new TaskCenter(schedulerCenter);
         await taskCenter.Start();
-        Thread.Sleep(Timeout.Infinite);
+
+        try
+        {
+            await Task.Delay(Timeout.Infinite, stoppingCts.Token);
+        }
+        catch (OperationCanceledException) when (stoppingCts.IsCancellationRequested)
+        {
+        }
     }
 
     private static async Task StartHostedServicesAsync(ServiceProvider serviceProvider)

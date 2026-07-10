@@ -1,4 +1,3 @@
-﻿using Autofac;
 using EU.Core.Common;
 using EU.Core.Common.DB;
 using EU.Core.Common.Seed;
@@ -36,18 +35,6 @@ public class Helper
             });
         });
 
-        var builder = new ContainerBuilder();
-        builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>()
-                       .AsImplementedInterfaces()
-                       .InstancePerLifetimeScope()
-                       .PropertiesAutowired();
-        builder.RegisterInstance(new LoggerFactory())
-              .As<ILoggerFactory>();
-
-        builder.RegisterGeneric(typeof(Logger<>))
-            .As(typeof(ILogger<>))
-            .SingleInstance();
-
         services.AddAppServices();
         //services.AddTransient<ISmQuartzJobServices, SmQuartzJobServices>();
         //services.AddTransient<IBaseRepository<SmQuartzJob>, BaseRepository<SmQuartzJob>>();
@@ -63,6 +50,5 @@ public class Helper
         if (mqttOptions.Enabled)
             services.AddMqttSetup(mqttOptions);
 
-        builder.Build();
     }
 }
