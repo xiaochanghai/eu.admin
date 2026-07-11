@@ -335,6 +335,13 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
     {
         try
         {
+            var module = await Db.Queryable<SmModules>().InSingleAsync(moduleId);
+            if (module == null)
+                return Failed<SmWorkFlow>("模块不存在");
+
+            if (module.IsWorkflow != true)
+                return Failed<SmWorkFlow>("该模块未启用工作流");
+
             var workflow = await _dal.QuerySingle(x => x.SmModuleId == moduleId);
             if (workflow != null)
                 return Success(workflow);
@@ -365,6 +372,13 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
     {
         try
         {
+            var module = await Db.Queryable<SmModules>().InSingleAsync(moduleId);
+            if (module == null)
+                return Failed<WorkFlowNode>("模块不存在");
+
+            if (module.IsWorkflow != true)
+                return Failed<WorkFlowNode>("该模块未启用工作流");
+
             var workflow = await _dal.QuerySingle(x => x.SmModuleId == moduleId);
             if (workflow == null)
             {

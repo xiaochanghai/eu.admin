@@ -208,4 +208,10 @@ public class SmModulesBase : BasePoco
     /// </summary>
     [Display(Name = "IsShowRowSelection"), Description("表格行是否可选择")]
     public bool? IsShowRowSelection { get; set; }
+
+    /// <summary>
+    /// 是否启用工作流
+    /// </summary>
+    [Display(Name = "IsWorkflow"), Description("是否启用工作流")]
+    public bool? IsWorkflow { get; set; }
 }

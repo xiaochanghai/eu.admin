@@ -50,6 +50,17 @@ export interface IErrorItem {
   message: string;
 }
 
+const findNodeById = (node: IWorkFlowNode | undefined, nodeId: string): IWorkFlowNode | undefined => {
+  if (!node) return undefined;
+  if (node.id === nodeId) return node;
+
+  const childMatch = findNodeById(node.childNode, nodeId);
+  if (childMatch) return childMatch;
+
+  const conditionNodes = (node as IWorkFlowNode & { conditionNodeList?: IWorkFlowNode[] }).conditionNodeList;
+  return conditionNodes?.map(item => findNodeById(item, nodeId)).find(Boolean);
+};
+
 export const PublishButton = memo(
   ({ onValidate, iWorkFlowNode }: { iWorkFlowNode?: IWorkFlowNode; onValidate?: (result: boolean) => void }) => {
     const [errors, setErrors] = useState<IErrorItem[]>();
@@ -86,10 +97,12 @@ export const PublishButton = memo(
         // 校验失败，收集错误信息展示给用户
         const errs: IErrorItem[] = [];
         for (const nodeId of Object.keys(validateResult)) {
-          const msg = validateResult[nodeId];
+          const msg = validateResult[nodeId] || "节点配置不完整";
+          const node = findNodeById(startNode, nodeId);
+          const nodeName = node?.name || (node?.nodeType ? t(node.nodeType) : "");
           errs.push({
             category: t("flowDesign"),
-            message: `${nodeId}: ${msg}`
+            message: nodeName ? `${nodeName}：${msg}` : msg
           });
         }
         setErrors(errs);

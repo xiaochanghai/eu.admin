@@ -2,8 +2,10 @@ import React, { useState, useCallback, useRef } from "react";
 import { TableList } from "@/components";
 import SqlEdit from "./SqlEdit";
 import FormDesign from "../../config/form/components/FormDesign";
+import WorkflowConfigPage from "../../config/form";
 import FormPage from "./FormPage";
 import { ViewType, ActionType } from "@/typings";
+import { getModuleInfoById } from "@/api/modules/module";
 
 /**
  * 模块管理组件属性接口
@@ -27,6 +29,7 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
   const [formPageId, setFormPageId] = useState<string>("");
   // 表单页面是否为查看模式状态
   const [formPageIsView, setFormPageIsView] = useState<boolean>(false);
+  const [isWorkflowModule, setIsWorkflowModule] = useState<boolean | null>(null);
   const tableRef = useRef<ActionType>();
 
   /**
@@ -43,6 +46,16 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
     else setFormPageId(id ?? "");
 
     setFormPageIsView(isView);
+
+    if (value !== ViewType.FORM_COLLOCATE || !id) {
+      setIsWorkflowModule(null);
+      return;
+    }
+
+    setIsWorkflowModule(null);
+    void getModuleInfoById(id).then(({ Data }) => {
+      setIsWorkflowModule(Data?.IsWorkflow === true);
+    });
   }, []);
   const handleReload = useCallback(() => {
     tableRef.current?.reload();
@@ -57,7 +70,10 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
         <SqlEdit ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} onReload={handleReload} />
       )}
       {viewType == ViewType.FORM_COLLOCATE && (
-        <FormDesign ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} onReload={handleReload} />
+        <>
+          {isWorkflowModule === true && <WorkflowConfigPage moduleId={formPageId} onBack={() => changePage(ViewType.INDEX)} />}
+          {isWorkflowModule !== true && <FormDesign ModuleId={formPageId} IsView={formPageIsView} changePage={changePage} onReload={handleReload} />}
+        </>
       )}
     </>
   );

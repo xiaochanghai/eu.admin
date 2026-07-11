@@ -5437,6 +5437,11 @@
             表格行是否可选择
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsWorkflow">
+            <summary>
+            是否启用工作流
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -5955,6 +5960,11 @@
         <member name="P:EU.Core.Model.Base.SmWorkFlowNodeBase.NodeName">
             <summary>
             节点名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeBase.ConditionsJson">
+            <summary>
+            条件分支配置
             </summary>
         </member>
         <member name="P:EU.Core.Model.Base.SmWorkFlowNodeBase.Remark">
@@ -12377,6 +12387,11 @@
             表格行是否可选择
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsWorkflow">
+            <summary>
+            是否启用工作流
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
             <summary>
             系统模块SQL (Model)
@@ -12895,6 +12910,11 @@
         <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.NodeName">
             <summary>
             节点名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.ConditionsJson">
+            <summary>
+            条件分支配置
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.Remark">
