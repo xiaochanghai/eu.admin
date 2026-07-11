@@ -1,6 +1,7 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { Spin } from "antd";
 import { FormVo } from "@/api/Form";
+import { FormFieldVo } from "@/api/FormField";
 import { Lang } from "@/workflow/component";
 import { materialUis } from "@/workflow/materialUis";
 import { WorkflowEditor } from "@/workflow/WorkflowEditor";
@@ -15,12 +16,50 @@ export interface FlowDesignProps {
   formVo: FormVo; // 映射后的表单模型
 }
 
+const createConditionFields = (entityType: string): FormFieldVo[] =>
+  [
+    { fieldName: "title", title: "申请标题", fieldType: "string" },
+    { fieldName: "amount", title: "申请金额", fieldType: "number" },
+    { fieldName: "applyDate", title: "申请日期", fieldType: "date" },
+    { fieldName: "status", title: "申请状态", fieldType: "string" },
+    { fieldName: "urgent", title: "是否紧急", fieldType: "boolean" }
+  ].map((field, index) =>
+    ({
+      ...field,
+      id: `mock-${field.fieldName}`,
+      entityType,
+      entityFieldName: field.fieldName,
+      pathName: field.fieldName,
+      javaType: field.fieldType,
+      javaTitle: field.title,
+      dataType: "basic",
+      formId: "mock-workflow-form",
+      form: {} as FormVo,
+      description: `流程条件模拟字段：${field.title}`,
+      sort: index,
+      required: false,
+      readOnly: false,
+      dictCode: null,
+      dataIndex: field.fieldName,
+      x_hidden: false,
+      disabled: false,
+      x_read_pretty: false,
+      listHide: false,
+      listSearch: false,
+      listAlign: "left"
+    }) as unknown as FormFieldVo
+  );
+
 const FlowDesign: React.FC<FlowDesignProps> = props => {
   const dispatch = useDispatch();
   const { moduleId, formVo } = props;
 
   const lang = Lang.cn;
   const themeMode = "light";
+  const workflowFormVo = useMemo(
+    () => (formVo.fields?.length ? formVo : { ...formVo, fields: createConditionFields(formVo.entityType || formVo.type) }),
+    [formVo]
+  );
 
   // 从服务端加载的流程节点树，作为 WorkflowEditor 的初始值
   const [flowNode, setFlowNode] = useState<IWorkFlowNode | undefined>();
@@ -66,7 +105,7 @@ const FlowDesign: React.FC<FlowDesignProps> = props => {
       lang={lang}
       materialUis={materialUis}
       flowNode={flowNode}
-      formVo={formVo}
+      formVo={workflowFormVo}
     />
   );
 };

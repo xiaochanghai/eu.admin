@@ -27,6 +27,7 @@ export const NotifierPanel = memo((props: { value?: IApproverSettings; formVo?: 
           props?.onChange?.(data);
         }}
         showUser={true}
+        userType="notifier"
       />
     </>
     // <FormPage

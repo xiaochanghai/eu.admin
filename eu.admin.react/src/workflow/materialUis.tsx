@@ -5,6 +5,17 @@ import { AuditPanel } from "./setters/AuditPanel";
 import { ConditionPanel } from "./setters/ConditionPanel";
 import { NotifierPanel } from "./setters/NotifierPanel";
 import { StartPanel } from "./setters/StartPanel";
+
+const isConditionConfigured = (node: IWorkFlowNode): boolean => {
+  const conditions = node.conditions;
+  return !!conditions?.length && conditions.every(group =>
+    !!group.where?.length && group.where.every(condition => {
+      if (!condition.fieldName || !condition.opt) return false;
+      if (condition.opt === "isNull" || condition.opt === "isNotNull") return true;
+      return !!condition.value?.some((value: unknown) => value !== undefined && value !== null && value !== "");
+    })
+  );
+};
 //dlc 当前流程参与的物料信息
 export const materialUis: IMaterialUIs = {
   //审批人物料UI
@@ -48,10 +59,8 @@ export const materialUis: IMaterialUIs = {
     //属性面板
     settersPanel: ConditionPanel,
     //校验函数
-    validate: () => {
-      // if (!node.conditions?.length) {
-      //   return t("noSetCondition");
-      // }
+    validate: (node: IWorkFlowNode, { t }) => {
+      if (!isConditionConfigured(node)) return t("noSetCondition");
       return true;
     }
   },

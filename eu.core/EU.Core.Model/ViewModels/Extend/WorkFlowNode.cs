@@ -15,6 +15,7 @@
 *└──────────────────────────────────┘
 */
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace EU.Core.Model;
 
@@ -37,6 +38,8 @@ public class WorkFlowNode
     public ApproverSettings approverSettings { get; set; }
 
     public List<WorkFlowNode> conditionNodeList { get; set; }
+
+    public JToken conditions { get; set; }
 
     /// <summary>
     /// 扩展数据：存储前端发送的、本类未定义的字段（如 desc, config, transfer 等）

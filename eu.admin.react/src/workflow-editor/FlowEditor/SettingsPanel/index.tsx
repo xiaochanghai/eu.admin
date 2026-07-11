@@ -17,7 +17,8 @@ const Content = styled.div`
 export const SettingsPanel = memo((props: { formVo?: FormVo }) => {
   const workFlow = useWorkFlow();
   const selectedId = useSelector((state: RootState) => state.workflow.selectedId);
-  const selectedNode = selectedId ? workFlow.getNode(selectedId) : undefined;
+  const startNode = useSelector((state: RootState) => state.workflow.startNode);
+  const selectedNode = selectedId ? workFlow.getNode(selectedId, startNode) : undefined;
   const dispatch = useDispatch();
 
   const materialUi = useMaterialUI(selectedNode);

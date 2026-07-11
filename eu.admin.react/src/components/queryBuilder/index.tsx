@@ -1,117 +1,88 @@
-/**
- * 视图查询条件设计器
- */
+import { Button, Space } from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { FormVo } from "@/api/Form";
+import { ConditionGroup, where } from "@/dsl/base";
 import { useMemo } from "react";
-// import Condition from "./component/Condition";
-import { ConditionGroup } from "@/dsl/base";
-// import { ConditionGroup, where } from "@/dsl/base";
+import Condition from "./component/Condition";
 
 interface QueryBuilderProps {
-  entityModel: FormVo; //当前实体模型
-  subForms?: FormVo[]; //1对多数据集信息
+  entityModel: FormVo;
   value: string;
   className?: string;
-  style?: any;
-  mode?: "build" | "list"; //使用场景 视图|列表
+  style?: React.CSSProperties;
   onDataChange: (conditionJson: string) => void;
 }
 
-/**
- * 简易模式的数据筛选设计器
- * 1. 支持多个分组，单个分组内是且运算关系
- * 2. 组内不支持递归组嵌套,组和组之间只能是或运算 支持=> (a and b and c) or ( d and e) 不支持=>(a and b and (a or c or (e and f)))
- */
+const emptyGroup = (): Partial<ConditionGroup> => ({ where: [{}] });
+
 const QueryBuilder = ({ onDataChange, entityModel, className, style, value }: QueryBuilderProps) => {
   const groups = useMemo((): Partial<ConditionGroup>[] => {
-    return value ? JSON.parse(value) : [{ where: [{}] }];
+    try {
+      return value ? JSON.parse(value) : [emptyGroup()];
+    } catch {
+      return [emptyGroup()];
+    }
   }, [value]);
-  return entityModel ? (
-    <div style={style} className={`${className} space-y-2`}>
+
+  const updateGroups = (nextGroups: Partial<ConditionGroup>[]) => onDataChange(JSON.stringify(nextGroups));
+
+  return (
+    <div style={style} className={`${className ?? ""} space-y-3`}>
       {groups.map((group, groupIndex) => (
-        <div key={`and${groupIndex}`} className=" space-y-1 rounded bg-gray-50 p-2">
-          {group?.where?.map(whereIndex => (
-            <div key={`where${whereIndex}`} className=" space-x-2 flex relative justify-between   items-center">
-              {/* <Condition
-                key={`conditionWhere${whereIndex}`}
-                className="w-full"
-                mode={mode}
-                subForms={subForms}
-                where={where}
-                formVo={entityModel}
-                onDataChange={(where: Partial<where>) => {
-                  const removeGroups = groups.map((g, group2Index) => {
-                    if (group2Index === groupIndex) {
-                      return {
-                        ...g,
-                        where: g.where?.map((ww, where2Index) => {
-                          if (where2Index !== whereIndex) return ww;
-                          return where;
-                        })
-                      };
-                    }
-                    return g;
-                  });
-                  //防抖延时(待)
-                  onDataChange(JSON.stringify(removeGroups));
-                }}
-              /> */}
-              <div
-                onClick={() => {
-                  const removeGroups = groups
-                    .map((g, group3Index) => {
-                      if (group3Index === groupIndex) {
-                        return {
-                          ...g,
-                          where: g.where?.filter(where3Index => where3Index !== whereIndex)
-                        };
-                      }
-                      return g;
-                    })
-                    .filter(g => g.where !== undefined && g.where.length > 0);
-                  onDataChange(JSON.stringify(removeGroups));
-                }}
-                className=" justify-end  text-right"
-              >
-                <i style={{ fontSize: "18px" }} className={`icon-recycle   text-gray-400 hover:text-gray-600  cursor-pointer `} />
+        <div key={`group-${groupIndex}`}>
+          {groupIndex > 0 && <div className="py-2 text-center text-sm font-medium text-gray-500">或</div>}
+          <div className="space-y-2 rounded border border-gray-200 bg-gray-50 p-3">
+            <div className="text-xs text-gray-500">条件组 {groupIndex + 1}（以下条件同时满足）</div>
+            {(group.where ?? []).map((condition, whereIndex) => (
+              <div key={`where-${whereIndex}`} className="flex items-center gap-2">
+                {whereIndex > 0 && <span className="w-4 text-center text-xs text-gray-500">且</span>}
+                {whereIndex === 0 && <span className="w-4" />}
+                <Condition
+                  className="w-full"
+                  where={condition}
+                  formVo={entityModel}
+                  onDataChange={(nextWhere: Partial<where>) => {
+                    updateGroups(
+                      groups.map((item, index) =>
+                        index === groupIndex
+                          ? { ...item, where: item.where?.map((current, index) => (index === whereIndex ? nextWhere : current)) }
+                          : item
+                      )
+                    );
+                  }}
+                />
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  aria-label="删除条件"
+                  onClick={() => {
+                    const nextGroups = groups
+                      .map((item, index) => (index === groupIndex ? { ...item, where: item.where?.filter((_, index) => index !== whereIndex) } : item))
+                      .filter(item => item.where?.length);
+                    updateGroups(nextGroups.length ? nextGroups : [emptyGroup()]);
+                  }}
+                />
               </div>
-            </div>
-          ))}
-          <div
-            onClick={() => {
-              onDataChange(
-                JSON.stringify(
-                  groups.map((g, group4Index) => {
-                    if (group4Index === groupIndex) {
-                      return {
-                        ...g,
-                        where: g.where ? [...g.where, {}] : [{}]
-                      };
-                    }
-                    return g;
-                  })
-                )
-              );
-            }}
-            className="group relative inline-flex border-dashed items-center py-2 px-4 text-gray-600 hover:text-gray-700 border border-gray-300 rounded transition duration-300 hover:bg-gray-100 hover:border-gray-400  cursor-pointer"
-          >
-            <i style={{ fontSize: "18px" }} className={`icon-add_circle mr-2   text-gray-400 group-hover:text-gray-600`} />
-            <span>且条件</span>
+            ))}
+            <Button
+              type="dashed"
+              icon={<PlusOutlined />}
+              onClick={() => updateGroups(groups.map((item, index) => (index === groupIndex ? { ...item, where: [...(item.where ?? []), {}] } : item)))}
+            >
+              添加条件
+            </Button>
           </div>
         </div>
       ))}
-      <div
-        onClick={() => {
-          onDataChange(JSON.stringify([...groups, { where: [{}] }]));
-        }}
-        className=" group ml-2 relative inline-flex border-dashed items-center py-2 px-4 text-gray-600 hover:text-gray-700 border border-gray-300 rounded transition duration-300 hover:bg-gray-100 hover:border-gray-400  cursor-pointer"
-      >
-        <i style={{ fontSize: "18px" }} className={`icon-add_circle mr-2   text-gray-400 group-hover:text-gray-600`} />
-        <span>或条件</span>
-      </div>
+      <Space>
+        <Button type="dashed" icon={<PlusOutlined />} onClick={() => updateGroups([...groups, emptyGroup()])}>
+          添加条件组
+        </Button>
+        <span className="text-xs text-gray-500">条件组之间为“或”关系</span>
+      </Space>
     </div>
-  ) : (
-    <div>请先确定数据集</div>
   );
 };
+
 export default QueryBuilder;

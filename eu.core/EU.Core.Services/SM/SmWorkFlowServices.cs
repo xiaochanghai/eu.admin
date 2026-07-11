@@ -18,6 +18,8 @@
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using MongoDB.Bson;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace EU.Core.Services;
 
@@ -138,13 +140,15 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
             ID = nodeId.Value,
             NodeType = node.nodeType,
             NodeName = node.name,
+            ConditionsJson = node.conditions?.ToString(Formatting.None),
             ParentNodeId = parentId
         });
 
         // 添加审核人员列表
         if (node.approverSettings?.auditList != null && node.approverSettings.auditList.Any())
         {
-            foreach (var audit in node.approverSettings.auditList)
+            var auditList1 = node.approverSettings.auditList.Distinct().ToList();
+            foreach (var audit in auditList1)
             {
                 if (audit?.objectId != null)
                 {
@@ -302,7 +306,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
             })
             .ToList();
 
-        return new WorkFlowNode
+        var workFlowNode = new WorkFlowNode
         {
             id = node.ID.ToString(),
             nodeType = node.NodeType,
@@ -312,6 +316,11 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
                 auditList = auditList
             } : null
         };
+
+        if (!string.IsNullOrWhiteSpace(node.ConditionsJson))
+            workFlowNode.conditions = JToken.Parse(node.ConditionsJson);
+
+        return workFlowNode;
     }
     #endregion
 
@@ -338,7 +347,8 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
                 FlowCode = string.Empty,
             };
             newWorkflow.ID = await _dal.Add(newWorkflow);
-            return Success(newWorkflow);        }
+            return Success(newWorkflow);
+        }
         catch (Exception ex)
         {
             return Failed<SmWorkFlow>($"获取工作流失败: {ex.Message}");

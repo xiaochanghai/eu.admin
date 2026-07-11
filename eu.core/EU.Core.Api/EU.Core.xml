@@ -1888,14 +1888,6 @@
             <param name="moduleId">模块ID（SmModules.ID）</param>
             <returns>流程节点树</returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmWorkFlowController.SaveDraft(System.Guid,EU.Core.Model.WorkFlowNode)">
-            <summary>
-            保存未发布的流程节点（设计器实时自动保存）
-            </summary>
-            <param name="moduleId">模块ID（SmModules.ID）</param>
-            <param name="node">草稿节点树</param>
-            <returns></returns>
-        </member>
         <member name="T:EU.Core.Api.Controllers.SmWorkFlowNodeAuditController">
             <summary>
             工作流节点审核人员(Controller)
