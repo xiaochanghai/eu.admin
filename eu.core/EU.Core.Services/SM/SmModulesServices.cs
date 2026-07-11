@@ -968,8 +968,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         dynamic data = new ExpandoObject();
 
         // 获取模块信息
-        var module = await base.QuerySingle(x => x.IsDeleted == false && x.ModuleCode == moduleCode);
-        if (module == null)
+        var isExist = await base.AnyAsync(x => x.ModuleCode == moduleCode);
+        if (!isExist)
             throw new Exception("未查询到模块【" + moduleCode + "】相关配置信息！");
 
         var moduleSql = new ModuleSql(moduleCode, Db);
