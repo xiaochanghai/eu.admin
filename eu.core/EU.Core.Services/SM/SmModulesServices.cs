@@ -971,7 +971,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     /// <param name="moduleCode">模块代码</param>
     /// <param name="id">数据ID</param>
     /// <returns>日志信息</returns>
-    public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id)
+    public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, Guid id)
     {
         dynamic data = new ExpandoObject();
 

@@ -72,7 +72,7 @@ public class SmModulesController : BaseController<ISmModulesServices, SmModules,
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpGet("GetModuleLogInfo/{moduleCode}/{id}")]
-    public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id) => await _service.GetModuleLogInfo(moduleCode, id);
+    public async Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, Guid id) => await _service.GetModuleLogInfo(moduleCode, id);
     #endregion
 
     #region 导出模块SQL

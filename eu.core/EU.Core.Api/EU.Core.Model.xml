@@ -5527,6 +5527,7 @@
             是否过滤角色数据权限
             </summary>
         </member>
+        <!-- Badly formed XML comment ignored for member "P:EU.Core.Model.Base.SmModulesBase.IsWorkflow" -->
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12592,6 +12593,7 @@
             是否过滤角色数据权限
             </summary>
         </member>
+        <!-- Badly formed XML comment ignored for member "P:EU.Core.Model.Entity.SmModules.IsWorkflow" -->
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
             <summary>
             系统模块SQL (Model)
@@ -15381,6 +15383,29 @@
             <summary>
             可访问的公司ID列表
             如果为空，表示无权限访问任何数据
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.WorkFlowNode">
+            <summary>
+            工作流节点视图模型
+            使用 JsonExtensionData 保留前端扩展字段，确保草稿/发布 JSON 不丢失数据
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.WorkFlowNode.ExtensionData">
+            <summary>
+            扩展数据：存储前端发送的、本类未定义的字段（如 desc, config, transfer 等）
+            序列化时会原样写回 JSON，保证草稿和已发布流程数据完整不丢失
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.ApproverSettings">
+            <summary>
+            审批人设置
+            使用 JsonExtensionData 保留前端扩展字段
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.ApproverSettings.ExtensionData">
+            <summary>
+            扩展数据：保留前端审批人设置中的其他字段（如 joinType, emptyPass, handleType 等）
             </summary>
         </member>
         <member name="P:EU.Core.Model.ImportExcelForm.file">

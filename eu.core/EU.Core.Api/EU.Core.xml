@@ -1686,7 +1686,7 @@
             <param name="id">模块ID</param>
             <returns></returns>
         </member>
-        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleLogInfo(System.String,System.String)">
+        <member name="M:EU.Core.Api.Controllers.SmModulesController.GetModuleLogInfo(System.String,System.Guid)">
             <summary>
             获取模块日志信息
             </summary>

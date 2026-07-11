@@ -28,7 +28,7 @@ public interface ISmModulesServices : IBaseServices<SmModules, SmModulesDto, Ins
     Task<dynamic> GetModuleInfo(string moduleCode);
     Task<ServicePageResult<SmModuleFormOption>> GetModuleFormColumn(Guid id);
 
-    Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, string id);
+    Task<ServiceResult<dynamic>> GetModuleLogInfo(string moduleCode, Guid id);
 
     Task<ServiceResult<Guid>> ExportModuleSqlScript(List<Guid> ids);
 
