@@ -215,4 +215,8 @@ public class SmModules : BasePoco
     /// </summary>
     [Display(Name = "IsRoleDataScope"), Description("是否过滤角色数据权限"), SugarColumn(IsNullable = true)]
     public bool? IsRoleDataScope { get; set; }
+    /// 是否启用工作流
+    /// </summary>
+    [Display(Name = "IsWorkflow"), Description("是否启用工作流"), SugarColumn(IsNullable = false, DefaultValue = "false")]
+    public bool? IsWorkflow { get; set; }
 }

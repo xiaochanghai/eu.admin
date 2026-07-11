@@ -6007,6 +6007,11 @@
             节点名
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmWorkFlowNodeBase.ConditionsJson">
+            <summary>
+            条件分支配置
+            </summary>
+        </member>
         <member name="P:EU.Core.Model.Base.SmWorkFlowNodeBase.Remark">
             <summary>
             备注
@@ -13072,6 +13077,11 @@
         <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.NodeName">
             <summary>
             节点名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.ConditionsJson">
+            <summary>
+            条件分支配置
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.SmWorkFlowNode.Remark">

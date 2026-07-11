@@ -48,4 +48,27 @@ public class SmWorkFlowController : BaseController<ISmWorkFlowServices, SmWorkFl
     [HttpGet("QueryNode/{id}")]
     public Task<ServiceResult<WorkFlowNode>> QueryNode(Guid id) => _service.QueryNode(id);
     #endregion
+
+    #region 按模块获取工作流
+    /// <summary>
+    /// 按模块ID获取工作流（不存在则自动初始化）
+    /// 用于流程设计器页面加载时，根据当前模块找到对应的 SmWorkFlow 记录
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <returns>工作流实体</returns>
+    [HttpGet("ForModule/{moduleId}")]
+    public Task<ServiceResult<SmWorkFlow>> ForModule(Guid moduleId) => _service.GetByModuleId(moduleId);
+    #endregion
+
+    #region 按模块获取流程节点
+    /// <summary>
+    /// 按模块ID获取流程节点树
+    /// 节点数据从节点表重建
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <returns>流程节点树</returns>
+    [HttpGet("QueryNodeByModule/{moduleId}")]
+    public Task<ServiceResult<WorkFlowNode>> QueryNodeByModule(Guid moduleId) => _service.QueryNodeByModuleId(moduleId);
+    #endregion
+
 }

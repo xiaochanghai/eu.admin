@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, useRef } from "react";
 import { styled } from "styled-components";
 import classNames from "classnames";
 import { FlowEditorCanvas, useStartNode, useEditorEngine, IWorkFlowNode } from "@/workflow-editor";
@@ -29,13 +29,18 @@ export const WorkFlowEditorInner = memo(
   }) => {
     const { className, flowNode, onDataChange, formVo, ...other } = props;
     const edtorStore = useEditorEngine();
+    const initialFlowNodeRef = useRef<IWorkFlowNode>();
 
     useEffect(() => {
       //初始流程节点
-      flowNode && edtorStore?.setStartNode(flowNode);
+      if (flowNode) {
+        initialFlowNodeRef.current = flowNode;
+        edtorStore?.setStartNode(flowNode);
+      }
     }, [flowNode]);
     const startNode = useStartNode();
     useUpdateEffect(() => {
+      if (startNode === initialFlowNodeRef.current) return;
       onDataChange?.(startNode);
     }, [startNode]);
     return (

@@ -16,6 +16,7 @@ const state: any = {
   changeNode: {},
   selectedId: null,
   changeFlag: false,
+  formId: null as string | null, // 当前设计器的 formVo.id，供 PublishButton 使用
   startNode: {
     id: "start",
     nodeType: NodeType.start
@@ -37,6 +38,9 @@ const workflowSlice = createSlice({
     },
     SET_REDOLIST(state, { payload }: PayloadAction<any>) {
       state.redoList = payload;
+    },
+    SET_FORM_ID(state, { payload }: PayloadAction<string | null>) {
+      state.formId = payload;
     },
     SET_START_NODE(state, { payload }: PayloadAction<any>) {
       state.startNode = payload;
@@ -117,6 +121,7 @@ export const {
   SET_VALIDATED,
   SET_REDOLIST,
   SET_START_NODE,
+  SET_FORM_ID,
   DELETE_NODE,
   CHANGE_NODE,
   SELECT_NODE,

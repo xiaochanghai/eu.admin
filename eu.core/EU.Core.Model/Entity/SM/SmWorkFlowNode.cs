@@ -55,6 +55,12 @@ public class SmWorkFlowNode : BasePoco
     public string NodeName { get; set; }
 
     /// <summary>
+    /// 条件分支配置
+    /// </summary>
+    [Display(Name = "ConditionsJson"), Description("条件分支配置"), SugarColumn(IsNullable = true, ColumnDataType = "text")]
+    public string ConditionsJson { get; set; }
+
+    /// <summary>
     /// 备注
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]

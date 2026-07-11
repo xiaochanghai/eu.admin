@@ -44,6 +44,7 @@ export const ApproverPanel = memo((props: { value?: IApproverSettings; formVo?: 
           props?.onChange?.(data);
         }}
         showUser={true}
+        userType="approver"
       />
       {/* <FormPage
           terse

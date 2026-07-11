@@ -54,6 +54,12 @@ public class SmWorkFlowNodeBase : BasePoco
     public string NodeName { get; set; }
 
     /// <summary>
+    /// 条件分支配置
+    /// </summary>
+    [Display(Name = "ConditionsJson"), Description("条件分支配置")]
+    public string ConditionsJson { get; set; }
+
+    /// <summary>
     /// 备注
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]

@@ -10,13 +10,26 @@ import { Icon } from "@/components";
 import { message } from "@/hooks/useMessage";
 import { getModuleInfoById } from "@/api/modules/module";
 
-const FormDesign: React.FC<any> = props => {
-  const { ModuleId, changePage } = props;
+interface FormDesignProps {
+  /** 当前配置的 SmModule 主键。 */
+  ModuleId: string;
+  /** 旧模块配置入口传入的查看标识，当前组件保留以兼容调用方。 */
+  IsView?: boolean;
+  /** 旧模块配置入口的页面切换回调。 */
+  changePage?: (...args: any[]) => void;
+  /** 旧模块配置入口的数据刷新回调。 */
+  onReload?: () => void;
+  /** 在流程设置页内嵌渲染，仅显示表单栏位并固定使用表单模式。 */
+  embedded?: boolean;
+}
+
+const FormDesign: React.FC<FormDesignProps> = props => {
+  const { ModuleId, changePage, embedded = false } = props;
   let [currentField, setCurrentField] = useState<any>(null);
   let [moduleCode, setModuleCode] = useState<any>(null);
   let [moduleName, setModuleName] = useState<any>(null);
   let [columns, setColumns] = useState<any[]>([]);
-  let [mode, setMode] = useState<Mode>(Mode.list);
+  let [mode, setMode] = useState<Mode>(embedded ? Mode.form : Mode.list);
 
   const queryFormColumn = async () => {
     let { Data } = await http.get<any>(`/api/SmModule/FormColumn/${ModuleId}`);
@@ -66,10 +79,14 @@ const FormDesign: React.FC<any> = props => {
         </Card>
       ) : (
         <>
-          <Space style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button type="default" onClick={() => changePage("FormIndex")} icon={<Icon name="RollbackOutlined" />}></Button>
-          </Space>
-          <div style={{ height: 10 }}></div>
+          {!embedded && (
+            <>
+              <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button type="default" onClick={() => changePage?.("FormIndex")} icon={<Icon name="RollbackOutlined" />}></Button>
+              </Space>
+              <div style={{ height: 10 }}></div>
+            </>
+          )}
           <Card>
             <Descriptions title="表单配置" items={descriptionItems} />
 
@@ -109,6 +126,7 @@ const FormDesign: React.FC<any> = props => {
                     <FormPage
                       moduleCode={moduleCode}
                       fieldList={columns}
+                      formOnly={embedded}
                       // fieldList={columns.sort((a, b) => a.FromTaxisNo - b.FromTaxisNo)}
                       currentField={currentField}
                       // mode={Mode.form}

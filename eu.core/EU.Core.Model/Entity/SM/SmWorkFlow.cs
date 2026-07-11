@@ -71,4 +71,5 @@ public class SmWorkFlow : BasePoco
     /// </summary>
     [Display(Name = "ExtRemark4"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string ExtRemark4 { get; set; }
+
 }

@@ -89,6 +89,7 @@ export interface ModuleInfo {
 export interface ModuleInfo1 {
   ModuleName: string;
   ModuleCode: string;
+  IsWorkflow: boolean;
 }
 export interface ModuleInfoBeforeAction {
   id: string;

@@ -16,6 +16,7 @@ type FieldType = {
 interface FieldSetCenterProps {
   moduleCode: any;
   fieldList: any[];
+  formOnly?: boolean;
   currentField: any;
   onDataChange: (ang: any[]) => void; //数据返回出去
   onSelect: (field: string) => void; //当前选中字段
@@ -30,11 +31,12 @@ const FieldSetCenter = ({
   onDataChange,
   onPlus,
   moduleCode,
+  formOnly = false,
   onSetMode,
   onReload
 }: FieldSetCenterProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>(Mode.list);
+  const [mode, setMode] = useState<Mode>(formOnly ? Mode.form : Mode.list);
   const [form] = Form.useForm(); // 表单实例
   const fieldListRef = useRef(fieldList);
 
@@ -465,7 +467,7 @@ const FieldSetCenter = ({
     <DndProvider backend={HTML5Backend}>
       <div className="bg-white">
         <Tabs
-          defaultActiveKey={"panel_list"}
+          defaultActiveKey={formOnly ? "panel_form" : "panel_list"}
           onChange={onTabsChange}
           tabBarExtraContent={{
             right: (
@@ -475,7 +477,7 @@ const FieldSetCenter = ({
             )
           }}
         >
-          <TabPane key="panel_list" tab="列表栏位" icon={<Icon name="TableOutlined" />}>
+          {!formOnly && <TabPane key="panel_list" tab="列表栏位" icon={<Icon name="TableOutlined" />}>
             <Card size="small" title="显示栏位">
               <Flex wrap>
                 {fieldList
@@ -498,7 +500,7 @@ const FieldSetCenter = ({
                 {fieldList.filter(f => f.HideInTable != false && f.ColumnMode != Mode.form).length == 0 ? "暂无隐藏栏位" : null}
               </Flex>
             </Card>
-          </TabPane>
+          </TabPane>}
           <TabPane key="panel_form" tab="表单栏位" icon={<Icon name="MenuOutlined" />}>
             <Form
               labelCol={{

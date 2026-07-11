@@ -13,13 +13,14 @@ const TabPane = Tabs.TabPane;
 export interface FlowSelectProps extends VfBaseProps<Partial<NodeUserInfo>[]> {
   showUser?: boolean; //仅使用用户
   multiple?: boolean; //是否能多选
+  userType?: string;
   groupSelectData?: ISelect[];
   deptSelectData?: ISelect[];
   userSelectData?: ISelect[];
 }
 
 export default (props: FlowSelectProps) => {
-  const { onDataChange, value, showUser = false, multiple = true, groupSelectData, deptSelectData, userSelectData } = props;
+  const { onDataChange, value, showUser = false, multiple = true, userType = "assignee", groupSelectData, deptSelectData, userSelectData } = props;
   // const [search, setSearch] = useState<string>(); //搜索的数据
   const [activeKey, setActiveKey] = useState<string>("assignee"); //当前页签
 
@@ -30,8 +31,8 @@ export default (props: FlowSelectProps) => {
 
   //用户数据
   const users = useMemo((): Partial<NodeUserInfo>[] => {
-    return value?.filter(v => v.userType === "assignee") || [];
-  }, [value]);
+    return value?.filter(v => v.userType === userType) || [];
+  }, [value, userType]);
 
   //dept数据
   const depts = useMemo((): Partial<NodeUserInfo>[] => {
@@ -74,7 +75,7 @@ export default (props: FlowSelectProps) => {
                     multiple={multiple}
                     value={users.map(v => v.objectId || "")}
                     onDataChange={(vals?: string[]) => {
-                      selectNode(userSelectData, "assignee", ...(vals || []));
+                      selectNode(userSelectData, userType, ...(vals || []));
                     }}
                   />
                 )}
@@ -149,7 +150,7 @@ export default (props: FlowSelectProps) => {
                       >
                         {user.label}
                         {(user.label === undefined || user.label === null) &&
-                          user.userType === "assignee" &&
+                          user.userType === userType &&
                           userSelectData &&
                           userSelectData.filter(data => data.value === user.objectId)?.[0]?.label}
 

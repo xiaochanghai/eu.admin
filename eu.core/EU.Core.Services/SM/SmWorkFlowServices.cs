@@ -18,6 +18,8 @@
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using MongoDB.Bson;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace EU.Core.Services;
 
@@ -49,9 +51,9 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
 
     #region 流程节点保存
     /// <summary>
-    /// 流程节点保存,将工作流节点树结构保存到数据库
+    /// 流程节点保存（发布），将工作流节点树保存到数据库
     /// </summary>
-    /// <param name="node">工作流节点树根节点</param>
+    /// <param name="node">工作流节点树（start 之后的第一个节点）</param>
     /// <param name="id">工作流ID</param>
     /// <returns>操作结果</returns>
     public async Task<ServiceResult> NodeSave(WorkFlowNode node, Guid id)
@@ -138,13 +140,15 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
             ID = nodeId.Value,
             NodeType = node.nodeType,
             NodeName = node.name,
+            ConditionsJson = node.conditions?.ToString(Formatting.None),
             ParentNodeId = parentId
         });
 
         // 添加审核人员列表
         if (node.approverSettings?.auditList != null && node.approverSettings.auditList.Any())
         {
-            foreach (var audit in node.approverSettings.auditList)
+            var auditList1 = node.approverSettings.auditList.Distinct().ToList();
+            foreach (var audit in auditList1)
             {
                 if (audit?.objectId != null)
                 {
@@ -302,7 +306,7 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
             })
             .ToList();
 
-        return new WorkFlowNode
+        var workFlowNode = new WorkFlowNode
         {
             id = node.ID.ToString(),
             nodeType = node.NodeType,
@@ -312,6 +316,83 @@ public class SmWorkFlowServices : BaseServices<SmWorkFlow, SmWorkFlowDto, Insert
                 auditList = auditList
             } : null
         };
+
+        if (!string.IsNullOrWhiteSpace(node.ConditionsJson))
+            workFlowNode.conditions = JToken.Parse(node.ConditionsJson);
+
+        return workFlowNode;
     }
+    #endregion
+
+    #region 按模块查询工作流
+
+    /// <summary>
+    /// 根据模块ID获取工作流；若该模块尚未创建工作流，则自动初始化一条
+    /// </summary>
+    /// <param name="moduleId">模块ID（SmModules.ID）</param>
+    /// <returns>对应的工作流实体</returns>
+    public async Task<ServiceResult<SmWorkFlow>> GetByModuleId(Guid moduleId)
+    {
+        try
+        {
+            var module = await Db.Queryable<SmModules>().InSingleAsync(moduleId);
+            if (module == null)
+                return Failed<SmWorkFlow>("模块不存在");
+
+            if (module.IsWorkflow != true)
+                return Failed<SmWorkFlow>("该模块未启用工作流");
+
+            var workflow = await _dal.QuerySingle(x => x.SmModuleId == moduleId);
+            if (workflow != null)
+                return Success(workflow);
+
+            // 该模块还没有工作流，自动创建一条
+            var newWorkflow = new SmWorkFlow
+            {
+                SmModuleId = moduleId,
+                FlowName = string.Empty,
+                FlowCode = string.Empty,
+            };
+            newWorkflow.ID = await _dal.Add(newWorkflow);
+            return Success(newWorkflow);
+        }
+        catch (Exception ex)
+        {
+            return Failed<SmWorkFlow>($"获取工作流失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 根据模块ID获取流程节点树
+    /// 节点数据从节点表重建
+    /// </summary>
+    /// <param name="moduleId">模块ID</param>
+    /// <returns>流程节点树</returns>
+    public async Task<ServiceResult<WorkFlowNode>> QueryNodeByModuleId(Guid moduleId)
+    {
+        try
+        {
+            var module = await Db.Queryable<SmModules>().InSingleAsync(moduleId);
+            if (module == null)
+                return Failed<WorkFlowNode>("模块不存在");
+
+            if (module.IsWorkflow != true)
+                return Failed<WorkFlowNode>("该模块未启用工作流");
+
+            var workflow = await _dal.QuerySingle(x => x.SmModuleId == moduleId);
+            if (workflow == null)
+            {
+                // 未初始化过，返回空的起始节点
+                return Success(new WorkFlowNode { id = StartNodeId, nodeType = StartNodeType });
+            }
+
+            return await QueryNode(workflow.ID);
+        }
+        catch (Exception ex)
+        {
+            return Failed<WorkFlowNode>($"查询流程节点失败: {ex.Message}");
+        }
+    }
+
     #endregion
 }

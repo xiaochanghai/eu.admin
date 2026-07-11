@@ -70,4 +70,5 @@ public class SmWorkFlowBase : BasePoco
     /// </summary>
     [Display(Name = "ExtRemark4"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string ExtRemark4 { get; set; }
+
 }

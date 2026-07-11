@@ -23,7 +23,7 @@ export const ContentPlaceholder = memo((props: ContentPlaceholderProps) => {
       {node?.conditions && <ConditionView condition={node.conditions} />}
       {/* {node.nodeType} */}
       <span className=" font-bold ">
-        {node?.approverSettings?.auditList === undefined && (node.conditions === undefined || node.conditions.length === 0) && (
+        {node?.approverSettings?.auditList === undefined && !node.conditions?.length && (
           <>{text}</>
         )}
       </span>

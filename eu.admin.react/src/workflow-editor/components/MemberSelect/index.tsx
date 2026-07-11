@@ -33,7 +33,7 @@ interface MemberSelectProps extends FlowSelectProps {
  * 用户选择器
  * 根据部门/角色进行筛选
  */
-export default ({ value, label, read, multiple, showUser, onDataChange }: MemberSelectProps) => {
+export default ({ value, label, read, multiple, showUser, userType, onDataChange }: MemberSelectProps) => {
   const windowSize = {
     width: window.innerWidth,
     height: window.innerHeight
@@ -100,6 +100,7 @@ export default ({ value, label, read, multiple, showUser, onDataChange }: Member
           value={modalSelected}
           multiple={multiple}
           showUser={showUser}
+          userType={userType}
           onDataChange={(d?: Partial<NodeUserInfo>[]) => {
             setModalSelected(d ? d : []);
           }}
@@ -110,7 +111,7 @@ export default ({ value, label, read, multiple, showUser, onDataChange }: Member
           return (
             <div key={`${index}_selected`} className="relative group">
               <Tooltip
-                title={d.label || (d.userType === "assignee" && userSelectData?.filter(u => u.value === d.objectId)?.[0]?.label)}
+                title={d.label || (d.userType === (userType || "assignee") && userSelectData?.filter(u => u.value === d.objectId)?.[0]?.label)}
                 placement="bottom"
               >
                 <Avatar
@@ -122,7 +123,7 @@ export default ({ value, label, read, multiple, showUser, onDataChange }: Member
                 >
                   {d?.label?.substring(0, 1)}
                   {(d.label === undefined || d.label === null) &&
-                    d.userType === "assignee" &&
+                    d.userType === (userType || "assignee") &&
                     userSelectData &&
                     userSelectData.filter(data => data.value === d.objectId)?.[0]?.label?.substring(0, 1)}
                   {(d.label === undefined || d.label === null) &&
