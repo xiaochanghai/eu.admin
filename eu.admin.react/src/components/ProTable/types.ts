@@ -1,4 +1,5 @@
 import { ModuleInfo, RecordLogData } from "@/api/interface/index";
+import type { ColumnCustomizerMap } from "./columnCustomizers";
 
 /**
  * ProTable 主组件 Props
@@ -8,6 +9,7 @@ export interface ProTableProps {
   IsView?: boolean | null;
   onEdit?: (id: string | null, isView?: boolean) => void;
   masterId?: string | null;
+  columnCustomizers?: ColumnCustomizerMap;
   customConditions?: string; // 自定义SQL WHERE条件
   formRef?: React.RefObject<any>;
   expendHideAction?: (action: any, selectedRows: any[]) => React.ReactNode;

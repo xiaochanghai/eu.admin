@@ -3,6 +3,7 @@ import { Drawer, Modal, Button, Space } from "antd";
 import { useDispatch, RootState, useSelector } from "@/redux";
 import { Skeleton, Icon } from "@/components";
 import SmProTable from "@/components/ProTable";
+import type { ColumnCustomizerMap } from "@/components/ProTable/columnCustomizers";
 import { ModuleInfo } from "@/api/interface/index";
 import { getModuleInfo } from "@/api/modules/module";
 import { setModuleInfo, setId } from "@/redux/modules/module";
@@ -18,6 +19,7 @@ import { getModuleName } from "@/components/ProTable/utils";
 interface TableListProps {
   moduleCode: string; // 模块代码
   masterId?: string | null; // 主表ID
+  columnCustomizers?: ColumnCustomizerMap; // 按 dataIndex 定制或替换动态列
   customConditions?: string; // 自定义SQL WHERE条件
   changePage?: (page: ViewType, id?: any, isView?: boolean) => void; // 页面切换回调
   IsView?: boolean | null; // 是否为查看模式

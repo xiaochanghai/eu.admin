@@ -19,6 +19,7 @@ import { Toolbar, RecordLogModal, UploadExcelModal } from "./components";
 // Types and Utils
 import { ProTableProps } from "./types";
 import { calculateScrollWidth } from "./utils";
+import { buildFinalColumns } from "./columnCustomizers";
 import { TABLE_SCROLL_CONFIG, SUM_ROW_ID } from "./constants";
 import { RootState, useSelector } from "@/redux";
 
@@ -56,9 +57,59 @@ const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, d
  * SmProTable 主组件
  * 基于 @ant-design/pro-components 的 ProTable 封装
  * 提供模块化的表格功能，包括数据请求、操作列、工具栏、批量操作等
+ *
+ * `columnCustomizers` 使用说明：
+ *
+ * - 对象的 key 与列的 `dataIndex` 精确匹配。
+ * - 数组形式的 `dataIndex` 使用点号连接，例如 `["customer", "name"]`
+ *   对应 `"customer.name"`。
+ * - 定制函数接收经过系统增强后的原列，并返回最终列配置。
+ * - 匹配发生在系统增强和操作列合并之后，因此包括操作列在内的自定义 `render` 拥有最终优先级。
+ * - 分组列会递归匹配 `children` 中的 `dataIndex`。
+ *
+ * @example 保留原列配置，仅自定义 render
+ * ```tsx
+ * <TableList
+ *   moduleCode="EM_EQUIPMENT_FILTER_MNG"
+ *   columnCustomizers={{
+ *     FilterConditions: originalColumn => ({
+ *       ...originalColumn,
+ *       render: (_, record) => <a onClick={() => openDetail(record)}>查看明细</a>
+ *     })
+ *   }}
+ * />
+ * ```
+ *
+ * @example 完整替换匹配到的列
+ * ```tsx
+ * <TableList
+ *   moduleCode="EM_EQUIPMENT_FILTER_MNG"
+ *   columnCustomizers={{
+ *     EquipmentList: () => ({
+ *       title: "设备清单",
+ *       dataIndex: "EquipmentList",
+ *       width: 140,
+ *       align: "center",
+ *       hideInSearch: true,
+ *       render: (_, record) => <a onClick={() => openEquipmentList(record)}>查看明细</a>
+ *     })
+ *   }}
+ * />
+ * ```
  */
 const SmProTable: React.FC<ProTableProps> = props => {
-  const { moduleInfo, IsView, onEdit, masterId, customConditions, formRef, expendHideAction, expendAction, ...restProps } = props;
+  const {
+    moduleInfo,
+    IsView,
+    onEdit,
+    masterId,
+    customConditions,
+    formRef,
+    expendHideAction,
+    expendAction,
+    columnCustomizers,
+    ...restProps
+  } = props;
 
   const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection } = moduleInfo;
   const actionRef = useRef<ActionType>();
@@ -334,19 +385,12 @@ const SmProTable: React.FC<ProTableProps> = props => {
       : [];
 
   /**
-   * 合并操作列到列配置中
+   * 合并操作列后应用列定制，保证定制配置拥有最终优先级
    */
-  const finalColumns = useMemo(() => {
-    if (!actionColumn || !actionColumn.dataIndex) return enhancedColumns;
-
-    const hasOptionColumn = enhancedColumns.some((col: any) => col.dataIndex === "option");
-    if (hasOptionColumn) {
-      // 替换现有操作列
-      return enhancedColumns.map((col: any) => (col.dataIndex === "option" ? actionColumn : col));
-    }
-    // 添加操作列到末尾
-    return [...enhancedColumns, actionColumn];
-  }, [enhancedColumns, actionColumn, language]);
+  const finalColumns = useMemo(
+    () => buildFinalColumns(enhancedColumns, actionColumn, columnCustomizers),
+    [enhancedColumns, actionColumn, columnCustomizers]
+  );
 
   // ==================== 工具栏渲染器 ====================
 
