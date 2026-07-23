@@ -18,5 +18,6 @@ export { default as InputPassword } from "@/components/Elements/InputPassword";
 export { default as BaseFormPage, renderFormComponent } from "@/components/BaseFormPage";
 export { Result } from "@/components/Result";
 export * from "@/components/Elements/TableList";
+export type { ColumnCustomizer, ColumnCustomizerMap } from "@/components/ProTable/columnCustomizers";
 export * from "@/components/Elements/FormIndex";
 export * from "@/components/Elements/FormPage";
