@@ -769,6 +769,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
             sql += $" WHERE label LIKE '%{escapedKey}%'";
         }
 
+        sql = sql.Replace("[USER_ID]", UserId1);
         data = await Db.Ado.SqlQueryAsync<ComboGridData>(sql);
 
         return ServiceResult<List<ComboGridData>>.OprateSuccess(data, ResponseText.QUERY_SUCCESS, data.Count);
