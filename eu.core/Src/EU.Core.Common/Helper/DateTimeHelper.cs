@@ -513,4 +513,30 @@ public static class DateTimeHelper
         };
     }
     #endregion
+
+    #region UTC时间按时区转换
+    /// <summary>
+    /// 将UTC时间转换为指定时区时间。
+    /// </summary>
+    /// <param name="utcTime">UTC时间</param>
+    /// <param name="timeZoneId">
+    /// 时区ID；为空时默认使用中国标准时区：
+    /// Windows 为 China Standard Time，Linux/macOS 为 Asia/Shanghai。
+    /// </param>
+    /// <returns>转换后的时区时间及其UTC偏移量</returns>
+    public static DateTime ConvertUtcToTimeZone(
+        this DateTimeOffset utcTime,
+        string timeZoneId = null)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            timeZoneId = OperatingSystem.IsWindows()
+                ? "China Standard Time"
+                : "Asia/Shanghai";
+        }
+
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        return TimeZoneInfo.ConvertTime(utcTime, timeZone).DateTime;
+    }
+    #endregion
 }
