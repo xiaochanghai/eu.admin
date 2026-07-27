@@ -229,26 +229,35 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         {
             // 获取顶级父模块
             var rootModules = smModules
-                .Where(x => x.IsParent == true && x.ParentId == null && roleModule.Contains(x.ID))
+                .Where(x => x.ParentId == null && roleModule.Contains(x.ID))
                 .OrderBy(x => x.TaxisNo)
                 .ToList();
             foreach (var y in rootModules)
             {
                 var titleEn = await LanguageHelper.Get(db, "Module", y.ID, "ModuleName");
-                subItems.Add(new TreeAuthMenu
+                var meta = new TreeAuthMenuMeta
+                {
+                    key = y.ModuleCode,
+                    icon = y.Icon,
+                    title = y.ModuleName,
+                    titleEn = titleEn?.Value_EN ?? y.ModuleName,
+                    isFull = y.IsFull == true,
+                    isHide = (y.ParentId == null || y.IsActive == true) ? false : true
+                };
+                if (y.IsParent == true)
+                    subItems.Add(new TreeAuthMenu
+                    {
+                        id = y.ID.ToString(),
+                        path = y.RoutePath,
+                        element = y.Element,
+                        meta = meta
+                    });
+                else subItems.Add(new TreeAuthMenu
                 {
                     id = y.ID.ToString(),
                     path = y.RoutePath,
-                    redirect = y.Element,
-                    meta = new TreeAuthMenuMeta
-                    {
-                        key = y.ModuleCode,
-                        icon = y.Icon,
-                        title = y.ModuleName,
-                        titleEn = titleEn?.Value_EN ?? y.ModuleName,
-                        isFull = y.IsFull == true,
-                        isHide = (y.ParentId == null || y.IsActive == true) ? false : true
-                    }
+                    element = y.Element,
+                    meta = meta
                 });
             }
         }
