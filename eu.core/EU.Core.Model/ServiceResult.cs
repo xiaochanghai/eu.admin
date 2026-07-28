@@ -105,7 +105,7 @@ public class ServiceResult<T>
     /// </summary>
     /// <param name="message">消息</param>
     /// <returns></returns>
-    public static ServiceResult<T> OprateFailed(string message) => new ServiceResult<T>() { Status = 201, Message = message, Data = default, Success = false, Count = 0 };
+    public static ServiceResult<T> OprateFailed(string message) => new ServiceResult<T>() { Status = 500, Message = message, Data = default, Success = false, Count = 0 };
 
     /// <summary>
     /// 返回失败
