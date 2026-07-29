@@ -1,0 +1,3 @@
+-- Operator-owned SQL Server placeholder for P4 MCP tool control.
+-- The independent Host uses local SQLite and never executes this file.
+-- Table names and fields remain operator-owned until the SQL Server merge phase.

@@ -1,0 +1,2 @@
+-- Operator-owned placeholder for P2 agent control rollback.
+-- Database objects are intentionally deferred to the database owner.

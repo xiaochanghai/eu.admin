@@ -1,0 +1,2 @@
+-- Operator-owned SQL Server placeholder for P3 Skill management.
+-- The independent Host uses local SQLite and never executes this file.

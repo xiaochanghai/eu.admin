@@ -1,0 +1,296 @@
+import { clear, element, setText } from "./dom.js";
+
+export function createSkillEditor({ api, onChanged, toast }) {
+  const drawer = document.querySelector("#skillDrawer");
+  const backdrop = document.querySelector("#skillDrawerBackdrop");
+  const fields = {
+    code: document.querySelector("#skillCodeInput"),
+    name: document.querySelector("#skillNameInput"),
+    category: document.querySelector("#skillCategoryInput"),
+    description: document.querySelector("#skillDescriptionInput")
+  };
+  const metadataButton = document.querySelector("#saveSkillMetadataButton");
+  const fileButton = document.querySelector("#saveSkillFileButton");
+  const publishButton = document.querySelector("#publishSkillButton");
+  const fileWorkspace = document.querySelector("#skillFileWorkspace");
+  const fileList = document.querySelector("#skillFileList");
+  const content = document.querySelector("#skillContentInput");
+  const message = document.querySelector("#skillEditorMessage");
+  let current = null;
+  let currentPath = "";
+  let fileDirty = false;
+  let metadataDirty = false;
+  let busy = false;
+
+  function showMessage(text, tone = "") {
+    setText(message, text);
+    message.dataset.tone = tone;
+  }
+
+  function setBusy(value) {
+    busy = value;
+    for (const button of [metadataButton, fileButton, publishButton]) button.disabled = value;
+  }
+
+  function nextVersion() {
+    const majors = (current?.publishedVersions ?? [])
+      .map(version => Number.parseInt(version.label.split(".")[0], 10))
+      .filter(Number.isFinite);
+    return `${(majors.length ? Math.max(...majors) : 0) + 1}.0.0`;
+  }
+
+  function fill(skill) {
+    current = skill;
+    fields.code.value = skill?.code ?? "";
+    fields.name.value = skill?.name ?? "";
+    fields.category.value = skill?.category ?? "";
+    fields.description.value = skill?.description ?? "";
+    fields.code.readOnly = Boolean(skill);
+    setText(document.querySelector("#skillDrawerTitle"), skill ? skill.name || skill.code : "创建 Skill");
+    setText(document.querySelector("#skillDrawerEyebrow"), skill ? `DRAFT REV ${skill.draftRevision}` : "NEW SKILL");
+    setText(metadataButton, skill ? "保存信息" : "创建 Skill");
+    fileWorkspace.hidden = !skill;
+    document.querySelector("#skillVersionSection").hidden = !skill;
+    fileButton.hidden = !skill;
+    publishButton.hidden = !skill;
+    if (skill) setText(publishButton, `发布 v${nextVersion()}`);
+    renderVersions(skill?.publishedVersions ?? []);
+    metadataDirty = false;
+  }
+
+  function renderVersions(versions) {
+    const list = document.querySelector("#skillVersionList");
+    clear(list);
+    if (!versions.length) {
+      list.append(element("li", { className: "version-empty" }, "尚未发布版本。"));
+      return;
+    }
+    [...versions].reverse().forEach(version => {
+      const title = element("strong");
+      title.textContent = `v${version.label}`;
+      const hash = element("code");
+      hash.textContent = version.manifestSha256.slice(0, 12);
+      const detail = element("p");
+      const bound = version.boundAgents?.length
+        ? ` · 绑定 ${version.boundAgents.map(agent => agent.name || agent.code).join("、")}`
+        : " · 尚未绑定 Agent";
+      detail.textContent = `${version.files.length} 个文件 · ${new Date(version.publishedAtUtc).toLocaleString()}${bound}`;
+      list.append(element("li", {}, element("div", {}, title, hash), detail));
+    });
+  }
+
+  async function loadFiles(preferredPath = "") {
+    if (!current) return;
+    const files = await api.files(current.id);
+    clear(fileList);
+    setText(document.querySelector("#skillFileCount"), `${files.length} 个`);
+    for (const file of files) {
+      const button = element("button", {
+        className: `skill-file-item ${file.path === currentPath ? "is-active" : ""}`,
+        type: "button"
+      });
+      const label = element("span");
+      label.textContent = file.path;
+      const size = element("small");
+      size.textContent = `${file.size} B`;
+      button.append(label, size);
+      button.addEventListener("click", () => selectFile(file.path));
+      fileList.append(button);
+    }
+    const target = preferredPath || currentPath || files[0]?.path;
+    if (target && files.some(file => file.path === target)) await selectFile(target, true);
+  }
+
+  async function selectFile(path, force = false) {
+    if (!current || busy || path === currentPath && !force) return;
+    if (fileDirty && !force) {
+      showMessage("当前文件有未保存修改，请先保存再切换。", "warning");
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await api.readFile(current.id, path);
+      currentPath = path;
+      content.value = result.content;
+      content.disabled = false;
+      fileDirty = false;
+      setText(document.querySelector("#currentSkillFile"), path);
+      setText(document.querySelector("#skillFileState"), "已同步");
+      [...fileList.children].forEach(button =>
+        button.classList.toggle("is-active", button.querySelector("span")?.textContent === path));
+    } catch (error) {
+      showMessage(`${error.message} · ${error.errorCode ?? "READ_FAILED"}`, "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function open(skill = null) {
+    fileDirty = false;
+    metadataDirty = false;
+    fill(skill);
+    currentPath = "";
+    content.value = "";
+    content.disabled = !skill;
+    showMessage("");
+    drawer.setAttribute("aria-hidden", "false");
+    backdrop.hidden = false;
+    document.body.classList.add("drawer-open");
+    if (skill) {
+      try { await loadFiles("SKILL.md"); }
+      catch (error) { showMessage(`${error.message} · ${error.errorCode ?? "LIST_FAILED"}`, "error"); }
+    }
+    requestAnimationFrame(() => fields[skill ? "name" : "code"].focus());
+  }
+
+  function close() {
+    if (busy) return;
+    if (fileDirty || metadataDirty) {
+      showMessage("存在未保存修改，请先保存。", "warning");
+      return;
+    }
+    drawer.setAttribute("aria-hidden", "true");
+    backdrop.hidden = true;
+    document.body.classList.remove("drawer-open");
+  }
+
+  metadataButton.addEventListener("click", async () => {
+    if (busy || !fields.code.reportValidity() || !fields.name.reportValidity()) return;
+    if (fileDirty) {
+      showMessage("请先保存当前文件，再保存 Skill 信息。", "warning");
+      return;
+    }
+    setBusy(true);
+    try {
+      current = current
+        ? await api.update(current.id, {
+            expectedDraftRevision: current.draftRevision,
+            name: fields.name.value.trim(),
+            description: fields.description.value,
+            category: fields.category.value.trim()
+          })
+        : await api.create({
+            code: fields.code.value.trim(),
+            name: fields.name.value.trim(),
+            description: fields.description.value,
+            category: fields.category.value.trim()
+          });
+      fill(current);
+      await loadFiles("SKILL.md");
+      showMessage("Skill 信息已保存。", "success");
+      await onChanged();
+    } catch (error) {
+      showMessage(
+        error.status === 409
+          ? "Draft 已被其他编辑器更新，请关闭后重新打开。"
+          : `${error.message} · ${error.errorCode ?? "SAVE_FAILED"}`,
+        error.status === 409 ? "warning" : "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  fileButton.addEventListener("click", async () => {
+    if (!current || !currentPath || busy) return;
+    if (metadataDirty) {
+      showMessage("请先保存 Skill 信息，再保存文件。", "warning");
+      return;
+    }
+    setBusy(true);
+    try {
+      current = await api.saveFile(current.id, {
+        expectedDraftRevision: current.draftRevision,
+        path: currentPath,
+        content: content.value
+      });
+      fileDirty = false;
+      fill(current);
+      setText(document.querySelector("#skillFileState"), "已同步");
+      showMessage("文件已原子保存。", "success");
+      await loadFiles(currentPath);
+      await onChanged();
+    } catch (error) {
+      showMessage(
+        error.status === 409
+          ? "文件未覆盖：Draft revision 已变化，请保留正文并重新打开。"
+          : `${error.message} · ${error.errorCode ?? "SAVE_FAILED"}`,
+        error.status === 409 ? "warning" : "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  publishButton.addEventListener("click", async () => {
+    if (!current || busy) return;
+    if (fileDirty || metadataDirty) {
+      showMessage("请先保存所有修改再发布。", "warning");
+      return;
+    }
+    setBusy(true);
+    try {
+      current = await api.publish(current.id, {
+        expectedDraftRevision: current.draftRevision,
+        versionLabel: nextVersion()
+      });
+      fill(current);
+      showMessage("Skill 已发布为不可变版本。", "success");
+      toast("Skill 发布成功，现可绑定到 Agent。", "success");
+      await onChanged();
+    } catch (error) {
+      showMessage(`${error.message} · ${error.errorCode ?? "PUBLISH_FAILED"}`, "error");
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  document.querySelector("#newSkillFileButton").addEventListener("click", async () => {
+    if (!current || busy) return;
+    if (fileDirty) {
+      showMessage("请先保存当前文件。", "warning");
+      return;
+    }
+    const input = document.querySelector("#newSkillFilePath");
+    const path = input.value.trim();
+    if (!path) return;
+    currentPath = path;
+    content.value = "";
+    content.disabled = false;
+    fileDirty = true;
+    setText(document.querySelector("#currentSkillFile"), path);
+    setText(document.querySelector("#skillFileState"), "新文件未保存");
+    input.value = "";
+  });
+
+  content.addEventListener("input", () => {
+    fileDirty = true;
+    setText(document.querySelector("#skillFileState"), "有未保存修改");
+  });
+  Object.values(fields).forEach(field => {
+    field.addEventListener("input", () => { metadataDirty = true; });
+  });
+  document.querySelector("#closeSkillDrawerButton").addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+  document.addEventListener("keydown", event => {
+    if (drawer.getAttribute("aria-hidden") !== "false") return;
+    if (event.key === "Escape") {
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusable = [...drawer.querySelectorAll(
+      "button:not([disabled]), input:not([disabled]), textarea:not([disabled])")]
+      .filter(node => !node.hidden && node.getClientRects().length > 0);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  return { open, close };
+}

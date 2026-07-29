@@ -1,0 +1,3 @@
+-- Operator-owned SQL Server placeholder for P4 MCP tool control rollback.
+-- The independent Host uses local SQLite and never executes this file.
+-- No destructive statement is supplied.

@@ -1,0 +1,2 @@
+-- Operator-owned rollback placeholder for P5 Agent runtime audit.
+-- Intentionally contains no executable SQL.
