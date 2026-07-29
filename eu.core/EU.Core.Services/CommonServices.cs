@@ -129,9 +129,9 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
     /// <param name="filter">查询筛选条件（包含查询参数、排序、自定义条件等）</param>
     /// <param name="moduleCode">模块代码</param>
     /// <returns>返回文件ID，用于下载Excel文件</returns>
-    public async Task<ServiceResult<string>> ExportExcelAsync(QueryFilter filter, string moduleCode)
+    public async Task<ServiceResult<Guid>> ExportExcelAsync(QueryFilter filter, string moduleCode)
     {
-        var fileId = Utility.GuidId1;
+        var fileId = Utility.GuidId;
 
         try
         {
@@ -205,7 +205,7 @@ public partial class CommonServices : BaseServices<SmModules, SmModulesDto, Inse
         catch (Exception ex)
         {
             // 记录错误日志
-            return Failed<string>($"导出失败：{ex.Message}");
+            return Failed<Guid>($"导出失败：{ex.Message}");
         }
     }
 

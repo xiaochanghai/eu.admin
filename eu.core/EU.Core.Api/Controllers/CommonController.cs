@@ -52,7 +52,7 @@ public class CommonController : Controller
     /// <param name="moduleCode">模块代码</param>
     /// <returns></returns>
     [HttpGet("ExportExcel/{moduleCode}")]
-    public async Task<ServiceResult<string>> ExportExcelAsync([FromFilter] QueryFilter filter, string moduleCode) => await _service.ExportExcelAsync(filter, moduleCode);
+    public async Task<ServiceResult<Guid>> ExportExcelAsync([FromFilter] QueryFilter filter, string moduleCode) => await _service.ExportExcelAsync(filter, moduleCode);
     #endregion
 
     #region Excel导入
