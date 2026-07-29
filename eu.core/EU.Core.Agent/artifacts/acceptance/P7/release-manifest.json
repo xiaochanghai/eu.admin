@@ -1,0 +1,50 @@
+{
+  "release": "P7",
+  "status": "ACCEPTED",
+  "acceptedAtUtc": "2026-07-29T00:00:00Z",
+  "sourceCommit": "c13aa17b924f4d2ddb911134b5748e4a2ec6eb0c",
+  "sourceTree": "7fc9b14541e8a71cbe51bd87dc98a3a4aa90ebb1",
+  "targetContainer": "EU.Core.Agent",
+  "projects": [
+    "src/EU.Core.Agent.Api/EU.Core.Agent.Api.csproj",
+    "src/EU.Core.Agent.Application/EU.Core.Agent.Application.csproj",
+    "src/EU.Core.Agent.Runtime/EU.Core.Agent.Runtime.csproj",
+    "src/EU.Core.Agent.Infrastructure/EU.Core.Agent.Infrastructure.csproj",
+    "tests/EU.Core.Agent.Tests/EU.Core.Agent.Tests.csproj"
+  ],
+  "copyRoots": [
+    "src",
+    "tests/EU.Core.Agent.Tests",
+    "database",
+    "agent-data",
+    "artifacts/acceptance/P7",
+    "Directory.Build.props",
+    "Directory.Packages.props",
+    ".env.example",
+    "README.md"
+  ],
+  "excludedRoots": [
+    ".build",
+    ".env",
+    "src/EU.Core.Agent.Api/data",
+    "src/EU.Core.Agent.Api/agent-data",
+    "bin",
+    "obj",
+    "TestResults",
+    "spikes",
+    "tests/EU.Core.Agent.CompatibilityTests"
+  ],
+  "verification": {
+    "mainTestsPassed": 223,
+    "mainTestsFailed": 0,
+    "compatibilityTestsPassed": 98,
+    "compatibilityTestsSkipped": 12,
+    "releaseWarnings": 0,
+    "releaseErrors": 0
+  },
+  "databasePolicy": {
+    "executeExternalMigrations": false,
+    "sqliteDevelopmentPersistence": true,
+    "mysqlSqlServerScripts": "manual-owner-execution-only"
+  }
+}
