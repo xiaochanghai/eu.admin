@@ -99,8 +99,8 @@ const useChangeHandler = (onChange?: (date: Dayjs | null, dateString: string | n
 /**
  * 共享的 hooks：创建验证规则
  */
-const useValidationRules = (validator: (_: any, value: any) => Promise<void>) => {
-  return useMemo(() => [{ validator }], [validator]);
+const useValidationRules = (required: boolean | undefined, validator: (_: any, value: any) => Promise<void>) => {
+  return useMemo(() => [{ required: required ?? false, validator }], [required, validator]);
 };
 
 /**
@@ -180,7 +180,7 @@ const BasePickerField: React.FC<DatePickerFieldProps & BasePickerConfig> = ({
   const formTitle = language === "en" ? field.FormTitle_EN || FormTitle : FormTitle;
   const customValidator = useValidator(Required, formTitle, pickerType === "date" ? "日期" : "时间");
   const handleChange = useChangeHandler(onChange);
-  const validationRules = useValidationRules(customValidator);
+  const validationRules = useValidationRules(Required, customValidator);
   const format = useMemo(() => field.DataFormate ?? defaultFormat, [field.DataFormate, defaultFormat]);
 
   const PickerComponent = pickerType === "date" ? AntdDatePicker : AntdTimePicker;
@@ -254,6 +254,7 @@ const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> =
   const validationRules = useMemo(
     () => [
       {
+        required: Required ?? false,
         validator: (_: unknown, value: unknown) => {
           if (Required && (!value || !form.getFieldValue(rangeEndDataIndex))) {
             return Promise.reject(new Error(`请选择${formTitle}!`));
