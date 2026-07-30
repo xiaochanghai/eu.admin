@@ -17,6 +17,12 @@ interface DatePickerFieldProps {
   onChange?: (date: Dayjs | null, dateString: string | null) => void;
 }
 
+type RangeValue = [Dayjs | null, Dayjs | null] | null;
+
+interface RangePickerFieldProps extends Omit<DatePickerFieldProps, "onChange"> {
+  onChange?: (dates: RangeValue, dateStrings: [string, string]) => void;
+}
+
 /**
  * 共享的 hooks：计算禁用状态
  */
@@ -104,6 +110,24 @@ const getValueProps = (value: any) => {
 const getValueFromEvent = (date: Dayjs | null) => date;
 
 /**
+ * 范围值转换：兼容接口返回的日期字符串和表单内的 Dayjs 值。
+ */
+const getRangeValueProps = (value: unknown) => {
+  if (value == null) return { value };
+  if (!Array.isArray(value) || value.length !== 2) return { value: undefined };
+
+  const converted = value.map(item => {
+    if (item == null || dayjs.isDayjs(item)) return item;
+    const date = dayjs(item);
+    return date.isValid() ? date : null;
+  }) as [Dayjs | null, Dayjs | null];
+
+  return { value: converted.every(Boolean) ? converted : undefined };
+};
+
+const getRangeValueFromEvent = (dates: RangeValue) => dates;
+
+/**
  * 通用基础组件配置类型
  */
 interface BasePickerConfig {
@@ -111,6 +135,7 @@ interface BasePickerConfig {
   defaultFormat: string;
   defaultPlaceholder: string;
   showTime?: boolean;
+  rangePickerMode?: "date" | "week" | "month" | "quarter";
 }
 
 /**
@@ -162,6 +187,95 @@ const BasePickerField: React.FC<DatePickerFieldProps & BasePickerConfig> = ({
 };
 
 /**
+ * 通用范围 Picker 组件。
+ */
+const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> = ({
+  field,
+  disabled,
+  modifyType = ModifyType.Edit,
+  onChange,
+  pickerType,
+  defaultFormat,
+  defaultPlaceholder,
+  showTime,
+  rangePickerMode = "date"
+}) => {
+  const { DataIndex, Required, Disabled, ModifyDisabled, AllowClear, FormTitle } = field;
+  const language = useSelector((state: RootState) => state.global.language);
+  const { t } = useTranslation();
+  const isDisabled = useDisabledState(modifyType, ModifyDisabled, Disabled, disabled);
+  const isAllowClear = useAllowClear(AllowClear);
+  const formTitle = language === "en" ? field.FormTitle_EN || FormTitle : FormTitle;
+  const format = useMemo(() => field.DataFormate ?? defaultFormat, [field.DataFormate, defaultFormat]);
+  const placeholders = useMemo<[string, string]>(() => {
+    if (field.Placeholder || field.Placeholder_EN) {
+      const customPlaceholder = (language === "en" ? field.Placeholder_EN : field.Placeholder) || defaultPlaceholder;
+      return [customPlaceholder, customPlaceholder];
+    }
+
+    if (pickerType === "time") {
+      return [t("formOption.selectStartTimePlaceholder"), t("formOption.selectEndTimePlaceholder")];
+    }
+    if (rangePickerMode === "week") {
+      return [t("formOption.selectStartWeekPlaceholder"), t("formOption.selectEndWeekPlaceholder")];
+    }
+    if (rangePickerMode === "month") {
+      return [t("formOption.selectStartMonthPlaceholder"), t("formOption.selectEndMonthPlaceholder")];
+    }
+    if (rangePickerMode === "quarter") {
+      return [t("formOption.selectStartQuarterPlaceholder"), t("formOption.selectEndQuarterPlaceholder")];
+    }
+    return [t("formOption.selectStartDatePlaceholder"), t("formOption.selectEndDatePlaceholder")];
+  }, [defaultPlaceholder, field.Placeholder, field.Placeholder_EN, language, pickerType, rangePickerMode, t]);
+
+  const validationRules = useMemo(
+    () => [
+      {
+        validator: (_: unknown, value: unknown) => {
+          if (Required && (!Array.isArray(value) || value.length !== 2 || !value[0] || !value[1])) {
+            return Promise.reject(new Error(`请选择${formTitle}!`));
+          }
+          return Promise.resolve();
+        }
+      }
+    ],
+    [Required, formTitle]
+  );
+
+  const handleChange = useCallback(
+    (dates: RangeValue, dateStrings: [string, string]) => {
+      onChange?.(dates, dateStrings);
+    },
+    [onChange]
+  );
+
+  const commonProps = {
+    disabled: isDisabled,
+    format,
+    placeholder: placeholders,
+    allowClear: isAllowClear,
+    onChange: handleChange,
+    style: { width: "100%" }
+  };
+
+  return (
+    <Form.Item
+      name={DataIndex}
+      label={<FieldTitle {...field} />}
+      rules={validationRules}
+      getValueFromEvent={getRangeValueFromEvent}
+      getValueProps={getRangeValueProps}
+    >
+      {pickerType === "date" ? (
+        <AntdDatePicker.RangePicker {...commonProps} picker={rangePickerMode} showTime={showTime} />
+      ) : (
+        <AntdTimePicker.RangePicker {...commonProps} />
+      )}
+    </Form.Item>
+  );
+};
+
+/**
  * Date picker field.
  */
 export const DatePickerField: React.FC<DatePickerFieldProps> = props => {
@@ -193,4 +307,99 @@ export const DateTimePickerField: React.FC<DatePickerFieldProps> = props => {
 export const TimePickerField: React.FC<DatePickerFieldProps> = props => {
   const { t } = useTranslation();
   return <BasePickerField {...props} pickerType="time" defaultFormat="HH:mm:ss" defaultPlaceholder={t("formOption.selectTimePlaceholder")} />;
+};
+
+/**
+ * Date range picker field.
+ */
+export const DateRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="date"
+      defaultFormat="YYYY-MM-DD"
+      defaultPlaceholder={t("formOption.selectDatePlaceholder")}
+      showTime={false}
+    />
+  );
+};
+
+/**
+ * Week range picker field.
+ */
+export const WeekRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="date"
+      rangePickerMode="week"
+      defaultFormat="YYYY-wo"
+      defaultPlaceholder={t("formOption.selectWeekPlaceholder")}
+    />
+  );
+};
+
+/**
+ * Month range picker field.
+ */
+export const MonthRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="date"
+      rangePickerMode="month"
+      defaultFormat="YYYY-MM"
+      defaultPlaceholder={t("formOption.selectMonthPlaceholder")}
+    />
+  );
+};
+
+/**
+ * Quarter range picker field.
+ */
+export const QuarterRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="date"
+      rangePickerMode="quarter"
+      defaultFormat="YYYY-[Q]Q"
+      defaultPlaceholder={t("formOption.selectQuarterPlaceholder")}
+    />
+  );
+};
+
+/**
+ * Date time range picker field.
+ */
+export const DateTimeRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="date"
+      defaultFormat="YYYY-MM-DD HH:mm:ss"
+      defaultPlaceholder={t("formOption.selectDateTimePlaceholder")}
+      showTime
+    />
+  );
+};
+
+/**
+ * Time range picker field.
+ */
+export const TimeRangePickerField: React.FC<RangePickerFieldProps> = props => {
+  const { t } = useTranslation();
+  return (
+    <BaseRangePickerField
+      {...props}
+      pickerType="time"
+      defaultFormat="HH:mm:ss"
+      defaultPlaceholder={t("formOption.selectTimePlaceholder")}
+    />
+  );
 };

@@ -12,7 +12,13 @@ import TextArea from "./TextArea"; // 多行文本框
 import {
   DatePickerField as DatePicker,
   DateTimePickerField as DateTimePicker,
-  TimePickerField as TimePicker
+  TimePickerField as TimePicker,
+  DateRangePickerField as DateRangePicker,
+  WeekRangePickerField as WeekRangePicker,
+  MonthRangePickerField as MonthRangePicker,
+  QuarterRangePickerField as QuarterRangePicker,
+  DateTimeRangePickerField as DateTimeRangePicker,
+  TimeRangePickerField as TimeRangePicker
 } from "./DatePicker"; // 日期选择器
 import ColorPicker from "./ColorPicker"; // 颜色选择器
 import ImageCover from "./ImageCover"; // 封面图
@@ -51,11 +57,17 @@ export const SUPPORTED_FIELD_TYPES = [
   "Radio",
   "TextArea",
   "DatePicker",
+  "DateRangePicker",
+  "WeekRangePicker",
+  "MonthRangePicker",
+  "QuarterRangePicker",
   "ColorPicker",
   "ImageCover",
   "FileUpload",
   "DateTimePicker",
+  "DateTimeRangePicker",
   "TimePicker",
+  "TimeRangePicker",
   "InputPassword"
 ] as const;
 
@@ -72,8 +84,14 @@ const FIELD_MAP: Record<string, React.ComponentType<any>> = {
   Radio,
   TextArea,
   DatePicker,
+  DateRangePicker,
+  WeekRangePicker,
+  MonthRangePicker,
+  QuarterRangePicker,
   DateTimePicker,
+  DateTimeRangePicker,
   TimePicker,
+  TimeRangePicker,
   ColorPicker,
   ImageCover,
   FileUpload,

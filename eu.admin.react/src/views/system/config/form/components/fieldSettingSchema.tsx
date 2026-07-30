@@ -512,7 +512,21 @@ export const schemaDef: SchemaClz = {
     type: "switch",
     mode: Mode.form,
     tag: "basic",
-    deps: { field: "FieldType", value: ["DatePicker", "Input"] }
+    deps: {
+      field: "FieldType",
+      value: [
+        "DatePicker",
+        "DateRangePicker",
+        "WeekRangePicker",
+        "MonthRangePicker",
+        "QuarterRangePicker",
+        "DateTimePicker",
+        "DateTimeRangePicker",
+        "TimePicker",
+        "TimeRangePicker",
+        "Input"
+      ]
+    }
   },
   Remark: {
     name: "备注",

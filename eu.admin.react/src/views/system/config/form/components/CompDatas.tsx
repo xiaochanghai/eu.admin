@@ -62,16 +62,52 @@ export const FormComponents = [
     label: "日期选择器"
   },
   {
+    ID: "DateRangePicker",
+    icon: "DatePicker",
+    fieldType: "DateRangePicker",
+    label: "日期段选择器"
+  },
+  {
+    ID: "WeekRangePicker",
+    icon: "DatePicker",
+    fieldType: "WeekRangePicker",
+    label: "周段选择器"
+  },
+  {
+    ID: "MonthRangePicker",
+    icon: "DatePicker",
+    fieldType: "MonthRangePicker",
+    label: "月段选择器"
+  },
+  {
+    ID: "QuarterRangePicker",
+    icon: "DatePicker",
+    fieldType: "QuarterRangePicker",
+    label: "季度段选择器"
+  },
+  {
     ID: "DateTimePicker",
     icon: "DateTimePicker",
     fieldType: "DateTimePicker",
     label: "日期时间选择器"
   },
   {
+    ID: "DateTimeRangePicker",
+    icon: "DateTimePicker",
+    fieldType: "DateTimeRangePicker",
+    label: "日期时间段选择器"
+  },
+  {
     ID: "TimePicker",
     icon: "TimePicker",
     fieldType: "TimePicker",
     label: "时间选择器"
+  },
+  {
+    ID: "TimeRangePicker",
+    icon: "TimePicker",
+    fieldType: "TimeRangePicker",
+    label: "时间段选择器"
   },
   {
     ID: "Radio",
