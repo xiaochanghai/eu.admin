@@ -2,10 +2,19 @@ import React, { useCallback, useMemo } from "react";
 import { DatePicker as AntdDatePicker, Form, TimePicker as AntdTimePicker } from "antd";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import weekYear from "dayjs/plugin/weekYear";
 import FieldTitle from "./FieldTitle";
 import { FieldProps, ModifyType } from "@/typings";
 import { RootState, useSelector } from "@/redux";
 import { useTranslation } from "react-i18next";
+
+dayjs.extend(advancedFormat);
+dayjs.extend(customParseFormat);
+dayjs.extend(weekOfYear);
+dayjs.extend(weekYear);
 
 /**
  * DatePicker组件属性接口定义
@@ -109,23 +118,34 @@ const getValueProps = (value: any) => {
  */
 const getValueFromEvent = (date: Dayjs | null) => date;
 
-/**
- * 范围值转换：兼容接口返回的日期字符串和表单内的 Dayjs 值。
- */
-const getRangeValueProps = (value: unknown) => {
-  if (value == null) return { value };
-  if (!Array.isArray(value) || value.length !== 2) return { value: undefined };
+const parsePickerValue = (value: unknown, pickerType: "date" | "time", format: string): Dayjs | null => {
+  if (value == null || value === "") return null;
+  if (dayjs.isDayjs(value)) return value.isValid() ? value : null;
 
-  const converted = value.map(item => {
-    if (item == null || dayjs.isDayjs(item)) return item;
-    const date = dayjs(item);
-    return date.isValid() ? date : null;
-  }) as [Dayjs | null, Dayjs | null];
+  const parsed = dayjs(value as string | number | Date);
+  if (parsed.isValid()) return parsed;
 
-  return { value: converted.every(Boolean) ? converted : undefined };
+  if (typeof value === "string") {
+    const formattedValue = dayjs(value, format, true);
+    if (formattedValue.isValid()) return formattedValue;
+
+    // TimeOnly 接口通常返回 HH:mm:ss，补充日期后再按配置格式严格解析。
+    if (pickerType === "time") {
+      const timeValue = dayjs(`2000-01-01 ${value}`, `YYYY-MM-DD ${format}`, true);
+      if (timeValue.isValid()) return timeValue;
+    }
+  }
+
+  return null;
 };
 
-const getRangeValueFromEvent = (dates: RangeValue) => dates;
+const getRangeValueProps = (startValue: unknown, endValue: unknown, pickerType: "date" | "time", format: string) => {
+  const start = parsePickerValue(startValue, pickerType, format);
+  const end = parsePickerValue(endValue, pickerType, format);
+  return { value: start || end ? ([start, end] as RangeValue) : null };
+};
+
+const HiddenField: React.FC<Record<string, unknown>> = () => null;
 
 /**
  * 通用基础组件配置类型
@@ -201,7 +221,10 @@ const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> =
   rangePickerMode = "date"
 }) => {
   const { DataIndex, Required, Disabled, ModifyDisabled, AllowClear, FormTitle } = field;
+  const rangeStartDataIndex = `${DataIndex}Start`;
+  const rangeEndDataIndex = `${DataIndex}End`;
   const language = useSelector((state: RootState) => state.global.language);
+  const form = Form.useFormInstance();
   const { t } = useTranslation();
   const isDisabled = useDisabledState(modifyType, ModifyDisabled, Disabled, disabled);
   const isAllowClear = useAllowClear(AllowClear);
@@ -232,14 +255,14 @@ const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> =
     () => [
       {
         validator: (_: unknown, value: unknown) => {
-          if (Required && (!Array.isArray(value) || value.length !== 2 || !value[0] || !value[1])) {
+          if (Required && (!value || !form.getFieldValue(rangeEndDataIndex))) {
             return Promise.reject(new Error(`请选择${formTitle}!`));
           }
           return Promise.resolve();
         }
       }
     ],
-    [Required, formTitle]
+    [Required, form, formTitle, rangeEndDataIndex]
   );
 
   const handleChange = useCallback(
@@ -247,6 +270,25 @@ const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> =
       onChange?.(dates, dateStrings);
     },
     [onChange]
+  );
+
+  const getRangeValueFromEvent = useCallback(
+    (dates: RangeValue) => {
+      form.setFieldValue(rangeEndDataIndex, dates?.[1] ?? null);
+      return dates?.[0] ?? null;
+    },
+    [form, rangeEndDataIndex]
+  );
+
+  const getRangePickerValueProps = useCallback(
+    (startValue: unknown) =>
+      getRangeValueProps(
+        startValue,
+        form.getFieldValue(rangeEndDataIndex),
+        pickerType,
+        format
+      ),
+    [form, format, pickerType, rangeEndDataIndex]
   );
 
   const commonProps = {
@@ -259,19 +301,25 @@ const BaseRangePickerField: React.FC<RangePickerFieldProps & BasePickerConfig> =
   };
 
   return (
-    <Form.Item
-      name={DataIndex}
-      label={<FieldTitle {...field} />}
-      rules={validationRules}
-      getValueFromEvent={getRangeValueFromEvent}
-      getValueProps={getRangeValueProps}
-    >
-      {pickerType === "date" ? (
-        <AntdDatePicker.RangePicker {...commonProps} picker={rangePickerMode} showTime={showTime} />
-      ) : (
-        <AntdTimePicker.RangePicker {...commonProps} />
-      )}
-    </Form.Item>
+    <>
+      <Form.Item name={rangeEndDataIndex} hidden>
+        <HiddenField />
+      </Form.Item>
+      <Form.Item
+        name={rangeStartDataIndex}
+        dependencies={[rangeEndDataIndex]}
+        label={<FieldTitle {...field} />}
+        rules={validationRules}
+        getValueFromEvent={getRangeValueFromEvent}
+        getValueProps={getRangePickerValueProps}
+      >
+        {pickerType === "date" ? (
+          <AntdDatePicker.RangePicker {...commonProps} picker={rangePickerMode} showTime={showTime} />
+        ) : (
+          <AntdTimePicker.RangePicker {...commonProps} />
+        )}
+      </Form.Item>
+    </>
   );
 };
 
@@ -335,7 +383,7 @@ export const WeekRangePickerField: React.FC<RangePickerFieldProps> = props => {
       {...props}
       pickerType="date"
       rangePickerMode="week"
-      defaultFormat="YYYY-wo"
+      defaultFormat="gggg-wo"
       defaultPlaceholder={t("formOption.selectWeekPlaceholder")}
     />
   );
