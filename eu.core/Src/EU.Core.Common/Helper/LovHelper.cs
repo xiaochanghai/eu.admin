@@ -127,7 +127,7 @@ public class LovHelper
         var cache = await db.Queryable<LovInfo>().AS("SmLov_V").ToListAsync();
         foreach (var item in lovs)
         {
-            var list = cache.Where(x => x.LovCode == item.LovCode).ToList();
+            var list = cache.Where(x => x.LovCode == item.LovCode).OrderBy(x => x.TaxisNo).ToList();
             redis.AddObject(lovCacheCode, item.LovCode, list);
         }
     }
@@ -191,5 +191,10 @@ public class LovInfo
     /// 是否标签显示
     /// </summary>
     public bool? IsTagDisplay { get; set; }
+
+    /// <summary>
+    /// 排序号
+    /// </summary>
+    public int TaxisNo { get; set; }
 }
 
