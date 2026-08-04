@@ -1,5 +1,6 @@
 ﻿using EU.Core.Common.Const;
 using EU.Core.DataAccess;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data;
 using System.Text;
@@ -104,7 +105,7 @@ public class TaskHelper
                     case JobConsts.TASK_OPERATE_ARGS:
                         {
                             AddQuartzLog(msg.TaskCode, "收到消息，修改参数");
-                            EditAgrs(msg, msg.TaskId);
+                            await EditAgrs(msg, msg.TaskId);
                             qz.Cron = msg.Args;
                             var ResuleModel = await _schedulerCenter.StopScheduleJobAsync(qz);
                             if (ResuleModel.Success)
@@ -610,24 +611,36 @@ public class TaskHelper
         else
             Logger.WriteLog("任务id不存在！");
     }
-    public static void EditAgrs(TaskMsg msg, Guid taskId)
+    public static async Task EditAgrs(TaskMsg msg, Guid taskId)
     {
-        using var _context = ContextFactory.CreateContext();
-        var task = _context.SmQuartzJob.Where(x => x.ID == taskId).FirstOrDefault();
-        if (task != null)
+        var curTime = Utility.GetSysDate();
+        var expression = new CronExpression(msg.Args)
         {
-            task.ScheduleRule = msg.Args;
-            var curTime = DateTime.UtcNow.AddHours(8);
-            var expression = new CronExpression(msg.Args);
-            expression.TimeZone = TimeZoneInfo.Utc;
-            var m_NextTime = expression?.GetNextValidTimeAfter(curTime).Value.DateTime;
-            task.NextExecuteTime = m_NextTime;
-            _context.SmQuartzJob.Update(task);
-            _context.SaveChanges();
-            AddQuartzLog(msg.TaskCode, $"消息处理完毕，参数已修改，下次执行时间：{m_NextTime.ConvertToSecondString()}");
+            TimeZone = TimeZoneInfo.Utc
+        };
+        var nextTime = expression.GetNextValidTimeAfter(curTime)?.DateTime;
+
+        await using var context = ContextFactory.CreateContext();
+        var task = await context.SmQuartzJob
+            .SingleOrDefaultAsync(x => x.ID == taskId && !x.IsDeleted);
+
+        if (task == null)
+            throw new InvalidOperationException($"任务参数修改失败，未找到任务：{taskId}");
+
+        task.ScheduleRule = msg.Args;
+        task.NextExecuteTime = nextTime;
+        await context.SaveChangesAsync();
+
+        var cachedTask = m_SmQuartzJob.FirstOrDefault(x => x.ID == taskId);
+        if (cachedTask != null)
+        {
+            cachedTask.ScheduleRule = msg.Args;
+            cachedTask.NextExecuteTime = nextTime;
         }
-        else
-            AddQuartzLog(msg.TaskCode, "无效的任务id");
+
+        AddQuartzLog(
+            msg.TaskCode,
+            $"消息处理完毕，参数已修改，下次执行时间：{nextTime.ConvertToSecondString()}");
 
     }
 }
