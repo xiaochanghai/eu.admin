@@ -20,6 +20,7 @@
 	<PackageReference Include="Magicodes.IE.Excel" Version="2.8.2" />
     <PackageReference Include="InitQ" Version="1.0.0.19" />
     <PackageReference Include="log4net" Version="3.2.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
     <PackageReference Include="Mapster" Version="10.0.0-pre01" />
     <PackageReference Include="Mapster.Core" Version="10.0.0-pre01" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />
