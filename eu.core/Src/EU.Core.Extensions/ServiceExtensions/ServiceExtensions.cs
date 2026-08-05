@@ -1,4 +1,8 @@
-﻿using EU.Core.Common.Helper;
+﻿using EU.Core.Common;
+using EU.Core.Common.Const;
+using EU.Core.Common.Helper;
+using EU.Core.Common.LogHelper;
+using EU.Core.Tasks;
 
 namespace EU.Core.Extensions;
 
@@ -24,6 +28,20 @@ public static class ServiceExtensions
         RabbitMQHelper.CheckRabbitMQServiceAvailable();
 
 
+    }
+
+    public static void InitTaskCallback()
+    {
+        //TaskCallback消息订阅
+        if (AppSettings.app(["RabbitMQ", "Enabled"]).ObjToBool())
+        {
+            Logger.WriteLog("[TaskCallback]启动消息订阅");
+            RabbitMQHelper.ConsumeMsg<TaskCallbackMsg>(RabbitMQConsts.CLIENT_ID_TASK_CALLBACK, msg =>
+            {
+                TaskHelper.TaskCallback(msg);
+                return ConsumeAction.Accept;
+            });
+        }
     }
 
     /// <summary>

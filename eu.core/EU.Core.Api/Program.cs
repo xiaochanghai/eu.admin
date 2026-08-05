@@ -57,6 +57,7 @@ builder.Services.AddAllOptionRegister();
 
 //builder.Services.AddUiFilesZipSetup(builder.Environment);
 ServiceExtensions.Init();
+ServiceExtensions.InitTaskCallback();
 
 Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool();
 Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool();

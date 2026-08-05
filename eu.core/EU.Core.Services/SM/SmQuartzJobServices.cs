@@ -65,7 +65,7 @@ public class SmQuartzJobServices : BaseServices<SmQuartzJob, SmQuartzJobDto, Ins
             case "LOG.HISTORY":
                 {
                     //发送消息并等待接收返回值
-                    (bool suc, object o) = TaskHelper.SendMsg(taskMsg);
+                    (bool suc, object o) = await TaskHelper.SendMsgAsync(taskMsg);
                     if (suc)
                         result.Data = o;
                     else
