@@ -163,9 +163,11 @@ const Extend: React.FC<ExtendProps> = ({ moduleCode, extendPageRef }) => {
    */
   // 执行任务操作
   const jobExecute = useCallback(async (jobId: string, type = "LOG.CURRENT") => {
-    message.loading(t("extend.gettingLogs"), 0);
-    const { Success, Data } = await http.post<any>(`/api/SmQuartzJob/Operate/${jobId}/${type}`, {});
-    message.destroy();
+    if (type === "LOG.CURRENT")
+      message.loading(t("extend.gettingLogs"), 0);
+    const { Success, Data, Message } = await http.post<any>(`/api/SmQuartzJob/Operate/${jobId}/${type}`, {});
+    // message.destroy();
+    message.success(Message ?? t("extend.operationSuccess"));
 
     if (Success && type === "LOG.CURRENT") {
       setModalVisible(true);
