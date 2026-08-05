@@ -122,7 +122,8 @@ export default {
     exportExcel: "导出Excel",
     importExcel: "Excel导入",
     importTitle: "导入",
-    logTitle: "日志"
+    logTitle: "日志",
+    link: "链接"
   },
   cacheClear: {
     title: "系统缓存管理",

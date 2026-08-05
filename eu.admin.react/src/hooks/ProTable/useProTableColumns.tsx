@@ -7,6 +7,7 @@ import { ModuleInfo } from "@/api/interface/index";
 import { ComboGrid, Icon } from "@/components";
 import { downloadFile } from "@/utils";
 import { RootState } from "@/redux";
+import { useTranslation } from "react-i18next";
 
 /**
  * 图片预览触发器组件
@@ -48,6 +49,7 @@ export const useProTableColumns = (
   language: RootState["global"]["language"]
 ) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [columnsStateMap, setColumnsStateMap] = useState(() => userModuleColumn);
 
 
@@ -133,7 +135,7 @@ export const useProTableColumns = (
           columnEnhancements.render = (_: any, record: any) => {
             if (record[item.dataIndex])
               return <a style={{ cursor: "pointer" }} onClick={() => downloadFile(record[item.dataIndex], record[item.dataIndex])} key="link">
-                <Icon name='LinkOutlined' /> 链接
+                <Icon name="LinkOutlined" /> {t("proTable.link")}
               </a>;
           };
 
@@ -155,7 +157,7 @@ export const useProTableColumns = (
       // 如果有任何增强，合并到原列配置中
       return Object.keys(columnEnhancements).length > 0 ? { ...item, ...columnEnhancements } : item;
     });
-  }, [columns, language]);
+  }, [columns, language, t]);
 
   return {
     enhancedColumns,

@@ -122,7 +122,8 @@ export default {
     exportExcel: "Export Excel",
     importExcel: "Import Excel",
     importTitle: "Import",
-    logTitle: "Log"
+    logTitle: "Log",
+    link: "Link"
   },
   cacheClear: {
     title: "System Cache Management",
