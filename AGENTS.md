@@ -12,7 +12,9 @@
 | 网关与 MCP | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | Gateway/MCP 各自配置、宿主代码和被调用服务 |
 | 后端公共能力 | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | Common、Extensions、DataAccess、EventBus、Tasks、Serilog 等拥有模块 |
 | 数据库与模型 | [`db`](db)、[`model`](model) | 实体、DTO、仓储、服务和所有调用方 |
-| 文档与部署 | [`README.md`](README.md)、[`doc`](doc) | Docker、环境配置和实际启动入口 |
+| 前端开发文档 | [`doc/frontend/README.md`](doc/frontend/README.md) | 前端模块文档和源码旁 README |
+| 后端开发文档 | [`doc/backend/README.md`](doc/backend/README.md) | 数据库、后端模块和宿主文档 |
+| 通用文档与部署 | [`README.md`](README.md)、[`doc`](doc) | Docker、环境配置和实际启动入口 |
 
 工作顺序：
 
