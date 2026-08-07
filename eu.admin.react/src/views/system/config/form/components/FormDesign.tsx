@@ -127,7 +127,7 @@ const FormDesign: React.FC<FormDesignProps> = props => {
                       moduleCode={moduleCode}
                       fieldList={columns}
                       formOnly={embedded}
-                      // fieldList={columns.sort((a, b) => a.FromTaxisNo - b.FromTaxisNo)}
+                      // fieldList={columns.sort((a, b) => a.FormTaxisNo - b.FormTaxisNo)}
                       currentField={currentField}
                       // mode={Mode.form}
                       onDataChange={fields => {

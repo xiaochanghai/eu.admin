@@ -147,8 +147,8 @@ public class SmModuleColumn : BasePoco
     /// <summary>
     /// 表单排序号
     /// </summary>
-    [Display(Name = "FromTaxisNo"), Description("表单排序号"), SugarColumn(IsNullable = true)]
-    public int? FromTaxisNo { get; set; }
+    [Display(Name = "FormTaxisNo"), Description("表单排序号"), SugarColumn(IsNullable = true)]
+    public int? FormTaxisNo { get; set; }
 
     /// <summary>
     /// 默认值

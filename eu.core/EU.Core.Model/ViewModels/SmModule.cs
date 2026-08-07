@@ -85,7 +85,7 @@ public class SmModuleForm
     /// <summary>
     /// 表单排序号
     /// </summary>
-    public int? FromTaxisNo { get; set; }
+    public int? FormTaxisNo { get; set; }
 
     /// <summary>
     /// 表单项标题

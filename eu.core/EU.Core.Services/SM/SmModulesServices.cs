@@ -41,10 +41,22 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
     private const string ACCEPT_FORMAT_PATTERN = @"^\.[A-Za-z0-9]+(,\.[A-Za-z0-9]+)*$";
 
+    private static readonly HashSet<string> VALID_COLUMN_ALIGNS = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "left",
+        "center",
+        "right"
+    };
+
     private static bool IsValidAcceptFormat(string accept)
     {
         return string.IsNullOrWhiteSpace(accept)
             || System.Text.RegularExpressions.Regex.IsMatch(accept.Trim(), ACCEPT_FORMAT_PATTERN);
+    }
+
+    private static bool IsValidColumnAlign(string align)
+    {
+        return string.IsNullOrWhiteSpace(align) || VALID_COLUMN_ALIGNS.Contains(align.Trim());
     }
 
     /// <summary>
@@ -577,9 +589,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             moduleColumns.ForEach(x =>
             {
                 x.FormTitle = x.FormTitle ?? x.Title;
-                x.FromTaxisNo = x.FromTaxisNo ?? x.TaxisNo;
+                x.FormTaxisNo = x.FormTaxisNo ?? x.TaxisNo;
             });
-            obj.formColumns = Mapper.Map(moduleColumns.Where(x => (x.ColumnMode != "list" || x.ColumnMode == null)).OrderBy(x => x.FromTaxisNo)).ToANew<List<SmModuleForm>>();
+            obj.formColumns = Mapper.Map(moduleColumns.Where(x => (x.ColumnMode != "list" || x.ColumnMode == null)).OrderBy(x => x.FormTaxisNo)).ToANew<List<SmModuleForm>>();
 
             // 获取功能权限列表
             var privileges = await FunctionPrivilege.QueryByModuleCodeAsync(Db, moduleCode);
@@ -1143,11 +1155,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             int i = 1;
             columns.ForEach(x =>
             {
-                x.FromTaxisNo = TAXIS_INCREMENT * i;
+                x.FormTaxisNo = TAXIS_INCREMENT * i;
                 i++;
             });
             await Db.Updateable(columns)
-                .UpdateColumns(x => new { x.FromTaxisNo, x.UpdateBy, x.UpdateTime }, true)
+                .UpdateColumns(x => new { x.FormTaxisNo, x.UpdateBy, x.UpdateTime }, true)
                 .ExecuteCommandAsync();
         }
         else
@@ -1197,6 +1209,9 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             if (!IsValidAcceptFormat(column.Accept))
                 return Failed("接受的文件类型格式不正确，请使用 .zip,.pdf 格式");
 
+            if (column.MinRows.HasValue && column.MinRows.Value <= 0)
+                return Failed("多行文字最小行数必须大于0");
+
             if (column.Accept.IsNotEmptyOrNull())
                 entity.Accept = column.Accept.Trim();
 
@@ -1232,6 +1247,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     x.IsUnique,
                     x.MaxLength,
                     x.MinLength,
+                    x.MinRows,
                     x.Maximum,
                     x.Minimum,
                     x.Placeholder,
@@ -1259,6 +1275,12 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         }
         else
         {
+            if (!IsValidColumnAlign(column.Align))
+                return Failed("对齐方式仅支持 left、center、right");
+
+            if (column.Align.IsNotEmptyOrNull())
+                entity.Align = column.Align.Trim().ToLowerInvariant();
+
             if (entity.IsLovCode == true)
                 entity.DataSource = column.ComboBoxDataSource;
             // 更新表格列配置
@@ -1354,10 +1376,10 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         var moduleId = id;
 
         //// 按表单排序号排序
-        //moduleColumns = moduleColumns.OrderBy(x => x.FromTaxisNo).ToList();
+        //moduleColumns = moduleColumns.OrderBy(x => x.FormTaxisNo).ToList();
 
         var moduleColumns = await Db.Queryable<SmModuleColumn>()
-            .OrderBy(x => x.FromTaxisNo)
+            .OrderBy(x => x.FormTaxisNo)
             .Where(x => x.SmModuleId == moduleId).ToListAsync();
 
         result = Mapper.Map(moduleColumns).ToANew<List<SmModuleFormOption>>();

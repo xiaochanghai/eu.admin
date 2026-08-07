@@ -146,8 +146,8 @@ public class SmModuleColumnBase : BasePoco
     /// <summary>
     /// 表单排序号
     /// </summary>
-    [Display(Name = "FromTaxisNo"), Description("表单排序号")]
-    public int? FromTaxisNo { get; set; }
+    [Display(Name = "FormTaxisNo"), Description("表单排序号")]
+    public int? FormTaxisNo { get; set; }
 
     /// <summary>
     /// 默认值

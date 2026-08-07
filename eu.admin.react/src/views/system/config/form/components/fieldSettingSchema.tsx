@@ -155,6 +155,13 @@ export const schemaDef: SchemaClz = {
     mode: Mode.form,
     deps: { field: "FieldType", value: ["Input", "TextArea"] }
   },
+  MinRows: {
+    name: "最小行数",
+    type: "inputNumber",
+    tag: "basic",
+    mode: Mode.form,
+    deps: { field: "FieldType", value: ["TextArea"] }
+  },
   Maximum: {
     name: "最大值",
     type: "inputNumber",
@@ -395,10 +402,14 @@ export const schemaDef: SchemaClz = {
   },
   Align: {
     name: "对齐方式",
-    type: "inputNumber",
+    type: "buttonGroup",
     tag: "basic",
     mode: Mode.list,
-    deps: { field: "FieldType", value: ["InputNumber"] }
+    items: [
+      { label: "左对齐", value: "left" },
+      { label: "居中", value: "center" },
+      { label: "右对齐", value: "right" }
+    ]
   },
   IsAutoCode: {
     name: "自动编号",
