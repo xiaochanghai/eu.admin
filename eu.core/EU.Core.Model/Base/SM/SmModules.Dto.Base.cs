@@ -214,6 +214,8 @@ public class SmModulesBase : BasePoco
     /// </summary>
     [Display(Name = "IsRoleDataScope"), Description("是否过滤角色数据权限")]
     public bool? IsRoleDataScope { get; set; }
+
+    /// <summary>
     /// 是否启用工作流
     /// </summary>
     [Display(Name = "IsWorkflow"), Description("是否启用工作流")]
