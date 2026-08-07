@@ -10,14 +10,6 @@
   </ItemGroup>
   
   
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<OutputPath>..\EU.Core.Api\bin\Debug\</OutputPath>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<OutputPath>..\EU.Core\bin\Release\</OutputPath>
-	</PropertyGroup>
-
 	<ItemGroup>
 	  <ProjectReference Include="..\EU.Core.Model\EU.Core.Model.csproj" />
 	  <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />

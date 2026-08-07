@@ -43,13 +43,13 @@ public static class SwaggerSetup
                     c.IncludeXmlComments(Path.Combine(basePath, file), true);
 
                 }
-                //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.xml"), true);
+                //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.Api.xml"), true);
                 //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.Model.xml"), true);
                 //c.IncludeXmlComments(Path.Combine(basePath, "EU.Core.EFS.Api.xml"), true);
             }
             catch (Exception ex)
             {
-                Log.Error("EU.Core.xml和EU.Core.Model.xml 丢失，请检查并拷贝。\n" + ex.Message);
+                Log.Error("接口 XML 文档丢失，请检查项目的 DocumentationFile 配置。\n" + ex.Message);
             }
 
             c.MapType<QueryFilter>(() => new OpenApiSchema { Type = "string", Format = "string" });

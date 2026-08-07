@@ -2,14 +2,9 @@
 
 	<Import Project="..\build\common.targets" />
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<PropertyGroup>
 		<DocumentationFile>..\EU.Core.Api\EU.Core.Model.xml</DocumentationFile>
-		<NoWarn>1701;1702;1591</NoWarn>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DocumentationFile>..\EU.Core\EU.Core.Model.xml</DocumentationFile>
-		<NoWarn>1701;1702;1591</NoWarn>
+		<NoWarn>$(NoWarn);1701;1702;1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

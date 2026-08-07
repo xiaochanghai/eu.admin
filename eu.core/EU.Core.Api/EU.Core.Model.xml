@@ -5152,7 +5152,7 @@
             是否合计
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.FromTaxisNo">
+        <member name="P:EU.Core.Model.Base.SmModuleColumnBase.FormTaxisNo">
             <summary>
             表单排序号
             </summary>
@@ -5527,7 +5527,11 @@
             是否过滤角色数据权限
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "P:EU.Core.Model.Base.SmModulesBase.IsWorkflow" -->
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsWorkflow">
+            <summary>
+            是否启用工作流
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12218,7 +12222,7 @@
             是否合计
             </summary>
         </member>
-        <member name="P:EU.Core.Model.Entity.SmModuleColumn.FromTaxisNo">
+        <member name="P:EU.Core.Model.Entity.SmModuleColumn.FormTaxisNo">
             <summary>
             表单排序号
             </summary>
@@ -12593,7 +12597,11 @@
             是否过滤角色数据权限
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "P:EU.Core.Model.Entity.SmModules.IsWorkflow" -->
+        <member name="P:EU.Core.Model.Entity.SmModules.IsWorkflow">
+            <summary>
+            是否启用工作流
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
             <summary>
             系统模块SQL (Model)
@@ -15513,7 +15521,7 @@
             模块代码
             </summary>
         </member>
-        <member name="P:EU.Core.Model.SmModuleForm.FromTaxisNo">
+        <member name="P:EU.Core.Model.SmModuleForm.FormTaxisNo">
             <summary>
             表单排序号
             </summary>
