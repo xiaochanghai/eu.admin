@@ -6,6 +6,7 @@
 
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)
 - 数据库表设计硬约束：[`数据库表设计约束.md`](数据库表设计约束.md)
+- SmModule 页面元数据专题索引：[`SmModule/README.md`](SmModule/README.md)
 - 后端解决方案：[`../../eu.core/EU.Core.sln`](../../eu.core/EU.Core.sln)
 
 新增后端开发文档应放在本目录或其按模块划分的子目录中；行为、API、数据库、宿主生命周期或发布方式变化时，应同步更新对应事实源和本索引。

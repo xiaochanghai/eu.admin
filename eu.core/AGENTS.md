@@ -21,6 +21,7 @@
 | 仓储、事务、ORM、连接 | `EU.Core.Repository/**`、`Src/EU.Core.DataAccess/**`、相关配置 |
 | 登录、JWT、权限、数据权限 | `EU.Core.Api/Controllers/Authorize/**`、`Src/EU.Core.Common/Authorizations/**`、`Src/EU.Core.Extensions/Authorizations/**`、认证中间件 |
 | 多租户 | `EU.Core.Model/Tenants/**`、`Src/EU.Core.Common/DB/TenantUtil.cs`、`EU.Core.Api/Controllers/Tenant/**`、对应服务 |
+| 页面模块元数据、动态列表/表单配置 | [`../doc/backend/SmModule/README.md`](../doc/backend/SmModule/README.md)，再按索引读取目标专题和源码 |
 | 后台任务与 Quartz | [`EU.Core.Jobs/Program.cs`](EU.Core.Jobs/Program.cs)、`Src/EU.Core.Tasks/**`、业务服务与配置 |
 | 网关、路由、Nacos | [`Src/EU.Core.Gateway/Program.cs`](Src/EU.Core.Gateway/Program.cs)、`Src/EU.Core.Gateway/**`、`Src/Ocelot.Provider.Nacos/**` |
 | MCP API | [`EU.Core.MCP.Api/Program.cs`](EU.Core.MCP.Api/Program.cs)、其 Controllers、Services、Models 和 Extensions |

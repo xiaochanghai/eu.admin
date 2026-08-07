@@ -21,6 +21,7 @@
 | 布局、标签页、主题、国际化 | `src/layouts/**`、`src/redux/modules/tabs.ts`、`src/styles/**`、`src/languages/**` |
 | 共享 UI、表单、上传附件 | `src/components/**`、相关 API 与业务页面 |
 | 普通业务页面 | 对应 `src/views/<domain>/**`、`src/api/**`、相关 Redux 模块 |
+| 动态页面、通用表格/表单、模块维护 | [`../doc/frontend/SmModule/README.md`](../doc/frontend/SmModule/README.md)，再按索引读取目标专题和源码 |
 | 工作流运行与设计器 | [`src/workflow/README.md`](src/workflow/README.md)、[`src/workflow/WorkflowEditor/README.md`](src/workflow/WorkflowEditor/README.md)、[`src/workflow/setters/README.md`](src/workflow/setters/README.md) |
 | 新版工作流编辑器 | [`src/workflow-editor/README.md`](src/workflow-editor/README.md)、`src/workflow-editor/**` |
 | DSL、动态表单或模型转换 | `src/dsl/**`、相关工作流与表单组件、服务端输入输出模型 |
