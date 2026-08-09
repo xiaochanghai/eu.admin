@@ -1,12 +1,14 @@
 ﻿using System.Reflection;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace EU.Core.MCP.Controllers;
 
 /// <summary>
 /// MCP基础服务
 /// </summary>
 /// <typeparam name="IServiceBase"></typeparam>
-[ApiController, Route("/[controller]")]
+[ApiController, Route("/[controller]"), Authorize(Permissions.Name)]
 public class BaseController<IServiceBase> : ControllerBase
 {
     #region 初始化
@@ -27,7 +29,7 @@ public class BaseController<IServiceBase> : ControllerBase
     /// <summary>
     /// Health check endpoint
     /// </summary>
-    [HttpGet]
+    [AllowAnonymous, HttpGet]
     public IActionResult HealthCheck()
     {
         return Ok("MCP API is running!");

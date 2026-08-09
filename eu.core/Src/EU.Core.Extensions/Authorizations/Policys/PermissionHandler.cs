@@ -125,11 +125,12 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                 {
                     if (!isTestCurrent) httpContext.User = result.Principal;
 
-                    //应该要先校验用户的信息 再校验菜单权限相关的
-                    // JWT模式下校验当前用户状态
-                    // IDS4也可以校验，可以通过服务或者接口形式
+                    var isExternalIdentityProvider = Permissions.IsUseIds4 || Permissions.IsUseAuthing;
+
+                    // 内部 JWT 模式额外校验 Redis 会话和当前用户状态。
+                    // IDS4/Authing 由外部身份提供商完成用户与会话校验。
                     SmUsersDto user = new SmUsersDto();
-                    if (!Permissions.IsUseIds4)
+                    if (!isExternalIdentityProvider)
                     {
 
                         var sessionId = _user.SessionId;
@@ -172,11 +173,9 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                         }
                     }
 
-                    // 判断token是否过期，过期则重新登录
+                    // 判断 token 是否过期，过期则重新登录。
                     var isExp = false;
-                    // ids4和jwt切换
-                    // ids4
-                    if (Permissions.IsUseIds4)
+                    if (isExternalIdentityProvider)
                     {
                         isExp = (httpContext.User.Claims.FirstOrDefault(s => s.Type == "exp")?.Value) != null &&
                                 DateTimeHelper.StampToDateTime(httpContext.User.Claims

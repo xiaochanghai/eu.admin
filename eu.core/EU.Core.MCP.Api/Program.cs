@@ -1,5 +1,6 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using EU.Core;
 using EU.Core.Common.Core;
 using EU.Core.Domain;
 using EU.Core.Extensions;
@@ -11,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.WebHost.UseUrls("http://localhost:5196");
 
 
-// 1¡¢ÅäÖÃhostÓëÈİÆ÷
+// 1ã€é…ç½®hostä¸å®¹å™¨
 builder.Host
     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(builder =>
@@ -20,9 +21,9 @@ builder.Host
         builder.RegisterModule(new AutofacMCPModuleRegister());
         //builder.RegisterModule<AutofacPropertityModuleReg>();
 
-        //×¢²á²Ö´¢£¬ËùÓĞIRepository½Ó¿Úµ½RepositoryµÄÓ³Éä
+        //æ³¨å†Œä»“å‚¨ï¼Œæ‰€æœ‰IRepositoryæ¥å£åˆ°Repositoryçš„æ˜ å°„
         builder.RegisterGeneric(typeof(BaseCRUDVM<>))
-            //InstancePerDependency£ºÄ¬ÈÏÄ£Ê½£¬Ã¿´Îµ÷ÓÃ£¬¶¼»áÖØĞÂÊµÀı»¯¶ÔÏó£»Ã¿´ÎÇëÇó¶¼´´½¨Ò»¸öĞÂµÄ¶ÔÏó£»
+            //InstancePerDependencyï¼šé»˜è®¤æ¨¡å¼ï¼Œæ¯æ¬¡è°ƒç”¨ï¼Œéƒ½ä¼šé‡æ–°å®ä¾‹åŒ–å¯¹è±¡ï¼›æ¯æ¬¡è¯·æ±‚éƒ½åˆ›å»ºä¸€ä¸ªæ–°çš„å¯¹è±¡ï¼›
             .As(typeof(IBaseCRUDVM<>)).InstancePerDependency();
         //builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>()
         //               .AsImplementedInterfaces()
@@ -38,7 +39,7 @@ builder.Host
     });
 builder.ConfigureApplication();
 
-// 2¡¢ÅäÖÃ·şÎñ
+// 2ã€é…ç½®æœåŠ¡
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
 builder.Services.AddAllOptionRegister();
 builder.Services.AddHttpPollySetup();
@@ -61,13 +62,16 @@ builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
 builder.Services.AddDataContextSetup();
 builder.Services.AddDbSetup();
-builder.Services.AddAuthorizationSetup();
-builder.Services.AddAuthentication_JWTSetup();
+builder.Services.AddHttpContextSetup();
+builder.Services.AddAuthenticationAndAuthorizationSetup();
 
 // Register our services
 builder.Services.AddMcpServices(); 
 
 var app = builder.Build();
+
+app.ConfigureApplication();
+app.UseApplicationSetup();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -76,8 +80,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Enable HTTPS redirection
-app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Add request logging middleware
 app.Use(async (context, next) =>

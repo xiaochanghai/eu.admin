@@ -101,6 +101,8 @@
    - API：http://localhost:8015/swagger
    - 网关：http://localhost:9000
    - MCP API：http://localhost:8020/swagger
+     - MCP Controller 业务端点必须携带 `Authorization: Bearer <token>`；健康检查端点允许匿名访问。
+     - `EU.Core.Api` 的 `api/Stream` 会把当前已认证请求的 Bearer Token 委托转发给 MCP API，不使用硬编码服务令牌。
 
 ## ⚡ 核心功能
 

@@ -1,6 +1,7 @@
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Models;
 using ModelContextProtocol.Client;
+using System.Net.Http.Headers;
 //using ModelContextProtocol.Protocol.Transport;
 
 namespace EU.Core.Api.Controllers.MCP;
@@ -29,6 +30,15 @@ public class StreamController : ControllerBase
     [HttpPost("chat/{chatId}")]
     public async Task<IActionResult> HandleStreamRequest([FromBody] StreamRequest request, Guid chatId)
     {
+        var cancellationToken = HttpContext.RequestAborted;
+        var authorizationHeader = Request.Headers.Authorization.ToString();
+        if (!AuthenticationHeaderValue.TryParse(authorizationHeader, out var authenticationHeader)
+            || !string.Equals(authenticationHeader.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(authenticationHeader.Parameter))
+        {
+            return Unauthorized(new { Message = "A valid Bearer token is required." });
+        }
+
         try
         {
             _logger.LogInformation("收到 MCP 流式请求: {Method}", request.messages);
@@ -45,14 +55,18 @@ public class StreamController : ControllerBase
                 new HttpClientTransportOptions()
                 {
                     Endpoint = new Uri(url + "/Supplier/mcp"),
+                    AdditionalHeaders = new Dictionary<string, string>
+                    {
+                        ["Authorization"] = authorizationHeader
+                    }
                 }
             );
 
             // Create an MCP client instance using the above configuration
-            var client = await McpClient.CreateAsync(config);
+            await using var client = await McpClient.CreateAsync(config, cancellationToken: cancellationToken);
 
             // 调用客户端的 ListToolsAsync 方法，获取可用工具列表
-            var listToolsResult = await client.ListToolsAsync();
+            var listToolsResult = await client.ListToolsAsync(cancellationToken: cancellationToken);
 
 
             //await chatAIClient.ProcessQueryAsync("测试", listToolsResult);
@@ -60,7 +74,6 @@ public class StreamController : ControllerBase
             if (request.messages[0].fileId.IsNotEmptyOrNull())
                 request.messages[0].content += $"fileId:{request.messages[0].fileId}";
 
-            var cancellationToken = HttpContext.RequestAborted;
             await foreach (var streamEvent in ChatHelper.CallStreamAsync(chatId, request.messages[0].content, listToolsResult, cancellationToken))
             {
                 //var eventData = System.Text.Json.JsonSerializer.Serialize(streamEvent);

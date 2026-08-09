@@ -17,7 +17,6 @@ using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,11 +58,8 @@ builder.Services.AddAllOptionRegister();
 ServiceExtensions.Init();
 ServiceExtensions.InitTaskCallback();
 
-Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool();
-Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool();
 RoutePrefix.Name = AppSettings.app(["AppSettings", "SvcName"]).ObjToString();
 //ChatHelper.InitChat();
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
@@ -88,16 +84,7 @@ builder.Services.AddRedisInitMqSetup();
 builder.Services.AddIpPolicyRateLimitSetup(builder.Configuration);
 builder.Services.AddSignalR().AddNewtonsoftJsonProtocol();
 
-builder.Services.AddAuthorizationSetup();
-if (Permissions.IsUseIds4 || Permissions.IsUseAuthing)
-{
-    if (Permissions.IsUseIds4) builder.Services.AddAuthentication_Ids4Setup();
-    else if (Permissions.IsUseAuthing) builder.Services.AddAuthentication_AuthingSetup();
-}
-else
-{
-    builder.Services.AddAuthentication_JWTSetup();
-}
+builder.Services.AddAuthenticationAndAuthorizationSetup();
 
 builder.Services.AddScoped<UseServiceDIAttribute>();
 builder.Services.Configure<KestrelServerOptions>(x =>
