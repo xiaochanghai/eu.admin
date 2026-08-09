@@ -78,8 +78,14 @@ export const useProTableColumns = (
       }
 
       // 处理 ComboGrid 类型
-      if (!item.hideInSearch && item.fieldType === "ComboGrid") {
-        columnEnhancements.renderFormItem = () => <ComboGrid code={item.dataSource} />;
+      const isSearchable = item.search !== false && item.hideInSearch !== true;
+
+      if (item.hideInSearch === true && item.search !== false) {
+        columnEnhancements.search = false;
+      }
+
+      if (isSearchable && item.fieldType === "ComboGrid") {
+        columnEnhancements.formItemRender = () => <ComboGrid code={item.dataSource} />;
       }
 
       // 处理标签显示
