@@ -5532,6 +5532,21 @@
             是否启用工作流
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.QueryApiUrl">
+            <summary>
+            自定义列表查询地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.OptionPosition">
+            <summary>
+            操作列位置（left/right）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsAllowCustomColumn">
+            <summary>
+            是否允许设置自定义列
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12600,6 +12615,21 @@
         <member name="P:EU.Core.Model.Entity.SmModules.IsWorkflow">
             <summary>
             是否启用工作流
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.QueryApiUrl">
+            <summary>
+            自定义列表查询地址
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.OptionPosition">
+            <summary>
+            操作列位置（left/right）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsAllowCustomColumn">
+            <summary>
+            是否允许设置自定义列
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">

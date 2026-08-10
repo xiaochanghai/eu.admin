@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/6/26 1:18:55  SahHsiao   初版
+* V0.01  2026/8/10 13:19:53  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -26,13 +26,13 @@ public class SmModulesBase : BasePoco
     /// <summary>
     /// 模块代码
     /// </summary>
-    [Display(Name = "ModuleCode"), Description("模块代码"), MaxLength(50, ErrorMessage = "模块代码 不能超过 50 个字符")]
+    [Display(Name = "ModuleCode"), Description("模块代码"), MaxLength(64, ErrorMessage = "模块代码 不能超过 64 个字符")]
     public string ModuleCode { get; set; }
 
     /// <summary>
     /// 模块名称
     /// </summary>
-    [Display(Name = "ModuleName"), Description("模块名称"), MaxLength(50, ErrorMessage = "模块名称 不能超过 50 个字符")]
+    [Display(Name = "ModuleName"), Description("模块名称"), MaxLength(64, ErrorMessage = "模块名称 不能超过 64 个字符")]
     public string ModuleName { get; set; }
 
     /// <summary>
@@ -44,13 +44,13 @@ public class SmModulesBase : BasePoco
     /// <summary>
     /// 图标
     /// </summary>
-    [Display(Name = "Icon"), Description("图标"), MaxLength(-1, ErrorMessage = "图标 不能超过 -1 个字符")]
+    [Display(Name = "Icon"), Description("图标"), MaxLength(32, ErrorMessage = "图标 不能超过 32 个字符")]
     public string Icon { get; set; }
 
     /// <summary>
     /// 路由
     /// </summary>
-    [Display(Name = "RoutePath"), Description("路由"), MaxLength(50, ErrorMessage = "路由 不能超过 50 个字符")]
+    [Display(Name = "RoutePath"), Description("路由"), MaxLength(64, ErrorMessage = "路由 不能超过 64 个字符")]
     public string RoutePath { get; set; }
 
     /// <summary>
@@ -122,13 +122,13 @@ public class SmModulesBase : BasePoco
     /// <summary>
     /// DefaultSort
     /// </summary>
-    [Display(Name = "DefaultSort"), Description("DefaultSort"), MaxLength(50, ErrorMessage = "DefaultSort 不能超过 50 个字符")]
+    [Display(Name = "DefaultSort"), Description("DefaultSort"), MaxLength(32, ErrorMessage = "DefaultSort 不能超过 32 个字符")]
     public string DefaultSort { get; set; }
 
     /// <summary>
     /// DefaultSortOrder
     /// </summary>
-    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), MaxLength(50, ErrorMessage = "DefaultSortOrder 不能超过 50 个字符")]
+    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), MaxLength(32, ErrorMessage = "DefaultSortOrder 不能超过 32 个字符")]
     public string DefaultSortOrder { get; set; }
 
     /// <summary>
@@ -220,4 +220,22 @@ public class SmModulesBase : BasePoco
     /// </summary>
     [Display(Name = "IsWorkflow"), Description("是否启用工作流")]
     public bool? IsWorkflow { get; set; }
+
+    /// <summary>
+    /// 自定义列表查询地址
+    /// </summary>
+    [Display(Name = "QueryApiUrl"), Description("自定义列表查询地址"), MaxLength(256, ErrorMessage = "自定义列表查询地址 不能超过 256 个字符")]
+    public string QueryApiUrl { get; set; }
+
+    /// <summary>
+    /// 操作列位置（left/right）
+    /// </summary>
+    [Display(Name = "OptionPosition"), Description("操作列位置（left/right）"), MaxLength(32, ErrorMessage = "操作列位置（left/right） 不能超过 32 个字符")]
+    public string OptionPosition { get; set; }
+
+    /// <summary>
+    /// 是否允许设置自定义列
+    /// </summary>
+    [Display(Name = "IsAllowCustomColumn"), Description("是否允许设置自定义列")]
+    public bool? IsAllowCustomColumn { get; set; }
 }

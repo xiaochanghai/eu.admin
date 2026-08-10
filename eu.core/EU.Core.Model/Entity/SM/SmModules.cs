@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/6/26 1:18:55  SahHsiao   初版
+* V0.01  2026/8/10 13:19:53  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -27,13 +27,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// 模块代码
     /// </summary>
-    [Display(Name = "ModuleCode"), Description("模块代码"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "ModuleCode"), Description("模块代码"), SugarColumn(IsNullable = true, Length = 64)]
     public string ModuleCode { get; set; }
 
     /// <summary>
     /// 模块名称
     /// </summary>
-    [Display(Name = "ModuleName"), Description("模块名称"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "ModuleName"), Description("模块名称"), SugarColumn(IsNullable = true, Length = 64)]
     public string ModuleName { get; set; }
 
     /// <summary>
@@ -45,13 +45,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// 图标
     /// </summary>
-    [Display(Name = "Icon"), Description("图标"), SugarColumn(IsNullable = true, Length = -1)]
+    [Display(Name = "Icon"), Description("图标"), SugarColumn(IsNullable = true, Length = 32)]
     public string Icon { get; set; }
 
     /// <summary>
     /// 路由
     /// </summary>
-    [Display(Name = "RoutePath"), Description("路由"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "RoutePath"), Description("路由"), SugarColumn(IsNullable = true, Length = 64)]
     public string RoutePath { get; set; }
 
     /// <summary>
@@ -123,13 +123,13 @@ public class SmModules : BasePoco
     /// <summary>
     /// DefaultSort
     /// </summary>
-    [Display(Name = "DefaultSort"), Description("DefaultSort"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "DefaultSort"), Description("DefaultSort"), SugarColumn(IsNullable = true, Length = 32)]
     public string DefaultSort { get; set; }
 
     /// <summary>
     /// DefaultSortOrder
     /// </summary>
-    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), SugarColumn(IsNullable = true, Length = 50)]
+    [Display(Name = "DefaultSortOrder"), Description("DefaultSortOrder"), SugarColumn(IsNullable = true, Length = 32)]
     public string DefaultSortOrder { get; set; }
 
     /// <summary>
@@ -219,6 +219,24 @@ public class SmModules : BasePoco
     /// <summary>
     /// 是否启用工作流
     /// </summary>
-    [Display(Name = "IsWorkflow"), Description("是否启用工作流"), SugarColumn(IsNullable = false, DefaultValue = "false")]
+    [Display(Name = "IsWorkflow"), Description("是否启用工作流"), SugarColumn(IsNullable = true)]
     public bool? IsWorkflow { get; set; }
+
+    /// <summary>
+    /// 自定义列表查询地址
+    /// </summary>
+    [Display(Name = "QueryApiUrl"), Description("自定义列表查询地址"), SugarColumn(IsNullable = true, Length = 256)]
+    public string QueryApiUrl { get; set; }
+
+    /// <summary>
+    /// 操作列位置（left/right）
+    /// </summary>
+    [Display(Name = "OptionPosition"), Description("操作列位置（left/right）"), SugarColumn(IsNullable = true, Length = 32)]
+    public string OptionPosition { get; set; }
+
+    /// <summary>
+    /// 是否允许设置自定义列
+    /// </summary>
+    [Display(Name = "IsAllowCustomColumn"), Description("是否允许设置自定义列"), SugarColumn(IsNullable = true)]
+    public bool? IsAllowCustomColumn { get; set; }
 }

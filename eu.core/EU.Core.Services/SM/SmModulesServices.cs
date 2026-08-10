@@ -111,7 +111,32 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     #endregion
 
     #region 新增
+    private static string NormalizeQueryApiUrl(string queryApiUrl)
+    {
+        if (string.IsNullOrWhiteSpace(queryApiUrl))
+            return null;
 
+        var normalized = queryApiUrl.Trim().TrimEnd('/');
+
+        var isInvalid =
+            !normalized.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)
+            || normalized.Contains("://", StringComparison.Ordinal)
+            || normalized.Contains("//", StringComparison.Ordinal)
+            || normalized.Contains("..", StringComparison.Ordinal)
+            || normalized.Contains('?')
+            || normalized.Contains('#')
+            || normalized.Length > 256;
+
+        if (isInvalid)
+        {
+            throw new ArgumentException(
+                "自定义列表查询地址必须是长度不超过 256 的站内 /api/... 路径。",
+                nameof(queryApiUrl)
+            );
+        }
+
+        return normalized;
+    }
     /// <summary>
     /// 新增模块
     /// </summary>
@@ -125,6 +150,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
     {
         var entity1 = ConvertToEntity(entity);
         entity1.OpenType = entity1.OpenType ?? DEFAULT_OPEN_TYPE;
+        //NormalizeListOptions(entity1);
+        entity1.QueryApiUrl = NormalizeQueryApiUrl(entity1.QueryApiUrl);
         var id = await base.Add(ConvertToString(entity1));
 
         // 重新初始化模块缓存
@@ -761,9 +788,12 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
 
             obj.moduleType = module.ModuleType; // 模块类型
             obj.url = module.ApiUrl; // API地址
+            obj.queryApiUrl = module.QueryApiUrl; // 自定义列表查询地址
             obj.IsShowAudit = module.IsShowAudit; // 是否显示审核
             obj.UserModuleColumn = await GetUserModuleColumn(moduleCode); // 用户自定义列配置
             obj.IsShowRowSelection = module.IsShowRowSelection;
+            obj.optionPosition = module.OptionPosition == "right" ? "right" : "left";
+            obj.isAllowCustomColumn = module.IsAllowCustomColumn != false;
 
             message = "获取成功！";
         }
@@ -1541,6 +1571,11 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
         await Db.Insertable(module).ExecuteCommandAsync();
         await Db.Insertable(moduleSql).ExecuteCommandAsync();
         await Db.Insertable(columns).ExecuteCommandAsync();
+
+        // 复制会直接写入模块及其配置，需要同步刷新三个运行时缓存。
+        ModuleInfo.Init();
+        ModuleSql.Init(Db);
+        ModuleSqlColumn.Init();
 
         return Success("复制成功！");
     }
