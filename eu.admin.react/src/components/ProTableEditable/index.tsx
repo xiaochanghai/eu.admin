@@ -34,7 +34,8 @@ const Index: React.FC<any> = React.memo(props => {
   } = props;
 
   const moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  const { masterColumn, isDetail, url, actions, UserModuleColumn, moduleId } = moduleInfo || {};
+  const { masterColumn, isDetail, url, actions, UserModuleColumn, moduleId, optionPosition, isAllowCustomColumn } =
+    moduleInfo || {};
   const tableParam = tableParams[moduleCode] as any;
 
   let currentParams: any = null;
@@ -76,7 +77,7 @@ const Index: React.FC<any> = React.memo(props => {
   const actionColumn = {
     title: "操作",
     dataIndex: "option",
-    fixed: "right",
+    fixed: optionPosition === "right" ? "right" : "left",
     valueType: "option",
     width: 150,
     render: (_text: any, record: any, _: any, action: any) => [
@@ -285,7 +286,7 @@ const Index: React.FC<any> = React.memo(props => {
                   search: true,
                   fullScreen: true,
                   reload: true,
-                  setting: true,
+                  setting: isAllowCustomColumn !== false,
                   density: true
                 }}
                 value={dataSource}

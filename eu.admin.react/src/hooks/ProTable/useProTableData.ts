@@ -126,7 +126,7 @@ export const useProTableData = (
     }
 
     // 加载数据
-    return await queryByFilter(moduleCode, {}, filter);
+    return await queryByFilter(moduleCode, {}, filter, moduleInfo.queryApiUrl);
   };
 
   /**

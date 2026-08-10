@@ -83,8 +83,11 @@ export interface ModuleInfo {
   moduleType: string;
   openType: string;
   url: string;
+  queryApiUrl?: string;
   customActionData: any[];
   IsShowRowSelection?: boolean;
+  optionPosition?: "left" | "right";
+  isAllowCustomColumn?: boolean;
 }
 export interface ModuleInfo1 {
   ModuleName: string;

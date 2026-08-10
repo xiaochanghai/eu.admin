@@ -20,7 +20,7 @@ const ProTableEditable: React.FC<any> = props => {
   let { moduleCode, modifyType, masterId, tableRef, editableCallBack, addCallBack, successCallBack, failCallBack, formRef } =
     props;
   let moduleInfo = moduleInfos[moduleCode] as ModuleInfo;
-  let { masterColumn, isDetail, url } = moduleInfo || {};
+  let { masterColumn, isDetail, url, optionPosition, isAllowCustomColumn } = moduleInfo || {};
 
   let tableParams = useSelector((state: RootState) => state.module.tableParams);
   let tableParam = tableParams[moduleCode] as any;
@@ -50,7 +50,7 @@ const ProTableEditable: React.FC<any> = props => {
     const actionColumn = {
       title: "操作",
       dataIndex: "option",
-      fixed: "right",
+      fixed: optionPosition === "right" ? "right" : "left",
       valueType: "option",
       width: 150,
       render: (_text: any, record: any, _: any, action: any) => [
@@ -206,7 +206,7 @@ const ProTableEditable: React.FC<any> = props => {
                 search: true,
                 fullScreen: true,
                 reload: true,
-                setting: true,
+                setting: isAllowCustomColumn !== false,
                 density: true
               }}
               value={dataSource}

@@ -104,10 +104,13 @@ export const query = (params: Record<string, any>) => {
  * @param moduleCode 模块代码
  * @param params 查询参数
  * @param filter 过滤条件
+ * @param queryApiUrl 模块配置的自定义列表查询地址
  * @returns 查询结果列表
  */
-export const queryByFilter = (moduleCode: string, params: Record<string, any>, filter: any) => {
-  return http.getGridList(`/api/Common/QueryByFilter/${moduleCode}`, params, { filter });
+export const queryByFilter = (moduleCode: string, params: Record<string, any>, filter: any, queryApiUrl?: string) => {
+  const customUrl = queryApiUrl?.trim().replace(/\/+$/, "");
+  const url = customUrl ?? `/api/Common/QueryByFilter/${encodeURIComponent(moduleCode)}`;
+  return http.getGridList(url, params, { filter });
 };
 
 /**

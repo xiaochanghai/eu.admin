@@ -111,7 +111,8 @@ const SmProTable: React.FC<ProTableProps> = props => {
     ...restProps
   } = props;
 
-  const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection } = moduleInfo;
+  const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection, optionPosition, isAllowCustomColumn } =
+    moduleInfo;
   const actionRef = useRef<ActionType>();
   const language = useSelector((state: RootState) => state.global.language);
   const { t } = useTranslation();
@@ -333,7 +334,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
       ? {
         title: t("proTable.operation"),
         dataIndex: "option",
-        fixed: "left",
+        fixed: optionPosition === "right" ? "right" : "left",
         valueType: "option",
         width: 100,
         align: "center",
@@ -514,6 +515,13 @@ const SmProTable: React.FC<ProTableProps> = props => {
         }}
         dateFormatter="string"
         columnEmptyText={"-"}
+        options={{
+          search: true,
+          fullScreen: true,
+          reload: true,
+          setting: isAllowCustomColumn !== false,
+          density: true
+        }}
         {...restProps}
       />
 
