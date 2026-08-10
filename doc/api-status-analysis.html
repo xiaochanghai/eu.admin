@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EU.Core API Status 状态分析报告</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --surface: #f6f8fb;
+      --primary: #2457c5;
+      --success: #147a50;
+      --warning: #9a5b00;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #eef2f7;
+      color: var(--ink);
+      font: 15px/1.75 "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 32px auto;
+      padding: 48px 56px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(23, 32, 51, .08);
+    }
+
+    h1, h2, h3 { line-height: 1.35; }
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    h2 {
+      margin: 40px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e8edf5;
+      font-size: 22px;
+    }
+    h3 { margin: 28px 0 8px; font-size: 18px; }
+    p { margin: 10px 0; }
+
+    .meta { color: var(--muted); }
+    .summary {
+      margin: 28px 0;
+      padding: 20px 24px;
+      border-left: 5px solid var(--primary);
+      border-radius: 8px;
+      background: #f0f5ff;
+    }
+    .summary strong { color: var(--primary); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--surface); font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+
+    .code {
+      font-weight: 800;
+      font-family: Consolas, "Cascadia Code", monospace;
+    }
+    .ok { color: var(--success); }
+    .warn { color: var(--warning); }
+    .error { color: var(--danger); }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #eef1f6;
+      font-family: Consolas, "Cascadia Code", monospace;
+    }
+    pre {
+      overflow-x: auto;
+      margin: 14px 0;
+      padding: 16px 18px;
+      border: 1px solid #dce3ef;
+      border-radius: 8px;
+      background: #101828;
+      color: #e6edf7;
+      font: 14px/1.6 Consolas, "Cascadia Code", monospace;
+    }
+
+    ul { padding-left: 22px; }
+    .note {
+      padding: 14px 18px;
+      border: 1px solid #f1cc88;
+      border-radius: 8px;
+      background: #fff8e8;
+    }
+    .source-list li { margin: 6px 0; }
+    footer {
+      margin-top: 44px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      main { width: 100%; margin: 0; padding: 28px 20px; border: 0; border-radius: 0; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; padding: 0; border: 0; box-shadow: none; }
+      pre { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>EU.Core API Status 状态分析报告</h1>
+    <div class="meta">项目：E:\EU\EU.Admin\eu.core　|　分析日期：2026-07-23</div>
+  </header>
+
+  <section class="summary">
+    <strong>结论：</strong>当前源码中，外层响应字段 <code>Status</code> 明确涉及
+    <strong>200、201、401、403、404、500</strong> 六种数值。
+    其中 404 已定义但未找到实际调用。外层 <code>Status</code> 与
+    <code>Data.Status</code> 属于两套不同的状态体系。
+  </section>
+
+  <h2>一、状态值总览</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>项目内含义</th>
+        <th>使用情况</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="code ok">200</td><td>默认状态；通常表示成功，但也可能是业务失败</td><td>大量使用</td></tr>
+      <tr><td class="code warn">201</td><td>泛型 <code>OprateFailed(message)</code> 使用的自定义业务失败码</td><td>大量使用</td></tr>
+      <tr><td class="code error">401</td><td>未认证、登录失效、Token 或用户验证失效</td><td>已使用</td></tr>
+      <tr><td class="code error">403</td><td>身份已认证，但接口访问权限不足</td><td>已使用</td></tr>
+      <tr><td class="code warn">404</td><td>请求资源不存在</td><td>已定义，当前未找到调用</td></tr>
+      <tr><td class="code error">500</td><td>系统异常、参数错误或普通失败</td><td>大量使用</td></tr>
+    </tbody>
+  </table>
+
+  <h2>二、各状态的实际语义</h2>
+
+  <h3>1. Status = 200</h3>
+  <p><code>ServiceResult&lt;T&gt;</code>、<code>ServiceResult</code> 和
+    <code>ServicePageResult&lt;T&gt;</code> 的 <code>Status</code> 默认值均为 200。</p>
+  <pre>public int Status { get; set; } = 200;</pre>
+  <p>正常成功响应通常为：</p>
+  <pre>{
+  "Status": 200,
+  "Success": true
+}</pre>
+  <div class="note">
+    <strong>注意：</strong><code>Status = 200</code> 不保证业务成功。
+    <code>ServiceResult&lt;T&gt;.OprateFailed(message, data)</code>
+    会保留默认状态 200，同时设置 <code>Success = false</code>。
+  </div>
+
+  <h3>2. Status = 201</h3>
+  <p>泛型方法 <code>ServiceResult&lt;T&gt;.OprateFailed(string message)</code>
+    明确将状态设置为 201，表示普通业务失败。</p>
+  <pre>{
+  "Status": 201,
+  "Success": false,
+  "Message": "具体业务错误信息"
+}</pre>
+  <p>项目中的典型场景包括用户账号或密码错误、用户不存在、导入失败、模块编码错误和 Redis 操作失败等。</p>
+  <p>该值是项目自定义语义，并不是标准 HTTP 201 “Created”的含义。</p>
+
+  <h3>3. Status = 401</h3>
+  <p>表示请求没有通过身份认证，例如：</p>
+  <ul>
+    <li>未携带有效身份凭证；</li>
+    <li>Token 或会话失效；</li>
+    <li>用户不存在、已删除或被禁用。</li>
+  </ul>
+  <p>认证处理器会同步把 HTTP 响应状态设置为 401。</p>
+
+  <h3>4. Status = 403</h3>
+  <p>表示用户身份已经确认，但访问权限等级不足。默认消息为：</p>
+  <pre>很抱歉，您的访问权限等级不够，联系管理员!</pre>
+  <p>授权处理器会同步把 HTTP 响应状态设置为 403。</p>
+
+  <h3>5. Status = 404</h3>
+  <p><code>ApiResponse</code> 中已定义资源不存在状态，默认消息为
+    <code>资源不存在!</code>。但当前仓库没有找到
+    <code>StatusCode.CODE404</code> 的实际调用。</p>
+  <p>因此该值目前属于预留状态；普通不存在的路由可能由 ASP.NET Core 直接返回 HTTP 404，并不一定带统一响应结构。</p>
+
+  <h3>6. Status = 500</h3>
+  <p>该值主要来自以下场景：</p>
+  <ul>
+    <li>未处理的系统异常；</li>
+    <li>非泛型 <code>ServiceResult.OprateFailed(...)</code>；</li>
+    <li>Controller 或 Service 基类中的 <code>Failed(...)</code>；</li>
+    <li>模型绑定或参数验证错误经过全局过滤器转换后返回。</li>
+  </ul>
+
+  <h2>三、项目当前存在的不一致</h2>
+  <p>同样是业务失败，当前代码可能生成三种不同组合：</p>
+  <pre>{ "Status": 200, "Success": false }
+{ "Status": 201, "Success": false }
+{ "Status": 500, "Success": false }</pre>
+  <table>
+    <thead>
+      <tr><th>调用方式</th><th>响应体 Status</th><th>Success</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ServiceResult&lt;T&gt;.OprateFailed(message)</code></td><td>201</td><td>false</td></tr>
+      <tr><td><code>ServiceResult&lt;T&gt;.OprateFailed(message, data)</code></td><td>200</td><td>false</td></tr>
+      <tr><td><code>ServiceResult.OprateFailed(message)</code></td><td>500</td><td>false</td></tr>
+      <tr><td><code>Failed(message)</code></td><td>500</td><td>false</td></tr>
+    </tbody>
+  </table>
+  <p><strong>客户端建议：</strong>先判断真实 HTTP 状态，再判断响应体中的
+    <code>Success</code>。不要仅依赖 <code>Status == 200</code> 判断业务成功。</p>
+
+  <h2>四、HTTP 状态与响应体 Status 的区别</h2>
+  <p>响应 JSON 中的 <code>Status</code> 是普通业务字段，不会自动决定 HTTP 状态码。</p>
+  <ul>
+    <li>401、403 的认证/授权处理器会明确设置对应 HTTP 状态。</li>
+    <li>全局异常过滤器设置响应体 <code>Status = 500</code>，但其 <code>ContentResult</code>
+      未明确设置 HTTP 状态，实际 HTTP 状态可能仍为 200。</li>
+    <li>参数错误被转换为普通 <code>JsonResult</code> 后，响应体可能是 500，但 HTTP 状态可能是 200。</li>
+  </ul>
+
+  <h2>五、Data.Status 与外层 Status</h2>
+  <p>示例响应中实际存在两个同名字段：</p>
+  <pre>{
+  "Status": 200,
+  "Data": {
+    "SessionId": "00000000-0000-4000-8000-000000000001",
+    "Status": "ALREADY_STORED"
+  }
+}</pre>
+  <ul>
+    <li>外层 <code>Status: 200</code>：统一响应包装状态。</li>
+    <li>内层 <code>Data.Status: "ALREADY_STORED"</code>：具体接口的业务流程状态。</li>
+  </ul>
+  <p>当前仓库中没有检索到 <code>ALREADY_STORED</code>、<code>投递会话已存在</code>
+    或示例中的固定 SessionId，因此无法从当前代码整理出该业务接口全部的字符串状态。
+    这部分可能来自其他服务、不同分支、尚未同步的代码或运行时依赖。</p>
+
+  <h2>六、最终结论</h2>
+  <p>当前源码明确出现或定义的外层状态集合为：</p>
+  <pre>200、201、401、403、404、500</pre>
+  <p>其中 404 仅定义未调用。由于 <code>Status</code> 属性公开可写，且多个
+    <code>Failed(message, status)</code> 方法允许传入任意整数，所以模型设计本身并未限制只能使用以上六种值。</p>
+
+  <h2>七、主要源码依据</h2>
+  <ul class="source-list">
+    <li><code>EU.Core.Model\ServiceResult.cs</code>：统一响应结构、默认值及成功/失败工厂方法。</li>
+    <li><code>EU.Core.Model\ApiResponse.cs</code>：200、401、403、404、500 映射。</li>
+    <li><code>EU.Core.Api\Filter\GlobalExceptionFilter.cs</code>：全局异常返回 500。</li>
+    <li><code>EU.Core.Api\Filter\GlobalActionFilter.cs</code>：参数错误统一转换逻辑。</li>
+    <li><code>Src\EU.Core.Extensions\Authorizations\Policys\ApiResponseHandler.cs</code>：401/403 HTTP 响应处理。</li>
+  </ul>
+
+  <footer>本报告根据 2026-07-23 当前工作区源码静态分析生成，未修改项目源代码。</footer>
+</main>
+</body>
+</html>

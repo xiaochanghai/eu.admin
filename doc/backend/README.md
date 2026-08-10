@@ -2,6 +2,16 @@
 
 本目录存放 `eu.core/**` 的后端开发、架构、数据库和交付约束文档。
 
+项目级功能与架构入口：
+
+- [EU-Admin 项目说明索引](../eu-admin-guide/README.md)
+- [完整功能模块地图](../eu-admin-guide/功能模块地图.md)
+- [系统架构总览](../eu-admin-guide/系统架构总览.md)
+- [实现链路与源码索引](../eu-admin-guide/实现链路与源码索引.md)
+- [业务模块实现明细](../eu-admin-guide/业务模块实现明细.md)
+- [系统模块实现明细](../eu-admin-guide/系统模块实现明细.md)
+- [实现核查报告](../eu-admin-guide/实现核查报告.md)
+
 ## 入口
 
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)

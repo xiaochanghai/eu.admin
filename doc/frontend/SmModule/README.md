@@ -2,7 +2,7 @@
 
 > 文档角色：动态页面元数据前端消费的渐进式披露入口  
 > 适用范围：`eu.admin.react/**` 中的模块 API、Redux、通用表格/表单及模块维护页面  
-> 最后核对：2026-08-07
+> 最后核对：2026-08-10
 
 ## 按任务阅读
 
@@ -12,6 +12,7 @@
 | 选择或新增表单 `FieldType` | [表单控件类型](表单控件类型.md) | `CompDatas.tsx`、`Elements/Index.tsx`、`fieldSettingSchema.tsx` 和具体控件实现 |
 | 修改 `ModuleInfo`、栏位或按钮契约 | [动态页面元数据消费约束](动态页面元数据消费约束.md)、[后端 SmModule 索引](../../backend/SmModule/README.md) | 后端组装、前端类型、缓存和全部消费者 |
 | 修改模块维护页面 | [动态页面元数据消费约束](动态页面元数据消费约束.md)、[后端维护约束](../../backend/SmModule/元数据模型与维护约束.md) | `src/views/system/privilege/module/**`、保存接口和缓存刷新 |
+| 配置自定义列表查询接口 | [QueryApiUrl 自定义列表查询](QueryApiUrl自定义列表查询.md) | `src/api/modules/module.ts`、`useProTableData` 和后端分页契约 |
 
 ## 文档边界
 

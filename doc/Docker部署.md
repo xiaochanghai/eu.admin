@@ -1,5 +1,9 @@
 # Docker部署
 
+> 状态：`HISTORICAL`
+>
+> 适用边界：旧版 VMware、CentOS 7 和 `eucloud` 脚本部署记录。当前仓库未包含完整脚本，且示例运行时与当前项目版本不同；执行前必须根据现有宿主、Dockerfile 和目标环境重新设计、验证。
+
 ## 前言
 使用的是VMware+Centos7安装虚拟机进行测试
 初识Docker猛如虎 一顿操作发现也没有那么难

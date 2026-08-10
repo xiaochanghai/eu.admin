@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>工作流运行态开发规格</title>
+    <style>
+      :root { color: #182230; background: #f5f7fa; font-family: "Microsoft YaHei", Arial, sans-serif; }
+      body { margin: 0; line-height: 1.65; }
+      main { max-width: 1120px; margin: 0 auto; padding: 40px 24px 64px; }
+      header { border-left: 5px solid #1677ff; padding-left: 18px; margin-bottom: 28px; }
+      h1 { margin: 0; font-size: 30px; } h2 { font-size: 20px; margin: 0 0 12px; } h3 { font-size: 16px; margin: 16px 0 6px; }
+      p { margin: 8px 0; } section { background: #fff; border: 1px solid #dde3ea; border-radius: 6px; padding: 22px 24px; margin: 16px 0; }
+      .note { color: #52606d; } .ok { border-left: 4px solid #52c41a; background: #f6ffed; padding: 12px 14px; }
+      .warning { border-left: 4px solid #faad14; background: #fffbe6; padding: 12px 14px; }
+      ul, ol { margin: 8px 0; padding-left: 24px; } li { margin: 5px 0; }
+      code { background: #eef2f6; border-radius: 3px; padding: 1px 5px; color: #c41d7f; }
+      table { border-collapse: collapse; width: 100%; margin-top: 10px; } th, td { border: 1px solid #d9e0e7; padding: 10px; text-align: left; vertical-align: top; } th { background: #f0f5ff; }
+      .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; } .step { background: #e6f4ff; border: 1px solid #91caff; border-radius: 4px; padding: 7px 10px; } .arrow { color: #697586; }
+      @media (max-width: 680px) { main { padding: 24px 14px; } section { padding: 18px; } h1 { font-size: 25px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>工作流运行态开发规格</h1>
+        <p class="note">范围仅包含流程申请、流程实例、节点推进、待办任务、审批记录、抄送和运行态查询。流程设计、PC/移动端表单布局与流程定义发布属于前置能力，不在本文实现范围内。</p>
+      </header>
+
+      <section>
+        <h2>目标与边界</h2>
+        <div class="ok"><strong>目标：</strong>用户提交流程申请后，系统基于已发布流程创建可追溯的实例和待办；审批人处理任务后，系统安全地计算下一节点、生成后续待办，并完整保留操作记录。</div>
+        <ul>
+          <li>一个业务申请单可关联一个流程实例；流程实例必须固定绑定启动时的已发布流程版本。</li>
+          <li>申请单保存业务表单数据；流程实例保存审批状态、版本、当前节点和发起人，二者不能混为同一张表。</li>
+          <li>运行态绝不读取或修改正在编辑的流程定义；只读取已发布版本快照。</li>
+          <li>所有提交、审批、驳回、撤回和自动推进操作必须可审计、可幂等、可并发保护。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>核心术语</h2>
+        <table>
+          <thead><tr><th>对象</th><th>含义</th><th>示例状态</th></tr></thead>
+          <tbody>
+            <tr><td>流程申请单</td><td>业务侧的申请记录，保存申请人输入的表单数据、单号、标题和业务主键。</td><td>草稿、审批中、已通过、已驳回、已撤回、已作废、异常</td></tr>
+            <tr><td>流程实例</td><td>一次实际运行，关联模块、业务申请单、流程版本、发起人和当前节点。</td><td>Running、Approved、Rejected、Withdrawn、Cancelled、Exception</td></tr>
+            <tr><td>实例节点</td><td>流程实例经过的节点快照，记录节点进入、完成、跳过和处理结果。</td><td>Pending、Active、Completed、Skipped、Rejected</td></tr>
+            <tr><td>待办任务</td><td>分派给具体用户的一项可处理审批工作。</td><td>Pending、Approved、Rejected、Transferred、Cancelled；Expired 仅在后续启用 SLA 后使用</td></tr>
+            <tr><td>审批记录</td><td>不可变的操作审计日志，记录谁在何时对哪个对象做了什么操作和意见。</td><td>Submit、Approve、Reject、Withdraw、Transfer、Urge、AutoPass</td></tr>
+            <tr><td>抄送</td><td>仅供知会和查看的记录，不产生审批权或节点推进。</td><td>Unread、Read</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>数据模型</h2>
+        <table>
+          <thead><tr><th>表</th><th>职责</th><th>关键字段</th></tr></thead>
+          <tbody>
+            <tr><td><code>SmWorkFlowApplication</code></td><td>流程申请单与业务表单、字段架构、显示值快照。BusinessId 是可选的外部业务主键；申请单自身主键始终是 Id。</td><td>Id、ModuleId、BusinessId、ApplicationNo、Title、ApplicantId、FormDataJson、FormSchemaJson、FormDisplayJson、Status、SubmittedTime</td></tr>
+            <tr><td><code>SmWorkFlowInstance</code></td><td>运行中的流程主记录。</td><td>Id、ApplicationId、ModuleId、BusinessId、WorkFlowId、WorkFlowVersionId、StarterId、CurrentNodeId、Status、StartedTime、CompletedTime、RowVersion</td></tr>
+            <tr><td><code>SmWorkFlowInstanceNode</code></td><td>实际经过的节点及节点配置快照。</td><td>Id、InstanceId、DefinitionNodeId、NodeName、NodeType、NodeOrder、Status、EnteredTime、CompletedTime、SnapshotJson</td></tr>
+            <tr><td><code>SmWorkFlowTask</code></td><td>个人待办任务；一个节点可按会签规则创建多条。</td><td>Id、InstanceId、InstanceNodeId、AssigneeId、Status、TaskType、SourceTaskId、TransferredToTaskId、ReceivedTime、HandledTime、DueTime、RowVersion</td></tr>
+            <tr><td><code>SmWorkFlowActionLog</code></td><td>不可修改的运行审计记录。</td><td>Id、InstanceId、InstanceNodeId、TaskId、Action、OperatorId、Opinion、BeforeStatus、AfterStatus、CreatedTime、ExtraJson</td></tr>
+            <tr><td><code>SmWorkFlowCc</code></td><td>抄送接收人与已读状态。</td><td>Id、InstanceId、InstanceNodeId、RecipientId、ReadTime、CreatedTime</td></tr>
+            <tr><td><code>SmWorkFlowIdempotency</code></td><td>提交、审批等写操作的请求去重与结果重放。</td><td>Id、OperatorId、Action、RequestKey、RequestHash、ResponseJson、CreatedTime、ExpiresTime</td></tr>
+            <tr><td><code>SmWorkFlowOutbox</code></td><td>事务内创建、事务后异步投递的通知事件。</td><td>Id、EventType、AggregateId、PayloadJson、Status、RetryCount、NextRetryTime、CreatedTime、SentTime</td></tr>
+          </tbody>
+        </table>
+        <p class="note">申请单等可编辑记录可保留软删除字段；实例、实例节点、已处理任务、审批日志和 Outbox 属于运行历史，禁止物理或软删除。实例和任务表增加乐观并发字段 <code>RowVersion</code>。<code>SmWorkFlowIdempotency</code> 对 OperatorId、Action、RequestKey 建立唯一索引；<code>SmWorkFlowInstance</code> 对 ApplicationId 建立唯一索引；ApplicationNo 由服务端生成，并对 (TenantId, ApplicationNo) 建立唯一索引。BusinessId 非空时，同一 (TenantId, ModuleId, BusinessId) 最多允许一条草稿、审批中或异常申请；终态申请可按业务规则再次发起。</p>
+      </section>
+
+      <section>
+        <h2>状态机</h2>
+        <div class="flow">
+          <span class="step">草稿</span><span class="arrow">→ 提交 →</span><span class="step">审批中</span><span class="arrow">→ 通过 →</span><span class="step">已通过</span>
+          <span class="arrow">；</span><span class="step">审批中</span><span class="arrow">→ 驳回 →</span><span class="step">已驳回</span>
+          <span class="arrow">；</span><span class="step">审批中</span><span class="arrow">→ 撤回 →</span><span class="step">已撤回</span>
+          <span class="arrow">；</span><span class="step">审批中</span><span class="arrow">→ 路由异常 →</span><span class="step">异常</span>
+          <span class="arrow">；</span><span class="step">异常</span><span class="arrow">→ 恢复 →</span><span class="step">审批中</span>
+          <span class="arrow">；</span><span class="step">异常</span><span class="arrow">→ 人工终止 →</span><span class="step">已作废</span>
+        </div>
+        <ul>
+          <li>草稿仅申请人可编辑或删除，不创建流程实例和待办。</li>
+          <li>提交是 ActionLog 事件，不作为申请单持久状态；提交成功后申请单、实例同步进入审批中，申请表单快照不得再直接修改。</li>
+          <li>终审通过、驳回、撤回和作废均为终态；终态实例不得再生成待办。</li>
+          <li>撤回规则建议限定为“当前待办尚未处理且申请人本人操作”；撤回后取消所有未处理任务。</li>
+          <li>条件无匹配、条件数据无法转换、审批人无法解析等运行错误进入 Exception；申请单同步标记为异常，取消后续自动推进，写入 RouteError 日志，并仅允许流程管理员重试路由、人工指定下一节点或终止实例。恢复成功后实例和申请单同步回到 Running/审批中；人工终止后同步进入 Cancelled/已作废，并写入 ResolveException 日志。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>关键运行流程</h2>
+        <h3>1. 保存草稿与提交申请</h3>
+        <ol>
+          <li>校验模块已启用工作流、用户有发起权限、表单字段及必填项合法。</li>
+          <li>保存或更新 <code>SmWorkFlowApplication</code>；草稿可继续编辑。</li>
+          <li>提交时读取当前已发布流程版本；若不存在有效版本，拒绝提交。</li>
+          <li>在同一事务内锁定申请单，写入表单快照，创建实例、首个实例节点、首批待办和 Submit 日志。</li>
+          <li>在同一事务内写入待办通知的 <code>SmWorkFlowOutbox</code> 事件；事务提交后由后台任务异步投递。通知失败可重试，不得回滚已成功创建的任务。</li>
+        </ol>
+        <h3>2. 审批通过</h3>
+        <ol>
+          <li>按任务 Id 读取待办，校验任务为 Pending、审批人匹配当前登录用户、实例仍为 Running。</li>
+          <li>使用 <code>RowVersion</code> 或数据库行锁避免两个审批人重复处理同一任务。</li>
+          <li>MVP 只支持单人审批：关闭当前任务，写入 Approve 日志并完成当前实例节点。后续支持或签时，首个同意任务完成节点并取消其余 Pending 任务；支持会签时必须配置通过阈值、驳回阈值和剩余任务关闭规则。</li>
+          <li>节点完成后，基于申请单 <code>FormDataJson</code> 计算条件分支，创建下一实例节点、待办和抄送。</li>
+          <li>若到达结束节点，将实例和申请单标记为已通过，并写入完成日志。</li>
+        </ol>
+        <h3>3. 驳回、撤回、转办与催办</h3>
+        <ul>
+          <li>驳回：关闭当前节点未完成任务，实例进入已驳回；MVP 不支持退回指定节点。</li>
+          <li>撤回：申请人仅能撤回仍在审批中的申请；取消所有 Pending 任务并写 Withdraw 日志。</li>
+          <li>转办：保留原任务和处理链，原任务置为 Transferred 并写入 TransferredToTaskId；创建接收人的 Pending 新任务并写入 SourceTaskId。不可直接覆盖原任务的审批人。</li>
+          <li>催办：不改变流程状态，仅写 Urge 日志并向当前 Pending 任务接收人发送通知；应限制频率。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>条件与节点推进</h2>
+        <ul>
+          <li>条件定义从实例绑定的已发布版本节点 <code>ConditionsJson</code> 读取，字段值从提交时冻结的 <code>FormDataJson</code> 读取；两者一律使用不可变 FieldCode/DataIndex，不得使用字段标题。</li>
+          <li>提交时将所用字段编码、类型和显示标题写入 <code>FormSchemaJson</code>，将字典标签、人员姓名、部门名称和关联对象名称等提交时显示值写入 <code>FormDisplayJson</code>；字段定义或数据源后续变更不能影响历史申请单的展示、审计或条件解释。</li>
+          <li>运行时只允许使用白名单运算符：<code>eq</code>、<code>ne</code>、<code>gt</code>、<code>gte</code>、<code>lt</code>、<code>lte</code>、<code>in</code>、<code>isNull</code>、<code>notNull</code>；严禁拼接 SQL。</li>
+          <li>必须定义无条件兜底分支；无匹配分支时将实例置为 Exception、写入 RouteError 日志并停止推进，不得静默跳过或保留为 Running。</li>
+          <li>审批人规则在节点激活时解析为具体用户并写入任务；不要在待办查询时动态重新计算组织关系。</li>
+          <li>自动通过、无审批人、重复审批人、审批人离职等异常场景必须有明确策略和 ActionLog。</li>
+          <li>MVP 仅支持一条活动节点路径，不支持并行网关。此阶段 <code>CurrentNodeId</code> 可作为当前节点缓存；后续支持并行时，以 <code>SmWorkFlowInstanceNode.Status = Active</code> 作为活动节点事实来源。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>接口清单</h2>
+        <table>
+          <thead><tr><th>接口</th><th>用途</th><th>权限与约束</th></tr></thead>
+          <tbody>
+            <tr><td><code>POST /api/SmWorkFlowApplication</code></td><td>保存申请草稿。</td><td>申请人；仅草稿可更新。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowApplication/{id}/submit</code></td><td>提交并创建流程实例。</td><td>申请人；支持幂等键，重复提交不得创建多个实例。</td></tr>
+            <tr><td><code>GET /api/SmWorkFlowApplication/{id}</code></td><td>获取申请单、表单快照与流程摘要。</td><td>申请人、当前/历史审批人、抄送人或管理员。</td></tr>
+            <tr><td><code>GET /api/SmWorkFlowTask/my</code></td><td>查询我的待办。</td><td>当前用户；支持模块、状态、日期、关键字分页筛选。</td></tr>
+            <tr><td><code>GET /api/SmWorkFlowTask/my-handled</code></td><td>查询我的已办。</td><td>当前用户；按操作日志或已处理任务分页。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowTask/{id}/approve</code></td><td>同意当前待办。</td><td>当前任务审批人；携带意见、并发版本与幂等键。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowTask/{id}/reject</code></td><td>驳回当前待办。</td><td>当前任务审批人；意见必填。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowApplication/{id}/withdraw</code></td><td>撤回申请。</td><td>申请人；只允许审批中且尚未完成的实例。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowTask/{id}/transfer</code></td><td>转办任务。</td><td>当前审批人或管理员；保留任务链和理由。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowTask/{id}/urge</code></td><td>催办。</td><td>申请人或流程管理员；限频。</td></tr>
+            <tr><td><code>POST /api/SmWorkFlowInstance/{id}/resolve-exception</code></td><td>重试路由、人工指定下一节点或终止异常实例。</td><td>流程管理员；实例必须为 Exception，携带 RowVersion 与 Idempotency-Key；事务内锁定实例，必须填写处理原因并写入 ActionLog。</td></tr>
+            <tr><td><code>GET /api/SmWorkFlowInstance/{id}</code></td><td>获取流程图、节点状态、任务和操作记录。</td><td>按实例可见性鉴权。</td></tr>
+            <tr><td><code>GET /api/SmWorkFlowCc/my</code></td><td>查询抄送给我的流程。</td><td>当前用户。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>前端功能</h2>
+        <table>
+          <thead><tr><th>页面</th><th>主要能力</th></tr></thead>
+          <tbody>
+            <tr><td>流程申请单</td><td>新建、保存草稿、提交、撤回；显示申请状态和当前节点。异常时展示原因和管理员处理结果。</td></tr>
+            <tr><td>我的待办</td><td>按状态/模块/时间筛选，查看表单与流程轨迹，同意或驳回并填写意见。</td></tr>
+            <tr><td>我的已办</td><td>查看本人已处理事项、处理结果、意见与后续流程状态。</td></tr>
+            <tr><td>我发起的</td><td>查看申请进度，执行撤回、催办，查看审批历史。</td></tr>
+            <tr><td>抄送我的</td><td>只读查看流程、表单和审批记录，支持标记已读。</td></tr>
+            <tr><td>流程详情</td><td>展示版本、申请单快照、节点轨迹、每个任务、审批意见、转办和异常日志。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>权限、可靠性与审计</h2>
+        <ul>
+          <li>后端必须基于当前登录用户鉴权，前端隐藏按钮不能作为权限边界。</li>
+          <li>任务处理接口要求任务状态为 Pending、任务审批人为当前用户，并校验 <code>RowVersion</code>。</li>
+          <li>提交、审批和异常处理接口支持客户端 <code>Idempotency-Key</code>；服务端在 <code>SmWorkFlowIdempotency</code> 中按用户、动作和键去重，并对重复成功请求返回首次处理结果。</li>
+          <li>BusinessId 非空时，数据库使用过滤唯一索引 <code>(TenantId, ModuleId, BusinessId) WHERE BusinessId IS NOT NULL AND Status IN ('Draft', 'Approving', 'Exception')</code> 限制一条活动申请；不以应用层查询代替该并发约束。</li>
+          <li>所有状态变更在一个数据库事务内完成：实例、节点、任务、申请单状态与 ActionLog 必须一致。</li>
+          <li>业务事务内写入 Outbox/消息表，事务提交后异步发送通知；失败可重试并记录发送状态。</li>
+          <li>ActionLog 仅新增不修改、不删除；记录操作人、来源、时间、意见、前后状态和必要的上下文。</li>
+          <li>申请单和流程详情的字段脱敏、附件访问和数据权限需复用业务模块现有权限模型。</li>
+          <li>MVP 不启用 DueTime 到 Expired 的自动转换；启用 SLA 后再实现定时扫描、超时通知、自动转办或终止策略，并为每项策略写入 ActionLog。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>MVP 实施顺序</h2>
+        <ol>
+          <li>前置完成 <code>SmWorkFlowVersion</code>、发布快照和版本节点关联；运行态只能启动已发布版本，禁止引用编辑中的流程定义。</li>
+          <li>建立申请单、实例、实例节点、任务、操作日志、幂等记录和 Outbox 表及索引、枚举和迁移脚本。</li>
+          <li>实现申请草稿、提交、已发布版本读取、首节点任务创建、幂等处理和我的待办查询。</li>
+          <li>实现同意、驳回、节点推进、条件计算、异常实例处理、结束节点处理与实例详情。</li>
+          <li>实现我发起的、我的已办、撤回和审批轨迹页面。</li>
+          <li>补充乐观并发、幂等、权限校验、事务测试和异常分支测试。</li>
+          <li>最后实现抄送、通知、催办、转办、会签/或签、时限和超时处理。</li>
+        </ol>
+        <div class="warning">MVP 先支持单人审批、条件分支、同意、驳回、撤回和待办。会签、顺序审批、退回指定节点、委托、加签、SLA 和自动催办应在核心链路稳定后逐步引入。</div>
+      </section>
+    </main>
+  </body>
+</html>

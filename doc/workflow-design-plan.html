@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>工作流与申请表单设计方案</title>
+    <style>
+      :root { color: #182230; background: #f5f7fa; font-family: "Microsoft YaHei", Arial, sans-serif; }
+      body { margin: 0; line-height: 1.65; }
+      main { max-width: 1024px; margin: 0 auto; padding: 40px 24px 64px; }
+      header { border-left: 5px solid #1677ff; padding-left: 18px; margin-bottom: 28px; }
+      h1 { margin: 0; font-size: 30px; }
+      h2 { font-size: 20px; margin: 0 0 12px; }
+      h3 { font-size: 16px; margin: 16px 0 6px; }
+      p { margin: 8px 0; }
+      section { background: #fff; border: 1px solid #dde3ea; border-radius: 6px; padding: 22px 24px; margin: 16px 0; }
+      .note { color: #52606d; }
+      .ok { border-left: 4px solid #52c41a; background: #f6ffed; padding: 12px 14px; }
+      .warning { border-left: 4px solid #faad14; background: #fffbe6; padding: 12px 14px; }
+      ul, ol { margin: 8px 0; padding-left: 24px; }
+      li { margin: 5px 0; }
+      code { background: #eef2f6; border-radius: 3px; padding: 1px 5px; color: #c41d7f; }
+      table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+      th, td { border: 1px solid #d9e0e7; padding: 10px; text-align: left; vertical-align: top; }
+      th { background: #f0f5ff; }
+      .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+      .step { background: #e6f4ff; border: 1px solid #91caff; border-radius: 4px; padding: 7px 10px; }
+      .arrow { color: #697586; }
+      @media (max-width: 680px) { main { padding: 24px 14px; } section { padding: 18px; } h1 { font-size: 25px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>工作流与申请表单设计方案</h1>
+        <p class="note">基于 eu.admin.react 与 eu.core 当前实现整理。本文确定模块开关、字段来源、PC/移动端申请表单和流程条件的职责边界。</p>
+      </header>
+
+      <section>
+        <h2>最终结论</h2>
+        <div class="ok">
+          <strong>SmModule.IsWorkflow 是唯一开关。</strong>启用后，模块的流程设置固定包含“流程设计、PC 申请表单、移动端申请表单”；不增加 FormId、EnableFlowForm 或 FlowFormDeviceMode。
+        </div>
+        <div class="flow">
+          <span class="step">SmModule.IsWorkflow</span><span class="arrow">→</span>
+          <span class="step">流程设置入口</span><span class="arrow">→</span>
+          <span class="step">流程设计</span><span class="arrow">+</span>
+          <span class="step">PC 申请表单</span><span class="arrow">+</span>
+          <span class="step">移动端申请表单</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>职责边界</h2>
+        <table>
+          <thead><tr><th>对象</th><th>职责</th><th>不承担的职责</th></tr></thead>
+          <tbody>
+            <tr><td><code>SmModule</code></td><td>模块定义；以 <code>IsWorkflow</code> 决定是否启用流程设置。</td><td>不保存字段、表单布局或流程节点。</td></tr>
+            <tr><td><code>SmModuleColumn</code></td><td>模块的唯一业务字段定义：不可变 FieldCode/DataIndex、标题、控件、数据类型、数据源、必填和校验。</td><td>不复制为两套 PC/移动端业务字段；已被发布流程引用的 FieldCode 不得修改。</td></tr>
+            <tr><td>表单展示规则</td><td>排序和显示状态复用 <code>SmModuleColumn</code>；<code>GridSpan</code> 仅控制 PC 栅格，移动端统一整行显示。</td><td>不改变字段编码、字段类型或流程条件含义。</td></tr>
+            <tr><td><code>SmWorkFlow</code></td><td>以 <code>SmModuleId</code> 关联模块，保存流程根记录和当前已发布版本标识。</td><td>不保存申请表单字段副本或 DraftJson/FlowJson。</td></tr>
+            <tr><td><code>SmWorkFlowVersion</code></td><td>一次发布生成的不可变定义快照；节点、审批人规则和条件均关联该版本。</td><td>不允许运行中的实例读取编辑中的定义。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>页面与数据流</h2>
+        <ol>
+          <li>用户进入模块配置。仅当 <code>SmModule.IsWorkflow = true</code> 时显示“流程设置”入口。</li>
+          <li>流程设置页固定展示三个页签：<strong>流程设计</strong>、<strong>PC 申请表单</strong>、<strong>移动端申请表单</strong>。</li>
+          <li>两个申请表单页签均通过 <code>/api/SmModule/FormColumn/{moduleId}</code> 读取 <code>SmModuleColumn</code>，字段定义完全一致。</li>
+          <li>PC 与移动端复用 <code>FormTaxisNo</code> 和 <code>HideInForm</code>。<code>GridSpan</code> 仅在 PC 生效；移动端忽略该值，所有字段默认整行 <code>100%</code> 显示。</li>
+          <li>流程条件面板也读取同一批 <code>SmModuleColumn</code>，将字段映射为 <code>FormVo.fields</code>，不再使用 mock 数据。</li>
+          <li>点击发布时，创建 <code>SmWorkFlowVersion</code>，并保存关联该版本的流程节点、审批人规则和条件 <code>ConditionsJson</code>。不进行实时草稿保存。</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>PC 与移动端展示</h2>
+        <p>不新增 <code>SmModuleColumnLayout</code> 或任何移动端布局表。字段排序和显示状态直接使用现有 <code>SmModuleColumn.FormTaxisNo</code>、<code>SmModuleColumn.HideInForm</code>。</p>
+        <table>
+          <thead><tr><th>配置</th><th>PC</th><th>移动端</th></tr></thead>
+          <tbody>
+            <tr><td>字段顺序</td><td>按 <code>FormTaxisNo</code>。</td><td>按同一 <code>FormTaxisNo</code>。</td></tr>
+            <tr><td>是否显示</td><td>按 <code>HideInForm</code>。</td><td>按同一 <code>HideInForm</code>。</td></tr>
+            <tr><td>字段宽度</td><td>按 <code>GridSpan</code> 栅格渲染。</td><td>忽略 <code>GridSpan</code>，固定整行 <code>100%</code>。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>FormDesign 复用方式</h2>
+        <p>现有 <code>src/views/system/config/form/components/FormDesign.tsx</code> 已从 <code>/api/SmModule/FormColumn/{ModuleId}</code> 获取字段，适合复用为流程设置的申请表单设计器。</p>
+        <ul>
+          <li>将组件改为可传入 <code>moduleId</code> 和 <code>deviceType</code> 的嵌入式组件。</li>
+          <li><code>deviceType = pc</code> 按 <code>GridSpan</code> 预览；<code>deviceType = mobile</code> 固定以 <code>100%</code> 宽度预览，不产生额外布局读写。</li>
+          <li>字段新增、控件类型、数据源、必填、标题等基础属性仍写入 <code>SmModuleColumn</code>，两个页签共用。</li>
+          <li>流程设置页负责页签和发布入口；<code>FormDesign</code> 只负责字段和布局编辑，不负责工作流开关判断。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>流程条件与发布</h2>
+        <ul>
+          <li>条件字段来自 <code>SmModuleColumn</code> 的不可变 FieldCode/DataIndex，因此无论申请来自 PC 还是移动端，分支判断一致；条件不得按字段标题存储或计算。</li>
+          <li>条件组之间为“或”，同一条件组内的条件为“且”。</li>
+          <li>发布校验必须检查：节点完整性、审批人规则、条件字段存在性、运算符与字段类型匹配、路由是否存在兜底分支。</li>
+          <li>发布接口创建 <code>SmWorkFlowVersion</code>，并保存关联 <code>WorkFlowVersionId</code> 的 <code>SmWorkFlowNode</code>、<code>SmWorkFlowNodeAudit</code> 与 <code>SmWorkFlowNode.ConditionsJson</code>；不再使用 <code>DraftJson</code>、<code>FlowJson</code>，也不做进入页面后的实时保存。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>当前项目需要补齐的实现</h2>
+        <ol>
+          <li>在 <code>SmModule</code> 和模块配置接口中增加并维护 <code>IsWorkflow</code>。</li>
+          <li>仅在该值为 true 时显示流程设置入口和三个固定页签。</li>
+          <li>把当前流程页中由 <code>SmWorkFlow</code> 映射出的空 <code>FormVo.fields</code> 替换为真实 <code>SmModuleColumn</code> 映射。</li>
+          <li>将 <code>FormDesign</code> 改造成支持 PC / 移动端预览的可复用组件；移动端渲染统一忽略 <code>GridSpan</code> 并使用 <code>100%</code> 宽度。</li>
+          <li>删除条件面板的 mock 字段，只允许使用模块真实字段。</li>
+        </ol>
+        <div class="warning">现有流程实现是“定义与发布”。若要真正提交申请、创建待办和审批流转，仍需另行实现流程实例、任务和审批日志等运行态能力。</div>
+      </section>
+    </main>
+  </body>
+</html>
