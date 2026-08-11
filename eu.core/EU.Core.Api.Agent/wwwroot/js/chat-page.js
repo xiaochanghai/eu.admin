@@ -56,12 +56,17 @@ const BUSINESS_QUERY_FAILURE_MESSAGES = Object.freeze({
   BUSINESS_QUERY_SERVICE_UNAVAILABLE: "业务查询服务暂时不可用，请稍后重试或联系管理员。"
 });
 
+const RUN_FAILURE_MESSAGES = Object.freeze({
+  UNIFIED_ENTRY_TIMEOUT: "\u6267\u884c\u5df2\u8d85\u65f6\uff0c\u5df2\u4fdd\u7559\u8d85\u65f6\u524d\u751f\u6210\u7684\u5185\u5bb9\uff1b\u56de\u7b54\u53ef\u80fd\u4e0d\u5b8c\u6574\uff0c\u53ef\u7ee7\u7eed\u8ffd\u95ee\u3002"
+});
+
 export function friendlyKnowledgeFailure(errorCode, fallback = "") {
   return KNOWLEDGE_FAILURE_MESSAGES[errorCode] || fallback;
 }
 
 export function friendlyRunFailure(errorCode, fallback = "") {
-  return BUSINESS_QUERY_FAILURE_MESSAGES[errorCode]
+  return RUN_FAILURE_MESSAGES[errorCode]
+    || BUSINESS_QUERY_FAILURE_MESSAGES[errorCode]
     || KNOWLEDGE_FAILURE_MESSAGES[errorCode]
     || fallback;
 }
@@ -587,8 +592,20 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
           String(conversationId) !== String(state.selectedConversationId)) return;
       setText(title, result.conversation.title || "未命名会话");
       setText(meta, `${result.messages.length} 条消息 · ${formatTime(result.conversation.updatedAtUtc)}`);
-      renderMessages(result.messages);
       const latest = runs[0];
+      const visibleMessages = [...result.messages];
+      const recoverableOutput = String(latest?.output || "");
+      if (["Failed", "Cancelled"].includes(latest?.status) &&
+          recoverableOutput.trim() &&
+          !visibleMessages.some(message =>
+            message.role === "Assistant" && message.content === recoverableOutput)) {
+        visibleMessages.push({
+          role: "Assistant",
+          content: recoverableOutput,
+          kind: "AssistantNarrative"
+        });
+      }
+      renderMessages(visibleMessages);
       if (latest) {
         const [details, persistedEvents] = await Promise.all([
           api.chatRunDetails(latest.id),

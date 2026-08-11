@@ -147,6 +147,9 @@ internal sealed class ActiveUnifiedEntryExecution(
 
 public sealed class UnifiedEntryService
 {
+    private const int MaximumPendingDeltaEvents = 8;
+    private static readonly TimeSpan MaximumDeltaPersistenceInterval =
+        TimeSpan.FromMilliseconds(250);
     private const int MaximumStoredPayloadBytes =
         AgentRuntimeService.MaximumInputCharacters * 4;
     public const int MaximumConversationHistoryMessages = 40;
@@ -717,8 +720,50 @@ public sealed class UnifiedEntryService
             enumerator = _agentRuntime
                 .StreamAsync(context.MainAgentContext, effectiveCancellation.Token)
                 .GetAsyncEnumerator(effectiveCancellation.Token);
-            while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+            Task<bool> moveNext = enumerator.MoveNextAsync().AsTask();
+            int pendingDeltaEvents = 0;
+            DateTimeOffset lastPersistenceAt = _timeProvider.GetUtcNow();
+            while (true)
             {
+                if (pendingDeltaEvents > 0)
+                {
+                    TimeSpan remaining = MaximumDeltaPersistenceInterval
+                        - (_timeProvider.GetUtcNow() - lastPersistenceAt);
+                    if (remaining > TimeSpan.Zero)
+                    {
+                        Task interval = Task.Delay(
+                            remaining,
+                            effectiveCancellation.Token);
+                        Task completed = await Task.WhenAny(moveNext, interval)
+                            .ConfigureAwait(false);
+                        if (completed == interval)
+                        {
+                            await interval.ConfigureAwait(false);
+                        }
+                    }
+
+                    if (!moveNext.IsCompleted)
+                    {
+                        foreach (UnifiedRunEvent value in await PersistAndCollectAsync(
+                                     active,
+                                     yieldedSequence).ConfigureAwait(false))
+                        {
+                            yieldedSequence = value.Sequence;
+                            await writer.WriteAsync(value, CancellationToken.None)
+                                .ConfigureAwait(false);
+                        }
+
+                        pendingDeltaEvents = 0;
+                        lastPersistenceAt = _timeProvider.GetUtcNow();
+                        continue;
+                    }
+                }
+
+                if (!await moveNext.ConfigureAwait(false))
+                {
+                    break;
+                }
+
                 AgentRunEvent source = enumerator.Current;
                 string? route = source.Kind switch
                 {
@@ -737,6 +782,7 @@ public sealed class UnifiedEntryService
                 if (source.Kind == AgentRunEventKind.Delta)
                 {
                     output += source.Text;
+                    pendingDeltaEvents++;
                 }
 
                 if (source.Kind == AgentRunEventKind.ApprovalRequired)
@@ -807,13 +853,23 @@ public sealed class UnifiedEntryService
                     }
                 }
 
-                foreach (UnifiedRunEvent value in await PersistAndCollectAsync(
-                             active,
-                             yieldedSequence).ConfigureAwait(false))
+                bool persistNow = source.Kind != AgentRunEventKind.Delta
+                    || pendingDeltaEvents >= MaximumPendingDeltaEvents
+                    || terminalRequested
+                    || waitingForApproval;
+                if (persistNow)
                 {
-                    yieldedSequence = value.Sequence;
-                    await writer.WriteAsync(value, CancellationToken.None)
-                        .ConfigureAwait(false);
+                    foreach (UnifiedRunEvent value in await PersistAndCollectAsync(
+                                 active,
+                                 yieldedSequence).ConfigureAwait(false))
+                    {
+                        yieldedSequence = value.Sequence;
+                        await writer.WriteAsync(value, CancellationToken.None)
+                            .ConfigureAwait(false);
+                    }
+
+                    pendingDeltaEvents = 0;
+                    lastPersistenceAt = _timeProvider.GetUtcNow();
                 }
 
                 if (terminalRequested)
@@ -825,6 +881,8 @@ public sealed class UnifiedEntryService
                 {
                     break;
                 }
+
+                moveNext = enumerator.MoveNextAsync().AsTask();
             }
 
             if (!terminalRequested && !waitingForApproval)
@@ -1316,7 +1374,7 @@ public sealed class UnifiedEntryService
                     }
 
                     if (status == UnifiedRunStatus.Completed
-                        || (status == UnifiedRunStatus.Cancelled
+                        || (status is UnifiedRunStatus.Cancelled or UnifiedRunStatus.Failed
                             && !string.IsNullOrWhiteSpace(output)))
                     {
                         var assistant = new ConversationMessageRecord(

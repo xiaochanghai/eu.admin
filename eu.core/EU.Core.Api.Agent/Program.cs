@@ -40,6 +40,7 @@ LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
     args);
 
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
+
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Services.AddOpenApi();
 builder.Services
@@ -56,28 +57,23 @@ builder.Services.AddScoped<ICallerContext, HttpCallerContext>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<AgentMetrics>();
 builder.Services.AddSingleton<HostDrainState>();
+builder.Services.AddSingleton<IAgentStorageConnectionStringResolver>(services =>
+    new EnvironmentAndDotEnvAgentStorageConnectionStringResolver(
+        services.GetRequiredService<IHostEnvironment>().ContentRootPath,
+        builder.Configuration.GetValue<bool>("AgentPlatform:LoadDotEnv"),
+        builder.Configuration));
 builder.Services.AddSingleton<IAgentOperationAuditRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryAgentOperationAuditRepository()
-        : new SqliteAgentOperationAuditRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IAgentOperationAuditRepository>(
+        services,
+        () => new InMemoryAgentOperationAuditRepository(),
+        value => new SqliteAgentOperationAuditRepository(value),
+        value => new SqlServerAgentOperationAuditRepository(value)));
 builder.Services.AddSingleton<IHttpIdempotencyRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryHttpIdempotencyRepository()
-        : new SqliteHttpIdempotencyRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IHttpIdempotencyRepository>(
+        services,
+        () => new InMemoryHttpIdempotencyRepository(),
+        value => new SqliteHttpIdempotencyRepository(value),
+        value => new SqlServerHttpIdempotencyRepository(value)));
 builder.Services.AddSingleton<
     IAuthorizationMiddlewareResultHandler,
     AgentAuthorizationResultHandler>();
@@ -89,95 +85,64 @@ builder.Services.AddOpenTelemetry()
 builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.With<LogRedactionEnricher>());
 builder.Services.AddSingleton<IAgentRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryAgentRepository()
-        : new SqliteAgentRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IAgentRepository>(
+        services,
+        () => new InMemoryAgentRepository(),
+        value => new SqliteAgentRepository(value),
+        value => new SqlServerAgentRepository(value)));
 builder.Services.AddSingleton<ISkillRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemorySkillRepository()
-        : new SqliteSkillRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<ISkillRepository>(
+        services,
+        () => new InMemorySkillRepository(),
+        value => new SqliteSkillRepository(value),
+        value => new SqlServerSkillRepository(value)));
 builder.Services.AddSingleton<IPublishedSkillVersionCatalog>(services =>
     (IPublishedSkillVersionCatalog)services.GetRequiredService<ISkillRepository>());
 builder.Services.AddSingleton<IMcpServerRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryMcpServerRepository()
-        : new SqliteMcpServerRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IMcpServerRepository>(
+        services,
+        () => new InMemoryMcpServerRepository(),
+        value => new SqliteMcpServerRepository(value),
+        value => new SqlServerMcpServerRepository(value)));
 builder.Services.AddSingleton<IPublishedMcpToolCatalog>(services =>
     (IPublishedMcpToolCatalog)services.GetRequiredService<IMcpServerRepository>());
 builder.Services.AddSingleton<IKnowledgeBaseRepository>(services =>
-{
-    AgentStorageOptions options = services.GetRequiredService<IOptions<AgentStorageOptions>>().Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryKnowledgeBaseRepository()
-        : new SqliteKnowledgeBaseRepository(options.ResolveDatabasePath(
-            services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IKnowledgeBaseRepository>(
+        services,
+        () => new InMemoryKnowledgeBaseRepository(),
+        value => new SqliteKnowledgeBaseRepository(value),
+        value => new SqlServerKnowledgeBaseRepository(value)));
 builder.Services.AddSingleton<IPublishedKnowledgeCatalog>(services =>
     (IPublishedKnowledgeCatalog)services.GetRequiredService<IKnowledgeBaseRepository>());
 builder.Services.AddSingleton<IKnowledgeRetriever>(services =>
     (IKnowledgeRetriever)services.GetRequiredService<IKnowledgeBaseRepository>());
 builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
 builder.Services.AddSingleton<IOrchestrationRepository>(services =>
-{
-    AgentStorageOptions options = services.GetRequiredService<IOptions<AgentStorageOptions>>().Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryOrchestrationRepository()
-        : new SqliteOrchestrationRepository(options.ResolveDatabasePath(
-            services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IOrchestrationRepository>(
+        services,
+        () => new InMemoryOrchestrationRepository(),
+        value => new SqliteOrchestrationRepository(value),
+        value => new SqlServerOrchestrationRepository(value)));
 builder.Services.AddSingleton<IMainAgentAssignmentRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryMainAgentAssignmentRepository()
-        : new SqliteMainAgentAssignmentRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IMainAgentAssignmentRepository>(
+        services,
+        () => new InMemoryMainAgentAssignmentRepository(),
+        value => new SqliteMainAgentAssignmentRepository(value),
+        value => new SqlServerMainAgentAssignmentRepository(value)));
 builder.Services.AddSingleton<IUnifiedEntryRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryUnifiedEntryRepository()
-        : new SqliteUnifiedEntryRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IUnifiedEntryRepository>(
+        services,
+        () => new InMemoryUnifiedEntryRepository(),
+        value => new SqliteUnifiedEntryRepository(value),
+        value => new SqlServerUnifiedEntryRepository(value)));
 builder.Services.AddSingleton<IPublishedOrchestrationCatalog>(services =>
     (IPublishedOrchestrationCatalog)services.GetRequiredService<IOrchestrationRepository>());
 builder.Services.AddSingleton<IOrchestrationRunRepository>(services =>
-{
-    AgentStorageOptions options = services.GetRequiredService<IOptions<AgentStorageOptions>>().Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryOrchestrationRunRepository()
-        : new SqliteOrchestrationRunRepository(options.ResolveDatabasePath(
-            services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IOrchestrationRunRepository>(
+        services,
+        () => new InMemoryOrchestrationRunRepository(),
+        value => new SqliteOrchestrationRunRepository(value),
+        value => new SqlServerOrchestrationRunRepository(value)));
 builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
 {
     AgentMcpOptions options =
@@ -196,38 +161,23 @@ builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
         services.GetRequiredService<IMcpCredentialResolver>());
 });
 builder.Services.AddSingleton<IEvaluationSuiteRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryEvaluationSuiteRepository()
-        : new SqliteEvaluationSuiteRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IEvaluationSuiteRepository>(
+        services,
+        () => new InMemoryEvaluationSuiteRepository(),
+        value => new SqliteEvaluationSuiteRepository(value),
+        value => new SqlServerEvaluationSuiteRepository(value)));
 builder.Services.AddSingleton<IEvaluationBatchRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryEvaluationBatchRepository()
-        : new SqliteEvaluationBatchRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IEvaluationBatchRepository>(
+        services,
+        () => new InMemoryEvaluationBatchRepository(),
+        value => new SqliteEvaluationBatchRepository(value),
+        value => new SqlServerEvaluationBatchRepository(value)));
 builder.Services.AddSingleton<IModelJudgeReportRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryModelJudgeReportRepository()
-        : new SqliteModelJudgeReportRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IModelJudgeReportRepository>(
+        services,
+        () => new InMemoryModelJudgeReportRepository(),
+        value => new SqliteModelJudgeReportRepository(value),
+        value => new SqlServerModelJudgeReportRepository(value)));
 builder.Services.AddSingleton<IMcpCredentialResolver,
     DevelopmentMcpCredentialResolver>();
 builder.Services.AddSingleton<IMcpToolDiscovery>(services =>
@@ -278,18 +228,11 @@ builder.Services.AddSingleton<IMcpRuntimeToolInvoker>(services =>
 builder.Services.AddSingleton<IApprovedMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
 builder.Services.AddSingleton<IToolApprovalRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(
-        options.Provider,
-        "InMemory",
-        StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryToolApprovalRepository()
-        : new SqliteToolApprovalRepository(options.ResolveDatabasePath(
-            services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IToolApprovalRepository>(
+        services,
+        () => new InMemoryToolApprovalRepository(),
+        value => new SqliteToolApprovalRepository(value),
+        value => new SqlServerToolApprovalRepository(value)));
 builder.Services.AddSingleton<ToolApprovalManagementService>();
 ToolApprovalOptions toolApproval = builder.Configuration
     .GetSection(ToolApprovalOptions.SectionName)
@@ -342,16 +285,11 @@ if (toolApproval.Enabled)
     builder.Services.AddSingleton<ToolApprovalConversationResumeService>();
 }
 builder.Services.AddSingleton<IAgentRunAuditRepository>(services =>
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    return string.Equals(options.Provider, "InMemory", StringComparison.OrdinalIgnoreCase)
-        ? new InMemoryAgentRunAuditRepository()
-        : new SqliteAgentRunAuditRepository(
-            options.ResolveDatabasePath(
-                services.GetRequiredService<IHostEnvironment>().ContentRootPath));
-});
+    CreateStorageRepository<IAgentRunAuditRepository>(
+        services,
+        () => new InMemoryAgentRunAuditRepository(),
+        value => new SqliteAgentRunAuditRepository(value),
+        value => new SqlServerAgentRunAuditRepository(value)));
 builder.Services.AddSingleton<IModelCredentialResolver>(services =>
     new EnvironmentAndDotEnvModelCredentialResolver(
         services.GetRequiredService<IHostEnvironment>().ContentRootPath,
@@ -517,3 +455,32 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapControllers();
 
 app.Run();
+
+static TRepository CreateStorageRepository<TRepository>(
+    IServiceProvider services,
+    Func<TRepository> createInMemory,
+    Func<string, TRepository> createSqlite,
+    Func<string, TRepository> createSqlServer)
+{
+    AgentStorageOptions options = services
+        .GetRequiredService<IOptions<AgentStorageOptions>>()
+        .Value;
+    if (options.IsInMemory)
+    {
+        return createInMemory();
+    }
+
+    if (options.IsSqlServer)
+    {
+        string connectionString = services
+            .GetRequiredService<IAgentStorageConnectionStringResolver>()
+            .Resolve(options.ConnectionStringAlias)
+            ?? throw new InvalidOperationException(
+                $"No SQL Server connection string is available for Agent storage alias '{options.ConnectionStringAlias}'.");
+        return createSqlServer(connectionString);
+    }
+
+    string databasePath = options.ResolveDatabasePath(
+        services.GetRequiredService<IHostEnvironment>().ContentRootPath);
+    return createSqlite(databasePath);
+}
