@@ -1,4 +1,7 @@
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using EU.Core.Common.Core;
+using EU.Core.Extensions;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Configuration;
@@ -39,9 +42,16 @@ LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
     AppContext.BaseDirectory,
     args);
 
-builder.Services.AddSingleton(new AppSettings(builder.Configuration));
+builder.Host
+    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(container =>
+        container.RegisterModule(new AutofacModuleRegister()))
+    .ConfigureAppConfiguration((hostingContext, _) =>
+        hostingContext.Configuration.ConfigureApplication());
+builder.ConfigureApplication();
 
-builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Services.AddSingleton(new AppSettings(builder.Configuration));
+builder.Services.AddSqlsugarSetup();
 builder.Services.AddOpenApi();
 builder.Services
     .AddControllers()
@@ -392,6 +402,7 @@ builder.Services.AddSingleton(services =>
 builder.Services.AddSingleton<ModelJudgeService>();
 
 WebApplication app = builder.Build();
+app.ConfigureApplication();
 HostDrainState hostDrainState = app.Services.GetRequiredService<HostDrainState>();
 app.Lifetime.ApplicationStopping.Register(hostDrainState.BeginDrain);
 

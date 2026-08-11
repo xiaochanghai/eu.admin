@@ -95,7 +95,11 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
                     System.Globalization.CultureInfo.InvariantCulture,
                     out int lifetime)
                 && lifetime is >= 1 and <= 60;
-            if (!isCredentialAlias && !isRuntimeSecret && !isNonSecretLifetime && (SensitiveKeyPattern().IsMatch(propertyName) ||
+            bool isSqlSugarConnection =
+                key.StartsWith("DBS:", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(propertyName, "Connection", StringComparison.OrdinalIgnoreCase);
+            if (!isCredentialAlias && !isRuntimeSecret && !isNonSecretLifetime &&
+                !isSqlSugarConnection && (SensitiveKeyPattern().IsMatch(propertyName) ||
                 SensitiveValuePattern().IsMatch(value) ||
                 ConnectionStringValuePattern().IsMatch(value) ||
                 CredentialValuePattern().IsMatch(value)))

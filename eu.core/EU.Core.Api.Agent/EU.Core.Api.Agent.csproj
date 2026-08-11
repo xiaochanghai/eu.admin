@@ -11,15 +11,23 @@
     <ProjectReference Include="..\Src\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj" />
+    <ProjectReference Include="..\EU.Core.IServices\EU.Core.IServices.csproj" />
+    <ProjectReference Include="..\EU.Core.Services\EU.Core.Services.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Extensions\EU.Core.Extensions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Snappier" Version="1.3.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="10.2.3" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="appsettings.json">
