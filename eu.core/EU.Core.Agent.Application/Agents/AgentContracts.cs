@@ -105,7 +105,8 @@ public sealed record AgentDefinition(
     IReadOnlyList<AgentVersion> PublishedVersions)
 {
     public const string ServerDeploymentTarget = "Server";
-    public const string ApiHost = "EU.Core.Agent.Api";
+    public const string ApiHost = "EU.Core.Api.Agent";
+    public const string LegacyApiHost = "EU.Core.Agent.Api";
 
     public string DeploymentTarget => ServerDeploymentTarget;
 

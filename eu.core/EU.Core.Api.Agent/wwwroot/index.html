@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Unified Chat · EU.Core Agent Platform</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234355b9'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='Arial' font-size='11' font-weight='700' fill='white'%3EEU%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/css/app.css?v=6">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="产品导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">EU</span>
+        <span><strong>Agent Platform</strong><small>Microsoft Agent Framework</small></span>
+      </div>
+      <nav class="nav-list">
+        <button id="chatNavButton" class="nav-item is-active" type="button" aria-label="Unified Chat" aria-controls="chatPage" aria-current="page">
+          <span aria-hidden="true">◌</span><span>Unified Chat</span>
+        </button>
+        <button id="approvalNavButton" class="nav-item" type="button" aria-label="审批中心" aria-controls="approvalPage">
+          <span aria-hidden="true">✓</span><span>审批中心</span><small>P11</small>
+        </button>
+        <button id="agentNavButton" class="nav-item" type="button" aria-label="Agent 管理" aria-controls="agentPageHeader">
+          <span aria-hidden="true">◎</span><span>Agent 管理</span>
+        </button>
+        <button id="skillNavButton" class="nav-item" type="button" aria-label="Skill 管理" aria-controls="skillPage">
+          <span aria-hidden="true">◇</span><span>Skill 管理</span>
+        </button>
+        <button id="knowledgeNavButton" class="nav-item" type="button" aria-label="知识库" aria-controls="knowledgePage">
+          <span aria-hidden="true">▤</span><span>知识库</span><small>P6</small>
+        </button>
+        <button id="orchestrationNavButton" class="nav-item" type="button" aria-label="编排" aria-controls="orchestrationPage">
+          <span aria-hidden="true">⑂</span><span>编排</span><small>P7</small>
+        </button>
+        <button id="evaluationNavButton" class="nav-item" type="button" aria-label="质量评估" aria-controls="evaluationPage">
+          <span aria-hidden="true">◫</span><span>质量评估</span><small>P12</small>
+        </button>
+        <button id="mcpNavButton" class="nav-item mcp-nav-item" type="button" aria-label="MCP 工具" aria-controls="mcpPage">
+          <span aria-hidden="true">◆</span><span>MCP 工具</span><small>P4</small>
+        </button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="pulse" aria-hidden="true"></span>
+        <div><strong>开发存储模式</strong><span>SQLite · Agent / Skill / MCP</span></div>
+      </div>
+    </aside>
+
+    <main id="mainContent" class="main">
+      <section id="chatPage" class="chat-page" aria-labelledby="chatPageTitle" aria-hidden="false" tabindex="-1">
+        <header class="chat-topbar">
+          <div>
+            <p class="eyebrow">UNIFIED ENTRY</p>
+            <h1 id="chatPageTitle">Unified Chat</h1>
+            <p class="subtitle">由平台当前 Main Agent 自动路由，无需选择执行资源</p>
+          </div>
+          <div class="chat-run-state">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="chatStatus" role="status" aria-live="polite">就绪</span>
+          </div>
+        </header>
+
+        <div class="chat-layout">
+          <aside class="chat-conversations" aria-labelledby="chatConversationListTitle">
+            <div class="chat-panel-heading">
+              <div>
+                <p class="eyebrow">HISTORY</p>
+                <h2 id="chatConversationListTitle">会话</h2>
+              </div>
+              <button id="newChatButton" class="icon-button" type="button" aria-label="新建会话" title="新建会话">＋</button>
+            </div>
+            <div id="chatConversationList" class="chat-conversation-list"></div>
+            <p id="chatConversationEmpty" class="chat-conversation-empty">还没有会话</p>
+          </aside>
+
+          <section class="chat-workspace" aria-labelledby="chatConversationTitle">
+            <header class="chat-conversation-head">
+              <div>
+                <h2 id="chatConversationTitle">新会话</h2>
+                <p id="chatConversationMeta">将由当前 Main Agent 处理</p>
+              </div>
+              <div id="chatMainAgentSummary" class="chat-main-summary" data-state="loading" aria-live="polite">
+                <strong id="chatMainAgentName">正在读取 Main Agent…</strong>
+                <small id="chatMainAgentDetail">统一对话固定使用已发布版本</small>
+                <button id="chatUpdateMainAgentButton" class="chat-main-update" type="button" hidden>更新 Main Agent</button>
+              </div>
+            </header>
+            <div id="chatTimeline" class="chat-timeline" aria-live="polite" aria-relevant="additions text">
+              <div class="chat-welcome">
+                <span class="chat-welcome-mark" aria-hidden="true">◎</span>
+                <h2>Unified Chat</h2>
+                <p>输入任务即可开始。平台会自动使用已配置的 Main Agent 路由能力。</p>
+              </div>
+            </div>
+            <form id="chatComposer" class="chat-composer" data-state="ready">
+              <label class="sr-only" for="chatInput">发送给 Main Agent</label>
+              <textarea id="chatInput" rows="2" maxlength="32768" placeholder="发送消息给 Main Agent…"></textarea>
+              <div class="chat-composer-actions">
+                <span>Enter 发送 · Shift + Enter 换行</span>
+                <button id="cancelChatRunButton" class="button secondary" type="button" hidden>取消运行</button>
+                <button id="sendChatButton" class="button primary" type="submit">发送</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="chat-trace" aria-labelledby="chatTraceTitle">
+            <div class="chat-panel-heading">
+              <div>
+                <p class="eyebrow">ORDERED TRACE</p>
+                <h2 id="chatTraceTitle">执行追踪</h2>
+              </div>
+              <span id="chatTraceStatus">等待运行</span>
+            </div>
+            <div id="chatTraceList" class="chat-trace-list">
+              <p class="chat-trace-empty">运行开始后，这里会按顺序显示 Main Agent、Child Agent、Skill、MCP 与 Orchestration。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="approvalPage" class="approval-page" aria-labelledby="approvalPageTitle" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar approval-topbar">
+          <div>
+            <p class="eyebrow">HUMAN APPROVAL</p>
+            <h1 id="approvalPageTitle">审批中心</h1>
+            <p class="subtitle">审核 Mutating 与 HighRisk 工具调用；参数仅显示服务端安全摘要</p>
+          </div>
+          <div class="approval-toolbar">
+            <label>
+              <span class="sr-only">审批状态</span>
+              <select id="approvalStatusFilter">
+                <option value="Pending">待审批</option>
+                <option value="Approved">已批准</option>
+                <option value="">全部状态</option>
+                <option value="Rejected">已拒绝</option>
+                <option value="Cancelled">已取消</option>
+                <option value="Expired">已过期</option>
+                <option value="Consumed">已执行</option>
+                <option value="Failed">执行失败</option>
+                <option value="Invalidated">已失效</option>
+              </select>
+            </label>
+            <button id="refreshApprovalsButton" class="button secondary" type="button">刷新</button>
+          </div>
+        </header>
+        <div class="approval-layout">
+          <section class="approval-queue" aria-labelledby="approvalQueueTitle">
+            <header class="approval-section-head">
+              <div><p class="eyebrow">QUEUE</p><h2 id="approvalQueueTitle">审批队列</h2></div>
+              <span id="approvalQueueCount">正在读取…</span>
+            </header>
+            <div id="approvalQueueList" class="approval-queue-list"></div>
+            <p id="approvalQueueEmpty" class="approval-empty" hidden>当前筛选条件下没有审批。</p>
+          </section>
+          <section id="approvalDetail" class="approval-detail" aria-labelledby="approvalDetailTitle">
+            <div class="approval-detail-empty">
+              <span aria-hidden="true">✓</span>
+              <h2 id="approvalDetailTitle">选择一条审批</h2>
+              <p>查看工具版本、风险、参数摘要、申请人和关联运行。</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <header id="agentPageHeader" class="topbar agent-page" aria-hidden="true" tabindex="-1" hidden>
+        <div>
+          <p class="eyebrow">CONTROL PLANE</p>
+          <h1>Agent 控制台</h1>
+          <p class="subtitle">维护 Agent 草稿、发布版本与运行状态</p>
+        </div>
+        <div class="top-actions">
+          <span class="deployment"><span class="status-dot" aria-hidden="true"></span>Server · EU.Core.Api.Agent</span>
+          <button id="importButton" class="button secondary" type="button">导入配置</button>
+          <button id="createButton" class="button primary" type="button">创建 Agent</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+        </div>
+      </header>
+
+      <section class="memory-banner agent-page" aria-label="存储提示" hidden>
+        <span aria-hidden="true">i</span>
+        <p><strong>当前使用 SQLite 持久化。</strong> Agent 与 Skill 在 Host 重启后保留；SQL Server 脚本仍由运维人工处理。</p>
+      </section>
+
+      <section class="workspace agent-page" aria-labelledby="agentListTitle" hidden>
+        <div class="toolbar">
+          <div>
+            <h2 id="agentListTitle">Agent 列表</h2>
+            <p id="agentCount" class="muted">正在读取…</p>
+          </div>
+          <div class="filters">
+            <label class="search-field">
+              <span class="sr-only">搜索 Agent</span>
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索名称、职责或 Code" autocomplete="off">
+            </label>
+            <label>
+              <span class="sr-only">运行状态</span>
+              <select id="statusFilter">
+                <option value="">未归档</option>
+                <option value="Enabled">已启用</option>
+                <option value="Disabled">已停用</option>
+                <option value="Archived">已归档</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="listStatus" class="list-status" role="status">正在加载 Agent…</div>
+        <div class="table-wrap" id="tableWrap" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>职责说明</th>
+                <th>模型</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th><span class="sr-only">操作</span></th>
+              </tr>
+            </thead>
+            <tbody id="agentRows"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="empty-state" hidden>
+          <span class="empty-glyph" aria-hidden="true">◎</span>
+          <h3>还没有 Agent</h3>
+          <p>创建第一个 Agent，配置 Draft 后再发布不可变版本。</p>
+          <button id="emptyCreateButton" class="button primary" type="button">创建 Agent</button>
+        </div>
+      </section>
+
+      <section class="deferred-strip agent-page" aria-label="能力阶段" hidden>
+        <div><strong>Skill</strong><span>P3 已开放</span></div>
+        <div><strong>MCP 工具</strong><span>P4 开放</span></div>
+        <div><strong>知识库</strong><span>P6 已开放：文本检索与引用</span></div>
+        <div><strong>编排</strong><span>P7 已开放：版本化流程与运行审计</span></div>
+        <div><strong>定时计划</strong><span>P8：当前不启动后台任务</span></div>
+      </section>
+
+      <section id="skillPage" class="skill-page" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">REUSABLE CAPABILITIES</p>
+            <h1>Skill 管理</h1>
+            <p class="subtitle">维护受控文件 Draft、发布版本与 Agent 绑定</p>
+          </div>
+          <div class="top-actions">
+            <button class="button secondary" type="button" disabled title="后续阶段开放">导入 Skill · 后续阶段</button>
+            <button id="createSkillButton" class="button primary" type="button">创建 Skill</button>
+          </div>
+        </header>
+        <section class="memory-banner" aria-label="Skill 安全边界">
+          <span aria-hidden="true">i</span>
+          <p><strong>文件受控存储。</strong> 单文件最多 2 MiB；发布版本不可修改；scripts 可以保存但没有执行入口。</p>
+        </section>
+        <section class="workspace" aria-labelledby="skillListTitle">
+          <div class="toolbar">
+            <div>
+              <h2 id="skillListTitle">技能库</h2>
+              <p id="skillCount" class="muted">正在读取…</p>
+            </div>
+            <div class="filters">
+              <label class="search-field">
+                <span class="sr-only">搜索 Skill</span><span aria-hidden="true">⌕</span>
+                <input id="skillSearchInput" type="search" placeholder="搜索名称、说明或 Code" autocomplete="off">
+              </label>
+              <label><span class="sr-only">Skill 分类</span><select id="skillCategoryFilter"><option value="">全部分类</option></select></label>
+              <label><span class="sr-only">Skill 状态</span><select id="skillStatusFilter"><option value="">未归档</option><option value="Active">正常</option><option value="Archived">已归档</option></select></label>
+            </div>
+          </div>
+          <div id="skillListStatus" class="list-status" role="status">正在加载 Skill…</div>
+          <div id="skillTableWrap" class="table-wrap" hidden>
+            <table class="skill-table">
+              <thead><tr><th>Skill</th><th>说明</th><th>分类</th><th>状态</th><th>Draft</th><th>发布版本</th><th><span class="sr-only">操作</span></th></tr></thead>
+              <tbody id="skillRows"></tbody>
+            </table>
+          </div>
+          <div id="skillEmptyState" class="empty-state" hidden>
+            <span class="empty-glyph" aria-hidden="true">◇</span>
+            <h3>还没有 Skill</h3>
+            <p>创建第一个受控 Skill，编辑 SKILL.md 后发布不可变版本。</p>
+            <button id="emptyCreateSkillButton" class="button primary" type="button">创建 Skill</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="knowledgePage" class="knowledge-page" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">RETRIEVAL CONTROL PLANE</p>
+            <h1>知识库</h1>
+            <p class="subtitle">导入受控文本、检查分块与管理 Agent 检索授权</p>
+          </div>
+          <div class="top-actions">
+            <button id="createKnowledgeButton" class="button primary" type="button">创建知识库</button>
+          </div>
+        </header>
+        <section class="memory-banner" aria-label="知识库安全边界">
+          <span aria-hidden="true">i</span>
+          <p><strong>支持 UTF-8 文本、Markdown 与可提取文本的 PDF。</strong> 文本内容最多 100 万字符；PDF 最大 10 MiB、200 页，不执行 OCR；检索内容会被标记为不可信数据而非系统指令。</p>
+        </section>
+        <section class="workspace" aria-labelledby="knowledgeListTitle">
+          <div class="toolbar">
+            <div><h2 id="knowledgeListTitle">知识库列表</h2><p id="knowledgeCount" class="muted">正在读取…</p></div>
+            <div class="filters"><label><span class="sr-only">知识库状态</span><select id="knowledgeStatusFilter"><option value="">未归档</option><option value="Enabled">已启用</option><option value="Disabled">已停用</option><option value="Archived">已归档</option></select></label></div>
+          </div>
+          <div id="knowledgeListStatus" class="list-status" role="status">正在加载知识库…</div>
+          <div id="knowledgeTableWrap" class="table-wrap" hidden>
+            <table>
+              <thead><tr><th>知识库</th><th>说明</th><th>文档</th><th>分块</th><th>状态</th><th><span class="sr-only">操作</span></th></tr></thead>
+              <tbody id="knowledgeRows"></tbody>
+            </table>
+          </div>
+          <div id="knowledgeEmptyState" class="empty-state" hidden>
+            <span class="empty-glyph" aria-hidden="true">▤</span>
+            <h3>还没有知识库</h3>
+            <p>创建知识库并导入 Markdown、文本或 PDF 文件后，即可授权给 Agent。</p>
+          </div>
+        </section>
+        <section id="knowledgeWorkbench" class="workspace knowledge-workbench" hidden>
+          <div class="section-heading"><h2 id="knowledgeWorkbenchTitle">知识库工作台</h2><p id="knowledgeWorkbenchMeta"></p></div>
+          <div class="field-grid three">
+            <label class="field"><span>Code</span><input id="knowledgeCodeInput" pattern="[a-z0-9-]+" placeholder="supplier-handbook"></label>
+            <label class="field"><span>名称</span><input id="knowledgeNameInput" maxlength="120"></label>
+            <label class="field"><span>状态</span><select id="knowledgeStatusInput"><option value="Enabled">Enabled</option><option value="Disabled">Disabled</option><option value="Archived" disabled>Archived</option></select></label>
+          </div>
+          <label class="field"><span>说明</span><textarea id="knowledgeDescriptionInput" rows="2"></textarea></label>
+          <label class="field"><span>导入文档</span><input id="knowledgeFileInput" type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"></label>
+          <div class="top-actions">
+            <button id="saveKnowledgeButton" class="button secondary" type="button">保存元数据</button>
+            <button id="importKnowledgeButton" class="button primary" type="button">导入并索引</button>
+            <button id="statusKnowledgeButton" class="button secondary" type="button" hidden>停用</button>
+            <button id="archiveKnowledgeButton" class="button ghost" type="button" hidden>归档</button>
+          </div>
+          <section id="knowledgeContentBrowser" class="knowledge-content-browser" aria-labelledby="knowledgeDocumentsTitle" hidden>
+            <div class="knowledge-browser-heading">
+              <div><h3 id="knowledgeDocumentsTitle">文档与分块</h3><p id="knowledgeDocumentsMeta">选择文档查看索引分块。</p></div>
+            </div>
+            <div class="knowledge-browser-grid">
+              <nav class="knowledge-document-panel" aria-label="知识库文档">
+                <div id="knowledgeDocumentsStatus" class="knowledge-browser-status" role="status">正在读取文档…</div>
+                <div id="knowledgeDocumentList" class="knowledge-document-list"></div>
+              </nav>
+              <section class="knowledge-chunk-panel" aria-labelledby="knowledgeChunksTitle">
+                <div class="knowledge-chunk-heading">
+                  <div><h3 id="knowledgeChunksTitle">选择一个文档</h3><p id="knowledgeChunksMeta">分块正文将按页加载。</p></div>
+                  <span id="knowledgeChunkRange" class="knowledge-chunk-range"></span>
+                </div>
+                <div id="knowledgeChunkList" class="knowledge-chunk-list"><p class="binding-empty">尚未选择文档。</p></div>
+                <div id="knowledgeChunkPager" class="knowledge-chunk-pager" hidden>
+                  <button id="previousKnowledgeChunksButton" class="button secondary" type="button">上一页</button>
+                  <button id="nextKnowledgeChunksButton" class="button secondary" type="button">下一页</button>
+                </div>
+              </section>
+            </div>
+          </section>
+          <div class="field-grid two knowledge-preview">
+            <label class="field"><span>检索预览</span><input id="knowledgeQueryInput" placeholder="输入问题检查召回片段"></label>
+            <div class="top-actions"><button id="searchKnowledgeButton" class="button secondary" type="button">检索</button></div>
+          </div>
+          <div id="knowledgeSearchResults" class="run-tool-events"><p class="binding-empty">尚未执行检索。</p></div>
+          <p id="knowledgeMessage" class="editor-message" role="status"></p>
+        </section>
+      </section>
+
+      <section id="orchestrationPage" class="orchestration-page" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">FLOW CONTROL PLANE</p>
+            <h1>Agent 编排</h1>
+            <p class="subtitle">维护有向无环流程、冻结 Agent 版本并检查节点运行状态</p>
+          </div>
+          <div class="top-actions">
+            <button id="createOrchestrationButton" class="button primary" type="button">创建编排</button>
+          </div>
+        </header>
+        <section class="memory-banner" aria-label="编排安全边界">
+          <span aria-hidden="true">i</span>
+          <p><strong>P7 仅支持手动触发。</strong> 每个节点最多重试 3 次；SQLite 会持久化编排输入与输出、节点 Attempt、MCP 调用明细和完整执行追踪，敏感字段在写入前脱敏。</p>
+        </section>
+        <section class="workspace" aria-labelledby="orchestrationListTitle">
+          <div class="toolbar">
+            <div><h2 id="orchestrationListTitle">编排列表</h2><p id="orchestrationCount" class="muted">正在读取…</p></div>
+            <div class="filters"><label><span class="sr-only">编排状态</span><select id="orchestrationStatusFilter"><option value="">未归档</option><option value="Enabled">已启用</option><option value="Disabled">已停用</option><option value="Archived">已归档</option></select></label></div>
+          </div>
+          <div id="orchestrationListStatus" class="list-status" role="status">正在加载编排…</div>
+          <div id="orchestrationTableWrap" class="table-wrap" hidden>
+            <table>
+              <thead><tr><th>编排</th><th>说明</th><th>Draft 节点</th><th>版本</th><th>状态</th><th><span class="sr-only">操作</span></th></tr></thead>
+              <tbody id="orchestrationRows"></tbody>
+            </table>
+          </div>
+          <div id="orchestrationEmptyState" class="empty-state" hidden>
+            <span class="empty-glyph" aria-hidden="true">⑂</span>
+            <h3>还没有编排</h3>
+            <p>创建流程后添加 Agent 节点，再发布不可变版本。</p>
+          </div>
+        </section>
+        <section id="orchestrationWorkbench" class="workspace orchestration-workbench" hidden>
+          <div class="section-heading"><h2 id="orchestrationWorkbenchTitle">创建编排</h2><p id="orchestrationWorkbenchMeta">配置 Draft</p></div>
+          <div class="field-grid three">
+            <label class="field"><span>Code</span><input id="orchestrationCodeInput" pattern="[a-z0-9-]+" placeholder="supplier-review"></label>
+            <label class="field"><span>名称</span><input id="orchestrationNameInput" maxlength="120"></label>
+            <label class="field"><span>状态</span><select id="orchestrationStatusInput"><option value="Enabled">Enabled</option><option value="Disabled">Disabled</option><option value="Archived" disabled>Archived</option></select></label>
+          </div>
+          <label class="field"><span>说明</span><textarea id="orchestrationDescriptionInput" rows="2"></textarea></label>
+          <section class="flow-section">
+            <div class="section-heading"><h3>节点</h3><p>节点按 ID 标识；模板支持 <code>{{input}}</code> 和 <code>{{previous}}</code>。</p></div>
+            <div id="orchestrationNodes" class="flow-node-list"></div>
+            <button id="addOrchestrationNodeButton" class="row-action" type="button">添加 Agent 节点</button>
+          </section>
+          <section class="flow-section">
+            <div class="section-heading"><h3>连接与条件</h3><p>按顺序匹配第一条满足条件的边。</p></div>
+            <div id="orchestrationEdges" class="flow-edge-list"></div>
+            <button id="addOrchestrationEdgeButton" class="row-action" type="button">添加连接</button>
+          </section>
+          <div class="top-actions flow-actions">
+            <button id="saveOrchestrationButton" class="button secondary" type="button">保存 Draft</button>
+            <button id="publishOrchestrationButton" class="button primary" type="button">发布版本</button>
+            <button id="statusOrchestrationButton" class="button secondary" type="button" hidden>停用</button>
+            <button id="archiveOrchestrationButton" class="button ghost" type="button" hidden>归档</button>
+          </div>
+          <p id="orchestrationMessage" class="editor-message" role="status"></p>
+          <section id="orchestrationRunPanel" class="flow-section" hidden>
+            <div class="section-heading"><h3>运行编排</h3><p>使用最新发布版本；运行期间轮询节点状态。</p></div>
+            <label class="field"><span>输入</span><textarea id="orchestrationRunInput" rows="3" maxlength="32768"></textarea></label>
+            <div class="top-actions">
+              <button id="cancelOrchestrationRunButton" class="button secondary" type="button" hidden>取消运行</button>
+              <button id="startOrchestrationRunButton" class="button primary" type="button">开始运行</button>
+            </div>
+            <div id="orchestrationRunTimeline" class="flow-timeline"><p class="binding-empty">尚未运行。</p></div>
+            <pre id="orchestrationRunOutput" class="run-output" hidden></pre>
+          </section>
+        </section>
+      </section>
+
+      <section id="mcpPage" class="mcp-page" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">TOOL CONTROL PLANE</p>
+            <h1>MCP 工具</h1>
+            <p class="subtitle">管理受控连接、工具发现、风险分类与 Agent 授权</p>
+          </div>
+          <div class="top-actions">
+            <button id="createMcpButton" class="button primary" type="button">创建 MCP Server</button>
+          </div>
+        </header>
+        <section class="memory-banner" aria-label="MCP 安全边界">
+          <span aria-hidden="true">i</span>
+          <p><strong>默认拒绝网络访问。</strong> HTTP/HTTPS Host/Port 必须由 Host 配置允许；stdio 默认关闭；凭据仅保存 alias 标识。</p>
+        </section>
+        <section class="workspace" aria-labelledby="mcpListTitle">
+          <div class="toolbar">
+            <div><h2 id="mcpListTitle">MCP Server</h2><p id="mcpCount" class="muted">正在读取…</p></div>
+            <div class="filters">
+              <label class="search-field"><span class="sr-only">搜索 MCP Server</span><span aria-hidden="true">⌕</span><input id="mcpSearchInput" type="search" placeholder="搜索名称、说明或 Code" autocomplete="off"></label>
+              <label><span class="sr-only">连接状态</span><select id="mcpStatusFilter"><option value="">未归档</option><option value="Healthy">Healthy</option><option value="Unhealthy">Unhealthy</option><option value="NotSynced">NotSynced</option><option value="Disabled">Disabled</option><option value="Archived">Archived</option></select></label>
+            </div>
+          </div>
+          <div id="mcpListStatus" class="list-status" role="status">正在加载 MCP Server…</div>
+          <div id="mcpTableWrap" class="table-wrap" hidden>
+            <table class="mcp-table">
+              <thead><tr><th>Server</th><th>传输</th><th>连接目标</th><th>工具</th><th>状态</th><th><span class="sr-only">操作</span></th></tr></thead>
+              <tbody id="mcpRows"></tbody>
+            </table>
+          </div>
+          <div id="mcpEmptyState" class="empty-state" hidden>
+            <span class="empty-glyph" aria-hidden="true">◆</span>
+            <h3>还没有 MCP Server</h3>
+            <p>先创建连接配置，再同步工具并完成风险分类。</p>
+            <button id="emptyCreateMcpButton" class="button primary" type="button">创建 MCP Server</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="evaluationPage" class="evaluation-page" aria-hidden="true" tabindex="-1" hidden>
+        <header class="topbar evaluation-topbar">
+          <div>
+            <p class="eyebrow">QUALITY CONTROL</p>
+            <h1>Agent 质量评估</h1>
+            <p class="subtitle">维护确定性测试套件，运行受控批次，并比较发布版本质量</p>
+          </div>
+          <div class="top-actions">
+            <label class="field compact"><span>状态</span><select id="evaluationSuiteStatusFilter"><option value="">Active</option><option value="Archived">Archived</option></select></label>
+            <button id="refreshEvaluationsButton" class="button secondary" type="button">刷新</button>
+            <button id="createEvaluationSuiteButton" class="button primary" type="button">创建 Suite</button>
+          </div>
+        </header>
+        <section class="memory-banner" aria-label="评估安全边界">
+          <span aria-hidden="true">i</span>
+          <p><strong>比较不会重新执行 Agent。</strong> 批次显式运行并继承现有预算、Capability、Policy 与 P11 审批；报告不复制 Prompt、模型原文或工具 Payload。</p>
+        </section>
+        <div class="evaluation-layout">
+          <aside class="evaluation-suite-rail" aria-labelledby="evaluationSuiteListTitle">
+            <header><div><p class="eyebrow">SUITES</p><h2 id="evaluationSuiteListTitle">评估套件</h2></div><span id="evaluationSuiteCount">0</span></header>
+            <div id="evaluationSuiteStatus" class="evaluation-inline-status" role="status">正在读取…</div>
+            <div id="evaluationSuiteList" class="evaluation-suite-list"></div>
+          </aside>
+
+          <section class="evaluation-editor" aria-labelledby="evaluationEditorTitle">
+            <div id="evaluationEmpty" class="evaluation-empty">
+              <span aria-hidden="true">◫</span><h2 id="evaluationEditorTitle">选择或创建 Suite</h2>
+              <p>Case 固定目标 Agent 发布版本、输入和确定性断言。</p>
+            </div>
+            <div id="evaluationCreatePanel" class="evaluation-create" hidden>
+              <div class="evaluation-section-head"><div><p class="eyebrow">NEW SUITE</p><h2>创建评估套件</h2></div></div>
+              <div class="field-grid two">
+                <label class="field"><span>Code</span><input id="evaluationCreateCode" pattern="[a-z0-9-]+" maxlength="80" placeholder="supplier-regression"></label>
+                <label class="field"><span>名称</span><input id="evaluationCreateName" maxlength="120" placeholder="供应商回归"></label>
+              </div>
+              <label class="field"><span>说明</span><textarea id="evaluationCreateDescription" rows="3"></textarea></label>
+              <div class="evaluation-actions"><button id="cancelEvaluationCreateButton" class="button secondary" type="button">取消</button><button id="confirmEvaluationCreateButton" class="button primary" type="button">创建</button></div>
+            </div>
+            <div id="evaluationWorkbench" hidden>
+              <header class="evaluation-workbench-head">
+                <div><p id="evaluationSuiteCode" class="eyebrow"></p><h2 id="evaluationSuiteName"></h2><p id="evaluationSuiteMeta" class="muted"></p></div>
+                <div class="evaluation-actions"><button id="archiveEvaluationSuiteButton" class="button danger" type="button">归档</button><button id="saveEvaluationDraftButton" class="button secondary" type="button">保存 Draft</button><button id="publishEvaluationSuiteButton" class="button primary" type="button">发布版本</button></div>
+              </header>
+              <div class="evaluation-metadata">
+                <label class="field"><span>名称</span><input id="evaluationNameInput" maxlength="120"></label>
+                <label class="field"><span>说明</span><textarea id="evaluationDescriptionInput" rows="2"></textarea></label>
+              </div>
+              <section class="evaluation-cases" aria-labelledby="evaluationCasesTitle">
+                <div class="evaluation-section-head"><div><h3 id="evaluationCasesTitle">测试 Case</h3><p>最多 100 个 Draft Case；单次批量运行最多 20 个。</p></div><button id="addEvaluationCaseButton" class="row-action" type="button">新增 Case</button></div>
+                <div id="evaluationCaseList" class="evaluation-case-list"></div>
+              </section>
+              <section class="evaluation-versions" aria-labelledby="evaluationVersionsTitle">
+                <div class="evaluation-section-head"><div><h3 id="evaluationVersionsTitle">发布与运行</h3><p>运行使用不可变 Suite 版本及 Case 中冻结的 Agent 版本。</p></div></div>
+                <div class="evaluation-runbar"><label class="field"><span>Suite 版本</span><select id="evaluationVersionSelect"></select></label><button id="runEvaluationBatchButton" class="button primary" type="button">运行批次</button></div>
+              </section>
+              <p id="evaluationEditorMessage" class="editor-message" role="status"></p>
+            </div>
+          </section>
+
+          <aside class="evaluation-inspector" aria-labelledby="evaluationBatchTitle">
+            <header><div><p class="eyebrow">BATCHES</p><h2 id="evaluationBatchTitle">运行与对比</h2></div><span id="evaluationBatchCount">0</span></header>
+            <div id="evaluationBatchList" class="evaluation-batch-list"><p class="evaluation-hint">选择 Suite 后显示批次。</p></div>
+            <section id="evaluationBatchDetail" class="evaluation-batch-detail" hidden></section>
+            <section id="evaluationComparePanel" class="evaluation-compare" hidden>
+              <div class="evaluation-section-head"><div><h3>版本质量门禁</h3><p>选择两个 Completed 批次。</p></div></div>
+              <label class="field"><span>基线批次</span><select id="evaluationBaselineBatch"></select></label>
+              <label class="field"><span>候选批次</span><select id="evaluationCandidateBatch"></select></label>
+              <details class="evaluation-gate-options"><summary>门禁阈值</summary>
+                <div class="field-grid two">
+                  <label class="field"><span>最低通过率</span><input id="evaluationMinimumPassRate" type="number" min="0" max="1" step="0.01" value="1"></label>
+                  <label class="field"><span>最大通过率回退</span><input id="evaluationMaximumPassRegression" type="number" min="0" max="1" step="0.01" value="0"></label>
+                  <label class="field"><span>最大平均耗时回退 %</span><input id="evaluationMaximumDurationRegression" type="number" min="0" max="10000" step="1" placeholder="不检查"></label>
+                  <label class="field"><span>单 Case 最大工具增长</span><input id="evaluationMaximumToolIncrease" type="number" min="0" max="1000" step="1" placeholder="不检查"></label>
+                </div>
+                <label class="switch-field"><input id="evaluationNoNewFailures" type="checkbox" checked><span>不允许新增失败</span></label>
+                <label class="switch-field"><input id="evaluationSameCaseSet" type="checkbox" checked><span>Case 集必须一致</span></label>
+                <label class="switch-field"><input id="evaluationStableRoutes" type="checkbox"><span>路由必须稳定</span></label>
+              </details>
+              <button id="compareEvaluationBatchesButton" class="button secondary" type="button">执行确定性对比</button>
+              <div id="evaluationComparisonResult" class="evaluation-comparison-result"></div>
+            </section>
+            <section id="evaluationModelJudgePanel" class="evaluation-model-judge" hidden>
+              <div class="evaluation-section-head"><div><h3>可选模型裁判</h3><p>仅作 advisory，不改变确定性门禁。</p></div><span id="evaluationModelJudgeAvailability" class="evaluation-state pending">默认关闭</span></div>
+              <p class="evaluation-judge-warning">会产生额外模型调用与费用。只发送已完成 Run 的输入和输出；报告仅保存 Hash 与分数。</p>
+              <label class="field"><span>裁判模型</span><select id="evaluationJudgeModel"></select></label>
+              <div class="evaluation-judge-metrics">
+                <label class="switch-field"><input id="evaluationJudgeRelevance" type="checkbox" checked><span>Relevance</span><input id="evaluationJudgeRelevanceMinimum" type="number" min="1" max="5" step="0.1" value="4" aria-label="Relevance 最低分"></label>
+                <label class="switch-field"><input id="evaluationJudgeCoherence" type="checkbox" checked><span>Coherence</span><input id="evaluationJudgeCoherenceMinimum" type="number" min="1" max="5" step="0.1" value="4" aria-label="Coherence 最低分"></label>
+              </div>
+              <label class="switch-field evaluation-explicit-consent"><input id="evaluationJudgeExplicit" type="checkbox"><span>我确认执行本次额外模型评估</span></label>
+              <button id="runEvaluationModelJudgeButton" class="button secondary" type="button">运行模型裁判</button>
+              <div id="evaluationModelJudgeReports" class="evaluation-judge-reports"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="agentDrawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+    <header class="drawer-header">
+      <div>
+        <p id="drawerEyebrow" class="eyebrow">DRAFT 0.1.0</p>
+        <h2 id="drawerTitle">创建 Agent</h2>
+      </div>
+      <button id="closeDrawerButton" class="icon-button" type="button" aria-label="关闭编辑器">×</button>
+    </header>
+
+    <div class="drawer-tabs" role="tablist" aria-label="Agent 配置区域">
+      <button class="tab is-active" type="button" data-panel="configuration" role="tab" aria-selected="true">配置</button>
+      <button class="tab" type="button" data-panel="versions" role="tab" aria-selected="false">版本历史</button>
+      <button class="tab" type="button" data-panel="deferred" role="tab" aria-selected="false">扩展能力</button>
+    </div>
+
+    <form id="agentForm" class="drawer-body" novalidate>
+      <section id="configurationPanel" data-panel-content="configuration">
+        <div class="field-grid two">
+          <label class="field"><span>Agent Code</span><input id="codeInput" name="code" required pattern="[a-z0-9-]+" placeholder="support-agent"><small>创建后不可修改，使用小写 kebab-case。</small></label>
+          <label class="field"><span>名称</span><input id="nameInput" name="name" required maxlength="120" placeholder="客户支持助手"></label>
+        </div>
+        <label class="field"><span>职责说明</span><textarea id="descriptionInput" name="description" rows="3" placeholder="说明这个 Agent 负责什么"></textarea></label>
+        <label class="field"><span>Instructions</span><textarea id="instructionsInput" name="instructions" rows="8" placeholder="明确角色、任务边界与输出要求"></textarea></label>
+        <div class="field-grid two">
+          <label class="field"><span>Model Profile</span><select id="modelProfileInput" name="modelProfileId"><option value="">请选择模型配置</option></select></label>
+          <label class="field"><span>输出模式</span><select id="outputModeInput" name="outputMode"><option value="Text">Text</option><option value="Structured">Structured</option></select></label>
+        </div>
+        <label id="schemaField" class="field code-field" hidden>
+          <span>JSON Schema</span>
+          <textarea id="schemaInput" name="outputJsonSchema" rows="10" spellcheck="false" placeholder='{"type":"object","properties":{}}'></textarea>
+          <small id="schemaHint">发布前由服务端执行严格校验。</small>
+        </label>
+        <div class="read-only-grid">
+          <div><span>部署目标</span><strong>Server</strong></div>
+          <div><span>Host</span><strong>EU.Core.Api.Agent</strong></div>
+          <div><span>存储模式</span><strong>SQLite（持久化）</strong></div>
+        </div>
+      </section>
+
+      <section id="versionsPanel" data-panel-content="versions" hidden>
+        <div class="section-heading"><h3>不可变发布版本</h3><p>每次发布产生新的主版本，历史版本不会被覆盖。</p></div>
+        <ol id="versionList" class="version-list"></ol>
+      </section>
+
+      <section id="deferredPanel" data-panel-content="deferred" hidden>
+        <div class="deferred-panel">
+          <div class="skill-binding-panel">
+            <strong>Skill 绑定</strong><span>P3 已开放</span>
+            <p>只能绑定已经发布的 SkillVersion；发布 Agent 时会固化版本 ID。</p>
+            <div id="agentSkillBindings" class="binding-options"></div>
+          </div>
+          <div class="tool-binding-panel">
+            <strong>MCP 工具授权</strong><span>P4 已开放</span>
+            <p>仅可授权已同步并完成风险分类的工具版本；发布 Agent 时固化版本 ID。</p>
+            <div id="agentToolBindings" class="binding-options"></div>
+          </div>
+          <div class="knowledge-binding-panel">
+            <strong>知识库授权</strong><span>P6 已开放</span>
+            <p>只可授权已启用且完成索引的知识库；发布 Agent 时固化知识库修订号。</p>
+            <div id="agentKnowledgeBindings" class="binding-options"></div>
+          </div>
+          <div class="child-binding-panel">
+            <strong>Child Agent 绑定</strong><span>P8 已开放</span>
+            <p>仅列出已启用且已发布的 Agent；当前 Agent 不能绑定自身。</p>
+            <div id="agentChildBindings" class="binding-options"></div>
+          </div>
+          <div class="orchestration-binding-panel">
+            <strong>Orchestration 绑定</strong><span>P8 已开放</span>
+            <p>仅列出已启用且已发布的 P7 orchestration。</p>
+            <div id="agentOrchestrationBindings" class="binding-options"></div>
+          </div>
+          <p class="binding-freeze-note">保存 Draft 后发布，会冻结当前 Child Agent 与 P7 Orchestration 的已发布版本。</p>
+        </div>
+      </section>
+    </form>
+
+    <footer class="drawer-footer">
+      <p id="editorMessage" class="editor-message" role="status"></p>
+      <div>
+        <button id="runButton" class="button ghost" type="button" hidden>运行</button>
+        <button id="exportButton" class="button ghost" type="button" hidden>导出</button>
+        <button id="statusButton" class="button secondary" type="button" hidden>停用</button>
+        <button id="archiveAgentButton" class="button ghost" type="button" hidden>归档</button>
+        <button id="setMainAgentButton" class="button ghost" type="button" hidden>设为 Main Agent</button>
+        <button id="reloadButton" class="button secondary" type="button" hidden>重新加载</button>
+        <button id="saveButton" class="button secondary" type="submit" form="agentForm">保存 Draft</button>
+        <button id="publishButton" class="button primary" type="button" hidden>发布新版本</button>
+      </div>
+    </footer>
+  </aside>
+
+  <div id="runDrawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="runDrawer" class="drawer run-drawer" role="dialog" aria-modal="true" aria-labelledby="runDrawerTitle" aria-hidden="true">
+    <header class="drawer-header">
+      <div><p id="runDrawerEyebrow" class="eyebrow">PUBLISHED RUNTIME</p><h2 id="runDrawerTitle">运行 Agent</h2></div>
+      <button id="closeRunDrawerButton" class="icon-button" type="button" aria-label="关闭运行控制台">×</button>
+    </header>
+    <div class="run-drawer-body">
+      <section class="run-compose">
+        <label class="field"><span>输入</span><textarea id="runInput" rows="5" maxlength="32768" placeholder="输入要交给 Agent 的任务"></textarea></label>
+        <div class="run-actions">
+          <p id="runStatus" class="editor-message" role="status">使用最新发布版本运行。</p>
+          <button id="cancelRunButton" class="button secondary" type="button" hidden>取消</button>
+          <button id="startRunButton" class="button primary" type="button">开始运行</button>
+        </div>
+      </section>
+      <section class="run-output-section">
+        <div class="section-heading"><h3>流式输出</h3><p id="runMeta">尚未开始</p></div>
+        <pre id="runOutput" class="run-output" aria-live="polite">等待输入…</pre>
+      </section>
+      <section class="run-tools-section">
+        <div class="section-heading"><h3>工具调用</h3><p>仅 ReadOnly 工具允许自动执行。</p></div>
+        <div id="runToolEvents" class="run-tool-events"><p class="binding-empty">本次运行尚无工具调用。</p></div>
+      </section>
+      <section class="run-tools-section">
+        <div class="section-heading"><h3>知识引用</h3><p>仅展示本次运行实际召回并提供给模型的证据来源。</p></div>
+        <div id="runCitations" class="run-tool-events"><p class="binding-empty">本次运行尚无知识引用。</p></div>
+      </section>
+      <section class="run-history-section">
+        <div class="section-heading"><h3>最近运行</h3><p>仅记录哈希、终态、耗时和工具审计，不保存输入与输出正文。</p></div>
+        <div id="runHistory" class="run-history"><p class="binding-empty">尚无运行记录。</p></div>
+      </section>
+    </div>
+  </aside>
+
+  <div id="skillDrawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="skillDrawer" class="drawer skill-drawer" role="dialog" aria-modal="true" aria-labelledby="skillDrawerTitle" aria-hidden="true">
+    <header class="drawer-header">
+      <div><p id="skillDrawerEyebrow" class="eyebrow">NEW SKILL</p><h2 id="skillDrawerTitle">创建 Skill</h2></div>
+      <button id="closeSkillDrawerButton" class="icon-button" type="button" aria-label="关闭 Skill 编辑器">×</button>
+    </header>
+    <div class="skill-drawer-body">
+      <section class="skill-metadata">
+        <div class="field-grid three">
+          <label class="field"><span>Skill Code</span><input id="skillCodeInput" required pattern="[a-z0-9-]+" placeholder="employee-handbook"></label>
+          <label class="field"><span>名称</span><input id="skillNameInput" required maxlength="120" placeholder="员工手册"></label>
+          <label class="field"><span>分类</span><input id="skillCategoryInput" maxlength="80" placeholder="HR"></label>
+        </div>
+        <label class="field"><span>说明</span><textarea id="skillDescriptionInput" rows="2" placeholder="说明 Skill 的职责和边界"></textarea></label>
+      </section>
+      <section id="skillFileWorkspace" class="skill-file-workspace" hidden>
+        <aside class="skill-file-panel">
+          <div class="skill-file-heading"><strong>Draft 文件</strong><span id="skillFileCount" class="muted">0</span></div>
+          <div id="skillFileList" class="skill-file-list"></div>
+          <div class="new-file-row">
+            <input id="newSkillFilePath" placeholder="references/example.md" aria-label="新文件相对路径">
+            <button id="newSkillFileButton" class="row-action" type="button">新建</button>
+          </div>
+          <small>允许 references / assets / tests / scripts；scripts 不会执行。</small>
+        </aside>
+        <section class="skill-code-panel">
+          <div class="skill-editor-bar"><strong id="currentSkillFile">请选择文件</strong><span id="skillFileState">已同步</span></div>
+          <textarea id="skillContentInput" class="skill-code-editor" spellcheck="false" disabled></textarea>
+        </section>
+      </section>
+      <section id="skillVersionSection" class="skill-version-section" hidden>
+        <div class="section-heading"><h3>发布历史</h3><p>发布目录只读，Runtime 后续仅加载这些固定版本。</p></div>
+        <ol id="skillVersionList" class="version-list"></ol>
+      </section>
+    </div>
+    <footer class="drawer-footer">
+      <p id="skillEditorMessage" class="editor-message" role="status"></p>
+      <div>
+        <button id="archiveSkillButton" class="button ghost" type="button" hidden>归档</button>
+        <button id="saveSkillMetadataButton" class="button secondary" type="button">创建 Skill</button>
+        <button id="saveSkillFileButton" class="button secondary" type="button" hidden>保存文件</button>
+        <button id="publishSkillButton" class="button primary" type="button" hidden>发布 v1.0.0</button>
+      </div>
+    </footer>
+  </aside>
+
+  <div id="mcpDrawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="mcpDrawer" class="drawer mcp-drawer" role="dialog" aria-modal="true" aria-labelledby="mcpDrawerTitle" aria-hidden="true">
+    <header class="drawer-header">
+      <div><p id="mcpDrawerEyebrow" class="eyebrow">NEW MCP SERVER</p><h2 id="mcpDrawerTitle">创建 MCP Server</h2></div>
+      <button id="closeMcpDrawerButton" class="icon-button" type="button" aria-label="关闭 MCP 编辑器">×</button>
+    </header>
+    <form id="mcpForm" class="drawer-body" novalidate>
+      <div class="field-grid two">
+        <label class="field"><span>Server Code</span><input id="mcpCodeInput" required pattern="[a-z0-9-]+" placeholder="catalog-tools"></label>
+        <label class="field"><span>名称</span><input id="mcpNameInput" required maxlength="120" placeholder="商品目录工具"></label>
+      </div>
+      <label class="field"><span>说明</span><textarea id="mcpDescriptionInput" rows="2"></textarea></label>
+      <div class="field-grid two">
+        <label class="field"><span>传输方式</span><select id="mcpTransportInput"><option value="StreamableHttp">Streamable HTTP</option><option value="Sse">SSE</option><option value="Stdio">stdio</option></select></label>
+        <label class="field"><span>Credential Alias</span><input id="mcpCredentialAliasInput" placeholder="alias:mcp-catalog"><small>只保存 alias，不保存密钥值。本地 Business Query 填写 alias:business-query-local。</small></label>
+      </div>
+      <section id="mcpHttpFields">
+        <label class="field"><span>HTTP/HTTPS Endpoint</span><input id="mcpEndpointInput" type="url" placeholder="http://127.0.0.1:3001/mcp"></label>
+      </section>
+      <section id="mcpStdioFields" hidden>
+        <label class="field"><span>Command</span><input id="mcpCommandInput" placeholder="npx"></label>
+        <label class="field"><span>Arguments</span><textarea id="mcpArgumentsInput" rows="3" placeholder="每行一个参数"></textarea></label>
+      </section>
+      <label class="switch-field"><input id="mcpEnabledInput" type="checkbox" checked><span>启用此 MCP Server</span></label>
+      <section id="mcpToolsSection" class="mcp-tools-section" hidden>
+        <div class="section-heading"><h3>已发现工具</h3><p>Unknown 工具不能授权给 Agent；修改风险会生成新的不可变工具版本。</p></div>
+        <div id="mcpToolList" class="mcp-tool-list"></div>
+      </section>
+    </form>
+    <footer class="drawer-footer">
+      <p id="mcpEditorMessage" class="editor-message" role="status"></p>
+      <div>
+        <button id="syncMcpButton" class="button secondary" type="button" hidden>同步工具</button>
+        <button id="statusMcpButton" class="button secondary" type="button" hidden>停用</button>
+        <button id="archiveMcpButton" class="button ghost" type="button" hidden>归档</button>
+        <button id="saveMcpButton" class="button primary" type="submit" form="mcpForm">创建 Server</button>
+      </div>
+    </footer>
+  </aside>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script type="module" src="/js/app.js?v=7"></script>
+</body>
+</html>

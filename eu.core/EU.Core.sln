@@ -71,7 +71,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Api.MCP", "EU.Core.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agent", "Agent", "{A0596E84-2522-6F31-0F43-77167BFA80D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Api", "EU.Core.Agent.Api\EU.Core.Agent.Api.csproj", "{3B67BA04-2F0C-4055-A133-1AB63EF00906}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Api.Agent", "EU.Core.Api.Agent\EU.Core.Api.Agent.csproj", "{3B67BA04-2F0C-4055-A133-1AB63EF00906}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Application", "EU.Core.Agent.Application\EU.Core.Agent.Application.csproj", "{023EDE8A-E0A1-45B5-8F48-2FE21A11196C}"
 EndProject

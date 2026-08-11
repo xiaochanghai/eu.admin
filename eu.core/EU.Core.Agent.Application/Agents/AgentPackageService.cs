@@ -783,10 +783,14 @@ public sealed class AgentPackageService
             return false;
         }
 
+        bool supportedHost =
+            string.Equals(agent.Deployment.Host, AgentDefinition.ApiHost, StringComparison.Ordinal) ||
+            string.Equals(agent.Deployment.Host, AgentDefinition.LegacyApiHost, StringComparison.Ordinal);
+
         if (!string.Equals(agent.Deployment.Target, AgentDefinition.ServerDeploymentTarget, StringComparison.Ordinal) ||
-            !string.Equals(agent.Deployment.Host, AgentDefinition.ApiHost, StringComparison.Ordinal))
+            !supportedHost)
         {
-            error = PackageInvalid("Deployment must target Server on EU.Core.Agent.Api.");
+            error = PackageInvalid("Deployment must target Server on EU.Core.Api.Agent.");
             return false;
         }
 
