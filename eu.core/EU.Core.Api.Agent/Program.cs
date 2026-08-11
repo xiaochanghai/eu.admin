@@ -33,19 +33,13 @@ using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Infrastructure.Security;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-builder.Configuration.Sources.Clear();
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-    .AddEnvironmentVariables();
-if (args.Length > 0)
-{
-    builder.Configuration.AddCommandLine(args);
-}
-LocalDotEnvConfiguration.Apply(
+LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
     builder.Configuration,
     builder.Environment.ContentRootPath,
-    AppContext.BaseDirectory);
+    AppContext.BaseDirectory,
+    args);
 
+builder.Services.AddSingleton(new AppSettings(builder.Configuration));
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Services.AddOpenApi();
 builder.Services

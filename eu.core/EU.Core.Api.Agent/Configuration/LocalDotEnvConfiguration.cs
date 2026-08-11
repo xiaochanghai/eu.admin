@@ -10,6 +10,29 @@ public static class LocalDotEnvConfiguration
     private const string ModelCredentialAliasKey = "AgentPlatform:ModelCredentialAlias";
     private const string ModelProfileSection = "AgentControl:ModelProfileIds";
 
+    public static void ConfigureWithDotEnvFallback(
+        IConfigurationManager configuration,
+        string contentRootPath,
+        string baseDirectory,
+        string[] args)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentException.ThrowIfNullOrWhiteSpace(contentRootPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory);
+        ArgumentNullException.ThrowIfNull(args);
+
+        configuration.Sources.Clear();
+        configuration
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables();
+        if (args.Length > 0)
+        {
+            configuration.AddCommandLine(args);
+        }
+
+        Apply(configuration, contentRootPath, baseDirectory);
+    }
+
     public static void Apply(
         IConfigurationManager configuration,
         string contentRootPath,

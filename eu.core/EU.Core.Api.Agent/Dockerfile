@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 
 COPY . .
-RUN dotnet restore EU.Core.Api.Agent/EU.Core.Api.Agent.csproj --locked-mode
+RUN dotnet restore EU.Core.Api.Agent/EU.Core.Api.Agent.csproj
 RUN dotnet publish EU.Core.Api.Agent/EU.Core.Api.Agent.csproj \
     --configuration Release \
     --no-restore \

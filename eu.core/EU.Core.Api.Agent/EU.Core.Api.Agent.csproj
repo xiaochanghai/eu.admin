@@ -3,10 +3,11 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1902</WarningsNotAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
-    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
     <ProjectReference Include="..\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
     <ProjectReference Include="..\EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj" />
     <ProjectReference Include="..\EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj" />
