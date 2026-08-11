@@ -33,6 +33,14 @@ using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Infrastructure.Security;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables();
+if (args.Length > 0)
+{
+    builder.Configuration.AddCommandLine(args);
+}
 LocalDotEnvConfiguration.Apply(
     builder.Configuration,
     builder.Environment.ContentRootPath,

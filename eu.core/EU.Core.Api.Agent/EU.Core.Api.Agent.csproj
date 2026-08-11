@@ -21,8 +21,8 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <Content Update="appsettings.Development.json">
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 </Project>
