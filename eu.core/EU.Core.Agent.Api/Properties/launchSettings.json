@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "EU.Core.Agent.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "AgentPlatform__LoadDotEnv": "true"
+      },
+      "applicationUrl": "http://localhost:62844"
+    }
+  }
+}
