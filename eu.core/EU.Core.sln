@@ -73,11 +73,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agent", "Agent", "{A0596E84
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Api.Agent", "EU.Core.Api.Agent\EU.Core.Api.Agent.csproj", "{3B67BA04-2F0C-4055-A133-1AB63EF00906}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Application", "EU.Core.Agent.Application\EU.Core.Agent.Application.csproj", "{023EDE8A-E0A1-45B5-8F48-2FE21A11196C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Application", "Src\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj", "{023EDE8A-E0A1-45B5-8F48-2FE21A11196C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Runtime", "EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj", "{D01DBD26-06D4-4941-B980-686FAE022027}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Runtime", "Src\EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj", "{D01DBD26-06D4-4941-B980-686FAE022027}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Infrastructure", "EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj", "{594619A1-DAEA-4806-AA19-F965067C5321}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EU.Core.Agent.Infrastructure", "Src\EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj", "{594619A1-DAEA-4806-AA19-F965067C5321}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -8,9 +8,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
-    <ProjectReference Include="..\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
-    <ProjectReference Include="..\EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj" />
-    <ProjectReference Include="..\EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Agent.Runtime\EU.Core.Agent.Runtime.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Agent.Infrastructure\EU.Core.Agent.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
