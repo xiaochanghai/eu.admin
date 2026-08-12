@@ -1,4 +1,4 @@
--- EU.Core.Api.Agent shared EU.Core schema for SQL Server 2016+
+-- EU.Core.Api.Agent shared EU.Core schema for SQL Server 2014+
 -- Run this script in the target database. It mirrors the final SQLite schema.
 -- Tables and secondary indexes are created idempotently; existing columns are not altered.
 
@@ -15,8 +15,7 @@ BEGIN
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_skill_definition PRIMARY KEY (Id),
         CONSTRAINT ux_ag_skill_definition_code UNIQUE (Code),
-        CONSTRAINT ck_ag_skill_definition_revision CHECK (DraftRevision >= 0),
-        CONSTRAINT ck_ag_skill_definition_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_skill_definition_revision CHECK (DraftRevision >= 0)
     );
 END;
 GO
@@ -24,14 +23,13 @@ GO
 IF OBJECT_ID(N'dbo.AgAgentDefinition', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.AgAgentDefinition (
-        Id CHAR(36) NOT NULL,
+        ID UNIQUEIDENTIFIER NOT NULL,
         Code NVARCHAR(128) COLLATE Latin1_General_100_BIN2 NOT NULL,
         LogicalRevision BIGINT NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
-        CONSTRAINT pk_ag_agent_definition PRIMARY KEY (Id),
+        CONSTRAINT pk_ag_agent_definition PRIMARY KEY (ID),
         CONSTRAINT ux_ag_agent_definition_code UNIQUE (Code),
-        CONSTRAINT ck_ag_agent_definition_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_agent_definition_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_agent_definition_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -45,8 +43,7 @@ BEGIN
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_mcp_server_definition PRIMARY KEY (Id),
         CONSTRAINT ux_ag_mcp_server_definition_code UNIQUE (Code),
-        CONSTRAINT ck_ag_mcp_server_definition_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_mcp_server_definition_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_mcp_server_definition_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -60,8 +57,7 @@ BEGIN
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_knowledge_base_definition PRIMARY KEY (Id),
         CONSTRAINT ux_ag_knowledge_base_definition_code UNIQUE (Code),
-        CONSTRAINT ck_ag_knowledge_base_definition_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_knowledge_base_definition_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_knowledge_base_definition_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -74,8 +70,7 @@ BEGIN
         StartedAtUtc VARCHAR(64) NOT NULL,
         Status VARCHAR(32) NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
-        CONSTRAINT pk_ag_agent_run_audit PRIMARY KEY (RunId),
-        CONSTRAINT ck_ag_agent_run_audit_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT pk_ag_agent_run_audit PRIMARY KEY (RunId)
     );
 END;
 GO
@@ -88,8 +83,7 @@ BEGIN
         OccurredAtUtc VARCHAR(64) NOT NULL,
         Outcome VARCHAR(32) NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
-        CONSTRAINT pk_ag_agent_operation_audit PRIMARY KEY (AuditId),
-        CONSTRAINT ck_ag_agent_operation_audit_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT pk_ag_agent_operation_audit PRIMARY KEY (AuditId)
     );
 END;
 GO
@@ -102,8 +96,7 @@ BEGIN
         LogicalRevision BIGINT NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_orchestration_definition PRIMARY KEY (Id),
-        CONSTRAINT ux_ag_orchestration_definition_code UNIQUE (Code),
-        CONSTRAINT ck_ag_orchestration_definition_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ux_ag_orchestration_definition_code UNIQUE (Code)
     );
 END;
 GO
@@ -115,8 +108,7 @@ BEGIN
         OrchestrationId CHAR(36) NOT NULL,
         StartedAtUtc VARCHAR(64) NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
-        CONSTRAINT pk_ag_orchestration_run PRIMARY KEY (Id),
-        CONSTRAINT ck_ag_orchestration_run_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT pk_ag_orchestration_run PRIMARY KEY (Id)
     );
 END;
 GO
@@ -399,8 +391,7 @@ BEGIN
         FinishedAtUtc VARCHAR(64) NULL,
         ErrorCode VARCHAR(128) NOT NULL,
         CONSTRAINT pk_ag_tool_approval_request PRIMARY KEY (Id),
-        CONSTRAINT ck_ag_tool_approval_request_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_tool_approval_request_summary CHECK (ISJSON(SafeArgumentsSummaryJson) = 1)
+        CONSTRAINT ck_ag_tool_approval_request_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -467,8 +458,7 @@ BEGIN
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_evaluation_suite PRIMARY KEY (Id),
         CONSTRAINT ux_ag_evaluation_suite_tenant_code UNIQUE (TenantId, Code),
-        CONSTRAINT ck_ag_evaluation_suite_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_evaluation_suite_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_evaluation_suite_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -485,8 +475,7 @@ BEGIN
         StartedAtUtc VARCHAR(64) NOT NULL,
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_evaluation_batch PRIMARY KEY (Id),
-        CONSTRAINT ck_ag_evaluation_batch_revision CHECK (LogicalRevision >= 0),
-        CONSTRAINT ck_ag_evaluation_batch_json CHECK (ISJSON(DocumentJson) = 1)
+        CONSTRAINT ck_ag_evaluation_batch_revision CHECK (LogicalRevision >= 0)
     );
 END;
 GO
@@ -502,8 +491,7 @@ BEGIN
         DocumentJson NVARCHAR(MAX) NOT NULL,
         CONSTRAINT pk_ag_evaluation_model_judgement PRIMARY KEY (Id),
         CONSTRAINT ux_ag_evaluation_model_judgement_configuration
-            UNIQUE (TenantId, BatchId, ConfigurationSha256),
-        CONSTRAINT ck_ag_evaluation_model_judgement_json CHECK (ISJSON(DocumentJson) = 1)
+            UNIQUE (TenantId, BatchId, ConfigurationSha256)
     );
 END;
 GO

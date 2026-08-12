@@ -3,10 +3,71 @@
 These baseline scripts create the Agent module in the shared EU.Core database.
 
 - MySQL: 8.0.13 or later
-- SQL Server: 2016 or later
+- SQL Server: 2014 or later
 - Table names use the EU.Core `Ag` module prefix.
 - Column names use PascalCase. SQLite source columns use snake_case.
 - The scripts create schema objects only; they do not copy SQLite rows.
+
+## Apply order
+
+For a new SQL Server database, run:
+
+1. `001_initial_schema.sql`
+2. `002_add_basepoco_columns_ag_agent_definition.sql`
+3. `003_normalize_agent_definition.sql`
+4. `Data/004_normalize_agent_definition_data.sql` (generated from the current SQLite snapshot)
+
+For a database where `001_initial_schema.sql` and the SQLite data import have already
+been completed, back up the database and run `002`, then `003`. Stop Agent writes
+until the migration and application deployment are complete.
+
+The `002` migration is an idempotent pilot for `AgAgentDefinition` only. On SQL
+Server it validates and converts a legacy character `Id` to `UNIQUEIDENTIFIER`,
+preserving the primary-key name and clustered/nonclustered type, then adds the
+missing non-key `BasePoco` columns. It stops before conversion if an invalid GUID,
+a conversion collision, a foreign-key dependency, or an additional `Id` index is
+found. MySQL keeps `Id CHAR(36)`, its native portable GUID representation.
+
+The SQL Server `003` migration prepares these normalized Agent tables:
+
+| Table | Purpose |
+|---|---|
+| `AgAgentDefinition` | Agent identity, display data, status, and logical revision |
+| `AgAgentVersion` | Draft and published version configuration |
+| `AgAgentVersionSnapshot` | Immutable published snapshot values |
+| `AgAgentVersionBinding` | Ordered Skill, MCP tool, knowledge, child-Agent, and orchestration references |
+
+All four tables use `ID UNIQUEIDENTIFIER` as the single physical primary key and
+match EU.Core `BasePoco`. Business uniqueness such as one snapshot per version and
+ordered binding identity is enforced with unique indexes/constraints instead of
+using business columns as primary keys.
+
+SQL Server 2014 does not provide `ISJSON`, `JSON_VALUE`, `JSON_QUERY`, or
+`OPENJSON`. Therefore `001` does not create database JSON check constraints and
+`003` only prepares the relational schema. It deliberately retains `DocumentJson`;
+SQL Server 2014 cannot safely expand arbitrary JSON with native T-SQL. JSON validity
+remains enforced by the application contracts. Populate the normalized detail
+tables with pre-expanded ordinary `INSERT` statements before switching the runtime
+repository; do not use SQL Server 2016 JSON functions on this database.
+
+`Data/004_normalize_agent_definition_data.sql` contains those pre-expanded rows for
+the current `EU.Core.Api.Agent/data/eu-core-agent.db` snapshot. It verifies all six
+Agent IDs and logical revisions, requires empty normalized detail tables, writes and
+validates everything in one transaction, and only then removes `DocumentJson`. If
+the SQL Server Agent data no longer matches that snapshot, it stops and rolls back.
+
+After the detail data is populated, the SQL Server repository reads and writes the relational tables directly.
+`OutputJsonSchema` remains because JSON Schema is itself a first-class Agent
+setting, not an aggregate persistence document.
+
+Do not expand the migration to other `Ag` tables until Agent create, save, publish,
+archive, restore, and query flows have passed.
+
+`CreatedTime` and `UpdateTime` remain nullable without database defaults. Existing
+rows retain `NULL`; the migration must not invent historical audit times.
+
+MySQL currently stops at `002`; `003` and the normalized runtime repository in this
+change apply to SQL Server storage.
 
 ## Table mapping
 
