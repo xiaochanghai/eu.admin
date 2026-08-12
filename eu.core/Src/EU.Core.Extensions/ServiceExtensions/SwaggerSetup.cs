@@ -415,12 +415,19 @@ public static class SwaggerSetup
         /// <summary>
         /// 微信
         /// </summary>
-        public const string GroupName_WX = " wechat";
+        public const string GroupName_WX = "wechat";
 
         /// <summary>
         /// 电商
         /// </summary>
-        public const string GroupName_EC = " ec";
+        public const string GroupName_EC = "ec";
+
+        /// <summary>
+        /// 智能体Agent
+        /// </summary>
+        public const string GroupName_AG = "agent";
+
+
     }
 }
 
