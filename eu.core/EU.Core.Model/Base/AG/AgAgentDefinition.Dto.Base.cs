@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/8/12 1:00:19  SahHsiao   初版
+* V0.01  2026/8/12 14:13:35  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -18,32 +18,38 @@
 namespace EU.Core.Model.Base;
 
 /// <summary>
-///  Agent 定义表 (Dto.Base)
+/// Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本 (Dto.Base)
 /// </summary>
 public class AgAgentDefinitionBase : BasePoco
 {
 
     /// <summary>
-    /// Id
+    /// Agent 唯一编码
     /// </summary>
-    [Display(Name = "Id"), Description("Id")]
-    public Guid? Id { get; set; }
-
-    /// <summary>
-    /// Code
-    /// </summary>
-    [Display(Name = "Code"), Description("Code"), MaxLength(128, ErrorMessage = "Code 不能超过 128 个字符")]
+    [Display(Name = "Code"), Description("Agent 唯一编码"), MaxLength(128, ErrorMessage = "Agent 唯一编码 不能超过 128 个字符")]
     public string Code { get; set; }
 
     /// <summary>
-    /// LogicalRevision
+    /// 逻辑修订号，用于乐观并发控制
     /// </summary>
-    [Display(Name = "LogicalRevision"), Description("LogicalRevision")]
+    [Display(Name = "LogicalRevision"), Description("逻辑修订号，用于乐观并发控制")]
     public long? LogicalRevision { get; set; }
 
     /// <summary>
-    /// DocumentJson
+    /// Agent 显示名称
     /// </summary>
-    [Display(Name = "DocumentJson"), Description("DocumentJson"), MaxLength(-1, ErrorMessage = "DocumentJson 不能超过 -1 个字符")]
-    public string DocumentJson { get; set; }
+    [Display(Name = "Name"), Description("Agent 显示名称"), MaxLength(256, ErrorMessage = "Agent 显示名称 不能超过 256 个字符")]
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Agent 功能说明
+    /// </summary>
+    [Display(Name = "Description"), Description("Agent 功能说明"), MaxLength(-1, ErrorMessage = "Agent 功能说明 不能超过 -1 个字符")]
+    public string Description { get; set; }
+
+    /// <summary>
+    /// 运行状态：Enabled、Disabled 或 Archived
+    /// </summary>
+    [Display(Name = "RuntimeStatus"), Description("运行状态：Enabled、Disabled 或 Archived"), MaxLength(32, ErrorMessage = "运行状态：Enabled、Disabled 或 Archived 不能超过 32 个字符")]
+    public string RuntimeStatus { get; set; }
 }

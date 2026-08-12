@@ -16,6 +16,7 @@ For a new SQL Server database, run:
 2. `002_add_basepoco_columns_ag_agent_definition.sql`
 3. `003_normalize_agent_definition.sql`
 4. `Data/004_normalize_agent_definition_data.sql` (generated from the current SQLite snapshot)
+5. `005_add_agent_table_descriptions.sql` (optional, adds Chinese table and column descriptions)
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes

@@ -15,13 +15,12 @@
 *└──────────────────────────────────┘
 */
 
-namespace EU.Core.Model.Entity;
+namespace EU.Core.Model.Base;
 
 /// <summary>
-/// Agent 版本表，保存当前草稿和历次已发布版本配置 (Model)
+/// Agent 版本表，保存当前草稿和历次已发布版本配置 (Dto.Base)
 /// </summary>
-[SugarTable("AgAgentVersion", "Agent 版本表，保存当前草稿和历次已发布版本配置"), Entity(TableCnName = "Agent 版本表，保存当前草稿和历次已发布版本配置", TableName = "AgAgentVersion")]
-public class AgAgentVersion : BasePoco
+public class AgAgentVersionBase : BasePoco
 {
 
     /// <summary>
@@ -39,7 +38,7 @@ public class AgAgentVersion : BasePoco
     /// <summary>
     /// 版本标签，例如 1.0.0
     /// </summary>
-    [Display(Name = "Label"), Description("版本标签，例如 1.0.0"), SugarColumn(IsNullable = true, Length = 128)]
+    [Display(Name = "Label"), Description("版本标签，例如 1.0.0"), MaxLength(128, ErrorMessage = "版本标签，例如 1.0.0 不能超过 128 个字符")]
     public string Label { get; set; }
 
     /// <summary>
@@ -51,30 +50,30 @@ public class AgAgentVersion : BasePoco
     /// <summary>
     /// Agent 系统指令
     /// </summary>
-    [Display(Name = "Instructions"), Description("Agent 系统指令"), SugarColumn(IsNullable = true, Length = -1)]
+    [Display(Name = "Instructions"), Description("Agent 系统指令"), MaxLength(-1, ErrorMessage = "Agent 系统指令 不能超过 -1 个字符")]
     public string Instructions { get; set; }
 
     /// <summary>
     /// 模型配置标识
     /// </summary>
-    [Display(Name = "ModelProfileId"), Description("模型配置标识"), SugarColumn(IsNullable = true, Length = 256)]
+    [Display(Name = "ModelProfileId"), Description("模型配置标识"), MaxLength(256, ErrorMessage = "模型配置标识 不能超过 256 个字符")]
     public string ModelProfileId { get; set; }
 
     /// <summary>
     /// 输出模式：Text 或 Structured
     /// </summary>
-    [Display(Name = "OutputMode"), Description("输出模式：Text 或 Structured"), SugarColumn(IsNullable = true, Length = 32)]
+    [Display(Name = "OutputMode"), Description("输出模式：Text 或 Structured"), MaxLength(32, ErrorMessage = "输出模式：Text 或 Structured 不能超过 32 个字符")]
     public string OutputMode { get; set; }
 
     /// <summary>
     /// 结构化输出使用的 JSON Schema
     /// </summary>
-    [Display(Name = "OutputJsonSchema"), Description("结构化输出使用的 JSON Schema"), SugarColumn(IsNullable = true, Length = -1)]
+    [Display(Name = "OutputJsonSchema"), Description("结构化输出使用的 JSON Schema"), MaxLength(-1, ErrorMessage = "结构化输出使用的 JSON Schema 不能超过 -1 个字符")]
     public string OutputJsonSchema { get; set; }
 
     /// <summary>
     /// 输出 JSON Schema 的 SHA-256 摘要
     /// </summary>
-    [Display(Name = "OutputSchemaSha256"), Description("输出 JSON Schema 的 SHA-256 摘要"), SugarColumn(IsNullable = true, Length = 64)]
+    [Display(Name = "OutputSchemaSha256"), Description("输出 JSON Schema 的 SHA-256 摘要"), MaxLength(64, ErrorMessage = "输出 JSON Schema 的 SHA-256 摘要 不能超过 64 个字符")]
     public string OutputSchemaSha256 { get; set; }
 }

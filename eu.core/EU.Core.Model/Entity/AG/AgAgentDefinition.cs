@@ -6,7 +6,7 @@
 *
 * Ver    变更日期 负责人  变更内容
 * ───────────────────────────────────
-* V0.01  2026/8/12 1:00:19  SahHsiao   初版
+* V0.01  2026/8/12 14:13:35  SahHsiao   初版
 *
 * Copyright(c) 2026 EU Corporation. All Rights Reserved.
 *┌──────────────────────────────────┐
@@ -18,38 +18,39 @@
 namespace EU.Core.Model.Entity;
 
 /// <summary>
-///  Agent 定义表 (Model)
+/// Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本 (Model)
 /// </summary>
-[SugarTable("AgAgentDefinition", " Agent 定义表"), Entity(TableCnName = " Agent 定义表", TableName = "AgAgentDefinition")]
+[SugarTable("AgAgentDefinition", "Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本"), Entity(TableCnName = "Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本", TableName = "AgAgentDefinition")]
 public class AgAgentDefinition : BasePoco
 {
+
     /// <summary>
-    /// Agent code
+    /// Agent 唯一编码
     /// </summary>
-    [Display(Name = "Code"), Description("Agent code"), SugarColumn(Length = 128)]
+    [Display(Name = "Code"), Description("Agent 唯一编码"), SugarColumn(IsNullable = true, Length = 128)]
     public string Code { get; set; }
 
     /// <summary>
-    /// Agent name
+    /// 逻辑修订号，用于乐观并发控制
     /// </summary>
-    [Display(Name = "Name"), Description("Agent name"), SugarColumn(Length = 256)]
+    [Display(Name = "LogicalRevision"), Description("逻辑修订号，用于乐观并发控制")]
+    public long? LogicalRevision { get; set; }
+
+    /// <summary>
+    /// Agent 显示名称
+    /// </summary>
+    [Display(Name = "Name"), Description("Agent 显示名称"), SugarColumn(IsNullable = true, Length = 256)]
     public string Name { get; set; }
 
     /// <summary>
-    /// Agent description
+    /// Agent 功能说明
     /// </summary>
-    [Display(Name = "Description"), Description("Agent description"), SugarColumn(ColumnDataType = "nvarchar(max)")]
+    [Display(Name = "Description"), Description("Agent 功能说明"), SugarColumn(IsNullable = true, Length = -1)]
     public string Description { get; set; }
 
     /// <summary>
-    /// Enabled, Disabled, or Archived
+    /// 运行状态：Enabled、Disabled 或 Archived
     /// </summary>
-    [Display(Name = "RuntimeStatus"), Description("Runtime status"), SugarColumn(Length = 32)]
+    [Display(Name = "RuntimeStatus"), Description("运行状态：Enabled、Disabled 或 Archived"), SugarColumn(IsNullable = true, Length = 32)]
     public string RuntimeStatus { get; set; }
-
-    /// <summary>
-    /// Optimistic concurrency revision
-    /// </summary>
-    [Display(Name = "LogicalRevision"), Description("Logical revision")]
-    public long LogicalRevision { get; set; }
 }
