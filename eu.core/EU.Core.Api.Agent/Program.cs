@@ -363,8 +363,6 @@ builder.Services.AddSingleton<ISkillFileStore>(services =>
 builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
-builder.Services.AddSingleton<AgentLifecycleService>();
-builder.Services.AddSingleton<AgentQueryService>();
 builder.Services.AddSingleton<MainAgentAssignmentService>();
 builder.Services.AddSingleton<SkillLifecycleService>();
 builder.Services.AddSingleton<McpLifecycleService>();
@@ -375,7 +373,7 @@ builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
         services.GetRequiredService<IOptions<AgentControlOptions>>().Value.ModelProfileIds));
 builder.Services.AddSingleton<IModelProfileReferenceCatalog>(services =>
     services.GetRequiredService<IPublicModelProfileCatalog>());
-builder.Services.AddSingleton<AgentPackageService>();
+builder.Services.AddScoped<AgentPackageService>();
 builder.Services.AddSingleton<AgentRuntimeService>();
 builder.Services.AddSingleton<OrchestrationRuntimeService>();
 builder.Services.AddSingleton(services =>

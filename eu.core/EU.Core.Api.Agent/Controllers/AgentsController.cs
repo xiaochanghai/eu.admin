@@ -1,6 +1,8 @@
 using System.Text;
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices;
+using EU.Core.Model.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
@@ -10,17 +12,10 @@ namespace EU.Core.Api.Agent.Controllers;
 [ApiController]
 [Route("api/agents")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class AgentsController(
-    AgentLifecycleService lifecycle,
-    AgentQueryService queries,
-    AgentPackageService packages,
-    IPublicModelProfileCatalog modelProfiles) : ControllerBase
+public sealed class AgentsController(AgentPackageService packages, IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
-        [FromQuery] string? search,
-        [FromQuery] string? status,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
     {
         AgentRuntimeStatus? runtimeStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -47,16 +42,34 @@ public sealed class AgentsController(
             }
         }
 
-        IReadOnlyList<AgentListItem> values = await queries.ListAsync(
-            new AgentDefinitionQuery(search, runtimeStatus),
+        cancellationToken.ThrowIfCancellationRequested();
+        var definitions = await agentDefinitionServices.QueryAgentList(
+            search,
+            runtimeStatus?.ToString(),
             cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        AgentListItem[] values = definitions.Select(definition => new AgentListItem(
+            definition.ID,
+            definition.Code,
+            definition.Name,
+            definition.Description,
+            ParseRuntimeStatus(definition.RuntimeStatus),
+            definition.LogicalRevision ?? throw new InvalidDataException(
+                $"Agent '{definition.Code}' does not have a LogicalRevision."),
+            definition.DraftLabel,
+            definition.DraftModelProfileId,
+            definition.CurrentPublishedLabel)).ToArray();
         return Ok(values);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
-        AgentDefinition? definition = await queries.GetAsync(id, cancellationToken);
+        AgAgentDefinitionDetailDto? value = await agentDefinitionServices.QueryAgent(
+            id,
+            cancellationToken);
+        AgentDefinition? definition = value is null ? null : AgentDefinitionDtoMapper.Map(value);
         return definition is null
             ? ApiProblemResults.Create(
                 HttpContext,
@@ -67,11 +80,9 @@ public sealed class AgentsController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateAgentRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await lifecycle.CreateAsync(
+        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.CreateAsync(
             new CreateAgentCommand(request.Code, request.Name, request.Description),
             cancellationToken);
         return result.Succeeded
@@ -80,10 +91,7 @@ public sealed class AgentsController(
     }
 
     [HttpPut("{id:guid}/draft")]
-    public async Task<IActionResult> SaveDraft(
-        Guid id,
-        [FromBody] SaveAgentDraftRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
@@ -95,7 +103,7 @@ public sealed class AgentsController(
                 "The selected model profile is not available.");
         }
 
-        AgentOperationResult<AgentDefinition> result = await lifecycle.SaveDraftAsync(
+        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
             new SaveAgentDraftCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -117,24 +125,18 @@ public sealed class AgentsController(
     }
 
     [HttpPost("{id:guid}/publish")]
-    public async Task<IActionResult> Publish(
-        Guid id,
-        [FromBody] ExpectedRevisionRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Publish(Guid id, [FromBody] ExpectedRevisionRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await lifecycle.PublishAsync(
+        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.PublishAsync(
             new PublishAgentCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
         return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/status")]
-    public async Task<IActionResult> SetStatus(
-        Guid id,
-        [FromBody] SetAgentStatusRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> SetStatus(Guid id, [FromBody] SetAgentStatusRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await lifecycle.SetRuntimeStatusAsync(
+        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -175,7 +177,10 @@ public sealed class AgentsController(
             leaveOpen: true);
         string json = await reader.ReadToEndAsync(cancellationToken);
         AgentOperationResult<AgentDefinition> result =
-            await packages.ImportAsync(json, cancellationToken);
+            await packages.ImportAsync(
+                json,
+                agentDefinitionServices.CreateImportedAsync,
+                cancellationToken);
         return result.Succeeded
             ? Created($"/api/agents/{result.Value!.Id}", result.Value)
             : FromError(result.Error!);
@@ -211,21 +216,17 @@ public sealed class AgentsController(
         return string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase) ||
                mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase);
     }
+
+    private static AgentRuntimeStatus ParseRuntimeStatus(string value) =>
+        Enum.TryParse(value, ignoreCase: false, out AgentRuntimeStatus status)
+            ? status
+            : throw new InvalidDataException($"Unsupported Agent runtime status '{value}'.");
 }
 
 public sealed record CreateAgentRequest(string Code, string Name, string Description);
 
-public sealed record SaveAgentDraftRequest(
-    long ExpectedLogicalRevision,
-    string Name,
-    string Description,
-    string Instructions,
-    string ModelProfileId,
-    AgentOutputMode OutputMode,
-    string? OutputJsonSchema,
-    IReadOnlyList<Guid>? SkillVersionIds,
-    IReadOnlyList<Guid>? ToolVersionIds,
-    IReadOnlyList<Guid>? KnowledgeBaseIds)
+public sealed record SaveAgentDraftRequest(long ExpectedLogicalRevision, string Name, string Description, string Instructions, string ModelProfileId,
+    AgentOutputMode OutputMode, string? OutputJsonSchema, IReadOnlyList<Guid>? SkillVersionIds, IReadOnlyList<Guid>? ToolVersionIds, IReadOnlyList<Guid>? KnowledgeBaseIds)
 {
     public IReadOnlyList<Guid>? ChildAgentIds { get; init; }
     public IReadOnlyList<Guid>? OrchestrationIds { get; init; }
@@ -233,6 +234,4 @@ public sealed record SaveAgentDraftRequest(
 
 public sealed record ExpectedRevisionRequest(long ExpectedLogicalRevision);
 
-public sealed record SetAgentStatusRequest(
-    long ExpectedLogicalRevision,
-    AgentRuntimeStatus RuntimeStatus);
+public sealed record SetAgentStatusRequest(long ExpectedLogicalRevision, AgentRuntimeStatus RuntimeStatus);

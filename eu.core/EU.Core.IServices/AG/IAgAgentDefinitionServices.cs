@@ -14,6 +14,8 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
+using EU.Core.Agent.Application.Agents;
+
 namespace EU.Core.IServices;
 
 /// <summary>
@@ -21,4 +23,23 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface IAgAgentDefinitionServices : IBaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>
 {
+    /// <summary>
+    /// 查询 Agent 管理列表，并批量加载草稿及最新发布版本摘要。
+    /// </summary>
+    Task<List<AgAgentDefinitionDto>> QueryAgentList(string search = null, string runtimeStatus = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 查询 Agent 明细及其版本、快照和资源绑定。
+    /// </summary>
+    Task<AgAgentDefinitionDetailDto> QueryAgent(Guid id, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> CreateImportedAsync(ImportAgentCommand command, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default);
 }

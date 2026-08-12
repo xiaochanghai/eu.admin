@@ -4,6 +4,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EU.Core.Model\EU.Core.Model.csproj" />
+    <ProjectReference Include="..\Src\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
   </ItemGroup>
 

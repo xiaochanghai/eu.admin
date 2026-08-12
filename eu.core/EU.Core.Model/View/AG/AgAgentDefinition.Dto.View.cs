@@ -22,4 +22,40 @@ namespace EU.Core.Model.Models;
 /// </summary>
 public class AgAgentDefinitionDto : AgAgentDefinition
 {
+    /// <summary>
+    /// 当前草稿版本标签。
+    /// </summary>
+    public string DraftLabel { get; set; }
+
+    /// <summary>
+    /// 当前草稿使用的模型配置标识。
+    /// </summary>
+    public string DraftModelProfileId { get; set; }
+
+    /// <summary>
+    /// 最新发布版本标签；尚未发布时为空。
+    /// </summary>
+    public string CurrentPublishedLabel { get; set; }
+}
+
+/// <summary>
+/// Agent 明细聚合数据。
+/// </summary>
+public class AgAgentDefinitionDetailDto
+{
+    public AgAgentDefinition Definition { get; set; }
+
+    public List<AgAgentVersionDetailDto> Versions { get; set; } = [];
+}
+
+/// <summary>
+/// Agent 版本明细聚合数据。
+/// </summary>
+public class AgAgentVersionDetailDto
+{
+    public AgAgentVersion Version { get; set; }
+
+    public AgAgentVersionSnapshot Snapshot { get; set; }
+
+    public List<AgAgentVersionBinding> Bindings { get; set; } = [];
 }

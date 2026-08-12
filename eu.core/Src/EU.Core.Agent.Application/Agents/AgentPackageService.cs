@@ -203,7 +203,6 @@ public sealed class AgentPackageService
     };
 
     private readonly IAgentRepository _repository;
-    private readonly AgentLifecycleService _lifecycle;
     private readonly IModelProfileReferenceCatalog _modelProfiles;
     private readonly JsonSchemaValidator _schemaValidator;
     private readonly IPublishedSkillVersionCatalog? _skillVersions;
@@ -213,7 +212,6 @@ public sealed class AgentPackageService
 
     public AgentPackageService(
         IAgentRepository repository,
-        AgentLifecycleService lifecycle,
         IModelProfileReferenceCatalog modelProfiles,
         JsonSchemaValidator? schemaValidator = null,
         IPublishedSkillVersionCatalog? skillVersions = null,
@@ -222,7 +220,6 @@ public sealed class AgentPackageService
         IPublishedOrchestrationCatalog? orchestrationCatalog = null)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _lifecycle = lifecycle ?? throw new ArgumentNullException(nameof(lifecycle));
         _modelProfiles = modelProfiles ?? throw new ArgumentNullException(nameof(modelProfiles));
         _schemaValidator = schemaValidator ?? new JsonSchemaValidator();
         _skillVersions = skillVersions;
@@ -340,8 +337,11 @@ public sealed class AgentPackageService
 
     public async Task<AgentOperationResult<AgentDefinition>> ImportAsync(
         string json,
+        Func<ImportAgentCommand, CancellationToken,
+            Task<AgentOperationResult<AgentDefinition>>> createImportedAgent,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(createImportedAgent);
         if (!TryReadPackage(json, out AgentPackageV1? package, out AgentError? error))
         {
             return new AgentOperationResult<AgentDefinition>(null, error);
@@ -400,7 +400,7 @@ public sealed class AgentPackageService
             .Select(Guid.Parse)
             .ToArray();
 
-        AgentOperationResult<AgentDefinition> result = await _lifecycle.CreateImportedAsync(
+        AgentOperationResult<AgentDefinition> result = await createImportedAgent(
             new ImportAgentCommand(
                 package.Agent.Code,
                 package.Agent.Name,
