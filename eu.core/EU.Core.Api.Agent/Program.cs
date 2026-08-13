@@ -385,7 +385,6 @@ builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
         services.GetRequiredService<IOptions<AgentControlOptions>>().Value.ModelProfileIds));
 builder.Services.AddSingleton<IModelProfileReferenceCatalog>(services =>
     services.GetRequiredService<IPublicModelProfileCatalog>());
-builder.Services.AddScoped<AgentPackageService>();
 builder.Services.AddSingleton<AgentRuntimeService>();
 builder.Services.AddSingleton<OrchestrationRuntimeService>();
 builder.Services.AddSingleton(services =>

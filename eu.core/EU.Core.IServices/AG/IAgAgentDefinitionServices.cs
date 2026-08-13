@@ -43,4 +43,8 @@ public interface IAgAgentDefinitionServices : IBaseServices<AgAgentDefinition, A
     Task<AgentOperationResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default);
 
     Task<AgentOperationResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default);
+
+    Task<AgentOperationResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default);
 }

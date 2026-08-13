@@ -12,7 +12,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [ApiController]
 [Route("api/agents")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class AgentsController(AgentPackageService packages, IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : ControllerBase
+public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
@@ -148,7 +148,7 @@ public sealed class AgentsController(AgentPackageService packages, IPublicModelP
     [HttpGet("{id:guid}/export")]
     public async Task<IActionResult> Export(Guid id, CancellationToken cancellationToken)
     {
-        AgentOperationResult<string> result = await packages.ExportAsync(id, cancellationToken);
+        AgentOperationResult<string> result = await agentDefinitionServices.ExportAsync(id, cancellationToken);
         return result.Succeeded
             ? File(
                 Encoding.UTF8.GetBytes(result.Value!),
@@ -177,10 +177,7 @@ public sealed class AgentsController(AgentPackageService packages, IPublicModelP
             leaveOpen: true);
         string json = await reader.ReadToEndAsync(cancellationToken);
         AgentOperationResult<AgentDefinition> result =
-            await packages.ImportAsync(
-                json,
-                agentDefinitionServices.CreateImportedAsync,
-                cancellationToken);
+            await agentDefinitionServices.ImportAsync(json, cancellationToken);
         return result.Succeeded
             ? Created($"/api/agents/{result.Value!.Id}", result.Value)
             : FromError(result.Error!);

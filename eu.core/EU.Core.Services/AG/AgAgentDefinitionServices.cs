@@ -6,6 +6,11 @@ using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Agent.Application.MainAgent;
+using System.Text.Encodings.Web;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 
 /*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * AgAgentDefinition.cs
@@ -31,6 +36,35 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices
 {
+    public const string AgentPackageFormatIdentifier = "eu.core.agent-package";
+    public const string AgentPackageCurrentVersion = "1.0.0";
+
+    private const int MaximumPackageUtf8Bytes = 131_072;
+    private const int MaximumPackageDepth = 24;
+    private const int MaximumPackageNodes = 2_048;
+
+    private static readonly JsonSerializerOptions AgentPackageSerializerOptions = new()
+    {
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        WriteIndented = false
+    };
+
+    private static readonly HashSet<string> ForbiddenPackagePropertyNames = new(StringComparer.Ordinal)
+    {
+        "apikey",
+        "connectionstring",
+        "credential",
+        "credentialalias",
+        "endpoint",
+        "password",
+        "secret",
+        "token",
+        "accesstoken"
+    };
+
     public AgAgentDefinitionServices(IBaseRepository<AgAgentDefinition> dal)
     {
         BaseDal = dal;
@@ -206,6 +240,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private readonly IPublishedOrchestrationCatalog? _orchestrationCatalog;
     private readonly IOrchestrationRepository? _orchestrations;
     private readonly IMainAgentAssignmentRepository? _mainAgentAssignments;
+    private readonly IModelProfileReferenceCatalog _modelProfiles;
 
     public AgAgentDefinitionServices(
         IBaseRepository<AgAgentDefinition> dal,
@@ -216,7 +251,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IPublishedKnowledgeCatalog? knowledgeBases = null,
         IPublishedOrchestrationCatalog? orchestrationCatalog = null,
         IOrchestrationRepository? orchestrations = null,
-        IMainAgentAssignmentRepository? mainAgentAssignments = null)
+        IMainAgentAssignmentRepository? mainAgentAssignments = null,
+        IModelProfileReferenceCatalog? modelProfiles = null)
     {
         BaseDal = dal ?? throw new ArgumentNullException(nameof(dal));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -227,6 +263,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         _orchestrationCatalog = orchestrationCatalog;
         _orchestrations = orchestrations;
         _mainAgentAssignments = mainAgentAssignments;
+        _modelProfiles = modelProfiles ?? throw new ArgumentNullException(nameof(modelProfiles));
     }
 
     public async Task<AgentOperationResult<AgentDefinition>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default)
@@ -626,6 +663,863 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             definition.Draft.ModelProfileId,
             definition.PublishedVersions.LastOrDefault()?.Label)));
     }
+
+    public async Task<AgentOperationResult<string>> ExportAsync(
+        Guid agentId,
+        CancellationToken cancellationToken = default)
+    {
+        AgentDefinition? definition = await _repository.GetByIdAsync(agentId, cancellationToken);
+        if (definition is null)
+        {
+            return AgentOperationResult<string>.Failure(
+                AgentErrorCodes.NotFound,
+                "The Agent was not found.");
+        }
+
+        AgentError? bindingError = await ValidateDraftChildReferencesAsync(
+            definition.Draft.ChildAgentIds, definition.Draft.ChildAgentPins, cancellationToken);
+        if (bindingError is not null)
+        {
+            return new AgentOperationResult<string>(null, bindingError);
+        }
+
+        bindingError = await ValidateDraftOrchestrationReferencesAsync(
+            definition.Draft.OrchestrationIds, definition.Draft.OrchestrationPins, cancellationToken);
+        if (bindingError is not null)
+        {
+            return new AgentOperationResult<string>(null, bindingError);
+        }
+
+        var package = new AgentPackageV1(
+            AgentPackageFormatIdentifier,
+            AgentPackageCurrentVersion,
+            new AgentPackageAgentV1(
+                definition.Code,
+                definition.Name,
+                definition.Description,
+                definition.RuntimeStatus.ToString(),
+                new AgentPackageDraftV1(
+                    definition.Draft.Instructions,
+                    definition.Draft.ModelProfileId,
+                    definition.Draft.OutputMode.ToString(),
+                    definition.Draft.OutputJsonSchema),
+                new AgentPackageDeploymentV1(
+                    AgentDefinition.ServerDeploymentTarget,
+                    AgentDefinition.ApiHost),
+                AgentContractCloner.ReadOnly(definition.Draft.SkillVersionIds.Select(
+                    id => id.ToString("D"))),
+                AgentContractCloner.ReadOnly(definition.Draft.ToolVersionIds.Select(
+                    id => id.ToString("D"))),
+                definition.Draft.KnowledgeBaseIds.Count == 0
+                    ? null
+                    : AgentContractCloner.ReadOnly(definition.Draft.KnowledgeBaseIds.Select(
+                        id => id.ToString("D"))))
+            {
+                ChildAgents = await ExportChildBindingsAsync(
+                    definition.Draft.ChildAgentIds,
+                    definition.Draft.ChildAgentPins,
+                    cancellationToken),
+                Orchestrations = await ExportOrchestrationBindingsAsync(
+                    definition.Draft.OrchestrationIds,
+                    definition.Draft.OrchestrationPins,
+                    cancellationToken)
+            });
+
+        string json = JsonSerializer.Serialize(package, AgentPackageSerializerOptions);
+        if (!TryReadPackage(json, out AgentPackageV1? verifiedPackage, out AgentError? safetyError))
+        {
+            return new AgentOperationResult<string>(null, safetyError);
+        }
+
+        if (!TryValidatePackage(verifiedPackage!, out _, out _, out AgentError? contractError))
+        {
+            return new AgentOperationResult<string>(null, contractError);
+        }
+
+        AgentError? referenceError = await ValidatePackageReferencesAsync(
+            verifiedPackage!, cancellationToken);
+        return referenceError is null
+            ? AgentOperationResult<string>.Success(json)
+            : new AgentOperationResult<string>(null, referenceError);
+    }
+
+    public async Task<AgentOperationResult<AgentDefinition>> ImportAsync(
+        string json,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryReadPackage(json, out AgentPackageV1? package, out AgentError? error))
+        {
+            return new AgentOperationResult<AgentDefinition>(null, error);
+        }
+
+        if (!TryValidatePackage(
+                package!,
+                out AgentRuntimeStatus runtimeStatus,
+                out AgentOutputMode outputMode,
+                out error))
+        {
+            return new AgentOperationResult<AgentDefinition>(null, error);
+        }
+
+        AgentError? referenceError = await ValidatePackageReferencesAsync(
+            package!, cancellationToken);
+        if (referenceError is not null)
+        {
+            return new AgentOperationResult<AgentDefinition>(null, referenceError);
+        }
+
+        AgentOperationResult<AgentDefinition> result = await CreateImportedAsync(
+            new ImportAgentCommand(
+                package!.Agent.Code,
+                package.Agent.Name,
+                package.Agent.Description,
+                runtimeStatus,
+                package.Agent.Draft.Instructions,
+                package.Agent.Draft.ModelProfileId,
+                outputMode,
+                package.Agent.Draft.OutputJsonSchema,
+                AgentContractCloner.ReadOnly(package.Agent.Skills.Select(Guid.Parse)),
+                AgentContractCloner.ReadOnly(package.Agent.Tools.Select(Guid.Parse)),
+                AgentContractCloner.ReadOnly(
+                    (package.Agent.KnowledgeBases ?? []).Select(Guid.Parse)))
+            {
+                ChildAgentIds = AgentContractCloner.ReadOnly(
+                    (package.Agent.ChildAgents ?? []).Select(value => Guid.Parse(value.AgentId))),
+                OrchestrationIds = AgentContractCloner.ReadOnly(
+                    (package.Agent.Orchestrations ?? []).Select(value => Guid.Parse(value.OrchestrationId))),
+                ChildAgentPins = AgentContractCloner.ReadOnly(
+                    (package.Agent.ChildAgents ?? []).Select(value =>
+                        new AgentChildBindingSnapshot(
+                            Guid.Parse(value.AgentId),
+                            Guid.Parse(value.AgentVersionId)))),
+                OrchestrationPins = AgentContractCloner.ReadOnly(
+                    (package.Agent.Orchestrations ?? []).Select(value =>
+                        new AgentOrchestrationBindingSnapshot(
+                            Guid.Parse(value.OrchestrationId),
+                            Guid.Parse(value.OrchestrationVersionId))))
+            },
+            cancellationToken);
+
+        if (result.Error?.Code is AgentErrorCodes.CodeInvalid or AgentErrorCodes.RuntimeStatusInvalid)
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.PackageInvalid,
+                result.Error.Message);
+        }
+
+        return result;
+    }
+
+    private async Task<AgentError?> ValidatePackageReferencesAsync(
+        AgentPackageV1 package,
+        CancellationToken cancellationToken)
+    {
+        AgentError? error = await ValidateModelReferenceAsync(
+            package.Agent.Draft.ModelProfileId, cancellationToken);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        error = await ValidateToolReferencesAsync(package.Agent.Tools, cancellationToken);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        error = await ValidateSkillReferencesAsync(package.Agent.Skills, cancellationToken);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        error = await ValidateKnowledgeReferencesAsync(
+            package.Agent.KnowledgeBases ?? [], cancellationToken);
+        if (error is not null)
+        {
+            return error;
+        }
+
+        error = await ValidateChildBindingReferencesAsync(
+            package.Agent.ChildAgents ?? [], cancellationToken);
+        return error ?? await ValidateOrchestrationBindingReferencesAsync(
+            package.Agent.Orchestrations ?? [], cancellationToken);
+    }
+
+    private async Task<AgentError?> ValidateModelReferenceAsync(
+        string modelProfileId,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(modelProfileId) &&
+            !await _modelProfiles.ExistsAsync(modelProfileId, cancellationToken))
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package references a model profile that is not available.");
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateToolReferencesAsync(
+        IReadOnlyList<string> references,
+        CancellationToken cancellationToken)
+    {
+        foreach (string reference in references)
+        {
+            if (!Guid.TryParseExact(reference, "D", out Guid versionId) ||
+                _toolVersions is null ||
+                !await _toolVersions.ExistsAsync(versionId, cancellationToken))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references an MCP tool version that is not available.");
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateSkillReferencesAsync(
+        IReadOnlyList<string> references,
+        CancellationToken cancellationToken)
+    {
+        foreach (string reference in references)
+        {
+            if (!Guid.TryParseExact(reference, "D", out Guid versionId) ||
+                _skillVersions is null ||
+                !await _skillVersions.ExistsAsync(versionId, cancellationToken))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references a Skill version that is not published.");
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateKnowledgeReferencesAsync(
+        IReadOnlyList<string> references,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlySet<Guid> available = _knowledgeBases is null
+            ? new HashSet<Guid>()
+            : (await _knowledgeBases.ListAsync(cancellationToken))
+                .Select(value => value.KnowledgeBaseId)
+                .ToHashSet();
+        foreach (string reference in references)
+        {
+            if (!Guid.TryParseExact(reference, "D", out Guid id) || !available.Contains(id))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references a knowledge base that is not enabled and indexed.");
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateDraftChildReferencesAsync(
+        IReadOnlyList<Guid> ids,
+        IReadOnlyList<AgentChildBindingSnapshot> pins,
+        CancellationToken cancellationToken)
+    {
+        if (pins.Count > 0 && pins.Select(value => value.AgentId).Distinct().Count() != pins.Count)
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package child Agent pins contain duplicate identities.");
+        }
+
+        IReadOnlyDictionary<Guid, AgentChildBindingSnapshot>? byId = pins.Count == 0
+            ? null
+            : pins.ToDictionary(value => value.AgentId);
+        if (byId is not null && (byId.Count != ids.Count || byId.Keys.Except(ids).Any()))
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package child Agent pins do not match its identities.");
+        }
+
+        foreach (Guid id in ids)
+        {
+            AgentDefinition? agent = await _repository.GetByIdAsync(id, cancellationToken);
+            Guid versionId = byId?.TryGetValue(id, out AgentChildBindingSnapshot? pin) is true
+                ? pin.AgentVersionId
+                : agent?.PublishedVersions.LastOrDefault()?.Id ?? Guid.Empty;
+            if (agent is null ||
+                agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
+                !agent.PublishedVersions.Any(value => value.Id == versionId))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references an enabled published child Agent that is not available.");
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateDraftOrchestrationReferencesAsync(
+        IReadOnlyList<Guid> ids,
+        IReadOnlyList<AgentOrchestrationBindingSnapshot> pins,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PublishedOrchestrationReference> values = _orchestrationCatalog is null
+            ? []
+            : await _orchestrationCatalog.ListPublishedAsync(cancellationToken);
+        if (pins.Count > 0 &&
+            pins.Select(value => value.OrchestrationId).Distinct().Count() != pins.Count)
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package orchestration pins contain duplicate identities.");
+        }
+
+        IReadOnlyDictionary<Guid, AgentOrchestrationBindingSnapshot>? byId = pins.Count == 0
+            ? null
+            : pins.ToDictionary(value => value.OrchestrationId);
+        if (byId is not null && (byId.Count != ids.Count || byId.Keys.Except(ids).Any()))
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package orchestration pins do not match its identities.");
+        }
+
+        return ids.Any(id =>
+            (byId?.TryGetValue(id, out AgentOrchestrationBindingSnapshot? pin) is true
+                ? values.SingleOrDefault(value =>
+                    value.OrchestrationId == id &&
+                    value.OrchestrationVersionId == pin.OrchestrationVersionId)
+                : values.LastOrDefault(value => value.OrchestrationId == id)) is not { Enabled: true })
+            ? new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package references an enabled published orchestration that is not available.")
+            : null;
+    }
+
+    private async Task<IReadOnlyList<AgentPackageChildBindingV1>?> ExportChildBindingsAsync(
+        IReadOnlyList<Guid> ids,
+        IReadOnlyList<AgentChildBindingSnapshot> pins,
+        CancellationToken cancellationToken)
+    {
+        if (pins.Count > 0)
+        {
+            return AgentContractCloner.ReadOnly(pins.Select(value =>
+                new AgentPackageChildBindingV1(
+                    value.AgentId.ToString("D"),
+                    value.AgentVersionId.ToString("D"))));
+        }
+
+        if (ids.Count == 0)
+        {
+            return null;
+        }
+
+        return AgentContractCloner.ReadOnly(await Task.WhenAll(ids.Select(async id =>
+        {
+            AgentDefinition agent = (await _repository.GetByIdAsync(id, cancellationToken))!;
+            return new AgentPackageChildBindingV1(
+                id.ToString("D"),
+                agent.PublishedVersions[^1].Id.ToString("D"));
+        })));
+    }
+
+    private async Task<IReadOnlyList<AgentPackageOrchestrationBindingV1>?> ExportOrchestrationBindingsAsync(
+        IReadOnlyList<Guid> ids,
+        IReadOnlyList<AgentOrchestrationBindingSnapshot> pins,
+        CancellationToken cancellationToken)
+    {
+        if (pins.Count > 0)
+        {
+            return AgentContractCloner.ReadOnly(pins.Select(value =>
+                new AgentPackageOrchestrationBindingV1(
+                    value.OrchestrationId.ToString("D"),
+                    value.OrchestrationVersionId.ToString("D"))));
+        }
+
+        if (ids.Count == 0)
+        {
+            return null;
+        }
+
+        IReadOnlyDictionary<Guid, PublishedOrchestrationReference> values =
+            (await _orchestrationCatalog!.ListPublishedAsync(cancellationToken))
+            .GroupBy(value => value.OrchestrationId)
+            .ToDictionary(group => group.Key, group => group.Last());
+        return AgentContractCloner.ReadOnly(ids.Select(id =>
+            new AgentPackageOrchestrationBindingV1(
+                id.ToString("D"),
+                values[id].OrchestrationVersionId.ToString("D"))));
+    }
+
+    private async Task<AgentError?> ValidateChildBindingReferencesAsync(
+        IReadOnlyList<AgentPackageChildBindingV1> references,
+        CancellationToken cancellationToken)
+    {
+        foreach (AgentPackageChildBindingV1 reference in references)
+        {
+            if (!Guid.TryParseExact(reference.AgentId, "D", out Guid id) ||
+                !Guid.TryParseExact(reference.AgentVersionId, "D", out Guid versionId))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references an invalid child Agent version.");
+            }
+
+            AgentDefinition? agent = await _repository.GetByIdAsync(id, cancellationToken);
+            if (agent is null ||
+                agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
+                !agent.PublishedVersions.Any(value => value.Id == versionId))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references a child Agent version that is not available.");
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<AgentError?> ValidateOrchestrationBindingReferencesAsync(
+        IReadOnlyList<AgentPackageOrchestrationBindingV1> references,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PublishedOrchestrationReference> values = _orchestrationCatalog is null
+            ? []
+            : await _orchestrationCatalog.ListPublishedAsync(cancellationToken);
+        foreach (AgentPackageOrchestrationBindingV1 reference in references)
+        {
+            if (!Guid.TryParseExact(reference.OrchestrationId, "D", out Guid id) ||
+                !Guid.TryParseExact(reference.OrchestrationVersionId, "D", out Guid versionId) ||
+                !values.Any(value =>
+                    value.OrchestrationId == id &&
+                    value.OrchestrationVersionId == versionId &&
+                    value.Enabled))
+            {
+                return new AgentError(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The package references an orchestration version that is not available.");
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryReadPackage(
+        string? json,
+        out AgentPackageV1? package,
+        out AgentError? error)
+    {
+        package = null;
+        error = null;
+        if (string.IsNullOrWhiteSpace(json) ||
+            Encoding.UTF8.GetByteCount(json) > MaximumPackageUtf8Bytes)
+        {
+            error = PackageInvalid("The Agent package is empty or exceeds the supported size.");
+            return false;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(
+                json,
+                new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = false,
+                    CommentHandling = JsonCommentHandling.Disallow,
+                    MaxDepth = MaximumPackageDepth
+                });
+            if (document.RootElement.ValueKind is not JsonValueKind.Object)
+            {
+                error = PackageInvalid("The Agent package root must be a JSON object.");
+                return false;
+            }
+
+            int nodeCount = 0;
+            if (!ValidateJsonSafety(document.RootElement, ref nodeCount, out string? safetyError))
+            {
+                error = PackageInvalid(safetyError!);
+                return false;
+            }
+
+            package = JsonSerializer.Deserialize<AgentPackageV1>(
+                json,
+                AgentPackageSerializerOptions);
+            if (package is null)
+            {
+                error = PackageInvalid("The Agent package is missing.");
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = PackageInvalid("The Agent package is not valid supported JSON.");
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            error = PackageInvalid("The Agent package contains unsupported values.");
+            return false;
+        }
+    }
+
+    private bool TryValidatePackage(
+        AgentPackageV1 package,
+        out AgentRuntimeStatus runtimeStatus,
+        out AgentOutputMode outputMode,
+        out AgentError? error)
+    {
+        runtimeStatus = default;
+        outputMode = default;
+        error = null;
+
+        if (!string.Equals(
+                package.Format,
+                AgentPackageFormatIdentifier,
+                StringComparison.Ordinal))
+        {
+            error = PackageInvalid("The Agent package format identifier is not supported.");
+            return false;
+        }
+
+        if (!TryParseSemanticVersion(package.Version, out int major))
+        {
+            error = PackageInvalid("The Agent package version is not a semantic version.");
+            return false;
+        }
+
+        if (major != 1)
+        {
+            error = new AgentError(
+                AgentErrorCodes.PackageVersionUnsupported,
+                "The Agent package major version is not supported.");
+            return false;
+        }
+
+        AgentPackageAgentV1? agent = package.Agent;
+        if (agent is null ||
+            agent.Draft is null ||
+            agent.Deployment is null ||
+            agent.Skills is null ||
+            agent.Tools is null ||
+            agent.Code is null ||
+            agent.Name is null ||
+            agent.Description is null ||
+            agent.RuntimeStatus is null ||
+            agent.Draft.Instructions is null ||
+            agent.Draft.ModelProfileId is null ||
+            agent.Draft.OutputMode is null)
+        {
+            error = PackageInvalid("The Agent package is missing required fields.");
+            return false;
+        }
+
+        IReadOnlyList<string> knowledgeBases = agent.KnowledgeBases ?? [];
+        if (knowledgeBases.Count > 32 ||
+            knowledgeBases.Distinct(StringComparer.Ordinal).Count() != knowledgeBases.Count ||
+            knowledgeBases.Any(reference => !Guid.TryParseExact(reference, "D", out _)))
+        {
+            error = PackageInvalid(
+                "Knowledge references must be unique enabled knowledge base IDs.");
+            return false;
+        }
+
+        IReadOnlyList<AgentPackageChildBindingV1> childAgents = agent.ChildAgents ?? [];
+        if (childAgents.Any(value =>
+                value is null ||
+                !Guid.TryParseExact(value.AgentId, "D", out _) ||
+                !Guid.TryParseExact(value.AgentVersionId, "D", out _)) ||
+            childAgents.Select(value => Guid.Parse(value.AgentId)).Distinct().Count() !=
+                childAgents.Count)
+        {
+            error = PackageInvalid(
+                "Child Agent references must contain unique Agent and published version IDs.");
+            return false;
+        }
+
+        IReadOnlyList<AgentPackageOrchestrationBindingV1> orchestrations =
+            agent.Orchestrations ?? [];
+        if (orchestrations.Any(value =>
+                value is null ||
+                !Guid.TryParseExact(value.OrchestrationId, "D", out _) ||
+                !Guid.TryParseExact(value.OrchestrationVersionId, "D", out _)) ||
+            orchestrations.Select(value => Guid.Parse(value.OrchestrationId)).Distinct().Count() !=
+                orchestrations.Count)
+        {
+            error = PackageInvalid(
+                "Orchestration references must contain unique orchestration and published version IDs.");
+            return false;
+        }
+
+        if (!IsNormalizedCode(agent.Code))
+        {
+            error = PackageInvalid("Imported Agent code must be lowercase kebab-case.");
+            return false;
+        }
+
+        if (string.Equals(
+                agent.RuntimeStatus,
+                nameof(AgentRuntimeStatus.Enabled),
+                StringComparison.Ordinal))
+        {
+            runtimeStatus = AgentRuntimeStatus.Enabled;
+        }
+        else if (string.Equals(
+                     agent.RuntimeStatus,
+                     nameof(AgentRuntimeStatus.Disabled),
+                     StringComparison.Ordinal))
+        {
+            runtimeStatus = AgentRuntimeStatus.Disabled;
+        }
+        else if (string.Equals(
+                     agent.RuntimeStatus,
+                     nameof(AgentRuntimeStatus.Archived),
+                     StringComparison.Ordinal))
+        {
+            runtimeStatus = AgentRuntimeStatus.Archived;
+        }
+        else
+        {
+            error = PackageInvalid(
+                "Runtime status must be Enabled, Disabled, or Archived.");
+            return false;
+        }
+
+        if (string.Equals(
+                agent.Draft.OutputMode,
+                nameof(AgentOutputMode.Text),
+                StringComparison.Ordinal))
+        {
+            outputMode = AgentOutputMode.Text;
+        }
+        else if (string.Equals(
+                     agent.Draft.OutputMode,
+                     nameof(AgentOutputMode.Structured),
+                     StringComparison.Ordinal))
+        {
+            outputMode = AgentOutputMode.Structured;
+        }
+        else
+        {
+            error = PackageInvalid("Output mode must be Text or Structured.");
+            return false;
+        }
+
+        bool supportedHost =
+            string.Equals(
+                agent.Deployment.Host,
+                AgentDefinition.ApiHost,
+                StringComparison.Ordinal) ||
+            string.Equals(
+                agent.Deployment.Host,
+                AgentDefinition.LegacyApiHost,
+                StringComparison.Ordinal);
+        if (!string.Equals(
+                agent.Deployment.Target,
+                AgentDefinition.ServerDeploymentTarget,
+                StringComparison.Ordinal) ||
+            !supportedHost)
+        {
+            error = PackageInvalid("Deployment must target Server on EU.Core.Api.Agent.");
+            return false;
+        }
+
+        if (agent.Tools.Count > 128 ||
+            agent.Tools.Distinct(StringComparer.Ordinal).Count() != agent.Tools.Count ||
+            agent.Tools.Any(reference => !Guid.TryParseExact(reference, "D", out _)))
+        {
+            error = PackageInvalid(
+                "Tool references must be unique available MCP tool version IDs.");
+            return false;
+        }
+
+        if (agent.Skills.Count > 64 ||
+            agent.Skills.Distinct(StringComparer.Ordinal).Count() != agent.Skills.Count ||
+            agent.Skills.Any(reference => !Guid.TryParseExact(reference, "D", out _)))
+        {
+            error = PackageInvalid(
+                "Skill references must be unique published Skill version IDs.");
+            return false;
+        }
+
+        if (outputMode is AgentOutputMode.Text)
+        {
+            if (agent.Draft.OutputJsonSchema is not null)
+            {
+                error = PackageInvalid("Text output cannot carry a JSON schema.");
+                return false;
+            }
+        }
+        else
+        {
+            JsonSchemaValidationResult schema =
+                _jsonSchemaValidator.Validate(agent.Draft.OutputJsonSchema);
+            if (!schema.IsValid)
+            {
+                error = new AgentError(
+                    AgentErrorCodes.OutputSchemaInvalid,
+                    schema.Error!);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool ValidateJsonSafety(
+        JsonElement element,
+        ref int nodeCount,
+        out string? error)
+    {
+        if (++nodeCount > MaximumPackageNodes)
+        {
+            error = "The Agent package exceeds the supported complexity.";
+            return false;
+        }
+
+        if (element.ValueKind is JsonValueKind.Object)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                {
+                    error = "The Agent package cannot contain duplicate property names.";
+                    return false;
+                }
+
+                string normalizedName = new(property.Name
+                    .Where(char.IsLetterOrDigit)
+                    .Select(char.ToLowerInvariant)
+                    .ToArray());
+                if (ForbiddenPackagePropertyNames.Contains(normalizedName))
+                {
+                    error =
+                        "The Agent package cannot contain credential, endpoint, or connection properties.";
+                    return false;
+                }
+
+                if (!ValidateJsonSafety(property.Value, ref nodeCount, out error))
+                {
+                    return false;
+                }
+            }
+        }
+        else if (element.ValueKind is JsonValueKind.Array)
+        {
+            foreach (JsonElement item in element.EnumerateArray())
+            {
+                if (!ValidateJsonSafety(item, ref nodeCount, out error))
+                {
+                    return false;
+                }
+            }
+        }
+        else if (element.ValueKind is JsonValueKind.String)
+        {
+            string value = element.GetString() ?? string.Empty;
+            if (LooksLikeAbsolutePath(value) || LooksLikeSecretReference(value))
+            {
+                error =
+                    "The Agent package cannot contain secret-shaped references or absolute paths.";
+                return false;
+            }
+        }
+
+        error = null;
+        return true;
+    }
+
+    private static bool IsNormalizedCode(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value[0] == '-' || value[^1] == '-')
+        {
+            return false;
+        }
+
+        bool previousHyphen = false;
+        foreach (char character in value)
+        {
+            if (character is >= 'a' and <= 'z' or >= '0' and <= '9')
+            {
+                previousHyphen = false;
+            }
+            else if (character == '-' && !previousHyphen)
+            {
+                previousHyphen = true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool TryParseSemanticVersion(string? value, out int major)
+    {
+        major = 0;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string[] parts = value.Split('.');
+        return parts.Length == 3 &&
+               TryParseCanonicalNumericIdentifier(parts[0], out major) &&
+               TryParseCanonicalNumericIdentifier(parts[1], out _) &&
+               TryParseCanonicalNumericIdentifier(parts[2], out _);
+    }
+
+    private static bool TryParseCanonicalNumericIdentifier(string value, out int number)
+    {
+        number = 0;
+        return value.Length > 0 &&
+               (value.Length == 1 || value[0] != '0') &&
+               value.All(char.IsAsciiDigit) &&
+               int.TryParse(value, out number);
+    }
+
+    private static bool LooksLikeAbsolutePath(string value)
+    {
+        if (value.StartsWith("/", StringComparison.Ordinal) ||
+            value.Contains(" /", StringComparison.Ordinal) ||
+            value.Contains("\\\\", StringComparison.Ordinal) ||
+            value.Contains("file:", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        for (int index = 0; index + 2 < value.Length; index++)
+        {
+            if (char.IsAsciiLetter(value[index]) &&
+                value[index + 1] == ':' &&
+                (value[index + 2] == '\\' || value[index + 2] == '/'))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool LooksLikeSecretReference(string value) =>
+        value.Contains("alias:", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("sk-", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("password=", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("api key=", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("apikey=", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("connection string=", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("data source=", StringComparison.OrdinalIgnoreCase);
+
+    private static AgentError PackageInvalid(string message) =>
+        new(AgentErrorCodes.PackageInvalid, message);
 
     private static AgentOperationResult<AgentDefinition> NotFound() =>
         AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.NotFound, "The Agent was not found.");
