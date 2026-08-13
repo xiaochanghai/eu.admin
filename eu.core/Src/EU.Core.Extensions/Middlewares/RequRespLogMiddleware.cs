@@ -92,12 +92,8 @@ public class RequRespLogMiddleware
 
         if (!string.IsNullOrEmpty(content))
         {
-            Parallel.For(0, 1, e =>
-            {
-                //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Request Data:", content });
-                LogLock.OutLogAOP("RequestResponseLog", context.TraceIdentifier,
-                    new string[] { "Request Data -  RequestJsonDataType:" + requestResponse.GetType().ToString(), content });
-            });
+            WriteLogSafely(context.TraceIdentifier,
+                new string[] { "Request Data -  RequestJsonDataType:" + requestResponse.GetType().ToString(), content });
             //SerilogServer.WriteLog("RequestResponseLog", new string[] { "Request Data:", content });
 
             request.Body.Position = 0;
@@ -123,14 +119,11 @@ public class RequRespLogMiddleware
         if (!string.IsNullOrEmpty(responseBody))
         {
             var isHtml = Regex.IsMatch(responseBody, reg);
-            Parallel.For(0, 1, e =>
+            if (response.ContentType?.Contains("image/", StringComparison.OrdinalIgnoreCase) != true)
             {
-                //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
-
-                if (!response.ContentType.Contains("image/"))
-                    LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
-                        new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
-            });
+                WriteLogSafely(response.HttpContext.TraceIdentifier,
+                    new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
+            }
             //SerilogServer.WriteLog("RequestResponseLog", new string[] { "Response Data:", responseBody });
         }
     }
@@ -146,13 +139,21 @@ public class RequRespLogMiddleware
 
         if (!string.IsNullOrEmpty(responseBody))
         {
-            Parallel.For(0, 1, e =>
-            {
-                //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
-                LogLock.OutLogAOP("RequestResponseLog", response.HttpContext.TraceIdentifier,
-                    new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
-            });
+            WriteLogSafely(response.HttpContext.TraceIdentifier,
+                new string[] { "Response Data -  ResponseJsonDataType:" + responseBody.GetType().ToString(), responseBody });
             //SerilogServer.WriteLog("RequestResponseLog", new string[] { "Response Data:", responseBody });
+        }
+    }
+
+    private void WriteLogSafely(string traceId, string[] data)
+    {
+        try
+        {
+            LogLock.OutLogAOP("RequestResponseLog", traceId, data);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to write request/response log. TraceId: {TraceId}", traceId);
         }
     }
 }

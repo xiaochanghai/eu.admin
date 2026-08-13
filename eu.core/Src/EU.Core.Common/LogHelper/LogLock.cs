@@ -174,6 +174,7 @@ public class LogLock : IDisposable
 
     public static void OutSql2LogToDB(string prefix, string traceId, string[] dataParas, bool IsHeader = true)
     {
+        var logType = dataParas.FirstOrDefault();
         dataParas = dataParas.Skip(1).ToArray();
         string logContent = string.Join("", dataParas);
 
@@ -200,9 +201,19 @@ public class LogLock : IDisposable
                 break;
 
             case "RequestResponseLog":
-                var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
-                if (requestInfo.Path.IsNullOrEmpty() || (requestInfo.Path.IsNotEmptyOrNull() && !requestInfo.Path.Contains("/Upload")))
+                if (logType?.StartsWith("Request Data", StringComparison.Ordinal) == true)
+                {
+                    var requestInfo = JsonHelper.JsonToObj<UserAccessModel>(logContent);
+                    if (requestInfo.Path.IsNullOrEmpty() ||
+                        (requestInfo.Path.IsNotEmptyOrNull() && !requestInfo.Path.Contains("/Upload")))
+                    {
+                        Log.Information(logContent);
+                    }
+                }
+                else
+                {
                     Log.Information(logContent);
+                }
                 break;
         }
     }

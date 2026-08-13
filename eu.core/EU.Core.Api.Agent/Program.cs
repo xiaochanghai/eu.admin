@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using EU.Core.Common.Core;
+using EU.Core.Common.Caches;
 using EU.Core.Extensions;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
@@ -35,6 +36,7 @@ using EU.Core.Agent.Application.Abstractions.Auditing;
 using EU.Core.Agent.Application.Approvals;
 using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Infrastructure.Security;
+using EU.Core.Extensions.Middlewares;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
@@ -52,6 +54,12 @@ builder.Host
 builder.ConfigureApplication();
 
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
+
+ServiceExtensions.Init();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSingleton<ICaching, Caching>();
 builder.Services.AddSqlsugarSetup();
 builder.Services.AddOpenApi();
 builder.Services
@@ -94,7 +102,10 @@ builder.Services.AddHealthChecks()
 builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics.AddMeter(AgentMetrics.MeterName));
 builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
-    .Enrich.With<LogRedactionEnricher>());
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.With<LogRedactionEnricher>()
+    .WriteTo.Console());
 builder.Services.AddSingleton<IAgentRepository>(services =>
     CreateStorageRepository<IAgentRepository>(
         services,
@@ -429,6 +440,9 @@ if (toolApproval.Enabled)
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseResponseBodyRead();
+app.UseRequestResponseLogMiddle();
+app.UseSerilogRequestLogging();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseCors(AgentHttpSecurityOptions.CorsPolicyName);
 app.UseAuthentication();

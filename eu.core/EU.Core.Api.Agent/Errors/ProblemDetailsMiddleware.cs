@@ -55,10 +55,10 @@ public sealed class ProblemDetailsMiddleware(RequestDelegate next, ILoggerFactor
                 "The request body is invalid.",
                 "REQUEST_INVALID");
         }
-        catch (Exception) when (!context.Response.HasStarted)
+        catch (Exception exception) when (!context.Response.HasStarted)
         {
             string traceId = ResolveTraceId(context);
-            logger.LogError("Unhandled request failed. TraceId: {TraceId}", traceId);
+            logger.LogError(exception, "Unhandled request failed. TraceId: {TraceId}", traceId);
 
             await WriteProblemAsync(
                 context,

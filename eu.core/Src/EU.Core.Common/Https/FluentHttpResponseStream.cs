@@ -37,6 +37,12 @@ public class FluentHttpResponseStream : Stream
 		_stream.Flush();
 	}
 
+	public override async Task FlushAsync(CancellationToken cancellationToken)
+	{
+		await _stream.FlushAsync(cancellationToken);
+		await _pipeWriter.Writer.FlushAsync(cancellationToken);
+	}
+
 	public override int Read(byte[] buffer, int offset, int count)
 	{
 		return _stream.Read(buffer, offset, count);
