@@ -1,12 +1,11 @@
-using System.Text;
 using EU.Core.Agent.Application.Agents;
-using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Agent.Application.Skills;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model.Models;
-using Microsoft.AspNetCore.Mvc;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
-using EU.Core.Api.Agent.Security;
+using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
