@@ -1,5 +1,6 @@
 using System.Text;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Skills;
 using EU.Core.IServices;
 using EU.Core.Model.Models;

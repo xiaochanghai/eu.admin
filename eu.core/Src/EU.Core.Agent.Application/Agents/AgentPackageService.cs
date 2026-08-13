@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Validation;
 using EU.Core.Agent.Application.Skills;
 using EU.Core.Agent.Application.Mcp;

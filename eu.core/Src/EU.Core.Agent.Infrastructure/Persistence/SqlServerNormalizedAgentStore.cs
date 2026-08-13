@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Data;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.Data.SqlClient;
 
 namespace EU.Core.Agent.Infrastructure.Persistence;

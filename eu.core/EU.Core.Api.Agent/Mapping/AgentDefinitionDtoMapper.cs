@@ -1,4 +1,5 @@
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Model.Entity;
 using EU.Core.Model.Models;
 

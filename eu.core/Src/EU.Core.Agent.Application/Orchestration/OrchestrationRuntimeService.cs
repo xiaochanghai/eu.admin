@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Runtime;
 
 namespace EU.Core.Agent.Application.Orchestration;

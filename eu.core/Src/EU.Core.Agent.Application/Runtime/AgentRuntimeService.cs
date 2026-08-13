@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Channels;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Validation;
 using EU.Core.Agent.Application.Knowledge;

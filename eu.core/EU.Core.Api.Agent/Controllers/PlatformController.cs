@@ -1,6 +1,7 @@
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Health;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.Skills;
 using Microsoft.AspNetCore.Mvc;

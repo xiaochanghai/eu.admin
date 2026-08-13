@@ -10,6 +10,7 @@ using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Health;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Validation;
 using EU.Core.Agent.Application.Skills;
 using EU.Core.Agent.Application.Mcp;

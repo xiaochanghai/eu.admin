@@ -15,6 +15,7 @@
 *└──────────────────────────────────┘
 */
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.IServices;
 

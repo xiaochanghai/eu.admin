@@ -1,6 +1,8 @@
+#nullable enable
+
 using System.Collections.ObjectModel;
 
-namespace EU.Core.Agent.Application.Agents;
+namespace EU.Core.Model.ViewModels.Extend;
 
 public enum AgentOutputMode
 {

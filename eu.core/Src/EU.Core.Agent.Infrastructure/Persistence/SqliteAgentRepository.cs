@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.Data.Sqlite;
 
 namespace EU.Core.Agent.Infrastructure.Persistence;

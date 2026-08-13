@@ -5,4 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\EU.Core.Model\EU.Core.Model.csproj" />
+  </ItemGroup>
 </Project>
