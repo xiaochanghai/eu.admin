@@ -17,6 +17,8 @@
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
+#nullable enable
+
 namespace EU.Core.IServices;
 
 /// <summary>
@@ -27,12 +29,12 @@ public interface IAgAgentDefinitionServices : IBaseServices<AgAgentDefinition, A
     /// <summary>
     /// 查询 Agent 管理列表，并批量加载草稿及最新发布版本摘要。
     /// </summary>
-    Task<List<AgAgentDefinitionDto>> QueryAgentList(string search = null, string runtimeStatus = null, CancellationToken cancellationToken = default);
+    Task<List<AgAgentDefinitionDto>> QueryAgentList(string? search = null, string? runtimeStatus = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 查询 Agent 明细及其版本、快照和资源绑定。
     /// </summary>
-    Task<AgAgentDefinitionDetailDto> QueryAgent(Guid id, CancellationToken cancellationToken = default);
+    Task<AgAgentDefinitionDetailDto?> QueryAgent(Guid id, CancellationToken cancellationToken = default);
 
     Task<AgentOperationResult<AgentDefinition>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default);
 

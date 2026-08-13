@@ -1,4 +1,4 @@
-﻿using EU.Core.Agent.Application.Agents;
+using EU.Core.Agent.Application.Agents;
 using EU.Core.Agent.Application.Validation;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Skills;
@@ -6,11 +6,13 @@ using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Agent.Application.MainAgent;
-using System.Text.Encodings.Web;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+
+#nullable enable
 
 /*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * AgAgentDefinition.cs
@@ -36,47 +38,21 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices
 {
-    public const string AgentPackageFormatIdentifier = "eu.core.agent-package";
-    public const string AgentPackageCurrentVersion = "1.0.0";
-
-    private const int MaximumPackageUtf8Bytes = 131_072;
-    private const int MaximumPackageDepth = 24;
-    private const int MaximumPackageNodes = 2_048;
-
-    private static readonly JsonSerializerOptions AgentPackageSerializerOptions = new()
-    {
-        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = false,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-        WriteIndented = false
-    };
-
-    private static readonly HashSet<string> ForbiddenPackagePropertyNames = new(StringComparer.Ordinal)
-    {
-        "apikey",
-        "connectionstring",
-        "credential",
-        "credentialalias",
-        "endpoint",
-        "password",
-        "secret",
-        "token",
-        "accesstoken"
-    };
-
     public AgAgentDefinitionServices(IBaseRepository<AgAgentDefinition> dal)
     {
         BaseDal = dal;
+        _repository = null!;
+        _jsonSchemaValidator = null!;
+        _modelProfiles = null!;
     }
 
     /// <summary>
     /// 查询 Agent 管理列表，并批量加载草稿及最新发布版本摘要。
     /// </summary>
-    public async Task<List<AgAgentDefinitionDto>> QueryAgentList(string search = null, string runtimeStatus = null, CancellationToken cancellationToken = default)
+    public async Task<List<AgAgentDefinitionDto>> QueryAgentList(string? search = null, string? runtimeStatus = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        string normalizedSearch = search?.Trim().ToLowerInvariant();
+        string? normalizedSearch = search?.Trim().ToLowerInvariant();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
         try
         {
@@ -91,9 +67,9 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 .WhereIF(
                     normalizedSearch.IsNotEmptyOrNull(),
                     definition =>
-                        SqlFunc.ToLower(definition.Code).Contains(normalizedSearch) ||
-                        SqlFunc.ToLower(definition.Name).Contains(normalizedSearch) ||
-                        SqlFunc.ToLower(definition.Description).Contains(normalizedSearch))
+                        SqlFunc.ToLower(definition.Code).Contains(normalizedSearch!) ||
+                        SqlFunc.ToLower(definition.Name).Contains(normalizedSearch!) ||
+                        SqlFunc.ToLower(definition.Description).Contains(normalizedSearch!))
                 .OrderBy(definition => definition.Code)
                 .OrderBy(definition => definition.ID)
                 .ToListAsync();
@@ -117,17 +93,18 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 .ToListAsync();
 
             var versionsByAgent = versions
-                .GroupBy(version => version.AgentId.Value)
+                .GroupBy(version => version.AgentId.GetValueOrDefault())
                 .ToDictionary(group => group.Key, group => group.ToArray());
 
             List<AgAgentDefinitionDto> result = definitions.Select(definition =>
             {
-                if (!versionsByAgent.TryGetValue(definition.ID, out AgAgentVersion[] agentVersions))
+                if (!versionsByAgent.TryGetValue(definition.ID, out AgAgentVersion[]? agentVersions) ||
+                    agentVersions is null)
                     throw new InvalidDataException($"Agent '{definition.Code}' does not have any versions.");
 
                 AgAgentVersion draft = agentVersions.SingleOrDefault(version => version.IsDraft == true)
                     ?? throw new InvalidDataException($"Agent '{definition.Code}' does not have exactly one Draft version.");
-                AgAgentVersion currentPublished = agentVersions
+                AgAgentVersion? currentPublished = agentVersions
                     .Where(version => version.IsDraft != true)
                     .OrderBy(version => version.Ordinal)
                     .LastOrDefault();
@@ -159,7 +136,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     /// <summary>
     /// 查询 Agent 明细及其版本、快照和资源绑定。
     /// </summary>
-    public async Task<AgAgentDefinitionDetailDto> QueryAgent(
+    public async Task<AgAgentDefinitionDetailDto?> QueryAgent(
         Guid id,
         CancellationToken cancellationToken = default)
     {
@@ -167,7 +144,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
         try
         {
-            AgAgentDefinition definition = await Db.Queryable<AgAgentDefinition>()
+            AgAgentDefinition? definition = await Db.Queryable<AgAgentDefinition>()
                 .Where(value => value.ID == id && !value.IsDeleted)
                 .FirstAsync();
             if (definition is null)
@@ -205,9 +182,9 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     .OrderBy(value => value.Ordinal)
                     .ToListAsync();
 
-            var snapshotsByVersion = snapshots.ToDictionary(value => value.VersionId.Value);
+            var snapshotsByVersion = snapshots.ToDictionary(value => value.VersionId.GetValueOrDefault());
             var bindingsByVersion = bindings
-                .GroupBy(value => value.VersionId.Value)
+                .GroupBy(value => value.VersionId.GetValueOrDefault())
                 .ToDictionary(group => group.Key, group => group.ToList());
             var result = new AgAgentDefinitionDetailDto
             {
@@ -229,8 +206,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             throw;
         }
     }
-
-#nullable enable
 
     private readonly IAgentRepository _repository;
     private readonly JsonSchemaValidator _jsonSchemaValidator;
@@ -268,6 +243,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     public async Task<AgentOperationResult<AgentDefinition>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         if (!TryNormalizeCode(command.Code, out string? normalizedCode))
         {
@@ -297,6 +273,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         ImportAgentCommand command,
         CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         if (!TryNormalizeCode(command.Code, out string? normalizedCode) ||
             !string.Equals(command.Code, normalizedCode, StringComparison.Ordinal))
@@ -408,6 +385,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     public async Task<AgentOperationResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         AgentDefinition? existing = await _repository.GetByIdAsync(command.AgentId, cancellationToken);
         if (existing is null)
@@ -488,6 +466,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     public async Task<AgentOperationResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         if (!Enum.IsDefined(command.RuntimeStatus))
         {
@@ -545,6 +524,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     public async Task<AgentOperationResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         AgentDefinition? existing = await _repository.GetByIdAsync(command.AgentId, cancellationToken);
         if (existing is null)
@@ -650,6 +630,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     public async Task<IReadOnlyList<AgentListItem>> ListAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(query);
         IReadOnlyList<AgentDefinition> definitions = await _repository.ListAsync(query, cancellationToken);
         return AgentContractCloner.ReadOnly(definitions.Select(definition => new AgentListItem(
@@ -664,10 +645,358 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             definition.PublishedVersions.LastOrDefault()?.Label)));
     }
 
+    private void EnsureAgentManagementAvailable()
+    {
+        if (_repository is null || _jsonSchemaValidator is null || _modelProfiles is null)
+        {
+            throw new InvalidOperationException(
+                "Agent management dependencies are not registered in this Host.");
+        }
+    }
+
+    private static AgentOperationResult<AgentDefinition> NotFound() =>
+        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.NotFound, "The Agent was not found.");
+
+    private static AgentOperationResult<AgentDefinition> RowVersionConflict() =>
+        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RowVersionConflict, "The Agent changed before this operation completed.");
+
+    private async Task<IReadOnlyList<string>> FindArchiveBlockersAsync(
+        Guid agentId,
+        CancellationToken cancellationToken)
+    {
+        var blockers = new List<string>();
+        IReadOnlyList<AgentDefinition> enabledAgents = await _repository.ListAsync(
+            new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
+            cancellationToken);
+        blockers.AddRange(enabledAgents
+            .Where(value => value.Id != agentId &&
+                value.PublishedVersions.LastOrDefault()?.Snapshot?.ChildAgents
+                    .Any(binding => binding.AgentId == agentId) == true)
+            .Select(value => $"Agent '{value.Code}'"));
+
+        if (_orchestrations is not null)
+        {
+            IReadOnlyList<OrchestrationDefinition> definitions =
+                await _orchestrations.ListAsync(cancellationToken);
+            blockers.AddRange(definitions
+                .Where(value => value.Status is OrchestrationStatus.Enabled &&
+                    value.PublishedVersions.LastOrDefault()?.Snapshot?.Agents
+                        .Any(binding => binding.AgentId == agentId) == true)
+                .Select(value => $"orchestration '{value.Code}'"));
+        }
+
+        if (_mainAgentAssignments is not null &&
+            (await _mainAgentAssignments.GetAsync(cancellationToken))?.AgentId == agentId)
+        {
+            blockers.Add("the Main Agent assignment");
+        }
+
+        return AgentContractCloner.ReadOnly(blockers.Take(8));
+    }
+
+    private async Task<AgentOperationResult<AgentDefinition>?> ValidateSkillVersionsAsync(
+        IReadOnlyList<Guid> versionIds,
+        CancellationToken cancellationToken)
+    {
+        if (versionIds.Count != versionIds.Distinct().Count())
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.SkillVersionNotPublished,
+                "Agent Skill bindings must not contain duplicate versions.");
+        }
+
+        if (versionIds.Count == 0)
+        {
+            return null;
+        }
+
+        IReadOnlySet<Guid> available = _skillVersions is null
+            ? new HashSet<Guid>()
+            : (await _skillVersions.ListAsync(cancellationToken))
+                .Select(value => value.VersionId)
+                .ToHashSet();
+        if (versionIds.Any(versionId =>
+                versionId == Guid.Empty || !available.Contains(versionId)))
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.SkillVersionNotPublished,
+                "Agent Drafts may bind only published Skill versions.");
+        }
+
+        return null;
+    }
+
+    private async Task<AgentOperationResult<AgentDefinition>?> ValidateToolVersionsAsync(
+        IReadOnlyList<Guid> versionIds,
+        CancellationToken cancellationToken)
+    {
+        if (versionIds.Count > 128 ||
+            versionIds.Count != versionIds.Distinct().Count())
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.ToolVersionNotAvailable,
+                "Agent MCP tool bindings must contain no more than 128 unique versions.");
+        }
+
+        if (versionIds.Count == 0)
+        {
+            return null;
+        }
+
+        IReadOnlySet<Guid> available = _toolVersions is null
+            ? new HashSet<Guid>()
+            : (await _toolVersions.ListAsync(cancellationToken))
+                .Select(value => value.ToolVersionId)
+                .ToHashSet();
+        if (versionIds.Any(versionId =>
+                versionId == Guid.Empty || !available.Contains(versionId)))
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.ToolVersionNotAvailable,
+                "Agent Drafts may bind only classified MCP tool versions.");
+        }
+
+        return null;
+    }
+
+    private async Task<AgentOperationResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(
+        IReadOnlyList<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        if (ids.Count > 32 || ids.Count != ids.Distinct().Count())
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.KnowledgeBaseUnavailable,
+                "Agent knowledge bindings must contain no more than 32 unique knowledge bases.");
+        }
+
+        IReadOnlySet<Guid> available = (await GetKnowledgeReferencesAsync(ids, cancellationToken))
+            .Select(value => value.KnowledgeBaseId)
+            .ToHashSet();
+        if (ids.Any(id => id == Guid.Empty || !available.Contains(id)))
+        {
+            return AgentOperationResult<AgentDefinition>.Failure(
+                AgentErrorCodes.KnowledgeBaseUnavailable,
+                "Agent Drafts may bind only enabled and indexed knowledge bases.");
+        }
+
+        return null;
+    }
+
+    private async Task<IReadOnlyList<PublishedKnowledgeReference>> GetKnowledgeReferencesAsync(
+        IReadOnlyList<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+        {
+            return Array.Empty<PublishedKnowledgeReference>();
+        }
+
+        if (_knowledgeBases is null)
+        {
+            return Array.Empty<PublishedKnowledgeReference>();
+        }
+
+        IReadOnlySet<Guid> selected = ids.ToHashSet();
+        return KnowledgeContractCloner.ReadOnly(
+            (await _knowledgeBases.ListAsync(cancellationToken))
+            .Where(value => selected.Contains(value.KnowledgeBaseId)));
+    }
+
+    private async Task<AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>> ResolveChildAgentBindingsAsync(
+        Guid agentId,
+        AgentVersion draft,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Guid> childAgentIds = draft.ChildAgentIds;
+        if (childAgentIds.Count > AgentDelegationPolicy.MaximumChildAgentBindings)
+        {
+            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
+                AgentErrorCodes.ReferenceMissing,
+                $"Main Agent publications may bind no more than {AgentDelegationPolicy.MaximumChildAgentBindings} child Agents.");
+        }
+
+        if (childAgentIds.Count != childAgentIds.Distinct().Count() ||
+            childAgentIds.Any(id => id == Guid.Empty || id == agentId))
+        {
+            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
+                AgentErrorCodes.ReferenceMissing,
+                "Child Agent bindings must contain unique published Agent identities other than the Agent itself.");
+        }
+
+        if (draft.ChildAgentPins.Count > 0 &&
+            (draft.ChildAgentPins.Select(value => value.AgentId).Distinct().Count() != draft.ChildAgentPins.Count ||
+             draft.ChildAgentPins.Count != childAgentIds.Count ||
+             draft.ChildAgentPins.Select(value => value.AgentId).Except(childAgentIds).Any() ||
+             draft.ChildAgentPins.Any(value => value.AgentVersionId == Guid.Empty)))
+        {
+            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
+                AgentErrorCodes.ReferenceMissing,
+                "Imported child Agent pins must match unique child Agent identities.");
+        }
+        IReadOnlyDictionary<Guid, AgentChildBindingSnapshot> pins = draft.ChildAgentPins
+            .ToDictionary(value => value.AgentId);
+
+        var resolved = new List<AgentChildBindingSnapshot>(childAgentIds.Count);
+        foreach (Guid childAgentId in childAgentIds)
+        {
+            AgentDefinition? child = await _repository.GetByIdAsync(childAgentId, cancellationToken);
+            if (child is null ||
+                child.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
+                child.PublishedVersions.Count == 0)
+            {
+                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
+                    AgentErrorCodes.ReferenceMissing,
+                    "Child Agent bindings must reference enabled published Agents.");
+            }
+
+            Guid versionId = pins.TryGetValue(childAgentId, out AgentChildBindingSnapshot? pin)
+                ? pin.AgentVersionId
+                : child.PublishedVersions[^1].Id;
+            AgentVersion? selectedVersion = child.PublishedVersions
+                .FirstOrDefault(version => version.Id == versionId);
+            if (selectedVersion is null)
+            {
+                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
+                    AgentErrorCodes.ReferenceMissing,
+                    "The imported child Agent version is no longer available.");
+            }
+            resolved.Add(new AgentChildBindingSnapshot(childAgentId, versionId)
+            {
+                AgentCode = selectedVersion.Snapshot?.AgentCode ?? child.Code,
+                AgentName = selectedVersion.Snapshot?.AgentName is { } frozenName
+                    ? frozenName
+                    : child.Name.Trim(),
+                AgentDescription = selectedVersion.Snapshot?.AgentDescription
+                    is { } frozenDescription
+                    ? frozenDescription
+                    : child.Description.Trim()
+            });
+        }
+
+        return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Success(
+            AgentContractCloner.ReadOnly(resolved));
+    }
+
+    private async Task<AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>> ResolveOrchestrationBindingsAsync(
+        AgentVersion draft,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Guid> orchestrationIds = draft.OrchestrationIds;
+        if (orchestrationIds.Count != orchestrationIds.Distinct().Count() ||
+            orchestrationIds.Any(id => id == Guid.Empty) ||
+            (orchestrationIds.Count > 0 && _orchestrationCatalog is null))
+        {
+            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
+                AgentErrorCodes.ReferenceMissing,
+                "Orchestration bindings must contain unique enabled published orchestrations.");
+        }
+
+        IReadOnlyList<PublishedOrchestrationReference> values = _orchestrationCatalog is null
+            ? []
+            : await _orchestrationCatalog.ListPublishedAsync(cancellationToken);
+        if (draft.OrchestrationPins.Count > 0 &&
+            (draft.OrchestrationPins.Select(value => value.OrchestrationId).Distinct().Count() != draft.OrchestrationPins.Count ||
+             draft.OrchestrationPins.Count != orchestrationIds.Count ||
+             draft.OrchestrationPins.Select(value => value.OrchestrationId).Except(orchestrationIds).Any() ||
+             draft.OrchestrationPins.Any(value => value.OrchestrationVersionId == Guid.Empty)))
+        {
+            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
+                AgentErrorCodes.ReferenceMissing,
+                "Imported orchestration pins must match unique orchestration identities.");
+        }
+        IReadOnlyDictionary<Guid, AgentOrchestrationBindingSnapshot> pins = draft.OrchestrationPins
+            .ToDictionary(value => value.OrchestrationId);
+
+        var resolved = new List<AgentOrchestrationBindingSnapshot>(orchestrationIds.Count);
+        foreach (Guid orchestrationId in orchestrationIds)
+        {
+            PublishedOrchestrationReference? selected = pins.TryGetValue(orchestrationId, out AgentOrchestrationBindingSnapshot? pin)
+                ? values.SingleOrDefault(value => value.OrchestrationId == orchestrationId && value.OrchestrationVersionId == pin.OrchestrationVersionId)
+                : values.LastOrDefault(value => value.OrchestrationId == orchestrationId);
+            if (selected is null || !selected.Enabled)
+            {
+                return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
+                    AgentErrorCodes.ReferenceMissing,
+                    "Orchestration bindings must reference enabled published orchestrations.");
+            }
+            resolved.Add(new AgentOrchestrationBindingSnapshot(orchestrationId, selected.OrchestrationVersionId));
+        }
+
+        return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Success(
+            AgentContractCloner.ReadOnly(resolved));
+    }
+
+    private static bool TryNormalizeCode(string? value, out string? normalizedCode)
+    {
+        normalizedCode = null;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var builder = new System.Text.StringBuilder();
+        bool pendingHyphen = false;
+        foreach (char character in value.Trim())
+        {
+            if (character is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9')
+            {
+                if (pendingHyphen && builder.Length > 0)
+                {
+                    builder.Append('-');
+                }
+
+                builder.Append(char.ToLowerInvariant(character));
+                pendingHyphen = false;
+            }
+            else if (character is '-' or '_' || char.IsWhiteSpace(character))
+            {
+                pendingHyphen = builder.Length > 0;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        normalizedCode = builder.ToString();
+        return normalizedCode.Length > 0;
+    }
+
+    public const string AgentPackageFormatIdentifier = "eu.core.agent-package";
+    public const string AgentPackageCurrentVersion = "1.0.0";
+
+    private const int MaximumPackageUtf8Bytes = 131_072;
+    private const int MaximumPackageDepth = 24;
+    private const int MaximumPackageNodes = 2_048;
+
+    private static readonly JsonSerializerOptions AgentPackageSerializerOptions = new()
+    {
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        WriteIndented = false
+    };
+
+    private static readonly HashSet<string> ForbiddenPackagePropertyNames = new(StringComparer.Ordinal)
+    {
+        "apikey",
+        "connectionstring",
+        "credential",
+        "credentialalias",
+        "endpoint",
+        "password",
+        "secret",
+        "token",
+        "accesstoken"
+    };
+
     public async Task<AgentOperationResult<string>> ExportAsync(
         Guid agentId,
         CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         AgentDefinition? definition = await _repository.GetByIdAsync(agentId, cancellationToken);
         if (definition is null)
         {
@@ -747,6 +1076,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         string json,
         CancellationToken cancellationToken = default)
     {
+        EnsureAgentManagementAvailable();
         if (!TryReadPackage(json, out AgentPackageV1? package, out AgentError? error))
         {
             return new AgentOperationResult<AgentDefinition>(null, error);
@@ -865,16 +1195,23 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IReadOnlyList<string> references,
         CancellationToken cancellationToken)
     {
-        foreach (string reference in references)
+        if (references.Count == 0)
         {
-            if (!Guid.TryParseExact(reference, "D", out Guid versionId) ||
-                _toolVersions is null ||
-                !await _toolVersions.ExistsAsync(versionId, cancellationToken))
-            {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references an MCP tool version that is not available.");
-            }
+            return null;
+        }
+
+        IReadOnlySet<Guid> available = _toolVersions is null
+            ? new HashSet<Guid>()
+            : (await _toolVersions.ListAsync(cancellationToken))
+                .Select(value => value.ToolVersionId)
+                .ToHashSet();
+        if (references.Any(reference =>
+                !Guid.TryParseExact(reference, "D", out Guid versionId) ||
+                !available.Contains(versionId)))
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package references an MCP tool version that is not available.");
         }
 
         return null;
@@ -884,16 +1221,23 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IReadOnlyList<string> references,
         CancellationToken cancellationToken)
     {
-        foreach (string reference in references)
+        if (references.Count == 0)
         {
-            if (!Guid.TryParseExact(reference, "D", out Guid versionId) ||
-                _skillVersions is null ||
-                !await _skillVersions.ExistsAsync(versionId, cancellationToken))
-            {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references a Skill version that is not published.");
-            }
+            return null;
+        }
+
+        IReadOnlySet<Guid> available = _skillVersions is null
+            ? new HashSet<Guid>()
+            : (await _skillVersions.ListAsync(cancellationToken))
+                .Select(value => value.VersionId)
+                .ToHashSet();
+        if (references.Any(reference =>
+                !Guid.TryParseExact(reference, "D", out Guid versionId) ||
+                !available.Contains(versionId)))
+        {
+            return new AgentError(
+                AgentErrorCodes.ReferenceMissing,
+                "The package references a Skill version that is not published.");
         }
 
         return null;
@@ -1520,301 +1864,4 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     private static AgentError PackageInvalid(string message) =>
         new(AgentErrorCodes.PackageInvalid, message);
-
-    private static AgentOperationResult<AgentDefinition> NotFound() =>
-        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.NotFound, "The Agent was not found.");
-
-    private static AgentOperationResult<AgentDefinition> RowVersionConflict() =>
-        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RowVersionConflict, "The Agent changed before this operation completed.");
-
-    private async Task<IReadOnlyList<string>> FindArchiveBlockersAsync(
-        Guid agentId,
-        CancellationToken cancellationToken)
-    {
-        var blockers = new List<string>();
-        IReadOnlyList<AgentDefinition> enabledAgents = await _repository.ListAsync(
-            new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
-            cancellationToken);
-        blockers.AddRange(enabledAgents
-            .Where(value => value.Id != agentId &&
-                value.PublishedVersions.LastOrDefault()?.Snapshot?.ChildAgents
-                    .Any(binding => binding.AgentId == agentId) == true)
-            .Select(value => $"Agent '{value.Code}'"));
-
-        if (_orchestrations is not null)
-        {
-            IReadOnlyList<OrchestrationDefinition> definitions =
-                await _orchestrations.ListAsync(cancellationToken);
-            blockers.AddRange(definitions
-                .Where(value => value.Status is OrchestrationStatus.Enabled &&
-                    value.PublishedVersions.LastOrDefault()?.Snapshot?.Agents
-                        .Any(binding => binding.AgentId == agentId) == true)
-                .Select(value => $"orchestration '{value.Code}'"));
-        }
-
-        if (_mainAgentAssignments is not null &&
-            (await _mainAgentAssignments.GetAsync(cancellationToken))?.AgentId == agentId)
-        {
-            blockers.Add("the Main Agent assignment");
-        }
-
-        return AgentContractCloner.ReadOnly(blockers.Take(8));
-    }
-
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateSkillVersionsAsync(
-        IReadOnlyList<Guid> versionIds,
-        CancellationToken cancellationToken)
-    {
-        if (versionIds.Count != versionIds.Distinct().Count())
-        {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.SkillVersionNotPublished,
-                "Agent Skill bindings must not contain duplicate versions.");
-        }
-
-        foreach (Guid versionId in versionIds)
-        {
-            if (versionId == Guid.Empty ||
-                _skillVersions is null ||
-                !await _skillVersions.ExistsAsync(versionId, cancellationToken))
-            {
-                return AgentOperationResult<AgentDefinition>.Failure(
-                    AgentErrorCodes.SkillVersionNotPublished,
-                    "Agent Drafts may bind only published Skill versions.");
-            }
-        }
-
-        return null;
-    }
-
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateToolVersionsAsync(
-        IReadOnlyList<Guid> versionIds,
-        CancellationToken cancellationToken)
-    {
-        if (versionIds.Count > 128 ||
-            versionIds.Count != versionIds.Distinct().Count())
-        {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.ToolVersionNotAvailable,
-                "Agent MCP tool bindings must contain no more than 128 unique versions.");
-        }
-
-        foreach (Guid versionId in versionIds)
-        {
-            if (versionId == Guid.Empty ||
-                _toolVersions is null ||
-                !await _toolVersions.ExistsAsync(versionId, cancellationToken))
-            {
-                return AgentOperationResult<AgentDefinition>.Failure(
-                    AgentErrorCodes.ToolVersionNotAvailable,
-                    "Agent Drafts may bind only classified MCP tool versions.");
-            }
-        }
-
-        return null;
-    }
-
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(
-        IReadOnlyList<Guid> ids,
-        CancellationToken cancellationToken)
-    {
-        if (ids.Count > 32 || ids.Count != ids.Distinct().Count())
-        {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.KnowledgeBaseUnavailable,
-                "Agent knowledge bindings must contain no more than 32 unique knowledge bases.");
-        }
-
-        IReadOnlySet<Guid> available = (await GetKnowledgeReferencesAsync(ids, cancellationToken))
-            .Select(value => value.KnowledgeBaseId)
-            .ToHashSet();
-        if (ids.Any(id => id == Guid.Empty || !available.Contains(id)))
-        {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.KnowledgeBaseUnavailable,
-                "Agent Drafts may bind only enabled and indexed knowledge bases.");
-        }
-
-        return null;
-    }
-
-    private async Task<IReadOnlyList<PublishedKnowledgeReference>> GetKnowledgeReferencesAsync(
-        IReadOnlyList<Guid> ids,
-        CancellationToken cancellationToken)
-    {
-        if (ids.Count == 0)
-        {
-            return Array.Empty<PublishedKnowledgeReference>();
-        }
-
-        if (_knowledgeBases is null)
-        {
-            return Array.Empty<PublishedKnowledgeReference>();
-        }
-
-        IReadOnlySet<Guid> selected = ids.ToHashSet();
-        return KnowledgeContractCloner.ReadOnly(
-            (await _knowledgeBases.ListAsync(cancellationToken))
-            .Where(value => selected.Contains(value.KnowledgeBaseId)));
-    }
-
-    private async Task<AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>> ResolveChildAgentBindingsAsync(
-        Guid agentId,
-        AgentVersion draft,
-        CancellationToken cancellationToken)
-    {
-        IReadOnlyList<Guid> childAgentIds = draft.ChildAgentIds;
-        if (childAgentIds.Count > AgentDelegationPolicy.MaximumChildAgentBindings)
-        {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
-                $"Main Agent publications may bind no more than {AgentDelegationPolicy.MaximumChildAgentBindings} child Agents.");
-        }
-
-        if (childAgentIds.Count != childAgentIds.Distinct().Count() ||
-            childAgentIds.Any(id => id == Guid.Empty || id == agentId))
-        {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
-                "Child Agent bindings must contain unique published Agent identities other than the Agent itself.");
-        }
-
-        if (draft.ChildAgentPins.Count > 0 &&
-            (draft.ChildAgentPins.Select(value => value.AgentId).Distinct().Count() != draft.ChildAgentPins.Count ||
-             draft.ChildAgentPins.Count != childAgentIds.Count ||
-             draft.ChildAgentPins.Select(value => value.AgentId).Except(childAgentIds).Any() ||
-             draft.ChildAgentPins.Any(value => value.AgentVersionId == Guid.Empty)))
-        {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
-                "Imported child Agent pins must match unique child Agent identities.");
-        }
-        IReadOnlyDictionary<Guid, AgentChildBindingSnapshot> pins = draft.ChildAgentPins
-            .ToDictionary(value => value.AgentId);
-
-        var resolved = new List<AgentChildBindingSnapshot>(childAgentIds.Count);
-        foreach (Guid childAgentId in childAgentIds)
-        {
-            AgentDefinition? child = await _repository.GetByIdAsync(childAgentId, cancellationToken);
-            if (child is null ||
-                child.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
-                child.PublishedVersions.Count == 0)
-            {
-                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
-                    "Child Agent bindings must reference enabled published Agents.");
-            }
-
-            Guid versionId = pins.TryGetValue(childAgentId, out AgentChildBindingSnapshot? pin)
-                ? pin.AgentVersionId
-                : child.PublishedVersions[^1].Id;
-            AgentVersion? selectedVersion = child.PublishedVersions
-                .FirstOrDefault(version => version.Id == versionId);
-            if (selectedVersion is null)
-            {
-                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The imported child Agent version is no longer available.");
-            }
-            resolved.Add(new AgentChildBindingSnapshot(childAgentId, versionId)
-            {
-                AgentCode = selectedVersion.Snapshot?.AgentCode ?? child.Code,
-                AgentName = selectedVersion.Snapshot?.AgentName is { } frozenName
-                    ? frozenName
-                    : child.Name.Trim(),
-                AgentDescription = selectedVersion.Snapshot?.AgentDescription
-                    is { } frozenDescription
-                    ? frozenDescription
-                    : child.Description.Trim()
-            });
-        }
-
-        return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Success(
-            AgentContractCloner.ReadOnly(resolved));
-    }
-
-    private async Task<AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>> ResolveOrchestrationBindingsAsync(
-        AgentVersion draft,
-        CancellationToken cancellationToken)
-    {
-        IReadOnlyList<Guid> orchestrationIds = draft.OrchestrationIds;
-        if (orchestrationIds.Count != orchestrationIds.Distinct().Count() ||
-            orchestrationIds.Any(id => id == Guid.Empty) ||
-            (orchestrationIds.Count > 0 && _orchestrationCatalog is null))
-        {
-            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
-                "Orchestration bindings must contain unique enabled published orchestrations.");
-        }
-
-        IReadOnlyList<PublishedOrchestrationReference> values = _orchestrationCatalog is null
-            ? []
-            : await _orchestrationCatalog.ListPublishedAsync(cancellationToken);
-        if (draft.OrchestrationPins.Count > 0 &&
-            (draft.OrchestrationPins.Select(value => value.OrchestrationId).Distinct().Count() != draft.OrchestrationPins.Count ||
-             draft.OrchestrationPins.Count != orchestrationIds.Count ||
-             draft.OrchestrationPins.Select(value => value.OrchestrationId).Except(orchestrationIds).Any() ||
-             draft.OrchestrationPins.Any(value => value.OrchestrationVersionId == Guid.Empty)))
-        {
-            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
-                "Imported orchestration pins must match unique orchestration identities.");
-        }
-        IReadOnlyDictionary<Guid, AgentOrchestrationBindingSnapshot> pins = draft.OrchestrationPins
-            .ToDictionary(value => value.OrchestrationId);
-
-        var resolved = new List<AgentOrchestrationBindingSnapshot>(orchestrationIds.Count);
-        foreach (Guid orchestrationId in orchestrationIds)
-        {
-            PublishedOrchestrationReference? selected = pins.TryGetValue(orchestrationId, out AgentOrchestrationBindingSnapshot? pin)
-                ? values.SingleOrDefault(value => value.OrchestrationId == orchestrationId && value.OrchestrationVersionId == pin.OrchestrationVersionId)
-                : values.LastOrDefault(value => value.OrchestrationId == orchestrationId);
-            if (selected is null || !selected.Enabled)
-            {
-                return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
-                    "Orchestration bindings must reference enabled published orchestrations.");
-            }
-            resolved.Add(new AgentOrchestrationBindingSnapshot(orchestrationId, selected.OrchestrationVersionId));
-        }
-
-        return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Success(
-            AgentContractCloner.ReadOnly(resolved));
-    }
-
-    private static bool TryNormalizeCode(string? value, out string? normalizedCode)
-    {
-        normalizedCode = null;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        var builder = new System.Text.StringBuilder();
-        bool pendingHyphen = false;
-        foreach (char character in value.Trim())
-        {
-            if (character is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9')
-            {
-                if (pendingHyphen && builder.Length > 0)
-                {
-                    builder.Append('-');
-                }
-
-                builder.Append(char.ToLowerInvariant(character));
-                pendingHyphen = false;
-            }
-            else if (character is '-' or '_' || char.IsWhiteSpace(character))
-            {
-                pendingHyphen = builder.Length > 0;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        normalizedCode = builder.ToString();
-        return normalizedCode.Length > 0;
-    }
 }
