@@ -1,6 +1,7 @@
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
+using EU.Core.Model;
 using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
@@ -69,25 +70,34 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         AgAgentDefinitionDetailDto? value = await agentDefinitionServices.QueryAgent(
             id,
             cancellationToken);
-        AgentDefinition? definition = value is null ? null : AgentDefinitionDtoMapper.Map(value);
-        return definition is null
+        return value is null
             ? ApiProblemResults.Create(
                 HttpContext,
                 StatusCodes.Status404NotFound,
                 AgentErrorCodes.NotFound,
                 "The Agent was not found.")
-            : Ok(definition);
+            : Ok(value);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.CreateAsync(
-            new CreateAgentCommand(request.Code, request.Name, request.Description),
-            cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/agents/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        var result = await agentDefinitionServices.CreateAsync( new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
+        if (!result.Success)
+        {
+            return ApiProblemResults.Create(
+                HttpContext,
+                StatusCodes.Status409Conflict,
+                AgentErrorCodes.CodeConflict,
+                "The Agent operation could not be completed.",
+                result.Message);
+        }
+
+        AgAgentDefinitionDetailDto value = await agentDefinitionServices.QueryAgent(
+            result.Data,
+            cancellationToken)
+            ?? throw new InvalidDataException("The newly created Agent could not be loaded.");
+        return Created($"/api/agents/{result.Data}", value);
     }
 
     [HttpPut("{id:guid}/draft")]
