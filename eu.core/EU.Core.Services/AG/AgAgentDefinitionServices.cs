@@ -36,7 +36,6 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices
 {
-    private readonly IAgentRepository? _repository;
     private readonly JsonSchemaValidator _jsonSchemaValidator;
     private readonly IPublishedSkillVersionCatalog? _skillVersions;
     private readonly IPublishedMcpToolCatalog? _toolVersions;
@@ -47,7 +46,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private readonly IModelProfileReferenceCatalog? _modelProfiles;
     public AgAgentDefinitionServices(
         IBaseRepository<AgAgentDefinition> dal,
-        IAgentRepository? repository = null,
         JsonSchemaValidator? jsonSchemaValidator = null,
         IPublishedSkillVersionCatalog? skillVersions = null,
         IPublishedMcpToolCatalog? toolVersions = null,
@@ -58,7 +56,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IModelProfileReferenceCatalog? modelProfiles = null)
     {
         BaseDal = dal ?? throw new ArgumentNullException(nameof(dal));
-        _repository = repository;
         _jsonSchemaValidator = jsonSchemaValidator ?? new JsonSchemaValidator();
         _skillVersions = skillVersions;
         _toolVersions = toolVersions;
@@ -548,20 +545,394 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         Guid? referenceVersionId = null,
         string? referenceCode = null,
         string? referenceName = null,
-        string? referenceDescription = null) =>
+        string? referenceDescription = null,
+        string scope = "Version",
+        long? logicalRevision = null) =>
         new()
         {
             ID = Guid.NewGuid(),
             VersionId = versionId,
-            Scope = "Version",
+            Scope = scope,
             BindingType = bindingType,
             Ordinal = ordinal,
             ReferenceId = referenceId,
             ReferenceVersionId = referenceVersionId,
+            LogicalRevision = logicalRevision,
             ReferenceCode = referenceCode,
             ReferenceName = referenceName,
             ReferenceDescription = referenceDescription
         };
+
+    private async Task<AgentDefinition?> GetAgentDefinitionAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        AgAgentDefinitionDetailDto? value = await QueryAgent(id, cancellationToken);
+        return value is null ? null : MapAgentDefinition(value);
+    }
+
+    private async Task<IReadOnlyList<AgentDefinition>> ListAgentDefinitionsAsync(
+        AgentDefinitionQuery query,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string? normalizedSearch = query.Search?.Trim().ToLowerInvariant();
+        string? runtimeStatus = query.RuntimeStatus?.ToString();
+        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
+        try
+        {
+            List<AgAgentDefinition> definitions = await Db.Queryable<AgAgentDefinition>()
+                .Where(value => !value.IsDeleted)
+                .WhereIF(
+                    runtimeStatus.IsNullOrEmpty(),
+                    value => value.RuntimeStatus != "Archived")
+                .WhereIF(
+                    runtimeStatus.IsNotEmptyOrNull(),
+                    value => value.RuntimeStatus == runtimeStatus)
+                .WhereIF(
+                    normalizedSearch.IsNotEmptyOrNull(),
+                    value =>
+                        SqlFunc.ToLower(value.Code).Contains(normalizedSearch!) ||
+                        SqlFunc.ToLower(value.Name).Contains(normalizedSearch!) ||
+                        SqlFunc.ToLower(value.Description).Contains(normalizedSearch!))
+                .OrderBy(value => value.Code)
+                .OrderBy(value => value.ID)
+                .ToListAsync();
+            if (definitions.Count == 0)
+            {
+                await Db.Ado.CommitTranAsync();
+                return [];
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            Guid[] agentIds = definitions.Select(value => value.ID).ToArray();
+            List<AgAgentVersion> versions = await Db.Queryable<AgAgentVersion>()
+                .Where(value =>
+                    value.AgentId.HasValue &&
+                    agentIds.Contains(value.AgentId.Value))
+                .OrderBy(value => value.AgentId)
+                .OrderBy(value => value.IsDraft, OrderByType.Desc)
+                .OrderBy(value => value.Ordinal)
+                .ToListAsync();
+            List<AgAgentVersionSnapshot> snapshots = await Db
+                .Queryable<AgAgentVersionSnapshot, AgAgentVersion>(
+                    (snapshot, version) => new JoinQueryInfos(
+                        JoinType.Inner,
+                        version.ID == snapshot.VersionId))
+                .Where((snapshot, version) =>
+                    version.AgentId.HasValue &&
+                    agentIds.Contains(version.AgentId.Value))
+                .Select((snapshot, version) => snapshot)
+                .ToListAsync();
+            List<AgAgentVersionBinding> bindings = await Db
+                .Queryable<AgAgentVersionBinding, AgAgentVersion>(
+                    (binding, version) => new JoinQueryInfos(
+                        JoinType.Inner,
+                        version.ID == binding.VersionId))
+                .Where((binding, version) =>
+                    version.AgentId.HasValue &&
+                    agentIds.Contains(version.AgentId.Value))
+                .OrderBy((binding, version) => binding.VersionId)
+                .OrderBy((binding, version) => binding.Scope)
+                .OrderBy((binding, version) => binding.BindingType)
+                .OrderBy((binding, version) => binding.Ordinal)
+                .Select((binding, version) => binding)
+                .ToListAsync();
+
+            var versionsByAgent = versions
+                .GroupBy(value => value.AgentId.GetValueOrDefault())
+                .ToDictionary(group => group.Key, group => group.ToArray());
+            var snapshotsByVersion = snapshots
+                .ToDictionary(value => value.VersionId.GetValueOrDefault());
+            var bindingsByVersion = bindings
+                .GroupBy(value => value.VersionId.GetValueOrDefault())
+                .ToDictionary(group => group.Key, group => group.ToList());
+            var result = new List<AgentDefinition>(definitions.Count);
+            foreach (AgAgentDefinition definition in definitions)
+            {
+                if (!versionsByAgent.TryGetValue(
+                        definition.ID,
+                        out AgAgentVersion[]? agentVersions) ||
+                    agentVersions.Count(value => value.IsDraft == true) != 1)
+                {
+                    continue;
+                }
+
+                AgAgentVersion draft = agentVersions.Single(value => value.IsDraft == true);
+                var detail = new AgAgentDefinitionDetailDto
+                {
+                    Id = definition.ID,
+                    Code = Required(definition.Code, "Code"),
+                    Name = Required(definition.Name, "Name"),
+                    Description = Required(definition.Description, "Description"),
+                    RuntimeStatus = ParseEnum<AgentRuntimeStatus>(
+                        Required(definition.RuntimeStatus, "RuntimeStatus"),
+                        "RuntimeStatus"),
+                    LogicalRevision = definition.LogicalRevision
+                        ?? throw new InvalidDataException(
+                            "Agent LogicalRevision is required."),
+                    Draft = MapVersionDto(
+                        draft,
+                        snapshotsByVersion.GetValueOrDefault(draft.ID),
+                        bindingsByVersion.GetValueOrDefault(draft.ID) ?? []),
+                    PublishedVersions = agentVersions
+                        .Where(value => value.IsDraft != true)
+                        .OrderBy(value => value.Ordinal)
+                        .Select(value => MapVersionDto(
+                            value,
+                            snapshotsByVersion.GetValueOrDefault(value.ID),
+                            bindingsByVersion.GetValueOrDefault(value.ID) ?? []))
+                        .ToList()
+                };
+                result.Add(MapAgentDefinition(detail));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await Db.Ado.CommitTranAsync();
+            return AgentContractCloner.ReadOnly(result);
+        }
+        catch
+        {
+            await Db.Ado.RollbackTranAsync();
+            throw;
+        }
+    }
+
+    private static AgentDefinition MapAgentDefinition(AgAgentDefinitionDetailDto value) =>
+        new(
+            value.Id,
+            value.Code,
+            value.Name,
+            value.Description,
+            value.RuntimeStatus,
+            value.LogicalRevision,
+            MapAgentVersion(value.Draft),
+            AgentContractCloner.ReadOnly(value.PublishedVersions.Select(MapAgentVersion)));
+
+    private static AgentVersion MapAgentVersion(AgAgentVersionDetailDto value) =>
+        new(
+            value.Id,
+            value.Label,
+            value.IsDraft,
+            value.Instructions,
+            value.ModelProfileId,
+            value.OutputMode,
+            value.OutputJsonSchema,
+            value.OutputSchemaSha256,
+            value.Snapshot is null ? null : MapAgentSnapshot(value.Snapshot))
+        {
+            SkillVersionIds = AgentContractCloner.ReadOnly(value.SkillVersionIds),
+            ToolVersionIds = AgentContractCloner.ReadOnly(value.ToolVersionIds),
+            KnowledgeBaseIds = AgentContractCloner.ReadOnly(value.KnowledgeBaseIds),
+            ChildAgentIds = AgentContractCloner.ReadOnly(value.ChildAgentIds),
+            OrchestrationIds = AgentContractCloner.ReadOnly(value.OrchestrationIds),
+            ChildAgentPins = AgentContractCloner.ReadOnly(
+                value.ChildAgentPins.Select(pin => pin with { })),
+            OrchestrationPins = AgentContractCloner.ReadOnly(
+                value.OrchestrationPins.Select(pin => pin with { }))
+        };
+
+    private static AgentVersionSnapshot MapAgentSnapshot(
+        AgAgentVersionSnapshotDetailDto value) =>
+        new(
+            value.VersionId,
+            value.AgentCode,
+            value.Instructions,
+            value.ModelProfileId,
+            value.OutputMode,
+            value.OutputJsonSchema,
+            AgentContractCloner.ReadOnly(value.Skills.Select(item => item with { })),
+            AgentContractCloner.ReadOnly(value.Tools.Select(item => item with { })))
+        {
+            AgentName = value.AgentName,
+            AgentDescription = value.AgentDescription,
+            KnowledgeBases = AgentContractCloner.ReadOnly(
+                value.KnowledgeBases.Select(item => item with { })),
+            ChildAgents = AgentContractCloner.ReadOnly(
+                value.ChildAgents.Select(item => item with { })),
+            Orchestrations = AgentContractCloner.ReadOnly(
+                value.Orchestrations.Select(item => item with { }))
+        };
+
+    private async Task<bool> TryReplaceAgentAsync(
+        AgentDefinition definition,
+        long expectedLogicalRevision,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        if (expectedLogicalRevision == long.MaxValue ||
+            definition.LogicalRevision != expectedLogicalRevision + 1)
+        {
+            return false;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            var entity = new AgAgentDefinition
+            {
+                ID = definition.Id,
+                Code = definition.Code,
+                Name = definition.Name,
+                Description = definition.Description,
+                RuntimeStatus = definition.RuntimeStatus.ToString(),
+                LogicalRevision = definition.LogicalRevision
+            };
+            int affected = await Db.Updateable(entity)
+                .UpdateColumns(value => new
+                {
+                    value.Name,
+                    value.Description,
+                    value.RuntimeStatus,
+                    value.LogicalRevision
+                })
+                .Where(value =>
+                    value.ID == definition.Id &&
+                    value.Code == definition.Code &&
+                    value.LogicalRevision == expectedLogicalRevision)
+                .ExecuteCommandAsync();
+            if (affected != 1)
+            {
+                await Db.Ado.RollbackTranAsync();
+                return false;
+            }
+
+            List<Guid> existingPublishedIds = await Db.Queryable<AgAgentVersion>()
+                .Where(value => value.AgentId == definition.Id && value.IsDraft == false)
+                .OrderBy(value => value.Ordinal)
+                .Select(value => value.ID)
+                .ToListAsync();
+            if (existingPublishedIds.Count > definition.PublishedVersions.Count ||
+                existingPublishedIds.Where((id, index) =>
+                    definition.PublishedVersions[index].Id != id).Any())
+            {
+                throw new InvalidDataException(
+                    "Published Agent versions are immutable and must remain an ordered prefix.");
+            }
+
+            List<Guid> draftIds = await Db.Queryable<AgAgentVersion>()
+                .Where(value => value.AgentId == definition.Id && value.IsDraft == true)
+                .Select(value => value.ID)
+                .ToListAsync();
+            foreach (Guid draftId in draftIds)
+            {
+                await Db.Deleteable<AgAgentVersionBinding>()
+                    .Where(value => value.VersionId == draftId)
+                    .ExecuteCommandAsync();
+                await Db.Deleteable<AgAgentVersionSnapshot>()
+                    .Where(value => value.VersionId == draftId)
+                    .ExecuteCommandAsync();
+            }
+            await Db.Deleteable<AgAgentVersion>()
+                .Where(value => value.AgentId == definition.Id && value.IsDraft == true)
+                .ExecuteCommandAsync();
+
+            await WriteAgentVersionAsync(definition.Id, 0, definition.Draft);
+            for (int index = existingPublishedIds.Count;
+                 index < definition.PublishedVersions.Count;
+                 index++)
+            {
+                await WriteAgentVersionAsync(
+                    definition.Id,
+                    index,
+                    definition.PublishedVersions[index]);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await Db.Ado.CommitTranAsync();
+            return true;
+        }
+        catch
+        {
+            await Db.Ado.RollbackTranAsync();
+            throw;
+        }
+    }
+
+    private async Task WriteAgentVersionAsync(
+        Guid agentId,
+        int ordinal,
+        AgentVersion version)
+    {
+        await Db.Insertable(MapVersionEntity(agentId, ordinal, version)).ExecuteCommandAsync();
+        List<AgAgentVersionBinding> bindings = MapVersionBindingEntities(version);
+        if (version.Snapshot is not null)
+        {
+            await Db.Insertable(MapSnapshotEntity(version.Id, version.Snapshot)).ExecuteCommandAsync();
+            bindings.AddRange(MapSnapshotBindingEntities(version.Id, version.Snapshot));
+        }
+
+        if (bindings.Count > 0)
+        {
+            await Db.Insertable(bindings).ExecuteCommandAsync();
+        }
+    }
+
+    private static AgAgentVersionSnapshot MapSnapshotEntity(
+        Guid versionId,
+        AgentVersionSnapshot snapshot) =>
+        new()
+        {
+            ID = versionId,
+            VersionId = versionId,
+            SnapshotVersionId = snapshot.VersionId,
+            AgentCode = snapshot.AgentCode,
+            AgentName = snapshot.AgentName,
+            AgentDescription = snapshot.AgentDescription,
+            Instructions = snapshot.Instructions,
+            ModelProfileId = snapshot.ModelProfileId,
+            OutputMode = snapshot.OutputMode.ToString(),
+            OutputJsonSchema = snapshot.OutputJsonSchema
+        };
+
+    private static List<AgAgentVersionBinding> MapSnapshotBindingEntities(
+        Guid versionId,
+        AgentVersionSnapshot snapshot)
+    {
+        var result = new List<AgAgentVersionBinding>();
+        AddSnapshotSimpleBindings(result, versionId, "Skill",
+            snapshot.Skills.Select(value => value.SkillVersionId));
+        AddSnapshotSimpleBindings(result, versionId, "Tool",
+            snapshot.Tools.Select(value => value.ToolVersionId));
+        for (int index = 0; index < snapshot.KnowledgeBases.Count; index++)
+        {
+            AgentKnowledgeBindingSnapshot value = snapshot.KnowledgeBases[index];
+            result.Add(NewBindingEntity(
+                versionId, "KnowledgeBase", index, value.KnowledgeBaseId,
+                scope: "Snapshot", logicalRevision: value.LogicalRevision));
+        }
+        for (int index = 0; index < snapshot.ChildAgents.Count; index++)
+        {
+            AgentChildBindingSnapshot value = snapshot.ChildAgents[index];
+            result.Add(NewBindingEntity(
+                versionId, "ChildAgent", index, value.AgentId, value.AgentVersionId,
+                value.AgentCode, value.AgentName, value.AgentDescription, "Snapshot"));
+        }
+        for (int index = 0; index < snapshot.Orchestrations.Count; index++)
+        {
+            AgentOrchestrationBindingSnapshot value = snapshot.Orchestrations[index];
+            result.Add(NewBindingEntity(
+                versionId, "Orchestration", index, value.OrchestrationId,
+                value.OrchestrationVersionId, scope: "Snapshot"));
+        }
+
+        return result;
+    }
+
+    private static void AddSnapshotSimpleBindings(
+        ICollection<AgAgentVersionBinding> target,
+        Guid versionId,
+        string bindingType,
+        IEnumerable<Guid> referenceIds)
+    {
+        int ordinal = 0;
+        foreach (Guid referenceId in referenceIds)
+        {
+            target.Add(NewBindingEntity(
+                versionId, bindingType, ordinal++, referenceId, scope: "Snapshot"));
+        }
+    }
 
     private IModelProfileReferenceCatalog ModelProfiles =>
         _modelProfiles ?? throw AgentManagementUnavailable();
@@ -722,8 +1093,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
-        AgentDefinition? existing = await _repository.GetByIdAsync(command.AgentId, cancellationToken);
-        //AgentDefinition? existing = await base.QueryById(command.AgentId);
+        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -792,7 +1162,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             Name = command.Name ?? existing.Name,
             Description = command.Description ?? existing.Description
         };
-        if (!await _repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
+        if (!await TryReplaceAgentAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
         {
             return RowVersionConflict();
         }
@@ -809,7 +1179,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RuntimeStatusInvalid, "Runtime status must be Enabled, Disabled, or Archived.");
         }
 
-        AgentDefinition? existing = await _repository.GetByIdAsync(command.AgentId, cancellationToken);
+        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -850,7 +1220,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         }
 
         AgentDefinition updated = existing with { RuntimeStatus = command.RuntimeStatus, LogicalRevision = existing.LogicalRevision + 1 };
-        if (!await _repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
+        if (!await TryReplaceAgentAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
         {
             return RowVersionConflict();
         }
@@ -862,7 +1232,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
-        AgentDefinition? existing = await _repository.GetByIdAsync(command.AgentId, cancellationToken);
+        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -956,7 +1326,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             LogicalRevision = existing.LogicalRevision + 1,
             PublishedVersions = AgentContractCloner.ReadOnly(existing.PublishedVersions.Append(published))
         };
-        if (!await _repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
+        if (!await TryReplaceAgentAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
         {
             return RowVersionConflict();
         }
@@ -968,7 +1338,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(query);
-        IReadOnlyList<AgentDefinition> definitions = await _repository.ListAsync(query, cancellationToken);
+        IReadOnlyList<AgentDefinition> definitions = await ListAgentDefinitionsAsync(query, cancellationToken);
         return AgentContractCloner.ReadOnly(definitions.Select(definition => new AgentListItem(
             definition.Id,
             definition.Code,
@@ -983,7 +1353,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     private void EnsureAgentManagementAvailable()
     {
-        if (_repository is null || _modelProfiles is null)
+        if (_modelProfiles is null)
         {
             throw AgentManagementUnavailable();
         }
@@ -1003,7 +1373,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         CancellationToken cancellationToken)
     {
         var blockers = new List<string>();
-        IReadOnlyList<AgentDefinition> enabledAgents = await _repository.ListAsync(
+        IReadOnlyList<AgentDefinition> enabledAgents = await ListAgentDefinitionsAsync(
             new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
             cancellationToken);
         blockers.AddRange(enabledAgents
@@ -1178,7 +1548,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         var resolved = new List<AgentChildBindingSnapshot>(childAgentIds.Count);
         foreach (Guid childAgentId in childAgentIds)
         {
-            AgentDefinition? child = await _repository.GetByIdAsync(childAgentId, cancellationToken);
+            AgentDefinition? child = await GetAgentDefinitionAsync(childAgentId, cancellationToken);
             if (child is null ||
                 child.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 child.PublishedVersions.Count == 0)
@@ -1335,7 +1705,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
-        AgentDefinition? definition = await _repository.GetByIdAsync(agentId, cancellationToken);
+        AgentDefinition? definition = await GetAgentDefinitionAsync(agentId, cancellationToken);
         if (definition is null)
         {
             return AgentOperationResult<string>.Failure(
@@ -1627,7 +1997,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         foreach (Guid id in ids)
         {
-            AgentDefinition? agent = await _repository.GetByIdAsync(id, cancellationToken);
+            AgentDefinition? agent = await GetAgentDefinitionAsync(id, cancellationToken);
             Guid versionId = byId?.TryGetValue(id, out AgentChildBindingSnapshot? pin) is true
                 ? pin.AgentVersionId
                 : agent?.PublishedVersions.LastOrDefault()?.Id ?? Guid.Empty;
@@ -1700,13 +2070,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return null;
         }
 
-        return AgentContractCloner.ReadOnly(await Task.WhenAll(ids.Select(async id =>
+        var result = new List<AgentPackageChildBindingV1>(ids.Count);
+        foreach (Guid id in ids)
         {
-            AgentDefinition agent = (await _repository.GetByIdAsync(id, cancellationToken))!;
-            return new AgentPackageChildBindingV1(
+            AgentDefinition agent = (await GetAgentDefinitionAsync(id, cancellationToken))!;
+            result.Add(new AgentPackageChildBindingV1(
                 id.ToString("D"),
-                agent.PublishedVersions[^1].Id.ToString("D"));
-        })));
+                agent.PublishedVersions[^1].Id.ToString("D")));
+        }
+
+        return AgentContractCloner.ReadOnly(result);
     }
 
     private async Task<IReadOnlyList<AgentPackageOrchestrationBindingV1>?> ExportOrchestrationBindingsAsync(
@@ -1751,7 +2124,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     "The package references an invalid child Agent version.");
             }
 
-            AgentDefinition? agent = await _repository.GetByIdAsync(id, cancellationToken);
+            AgentDefinition? agent = await GetAgentDefinitionAsync(id, cancellationToken);
             if (agent is null ||
                 agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 !agent.PublishedVersions.Any(value => value.Id == versionId))
