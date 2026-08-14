@@ -135,7 +135,7 @@ public interface IEvaluationTargetCatalog
         CancellationToken cancellationToken = default);
 }
 
-public sealed class PublishedAgentEvaluationTargetCatalog(IAgentRepository agents)
+public sealed class PublishedAgentEvaluationTargetCatalog(IAgentDefinitionCatalog agents)
     : IEvaluationTargetCatalog
 {
     public async Task<bool> IsPublishedAsync(
@@ -143,7 +143,7 @@ public sealed class PublishedAgentEvaluationTargetCatalog(IAgentRepository agent
         Guid agentVersionId,
         CancellationToken cancellationToken = default)
     {
-        AgentDefinition? agent = await agents.GetByIdAsync(agentId, cancellationToken);
+        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
         return agent?.PublishedVersions.Any(version =>
             version.Id == agentVersionId && version.Snapshot is not null) == true;
     }

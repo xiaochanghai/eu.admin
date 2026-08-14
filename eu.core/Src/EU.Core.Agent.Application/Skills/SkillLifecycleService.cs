@@ -8,7 +8,7 @@ namespace EU.Core.Agent.Application.Skills;
 public sealed partial class SkillLifecycleService(
     ISkillRepository repository,
     ISkillFileStore fileStore,
-    IAgentRepository? agents = null)
+    IAgentDefinitionCatalog? agents = null)
 {
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> Locks = new();
 
@@ -280,7 +280,7 @@ public sealed partial class SkillLifecycleService(
             if (command.Archived && agents is not null)
             {
                 var versionIds = existing.PublishedVersions.Select(value => value.Id).ToHashSet();
-                IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListAsync(
+                IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListDefinitionsAsync(
                     new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
                     cancellationToken);
                 string[] blockers = enabledAgents

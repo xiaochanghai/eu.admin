@@ -4,10 +4,10 @@ using EU.Core.Model.ViewModels.Extend;
 namespace EU.Core.Agent.Application.MainAgent;
 
 public sealed class MainAgentAssignmentService(
-    IAgentRepository agents,
+    IAgentDefinitionCatalog agents,
     IMainAgentAssignmentRepository assignments)
 {
-    private readonly IAgentRepository _agents = agents ?? throw new ArgumentNullException(nameof(agents));
+    private readonly IAgentDefinitionCatalog _agents = agents ?? throw new ArgumentNullException(nameof(agents));
     private readonly IMainAgentAssignmentRepository _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
 
     public async Task<MainAgentOperationResult> GetAsync(CancellationToken cancellationToken = default)
@@ -20,7 +20,7 @@ public sealed class MainAgentAssignmentService(
                 "No Main Agent is configured.");
         }
 
-        AgentDefinition? agent = await _agents.GetByIdAsync(assignment.AgentId, cancellationToken);
+        AgentDefinition? agent = await _agents.GetDefinitionAsync(assignment.AgentId, cancellationToken);
         if (agent is null)
         {
             return MainAgentOperationResult.Failure(
@@ -53,7 +53,7 @@ public sealed class MainAgentAssignmentService(
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        AgentDefinition? agent = await _agents.GetByIdAsync(command.AgentId, cancellationToken);
+        AgentDefinition? agent = await _agents.GetDefinitionAsync(command.AgentId, cancellationToken);
         if (agent is null)
         {
             return MainAgentOperationResult.Failure(

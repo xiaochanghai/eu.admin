@@ -9,7 +9,7 @@ namespace EU.Core.Agent.Application.Knowledge;
 public sealed class KnowledgeLifecycleService(
     IKnowledgeBaseRepository repository,
     IKnowledgeRetriever retriever,
-    IAgentRepository? agents = null,
+    IAgentDefinitionCatalog? agents = null,
     IKnowledgePdfTextExtractor? pdfTextExtractor = null)
 {
     public const int MaximumDocumentCharacters = 1_000_000;
@@ -254,7 +254,7 @@ public sealed class KnowledgeLifecycleService(
 
         if (command.Archived && agents is not null)
         {
-            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListAsync(
+            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListDefinitionsAsync(
                 new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
                 cancellationToken);
             string[] blockers = enabledAgents

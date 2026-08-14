@@ -12,7 +12,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
     SkillLifecycleService lifecycle,
-    IAgentRepository agents) : ControllerBase
+    IAgentDefinitionCatalog agents) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(
@@ -59,7 +59,7 @@ public sealed class SkillsController(
                 "The Skill was not found.");
         }
 
-        IReadOnlyList<AgentDefinition> agentDefinitions = await agents.ListAsync(
+        IReadOnlyList<AgentDefinition> agentDefinitions = await agents.ListDefinitionsAsync(
             new AgentDefinitionQuery(),
             cancellationToken);
         return Ok(new

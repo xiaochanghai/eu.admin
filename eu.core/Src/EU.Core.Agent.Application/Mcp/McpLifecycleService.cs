@@ -9,7 +9,7 @@ namespace EU.Core.Agent.Application.Mcp;
 public sealed class McpLifecycleService(
     IMcpServerRepository repository,
     IMcpToolDiscovery discovery,
-    IAgentRepository? agents = null)
+    IAgentDefinitionCatalog? agents = null)
 {
     private const int MaximumTools = 256;
 
@@ -331,7 +331,7 @@ public sealed class McpLifecycleService(
             var serverToolIds = existing.ToolVersions
                 .Select(value => value.Id)
                 .ToHashSet();
-            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListAsync(
+            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListDefinitionsAsync(
                 new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
                 cancellationToken);
             string[] blockers = enabledAgents

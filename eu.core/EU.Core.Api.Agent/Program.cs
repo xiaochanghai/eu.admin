@@ -106,12 +106,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.FromLogContext()
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
-builder.Services.AddSingleton<IAgentRepository>(services =>
-    CreateStorageRepository<IAgentRepository>(
-        services,
-        () => new InMemoryAgentRepository(),
-        value => new SqliteAgentRepository(value),
-        value => new SqlServerAgentRepository(value)));
 builder.Services.AddSingleton<ISkillRepository>(services =>
     CreateStorageRepository<ISkillRepository>(
         services,

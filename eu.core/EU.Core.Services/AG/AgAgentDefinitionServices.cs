@@ -34,7 +34,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// Agent 定义表 (服务)
 /// </summary>
-public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices
+public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices, IAgentDefinitionCatalog
 {
     private readonly JsonSchemaValidator _jsonSchemaValidator;
     private readonly IPublishedSkillVersionCatalog? _skillVersions;
@@ -563,7 +563,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             ReferenceDescription = referenceDescription
         };
 
-    private async Task<AgentDefinition?> GetAgentDefinitionAsync(
+    public async Task<AgentDefinition?> GetDefinitionAsync(
         Guid id,
         CancellationToken cancellationToken)
     {
@@ -571,7 +571,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return value is null ? null : MapAgentDefinition(value);
     }
 
-    private async Task<IReadOnlyList<AgentDefinition>> ListAgentDefinitionsAsync(
+    public async Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(
         AgentDefinitionQuery query,
         CancellationToken cancellationToken)
     {
@@ -1093,7 +1093,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
-        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
+        AgentDefinition? existing = await GetDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -1179,7 +1179,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RuntimeStatusInvalid, "Runtime status must be Enabled, Disabled, or Archived.");
         }
 
-        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
+        AgentDefinition? existing = await GetDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -1232,7 +1232,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
-        AgentDefinition? existing = await GetAgentDefinitionAsync(command.AgentId, cancellationToken);
+        AgentDefinition? existing = await GetDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
         {
             return NotFound();
@@ -1338,7 +1338,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(query);
-        IReadOnlyList<AgentDefinition> definitions = await ListAgentDefinitionsAsync(query, cancellationToken);
+        IReadOnlyList<AgentDefinition> definitions = await ListDefinitionsAsync(query, cancellationToken);
         return AgentContractCloner.ReadOnly(definitions.Select(definition => new AgentListItem(
             definition.Id,
             definition.Code,
@@ -1373,7 +1373,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         CancellationToken cancellationToken)
     {
         var blockers = new List<string>();
-        IReadOnlyList<AgentDefinition> enabledAgents = await ListAgentDefinitionsAsync(
+        IReadOnlyList<AgentDefinition> enabledAgents = await ListDefinitionsAsync(
             new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
             cancellationToken);
         blockers.AddRange(enabledAgents
@@ -1548,7 +1548,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         var resolved = new List<AgentChildBindingSnapshot>(childAgentIds.Count);
         foreach (Guid childAgentId in childAgentIds)
         {
-            AgentDefinition? child = await GetAgentDefinitionAsync(childAgentId, cancellationToken);
+            AgentDefinition? child = await GetDefinitionAsync(childAgentId, cancellationToken);
             if (child is null ||
                 child.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 child.PublishedVersions.Count == 0)
@@ -1705,7 +1705,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
-        AgentDefinition? definition = await GetAgentDefinitionAsync(agentId, cancellationToken);
+        AgentDefinition? definition = await GetDefinitionAsync(agentId, cancellationToken);
         if (definition is null)
         {
             return AgentOperationResult<string>.Failure(
@@ -1997,7 +1997,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         foreach (Guid id in ids)
         {
-            AgentDefinition? agent = await GetAgentDefinitionAsync(id, cancellationToken);
+            AgentDefinition? agent = await GetDefinitionAsync(id, cancellationToken);
             Guid versionId = byId?.TryGetValue(id, out AgentChildBindingSnapshot? pin) is true
                 ? pin.AgentVersionId
                 : agent?.PublishedVersions.LastOrDefault()?.Id ?? Guid.Empty;
@@ -2073,7 +2073,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         var result = new List<AgentPackageChildBindingV1>(ids.Count);
         foreach (Guid id in ids)
         {
-            AgentDefinition agent = (await GetAgentDefinitionAsync(id, cancellationToken))!;
+            AgentDefinition agent = (await GetDefinitionAsync(id, cancellationToken))!;
             result.Add(new AgentPackageChildBindingV1(
                 id.ToString("D"),
                 agent.PublishedVersions[^1].Id.ToString("D")));
@@ -2124,7 +2124,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     "The package references an invalid child Agent version.");
             }
 
-            AgentDefinition? agent = await GetAgentDefinitionAsync(id, cancellationToken);
+            AgentDefinition? agent = await GetDefinitionAsync(id, cancellationToken);
             if (agent is null ||
                 agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 !agent.PublishedVersions.Any(value => value.Id == versionId))

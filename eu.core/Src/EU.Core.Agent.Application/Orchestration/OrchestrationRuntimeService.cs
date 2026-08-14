@@ -10,7 +10,7 @@ namespace EU.Core.Agent.Application.Orchestration;
 public sealed class OrchestrationRuntimeService(
     IOrchestrationRepository orchestrations,
     IOrchestrationRunRepository runs,
-    IAgentRepository agents,
+    IAgentDefinitionCatalog agents,
     AgentRuntimeService agentRuntime,
     ExecutionPayloadLimits? payloadLimits = null)
 {
@@ -121,7 +121,7 @@ public sealed class OrchestrationRuntimeService(
     {
         foreach (OrchestrationAgentBinding binding in snapshot.Agents)
         {
-            AgentDefinition? agent = await agents.GetByIdAsync(binding.AgentId, cancellationToken);
+            AgentDefinition? agent = await agents.GetDefinitionAsync(binding.AgentId, cancellationToken);
             if (agent?.RuntimeStatus != AgentRuntimeStatus.Enabled ||
                 agent.PublishedVersions.LastOrDefault()?.Id != binding.AgentVersionId)
                 return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(

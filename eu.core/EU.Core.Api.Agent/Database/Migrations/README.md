@@ -49,7 +49,7 @@ SQL Server 2014 does not provide `ISJSON`, `JSON_VALUE`, `JSON_QUERY`, or
 SQL Server 2014 cannot safely expand arbitrary JSON with native T-SQL. JSON validity
 remains enforced by the application contracts. Populate the normalized detail
 tables with pre-expanded ordinary `INSERT` statements before switching the runtime
-repository; do not use SQL Server 2016 JSON functions on this database.
+catalog; do not use SQL Server 2016 JSON functions on this database.
 
 `Data/004_normalize_agent_definition_data.sql` contains those pre-expanded rows for
 the current `EU.Core.Api.Agent/data/eu-core-agent.db` snapshot. It verifies all six
@@ -57,7 +57,10 @@ Agent IDs and logical revisions, requires empty normalized detail tables, writes
 validates everything in one transaction, and only then removes `DocumentJson`. If
 the SQL Server Agent data no longer matches that snapshot, it stops and rolls back.
 
-After the detail data is populated, the SQL Server repository reads and writes the relational tables directly.
+After the detail data is populated, `AgAgentDefinitionServices` reads and writes the
+four relational Agent-definition tables through the shared SqlSugar data source.
+Runtime and lifecycle consumers use `IAgentDefinitionCatalog`; they no longer select
+an Agent-definition repository through `AgentStorage:Provider`.
 `OutputJsonSchema` remains because JSON Schema is itself a first-class Agent
 setting, not an aggregate persistence document.
 
@@ -67,8 +70,9 @@ archive, restore, and query flows have passed.
 `CreatedTime` and `UpdateTime` remain nullable without database defaults. Existing
 rows retain `NULL`; the migration must not invent historical audit times.
 
-MySQL currently stops at `002`; `003` and the normalized runtime repository in this
-change apply to SQL Server storage.
+MySQL currently stops at `002`; the normalized detail-table schema must be supplied
+for a target database before the SqlSugar catalog can be used there. The checked-in
+`003` normalization migration currently applies to SQL Server storage.
 
 ## Table mapping
 
@@ -138,7 +142,10 @@ For the final copy, stop writes to the Agent API and keep a backup of
 6. Import the three tool-approval child tables.
 
 After import, compare row counts and primary-key sets for all 27 tables before switching
-the application storage provider. The application supports SQLite, SQL Server, and InMemory. After validation, switch with
+the application storage provider. `AgentStorage:Provider` continues to support SQLite,
+SQL Server, and InMemory for the remaining Agent platform repositories. Agent definitions,
+versions, snapshots, and bindings always use the shared EU.Core SqlSugar data source.
+After validation, switch the remaining repositories with
 `AgentStorage:Provider=SqlServer` and configure
 `AgentStorage:ConnectionStringAlias=alias:agent-storage`. Store the real value only
 as `AGENT_STORAGE_CONNECTION_AGENT_STORAGE` in the ignored `.env` or process

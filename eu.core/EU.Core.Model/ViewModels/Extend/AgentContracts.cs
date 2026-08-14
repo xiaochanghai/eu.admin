@@ -205,17 +205,15 @@ public sealed record AgentOperationResult<T>(T? Value, AgentError? Error)
     public static AgentOperationResult<T> Failure(string code, string message) => new(default, new AgentError(code, message));
 }
 
-public interface IAgentRepository
+public interface IAgentDefinitionCatalog
 {
-    Task<AgentDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AgentDefinition?> GetDefinitionAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
 
-    Task<AgentDefinition?> GetByCodeAsync(string normalizedCode, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<AgentDefinition>> ListAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default);
-
-    Task<bool> TryCreateAsync(AgentDefinition definition, CancellationToken cancellationToken = default);
-
-    Task<bool> TryReplaceAsync(AgentDefinition definition, long expectedLogicalRevision, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(
+        AgentDefinitionQuery query,
+        CancellationToken cancellationToken = default);
 }
 
 public static class AgentContractCloner

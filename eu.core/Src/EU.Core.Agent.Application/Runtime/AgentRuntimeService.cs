@@ -12,7 +12,7 @@ using EU.Core.Agent.Application.Skills;
 namespace EU.Core.Agent.Application.Runtime;
 
 public sealed class AgentRuntimeService(
-    IAgentRepository agents,
+    IAgentDefinitionCatalog agents,
     IPublishedMcpToolCatalog toolCatalog,
     IAgentRuntimeEngine engine,
     IAgentRunAuditRepository auditRepository,
@@ -38,7 +38,7 @@ public sealed class AgentRuntimeService(
                 $"Run input must contain from 1 through {MaximumInputCharacters} characters.");
         }
 
-        AgentDefinition? agent = await agents.GetByIdAsync(agentId, cancellationToken);
+        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
         if (agent is null)
         {
             return AgentRunPreparationResult.Failure(
@@ -79,7 +79,7 @@ public sealed class AgentRuntimeService(
                 $"Run input must contain from 1 through {MaximumInputCharacters} characters.");
         }
 
-        AgentDefinition? agent = await agents.GetByIdAsync(agentId, cancellationToken);
+        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
         if (agent is null)
         {
             return AgentRunPreparationResult.Failure(

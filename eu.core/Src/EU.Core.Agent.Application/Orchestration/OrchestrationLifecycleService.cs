@@ -6,7 +6,7 @@ namespace EU.Core.Agent.Application.Orchestration;
 
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
-    IAgentRepository agents)
+    IAgentDefinitionCatalog agents)
 {
     public async Task<OrchestrationOperationResult<OrchestrationDefinition>> CreateAsync(
         CreateOrchestrationCommand command,
@@ -80,7 +80,7 @@ public sealed class OrchestrationLifecycleService(
         var bindings = new List<OrchestrationAgentBinding>();
         foreach (Guid agentId in existing.Draft.Nodes.Select(node => node.AgentId).Distinct())
         {
-            AgentDefinition? agent = await agents.GetByIdAsync(agentId, cancellationToken);
+            AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
             AgentVersion? version = agent?.PublishedVersions.LastOrDefault();
             if (agent?.RuntimeStatus != AgentRuntimeStatus.Enabled || version?.Snapshot is null)
             {
@@ -145,7 +145,7 @@ public sealed class OrchestrationLifecycleService(
 
         if (command.Archived)
         {
-            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListAsync(
+            IReadOnlyList<AgentDefinition> enabledAgents = await agents.ListDefinitionsAsync(
                 new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled),
                 cancellationToken);
             string[] blockers = enabledAgents
@@ -188,7 +188,7 @@ public sealed class OrchestrationLifecycleService(
             return "Node retry, timeout, or input template limits are invalid.";
         foreach (Guid agentId in nodes.Select(node => node.AgentId).Distinct())
         {
-            if (agentId == Guid.Empty || await agents.GetByIdAsync(agentId, cancellationToken) is null)
+            if (agentId == Guid.Empty || await agents.GetDefinitionAsync(agentId, cancellationToken) is null)
                 return $"Agent '{agentId}' does not exist.";
         }
         HashSet<string> ids = nodes.Select(node => node.Id).ToHashSet(StringComparer.Ordinal);
