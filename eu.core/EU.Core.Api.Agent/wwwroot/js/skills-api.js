@@ -39,6 +39,9 @@ export const skillsApi = {
   saveFile: (id, body) => request(`${base}/${encodeURIComponent(id)}/files/content`, {
     method: "PUT", body: JSON.stringify(body)
   }),
+  deleteFile: (id, body) => request(`${base}/${encodeURIComponent(id)}/files/content`, {
+    method: "DELETE", body: JSON.stringify(body)
+  }),
   publish: (id, body) => request(`${base}/${encodeURIComponent(id)}/publish`, {
     method: "POST", body: JSON.stringify(body)
   }),

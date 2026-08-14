@@ -1,6 +1,7 @@
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
@@ -11,7 +12,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/skills")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
-    SkillLifecycleService lifecycle,
+    IAgSkillDefinitionServices lifecycle,
     IAgentDefinitionCatalog agents) : ControllerBase
 {
     [HttpGet]
@@ -164,6 +165,21 @@ public sealed class SkillsController(
         return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
     }
 
+    [HttpDelete("{id:guid}/files/content")]
+    public async Task<IActionResult> DeleteFile(
+        Guid id,
+        [FromBody] DeleteSkillFileRequest request,
+        CancellationToken cancellationToken)
+    {
+        SkillOperationResult<SkillDefinition> result = await lifecycle.DeleteFileAsync(
+            new DeleteSkillFileCommand(
+                id,
+                request.ExpectedDraftRevision,
+                request.Path),
+            cancellationToken);
+        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+    }
+
     [HttpPost("{id:guid}/publish")]
     public async Task<IActionResult> Publish(
         Guid id,
@@ -231,6 +247,10 @@ public sealed record SaveSkillFileRequest(
     long ExpectedDraftRevision,
     string Path,
     string Content);
+
+public sealed record DeleteSkillFileRequest(
+    long ExpectedDraftRevision,
+    string Path);
 
 public sealed record PublishSkillRequest(
     long ExpectedDraftRevision,

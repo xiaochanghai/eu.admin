@@ -106,14 +106,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.FromLogContext()
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
-builder.Services.AddSingleton<ISkillRepository>(services =>
-    CreateStorageRepository<ISkillRepository>(
-        services,
-        () => new InMemorySkillRepository(),
-        value => new SqliteSkillRepository(value),
-        value => new SqlServerSkillRepository(value)));
-builder.Services.AddSingleton<IPublishedSkillVersionCatalog>(services =>
-    (IPublishedSkillVersionCatalog)services.GetRequiredService<ISkillRepository>());
 builder.Services.AddSingleton<IMcpServerRepository>(services =>
     CreateStorageRepository<IMcpServerRepository>(
         services,
@@ -370,7 +362,6 @@ builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
 builder.Services.AddSingleton<MainAgentAssignmentService>();
-builder.Services.AddSingleton<SkillLifecycleService>();
 builder.Services.AddSingleton<McpLifecycleService>();
 builder.Services.AddSingleton<KnowledgeLifecycleService>();
 builder.Services.AddSingleton<OrchestrationLifecycleService>();

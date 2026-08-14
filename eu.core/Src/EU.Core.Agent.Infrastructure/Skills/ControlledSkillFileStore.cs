@@ -174,6 +174,31 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
         await AtomicWriteAsync(path, content, cancellationToken);
     }
 
+    public Task DeleteDraftAsync(
+        string skillCode,
+        string relativePath,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string normalizedRelativePath = ValidateRelativePath(relativePath);
+        string path = ResolveDraftPath(skillCode, normalizedRelativePath, createParent: false);
+        if (string.Equals(normalizedRelativePath, "SKILL.md", StringComparison.OrdinalIgnoreCase))
+        {
+            throw Error(
+                SkillErrorCodes.PathInvalid,
+                "SKILL.md is required and cannot be deleted.");
+        }
+
+        if (!File.Exists(path))
+        {
+            throw Error(SkillErrorCodes.FileMissing, "The Skill file was not found.");
+        }
+
+        RejectReparsePoint(path);
+        File.Delete(path);
+        return Task.CompletedTask;
+    }
+
     public async Task<SkillPublishArtifact> PublishAsync(
         string skillCode,
         string versionLabel,
@@ -403,16 +428,7 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
             throw Error(SkillErrorCodes.PathInvalid, "The Skill file path is invalid.");
         }
 
-        if (segments.Length == 1)
-        {
-            if (!string.Equals(segments[0], "SKILL.md", StringComparison.OrdinalIgnoreCase))
-            {
-                throw Error(
-                    SkillErrorCodes.PathInvalid,
-                    "Root-level Skill files are limited to SKILL.md.");
-            }
-        }
-        else if (!AllowedTopLevelDirectories.Contains(segments[0]))
+        if (segments.Length > 1 && !AllowedTopLevelDirectories.Contains(segments[0]))
         {
             throw Error(
                 SkillErrorCodes.PathInvalid,

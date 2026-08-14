@@ -11,6 +11,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   };
   const metadataButton = document.querySelector("#saveSkillMetadataButton");
   const fileButton = document.querySelector("#saveSkillFileButton");
+  const deleteFileButton = document.querySelector("#deleteSkillFileButton");
   const publishButton = document.querySelector("#publishSkillButton");
   const archiveButton = document.querySelector("#archiveSkillButton");
   const newFilePath = document.querySelector("#newSkillFilePath");
@@ -21,6 +22,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   const message = document.querySelector("#skillEditorMessage");
   let current = null;
   let currentPath = "";
+  let currentFilePersisted = false;
   let fileDirty = false;
   let metadataDirty = false;
   let busy = false;
@@ -37,6 +39,18 @@ export function createSkillEditor({ api, onChanged, toast }) {
     archiveButton.disabled = value;
     newFilePath.disabled = value || archived;
     newFileButton.disabled = value || archived;
+    syncDeleteFileButton();
+  }
+
+  function syncDeleteFileButton() {
+    const archived = current?.status === "Archived";
+    const isProtectedFile = !currentPath || currentPath.toUpperCase() === "SKILL.MD";
+    deleteFileButton.hidden = !current;
+    deleteFileButton.disabled = busy || archived || isProtectedFile;
+    setText(deleteFileButton, currentPath && !currentFilePersisted ? "取消新建" : "删除文件");
+    deleteFileButton.title = isProtectedFile && currentPath
+      ? "SKILL.md 是必需入口文件，不能删除"
+      : "";
   }
 
   function formatArchiveError(error) {
@@ -73,6 +87,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
     fileWorkspace.hidden = !skill;
     document.querySelector("#skillVersionSection").hidden = !skill;
     fileButton.hidden = !skill;
+    deleteFileButton.hidden = !skill;
     publishButton.hidden = !skill;
     archiveButton.hidden = !skill;
     if (skill) setText(publishButton, `发布 v${nextVersion()}`);
@@ -83,6 +98,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
     publishButton.disabled = archived;
     newFilePath.disabled = archived;
     newFileButton.disabled = archived;
+    syncDeleteFileButton();
     renderVersions(skill?.publishedVersions ?? []);
     metadataDirty = false;
   }
@@ -131,34 +147,38 @@ export function createSkillEditor({ api, onChanged, toast }) {
   }
 
   async function selectFile(path, force = false) {
-    if (!current || busy || path === currentPath && !force) return;
+    if (!current || (busy && !force) || (path === currentPath && !force)) return;
     if (fileDirty && !force) {
       showMessage("当前文件有未保存修改，请先保存再切换。", "warning");
       return;
     }
+    const wasBusy = busy;
     setBusy(true);
     try {
       const result = await api.readFile(current.id, path);
       currentPath = path;
+      currentFilePersisted = true;
       content.value = result.content;
       content.disabled = current.status === "Archived";
       fileDirty = false;
       setText(document.querySelector("#currentSkillFile"), path);
       setText(document.querySelector("#skillFileState"), "已同步");
+      syncDeleteFileButton();
       [...fileList.children].forEach(button =>
         button.classList.toggle("is-active", button.querySelector("span")?.textContent === path));
     } catch (error) {
       showMessage(`${error.message} · ${error.errorCode ?? "READ_FAILED"}`, "error");
     } finally {
-      setBusy(false);
+      setBusy(wasBusy);
     }
   }
 
   async function open(skill = null) {
     fileDirty = false;
     metadataDirty = false;
-    fill(skill);
     currentPath = "";
+    currentFilePersisted = false;
+    fill(skill);
     content.value = "";
     content.disabled = !skill || skill.status === "Archived";
     showMessage("");
@@ -235,6 +255,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
         content: content.value
       });
       fileDirty = false;
+      currentFilePersisted = true;
       fill(current);
       setText(document.querySelector("#skillFileState"), "已同步");
       showMessage("文件已原子保存。", "success");
@@ -249,6 +270,58 @@ export function createSkillEditor({ api, onChanged, toast }) {
     } finally {
       setBusy(false);
     }
+  });
+
+  async function deleteFile(path) {
+    if (!current || busy || current.status === "Archived") return;
+    if (fileDirty || metadataDirty) {
+      showMessage("存在未保存修改，请先保存后再删除文件。", "warning");
+      return;
+    }
+    if (!window.confirm(`确定删除 Draft 文件“${path}”吗？`)) return;
+
+    setBusy(true);
+    try {
+      current = await api.deleteFile(current.id, {
+        expectedDraftRevision: current.draftRevision,
+        path
+      });
+      const deletedCurrentFile = currentPath === path;
+      if (deletedCurrentFile) {
+        currentPath = "";
+        currentFilePersisted = false;
+        content.value = "";
+        setText(document.querySelector("#currentSkillFile"), "未选择文件");
+        setText(document.querySelector("#skillFileState"), "已同步");
+      }
+      fill(current);
+      await loadFiles(deletedCurrentFile ? "SKILL.md" : currentPath);
+      showMessage("Draft 文件已删除。", "success");
+      await onChanged();
+    } catch (error) {
+      showMessage(
+        error.status === 409
+          ? "文件未删除：Draft revision 已变化，请关闭后重新打开。"
+          : `${error.message} · ${error.errorCode ?? "DELETE_FAILED"}`,
+        error.status === 409 ? "warning" : "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  deleteFileButton.addEventListener("click", async () => {
+    if (!current || !currentPath || busy || current.status === "Archived") return;
+    if (!currentFilePersisted) {
+      currentPath = "";
+      currentFilePersisted = false;
+      fileDirty = false;
+      content.value = "";
+      syncDeleteFileButton();
+      await loadFiles("SKILL.md");
+      showMessage("已取消新建 Draft 文件。", "success");
+      return;
+    }
+    await deleteFile(currentPath);
   });
 
   publishButton.addEventListener("click", async () => {
@@ -309,11 +382,13 @@ export function createSkillEditor({ api, onChanged, toast }) {
     const path = input.value.trim();
     if (!path) return;
     currentPath = path;
+    currentFilePersisted = false;
     content.value = "";
     content.disabled = false;
     fileDirty = true;
     setText(document.querySelector("#currentSkillFile"), path);
     setText(document.querySelector("#skillFileState"), "新文件未保存");
+    syncDeleteFileButton();
     input.value = "";
   });
 

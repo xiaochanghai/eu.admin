@@ -6,7 +6,8 @@ These baseline scripts create the Agent module in the shared EU.Core database.
 - SQL Server: 2014 or later
 - Table names use the EU.Core `Ag` module prefix.
 - Column names use PascalCase. SQLite source columns use snake_case.
-- The scripts create schema objects only; they do not copy SQLite rows.
+- Skill cutover scripts retain existing Skill definitions and normalize their
+  published-version metadata before removing the legacy aggregate document.
 
 ## Apply order
 
@@ -17,6 +18,10 @@ For a new SQL Server database, run:
 3. `003_normalize_agent_definition.sql`
 4. `Data/004_normalize_agent_definition_data.sql` (generated from the current SQLite snapshot)
 5. `005_add_agent_table_descriptions.sql` (optional, adds Chinese table and column descriptions)
+6. `006_add_basepoco_and_fields_ag_skill_definition.sql`
+7. `007_create_skill_version_tables.sql`
+8. `Data/008_normalize_skill_definition_data.sql` (preserves normalized data and finalizes the schema)
+9. `009_add_skill_table_descriptions.sql` (adds or updates Chinese table and column descriptions)
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -64,15 +69,48 @@ an Agent-definition repository through `AgentStorage:Provider`.
 `OutputJsonSchema` remains because JSON Schema is itself a first-class Agent
 setting, not an aggregate persistence document.
 
-Do not expand the migration to other `Ag` tables until Agent create, save, publish,
-archive, restore, and query flows have passed.
+Apply the Skill normalization only after Agent create, save, publish, archive,
+restore, and query flows have passed on the normalized Agent tables.
 
 `CreatedTime` and `UpdateTime` remain nullable without database defaults. Existing
 rows retain `NULL`; the migration must not invent historical audit times.
 
-MySQL currently stops at `002`; the normalized detail-table schema must be supplied
-for a target database before the SqlSugar catalog can be used there. The checked-in
-`003` normalization migration currently applies to SQL Server storage.
+The SQL Server `006` migration prepares `AgSkillDefinition` for the EU.Core
+`BasePoco`/SqlSugar model. It safely converts a legacy character `Id` to
+`UNIQUEIDENTIFIER`, adds the common columns and the `Name`, `Description`,
+`Category`, and `Status` fields, and retains `DocumentJson` so the existing
+data remains available until `Data/008` performs the cutover. The SQL Server `007`
+migration creates `AgSkillVersion` and `AgSkillVersionFile`. Existing JSON documents
+are not expanded by these schema-only migrations because SQL Server 2014 has no
+native JSON parser.
+
+`Data/008_normalize_skill_definition_data.sql` assumes the three normalized Skill
+tables have already been populated. It does not compare, insert, delete, or rebuild
+business rows. It only fills null basic fields before applying required constraints
+and removes `DocumentJson` in one SQL Server transaction. Back up the database and
+stop Agent writes before running it.
+
+After the data cutover, run `SqlServer/009_add_skill_table_descriptions.sql` to
+add or update the Chinese `MS_Description` metadata for all three Skill tables
+and every persisted column. The script is idempotent for existing descriptions.
+
+For MySQL, run `003_add_basepoco_and_fields_ag_skill_definition.sql`,
+`004_create_skill_version_tables.sql`, and
+`005_normalize_skill_definition_data.sql` after `002`, followed by
+`006_add_skill_table_descriptions.sql`. The final script adds or updates table and
+column `COMMENT` metadata for all three normalized Skill tables. MySQL `005` expands
+the existing JSON documents without snapshot identity checks before removing
+`DocumentJson`. The schema keeps the portable `Id CHAR(36)` representation.
+MySQL Agent normalized detail
+tables must still be supplied for a target database before the SqlSugar catalog can
+be used there. The checked-in
+`SqlServer/003_normalize_agent_definition.sql` migration applies only to SQL Server storage.
+
+After the Skill migration, `AgSkillDefinitionServices` reads and writes
+`AgSkillDefinition`, `AgSkillVersion`, and `AgSkillVersionFile` through the shared
+SqlSugar data source. `AgentStorage:Provider` no longer selects Skill-definition
+storage. Draft Skill file contents remain owned by `ISkillFileStore`; the database
+stores only definition metadata and immutable published file manifests.
 
 ## Table mapping
 
@@ -80,6 +118,8 @@ for a target database before the SqlSugar catalog can be used there. The checked
 |---|---|
 | `agent_definitions` | `AgAgentDefinition` |
 | `skill_definitions` | `AgSkillDefinition` |
+| `skill_definitions.publishedVersions` | `AgSkillVersion` |
+| `skill_definitions.publishedVersions.files` | `AgSkillVersionFile` |
 | `mcp_server_definitions` | `AgMcpServerDefinition` |
 | `knowledge_base_definitions` | `AgKnowledgeBaseDefinition` |
 | `agent_run_audits` | `AgAgentRunAudit` |

@@ -1,6 +1,6 @@
 import { clear, element, setText } from "./dom.js";
-import { skillsApi } from "./skills-api.js";
-import { createSkillEditor } from "./skill-editor.js";
+import { skillsApi } from "./skills-api.js?v=2";
+import { createSkillEditor } from "./skill-editor.js?v=2";
 
 export function createSkillsPage({ toast, onPublishedChanged }) {
   const state = { skills: [], search: "", category: "", status: "" };
