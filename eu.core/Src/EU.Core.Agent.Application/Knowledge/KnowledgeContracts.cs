@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Text;
 
 namespace EU.Core.Agent.Application.Knowledge;
 
@@ -188,4 +190,60 @@ public static class KnowledgeContractCloner
 
     public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> values) =>
         new ReadOnlyCollection<T>(values.ToArray());
+}
+
+public static class KnowledgeLexicalSearch
+{
+    public static HashSet<string> Terms(string value)
+    {
+        string normalized = value.Normalize(NormalizationForm.FormKC).ToLowerInvariant();
+        var terms = new HashSet<string>(StringComparer.Ordinal);
+        var word = new StringBuilder();
+        var cjk = new StringBuilder();
+        void FlushWord()
+        {
+            if (word.Length > 1) terms.Add(word.ToString());
+            word.Clear();
+        }
+        void FlushCjk()
+        {
+            if (cjk.Length == 1) terms.Add(cjk.ToString());
+            for (int i = 0; i + 1 < cjk.Length; i++) terms.Add(cjk.ToString(i, 2));
+            cjk.Clear();
+        }
+
+        foreach (char character in normalized)
+        {
+            UnicodeCategory category = char.GetUnicodeCategory(character);
+            bool isCjk = character is >= '\u3400' and <= '\u9fff';
+            if (isCjk)
+            {
+                FlushWord();
+                cjk.Append(character);
+            }
+            else if (char.IsLetterOrDigit(character) || category == UnicodeCategory.ConnectorPunctuation)
+            {
+                FlushCjk();
+                word.Append(character);
+            }
+            else
+            {
+                FlushWord();
+                FlushCjk();
+            }
+        }
+        FlushWord();
+        FlushCjk();
+        return terms;
+    }
+
+    public static double Score(string content, HashSet<string> queryTerms)
+    {
+        if (queryTerms.Count == 0) return 0;
+        HashSet<string> contentTerms = Terms(content);
+        int matches = queryTerms.Count(contentTerms.Contains);
+        return matches == 0
+            ? 0
+            : matches / Math.Sqrt(queryTerms.Count * (double)Math.Max(1, contentTerms.Count));
+    }
 }

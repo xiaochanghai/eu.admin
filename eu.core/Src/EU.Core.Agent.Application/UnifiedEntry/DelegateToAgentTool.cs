@@ -581,6 +581,8 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             source.ToolCallId,
             source.SkillVersionId,
             source.SkillName,
+            source.KnowledgeBaseCount,
+            source.KnowledgeHitCount,
             capability = controlledBusinessQuery && source.Kind is
                 AgentRunEventKind.ToolStarted or
                 AgentRunEventKind.ToolSucceeded or
@@ -606,6 +608,8 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             source.ToolCallId,
             source.SkillVersionId,
             source.SkillName,
+            source.KnowledgeBaseCount,
+            source.KnowledgeHitCount,
             capability = controlledBusinessQuery && source.Kind is
                 AgentRunEventKind.ToolStarted or
                 AgentRunEventKind.ToolSucceeded or
@@ -770,6 +774,8 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
         {
             AgentRunEventKind.Started => "child-agent-started",
             AgentRunEventKind.SkillStarted => "skill-started",
+            AgentRunEventKind.KnowledgeRetrieved => "knowledge-retrieved",
+            AgentRunEventKind.Citation => "knowledge-citation",
             AgentRunEventKind.ToolStarted => "tool-started",
             AgentRunEventKind.ToolSucceeded => "tool-succeeded",
             AgentRunEventKind.ToolBlocked => "tool-blocked",

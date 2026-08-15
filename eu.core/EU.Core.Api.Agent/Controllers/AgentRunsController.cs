@@ -96,6 +96,7 @@ public sealed class AgentRunsController(
         kind switch
         {
             AgentRunEventKind.SkillStarted => "skill-started",
+            AgentRunEventKind.KnowledgeRetrieved => "knowledge-retrieved",
             AgentRunEventKind.ToolStarted => "tool-started",
             AgentRunEventKind.Citation => "citation",
             AgentRunEventKind.ToolSucceeded => "tool-succeeded",

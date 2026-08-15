@@ -11,6 +11,8 @@ const TRACE_LABELS = {
   "route-selected": "Route",
   "child-agent-started": "Child Agent",
   "skill-started": "Skill",
+  "knowledge-retrieved": "知识库检索",
+  "knowledge-citation": "知识库引用",
   "tool-started": "MCP",
   "tool-succeeded": "MCP",
   "tool-blocked": "MCP",
@@ -388,6 +390,14 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
     if (kind === "skill-started") {
       return payload.skillName || payload.skillVersionId ||
         presentation.toolName || "Skill";
+    }
+    if (kind === "knowledge-retrieved") {
+      const knowledgeBaseCount = Number(payload.knowledgeBaseCount || 0);
+      const knowledgeHitCount = Number(payload.knowledgeHitCount || 0);
+      return `检索 ${knowledgeBaseCount} 个知识库，命中 ${knowledgeHitCount} 个分块`;
+    }
+    if (kind === "knowledge-citation") {
+      return payload.text || "知识库引用分块";
     }
     if (kind.startsWith("tool-")) {
       return [

@@ -416,12 +416,6 @@ public sealed class UnifiedEntryService
                 internalTools.Add(new UseSkillTool(preparedMainContext.Skills));
             }
 
-            if (preparedMainContext.Knowledge.Count > 0)
-            {
-                internalTools.Add(
-                    new SearchKnowledgeTool(preparedMainContext.Knowledge));
-            }
-
             if (preparedMainContext.Snapshot.ChildAgents.Count > 0)
             {
                 internalTools.Add(new DelegateToAgentTool(
@@ -457,7 +451,7 @@ public sealed class UnifiedEntryService
             {
                 ConversationHistory = BuildConversationHistory(priorMessages),
                 Skills = [],
-                Knowledge = [],
+                Knowledge = preparedMainContext.Knowledge,
                 InternalTools = internalTools,
                 McpCallGuard = scope,
                 McpResultGuard = scope,
@@ -825,23 +819,6 @@ public sealed class UnifiedEntryService
                         source,
                         output,
                         effectiveCancellation.Token).ConfigureAwait(false);
-                    if (source.Kind == AgentRunEventKind.ToolSucceeded
-                        && source.ToolName == "search_knowledge")
-                    {
-                        foreach (string citation in ReadKnowledgeCitations(source.Text))
-                        {
-                            await PersistMainEventAsync(
-                                active,
-                                new AgentRunEvent(
-                                    source.RunId,
-                                    0,
-                                    AgentRunEventKind.Citation,
-                                    source.OccurredAtUtc,
-                                    citation),
-                                output,
-                                effectiveCancellation.Token).ConfigureAwait(false);
-                        }
-                    }
 
                     if (source.Kind == AgentRunEventKind.ToolFailed
                         && IsFatalPlatformFailure(source.ErrorCode))
@@ -1070,7 +1047,9 @@ public sealed class UnifiedEntryService
             source.ToolCallId,
             source.SkillVersionId,
             source.SkillName,
-            source.ApprovalId
+            source.ApprovalId,
+            source.KnowledgeBaseCount,
+            source.KnowledgeHitCount
         });
         ProtectedUnifiedPayload rawPayload = Protect(rawPayloadJson);
         ProtectedUnifiedPayload persistedPayload = Protect(JsonSerializer.Serialize(new
@@ -1085,7 +1064,9 @@ public sealed class UnifiedEntryService
             source.ToolCallId,
             source.SkillVersionId,
             source.SkillName,
-            source.ApprovalId
+            source.ApprovalId,
+            source.KnowledgeBaseCount,
+            source.KnowledgeHitCount
         }));
         string kind = MapMainEventKind(source);
         await active.Scope.MutateAggregateAndAppendEventAsync(
@@ -1837,7 +1818,6 @@ public sealed class UnifiedEntryService
         toolName switch
         {
             "use_skill" => "skill",
-            "search_knowledge" => "skill",
             "delegate_to_agent" => "child-agent",
             "run_orchestration" => "orchestration",
             _ => "mcp"
@@ -1848,8 +1828,10 @@ public sealed class UnifiedEntryService
         {
             AgentRunEventKind.Started => "main-agent-started",
             AgentRunEventKind.SkillStarted => "skill-started",
-            AgentRunEventKind.ToolStarted when source.ToolName is
-                "use_skill" or "search_knowledge" => "skill-started",
+            AgentRunEventKind.KnowledgeRetrieved => "knowledge-retrieved",
+            AgentRunEventKind.Citation => "knowledge-citation",
+            AgentRunEventKind.ToolStarted when source.ToolName == "use_skill" =>
+                "skill-started",
             AgentRunEventKind.ToolStarted => "tool-started",
             AgentRunEventKind.ToolSucceeded => "tool-succeeded",
             AgentRunEventKind.ToolBlocked => "tool-blocked",
@@ -1857,70 +1839,6 @@ public sealed class UnifiedEntryService
             AgentRunEventKind.ApprovalRequired => "approval-required",
             _ => "message"
         };
-
-    private static IReadOnlyList<string> ReadKnowledgeCitations(
-        string resultJson)
-    {
-        try
-        {
-            using JsonDocument document = JsonDocument.Parse(resultJson);
-            if (!TryGetPropertyIgnoreCase(
-                    document.RootElement,
-                    "excerpts",
-                    out JsonElement excerpts)
-                || excerpts.ValueKind != JsonValueKind.Array)
-            {
-                return [];
-            }
-
-            return excerpts
-                .EnumerateArray()
-                .Select(value => TryGetPropertyIgnoreCase(
-                        value,
-                        "citation",
-                        out JsonElement citation)
-                    && citation.ValueKind == JsonValueKind.String
-                        ? citation.GetString() ?? string.Empty
-                        : string.Empty)
-                .Where(IsCanonicalKnowledgeCitation)
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
-    }
-
-    private static bool TryGetPropertyIgnoreCase(
-        JsonElement element,
-        string propertyName,
-        out JsonElement value)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                if (string.Equals(
-                        property.Name,
-                        propertyName,
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    value = property.Value;
-                    return true;
-                }
-            }
-        }
-
-        value = default;
-        return false;
-    }
-
-    private static bool IsCanonicalKnowledgeCitation(string citation) =>
-        citation.Length is > 5 and <= 1_024
-        && citation.StartsWith("[kb:", StringComparison.Ordinal)
-        && citation.EndsWith(']')
-        && !citation.Any(char.IsControl);
 
     private static bool IsFatalPlatformFailure(string errorCode) =>
         errorCode == UnifiedEntryErrorCodes.KnowledgeAccessDenied

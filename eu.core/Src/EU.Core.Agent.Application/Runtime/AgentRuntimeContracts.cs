@@ -21,6 +21,7 @@ public enum AgentRunEventKind
 {
     Started,
     SkillStarted,
+    KnowledgeRetrieved,
     Delta,
     Citation,
     ToolStarted,
@@ -59,6 +60,10 @@ public sealed record AgentRunEvent(
     public string ArgumentsJson { get; init; } = "";
 
     public Guid? ApprovalId { get; init; }
+
+    public int KnowledgeBaseCount { get; init; }
+
+    public int KnowledgeHitCount { get; init; }
 }
 
 public sealed class AgentRuntimeException(string errorCode, string message)

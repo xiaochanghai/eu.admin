@@ -1,22 +1,22 @@
 namespace EU.Core.Api.Agent.Errors;
 
+using EU.Core.Agent.Application.Knowledge;
+
 public sealed class RequestBodyTooLargeException : Exception;
 
 public sealed class RequestBodyLimitMiddleware(RequestDelegate next)
 {
     public const long MaximumRequestBodyBytes = 131_072;
     public const long MaximumSkillRequestBodyBytes = 2_129_920;
+    public const long MaximumKnowledgePdfRequestBodyBytes =
+        KnowledgeLifecycleService.MaximumPdfBytes + 65_536;
 
     public async Task InvokeAsync(HttpContext context)
     {
         if (HasRequestBody(context.Request) &&
             context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
         {
-            long maximumBytes = context.Request.Path.StartsWithSegments(
-                "/api/skills",
-                StringComparison.OrdinalIgnoreCase)
-                ? MaximumSkillRequestBodyBytes
-                : MaximumRequestBodyBytes;
+            long maximumBytes = GetMaximumRequestBodyBytes(context.Request.Path);
             if (context.Request.ContentLength > maximumBytes)
             {
                 throw new RequestBodyTooLargeException();
@@ -30,6 +30,22 @@ public sealed class RequestBodyLimitMiddleware(RequestDelegate next)
 
     private static bool HasRequestBody(HttpRequest request) =>
         request.Method is "POST" or "PUT" or "PATCH";
+
+    private static long GetMaximumRequestBodyBytes(PathString path)
+    {
+        if (path.StartsWithSegments("/api/skills", StringComparison.OrdinalIgnoreCase))
+        {
+            return MaximumSkillRequestBodyBytes;
+        }
+
+        if (path.StartsWithSegments("/api/knowledge-bases", StringComparison.OrdinalIgnoreCase)
+            && path.Value?.EndsWith("/documents/pdf", StringComparison.OrdinalIgnoreCase) is true)
+        {
+            return MaximumKnowledgePdfRequestBodyBytes;
+        }
+
+        return MaximumRequestBodyBytes;
+    }
 
     private sealed class BoundedReadStream(Stream inner, long maximumBytes) : Stream
     {

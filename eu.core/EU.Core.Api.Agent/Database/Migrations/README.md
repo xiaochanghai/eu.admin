@@ -29,6 +29,12 @@ For a new SQL Server database, run:
 12. `Data/012_normalize_mcp_server_definition_data.sql` (finalizes already-populated normalized data)
 13. `013_add_mcp_table_descriptions.sql` (adds or updates Chinese table and column descriptions)
 14. `014_convert_mcp_nvarchar_to_varchar.sql` (losslessly converts supported MCP `nvarchar` data columns to `varchar`)
+15. `015_add_basepoco_and_fields_ag_knowledge_base_definition.sql`
+16. `016_create_knowledge_document_tables.sql`
+17. Generate and run `Data/knowledge_normalized_data.generated.sql` from the current SQL Server rows
+18. `Data/017_normalize_knowledge_base_definition_data.sql`
+19. `018_add_knowledge_table_descriptions.sql`
+20. `019_convert_knowledge_text_to_varchar.sql` (idempotently converts pre-existing normalized text columns)
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -219,6 +225,36 @@ three MCP tables to their declared `varchar` length. `LastError` uses
 SQL Server 2014 code pages cannot losslessly represent every imported Unicode tool
 description. The migration rolls back rather than replacing unsupported characters
 or truncating data.
+
+For Knowledge Base normalization, run `015` and `016`, stop Agent API writes, and
+generate the data-only script from the current SQL Server
+`AgKnowledgeBaseDefinition.DocumentJson` rows. Put a read-capable ODBC connection
+string in the process environment; never pass or commit it as a command argument:
+
+```powershell
+py -3 .\Tools\export_sqlserver_knowledge_to_sqlserver.py `
+  .\SqlServer\Data\knowledge_normalized_data.generated.sql
+```
+
+The default variable name is `KNOWLEDGE_MIGRATION_SQLSERVER_ODBC`; use
+`--connection-env <name>` when the secret manager exposes a different variable.
+The exporter maps historical numeric statuses (`0`, `1`, `2`) to `Enabled`,
+`Disabled`, and `Archived`, and the generated SQL verifies each definition's code
+and logical revision before modifying normalized rows.
+
+The three finalized Knowledge tables use `varchar` for persisted text columns.
+Migration `015` checks the legacy JSON and code, while `016` checks any existing
+normalized rows, and stops if the current SQL Server collation cannot represent a
+value losslessly. `DocumentJson` remains `nvarchar(max)` only during the transition
+and is removed by `Data/017`.
+
+Run the generated script and then `Data/017`, followed by `018`. The generated file
+contains document content and is intentionally ignored by Git. Keep the Agent API
+stopped from generation through `Data/017`, and retain a database backup until list,
+document, chunk, search, Agent binding, disable, and archive checks have passed.
+Re-running `Data/017` after a completed cutover is a no-op and prints an
+already-finalized message.
+
 
 For the final copy, stop writes to the Agent API and keep a backup of
 `data/eu-core-agent.db`. Import parent rows before dependent rows:

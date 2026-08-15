@@ -363,6 +363,22 @@ public sealed class AgentRuntimeService(
                     SkillName: skill.SkillName), cancellationToken);
             }
 
+            if (context.Snapshot.KnowledgeBases.Count > 0)
+            {
+                int knowledgeBaseCount = context.Snapshot.KnowledgeBases.Count;
+                int knowledgeHitCount = context.Knowledge.Count;
+                await writer.WriteAsync(new AgentRunEvent(
+                    context.RunId,
+                    ++sequence,
+                    AgentRunEventKind.KnowledgeRetrieved,
+                    DateTimeOffset.UtcNow,
+                    $"Knowledge retrieval completed: searched {knowledgeBaseCount} knowledge base(s) and matched {knowledgeHitCount} chunk(s).")
+                {
+                    KnowledgeBaseCount = knowledgeBaseCount,
+                    KnowledgeHitCount = knowledgeHitCount
+                }, cancellationToken);
+            }
+
             foreach (KnowledgeSearchResult citation in context.Knowledge)
             {
                 await writer.WriteAsync(new AgentRunEvent(

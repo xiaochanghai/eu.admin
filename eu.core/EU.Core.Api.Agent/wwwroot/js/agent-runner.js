@@ -90,6 +90,11 @@ export function createAgentRunner({ api, toast }) {
     } else if (eventName === "citation") {
       citations.append(element("div", { className: "run-tool-event tool-succeeded" },
         element("strong", {}, value.text)));
+    } else if (eventName === "knowledge-retrieved") {
+      citations.append(element("div", { className: "run-tool-event tool-succeeded" },
+        element("strong", {}, "知识库检索"),
+        element("small", {},
+          `检索 ${Number(value.knowledgeBaseCount || 0)} 个知识库，命中 ${Number(value.knowledgeHitCount || 0)} 个分块`)));
     } else if (eventName.startsWith("tool-")) {
       renderTool(eventName, value);
     } else if (["completed", "failed", "cancelled"].includes(eventName)) {

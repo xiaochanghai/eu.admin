@@ -106,16 +106,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.FromLogContext()
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
-builder.Services.AddSingleton<IKnowledgeBaseRepository>(services =>
-    CreateStorageRepository<IKnowledgeBaseRepository>(
-        services,
-        () => new InMemoryKnowledgeBaseRepository(),
-        value => new SqliteKnowledgeBaseRepository(value),
-        value => new SqlServerKnowledgeBaseRepository(value)));
-builder.Services.AddSingleton<IPublishedKnowledgeCatalog>(services =>
-    (IPublishedKnowledgeCatalog)services.GetRequiredService<IKnowledgeBaseRepository>());
-builder.Services.AddSingleton<IKnowledgeRetriever>(services =>
-    (IKnowledgeRetriever)services.GetRequiredService<IKnowledgeBaseRepository>());
 builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
 builder.Services.AddSingleton<IOrchestrationRepository>(services =>
     CreateStorageRepository<IOrchestrationRepository>(
