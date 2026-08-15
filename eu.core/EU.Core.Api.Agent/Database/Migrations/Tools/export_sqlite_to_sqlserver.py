@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import math
 import re
 import sqlite3
 import tempfile
+import uuid
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
@@ -253,6 +255,134 @@ def write_validation_and_footer(
     output.write("END CATCH;\n")
 
 
+def sql_server_utc_datetime(value: str | None) -> str:
+    if value is None:
+        return "NULL"
+    normalized = value.replace("+00:00", "").removesuffix("Z")
+    return f"CONVERT(datetime2(7), {sql_server_text(normalized)}, 126)"
+
+
+def write_mcp_normalization_script(
+    connection: sqlite3.Connection,
+    output_path: Path,
+    source: Path,
+    snapshot_hash: str,
+) -> None:
+    rows = connection.execute(
+        'SELECT "id", "document_json" FROM "mcp_server_definitions" ORDER BY "code", "id"'
+    ).fetchall()
+    output_path = output_path.resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8-sig", newline="\n") as output:
+        output.write("-- Normalize MCP documents exported from the SQLite source.\n")
+        output.write(f"-- Source: {source.resolve()}\n")
+        output.write(f"-- Snapshot SHA-256: {snapshot_hash}\n")
+        output.write("-- Run SQL Server 010 and 011 first, then this script, then Data/012.\n\n")
+        output.write("SET NOCOUNT ON;\nSET XACT_ABORT ON;\n\n")
+        output.write("IF OBJECT_ID(N'dbo.AgMcpServerDefinition', N'U') IS NULL\n")
+        output.write("   OR OBJECT_ID(N'dbo.AgMcpServerArgument', N'U') IS NULL\n")
+        output.write("   OR OBJECT_ID(N'dbo.AgMcpToolVersion', N'U') IS NULL\n")
+        output.write("    THROW 51210, N'MCP normalized tables are missing.', 1;\n")
+        output.write("IF COL_LENGTH(N'dbo.AgMcpServerDefinition', N'DocumentJson') IS NULL\n")
+        output.write("    THROW 51211, N'DocumentJson is absent; MCP cutover was already finalized.', 1;\n\n")
+        output.write("BEGIN TRY\n    BEGIN TRANSACTION;\n\n")
+        output.write("    IF OBJECT_ID(N'dbo.AgMcpNormalizationCheckpoint', N'U') IS NULL\n")
+        output.write("        CREATE TABLE dbo.AgMcpNormalizationCheckpoint (ID INT NOT NULL PRIMARY KEY);\n\n")
+
+        for row_id, document_json in rows:
+            document = json.loads(str(document_json))
+            server_id = str(row_id)
+            server_literal = sql_server_text(server_id)
+            last_synced = document.get("lastSyncedAtUtc")
+            output.write(f"    -- MCP Server {server_id}\n")
+            output.write("    UPDATE dbo.AgMcpServerDefinition\n    SET ")
+            assignments = [
+                f"Name = {sql_server_text(str(document.get('name') or ''))}",
+                f"Description = {sql_server_text(str(document.get('description') or ''))}",
+                f"Transport = {sql_server_text(str(document['transport']))}",
+                f"Endpoint = {sql_server_text(str(document.get('endpoint') or ''))}",
+                f"Command = {sql_server_text(str(document.get('command') or ''))}",
+                f"CredentialAlias = {sql_server_text(str(document.get('credentialAlias') or ''))}",
+                f"Enabled = {1 if document.get('enabled') else 0}",
+                f"Status = {sql_server_text(str(document['status']))}",
+                f"LastError = {sql_server_text(str(document.get('lastError') or ''))}",
+                f"LastSyncedAtUtc = {sql_server_utc_datetime(last_synced)}",
+            ]
+            output.write(",\n        ".join(assignments))
+            output.write(f"\n    WHERE ID = CONVERT(uniqueidentifier, {server_literal});\n")
+            output.write("    IF @@ROWCOUNT <> 1 THROW 51212, N'MCP Server target row is missing.', 1;\n\n")
+
+            arguments = list(document.get("arguments") or [])
+            for ordinal, argument in enumerate(arguments):
+                argument_id = uuid.uuid5(uuid.UUID(server_id), f"argument:{ordinal}")
+                output.write("    UPDATE dbo.AgMcpServerArgument\n")
+                output.write(f"    SET [Value] = {sql_server_text(str(argument))}\n")
+                output.write(
+                    f"    WHERE ServerId = CONVERT(uniqueidentifier, {server_literal}) "
+                    f"AND Ordinal = {ordinal};\n"
+                )
+                output.write("    IF @@ROWCOUNT = 0\n")
+                output.write("        INSERT INTO dbo.AgMcpServerArgument (ID, ServerId, Ordinal, [Value])\n")
+                output.write(
+                    f"        VALUES (CONVERT(uniqueidentifier, N'{argument_id}'), "
+                    f"CONVERT(uniqueidentifier, {server_literal}), {ordinal}, "
+                    f"{sql_server_text(str(argument))});\n"
+                )
+            output.write(
+                "    DELETE FROM dbo.AgMcpServerArgument "
+                f"WHERE ServerId = CONVERT(uniqueidentifier, {server_literal}) "
+                f"AND Ordinal >= {len(arguments)};\n\n"
+            )
+
+            current_ids = {
+                str(tool_id): ordinal
+                for ordinal, tool_id in enumerate(document.get("currentToolVersionIds") or [])
+            }
+            output.write(
+                "    UPDATE dbo.AgMcpToolVersion SET CurrentOrdinal = NULL "
+                f"WHERE ServerId = CONVERT(uniqueidentifier, {server_literal});\n"
+            )
+            for history_ordinal, tool in enumerate(document.get("toolVersions") or []):
+                tool_id = str(tool["id"])
+                current_ordinal = current_ids.get(tool_id)
+                current_literal = "NULL" if current_ordinal is None else str(current_ordinal)
+                tool_values = {
+                    "Name": sql_server_text(str(tool.get("name") or "")),
+                    "Description": sql_server_text(str(tool.get("description") or "")),
+                    "InputSchemaJson": sql_server_text(str(tool.get("inputSchemaJson") or "{}")),
+                    "Risk": sql_server_text(str(tool["risk"])),
+                    "Sha256": sql_server_text(str(tool["sha256"])),
+                    "DiscoveredAtUtc": sql_server_utc_datetime(tool.get("discoveredAtUtc")),
+                }
+                output.write("    UPDATE dbo.AgMcpToolVersion\n")
+                output.write(
+                    f"    SET ServerId = CONVERT(uniqueidentifier, {server_literal}), "
+                    f"HistoryOrdinal = {history_ordinal}, CurrentOrdinal = {current_literal},\n"
+                    f"        Name = {tool_values['Name']}, Description = {tool_values['Description']},\n"
+                    f"        InputSchemaJson = {tool_values['InputSchemaJson']}, Risk = {tool_values['Risk']},\n"
+                    f"        Sha256 = {tool_values['Sha256']}, DiscoveredAtUtc = {tool_values['DiscoveredAtUtc']}\n"
+                    f"    WHERE ID = CONVERT(uniqueidentifier, {sql_server_text(tool_id)});\n"
+                )
+                output.write("    IF @@ROWCOUNT = 0\n")
+                output.write(
+                    "        INSERT INTO dbo.AgMcpToolVersion "
+                    "(ID, ServerId, HistoryOrdinal, CurrentOrdinal, Name, Description, "
+                    "InputSchemaJson, Risk, Sha256, DiscoveredAtUtc)\n"
+                )
+                output.write(
+                    f"        VALUES (CONVERT(uniqueidentifier, {sql_server_text(tool_id)}), "
+                    f"CONVERT(uniqueidentifier, {server_literal}), {history_ordinal}, {current_literal}, "
+                    f"{tool_values['Name']}, {tool_values['Description']}, {tool_values['InputSchemaJson']}, "
+                    f"{tool_values['Risk']}, {tool_values['Sha256']}, {tool_values['DiscoveredAtUtc']});\n"
+                )
+            output.write("\n")
+
+        output.write("    IF NOT EXISTS (SELECT 1 FROM dbo.AgMcpNormalizationCheckpoint WHERE ID = 1)\n")
+        output.write("        INSERT INTO dbo.AgMcpNormalizationCheckpoint (ID) VALUES (1);\n\n")
+        output.write("    COMMIT TRANSACTION;\nEND TRY\nBEGIN CATCH\n")
+        output.write("    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;\n    THROW;\nEND CATCH;\n")
+
+
 def main() -> None:
     args = parse_args()
     source = args.source.resolve()
@@ -320,6 +450,7 @@ def main() -> None:
                         f"expected={row_counts}, actual={exported_counts}"
                     )
                 write_validation_and_footer(output, row_counts)
+
 
         print(f"Created: {output_path}")
         print(f"Snapshot SHA-256: {snapshot_hash}")

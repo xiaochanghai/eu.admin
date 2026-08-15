@@ -8,6 +8,8 @@ These baseline scripts create the Agent module in the shared EU.Core database.
 - Column names use PascalCase. SQLite source columns use snake_case.
 - Skill cutover scripts retain existing Skill definitions and normalize their
   published-version metadata before removing the legacy aggregate document.
+- MCP cutover scripts normalize Server configuration, ordered Stdio arguments,
+  immutable tool history, and the ordered current-tool set.
 
 ## Apply order
 
@@ -22,6 +24,11 @@ For a new SQL Server database, run:
 7. `007_create_skill_version_tables.sql`
 8. `Data/008_normalize_skill_definition_data.sql` (preserves normalized data and finalizes the schema)
 9. `009_add_skill_table_descriptions.sql` (adds or updates Chinese table and column descriptions)
+10. `010_add_basepoco_and_fields_ag_mcp_server_definition.sql`
+11. `011_create_mcp_tool_tables.sql`
+12. `Data/012_normalize_mcp_server_definition_data.sql` (finalizes already-populated normalized data)
+13. `013_add_mcp_table_descriptions.sql` (adds or updates Chinese table and column descriptions)
+14. `014_convert_mcp_nvarchar_to_varchar.sql` (losslessly converts supported MCP `nvarchar` data columns to `varchar`)
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -112,6 +119,28 @@ SqlSugar data source. `AgentStorage:Provider` no longer selects Skill-definition
 storage. Draft Skill file contents remain owned by `ISkillFileStore`; the database
 stores only definition metadata and immutable published file manifests.
 
+Apply the MCP normalization only after the Skill flow has been accepted. For SQL
+Server, run `010`, then `011`, generate and run the ordinary MCP normalization
+`UPDATE`/`INSERT` script shown below, and only then run `Data/012`. SQL Server 2014
+cannot expand `DocumentJson` itself. `Data/012` refuses to remove `DocumentJson`
+unless the generated normalization script completed its checkpoint and all basic
+fields are populated; it never substitutes placeholder MCP configuration. Stop
+Agent writes and back up the database for the cutover. Run `013` for idempotent
+Chinese table and column descriptions, then run `014` for the final string-type
+conversion.
+
+For MySQL, run `007_add_basepoco_and_fields_ag_mcp_server_definition.sql`,
+`008_create_mcp_tool_tables.sql`, `009_normalize_mcp_server_definition_data.sql`,
+and `010_add_mcp_table_descriptions.sql` in that order. MySQL `009` expands the
+existing JSON document directly into the three normalized tables before removing
+`DocumentJson`.
+
+After the MCP cutover, `AgMcpServerDefinitionServices` owns lifecycle behavior and
+reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
+`AgMcpToolVersion` through SqlSugar. Runtime consumers use the read-only
+`IMcpServerDefinitionCatalog`; the MCP repository implementations and
+`AgentStorage:Provider` selection no longer participate in MCP-definition storage.
+
 ## Table mapping
 
 | SQLite source | EU.Core target |
@@ -121,6 +150,8 @@ stores only definition metadata and immutable published file manifests.
 | `skill_definitions.publishedVersions` | `AgSkillVersion` |
 | `skill_definitions.publishedVersions.files` | `AgSkillVersionFile` |
 | `mcp_server_definitions` | `AgMcpServerDefinition` |
+| `mcp_server_definitions.arguments` | `AgMcpServerArgument` |
+| `mcp_server_definitions.toolVersions` | `AgMcpToolVersion` |
 | `knowledge_base_definitions` | `AgKnowledgeBaseDefinition` |
 | `agent_run_audits` | `AgAgentRunAudit` |
 | `agent_operation_audits` | `AgAgentOperationAudit` |
@@ -170,6 +201,24 @@ py -3 .\Tools\export_sqlite_to_sqlserver.py `
   ..\..\data\eu-core-agent.db `
   .\SqlServer\Data\001_import_from_sqlite.sql
 ```
+
+For an existing SQL Server database, generate only the MCP normalization script:
+
+```powershell
+py -3 .\Tools\export_sqlite_mcp_to_sqlserver.py `
+  ..\..\data\eu-core-agent.db `
+  .\SqlServer\Data\mcp_normalized_data.generated.sql
+```
+
+Run the generated `mcp_normalized_data.generated.sql` after `010` and `011`; do not
+rerun the initial full-database import. Then run `Data/012`, `013`, and `014`.
+The final `014` migration validates the current SQL Server collation and the encoded
+byte length of every value before converting supported `nvarchar` columns in the
+three MCP tables to their declared `varchar` length. `LastError` uses
+`varchar(4096)`. `AgMcpToolVersion.Description` remains `nvarchar(max)` because
+SQL Server 2014 code pages cannot losslessly represent every imported Unicode tool
+description. The migration rolls back rather than replacing unsupported characters
+or truncating data.
 
 For the final copy, stop writes to the Agent API and keep a backup of
 `data/eu-core-agent.db`. Import parent rows before dependent rows:

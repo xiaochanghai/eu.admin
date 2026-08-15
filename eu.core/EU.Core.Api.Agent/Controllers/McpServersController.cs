@@ -2,13 +2,14 @@ using EU.Core.Agent.Application.Mcp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [ApiController]
 [Route("api/mcp/servers")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class McpServersController(McpLifecycleService lifecycle) : ControllerBase
+public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycle) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(

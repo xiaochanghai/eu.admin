@@ -12,7 +12,7 @@ using ModelContextProtocol.Protocol;
 namespace EU.Core.Agent.Infrastructure.Mcp;
 
 public sealed class SdkMcpRuntimeToolInvoker(
-    IMcpServerRepository repository,
+    IMcpServerDefinitionCatalog serverCatalog,
     SdkMcpToolDiscovery connections,
     TimeSpan callTimeout,
     BusinessQueryToolPolicy? businessQueryPolicy = null,
@@ -125,7 +125,7 @@ public sealed class SdkMcpRuntimeToolInvoker(
         }
 
         IReadOnlyList<McpServerDefinition> servers =
-            await repository.ListAsync(new McpServerQuery(), cancellationToken);
+            await serverCatalog.ListAsync(new McpServerQuery(), cancellationToken);
         McpServerDefinition? server = servers.FirstOrDefault(candidate =>
             candidate.CurrentToolVersionIds.Contains(toolVersionId));
         McpToolVersion? version = server?.ToolVersions.FirstOrDefault(candidate =>

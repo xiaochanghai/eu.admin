@@ -131,26 +131,18 @@ public static class McpErrorCodes
     public const string ToolNotFound = "MCP_TOOL_NOT_FOUND";
     public const string RiskInvalid = "MCP_TOOL_RISK_INVALID";
     public const string LifecycleTransitionInvalid = "MCP_LIFECYCLE_TRANSITION_INVALID";
+    public const string DisableBlocked = "MCP_DISABLE_BLOCKED";
     public const string ArchiveBlocked = "MCP_ARCHIVE_BLOCKED";
 }
 
-public interface IMcpServerRepository
+public interface IMcpServerDefinitionCatalog
 {
-    Task<McpServerDefinition?> GetByIdAsync(
+    Task<McpServerDefinition?> GetAsync(
         Guid id,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<McpServerDefinition>> ListAsync(
         McpServerQuery query,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> TryCreateAsync(
-        McpServerDefinition definition,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> TryReplaceAsync(
-        McpServerDefinition definition,
-        long expectedLogicalRevision,
         CancellationToken cancellationToken = default);
 }
 

@@ -106,14 +106,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.FromLogContext()
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
-builder.Services.AddSingleton<IMcpServerRepository>(services =>
-    CreateStorageRepository<IMcpServerRepository>(
-        services,
-        () => new InMemoryMcpServerRepository(),
-        value => new SqliteMcpServerRepository(value),
-        value => new SqlServerMcpServerRepository(value)));
-builder.Services.AddSingleton<IPublishedMcpToolCatalog>(services =>
-    (IPublishedMcpToolCatalog)services.GetRequiredService<IMcpServerRepository>());
 builder.Services.AddSingleton<IKnowledgeBaseRepository>(services =>
     CreateStorageRepository<IKnowledgeBaseRepository>(
         services,
@@ -223,7 +215,7 @@ builder.Services.AddSingleton<SdkMcpRuntimeToolInvoker>(services =>
         .GetRequiredService<BusinessQueryToolPolicyAccessor>()
         .Policy;
     return new SdkMcpRuntimeToolInvoker(
-        services.GetRequiredService<IMcpServerRepository>(),
+        services.GetRequiredService<IMcpServerDefinitionCatalog>(),
         services.GetRequiredService<SdkMcpToolDiscovery>(),
         TimeSpan.FromSeconds(options.ToolCallTimeoutSeconds),
         policy,
@@ -362,7 +354,6 @@ builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
 builder.Services.AddSingleton<MainAgentAssignmentService>();
-builder.Services.AddSingleton<McpLifecycleService>();
 builder.Services.AddSingleton<KnowledgeLifecycleService>();
 builder.Services.AddSingleton<OrchestrationLifecycleService>();
 builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
