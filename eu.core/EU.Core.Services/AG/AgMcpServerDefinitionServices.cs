@@ -516,7 +516,7 @@ public sealed class AgMcpServerDefinitionServices :
             .Where(value =>
                 value.ServerId.HasValue &&
                 serverIds.Contains(value.ServerId.Value) &&
-                value.CurrentOrdinal.HasValue &&
+                value.CurrentOrdinal >= 0 &&
                 !value.IsDeleted &&
                 value.Risk != nameof(McpToolRisk.Unknown))
             .OrderBy(value => value.ServerId)

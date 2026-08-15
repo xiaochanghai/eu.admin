@@ -81,12 +81,6 @@ builder.Services.AddSingleton<IAgentStorageConnectionStringResolver>(services =>
         services.GetRequiredService<IHostEnvironment>().ContentRootPath,
         builder.Configuration.GetValue<bool>("AgentPlatform:LoadDotEnv"),
         builder.Configuration));
-builder.Services.AddSingleton<IAgentOperationAuditRepository>(services =>
-    CreateStorageRepository<IAgentOperationAuditRepository>(
-        services,
-        () => new InMemoryAgentOperationAuditRepository(),
-        value => new SqliteAgentOperationAuditRepository(value),
-        value => new SqlServerAgentOperationAuditRepository(value)));
 builder.Services.AddSingleton<IHttpIdempotencyRepository>(services =>
     CreateStorageRepository<IHttpIdempotencyRepository>(
         services,

@@ -434,6 +434,26 @@ After this cutover, `AgAgentRunAuditServices` implements
 `AgAgentToolCallAudit`, and `AgentStorage:Provider` no longer selects Agent run
 audit persistence.
 
+For Agent API operation audit normalization, stop Agent API writes and run
+`052`. Generate the data-only script from the current SQL Server audit
+documents:
+
+```powershell
+py -3 .\Tools\export_sqlserver_agent_operation_audit_to_sqlserver.py `
+  .\SqlServer\Data\agent_operation_audit_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`AGENT_OPERATION_AUDIT_MIGRATION_SQLSERVER_ODBC`. Existing `CHAR(36)` audit
+identifiers remain unchanged; `AuditId` is renamed to the `BasePoco` key name
+`ID`. Run the generated script, then `Data/053`, `054`, and `055`. Do not run
+the generated script after `Data/053` removes `DocumentJson`.
+
+After this cutover, `AgAgentOperationAuditServices` implements
+`IAgentOperationAuditRepository` through SqlSugar. Operation audit rows retain
+their Started-to-terminal idempotent update rules, and `AgentStorage:Provider`
+no longer selects operation audit persistence.
+
 
 For the final copy, stop writes to the Agent API and keep a backup of
 `data/eu-core-agent.db`. Import parent rows before dependent rows:

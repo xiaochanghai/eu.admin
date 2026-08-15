@@ -72,6 +72,7 @@ public sealed class AgentOperationAuditMiddleware(
             !context.RequestAborted.IsCancellationRequested)
         {
             logger.LogError(
+                exception,
                 "Agent operation audit start persistence failed. CorrelationId: {CorrelationId}",
                 context.TraceIdentifier);
             metrics.RecordCompleted(
@@ -173,6 +174,7 @@ public sealed class AgentOperationAuditMiddleware(
             !cancellationToken.IsCancellationRequested)
         {
             logger.LogError(
+                exception,
                 "Agent operation audit completion persistence failed. CorrelationId: {CorrelationId}",
                 record.CorrelationId);
         }
