@@ -236,12 +236,6 @@ if (toolApproval.Enabled)
         services.GetRequiredService<ToolApprovalRuntimeService>());
     builder.Services.AddSingleton<ToolApprovalConversationResumeService>();
 }
-builder.Services.AddSingleton<IAgentRunAuditRepository>(services =>
-    CreateStorageRepository<IAgentRunAuditRepository>(
-        services,
-        () => new InMemoryAgentRunAuditRepository(),
-        value => new SqliteAgentRunAuditRepository(value),
-        value => new SqlServerAgentRunAuditRepository(value)));
 builder.Services.AddSingleton<IModelCredentialResolver>(services =>
     new EnvironmentAndDotEnvModelCredentialResolver(
         services.GetRequiredService<IHostEnvironment>().ContentRootPath,

@@ -6,12 +6,21 @@ namespace EU.Core.Model.Entity;
 [SugarTable("AgMcpServerArgument", "MCP Server Stdio 参数表"), Entity(TableCnName = "MCP Server Stdio 参数表", TableName = "AgMcpServerArgument")]
 public class AgMcpServerArgument : BasePoco
 {
+    /// <summary>
+    /// 所属 MCP Server 主键
+    /// </summary>
     [Display(Name = "ServerId"), Description("所属 MCP Server 主键"), SugarColumn(IsNullable = true)]
     public Guid? ServerId { get; set; }
 
+    /// <summary>
+    /// 参数排列顺序
+    /// </summary>
     [Display(Name = "Ordinal"), Description("参数排列顺序"), SugarColumn(IsNullable = true)]
     public int? Ordinal { get; set; }
 
+    /// <summary>
+    /// 参数值
+    /// </summary>
     [Display(Name = "Value"), Description("参数值"), SugarColumn(IsNullable = true, Length = 1024)]
     public string Value { get; set; }
 }

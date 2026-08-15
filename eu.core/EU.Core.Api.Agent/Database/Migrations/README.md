@@ -11,8 +11,7 @@ These baseline scripts create the Agent module in the shared EU.Core database.
 - MCP cutover scripts normalize Server configuration, ordered Stdio arguments,
   immutable tool history, and the ordered current-tool set.
 - Orchestration cutover scripts normalize definitions, versions, graph nodes and
-  edges, and published Agent-version bindings. Runtime execution tables remain
-  under the existing run repositories.
+  edges, published Agent-version bindings, and runtime execution records.
 
 ## Apply order
 
@@ -56,6 +55,26 @@ For a new SQL Server database, run:
 36. `Data/032_normalize_evaluation_batch_data.sql`
 37. `033_add_evaluation_batch_table_descriptions.sql`
 38. `034_verify_evaluation_batch_character_types.sql`
+39. `035_add_basepoco_and_fields_ag_evaluation_model_judgement.sql`
+40. `036_create_evaluation_model_judgement_detail_tables.sql`
+41. Generate and run `Data/evaluation_model_judgement_normalized_data.generated.sql` from the current SQL Server rows
+42. `Data/037_normalize_evaluation_model_judgement_data.sql`
+43. `038_add_evaluation_model_judgement_table_descriptions.sql`
+44. `039_verify_evaluation_model_judgement_character_types.sql`
+45. `040_add_basepoco_and_fields_ag_orchestration_run.sql`
+46. `041_normalize_orchestration_run_detail_tables.sql`
+47. Generate and run `Data/orchestration_run_normalized_data.generated.sql` from the current SQL Server rows
+48. `Data/042_normalize_orchestration_run_data.sql`
+49. `043_add_orchestration_run_table_descriptions.sql`
+50. `044_verify_orchestration_run_character_types.sql`
+51. `045_normalize_main_agent_assignment.sql`
+52. `046_add_main_agent_assignment_descriptions.sql`
+53. `047_verify_main_agent_assignment.sql`
+54. `048_prepare_normalized_agent_run_audit.sql`
+55. Generate and run `Data/agent_run_audit_normalized_data.generated.sql` from the current SQL Server rows
+56. `Data/049_normalize_agent_run_audit_data.sql`
+57. `050_add_agent_run_audit_descriptions.sql`
+58. `051_verify_agent_run_audit.sql`
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -181,6 +200,7 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `mcp_server_definitions.toolVersions` | `AgMcpToolVersion` |
 | `knowledge_base_definitions` | `AgKnowledgeBaseDefinition` |
 | `agent_run_audits` | `AgAgentRunAudit` |
+| `agent_run_audits.toolCalls` | `AgAgentToolCallAudit` |
 | `agent_operation_audits` | `AgAgentOperationAudit` |
 | `orchestration_definitions` | `AgOrchestrationDefinition` |
 | `orchestration_definitions.draft/publishedVersions` | `AgOrchestrationVersion` |
@@ -393,6 +413,26 @@ After this cutover, `AgMainAgentAssignmentServices` implements
 `IMainAgentAssignmentRepository` through SqlSugar. The fixed
 `platform-main-agent` business key remains unique, while `LogicalRevision`
 continues to provide optimistic concurrency control.
+
+For Agent run audit normalization, run `048`, stop Agent API writes, and generate
+the data-only script from the current SQL Server audit documents:
+
+```powershell
+py -3 .\Tools\export_sqlserver_agent_run_audit_to_sqlserver.py `
+  .\SqlServer\Data\agent_run_audit_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`AGENT_RUN_AUDIT_MIGRATION_SQLSERVER_ODBC`. Existing `CHAR(36)` identifier
+columns remain unchanged; the run key column is renamed from `RunId` to the
+`BasePoco` key name `ID`. Run the generated script, then `Data/049`, `050`, and
+`051`. Do not run the generated script after `Data/049` removes `DocumentJson`.
+
+After this cutover, `AgAgentRunAuditServices` implements
+`IAgentRunAuditRepository` through SqlSugar. Run summaries remain in
+`AgAgentRunAudit`, ordered tool-call audit rows are stored in
+`AgAgentToolCallAudit`, and `AgentStorage:Provider` no longer selects Agent run
+audit persistence.
 
 
 For the final copy, stop writes to the Agent API and keep a backup of
