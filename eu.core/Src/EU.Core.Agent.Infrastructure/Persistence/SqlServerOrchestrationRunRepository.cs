@@ -5,104 +5,6 @@ using Microsoft.Data.SqlClient;
 
 namespace EU.Core.Agent.Infrastructure.Persistence;
 
-public sealed class SqlServerOrchestrationRepository : IOrchestrationRepository, IPublishedOrchestrationCatalog
-{
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
-    private readonly string _connectionString;
-
-    public SqlServerOrchestrationRepository(string connectionString)
-    {
-        _connectionString = SqlServerAgentConnection.Validate(connectionString);
-    }
-
-    public async Task<OrchestrationDefinition?> GetByIdAsync(Guid Id, CancellationToken cancellationToken = default)
-    {
-        await using SqlConnection connection = await OpenAsync(cancellationToken);
-        await using SqlCommand command = connection.CreateCommand();
-        command.CommandText = "SELECT DocumentJson FROM AgOrchestrationDefinition WHERE Id=@Id;";
-        command.Parameters.AddWithValue("@Id", Id.ToString("D"));
-        object? result = await command.ExecuteScalarAsync(cancellationToken);
-        return result is string json ? Read(json) : null;
-    }
-
-    public async Task<IReadOnlyList<OrchestrationDefinition>> ListAsync(CancellationToken cancellationToken = default)
-    {
-        await using SqlConnection connection = await OpenAsync(cancellationToken);
-        await using SqlCommand command = connection.CreateCommand();
-        command.CommandText = "SELECT DocumentJson FROM AgOrchestrationDefinition ORDER BY Code;";
-        var values = new List<OrchestrationDefinition>();
-        await using SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken)) values.Add(Read(reader.GetString(0)));
-        return OrchestrationContractCloner.ReadOnly(values);
-    }
-
-    public async Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(
-        CancellationToken cancellationToken = default)
-    {
-        IReadOnlyList<OrchestrationDefinition> values = await ListAsync(cancellationToken);
-        return OrchestrationContractCloner.ReadOnly(values
-            .Where(value => value.Status is not OrchestrationStatus.Archived &&
-                value.PublishedVersions.Count > 0)
-            .SelectMany(value => value.PublishedVersions.Select(version =>
-                new PublishedOrchestrationReference(
-                    value.Id,
-                    version.Id,
-                    value.Status is OrchestrationStatus.Enabled))));
-    }
-
-    public async Task<bool> TryCreateAsync(OrchestrationDefinition value, CancellationToken cancellationToken = default)
-    {
-        await using SqlConnection connection = await OpenAsync(cancellationToken);
-        await using SqlCommand command = connection.CreateCommand();
-        command.CommandText = """
-            INSERT INTO AgOrchestrationDefinition(Id,Code,LogicalRevision,DocumentJson)
-            SELECT @Id,@Code,@revision,@json
-            WHERE NOT EXISTS
-            (
-                SELECT 1 FROM AgOrchestrationDefinition WITH (UPDLOCK, HOLDLOCK)
-                WHERE Id=@Id OR Code=@Code
-            );
-            """;
-        Add(command, value);
-        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
-    }
-
-    public async Task<bool> TryReplaceAsync(
-        OrchestrationDefinition value, long expectedRevision, CancellationToken cancellationToken = default)
-    {
-        if (value.LogicalRevision != expectedRevision + 1) return false;
-        await using SqlConnection connection = await OpenAsync(cancellationToken);
-        await using SqlCommand command = connection.CreateCommand();
-        command.CommandText = """
-            UPDATE AgOrchestrationDefinition SET LogicalRevision=@revision,DocumentJson=@json
-            WHERE Id=@Id AND Code=@Code AND LogicalRevision=@expected;
-            """;
-        Add(command, value);
-        command.Parameters.AddWithValue("@expected", expectedRevision);
-        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
-    }
-
-    private async Task<SqlConnection> OpenAsync(CancellationToken cancellationToken)
-    {
-        return await SqlServerAgentConnection.OpenAsync(_connectionString, cancellationToken);
-    }
-    private static void Add(SqlCommand command, OrchestrationDefinition value)
-    {
-        command.Parameters.AddWithValue("@Id", value.Id.ToString("D"));
-        command.Parameters.AddWithValue("@Code", value.Code);
-        command.Parameters.AddWithValue("@revision", value.LogicalRevision);
-        command.Parameters.AddWithValue("@json", JsonSerializer.Serialize(value, JsonOptions));
-    }
-    private static OrchestrationDefinition Read(string json) =>
-        OrchestrationContractCloner.Clone(
-            JsonSerializer.Deserialize<OrchestrationDefinition>(json, JsonOptions) ??
-            throw new InvalidDataException("The SQL Server orchestration document is empty."));
-}
-
 internal sealed class SqlServerOrchestrationRunRepositoryHooks
 {
     public Func<CancellationToken, Task>? BeforeInterruptedSummaryWriteAsync { get; init; }
@@ -309,13 +211,13 @@ public sealed class SqlServerOrchestrationRunRepository : IOrchestrationRunRepos
             while (await reader.ReadAsync(cancellationToken))
             {
                 attemptRows.Add((
-                    reader.GetString(0),
+                    ReadFixedLengthText(reader, 0),
                     reader.GetInt32(1),
                     Guid.Parse(reader.GetString(2)),
                     reader.GetString(3),
-                    reader.GetString(4),
+                    ReadFixedLengthText(reader, 4),
                     reader.GetString(5),
-                    reader.GetString(6),
+                    ReadFixedLengthText(reader, 6),
                     Enum.Parse<OrchestrationNodeRunStatus>(reader.GetString(7)),
                     DateTimeOffset.Parse(reader.GetString(8)),
                     reader.IsDBNull(9) ? null : DateTimeOffset.Parse(reader.GetString(9)),
@@ -694,7 +596,7 @@ public sealed class SqlServerOrchestrationRunRepository : IOrchestrationRunRepos
                 Enum.Parse<AgentRunEventKind>(reader.GetString(4)),
                 reader.GetString(5),
                 reader.GetString(6),
-                reader.GetString(7),
+                ReadFixedLengthText(reader, 7),
                 reader.GetInt32(8),
                 DateTimeOffset.Parse(reader.GetString(9)),
                 reader.IsDBNull(10) ? null : DateTimeOffset.Parse(reader.GetString(10)),
@@ -702,6 +604,10 @@ public sealed class SqlServerOrchestrationRunRepository : IOrchestrationRunRepos
         }
         return OrchestrationContractCloner.ReadOnly(values);
     }
+
+    private static string ReadFixedLengthText(SqlDataReader reader, int ordinal) =>
+        reader.GetString(ordinal).TrimEnd();
+
     private async Task<SqlConnection> OpenAsync(CancellationToken cancellationToken)
     {
         return await SqlServerAgentConnection.OpenAsync(_connectionString, cancellationToken);

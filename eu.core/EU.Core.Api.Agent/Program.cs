@@ -107,12 +107,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
 builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
-builder.Services.AddSingleton<IOrchestrationRepository>(services =>
-    CreateStorageRepository<IOrchestrationRepository>(
-        services,
-        () => new InMemoryOrchestrationRepository(),
-        value => new SqliteOrchestrationRepository(value),
-        value => new SqlServerOrchestrationRepository(value)));
 builder.Services.AddSingleton<IMainAgentAssignmentRepository>(services =>
     CreateStorageRepository<IMainAgentAssignmentRepository>(
         services,
@@ -125,8 +119,6 @@ builder.Services.AddSingleton<IUnifiedEntryRepository>(services =>
         () => new InMemoryUnifiedEntryRepository(),
         value => new SqliteUnifiedEntryRepository(value),
         value => new SqlServerUnifiedEntryRepository(value)));
-builder.Services.AddSingleton<IPublishedOrchestrationCatalog>(services =>
-    (IPublishedOrchestrationCatalog)services.GetRequiredService<IOrchestrationRepository>());
 builder.Services.AddSingleton<IOrchestrationRunRepository>(services =>
     CreateStorageRepository<IOrchestrationRunRepository>(
         services,

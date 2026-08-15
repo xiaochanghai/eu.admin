@@ -10,6 +10,9 @@ These baseline scripts create the Agent module in the shared EU.Core database.
   published-version metadata before removing the legacy aggregate document.
 - MCP cutover scripts normalize Server configuration, ordered Stdio arguments,
   immutable tool history, and the ordered current-tool set.
+- Orchestration cutover scripts normalize definitions, versions, graph nodes and
+  edges, and published Agent-version bindings. Runtime execution tables remain
+  under the existing run repositories.
 
 ## Apply order
 
@@ -35,6 +38,12 @@ For a new SQL Server database, run:
 18. `Data/017_normalize_knowledge_base_definition_data.sql`
 19. `018_add_knowledge_table_descriptions.sql`
 20. `019_convert_knowledge_text_to_varchar.sql` (idempotently converts pre-existing normalized text columns)
+21. `020_add_basepoco_and_fields_ag_orchestration_definition.sql`
+22. `021_create_orchestration_version_tables.sql`
+23. Generate and run `Data/orchestration_normalized_data.generated.sql` from the current SQL Server rows
+24. `Data/022_normalize_orchestration_definition_data.sql`
+25. `023_add_orchestration_table_descriptions.sql`
+26. `024_verify_orchestration_character_types.sql`
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -162,6 +171,10 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `agent_run_audits` | `AgAgentRunAudit` |
 | `agent_operation_audits` | `AgAgentOperationAudit` |
 | `orchestration_definitions` | `AgOrchestrationDefinition` |
+| `orchestration_definitions.draft/publishedVersions` | `AgOrchestrationVersion` |
+| `orchestration_definitions.*.nodes` | `AgOrchestrationNode` |
+| `orchestration_definitions.*.edges` | `AgOrchestrationEdge` |
+| `orchestration_definitions.publishedVersions.snapshot.agents` | `AgOrchestrationAgentBinding` |
 | `orchestration_runs` | `AgOrchestrationRun` |
 | `orchestration_run_details` | `AgOrchestrationRunDetail` |
 | `orchestration_node_attempts` | `AgOrchestrationNodeAttempt` |
@@ -255,6 +268,27 @@ document, chunk, search, Agent binding, disable, and archive checks have passed.
 Re-running `Data/017` after a completed cutover is a no-op and prints an
 already-finalized message.
 
+For Orchestration definition normalization, run `020` and `021`, stop Agent API
+writes, and generate the data-only script from the current SQL Server aggregate
+rows:
+
+```powershell
+py -3 .\Tools\export_sqlserver_orchestration_to_sqlserver.py `
+  .\SqlServer\Data\orchestration_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`ORCHESTRATION_MIGRATION_SQLSERVER_ODBC`. The exporter maps historical numeric enum
+values to contract names and emits deterministic child-row IDs. Run the generated
+script, then `Data/022`, `023`, and `024`. Do not run the generated script after
+`Data/022` removes `DocumentJson`.
+
+After the cutover, `AgOrchestrationDefinitionServices` implements both
+`IOrchestrationRepository` and `IPublishedOrchestrationCatalog` through SqlSugar.
+`AgentStorage:Provider` no longer selects Orchestration-definition persistence.
+`IOrchestrationRunRepository` is intentionally unchanged and continues to own run
+summaries, execution details, node attempts, tool calls, finalization, and recovery.
+
 
 For the final copy, stop writes to the Agent API and keep a backup of
 `data/eu-core-agent.db`. Import parent rows before dependent rows:
@@ -268,8 +302,9 @@ For the final copy, stop writes to the Agent API and keep a backup of
 
 After import, compare row counts and primary-key sets for all 27 tables before switching
 the application storage provider. `AgentStorage:Provider` continues to support SQLite,
-SQL Server, and InMemory for the remaining Agent platform repositories. Agent definitions,
-versions, snapshots, and bindings always use the shared EU.Core SqlSugar data source.
+SQL Server, and InMemory for the remaining Agent platform repositories. Agent and
+Orchestration definitions, versions, snapshots, and bindings always use the shared
+EU.Core SqlSugar data source.
 After validation, switch the remaining repositories with
 `AgentStorage:Provider=SqlServer` and configure
 `AgentStorage:ConnectionStringAlias=alias:agent-storage`. Store the real value only
