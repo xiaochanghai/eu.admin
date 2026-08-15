@@ -107,12 +107,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
 builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
-builder.Services.AddSingleton<IMainAgentAssignmentRepository>(services =>
-    CreateStorageRepository<IMainAgentAssignmentRepository>(
-        services,
-        () => new InMemoryMainAgentAssignmentRepository(),
-        value => new SqliteMainAgentAssignmentRepository(value),
-        value => new SqlServerMainAgentAssignmentRepository(value)));
 builder.Services.AddSingleton<IUnifiedEntryRepository>(services =>
     CreateStorageRepository<IUnifiedEntryRepository>(
         services,

@@ -1995,7 +1995,6 @@ public sealed class SqliteUnifiedEntryRepository :
 
             UpgradeMessageOrdinals(connection, transaction);
             UpgradeMessageKinds(connection, transaction);
-            SqliteMainAgentAssignmentSchema.EnsureCreated(connection, transaction);
             transaction.Commit();
         }
         catch

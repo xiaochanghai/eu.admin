@@ -384,6 +384,16 @@ continue in their existing dedicated tables with BasePoco fields and `varchar`
 text storage. Terminal transitions, conditional detail saves, and interrupted-run
 recovery remain transactional.
 
+For Main Agent assignment normalization, stop Agent API writes and run `045`,
+`046`, and `047` in order. No generated data script is required because the
+existing assignment columns are converted in place. Existing `CHAR(36)` Agent
+identifier columns remain unchanged.
+
+After this cutover, `AgMainAgentAssignmentServices` implements
+`IMainAgentAssignmentRepository` through SqlSugar. The fixed
+`platform-main-agent` business key remains unique, while `LogicalRevision`
+continues to provide optimistic concurrency control.
+
 
 For the final copy, stop writes to the Agent API and keep a backup of
 `data/eu-core-agent.db`. Import parent rows before dependent rows:
