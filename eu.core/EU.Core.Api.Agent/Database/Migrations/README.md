@@ -44,6 +44,12 @@ For a new SQL Server database, run:
 24. `Data/022_normalize_orchestration_definition_data.sql`
 25. `023_add_orchestration_table_descriptions.sql`
 26. `024_verify_orchestration_character_types.sql`
+27. `025_add_basepoco_and_fields_ag_evaluation_suite.sql`
+28. `026_create_evaluation_suite_version_tables.sql`
+29. Generate and run `Data/evaluation_suite_normalized_data.generated.sql` from the current SQL Server rows
+30. `Data/027_normalize_evaluation_suite_data.sql`
+31. `028_add_evaluation_suite_table_descriptions.sql`
+32. `029_verify_evaluation_suite_character_types.sql`
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -192,6 +198,9 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `tool_approval_decisions` | `AgToolApprovalDecision` |
 | `tool_approval_execution_results` | `AgToolApprovalExecutionResult` |
 | `evaluation_suites` | `AgEvaluationSuite` |
+| `evaluation_suites.draft/publishedVersions` | `AgEvaluationSuiteVersion` |
+| `evaluation_suites.*.cases` | `AgEvaluationCase` |
+| `evaluation_suites.*.cases.specification rules` | `AgEvaluationCaseRule` |
 | `evaluation_batches` | `AgEvaluationBatch` |
 | `evaluation_model_judgements` | `AgEvaluationModelJudgement` |
 | `api_idempotency` | `AgApiIdempotency` |
@@ -288,6 +297,25 @@ After the cutover, `AgOrchestrationDefinitionServices` implements both
 `AgentStorage:Provider` no longer selects Orchestration-definition persistence.
 `IOrchestrationRunRepository` is intentionally unchanged and continues to own run
 summaries, execution details, node attempts, tool calls, finalization, and recovery.
+
+For Evaluation Suite normalization, run `025` and `026`, stop Agent API writes,
+and generate the data-only script from the current SQL Server aggregate rows:
+
+```powershell
+py -3 .\Tools\export_sqlserver_evaluation_suite_to_sqlserver.py `
+  .\SqlServer\Data\evaluation_suite_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`EVALUATION_SUITE_MIGRATION_SQLSERVER_ODBC`. Run the generated script, then
+`Data/027`, `028`, and `029`. The generated script validates source identity,
+logical revision, and lossless conversion to `varchar`. Do not run it after
+`Data/027` removes `DocumentJson`.
+
+After this cutover, `AgEvaluationSuiteServices` implements
+`IEvaluationSuiteRepository` through SqlSugar. Evaluation cases and their ordered
+contains, excludes, and required-event rules are stored in normalized child rows.
+Evaluation Batch and Model Judge persistence remain unchanged.
 
 
 For the final copy, stop writes to the Agent API and keep a backup of
