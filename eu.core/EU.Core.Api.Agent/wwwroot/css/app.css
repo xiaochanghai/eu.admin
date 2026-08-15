@@ -587,6 +587,7 @@ tbody tr:hover { background: #fafbfc; }
 .evaluation-suite-rail > header > span, .evaluation-inspector > header > span { color: var(--muted); font-size: 10px; }
 .evaluation-inline-status, .evaluation-hint { margin: 0; padding: 16px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .evaluation-suite-list, .evaluation-batch-list { display: grid; align-content: start; gap: 3px; padding: 7px; overflow-y: auto; }
+.evaluation-batch-list { flex: 0 0 clamp(300px, 42vh, 460px); min-height: 300px; }
 .evaluation-suite-item, .evaluation-batch-item { display: grid; gap: 5px; width: 100%; padding: 12px 11px; color: var(--ink); border: 1px solid transparent; border-radius: 8px; background: transparent; text-align: left; transition: border-color .16s ease, background-color .16s ease, transform .16s ease; }
 .evaluation-suite-item:hover, .evaluation-batch-item:hover { background: #fff; transform: translateX(2px); }
 .evaluation-suite-item.is-active, .evaluation-batch-item.is-active { border-color: #d8def5; background: #fff; }
@@ -671,7 +672,7 @@ tbody tr:hover { background: #fafbfc; }
   .evaluation-layout { grid-template-columns: 210px minmax(500px, 1fr); height: auto; min-height: 760px; }
   .evaluation-inspector { grid-column: 1 / -1; display: grid; grid-template-columns: 230px minmax(300px, 1fr) minmax(320px, 1fr); border-top: 1px solid var(--line); border-left: 0; }
   .evaluation-inspector > header { align-items: flex-start; border-right: 1px solid var(--line); }
-  .evaluation-batch-list { max-height: 420px; border-right: 1px solid var(--line); }
+  .evaluation-batch-list { min-height: 420px; max-height: 520px; border-right: 1px solid var(--line); }
   .evaluation-batch-detail, .evaluation-compare { border-top: 0; }
   .evaluation-compare { border-left: 1px solid var(--line); }
 }
@@ -682,6 +683,7 @@ tbody tr:hover { background: #fafbfc; }
   .evaluation-suite-rail { max-height: 300px; border-right: 0; border-bottom: 1px solid var(--line); }
   .evaluation-inspector { display: flex; border-top: 1px solid var(--line); }
   .evaluation-inspector > header, .evaluation-batch-list, .evaluation-compare { border-right: 0; border-left: 0; }
+  .evaluation-batch-list { flex-basis: min(58vh, 520px); min-height: 360px; max-height: 520px; }
   .evaluation-editor { overflow: visible; }
   .evaluation-metadata, .evaluation-runbar { grid-template-columns: 1fr; }
   .evaluation-case-name { width: 100%; }

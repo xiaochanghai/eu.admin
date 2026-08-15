@@ -212,6 +212,11 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `evaluation_batches.cases.report.checks` | `AgEvaluationBatchCheck` |
 | `evaluation_batches.cases.observedEventKinds/observedRoutes` | `AgEvaluationBatchObservation` |
 | `evaluation_model_judgements` | `AgEvaluationModelJudgement` |
+| `evaluation_model_judgements.evaluators` | `AgEvaluationModelJudgementEvaluator` |
+| `evaluation_model_judgements.minimumScores` | `AgEvaluationModelJudgementMinimumScore` |
+| `evaluation_model_judgements.cases` | `AgEvaluationModelJudgementCase` |
+| `evaluation_model_judgements.cases.metrics` | `AgEvaluationModelJudgementMetric` |
+| `evaluation_model_judgements.cases.metrics.diagnosticCodes` | `AgEvaluationModelJudgementDiagnostic` |
 | `api_idempotency` | `AgApiIdempotency` |
 
 Column mapping is mechanical snake_case to PascalCase, with acronym casing such as
@@ -341,6 +346,24 @@ The default connection environment variable is
 `IEvaluationBatchRecovery` through SqlSugar. Case reports, ordered checks, event
 kinds, and routes are stored in normalized child rows. Model Judge persistence
 remains unchanged.
+
+For Evaluation Model Judgement normalization, run `035` and `036`, stop Agent API
+writes, and generate the data-only script from the current SQL Server aggregate rows:
+
+```powershell
+py -3 .\Tools\export_sqlserver_evaluation_model_judgement_to_sqlserver.py `
+  .\SqlServer\Data\evaluation_model_judgement_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`EVALUATION_MODEL_JUDGEMENT_MIGRATION_SQLSERVER_ODBC`. Run the generated script,
+then `Data/037`, `038`, and `039`. The generated script validates source identity
+and lossless conversion to `varchar`; do not run it after `Data/037` removes
+`DocumentJson`.
+
+After this cutover, `AgEvaluationModelJudgementServices` implements
+`IModelJudgeReportRepository` through SqlSugar. Evaluators, minimum scores, cases,
+metrics, and diagnostic codes are stored in normalized ordered child rows.
 
 
 For the final copy, stop writes to the Agent API and keep a backup of

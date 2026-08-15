@@ -142,12 +142,6 @@ builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
         options.AllowDevelopmentHttp),
         services.GetRequiredService<IMcpCredentialResolver>());
 });
-builder.Services.AddSingleton<IModelJudgeReportRepository>(services =>
-    CreateStorageRepository<IModelJudgeReportRepository>(
-        services,
-        () => new InMemoryModelJudgeReportRepository(),
-        value => new SqliteModelJudgeReportRepository(value),
-        value => new SqlServerModelJudgeReportRepository(value)));
 builder.Services.AddSingleton<IMcpCredentialResolver,
     DevelopmentMcpCredentialResolver>();
 builder.Services.AddSingleton<IMcpToolDiscovery>(services =>
