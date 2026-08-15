@@ -189,6 +189,7 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `orchestration_definitions.publishedVersions.snapshot.agents` | `AgOrchestrationAgentBinding` |
 | `orchestration_runs` | `AgOrchestrationRun` |
 | `orchestration_run_details` | `AgOrchestrationRunDetail` |
+| `orchestration_runs.nodes` | `AgOrchestrationRunNode` |
 | `orchestration_node_attempts` | `AgOrchestrationNodeAttempt` |
 | `orchestration_tool_calls` | `AgOrchestrationToolCall` |
 | `chat_conversations` | `AgChatConversation` |
@@ -309,8 +310,6 @@ script, then `Data/022`, `023`, and `024`. Do not run the generated script after
 After the cutover, `AgOrchestrationDefinitionServices` implements both
 `IOrchestrationRepository` and `IPublishedOrchestrationCatalog` through SqlSugar.
 `AgentStorage:Provider` no longer selects Orchestration-definition persistence.
-`IOrchestrationRunRepository` is intentionally unchanged and continues to own run
-summaries, execution details, node attempts, tool calls, finalization, and recovery.
 
 For Evaluation Suite normalization, run `025` and `026`, stop Agent API writes,
 and generate the data-only script from the current SQL Server aggregate rows:
@@ -364,6 +363,26 @@ and lossless conversion to `varchar`; do not run it after `Data/037` removes
 After this cutover, `AgEvaluationModelJudgementServices` implements
 `IModelJudgeReportRepository` through SqlSugar. Evaluators, minimum scores, cases,
 metrics, and diagnostic codes are stored in normalized ordered child rows.
+
+For Orchestration Run normalization, run `040` and `041`, stop Agent API writes,
+and generate the data-only script from the current SQL Server run documents:
+
+```powershell
+py -3 .\Tools\export_sqlserver_orchestration_run_to_sqlserver.py `
+  .\SqlServer\Data\orchestration_run_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`ORCHESTRATION_RUN_MIGRATION_SQLSERVER_ODBC`. Existing `CHAR(36)` identifier
+columns remain unchanged. Run the generated script, then `Data/042`, `043`, and
+`044`. Do not run the generated script after `Data/042` removes `DocumentJson`.
+
+After this cutover, `AgOrchestrationRunServices` implements
+`IOrchestrationRunRepository` through SqlSugar. Run summaries and ordered node
+summaries are normalized, while execution details, node attempts, and tool calls
+continue in their existing dedicated tables with BasePoco fields and `varchar`
+text storage. Terminal transitions, conditional detail saves, and interrupted-run
+recovery remain transactional.
 
 
 For the final copy, stop writes to the Agent API and keep a backup of

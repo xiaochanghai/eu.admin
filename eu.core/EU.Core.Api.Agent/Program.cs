@@ -119,12 +119,6 @@ builder.Services.AddSingleton<IUnifiedEntryRepository>(services =>
         () => new InMemoryUnifiedEntryRepository(),
         value => new SqliteUnifiedEntryRepository(value),
         value => new SqlServerUnifiedEntryRepository(value)));
-builder.Services.AddSingleton<IOrchestrationRunRepository>(services =>
-    CreateStorageRepository<IOrchestrationRunRepository>(
-        services,
-        () => new InMemoryOrchestrationRunRepository(),
-        value => new SqliteOrchestrationRunRepository(value),
-        value => new SqlServerOrchestrationRunRepository(value)));
 builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
 {
     AgentMcpOptions options =
