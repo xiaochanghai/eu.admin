@@ -50,6 +50,12 @@ For a new SQL Server database, run:
 30. `Data/027_normalize_evaluation_suite_data.sql`
 31. `028_add_evaluation_suite_table_descriptions.sql`
 32. `029_verify_evaluation_suite_character_types.sql`
+33. `030_add_basepoco_and_fields_ag_evaluation_batch.sql`
+34. `031_create_evaluation_batch_detail_tables.sql`
+35. Generate and run `Data/evaluation_batch_normalized_data.generated.sql` from the current SQL Server rows
+36. `Data/032_normalize_evaluation_batch_data.sql`
+37. `033_add_evaluation_batch_table_descriptions.sql`
+38. `034_verify_evaluation_batch_character_types.sql`
 
 For a database where `001_initial_schema.sql` and the SQLite data import have already
 been completed, back up the database and run `002`, then `003`. Stop Agent writes
@@ -202,6 +208,9 @@ reads and writes `AgMcpServerDefinition`, `AgMcpServerArgument`, and
 | `evaluation_suites.*.cases` | `AgEvaluationCase` |
 | `evaluation_suites.*.cases.specification rules` | `AgEvaluationCaseRule` |
 | `evaluation_batches` | `AgEvaluationBatch` |
+| `evaluation_batches.cases` | `AgEvaluationBatchCase` |
+| `evaluation_batches.cases.report.checks` | `AgEvaluationBatchCheck` |
+| `evaluation_batches.cases.observedEventKinds/observedRoutes` | `AgEvaluationBatchObservation` |
 | `evaluation_model_judgements` | `AgEvaluationModelJudgement` |
 | `api_idempotency` | `AgApiIdempotency` |
 
@@ -315,7 +324,23 @@ logical revision, and lossless conversion to `varchar`. Do not run it after
 After this cutover, `AgEvaluationSuiteServices` implements
 `IEvaluationSuiteRepository` through SqlSugar. Evaluation cases and their ordered
 contains, excludes, and required-event rules are stored in normalized child rows.
-Evaluation Batch and Model Judge persistence remain unchanged.
+The Evaluation Suite cutover itself does not change Evaluation Batch or Model Judge persistence.
+
+For Evaluation Batch normalization, run `030` and `031`, stop Agent API writes,
+and generate the data-only script from the current SQL Server aggregate rows:
+
+```powershell
+py -3 .\Tools\export_sqlserver_evaluation_batch_to_sqlserver.py `
+  .\SqlServer\Data\evaluation_batch_normalized_data.generated.sql
+```
+
+The default connection environment variable is
+`EVALUATION_BATCH_MIGRATION_SQLSERVER_ODBC`. Run the generated script, then
+`Data/032`, `033`, and `034`. After this cutover,
+`AgEvaluationBatchServices` implements both `IEvaluationBatchRepository` and
+`IEvaluationBatchRecovery` through SqlSugar. Case reports, ordered checks, event
+kinds, and routes are stored in normalized child rows. Model Judge persistence
+remains unchanged.
 
 
 For the final copy, stop writes to the Agent API and keep a backup of

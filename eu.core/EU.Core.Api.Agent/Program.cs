@@ -142,12 +142,6 @@ builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
         options.AllowDevelopmentHttp),
         services.GetRequiredService<IMcpCredentialResolver>());
 });
-builder.Services.AddSingleton<IEvaluationBatchRepository>(services =>
-    CreateStorageRepository<IEvaluationBatchRepository>(
-        services,
-        () => new InMemoryEvaluationBatchRepository(),
-        value => new SqliteEvaluationBatchRepository(value),
-        value => new SqlServerEvaluationBatchRepository(value)));
 builder.Services.AddSingleton<IModelJudgeReportRepository>(services =>
     CreateStorageRepository<IModelJudgeReportRepository>(
         services,
