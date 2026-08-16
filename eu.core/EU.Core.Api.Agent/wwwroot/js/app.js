@@ -375,12 +375,47 @@ document.querySelector("#knowledgeNavButton").addEventListener("click", () => sh
 document.querySelector("#orchestrationNavButton").addEventListener("click", () => showPage("orchestration", true));
 document.querySelector("#evaluationNavButton").addEventListener("click", () => showPage("evaluation", true));
 
+function renderStorageMode(capabilities) {
+  const storageMode = String(capabilities?.storageMode || "").trim().toLowerCase();
+  if (!storageMode) {
+    document.querySelector("#storageModeTitle").textContent = "持久化存储";
+    document.querySelector("#storageModeSummary").textContent = "模式读取失败";
+    document.querySelector("#storageModeBanner").textContent = "持久化模式读取失败。";
+    document.querySelector("#storageModeDescription").textContent =
+      "请检查 Host 能力接口后重试。";
+    document.querySelector("#agentStorageMode").textContent = "读取失败";
+    return;
+  }
+
+  const isSqlSugar = storageMode === "sqlsugar";
+  const displayName = isSqlSugar
+    ? "SqlSugar"
+    : (storageMode || "统一存储");
+
+  document.querySelector("#storageModeTitle").textContent = isSqlSugar
+    ? "统一数据库模式"
+    : "持久化存储";
+  document.querySelector("#storageModeSummary").textContent =
+    `${displayName} · Agent / Skill / MCP`;
+  document.querySelector("#storageModeBanner").textContent =
+    `当前使用 ${displayName} 持久化。`;
+  document.querySelector("#storageModeDescription").textContent = isSqlSugar
+    ? "Agent、Skill 与 MCP 数据通过统一数据库访问层持久化。"
+    : "Agent、Skill 与 MCP 数据由 Host 统一持久化。";
+  document.querySelector("#orchestrationStorageDescription").textContent = isSqlSugar
+    ? "每个节点最多重试 3 次；SqlSugar 会持久化编排输入与输出、节点 Attempt、MCP 调用明细和完整执行追踪，敏感字段在写入前脱敏。"
+    : "每个节点最多重试 3 次；Host 会持久化编排输入与输出、节点 Attempt、MCP 调用明细和完整执行追踪，敏感字段在写入前脱敏。";
+  document.querySelector("#agentStorageMode").textContent = `${displayName}（持久化）`;
+}
+
 async function initialize() {
   showPage("chat");
   try {
     state.capabilities = await agentApi.capabilities();
     editor.setModelProfiles(state.capabilities.modelProfileIds ?? []);
+    renderStorageMode(state.capabilities);
   } catch (error) {
+    renderStorageMode(null);
     toast(`能力信息读取失败：${error.message}`, "error");
   }
   await refreshPublishedSkills();

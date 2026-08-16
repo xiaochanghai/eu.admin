@@ -44,7 +44,7 @@
       </nav>
       <div class="sidebar-note">
         <span class="pulse" aria-hidden="true"></span>
-        <div><strong>开发存储模式</strong><span>SQLite · Agent / Skill / MCP</span></div>
+        <div><strong id="storageModeTitle">持久化存储</strong><span id="storageModeSummary">正在读取…</span></div>
       </div>
     </aside>
 
@@ -180,7 +180,7 @@
 
       <section class="memory-banner agent-page" aria-label="存储提示" hidden>
         <span aria-hidden="true">i</span>
-        <p><strong>当前使用 SQLite 持久化。</strong> Agent 与 Skill 在 Host 重启后保留；SQL Server 脚本仍由运维人工处理。</p>
+        <p><strong id="storageModeBanner">正在读取持久化模式。</strong> <span id="storageModeDescription">Agent、Skill 与 MCP 数据由 Host 统一持久化。</span></p>
       </section>
 
       <section class="workspace agent-page" aria-labelledby="agentListTitle" hidden>
@@ -378,7 +378,7 @@
         </header>
         <section class="memory-banner" aria-label="编排安全边界">
           <span aria-hidden="true">i</span>
-          <p><strong>P7 仅支持手动触发。</strong> 每个节点最多重试 3 次；SQLite 会持久化编排输入与输出、节点 Attempt、MCP 调用明细和完整执行追踪，敏感字段在写入前脱敏。</p>
+          <p><strong>P7 仅支持手动触发。</strong> <span id="orchestrationStorageDescription">每个节点最多重试 3 次；Host 会持久化编排输入与输出、节点 Attempt、MCP 调用明细和完整执行追踪，敏感字段在写入前脱敏。</span></p>
         </section>
         <section class="workspace" aria-labelledby="orchestrationListTitle">
           <div class="toolbar">
@@ -610,7 +610,7 @@
         <div class="read-only-grid">
           <div><span>部署目标</span><strong>Server</strong></div>
           <div><span>Host</span><strong>EU.Core.Api.Agent</strong></div>
-          <div><span>存储模式</span><strong>SQLite（持久化）</strong></div>
+          <div><span>存储模式</span><strong id="agentStorageMode">正在读取…</strong></div>
         </div>
       </section>
 
@@ -788,6 +788,6 @@
   </aside>
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="/js/app.js?v=8"></script>
+  <script type="module" src="/js/app.js?v=11"></script>
 </body>
 </html>
