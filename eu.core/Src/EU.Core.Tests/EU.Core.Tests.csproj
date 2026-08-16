@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EU.Core.Api\EU.Core.Api.csproj" />
+    <ProjectReference Include="..\..\EU.Core.Api.Agent\EU.Core.Api.Agent.csproj" />
     <ProjectReference Include="..\..\EU.Core.Services\EU.Core.Services.csproj" />
     <ProjectReference Include="..\EU.Core.Common\EU.Core.Common.csproj" />
     <ProjectReference Include="..\EU.Core.Extensions\EU.Core.Extensions.csproj" />

@@ -10,7 +10,6 @@ namespace EU.Core.Api.Agent.Security;
 
 public sealed class AgentOperationAuditMiddleware(
     RequestDelegate next,
-    IAgentOperationAuditRepository repository,
     IOptions<AgentAuthenticationOptions> options,
     TimeProvider timeProvider,
     AgentMetrics metrics,
@@ -19,7 +18,9 @@ public sealed class AgentOperationAuditMiddleware(
     internal const string CancelledItemKey =
         "EU.Core.Api.Agent.OperationAudit.Cancelled";
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(
+        HttpContext context,
+        IAgentOperationAuditRepository repository)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -105,6 +106,7 @@ public sealed class AgentOperationAuditMiddleware(
         {
             await next(context);
             AgentOperationAuditRecord terminal = await SaveTerminalAsync(
+                repository,
                 record,
                 context.Response.StatusCode,
                 ElapsedMilliseconds(started),
@@ -121,6 +123,7 @@ public sealed class AgentOperationAuditMiddleware(
         catch (Exception)
         {
             AgentOperationAuditRecord terminal = await SaveTerminalAsync(
+                repository,
                 record,
                 StatusCodes.Status500InternalServerError,
                 ElapsedMilliseconds(started),
@@ -138,6 +141,7 @@ public sealed class AgentOperationAuditMiddleware(
     }
 
     private async Task<AgentOperationAuditRecord> SaveTerminalAsync(
+        IAgentOperationAuditRepository repository,
         AgentOperationAuditRecord record,
         int statusCode,
         long durationMilliseconds,

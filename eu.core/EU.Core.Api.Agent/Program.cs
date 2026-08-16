@@ -155,7 +155,7 @@ builder.Services.AddSingleton<IMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
 builder.Services.AddSingleton<IApprovedMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
-builder.Services.AddSingleton<ToolApprovalManagementService>();
+builder.Services.AddScoped<ToolApprovalManagementService>();
 ToolApprovalOptions toolApproval = builder.Configuration
     .GetSection(ToolApprovalOptions.SectionName)
     .Get<ToolApprovalOptions>() ?? new ToolApprovalOptions();
@@ -204,7 +204,7 @@ if (toolApproval.Enabled)
     });
     builder.Services.AddSingleton<IAgentToolApprovalHandler>(services =>
         services.GetRequiredService<ToolApprovalRuntimeService>());
-    builder.Services.AddSingleton<ToolApprovalConversationResumeService>();
+    builder.Services.AddScoped<ToolApprovalConversationResumeService>();
 }
 builder.Services.AddSingleton<IModelCredentialResolver>(services =>
     new EnvironmentAndDotEnvModelCredentialResolver(
@@ -270,8 +270,8 @@ builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
 builder.Services.AddSingleton<MainAgentAssignmentService>();
-builder.Services.AddSingleton<KnowledgeLifecycleService>();
-builder.Services.AddSingleton<OrchestrationLifecycleService>();
+builder.Services.AddScoped<KnowledgeLifecycleService>();
+builder.Services.AddScoped<OrchestrationLifecycleService>();
 builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
     new PublicModelProfileCatalog(
         services.GetRequiredService<IOptions<AgentControlOptions>>().Value.ModelProfileIds));
@@ -283,13 +283,15 @@ builder.Services.AddSingleton(services =>
     services.GetRequiredService<IOptions<UnifiedEntryOptions>>()
         .Value
         .ToLimits());
+// These runtime coordinators own active executions, cancellation tokens and
+// recovery gates that must remain available across HTTP request scopes.
 builder.Services.AddSingleton<UnifiedEntryService>();
-builder.Services.AddSingleton<RunEvaluationService>();
-builder.Services.AddSingleton<IEvaluationTargetCatalog,
+builder.Services.AddScoped<RunEvaluationService>();
+builder.Services.AddScoped<IEvaluationTargetCatalog,
     PublishedAgentEvaluationTargetCatalog>();
-builder.Services.AddSingleton<EvaluationSuiteLifecycleService>();
-builder.Services.AddSingleton<EvaluationBatchService>();
-builder.Services.AddSingleton<EvaluationBatchComparisonService>();
+builder.Services.AddScoped<EvaluationSuiteLifecycleService>();
+builder.Services.AddScoped<EvaluationBatchService>();
+builder.Services.AddScoped<EvaluationBatchComparisonService>();
 builder.Services.AddSingleton(services =>
 {
     AgentEvaluationOptions options = services
@@ -300,38 +302,43 @@ builder.Services.AddSingleton(services =>
         options.ModelJudgeMaximumCases,
         TimeSpan.FromSeconds(options.ModelJudgeTimeoutSeconds));
 });
-builder.Services.AddSingleton<ModelJudgeService>();
+builder.Services.AddScoped<ModelJudgeService>();
+builder.Services.ValidateAgentServiceLifetimes();
 
 WebApplication app = builder.Build();
 app.ConfigureApplication();
 HostDrainState hostDrainState = app.Services.GetRequiredService<HostDrainState>();
 app.Lifetime.ApplicationStopping.Register(hostDrainState.BeginDrain);
 
-await app.Services
-    .GetRequiredService<EU.Core.IServices.IAgSkillDefinitionServices>()
-    .ReconcileFileAttachmentsAsync(CancellationToken.None);
+await using (AsyncServiceScope startupScope = app.Services.CreateAsyncScope())
+{
+    IServiceProvider startupServices = startupScope.ServiceProvider;
+    await startupServices
+        .GetRequiredService<EU.Core.IServices.IAgSkillDefinitionServices>()
+        .ReconcileFileAttachmentsAsync(CancellationToken.None);
 
-if (app.Services.GetRequiredService<IEvaluationBatchRepository>()
-    is IEvaluationBatchRecovery evaluationBatchRecovery)
-{
-    await evaluationBatchRecovery.RecoverInterruptedAsync(
-        TimeProvider.System.GetUtcNow(),
-        CancellationToken.None);
-}
-
-if (app.Services.GetRequiredService<IUnifiedEntryRepository>()
-    is IUnifiedEntryRecovery recovery)
-{
-    await recovery.RecoverInterruptedAsync(
-        TimeProvider.System.GetUtcNow(),
-        CancellationToken.None);
-}
-if (toolApproval.Enabled)
-{
-    await app.Services.GetRequiredService<IToolApprovalRepository>()
-        .RecoverInterruptedExecutionsAsync(
+    if (startupServices.GetRequiredService<IEvaluationBatchRepository>()
+        is IEvaluationBatchRecovery evaluationBatchRecovery)
+    {
+        await evaluationBatchRecovery.RecoverInterruptedAsync(
             TimeProvider.System.GetUtcNow(),
             CancellationToken.None);
+    }
+
+    if (startupServices.GetRequiredService<IUnifiedEntryRepository>()
+        is IUnifiedEntryRecovery recovery)
+    {
+        await recovery.RecoverInterruptedAsync(
+            TimeProvider.System.GetUtcNow(),
+            CancellationToken.None);
+    }
+    if (toolApproval.Enabled)
+    {
+        await startupServices.GetRequiredService<IToolApprovalRepository>()
+            .RecoverInterruptedExecutionsAsync(
+                TimeProvider.System.GetUtcNow(),
+                CancellationToken.None);
+    }
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
