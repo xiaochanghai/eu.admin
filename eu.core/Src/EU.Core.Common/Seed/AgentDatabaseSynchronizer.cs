@@ -9,6 +9,8 @@ namespace EU.Core.Common.Seed;
 /// <summary>基于 SqlSugar 的 Agent 表结构与数据同步器。</summary>
 public static class AgentDatabaseSynchronizer
 {
+    private static readonly SemaphoreSlim SyncLock = new(1, 1);
+
     private static readonly string[] AgentTableOrder =
     [
         "AgAgentDefinition", "AgAgentVersion", "AgAgentVersionSnapshot", "AgAgentVersionBinding",
@@ -35,25 +37,61 @@ public static class AgentDatabaseSynchronizer
     /// 将 Agent 实体结构及数据从一个已配置连接同步到另一个连接。
     /// 同步器按固定的父表到子表顺序写入，替换数据时按相反顺序清空目标表。
     /// </summary>
-    public static async Task<AgentDatabaseSyncResult> SyncAsync(
+    public static Task<AgentDatabaseSyncResult> SyncAsync(
         MyContext myContext,
         AgentDatabaseSyncRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(myContext);
+        return SyncAsync(myContext.Db, request, cancellationToken);
+    }
+
+    /// <summary>
+    /// 将 Agent 实体结构及数据在同一个 SqlSugar 多连接作用域内同步。
+    /// </summary>
+    public static async Task<AgentDatabaseSyncResult> SyncAsync(
+        SqlSugarScope db,
+        AgentDatabaseSyncRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(db);
         ArgumentNullException.ThrowIfNull(request);
 
         string sourceConfigId = NormalizeConfigId(request.SourceConfigId, nameof(request.SourceConfigId));
         string targetConfigId = NormalizeConfigId(request.TargetConfigId, nameof(request.TargetConfigId));
         ValidateRequest(request, sourceConfigId, targetConfigId);
-        if (!myContext.Db.IsAnyConnection(sourceConfigId) ||
-            !myContext.Db.IsAnyConnection(targetConfigId))
+
+        await SyncLock.WaitAsync(cancellationToken);
+        try
+        {
+            return await SyncLockedAsync(
+                db,
+                request,
+                sourceConfigId,
+                targetConfigId,
+                cancellationToken);
+        }
+        finally
+        {
+            SyncLock.Release();
+        }
+    }
+
+    private static async Task<AgentDatabaseSyncResult> SyncLockedAsync(
+        SqlSugarScope db,
+        AgentDatabaseSyncRequest request,
+        string sourceConfigId,
+        string targetConfigId,
+        CancellationToken cancellationToken)
+    {
+        if (!db.IsAnyConnection(sourceConfigId) ||
+            !db.IsAnyConnection(targetConfigId))
         {
             throw new InvalidOperationException("源数据库或目标数据库未配置为已启用的 SqlSugar 连接。");
         }
 
-        SqlSugarScopeProvider source = myContext.Db.GetConnectionScope(sourceConfigId);
-        SqlSugarScopeProvider target = myContext.Db.GetConnectionScope(targetConfigId);
+        SqlSugarScopeProvider source = db.GetConnectionScope(sourceConfigId);
+        SqlSugarScopeProvider target = db.GetConnectionScope(targetConfigId);
         IReadOnlyDictionary<string, Type> entityTypes = GetAgentEntityTypes(source);
         IReadOnlyList<(string TableName, Type EntityType)> tables = ResolveAgentTables(
             request.Tables ?? [],
@@ -62,7 +100,7 @@ public static class AgentDatabaseSynchronizer
 
         if (request.SyncStructure)
         {
-            target.CodeFirst.InitTables(tables.Select(table => table.EntityType).ToArray());
+            SyncTargetStructure(target, tables);
         }
         ValidateTargetTables(target, tables);
 
@@ -183,6 +221,43 @@ public static class AgentDatabaseSynchronizer
             {
                 throw new InvalidOperationException(
                     $"目标数据库缺少 Agent 表 {tableName}，请启用 SyncStructure。");
+            }
+        }
+    }
+
+    private static void SyncTargetStructure(
+        SqlSugarScopeProvider target,
+        IReadOnlyList<(string TableName, Type EntityType)> tables)
+    {
+        ConnectionConfig config = target.CurrentConnectionConfig;
+        ConnMoreSettings originalSettings = config.MoreSettings;
+        bool forceSqlServerVarchar = config.DbType is SqlSugar.DbType.SqlServer;
+        bool originalSqlServerCodeFirstNvarchar =
+            originalSettings?.SqlServerCodeFirstNvarchar ?? false;
+        if (forceSqlServerVarchar)
+        {
+            config.MoreSettings ??= new ConnMoreSettings();
+            config.MoreSettings.SqlServerCodeFirstNvarchar = false;
+        }
+
+        try
+        {
+            target.CodeFirst.InitTables(tables.Select(table => table.EntityType).ToArray());
+        }
+        finally
+        {
+            if (forceSqlServerVarchar)
+            {
+                if (originalSettings is null)
+                {
+                    config.MoreSettings = null;
+                }
+                else
+                {
+                    originalSettings.SqlServerCodeFirstNvarchar =
+                        originalSqlServerCodeFirstNvarchar;
+                    config.MoreSettings = originalSettings;
+                }
             }
         }
     }

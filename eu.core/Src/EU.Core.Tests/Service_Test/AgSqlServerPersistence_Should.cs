@@ -1,5 +1,8 @@
+using EU.Core.Agent.Application.Abstractions.Auditing;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Approvals;
+using EU.Core.Agent.Application.Mcp;
+using EU.Core.Agent.Application.Runtime;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Model.Entity;
 using EU.Core.Repository.Base;
@@ -32,6 +35,10 @@ public sealed class AgSqlServerPersistence_Should
         });
         db.Ado.Open();
         EnsureTablesExist(db);
+        AssertAllTablesHaveIdPrimaryKeys(db);
+        AssertNoUnicodeCharacterColumns(db);
+        AssertAllTablesHaveDescriptions(db);
+        AssertAllColumnsHaveDescriptions(db);
 
         DateTimeOffset started = DateTimeOffset.UtcNow;
         UnifiedEntryAggregate running =
@@ -43,6 +50,35 @@ public sealed class AgSqlServerPersistence_Should
                 started);
         ToolApprovalRequestRecord approval =
             AgToolApprovalPersistence_Should.CreatePending(started);
+        Guid operationAuditId = Guid.NewGuid();
+        var operationStarted = new AgentOperationAuditRecord(
+            operationAuditId,
+            started,
+            "sql-test-tenant",
+            "sql-test-user",
+            $"sql-correlation-{Guid.NewGuid():N}",
+            "AgentRead",
+            "GET",
+            "/api/agents",
+            0,
+            "Started",
+            null,
+            0);
+        Guid auditRunId = Guid.NewGuid();
+        Guid auditAgentId = Guid.NewGuid();
+        var auditRunning = new AgentRunAuditRecord(
+            auditRunId,
+            auditAgentId,
+            Guid.NewGuid(),
+            $"sql-audit-agent-{Guid.NewGuid():N}",
+            AgentRunStatus.Running,
+            started,
+            null,
+            new string('a', 64),
+            0,
+            0,
+            string.Empty,
+            []);
 
         try
         {
@@ -144,6 +180,47 @@ public sealed class AgSqlServerPersistence_Should
                 finishedAtDifference,
                 0,
                 TimeSpan.FromMilliseconds(4).Ticks);
+
+            var operationAudits = new AgAgentOperationAuditServices(
+                CreateRepository<AgAgentOperationAudit>(db));
+            await operationAudits.SaveAsync(operationStarted);
+            await operationAudits.SaveAsync(operationStarted with
+            {
+                StatusCode = 200,
+                Outcome = "Succeeded",
+                DurationMilliseconds = 15
+            });
+            AgentOperationAuditRecord persistedOperation = Assert.Single(
+                await operationAudits.ListAsync("sql-test-tenant", 100),
+                value => value.Id == operationAuditId);
+            Assert.Equal("Succeeded", persistedOperation.Outcome);
+            Assert.Equal(200, persistedOperation.StatusCode);
+
+            var runAudits = new AgAgentRunAuditServices(
+                CreateRepository<AgAgentRunAudit>(db));
+            await runAudits.SaveAsync(auditRunning);
+            var auditToolCall = new AgentToolCallAuditRecord(
+                Guid.NewGuid(),
+                "sql_test_tool",
+                McpToolRisk.ReadOnly,
+                AgentRunEventKind.ToolSucceeded,
+                started.AddMilliseconds(10),
+                started.AddMilliseconds(20),
+                string.Empty);
+            await runAudits.SaveAsync(auditRunning with
+            {
+                Status = AgentRunStatus.Completed,
+                FinishedAtUtc = started.AddSeconds(1),
+                OutputCharacters = 8,
+                ToolCallCount = 1,
+                ToolCalls = [auditToolCall]
+            });
+            AgentRunAuditRecord persistedRunAudit = Assert.Single(
+                await runAudits.ListAsync(auditAgentId, 10));
+            Assert.Equal(AgentRunStatus.Completed, persistedRunAudit.Status);
+            Assert.Equal(
+                auditToolCall.ToolVersionId,
+                Assert.Single(persistedRunAudit.ToolCalls).ToolVersionId);
         }
         finally
         {
@@ -163,6 +240,15 @@ public sealed class AgSqlServerPersistence_Should
             await db.Deleteable<AgToolApprovalRequest>()
                 .Where(value => value.ID == approval.Id)
                 .ExecuteCommandAsync();
+            await db.Deleteable<AgAgentToolCallAudit>()
+                .Where(value => value.RunId == auditRunId)
+                .ExecuteCommandAsync();
+            await db.Deleteable<AgAgentRunAudit>()
+                .Where(value => value.ID == auditRunId)
+                .ExecuteCommandAsync();
+            await db.Deleteable<AgAgentOperationAudit>()
+                .Where(value => value.ID == operationAuditId)
+                .ExecuteCommandAsync();
         }
     }
 
@@ -178,26 +264,138 @@ public sealed class AgSqlServerPersistence_Should
 
     private static void EnsureTablesExist(SqlSugarScope db)
     {
-        string[] tableNames =
-        [
-            "AgChatConversation",
-            "AgChatMessage",
-            "AgUnifiedEntryRun",
-            "AgUnifiedAgentRun",
-            "AgUnifiedOrchestrationLink",
-            "AgUnifiedToolCall",
-            "AgUnifiedRunEvent",
-            "AgApiIdempotency",
-            "AgToolApprovalRequest",
-            "AgToolApprovalPayload",
-            "AgToolApprovalDecision",
-            "AgToolApprovalExecutionResult"
-        ];
-        string[] missing = tableNames
+        string[] missing = GetCurrentAgentTableNames(db)
             .Where(name => !db.DbMaintenance.IsAnyTable(name, false))
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
         Assert.True(missing.Length == 0, $"Missing Agent tables: {string.Join(", ", missing)}");
     }
+
+    private static void AssertNoUnicodeCharacterColumns(SqlSugarScope db)
+    {
+        const string sql = """
+            SELECT
+                TABLE_NAME AS TableName,
+                COLUMN_NAME AS ColumnName,
+                DATA_TYPE AS DataType
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = 'dbo'
+              AND TABLE_NAME LIKE 'Ag%'
+              AND DATA_TYPE IN ('nvarchar', 'nchar', 'ntext')
+            ORDER BY TABLE_NAME, ORDINAL_POSITION
+            """;
+        HashSet<string> currentAgentTables = GetCurrentAgentTableNames(db);
+        List<UnicodeCharacterColumn> columns = db.Ado
+            .SqlQuery<UnicodeCharacterColumn>(sql)
+            .Where(value => currentAgentTables.Contains(value.TableName))
+            .ToList();
+        Assert.True(
+            columns.Count == 0,
+            $"Agent columns must use varchar/char types: {string.Join(", ", columns.Select(value => $"{value.TableName}.{value.ColumnName} ({value.DataType})"))}");
+    }
+
+    private static void AssertAllTablesHaveIdPrimaryKeys(SqlSugarScope db)
+    {
+        const string sql = """
+            SELECT tables.name AS TableName
+            FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas
+                ON schemas.schema_id = tables.schema_id
+            WHERE schemas.name = N'dbo'
+              AND tables.name LIKE N'Ag%'
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM sys.indexes AS indexes
+                  INNER JOIN sys.index_columns AS indexColumns
+                      ON indexColumns.object_id = indexes.object_id
+                     AND indexColumns.index_id = indexes.index_id
+                  INNER JOIN sys.columns AS columns
+                      ON columns.object_id = indexColumns.object_id
+                     AND columns.column_id = indexColumns.column_id
+                  WHERE indexes.object_id = tables.object_id
+                    AND indexes.is_primary_key = 1
+                    AND columns.name = N'ID'
+              )
+            ORDER BY tables.name
+            """;
+        HashSet<string> currentAgentTables = GetCurrentAgentTableNames(db);
+        List<TableWithoutIdPrimaryKey> tables = db.Ado
+            .SqlQuery<TableWithoutIdPrimaryKey>(sql)
+            .Where(value => currentAgentTables.Contains(value.TableName))
+            .ToList();
+        Assert.True(
+            tables.Count == 0,
+            $"Agent tables must have primary keys on ID: {string.Join(", ", tables.Select(value => value.TableName))}");
+    }
+
+    private static void AssertAllColumnsHaveDescriptions(SqlSugarScope db)
+    {
+        const string sql = """
+            SELECT
+                tables.name AS TableName,
+                columns.name AS ColumnName
+            FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas
+                ON schemas.schema_id = tables.schema_id
+            INNER JOIN sys.columns AS columns
+                ON columns.object_id = tables.object_id
+            LEFT JOIN sys.extended_properties AS descriptions
+                ON descriptions.major_id = tables.object_id
+               AND descriptions.minor_id = columns.column_id
+               AND descriptions.name = N'MS_Description'
+            WHERE schemas.name = N'dbo'
+              AND tables.name LIKE N'Ag%'
+              AND NULLIF(LTRIM(RTRIM(CONVERT(nvarchar(max), descriptions.value))), N'') IS NULL
+            ORDER BY tables.name, columns.column_id
+            """;
+        HashSet<string> currentAgentTables = GetCurrentAgentTableNames(db);
+        List<UndocumentedColumn> columns = db.Ado
+            .SqlQuery<UndocumentedColumn>(sql)
+            .Where(value => currentAgentTables.Contains(value.TableName))
+            .ToList();
+        Assert.True(
+            columns.Count == 0,
+            $"Agent columns must have MS_Description values: {string.Join(", ", columns.Select(value => $"{value.TableName}.{value.ColumnName}"))}");
+    }
+
+    private static void AssertAllTablesHaveDescriptions(SqlSugarScope db)
+    {
+        const string sql = """
+            SELECT tables.name AS TableName
+            FROM sys.tables AS tables
+            INNER JOIN sys.schemas AS schemas
+                ON schemas.schema_id = tables.schema_id
+            LEFT JOIN sys.extended_properties AS descriptions
+                ON descriptions.major_id = tables.object_id
+               AND descriptions.minor_id = 0
+               AND descriptions.name = N'MS_Description'
+            WHERE schemas.name = N'dbo'
+              AND tables.name LIKE N'Ag%'
+              AND NULLIF(LTRIM(RTRIM(CONVERT(nvarchar(max), descriptions.value))), N'') IS NULL
+            ORDER BY tables.name
+            """;
+        HashSet<string> currentAgentTables = GetCurrentAgentTableNames(db);
+        List<UndocumentedTable> tables = db.Ado
+            .SqlQuery<UndocumentedTable>(sql)
+            .Where(value => currentAgentTables.Contains(value.TableName))
+            .ToList();
+        Assert.True(
+            tables.Count == 0,
+            $"Agent tables must have MS_Description values: {string.Join(", ", tables.Select(value => value.TableName))}");
+    }
+
+    private static HashSet<string> GetCurrentAgentTableNames(SqlSugarScope db) =>
+        typeof(AgAgentDefinition).Assembly
+            .GetTypes()
+            .Where(type => type is { IsClass: true, IsAbstract: false } &&
+                           string.Equals(
+                               type.Namespace,
+                               "EU.Core.Model.Entity",
+                               StringComparison.Ordinal) &&
+                           type.Name.StartsWith("Ag", StringComparison.Ordinal))
+            .Select(type => db.EntityMaintenance.GetEntityInfo(type).DbTableName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     private static async Task DeleteChatRowsAsync(
         SqlSugarScope db,
@@ -226,6 +424,32 @@ public sealed class AgSqlServerPersistence_Should
         await db.Deleteable<AgChatConversation>()
             .Where(value => value.ID == conversationId)
             .ExecuteCommandAsync();
+    }
+
+    private sealed class UnicodeCharacterColumn
+    {
+        public string TableName { get; set; } = string.Empty;
+
+        public string ColumnName { get; set; } = string.Empty;
+
+        public string DataType { get; set; } = string.Empty;
+    }
+
+    private sealed class UndocumentedColumn
+    {
+        public string TableName { get; set; } = string.Empty;
+
+        public string ColumnName { get; set; } = string.Empty;
+    }
+
+    private sealed class UndocumentedTable
+    {
+        public string TableName { get; set; } = string.Empty;
+    }
+
+    private sealed class TableWithoutIdPrimaryKey
+    {
+        public string TableName { get; set; } = string.Empty;
     }
 }
 
