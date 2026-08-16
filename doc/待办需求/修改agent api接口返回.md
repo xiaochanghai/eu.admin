@@ -33,7 +33,7 @@
 - 普通结果：`ServiceResult<T>`；
 - 分页结果：`ServicePageResult<T>`；
 - JSON 属性命名采用 PascalCase，与 `EU.Core.Api` 的 `DefaultContractResolver` 行为一致；
-- `Status` 与实际 HTTP 状态码保持一致；
+- 成功响应的 `Status` 固定为 `200`；Agent 业务失败使用 `600000–699999` 独立号段，不使用 4 或 5 开头的常用 HTTP 状态码；
 - `Success` 明确表示本次操作是否成功；
 - `Message` 提供用户可理解的结果说明；
 - `MessageDev` 只允许在开发环境返回诊断信息，生产环境不得暴露堆栈、连接信息或凭据；
@@ -57,7 +57,7 @@
 
 ```json
 {
-  "Status": 409,
+  "Status": 610002,
   "Success": false,
   "Message": "Agent 操作无法完成。",
   "MessageDev": null,
@@ -89,39 +89,84 @@
 - 参数校验、业务冲突、未找到、未授权、限流、请求体过大和未处理异常均返回统一响应模型；
 - 原 Agent API 的稳定错误码不得丢失，统一放入 `Data.ErrorCode`；
 - 请求追踪标识不得丢失，统一放入 `Data.TraceId`，并继续保留现有关联 ID 响应头；
-- 不以 HTTP 200 掩盖失败：HTTP 状态码与响应体 `Status` 一致；
+- 响应体 `Status` 是业务状态码，HTTP 响应状态码负责传输语义；两者由同一错误映射同时生成，但数值不要求相同；
 - 生产环境不得在 `Message`、`MessageDev` 或 `Data` 中暴露异常堆栈及敏感配置。
 
 ### 3. ErrorCode 与 Status 对照
 
-新增公共的 Agent API 错误响应映射器，作为 `ErrorCode → Status` 的唯一事实源。
+新增公共的 Agent API 错误响应映射器，作为 `ErrorCode → Status + HTTP Status` 的唯一事实源。
 Controller、参数校验、授权处理器及中间件不得继续各自维护重复的 `switch`。
 
-`ErrorCode` 继续作为稳定的机器可读业务码返回在 `Data.ErrorCode`；`Status` 使用下表对应的
-HTTP 数字状态码，并与实际 HTTP 响应状态码完全一致。
+`ErrorCode` 继续作为稳定的机器可读错误标识返回在 `Data.ErrorCode`；`Status` 是供
+EU.Core 客户端统一判断的数字业务状态码。HTTP 状态码仍按 HTTP 语义返回，例如未找到为
+HTTP 404，但响应体可以是 `Status=610001`。
 
-| Status | 场景 | ErrorCode 对照或示例 |
+#### Status 号段
+
+| Status 范围 | 所属类别 | ErrorCode 示例 |
 |---:|---|---|
-| 200 | 查询、更新、发布等操作成功 | 成功响应不返回 `ErrorCode` |
-| 201 | 创建或导入成功 | 成功响应不返回 `ErrorCode` |
-| 400 | 请求参数、编码、路径、定义或配置无效 | `REQUEST_INVALID`、`*_CODE_INVALID`、`*_DEFINITION_INVALID`、`*_CONFIGURATION_INVALID`、`*_PATH_INVALID`、`*_INPUT_INVALID`、`*_PAYLOAD_INVALID`、`*_SPECIFICATION_INVALID` |
-| 401 | 未登录或认证信息无效 | `AUTHENTICATION_REQUIRED` |
-| 403 | 已认证但无权限，或策略明确禁止执行 | `AUTHORIZATION_DENIED`、`MCP_TOOL_CALL_BLOCKED` |
-| 404 | 目标资源、版本或运行记录不存在 | `*_NOT_FOUND`、`MAIN_AGENT_NOT_CONFIGURED` |
-| 409 | 编码、版本、持久化或状态流转冲突，资源仍被引用 | `*_CODE_CONFLICT`、`*_REVISION_CONFLICT`、`*_ROW_VERSION_CONFLICT`、`*_PERSISTENCE_CONFLICT`、`*_LIFECYCLE_TRANSITION_INVALID`、`*_ARCHIVE_BLOCKED`、`MCP_DISABLE_BLOCKED`、`TOOL_APPROVAL_INVALID_STATE` |
-| 413 | 请求体、输入、输出或工具参数超过限制 | `REQUEST_BODY_TOO_LARGE`、`*_PAYLOAD_LIMIT_EXCEEDED`、`*_INPUT_LIMIT_EXCEEDED`、`*_OUTPUT_LIMIT_EXCEEDED`、`TOOL_ARGUMENT_LIMIT_EXCEEDED` |
-| 415 | 请求 Content-Type 不受支持 | `REQUEST_UNSUPPORTED_MEDIA_TYPE` |
-| 422 | 请求格式正确，但业务断言或业务规则无法满足 | `EVALUATION_BATCH_ASSERTION_FAILED`、其他明确归类为不可处理实体的错误码 |
-| 429 | 请求频率超过限制 | `AGENT_RATE_LIMIT_EXCEEDED` |
-| 502 | 下游 MCP、模型或外部执行服务返回失败 | `MCP_DISCOVERY_FAILED`、`MCP_TOOL_CALL_FAILED`、`MODEL_INVOCATION_FAILED`、`*_EXECUTION_FAILED` |
-| 503 | 审计、知识库、模型目标或其他必要依赖暂不可用 | `AGENT_AUDIT_UNAVAILABLE`、`KNOWLEDGE_SERVICE_UNAVAILABLE`、`*_UNAVAILABLE` |
-| 500 | 未处理异常，或尚未登记映射的错误码 | `UNEXPECTED_ERROR`、未知 `ErrorCode` |
+| 200 | 所有成功响应 | 成功响应不返回 `ErrorCode`，即使实际 HTTP 状态码为 201，响应体仍为 `Status=200` |
+| 600000–609999 | Agent API 通用请求、认证和限流 | `REQUEST_INVALID`、`REQUEST_BODY_TOO_LARGE`、`AUTHENTICATION_REQUIRED`、`AUTHORIZATION_DENIED`、`AGENT_RATE_LIMIT_EXCEEDED` |
+| 610000–619999 | Agent 定义和主 Agent | `AGENT_NOT_FOUND`、`AGENT_CODE_CONFLICT`、`AGENT_ROW_VERSION_CONFLICT`、`MAIN_AGENT_NOT_CONFIGURED` |
+| 620000–629999 | Skill | `SKILL_NOT_FOUND`、`SKILL_CODE_INVALID`、`SKILL_DRAFT_REVISION_CONFLICT`、`SKILL_ARCHIVE_BLOCKED` |
+| 630000–639999 | MCP、工具和审批 | `MCP_SERVER_NOT_FOUND`、`MCP_DISCOVERY_FAILED`、`MCP_DISABLE_BLOCKED`、`TOOL_APPROVAL_INVALID_STATE` |
+| 640000–649999 | 知识库 | `KNOWLEDGE_BASE_NOT_FOUND`、`KNOWLEDGE_DOCUMENT_INVALID`、`KNOWLEDGE_SERVICE_UNAVAILABLE` |
+| 650000–659999 | 编排 | `ORCHESTRATION_NOT_FOUND`、`ORCHESTRATION_ROW_VERSION_CONFLICT`、`ORCHESTRATION_RUN_INPUT_INVALID` |
+| 660000–669999 | Agent 运行、聊天和统一入口 | `AGENT_RUN_INPUT_INVALID`、`MODEL_INVOCATION_FAILED`、`MCP_TOOL_CALL_FAILED`、`UNIFIED_ENTRY_INVALID_STATE` |
+| 670000–679999 | 质量评估和模型评审 | `EVALUATION_SUITE_NOT_FOUND`、`EVALUATION_BATCH_ASSERTION_FAILED`、`MODEL_JUDGE_EXECUTION_FAILED` |
+| 680000–689999 | 审计、幂等、准入及宿主依赖 | `AGENT_AUDIT_UNAVAILABLE`、幂等冲突、昂贵请求准入失败 |
+| 690000–699999 | 未知错误和兜底异常 | `UNEXPECTED_ERROR`、尚未登记的 `ErrorCode` |
+
+#### 首批固定对照
+
+| ErrorCode | Status | HTTP 状态码 |
+|---|---:|---:|
+| `REQUEST_INVALID` | 600001 | 400 |
+| `REQUEST_BODY_TOO_LARGE` | 600002 | 413 |
+| `REQUEST_UNSUPPORTED_MEDIA_TYPE` | 600003 | 415 |
+| `AUTHENTICATION_REQUIRED` | 600004 | 401 |
+| `AUTHORIZATION_DENIED` | 600005 | 403 |
+| `AGENT_RATE_LIMIT_EXCEEDED` | 600006 | 429 |
+| `AGENT_NOT_FOUND` | 610001 | 404 |
+| `AGENT_CODE_CONFLICT` | 610002 | 409 |
+| `AGENT_ROW_VERSION_CONFLICT` | 610003 | 409 |
+| `MAIN_AGENT_NOT_CONFIGURED` | 610004 | 404 |
+| `SKILL_NOT_FOUND` | 620001 | 404 |
+| `SKILL_CODE_INVALID` | 620002 | 400 |
+| `SKILL_CODE_CONFLICT` | 620003 | 409 |
+| `SKILL_DRAFT_REVISION_CONFLICT` | 620004 | 409 |
+| `SKILL_PATH_INVALID` | 620005 | 400 |
+| `SKILL_ARCHIVE_BLOCKED` | 620006 | 409 |
+| `MCP_SERVER_NOT_FOUND` | 630001 | 404 |
+| `MCP_SERVER_CODE_INVALID` | 630002 | 400 |
+| `MCP_SERVER_CODE_CONFLICT` | 630003 | 409 |
+| `MCP_REVISION_CONFLICT` | 630004 | 409 |
+| `MCP_DISCOVERY_FAILED` | 630005 | 502 |
+| `MCP_DISABLE_BLOCKED` | 630006 | 409 |
+| `MCP_ARCHIVE_BLOCKED` | 630007 | 409 |
+| `KNOWLEDGE_BASE_NOT_FOUND` | 640001 | 404 |
+| `KNOWLEDGE_DOCUMENT_INVALID` | 640002 | 400 |
+| `KNOWLEDGE_SERVICE_UNAVAILABLE` | 640003 | 503 |
+| `ORCHESTRATION_NOT_FOUND` | 650001 | 404 |
+| `ORCHESTRATION_ROW_VERSION_CONFLICT` | 650002 | 409 |
+| `ORCHESTRATION_RUN_INPUT_INVALID` | 650003 | 400 |
+| `AGENT_RUN_INPUT_INVALID` | 660001 | 400 |
+| `MODEL_INVOCATION_FAILED` | 660002 | 502 |
+| `MCP_TOOL_CALL_FAILED` | 660003 | 502 |
+| `MCP_TOOL_CALL_BLOCKED` | 660004 | 403 |
+| `EVALUATION_SUITE_NOT_FOUND` | 670001 | 404 |
+| `EVALUATION_BATCH_ASSERTION_FAILED` | 670002 | 422 |
+| `MODEL_JUDGE_EXECUTION_FAILED` | 670003 | 502 |
+| `AGENT_AUDIT_UNAVAILABLE` | 680001 | 503 |
+| `UNEXPECTED_ERROR` | 690001 | 500 |
+| 未登记的 `ErrorCode` | 699999 | 500 |
 
 映射规则：
 
-- 明确错误码映射优先于通配规则；例如某个 `*_INVALID` 若属于状态冲突，应显式登记为 409；
-- 同一个 `ErrorCode` 在不同 Controller 中必须得到相同的 `Status`；
-- 新增错误码时必须同时补充映射和契约测试，映射缺失时按 500 返回并记录告警日志；
+- 每个 `ErrorCode` 必须对应唯一的六位 `Status`，同一个 `Status` 不得分配给多个错误码；
+- 同一个 `ErrorCode` 在不同 Controller 中必须得到相同的业务 `Status` 和 HTTP 状态码；
+- 新增错误码时必须在所属号段顺序分配新 `Status`，不得复用已经废弃的号码；
+- 映射缺失时响应体使用 `Status=699999`、HTTP 500，并记录包含原 `ErrorCode` 的告警日志；
 - 不允许仅根据错误消息文本推断状态码；
 - SSE 已开始、后台运行或编排节点内部产生的错误码无法改变已经发送的 HTTP 状态码，应保留在事件或运行详情的 `Data.ErrorCode` 中；流开始前发生的失败仍使用本表映射；
 - 现有错误码如与上表分类冲突，实施前在接口清单中记录兼容结论，不直接重命名稳定错误码。
@@ -158,9 +203,10 @@ HTTP 数字状态码，并与实际 HTTP 响应状态码完全一致。
 - [ ] 除明确列出的特殊协议接口外，Agent API 所有 JSON 响应均使用 `ServiceResult<T>` 或 `ServicePageResult<T>`。
 - [ ] 返回属性及 `Data` 内 DTO 属性统一采用 PascalCase，与 `EU.Core.Api` 保持一致。
 - [ ] 成功、创建、参数错误、未授权、未找到、业务冲突、限流和未处理异常均有契约测试。
-- [ ] HTTP 状态码与响应体 `Status` 一致，`Success` 值正确。
-- [ ] 所有现有 `ErrorCode` 已登记到集中映射器，同一错误码在不同接口中返回相同的 `Status`。
-- [ ] 未登记错误码返回 500、保留原错误码并产生告警日志，不默认降级为 400。
+- [ ] 成功响应体 `Status=200`；Agent 业务失败只使用 `600000–699999`，不使用 4 或 5 开头的业务状态码。
+- [ ] HTTP 状态码保持标准 HTTP 语义，响应体 `Status` 按 ErrorCode 对照表返回，`Success` 值正确。
+- [ ] 所有现有 `ErrorCode` 已登记到集中映射器，同一错误码在不同接口中返回相同的业务 `Status` 和 HTTP 状态码。
+- [ ] 未登记错误码返回业务 `Status=699999`、HTTP 500，保留原错误码并产生告警日志。
 - [ ] 原有稳定错误码和追踪标识可由前端继续获取。
 - [ ] Agent 管理页面的 Agent、Skill、MCP、知识库、编排、聊天和质量评估功能能够正常加载及操作。
 - [ ] 文件导入导出、PDF 上传、SSE 聊天和运行事件流保持原协议并通过回归测试。
@@ -182,6 +228,7 @@ HTTP 数字状态码，并与实际 HTTP 响应状态码完全一致。
 | 2026-08-17 | sah | 新建 → 待分析 | 提出统一 Agent API 返回结构需求 |
 | 2026-08-17 | Codex | 待分析 → 待开发 | 补齐目标契约、范围、例外、兼容方案和验收标准 |
 | 2026-08-17 | Codex | 待开发 | 补充 ErrorCode 与 Status 集中映射规则及对照表 |
+| 2026-08-17 | Codex | 待开发 | Agent 业务 Status 调整为 600000–699999 独立号段，HTTP 状态码单独保留 |
 
 ## 实施与验证
 
