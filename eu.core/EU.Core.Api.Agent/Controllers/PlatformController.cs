@@ -16,7 +16,6 @@ namespace EU.Core.Api.Agent.Controllers;
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class PlatformController(
     IOptions<AgentPlatformOptions> platform,
-    IOptions<AgentStorageOptions> storage,
     IOptions<AgentEvaluationOptions> evaluation,
     IPublicModelProfileCatalog modelProfiles,
     MainAgentAssignmentService mainAgentAssignments) : ControllerBase
@@ -32,15 +31,11 @@ public sealed class PlatformController(
     [HttpGet("capabilities")]
     public async Task<IActionResult> Capabilities(CancellationToken cancellationToken)
     {
-        bool inMemory = string.Equals(
-            storage.Value.Provider,
-            "InMemory",
-            StringComparison.OrdinalIgnoreCase);
         bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Succeeded;
         return Ok(new
         {
-            storageMode = inMemory ? "memory" : "sqlite",
-            @volatile = inMemory,
+            storageMode = "sqlsugar",
+            @volatile = false,
             deployment = new
             {
                 target = AgentDefinition.ServerDeploymentTarget,

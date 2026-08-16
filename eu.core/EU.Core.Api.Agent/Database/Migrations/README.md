@@ -454,25 +454,50 @@ After this cutover, `AgAgentOperationAuditServices` implements
 their Started-to-terminal idempotent update rules, and `AgentStorage:Provider`
 no longer selects operation audit persistence.
 
+For Agent API idempotency normalization, stop Agent API writes and run `056`,
+`057`, and `058` in order. `056` preserves existing request and response data,
+converts timestamp columns to `DATETIME2(7)`, adds the `BasePoco` key and common
+fields, and moves scope uniqueness from the primary key to a unique index. No
+generated data script is required because the table is already column-normalized.
 
-For the final copy, stop writes to the Agent API and keep a backup of
-`data/eu-core-agent.db`. Import parent rows before dependent rows:
+After this cutover, `AgApiIdempotencyServices` implements
+`IHttpIdempotencyRepository` through SqlSugar. Scope acquisition remains atomic
+through the unique scope index, and completion, indeterminate, and abandon
+transitions remain conditional on the request hash and `InProgress` status.
+`AgentStorage:Provider` no longer selects HTTP idempotency persistence.
 
-1. Import definition, audit, orchestration, evaluation, assignment, and idempotency tables.
-2. Import `AgChatConversation`.
-3. Import `AgChatMessage` and `AgUnifiedEntryRun`.
-4. Import the four `AgUnified*` child tables.
-5. Import `AgToolApprovalRequest`.
-6. Import the three tool-approval child tables.
+For Tool Approval normalization, stop Agent API writes and run `059`, `060`,
+and `061` in order. `059` transactionally copies the four approval tables to
+their BasePoco/SqlSugar shape, validates row counts, rebuilds keys and indexes,
+and preserves approval, payload, decision, and execution-result data. `060`
+adds Chinese table and column descriptions, and `061` verifies the cutover.
 
-After import, compare row counts and primary-key sets for all 27 tables before switching
-the application storage provider. `AgentStorage:Provider` continues to support SQLite,
-SQL Server, and InMemory for the remaining Agent platform repositories. Agent and
-Orchestration definitions, versions, snapshots, and bindings always use the shared
-EU.Core SqlSugar data source.
-After validation, switch the remaining repositories with
-`AgentStorage:Provider=SqlServer` and configure
-`AgentStorage:ConnectionStringAlias=alias:agent-storage`. Store the real value only
-as `AGENT_STORAGE_CONNECTION_AGENT_STORAGE` in the ignored `.env` or process
-environment. The connection string is resolved outside `IConfiguration` so the
-existing secret-leak validation remains effective.
+After this cutover, `AgToolApprovalRequestServices` implements
+`IToolApprovalRepository` through SqlSugar. Approval state transitions retain
+their logical-revision guards, payload integrity checks, and transactional
+request/detail writes. `AgentStorage:Provider` no longer selects Tool Approval
+persistence.
+
+For Unified Entry normalization, stop Agent API writes and run `062`, `063`,
+and `064` in order. `062` transactionally copies all seven conversation,
+message, run, child-detail, and event tables to their BasePoco/SqlSugar shape,
+validates GUIDs, timestamps, and row counts, then rebuilds the original keys,
+constraints, and query indexes. On SQL Server versions without a UTF-8 collation,
+characters outside the configured database code page are converted according to
+SQL Server's `VARCHAR` rules. `063` adds Chinese
+table and column descriptions, and `064` verifies the complete cutover. No
+generated data script is required.
+
+After this cutover, `AgChatConversationServices` implements
+`IUnifiedEntryRepository` and `IUnifiedEntryRecovery` through SqlSugar. Unified
+run saves retain revision/fingerprint idempotency, append-only event validation,
+transactional aggregate writes, owner filtering, business-query redaction, and
+interrupted-run recovery. `AgentStorage:Provider` no longer selects Unified
+Entry persistence.
+
+
+After `064` succeeds, all Agent platform relational persistence uses the shared
+EU.Core SqlSugar data source. The legacy SQLite/InMemory repository selection and
+its separate SQL Server connection-string resolver are no longer part of runtime
+persistence. `AgentStorage` now contains only the local Skill root setting and
+must not be used to select a second relational data source.

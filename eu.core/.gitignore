@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+
+EU.Core.Api.Agent/data/
+EU.Core.Api.Agent/agent-data/

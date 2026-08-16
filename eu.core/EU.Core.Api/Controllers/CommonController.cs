@@ -169,19 +169,24 @@ public class CommonController : Controller
     }
     #endregion
 
-    #region 生成所有表实体
+    #region Agent 数据库同步
     /// <summary>
-    /// 生成所有表实体
+    /// 同步 Agent 表结构及数据
     /// </summary>
-    /// <returns></returns>
-    [HttpGet("SyncData"), AllowAnonymous]
-    public ServiceResult SyncData()
+    /// <param name="request">同步范围与安全确认</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    [HttpPost("SyncAgentDatabase"), Authorize(Roles = "SuperAdmin")]
+    public async Task<ServiceResult<AgentDatabaseSyncResult>> SyncAgentDatabase(
+        [FromBody] AgentDatabaseSyncRequest request,
+        CancellationToken cancellationToken)
     {
-
-        DBSeed.SyncData(_myContext);
-
-        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
-
+        AgentDatabaseSyncResult result = await AgentDatabaseSynchronizer.SyncAsync(
+            _myContext,
+            request,
+            cancellationToken);
+        return ServiceResult<AgentDatabaseSyncResult>.OprateSuccess(
+            result,
+            "Agent 数据库同步完成");
     }
     #endregion
 
@@ -308,28 +313,4 @@ public class CommonController : Controller
 
 
 
-    #region 测试
-    [HttpGet("SyncData/{tableName}"), AllowAnonymous]
-    public async Task<ServiceResult> SyncDataTable(string tableName)
-    {
-        //for (int i = 0; i < 100; i++)
-        //{
-        //    TaskMsg msg = new TaskMsg();
-
-        //    msg.MsgId = Guid.NewGuid();
-        //    msg.Time = DateTime.Now;
-        //    RabbitMQHelper.SendMsg(RabbitMQConsts.CLIENT_ID_TASK_JOB, msg);
-        //    Thread.Sleep(2000);
-        //}
-        //DBHelper.ExecuteDML("UPDATE  SmModules set UpdateTime=getdate() where ID='402d1606-286a-47ec-8e45-346a12450e9a'");
-
-        //var aa = Guid.NewGuid().ToString("N");
-        //var aa1 = Guid.NewGuid();
-        DBSeed.SyncData(_myContext, tableName);
-
-
-        return ServiceResult.OprateSuccess(ResponseText.DELETE_SUCCESS);
-
-    }
-    #endregion
 }

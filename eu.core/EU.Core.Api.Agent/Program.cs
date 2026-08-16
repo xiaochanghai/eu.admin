@@ -22,7 +22,6 @@ using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Agent.Infrastructure.Mcp;
 using EU.Core.Agent.Infrastructure.Knowledge;
-using EU.Core.Agent.Infrastructure.Persistence;
 using EU.Core.Agent.Infrastructure.Skills;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -76,17 +75,6 @@ builder.Services.AddScoped<ICallerContext, HttpCallerContext>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<AgentMetrics>();
 builder.Services.AddSingleton<HostDrainState>();
-builder.Services.AddSingleton<IAgentStorageConnectionStringResolver>(services =>
-    new EnvironmentAndDotEnvAgentStorageConnectionStringResolver(
-        services.GetRequiredService<IHostEnvironment>().ContentRootPath,
-        builder.Configuration.GetValue<bool>("AgentPlatform:LoadDotEnv"),
-        builder.Configuration));
-builder.Services.AddSingleton<IHttpIdempotencyRepository>(services =>
-    CreateStorageRepository<IHttpIdempotencyRepository>(
-        services,
-        () => new InMemoryHttpIdempotencyRepository(),
-        value => new SqliteHttpIdempotencyRepository(value),
-        value => new SqlServerHttpIdempotencyRepository(value)));
 builder.Services.AddSingleton<
     IAuthorizationMiddlewareResultHandler,
     AgentAuthorizationResultHandler>();
@@ -101,12 +89,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
 builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
-builder.Services.AddSingleton<IUnifiedEntryRepository>(services =>
-    CreateStorageRepository<IUnifiedEntryRepository>(
-        services,
-        () => new InMemoryUnifiedEntryRepository(),
-        value => new SqliteUnifiedEntryRepository(value),
-        value => new SqlServerUnifiedEntryRepository(value)));
 builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
 {
     AgentMcpOptions options =
@@ -173,12 +155,6 @@ builder.Services.AddSingleton<IMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
 builder.Services.AddSingleton<IApprovedMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
-builder.Services.AddSingleton<IToolApprovalRepository>(services =>
-    CreateStorageRepository<IToolApprovalRepository>(
-        services,
-        () => new InMemoryToolApprovalRepository(),
-        value => new SqliteToolApprovalRepository(value),
-        value => new SqlServerToolApprovalRepository(value)));
 builder.Services.AddSingleton<ToolApprovalManagementService>();
 ToolApprovalOptions toolApproval = builder.Configuration
     .GetSection(ToolApprovalOptions.SectionName)
@@ -394,32 +370,3 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapControllers();
 
 app.Run();
-
-static TRepository CreateStorageRepository<TRepository>(
-    IServiceProvider services,
-    Func<TRepository> createInMemory,
-    Func<string, TRepository> createSqlite,
-    Func<string, TRepository> createSqlServer)
-{
-    AgentStorageOptions options = services
-        .GetRequiredService<IOptions<AgentStorageOptions>>()
-        .Value;
-    if (options.IsInMemory)
-    {
-        return createInMemory();
-    }
-
-    if (options.IsSqlServer)
-    {
-        string connectionString = services
-            .GetRequiredService<IAgentStorageConnectionStringResolver>()
-            .Resolve(options.ConnectionStringAlias)
-            ?? throw new InvalidOperationException(
-                $"No SQL Server connection string is available for Agent storage alias '{options.ConnectionStringAlias}'.");
-        return createSqlServer(connectionString);
-    }
-
-    string databasePath = options.ResolveDatabasePath(
-        services.GetRequiredService<IHostEnvironment>().ContentRootPath);
-    return createSqlite(databasePath);
-}

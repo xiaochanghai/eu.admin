@@ -82,16 +82,6 @@ public static class LocalDotEnvConfiguration
         AddWhenMissing(
             configuration,
             additions,
-            "AgentStorage:Provider",
-            Get(entries, "AgentStorage__Provider"));
-        AddWhenMissing(
-            configuration,
-            additions,
-            "AgentStorage:DatabasePath",
-            Get(entries, "AgentStorage__DatabasePath"));
-        AddWhenMissing(
-            configuration,
-            additions,
             "AgentStorage:SkillRootPath",
             Get(entries, "AgentStorage__SkillRootPath"));
         AddWhenMissing(configuration, additions, "AgentMcp:EnableStdio", Get(entries, "AgentMcp__EnableStdio"));
@@ -202,8 +192,6 @@ public static class LocalDotEnvConfiguration
         name.Equals("AGENT_PLATFORM__MODEL_CREDENTIAL_ALIAS", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AGENT_MODEL_ENDPOINT", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AGENT_MODEL_DEFAULT_ID", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AgentStorage__Provider", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AgentStorage__DatabasePath", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentStorage__SkillRootPath", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__EnableStdio", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__AllowDevelopmentHttp", StringComparison.OrdinalIgnoreCase) ||

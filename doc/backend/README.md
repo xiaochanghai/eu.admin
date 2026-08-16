@@ -16,6 +16,7 @@
 
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)
 - 数据库表设计硬约束：[`数据库表设计约束.md`](数据库表设计约束.md)
+- Agent 数据库同步：[`Agent数据库同步.md`](Agent数据库同步.md)
 - SmModule 页面元数据专题索引：[`SmModule/README.md`](SmModule/README.md)
 - 后端解决方案：[`../../eu.core/EU.Core.sln`](../../eu.core/EU.Core.sln)
 

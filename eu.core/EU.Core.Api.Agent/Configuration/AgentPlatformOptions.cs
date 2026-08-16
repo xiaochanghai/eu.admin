@@ -72,19 +72,11 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             bool isModelCredentialAlias = string.Equals(key, $"{AgentPlatformOptions.SectionName}{ConfigurationPath.KeyDelimiter}{nameof(AgentPlatformOptions.ModelCredentialAlias)}", StringComparison.OrdinalIgnoreCase) &&
                 CredentialAliasPattern().IsMatch(value) &&
                 !SecretShapedAliasPattern().IsMatch(value);
-            bool isStorageCredentialAlias = string.Equals(
-                    key,
-                    $"{AgentStorageOptions.SectionName}{ConfigurationPath.KeyDelimiter}{nameof(AgentStorageOptions.ConnectionStringAlias)}",
-                    StringComparison.OrdinalIgnoreCase) &&
-                CredentialAliasPattern().IsMatch(value) &&
-                !SecretShapedAliasPattern().IsMatch(value);
-            bool isCredentialAlias = isModelCredentialAlias || isStorageCredentialAlias;
+            bool isCredentialAlias = isModelCredentialAlias;
             bool isRuntimeSecret =
                 string.Equals(key, "AGENT_MODEL_API_KEY", StringComparison.OrdinalIgnoreCase) ||
                 key.StartsWith("AGENT_MODEL_CREDENTIAL_", StringComparison.OrdinalIgnoreCase) ||
-                key.StartsWith("AGENT_MCP_CREDENTIAL_", StringComparison.OrdinalIgnoreCase) ||
-                key.StartsWith("AGENT_STORAGE_CONNECTION_", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(key, "EUCORE_AGENT_SQLSERVER", StringComparison.OrdinalIgnoreCase);
+                key.StartsWith("AGENT_MCP_CREDENTIAL_", StringComparison.OrdinalIgnoreCase);
             bool isNonSecretLifetime = string.Equals(
                     key,
                     $"{BusinessQueryForwardingOptions.SectionName}{ConfigurationPath.KeyDelimiter}{nameof(BusinessQueryForwardingOptions.TokenLifetimeSeconds)}",

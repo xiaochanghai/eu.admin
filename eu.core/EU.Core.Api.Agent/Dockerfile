@@ -22,8 +22,6 @@ COPY --from=build --chown=app:app /app/publish/ ./
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=8080 \
-    AgentStorage__Provider=Sqlite \
-    AgentStorage__DatabasePath=/var/lib/eu-core-agent/eu-core-agent.db \
     AgentStorage__SkillRootPath=/var/lib/eu-core-agent/skills
 
 EXPOSE 8080
