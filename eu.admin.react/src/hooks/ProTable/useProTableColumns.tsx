@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
  * 图片预览触发器组件
  * 显示"图片"文字，点击后弹出 antd Image 内置预览
  */
-const ImagePreviewTrigger: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
+const ImagePreviewTrigger: React.FC<{ imageUrls: string[] }> = ({ imageUrls }) => {
   const [visible, setVisible] = useState(false);
   return (
     <>
@@ -21,11 +21,13 @@ const ImagePreviewTrigger: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
         图片
       </a>
       {visible && (
-        <Image
-          src={imageUrl}
+        <Image.PreviewGroup
           preview={{ visible, onVisibleChange: setVisible }}
-          style={{ display: "none" }}
-        />
+        >
+          {imageUrls.map((imageUrl, index) => (
+            <Image key={`${imageUrl}-${index}`} src={imageUrl} style={{ display: "none" }} />
+          ))}
+        </Image.PreviewGroup>
       )}
     </>
   );
@@ -149,12 +151,24 @@ export const useProTableColumns = (
 
         case "imagePreview":
           columnEnhancements.render = (_: any, record: any) => {
-            if (record[item.dataIndex]) {
-              const baseURL = import.meta.env.VITE_API_URL as string;
-              const imageUrl = (baseURL == "/" ? "" : baseURL) + `/api/File/Download/${record[item.dataIndex]}`;
-              return <ImagePreviewTrigger key="imagePreview" imageUrl={imageUrl} />;
-            }
-            return null;
+            const value = record[item.dataIndex];
+            if (!value) return null;
+
+            const imageIds = Array.from(
+              new Set(
+                String(value)
+                  .split(",")
+                  .map((imageId) => imageId.trim())
+                  .filter(Boolean)
+              )
+            );
+            if (imageIds.length === 0) return null;
+
+            const baseURL = import.meta.env.VITE_API_URL as string;
+            const apiBaseURL = baseURL === "/" ? "" : baseURL;
+            const imageUrls = imageIds.map((imageId) => `${apiBaseURL}/api/File/Download/${imageId}`);
+
+            return <ImagePreviewTrigger imageUrls={imageUrls} />;
           };
 
           break;
