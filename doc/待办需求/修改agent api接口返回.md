@@ -117,55 +117,17 @@ HTTP 404，但响应体可以是 `Status=610001`。
 | 680000–689999 | 审计、幂等、准入及宿主依赖 | `AGENT_AUDIT_UNAVAILABLE`、幂等冲突、昂贵请求准入失败 |
 | 690000–699999 | 未知错误和兜底异常 | `UNEXPECTED_ERROR`、尚未登记的 `ErrorCode` |
 
-#### 首批固定对照
+#### 完整固定对照
 
-| ErrorCode | Status | HTTP 状态码 |
-|---|---:|---:|
-| `REQUEST_INVALID` | 600001 | 400 |
-| `REQUEST_BODY_TOO_LARGE` | 600002 | 413 |
-| `REQUEST_UNSUPPORTED_MEDIA_TYPE` | 600003 | 415 |
-| `AUTHENTICATION_REQUIRED` | 600004 | 401 |
-| `AUTHORIZATION_DENIED` | 600005 | 403 |
-| `AGENT_RATE_LIMIT_EXCEEDED` | 600006 | 429 |
-| `AGENT_NOT_FOUND` | 610001 | 404 |
-| `AGENT_CODE_CONFLICT` | 610002 | 409 |
-| `AGENT_ROW_VERSION_CONFLICT` | 610003 | 409 |
-| `MAIN_AGENT_NOT_CONFIGURED` | 610004 | 404 |
-| `SKILL_NOT_FOUND` | 620001 | 404 |
-| `SKILL_CODE_INVALID` | 620002 | 400 |
-| `SKILL_CODE_CONFLICT` | 620003 | 409 |
-| `SKILL_DRAFT_REVISION_CONFLICT` | 620004 | 409 |
-| `SKILL_PATH_INVALID` | 620005 | 400 |
-| `SKILL_ARCHIVE_BLOCKED` | 620006 | 409 |
-| `MCP_SERVER_NOT_FOUND` | 630001 | 404 |
-| `MCP_SERVER_CODE_INVALID` | 630002 | 400 |
-| `MCP_SERVER_CODE_CONFLICT` | 630003 | 409 |
-| `MCP_REVISION_CONFLICT` | 630004 | 409 |
-| `MCP_DISCOVERY_FAILED` | 630005 | 502 |
-| `MCP_DISABLE_BLOCKED` | 630006 | 409 |
-| `MCP_ARCHIVE_BLOCKED` | 630007 | 409 |
-| `KNOWLEDGE_BASE_NOT_FOUND` | 640001 | 404 |
-| `KNOWLEDGE_DOCUMENT_INVALID` | 640002 | 400 |
-| `KNOWLEDGE_SERVICE_UNAVAILABLE` | 640003 | 503 |
-| `ORCHESTRATION_NOT_FOUND` | 650001 | 404 |
-| `ORCHESTRATION_ROW_VERSION_CONFLICT` | 650002 | 409 |
-| `ORCHESTRATION_RUN_INPUT_INVALID` | 650003 | 400 |
-| `AGENT_RUN_INPUT_INVALID` | 660001 | 400 |
-| `MODEL_INVOCATION_FAILED` | 660002 | 502 |
-| `MCP_TOOL_CALL_FAILED` | 660003 | 502 |
-| `MCP_TOOL_CALL_BLOCKED` | 660004 | 403 |
-| `EVALUATION_SUITE_NOT_FOUND` | 670001 | 404 |
-| `EVALUATION_BATCH_ASSERTION_FAILED` | 670002 | 422 |
-| `MODEL_JUDGE_EXECUTION_FAILED` | 670003 | 502 |
-| `AGENT_AUDIT_UNAVAILABLE` | 680001 | 503 |
-| `UNEXPECTED_ERROR` | 690001 | 500 |
-| 未登记的 `ErrorCode` | 699999 | 500 |
+当前代码中的全部固定错误码及其业务 `Status`、默认 HTTP 状态码，统一维护在
+[`Agent API ErrorCode 固定清单`](Agent%20API%20ErrorCode固定清单.md)。该文件是本需求的错误码
+注册表，实施时必须整体落入集中映射器，不得只实现部分示例。
 
 映射规则：
 
 - 每个 `ErrorCode` 必须对应唯一的六位 `Status`，同一个 `Status` 不得分配给多个错误码；
 - 同一个 `ErrorCode` 在不同 Controller 中必须得到相同的业务 `Status` 和 HTTP 状态码；
-- 新增错误码时必须在所属号段顺序分配新 `Status`，不得复用已经废弃的号码；
+- 新增错误码时必须先更新固定清单，在所属号段顺序分配新 `Status`，不得复用已经废弃的号码；
 - 映射缺失时响应体使用 `Status=699999`、HTTP 500，并记录包含原 `ErrorCode` 的告警日志；
 - 不允许仅根据错误消息文本推断状态码；
 - SSE 已开始、后台运行或编排节点内部产生的错误码无法改变已经发送的 HTTP 状态码，应保留在事件或运行详情的 `Data.ErrorCode` 中；流开始前发生的失败仍使用本表映射；
@@ -218,7 +180,7 @@ HTTP 404，但响应体可以是 `Status=610001`。
 - 相关页面或接口：`/api/agents`、`/api/skills`、`/api/mcp/**`、`/api/knowledge-bases`、`/api/orchestrations`、`/api/chat/**`、`/api/evaluation-*`
 - 相关文件：`EU.Core.Model/ServiceResult.cs`、`EU.Core.Api/Filter/GlobalActionFilter.cs`、`EU.Core.Api.Agent/Controllers/ApiProblemResults.cs`、`EU.Core.Api.Agent/Errors/ProblemDetailsMiddleware.cs`、`EU.Core.Api.Agent/wwwroot/js/http.js`
 - 截图或附件：无
-- 依赖或前置条件：完成 Agent API 响应清单及前端调用方清单
+- 依赖或前置条件：完成 Agent API 响应清单及前端调用方清单；以 [`Agent API ErrorCode 固定清单`](Agent%20API%20ErrorCode固定清单.md) 为映射事实源
 - 其他说明：优先复用公共响应模型，不在 Agent 宿主内复制另一套同名模型。
 
 ## 处理记录
@@ -229,6 +191,7 @@ HTTP 404，但响应体可以是 `Status=610001`。
 | 2026-08-17 | Codex | 待分析 → 待开发 | 补齐目标契约、范围、例外、兼容方案和验收标准 |
 | 2026-08-17 | Codex | 待开发 | 补充 ErrorCode 与 Status 集中映射规则及对照表 |
 | 2026-08-17 | Codex | 待开发 | Agent 业务 Status 调整为 600000–699999 独立号段，HTTP 状态码单独保留 |
+| 2026-08-17 | Codex | 待开发 | 完成当前 Agent ErrorCode 全量盘点并建立固定注册表 |
 
 ## 实施与验证
 
