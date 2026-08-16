@@ -92,7 +92,41 @@
 - 不以 HTTP 200 掩盖失败：HTTP 状态码与响应体 `Status` 一致；
 - 生产环境不得在 `Message`、`MessageDev` 或 `Data` 中暴露异常堆栈及敏感配置。
 
-### 3. 改造范围
+### 3. ErrorCode 与 Status 对照
+
+新增公共的 Agent API 错误响应映射器，作为 `ErrorCode → Status` 的唯一事实源。
+Controller、参数校验、授权处理器及中间件不得继续各自维护重复的 `switch`。
+
+`ErrorCode` 继续作为稳定的机器可读业务码返回在 `Data.ErrorCode`；`Status` 使用下表对应的
+HTTP 数字状态码，并与实际 HTTP 响应状态码完全一致。
+
+| Status | 场景 | ErrorCode 对照或示例 |
+|---:|---|---|
+| 200 | 查询、更新、发布等操作成功 | 成功响应不返回 `ErrorCode` |
+| 201 | 创建或导入成功 | 成功响应不返回 `ErrorCode` |
+| 400 | 请求参数、编码、路径、定义或配置无效 | `REQUEST_INVALID`、`*_CODE_INVALID`、`*_DEFINITION_INVALID`、`*_CONFIGURATION_INVALID`、`*_PATH_INVALID`、`*_INPUT_INVALID`、`*_PAYLOAD_INVALID`、`*_SPECIFICATION_INVALID` |
+| 401 | 未登录或认证信息无效 | `AUTHENTICATION_REQUIRED` |
+| 403 | 已认证但无权限，或策略明确禁止执行 | `AUTHORIZATION_DENIED`、`MCP_TOOL_CALL_BLOCKED` |
+| 404 | 目标资源、版本或运行记录不存在 | `*_NOT_FOUND`、`MAIN_AGENT_NOT_CONFIGURED` |
+| 409 | 编码、版本、持久化或状态流转冲突，资源仍被引用 | `*_CODE_CONFLICT`、`*_REVISION_CONFLICT`、`*_ROW_VERSION_CONFLICT`、`*_PERSISTENCE_CONFLICT`、`*_LIFECYCLE_TRANSITION_INVALID`、`*_ARCHIVE_BLOCKED`、`MCP_DISABLE_BLOCKED`、`TOOL_APPROVAL_INVALID_STATE` |
+| 413 | 请求体、输入、输出或工具参数超过限制 | `REQUEST_BODY_TOO_LARGE`、`*_PAYLOAD_LIMIT_EXCEEDED`、`*_INPUT_LIMIT_EXCEEDED`、`*_OUTPUT_LIMIT_EXCEEDED`、`TOOL_ARGUMENT_LIMIT_EXCEEDED` |
+| 415 | 请求 Content-Type 不受支持 | `REQUEST_UNSUPPORTED_MEDIA_TYPE` |
+| 422 | 请求格式正确，但业务断言或业务规则无法满足 | `EVALUATION_BATCH_ASSERTION_FAILED`、其他明确归类为不可处理实体的错误码 |
+| 429 | 请求频率超过限制 | `AGENT_RATE_LIMIT_EXCEEDED` |
+| 502 | 下游 MCP、模型或外部执行服务返回失败 | `MCP_DISCOVERY_FAILED`、`MCP_TOOL_CALL_FAILED`、`MODEL_INVOCATION_FAILED`、`*_EXECUTION_FAILED` |
+| 503 | 审计、知识库、模型目标或其他必要依赖暂不可用 | `AGENT_AUDIT_UNAVAILABLE`、`KNOWLEDGE_SERVICE_UNAVAILABLE`、`*_UNAVAILABLE` |
+| 500 | 未处理异常，或尚未登记映射的错误码 | `UNEXPECTED_ERROR`、未知 `ErrorCode` |
+
+映射规则：
+
+- 明确错误码映射优先于通配规则；例如某个 `*_INVALID` 若属于状态冲突，应显式登记为 409；
+- 同一个 `ErrorCode` 在不同 Controller 中必须得到相同的 `Status`；
+- 新增错误码时必须同时补充映射和契约测试，映射缺失时按 500 返回并记录告警日志；
+- 不允许仅根据错误消息文本推断状态码；
+- SSE 已开始、后台运行或编排节点内部产生的错误码无法改变已经发送的 HTTP 状态码，应保留在事件或运行详情的 `Data.ErrorCode` 中；流开始前发生的失败仍使用本表映射；
+- 现有错误码如与上表分类冲突，实施前在接口清单中记录兼容结论，不直接重命名稳定错误码。
+
+### 4. 改造范围
 
 - `EU.Core.Api.Agent/Controllers/**` 中的普通 JSON 接口；
 - 参数校验、授权、限流、幂等、审计失败和全局异常处理中间件；
@@ -102,7 +136,7 @@
 
 改造前应形成接口清单，逐项记录原响应类型、目标响应类型、HTTP 状态码和前端调用方，避免遗漏聊天、Skill、MCP、知识库、编排及质量评估接口。
 
-### 4. 不在统一包装范围内
+### 5. 不在统一包装范围内
 
 以下接口保持所属协议，不使用 `ServiceResult<T>` 包装其成功响应，但失败响应仍应遵循可被统一客户端识别的错误约定：
 
@@ -111,7 +145,7 @@
 - 健康检查、指标及其他基础设施协议端点；
 - HTTP 204 响应。若业务需要返回统一消息，应改为 HTTP 200 和 `ServiceResult<T>`，不得在 204 中写响应体。
 
-### 5. 兼容与上线要求
+### 6. 兼容与上线要求
 
 - 此变更属于破坏性 API 契约变更，后端与 Agent 自带前端必须在同一版本同步发布；
 - 前端统一请求函数负责读取 `Data`，并从 `Data.ErrorCode`、`Data.TraceId` 构造现有错误对象；
@@ -125,6 +159,8 @@
 - [ ] 返回属性及 `Data` 内 DTO 属性统一采用 PascalCase，与 `EU.Core.Api` 保持一致。
 - [ ] 成功、创建、参数错误、未授权、未找到、业务冲突、限流和未处理异常均有契约测试。
 - [ ] HTTP 状态码与响应体 `Status` 一致，`Success` 值正确。
+- [ ] 所有现有 `ErrorCode` 已登记到集中映射器，同一错误码在不同接口中返回相同的 `Status`。
+- [ ] 未登记错误码返回 500、保留原错误码并产生告警日志，不默认降级为 400。
 - [ ] 原有稳定错误码和追踪标识可由前端继续获取。
 - [ ] Agent 管理页面的 Agent、Skill、MCP、知识库、编排、聊天和质量评估功能能够正常加载及操作。
 - [ ] 文件导入导出、PDF 上传、SSE 聊天和运行事件流保持原协议并通过回归测试。
@@ -145,6 +181,7 @@
 |---|---|---|---|
 | 2026-08-17 | sah | 新建 → 待分析 | 提出统一 Agent API 返回结构需求 |
 | 2026-08-17 | Codex | 待分析 → 待开发 | 补齐目标契约、范围、例外、兼容方案和验收标准 |
+| 2026-08-17 | Codex | 待开发 | 补充 ErrorCode 与 Status 集中映射规则及对照表 |
 
 ## 实施与验证
 
