@@ -10,6 +10,7 @@ using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.Skills;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
 using AIChatMessage = Microsoft.Extensions.AI.ChatMessage;
@@ -39,6 +40,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
 {
     private const int MaximumFunctionNameLength = 64;
     private readonly IModelCredentialResolver _credentials;
+    private readonly ILogger<MicrosoftAgentRuntimeEngine> _logger;
     private readonly IMicrosoftAgentRuntimeModelClient _modelClient;
     private readonly AgentRuntimeOptions _options;
     private readonly IMcpRuntimeToolInvoker _toolInvoker;
@@ -46,12 +48,14 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     public MicrosoftAgentRuntimeEngine(
         AgentRuntimeOptions options,
         IModelCredentialResolver credentials,
-        IMcpRuntimeToolInvoker toolInvoker)
+        IMcpRuntimeToolInvoker toolInvoker,
+        ILogger<MicrosoftAgentRuntimeEngine> logger)
         : this(
             options,
             credentials,
             toolInvoker,
-            new OpenAiMicrosoftAgentRuntimeModelClient(options))
+            new OpenAiMicrosoftAgentRuntimeModelClient(options),
+            logger)
     {
     }
 
@@ -59,12 +63,14 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         AgentRuntimeOptions options,
         IModelCredentialResolver credentials,
         IMcpRuntimeToolInvoker toolInvoker,
-        IMicrosoftAgentRuntimeModelClient modelClient)
+        IMicrosoftAgentRuntimeModelClient modelClient,
+        ILogger<MicrosoftAgentRuntimeEngine> logger)
     {
         _options = options;
         _credentials = credentials;
         _toolInvoker = toolInvoker;
         _modelClient = modelClient;
+        _logger = logger;
     }
 
     public async IAsyncEnumerable<AgentRunEvent> StreamAsync(
@@ -328,8 +334,20 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
 
             writer.TryComplete();
         }
+        catch (OperationCanceledException exception)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            writer.TryComplete(exception);
+        }
         catch (Exception exception)
         {
+            _logger.LogError(
+                exception,
+                "Agent model execution failed. RunId: {RunId}, AgentId: {AgentId}, AgentVersionId: {AgentVersionId}, ModelProfileId: {ModelProfileId}",
+                context.RunId,
+                context.AgentId,
+                context.Snapshot.VersionId,
+                context.Snapshot.ModelProfileId);
             writer.TryComplete(exception);
         }
     }

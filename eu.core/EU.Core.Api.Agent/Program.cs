@@ -231,7 +231,8 @@ builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
             execution.MaximumInternalToolCalls,
             execution.MaximumMcpToolCalls),
         services.GetRequiredService<IModelCredentialResolver>(),
-        services.GetRequiredService<IMcpRuntimeToolInvoker>());
+        services.GetRequiredService<IMcpRuntimeToolInvoker>(),
+        services.GetRequiredService<ILogger<MicrosoftAgentRuntimeEngine>>());
 });
 builder.Services.AddSingleton<IModelJudgeEngine>(services =>
 {
