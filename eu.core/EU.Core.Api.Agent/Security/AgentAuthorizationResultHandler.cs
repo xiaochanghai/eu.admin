@@ -46,9 +46,12 @@ public sealed class AgentAuthorizationResultHandler
             Type = $"https://httpstatuses.com/{status}",
             Instance = context.Request.Path
         };
-        problem.Extensions["code"] = forbidden
+        string errorCode = forbidden
             ? "AUTHORIZATION_DENIED"
             : "AUTHENTICATION_REQUIRED";
+        problem.Extensions["errorCode"] = errorCode;
+        problem.Extensions["traceId"] = context.TraceIdentifier;
+        problem.Extensions["code"] = errorCode;
         problem.Extensions["correlationId"] = context.TraceIdentifier;
 
         context.Response.StatusCode = status;

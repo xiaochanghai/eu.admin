@@ -1,27 +1,6 @@
-const base = "/api/agents";
+import { createApiError, requestJson as request } from "./http.js";
 
-async function request(path, options = {}) {
-  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
-  const response = await fetch(path, {
-    headers: {
-      Accept: "application/json",
-      ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
-      ...options.headers
-    },
-    ...options
-  });
-  if (!response.ok) {
-    let problem = {};
-    try { problem = await response.json(); } catch { problem = {}; }
-    const error = new Error(problem.detail || problem.title || `请求失败 (${response.status})`);
-    error.status = response.status;
-    error.errorCode = problem.errorCode;
-    error.traceId = problem.traceId;
-    throw error;
-  }
-  if (response.status === 204) return null;
-  return response.json();
-}
+const base = "/api/agents";
 
 export function createSseParser(onEvent) {
   const decoder = new TextDecoder("utf-8");
@@ -95,12 +74,7 @@ export async function streamChatRun({ input, conversationId, onOpen, onEvent, si
     signal
   });
   if (!response.ok) {
-    let problem = {};
-    try { problem = await response.json(); } catch { problem = {}; }
-    const error = new Error(problem.detail || problem.title || `运行失败 (${response.status})`);
-    error.status = response.status;
-    error.errorCode = problem.errorCode;
-    throw error;
+    throw await createApiError(response, `运行失败 (${response.status})`);
   }
   onOpen?.({
     runId: response.headers.get("X-Agent-Run-ID"),
@@ -148,12 +122,7 @@ export const agentApi = {
   exportPackage: async id => {
     const response = await fetch(`${base}/${encodeURIComponent(id)}/export`, { headers: { Accept: "application/json" } });
     if (!response.ok) {
-      let problem = {};
-      try { problem = await response.json(); } catch { problem = {}; }
-      const error = new Error(problem.detail || problem.title || `导出失败 (${response.status})`);
-      error.status = response.status;
-      error.errorCode = problem.errorCode;
-      throw error;
+      throw await createApiError(response, `导出失败 (${response.status})`);
     }
     return response.blob();
   },
@@ -286,12 +255,7 @@ export const agentApi = {
       signal
     });
     if (!response.ok) {
-      let problem = {};
-      try { problem = await response.json(); } catch { problem = {}; }
-      const error = new Error(problem.detail || problem.title || `运行失败 (${response.status})`);
-      error.status = response.status;
-      error.errorCode = problem.errorCode;
-      throw error;
+      throw await createApiError(response, `运行失败 (${response.status})`);
     }
     if (!response.body) throw new Error("运行响应不支持流式读取。");
     const reader = response.body.getReader();

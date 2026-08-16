@@ -1,21 +1,6 @@
-const base = "/api/mcp";
+import { requestJson as request } from "./http.js";
 
-async function request(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { Accept: "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}) },
-    ...options
-  });
-  if (!response.ok) {
-    let problem = {};
-    try { problem = await response.json(); } catch { problem = {}; }
-    const error = new Error(problem.detail || problem.title || `请求失败 (${response.status})`);
-    error.status = response.status;
-    error.errorCode = problem.errorCode;
-    error.traceId = problem.traceId;
-    throw error;
-  }
-  return response.status === 204 ? null : response.json();
-}
+const base = "/api/mcp";
 
 export const mcpApi = {
   list: ({ search = "", status = "" } = {}) => {

@@ -36,7 +36,7 @@ internal static class AgentApiSecurityServiceCollectionExtensions
             {
                 if (httpSecurity.AllowedOrigins.Count > 0)
                     policy.WithOrigins(httpSecurity.AllowedOrigins.ToArray());
-                policy.WithMethods("GET", "POST", "PUT")
+                policy.WithMethods("GET", "POST", "PUT", "DELETE")
                     .WithHeaders(
                         "Authorization",
                         "Content-Type",
@@ -90,6 +90,8 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                     type = "https://httpstatuses.com/429",
                     title = "Too many requests.",
                     status = StatusCodes.Status429TooManyRequests,
+                    errorCode = "AGENT_RATE_LIMIT_EXCEEDED",
+                    traceId = context.HttpContext.TraceIdentifier,
                     code = "AGENT_RATE_LIMIT_EXCEEDED",
                     detail = "The request rate limit was exceeded. Retry after the indicated interval.",
                     correlationId = context.HttpContext.TraceIdentifier

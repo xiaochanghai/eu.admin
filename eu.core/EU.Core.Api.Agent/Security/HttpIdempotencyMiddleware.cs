@@ -239,6 +239,8 @@ public sealed class HttpIdempotencyMiddleware(
                 ? "Invalid idempotency request."
                 : "Idempotency conflict.",
             status,
+            errorCode = code,
+            traceId = context.TraceIdentifier,
             code,
             detail,
             correlationId = context.TraceIdentifier

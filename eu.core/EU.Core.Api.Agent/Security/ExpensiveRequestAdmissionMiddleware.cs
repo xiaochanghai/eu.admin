@@ -83,6 +83,8 @@ public sealed class ExpensiveRequestAdmissionMiddleware(
             type = "https://httpstatuses.com/503",
             title,
             status = StatusCodes.Status503ServiceUnavailable,
+            errorCode = code,
+            traceId = context.TraceIdentifier,
             code,
             detail,
             correlationId = context.TraceIdentifier

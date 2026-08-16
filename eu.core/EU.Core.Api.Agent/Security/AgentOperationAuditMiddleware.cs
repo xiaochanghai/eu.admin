@@ -90,6 +90,8 @@ public sealed class AgentOperationAuditMiddleware(
                     type = "https://httpstatuses.com/503",
                     title = "The audit service is unavailable.",
                     status = StatusCodes.Status503ServiceUnavailable,
+                    errorCode = "AGENT_AUDIT_UNAVAILABLE",
+                    traceId = context.TraceIdentifier,
                     code = "AGENT_AUDIT_UNAVAILABLE",
                     correlationId = context.TraceIdentifier
                 },

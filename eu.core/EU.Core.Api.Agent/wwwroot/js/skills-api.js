@@ -1,24 +1,6 @@
-const base = "/api/skills";
+import { requestJson as request } from "./http.js";
 
-async function request(path, options = {}) {
-  const response = await fetch(path, {
-    headers: {
-      Accept: "application/json",
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...options.headers
-    },
-    ...options
-  });
-  if (!response.ok) {
-    let problem = {};
-    try { problem = await response.json(); } catch { problem = {}; }
-    const error = new Error(problem.detail || problem.title || `请求失败 (${response.status})`);
-    error.status = response.status;
-    error.errorCode = problem.errorCode;
-    throw error;
-  }
-  return response.status === 204 ? null : response.json();
-}
+const base = "/api/skills";
 
 export const skillsApi = {
   list: ({ search = "", category = "", status = "" } = {}) => {
