@@ -251,6 +251,81 @@ public sealed class AgSkillPersistence_Should
             .ToListAsync());
     }
 
+    [Fact]
+    public async Task Block_archive_while_an_enabled_agent_references_the_published_version()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgSkillDefinition),
+            typeof(AgSkillVersion),
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment),
+            typeof(AgAgentDefinition),
+            typeof(AgAgentVersion),
+            typeof(AgAgentVersionBinding));
+        var service = new AgSkillDefinitionServices(
+            fixture.CreateRepository<AgSkillDefinition>(),
+            new StubSkillFileStore());
+        SkillDefinition definition = Assert.IsType<SkillDefinition>((await service.CreateAsync(
+            new CreateSkillCommand(
+                $"skill-{Guid.NewGuid():N}",
+                "Referenced Skill",
+                string.Empty,
+                string.Empty))).Value);
+        SkillDefinition published = Assert.IsType<SkillDefinition>((await service.PublishAsync(
+            new PublishSkillCommand(definition.Id, 0, "1.0.0"))).Value);
+        Guid skillVersionId = Assert.Single(published.PublishedVersions).Id;
+        Guid agentId = Guid.NewGuid();
+        Guid agentVersionId = Guid.NewGuid();
+        await fixture.Db.Insertable(new AgAgentDefinition
+        {
+            ID = agentId,
+            Code = "skill-consumer",
+            Name = "Skill Consumer",
+            Description = string.Empty,
+            RuntimeStatus = "Enabled",
+            LogicalRevision = 0
+        }).ExecuteCommandAsync();
+        await fixture.Db.Insertable(new AgAgentVersion
+        {
+            ID = agentVersionId,
+            AgentId = agentId,
+            Ordinal = 0,
+            Label = "draft",
+            IsDraft = true,
+            Instructions = string.Empty,
+            ModelProfileId = string.Empty,
+            OutputMode = "Text"
+        }).ExecuteCommandAsync();
+        await fixture.Db.Insertable(new AgAgentVersionBinding
+        {
+            ID = Guid.NewGuid(),
+            VersionId = agentVersionId,
+            Scope = "Version",
+            BindingType = "Skill",
+            Ordinal = 0,
+            ReferenceId = skillVersionId,
+            ReferenceCode = definition.Code,
+            ReferenceName = definition.Name,
+            ReferenceDescription = string.Empty
+        }).ExecuteCommandAsync();
+
+        SkillOperationResult<SkillDefinition> blocked = await service.SetArchivedAsync(
+            new SetSkillArchiveCommand(definition.Id, published.DraftRevision, true));
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(SkillErrorCodes.ArchiveBlocked, blocked.Error?.Code);
+        Assert.Contains("skill-consumer", blocked.Error?.Message);
+
+        await fixture.Db.Updateable<AgAgentDefinition>()
+            .SetColumns(value => value.RuntimeStatus == "Disabled")
+            .Where(value => value.ID == agentId)
+            .ExecuteCommandAsync();
+        SkillOperationResult<SkillDefinition> archived = await service.SetArchivedAsync(
+            new SetSkillArchiveCommand(definition.Id, published.DraftRevision, true));
+        Assert.True(archived.Succeeded);
+        Assert.Equal(SkillStatus.Archived, archived.Value?.Status);
+    }
+
     private sealed class StubSkillFileStore : ISkillFileStore
     {
         public Dictionary<string, string> Draft { get; } = new(StringComparer.Ordinal);

@@ -1,4 +1,6 @@
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Agent.Application.MainAgent;
+using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
@@ -93,5 +95,225 @@ public sealed class AgAgentDefinitionPersistence_Should
         AgentListItem archivedItem = Assert.Single(await service.ListAsync(
             new AgentDefinitionQuery(code, AgentRuntimeStatus.Archived)));
         Assert.Equal(4, archivedItem.LogicalRevision);
+    }
+
+    [Fact]
+    public async Task Block_archive_while_an_enabled_parent_agent_references_the_agent()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgAgentDefinition),
+            typeof(AgAgentVersion),
+            typeof(AgAgentVersionBinding),
+            typeof(AgAgentVersionSnapshot));
+        const string modelProfileId = "test-model";
+        var service = new AgAgentDefinitionServices(
+            fixture.CreateRepository<AgAgentDefinition>(),
+            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+
+        Guid childId = (await service.CreateAsync(
+            new CreateAgentCommand(
+                $"child-{Guid.NewGuid():N}",
+                "Child Agent"))).Data;
+        AgentDefinition childDraft = Assert.IsType<AgentDefinition>((await service.SaveDraftAsync(
+            new SaveAgentDraftCommand(
+                childId,
+                0,
+                "Return CHILD_OK.",
+                modelProfileId,
+                AgentOutputMode.Text,
+                null))).Value);
+        AgentDefinition childPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
+            new PublishAgentCommand(childId, childDraft.LogicalRevision))).Value);
+        Guid childVersionId = Assert.Single(childPublished.PublishedVersions).Id;
+
+        Guid parentId = (await service.CreateAsync(
+            new CreateAgentCommand(
+                $"parent-{Guid.NewGuid():N}",
+                "Parent Agent"))).Data;
+        var saveParent = new SaveAgentDraftCommand(
+            parentId,
+            0,
+            "Delegate to the child Agent.",
+            modelProfileId,
+            AgentOutputMode.Text,
+            null)
+        {
+            ChildAgentIds = [childId],
+            ChildAgentPins =
+            [
+                new AgentChildBindingSnapshot(childId, childVersionId)
+                {
+                    AgentCode = childPublished.Code,
+                    AgentName = childPublished.Name,
+                    AgentDescription = childPublished.Description
+                }
+            ]
+        };
+        AgentDefinition parentDraft = Assert.IsType<AgentDefinition>(
+            (await service.SaveDraftAsync(saveParent)).Value);
+        AgentDefinition parentPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
+            new PublishAgentCommand(parentId, parentDraft.LogicalRevision))).Value);
+
+        AgentDefinition childDisabled = Assert.IsType<AgentDefinition>((await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                childId,
+                childPublished.LogicalRevision,
+                AgentRuntimeStatus.Disabled))).Value);
+        AgentOperationResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                childId,
+                childDisabled.LogicalRevision,
+                AgentRuntimeStatus.Archived));
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(AgentErrorCodes.ArchiveBlocked, blocked.Error?.Code);
+        Assert.Contains(parentPublished.Code, blocked.Error?.Message);
+
+        Assert.True((await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                parentId,
+                parentPublished.LogicalRevision,
+                AgentRuntimeStatus.Disabled))).Succeeded);
+        AgentOperationResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                childId,
+                childDisabled.LogicalRevision,
+                AgentRuntimeStatus.Archived));
+        Assert.True(archived.Succeeded);
+        Assert.Equal(AgentRuntimeStatus.Archived, archived.Value?.RuntimeStatus);
+    }
+
+    [Fact]
+    public async Task Block_archive_while_agent_is_main_assignment_or_used_by_orchestration()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgAgentDefinition),
+            typeof(AgAgentVersion),
+            typeof(AgAgentVersionBinding),
+            typeof(AgAgentVersionSnapshot),
+            typeof(AgMainAgentAssignment),
+            typeof(AgOrchestrationDefinition),
+            typeof(AgOrchestrationVersion),
+            typeof(AgOrchestrationNode),
+            typeof(AgOrchestrationEdge),
+            typeof(AgOrchestrationAgentBinding));
+        var assignments = new AgMainAgentAssignmentServices(
+            fixture.CreateRepository<AgMainAgentAssignment>());
+        var orchestrations = new AgOrchestrationDefinitionServices(
+            fixture.CreateRepository<AgOrchestrationDefinition>());
+        const string modelProfileId = "test-model";
+        var service = new AgAgentDefinitionServices(
+            fixture.CreateRepository<AgAgentDefinition>(),
+            orchestrations: orchestrations,
+            mainAgentAssignments: assignments,
+            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+        Guid agentId = (await service.CreateAsync(
+            new CreateAgentCommand(
+                $"referenced-{Guid.NewGuid():N}",
+                "Referenced Agent"))).Data;
+        AgentDefinition draft = Assert.IsType<AgentDefinition>((await service.SaveDraftAsync(
+            new SaveAgentDraftCommand(
+                agentId,
+                0,
+                "Return REFERENCED_OK.",
+                modelProfileId,
+                AgentOutputMode.Text,
+                null))).Value);
+        AgentDefinition published = Assert.IsType<AgentDefinition>((await service.PublishAsync(
+            new PublishAgentCommand(agentId, draft.LogicalRevision))).Value);
+        Guid agentVersionId = Assert.Single(published.PublishedVersions).Id;
+        Assert.True(await assignments.TryReplaceAsync(
+            new MainAgentAssignment(
+                agentId,
+                agentVersionId,
+                0,
+                DateTimeOffset.Parse("2026-08-16T15:00:00Z")),
+            null));
+
+        Guid orchestrationId = Guid.NewGuid();
+        Guid orchestrationVersionId = Guid.NewGuid();
+        const string orchestrationCode = "agent-consumer-flow";
+        OrchestrationNode[] nodes =
+        [
+            new(
+                "node-1",
+                "Referenced Agent Node",
+                agentId,
+                OrchestrationNodeInputMode.InitialInput,
+                string.Empty,
+                0,
+                30)
+        ];
+        var orchestrationSnapshot = new OrchestrationVersionSnapshot(
+            orchestrationVersionId,
+            orchestrationCode,
+            "node-1",
+            nodes,
+            [],
+            [new OrchestrationAgentBinding(agentId, agentVersionId)]);
+        var orchestration = new OrchestrationDefinition(
+            orchestrationId,
+            orchestrationCode,
+            "Agent Consumer Flow",
+            string.Empty,
+            OrchestrationStatus.Enabled,
+            0,
+            new OrchestrationVersion(
+                Guid.NewGuid(),
+                "draft",
+                true,
+                "node-1",
+                nodes,
+                [],
+                null),
+            [
+                new OrchestrationVersion(
+                    orchestrationVersionId,
+                    "1.0.0",
+                    false,
+                    "node-1",
+                    nodes,
+                    [],
+                    orchestrationSnapshot)
+            ]);
+        Assert.True(await orchestrations.TryCreateAsync(orchestration));
+
+        AgentDefinition disabled = Assert.IsType<AgentDefinition>((await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                agentId,
+                published.LogicalRevision,
+                AgentRuntimeStatus.Disabled))).Value);
+        AgentOperationResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                agentId,
+                disabled.LogicalRevision,
+                AgentRuntimeStatus.Archived));
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(AgentErrorCodes.ArchiveBlocked, blocked.Error?.Code);
+        Assert.Contains("Main Agent assignment", blocked.Error?.Message);
+        Assert.Contains(orchestrationCode, blocked.Error?.Message);
+
+        Assert.True(await assignments.TryReplaceAsync(
+            new MainAgentAssignment(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                1,
+                DateTimeOffset.Parse("2026-08-16T15:01:00Z")),
+            0));
+        Assert.True(await orchestrations.TryReplaceAsync(
+            orchestration with
+            {
+                Status = OrchestrationStatus.Disabled,
+                LogicalRevision = 1
+            },
+            0));
+        AgentOperationResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
+            new SetAgentRuntimeStatusCommand(
+                agentId,
+                disabled.LogicalRevision,
+                AgentRuntimeStatus.Archived));
+        Assert.True(archived.Succeeded);
+        Assert.Equal(AgentRuntimeStatus.Archived, archived.Value?.RuntimeStatus);
     }
 }

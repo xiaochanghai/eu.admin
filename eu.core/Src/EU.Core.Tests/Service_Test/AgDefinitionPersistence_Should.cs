@@ -2,6 +2,7 @@ using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Model.Entity;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
 using Xunit;
 
@@ -149,6 +150,49 @@ public sealed class AgDefinitionPersistence_Should
             value.OrchestrationId == definition.Id));
     }
 
+    [Fact]
+    public async Task Block_orchestration_archive_while_an_enabled_agent_references_it()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgOrchestrationDefinition),
+            typeof(AgOrchestrationVersion),
+            typeof(AgOrchestrationNode),
+            typeof(AgOrchestrationEdge),
+            typeof(AgOrchestrationAgentBinding));
+        var repository = new AgOrchestrationDefinitionServices(
+            fixture.CreateRepository<AgOrchestrationDefinition>());
+        Guid orchestrationId = Guid.NewGuid();
+        string code = $"orchestration-{Guid.NewGuid():N}";
+        var definition = new OrchestrationDefinition(
+            orchestrationId,
+            code,
+            "Referenced Orchestration",
+            string.Empty,
+            OrchestrationStatus.Disabled,
+            0,
+            CreateOrchestrationVersion(code, "draft", true),
+            [CreateOrchestrationVersion(code, "1.0.0", false)]);
+        Assert.True(await repository.TryCreateAsync(definition));
+        var agents = new StubAgentDefinitionCatalog(
+            [CreateOrchestrationReferencingAgent(orchestrationId)]);
+        var lifecycle = new OrchestrationLifecycleService(repository, agents);
+
+        OrchestrationOperationResult<OrchestrationDefinition> blocked =
+            await lifecycle.SetArchivedAsync(
+                new SetOrchestrationArchiveCommand(orchestrationId, 0, true));
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(OrchestrationErrorCodes.ArchiveBlocked, blocked.Error?.Code);
+        Assert.Contains("orchestration-consumer", blocked.Error?.Message);
+
+        agents.Definitions = [];
+        OrchestrationOperationResult<OrchestrationDefinition> archived =
+            await lifecycle.SetArchivedAsync(
+                new SetOrchestrationArchiveCommand(orchestrationId, 0, true));
+        Assert.True(archived.Succeeded);
+        Assert.Equal(OrchestrationStatus.Archived, archived.Value?.Status);
+    }
+
     private static EvaluationCaseDefinition CreateEvaluationCase(string name) => new(
         Guid.NewGuid(),
         name,
@@ -199,6 +243,53 @@ public sealed class AgDefinitionPersistence_Should
             nodes,
             edges,
             snapshot);
+    }
+
+    private static AgentDefinition CreateOrchestrationReferencingAgent(Guid orchestrationId)
+    {
+        Guid agentId = Guid.NewGuid();
+        Guid versionId = Guid.NewGuid();
+        var snapshot = new AgentVersionSnapshot(
+            versionId,
+            "orchestration-consumer",
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            [],
+            [])
+        {
+            Orchestrations = [new AgentOrchestrationBindingSnapshot(orchestrationId, Guid.NewGuid())]
+        };
+        var draft = new AgentVersion(
+            Guid.NewGuid(),
+            "draft",
+            true,
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            null,
+            null);
+        var published = new AgentVersion(
+            versionId,
+            "1.0.0",
+            false,
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            null,
+            snapshot);
+        return new AgentDefinition(
+            agentId,
+            "orchestration-consumer",
+            "Orchestration Consumer",
+            string.Empty,
+            AgentRuntimeStatus.Enabled,
+            0,
+            draft,
+            [published]);
     }
 
     private static string Hash(char value) => new(value, 64);

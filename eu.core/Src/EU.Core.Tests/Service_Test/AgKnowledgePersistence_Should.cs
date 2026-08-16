@@ -1,5 +1,6 @@
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Model.Entity;
+using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
 using Xunit;
 
@@ -92,6 +93,94 @@ public sealed class AgKnowledgePersistence_Should
             await service.GetByIdAsync(definition.Id));
         Assert.Single(unchanged.Documents);
         Assert.Equal(2, unchanged.Chunks.Count);
+    }
+
+    [Fact]
+    public async Task Block_archive_while_an_enabled_agent_references_the_knowledge_base()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgKnowledgeBaseDefinition),
+            typeof(AgKnowledgeDocument),
+            typeof(AgKnowledgeChunk));
+        var repository = new AgKnowledgeBaseDefinitionServices(
+            fixture.CreateRepository<AgKnowledgeBaseDefinition>());
+        Guid knowledgeBaseId = Guid.NewGuid();
+        var definition = new KnowledgeBaseDefinition(
+            knowledgeBaseId,
+            $"knowledge-{Guid.NewGuid():N}",
+            "Referenced Knowledge",
+            string.Empty,
+            KnowledgeBaseStatus.Disabled,
+            0,
+            [],
+            [],
+            null);
+        Assert.True(await repository.TryCreateAsync(definition));
+        var agents = new StubAgentDefinitionCatalog(
+            [CreateReferencingAgent(knowledgeBaseId)]);
+        var lifecycle = new KnowledgeLifecycleService(repository, repository, agents);
+
+        KnowledgeOperationResult<KnowledgeBaseDefinition> blocked =
+            await lifecycle.SetArchivedAsync(
+                new SetKnowledgeBaseArchiveCommand(knowledgeBaseId, 0, true));
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(KnowledgeErrorCodes.ArchiveBlocked, blocked.Error?.Code);
+        Assert.Contains("knowledge-consumer", blocked.Error?.Message);
+
+        agents.Definitions = [];
+        KnowledgeOperationResult<KnowledgeBaseDefinition> archived =
+            await lifecycle.SetArchivedAsync(
+                new SetKnowledgeBaseArchiveCommand(knowledgeBaseId, 0, true));
+        Assert.True(archived.Succeeded);
+        Assert.Equal(KnowledgeBaseStatus.Archived, archived.Value?.Status);
+    }
+
+    private static AgentDefinition CreateReferencingAgent(Guid knowledgeBaseId)
+    {
+        Guid agentId = Guid.NewGuid();
+        Guid versionId = Guid.NewGuid();
+        var snapshot = new AgentVersionSnapshot(
+            versionId,
+            "knowledge-consumer",
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            [],
+            [])
+        {
+            KnowledgeBases = [new AgentKnowledgeBindingSnapshot(knowledgeBaseId, 0)]
+        };
+        var draft = new AgentVersion(
+            Guid.NewGuid(),
+            "draft",
+            true,
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            null,
+            null);
+        var published = new AgentVersion(
+            versionId,
+            "1.0.0",
+            false,
+            string.Empty,
+            string.Empty,
+            AgentOutputMode.Text,
+            null,
+            null,
+            snapshot);
+        return new AgentDefinition(
+            agentId,
+            "knowledge-consumer",
+            "Knowledge Consumer",
+            string.Empty,
+            AgentRuntimeStatus.Enabled,
+            0,
+            draft,
+            [published]);
     }
 
     private static string Hash(char value) => new(value, 64);

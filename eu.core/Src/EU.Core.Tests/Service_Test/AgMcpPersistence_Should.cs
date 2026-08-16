@@ -87,6 +87,121 @@ public sealed class AgMcpPersistence_Should
                 McpToolRisk.Mutating))).Succeeded);
     }
 
+    [Fact]
+    public async Task Block_disable_while_an_enabled_agent_references_a_current_tool()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgMcpServerDefinition),
+            typeof(AgMcpServerArgument),
+            typeof(AgMcpToolVersion),
+            typeof(AgAgentDefinition),
+            typeof(AgAgentVersion),
+            typeof(AgAgentVersionBinding),
+            typeof(AgAgentVersionSnapshot));
+        var service = new AgMcpServerDefinitionServices(
+            fixture.CreateRepository<AgMcpServerDefinition>(),
+            new StubMcpToolDiscovery(
+            [
+                new DiscoveredMcpTool(
+                    "query_business_data",
+                    "Query business data",
+                    "{\"type\":\"object\"}")
+            ]));
+        McpServerDefinition created = Assert.IsType<McpServerDefinition>((await service.CreateAsync(
+            new CreateMcpServerCommand(
+                $"mcp-{Guid.NewGuid():N}",
+                "Referenced MCP",
+                string.Empty,
+                McpTransportKind.StreamableHttp,
+                "https://localhost/mcp",
+                string.Empty,
+                [],
+                string.Empty,
+                true))).Value);
+        McpServerDefinition synced = Assert.IsType<McpServerDefinition>((await service.SyncAsync(
+            new SyncMcpServerCommand(created.Id, 0))).Value);
+        McpToolVersion discovered = Assert.Single(synced.ToolVersions);
+        McpServerDefinition classified = Assert.IsType<McpServerDefinition>((await service.ClassifyToolAsync(
+            new ClassifyMcpToolCommand(
+                created.Id,
+                discovered.Id,
+                synced.LogicalRevision,
+                McpToolRisk.ReadOnly))).Value);
+        Guid toolVersionId = Assert.Single(classified.CurrentToolVersionIds);
+        Guid agentId = Guid.NewGuid();
+        Guid agentVersionId = Guid.NewGuid();
+        await fixture.Db.Insertable(new AgAgentDefinition
+        {
+            ID = agentId,
+            Code = "mcp-consumer",
+            Name = "MCP Consumer",
+            Description = string.Empty,
+            RuntimeStatus = "Enabled",
+            LogicalRevision = 0
+        }).ExecuteCommandAsync();
+        await fixture.Db.Insertable(new AgAgentVersion
+        {
+            ID = agentVersionId,
+            AgentId = agentId,
+            Ordinal = 1,
+            Label = "1.0.0",
+            IsDraft = false,
+            Instructions = string.Empty,
+            ModelProfileId = string.Empty,
+            OutputMode = "Text"
+        }).ExecuteCommandAsync();
+        await fixture.Db.Insertable(new AgAgentVersionSnapshot
+        {
+            ID = Guid.NewGuid(),
+            VersionId = agentVersionId,
+            SnapshotVersionId = agentVersionId,
+            AgentCode = "mcp-consumer",
+            AgentName = "MCP Consumer",
+            AgentDescription = string.Empty,
+            Instructions = string.Empty,
+            ModelProfileId = string.Empty,
+            OutputMode = "Text"
+        }).ExecuteCommandAsync();
+        await fixture.Db.Insertable(new AgAgentVersionBinding
+        {
+            ID = Guid.NewGuid(),
+            VersionId = agentVersionId,
+            Scope = "Snapshot",
+            BindingType = "Tool",
+            Ordinal = 0,
+            ReferenceId = toolVersionId,
+            ReferenceCode = "query_business_data",
+            ReferenceName = "Query business data",
+            ReferenceDescription = string.Empty
+        }).ExecuteCommandAsync();
+        var disable = new UpdateMcpServerCommand(
+            classified.Id,
+            classified.LogicalRevision,
+            classified.Name,
+            classified.Description,
+            classified.Transport,
+            classified.Endpoint,
+            classified.Command,
+            classified.Arguments,
+            classified.CredentialAlias,
+            false);
+
+        McpOperationResult<McpServerDefinition> blocked = await service.UpdateAsync(disable);
+
+        Assert.False(blocked.Succeeded);
+        Assert.Equal(McpErrorCodes.DisableBlocked, blocked.Error?.Code);
+        Assert.Contains("mcp-consumer", blocked.Error?.Message);
+
+        await fixture.Db.Updateable<AgAgentDefinition>()
+            .SetColumns(value => value.RuntimeStatus == "Disabled")
+            .Where(value => value.ID == agentId)
+            .ExecuteCommandAsync();
+        McpOperationResult<McpServerDefinition> disabled = await service.UpdateAsync(disable);
+        Assert.True(disabled.Succeeded);
+        Assert.False(disabled.Value?.Enabled);
+        Assert.Equal(McpServerStatus.Disabled, disabled.Value?.Status);
+    }
+
     private sealed class StubMcpToolDiscovery(
         IReadOnlyList<DiscoveredMcpTool> tools) : IMcpToolDiscovery
     {

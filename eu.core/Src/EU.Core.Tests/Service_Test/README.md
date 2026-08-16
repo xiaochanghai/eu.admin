@@ -6,7 +6,10 @@ SqlSugar through `IBaseRepository<T>`.
 The regular tests use an in-memory SQLite database and do not access shared
 infrastructure. They cover normalized persistence read/write behavior,
 transaction rollback, database synchronization validation and concurrent
-replacement serialization. Run them with:
+replacement serialization. They also exercise lifecycle reference guards for
+Agent, Skill, MCP Server, Knowledge Base and Orchestration archival or disable
+operations, including the successful path after references are removed. Run
+them with:
 
 ```powershell
 dotnet test Src\EU.Core.Tests\EU.Core.Tests.csproj --no-restore `
