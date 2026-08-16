@@ -75,7 +75,7 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
         }
     }
 
-    public async Task EnsureDraftAsync(
+    public async Task<bool> EnsureDraftAsync(
         string skillCode,
         string name,
         string description,
@@ -85,7 +85,7 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
         string skillFile = ResolveDraftPath(skillCode, "SKILL.md", createParent: true);
         if (File.Exists(skillFile))
         {
-            return;
+            return false;
         }
 
         string safeName = string.IsNullOrWhiteSpace(name) ? skillCode : name.Trim();
@@ -105,6 +105,39 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
             """;
         await AtomicWriteAsync(skillFile, content, cancellationToken);
         RejectReparsePoint(draftRoot);
+        return true;
+    }
+
+    public Task RollbackDraftCreationAsync(
+        string skillCode,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        string skillRoot = SkillRoot(skillCode, create: false);
+        string draftRoot = Path.Combine(skillRoot, "draft");
+        string skillFile = Path.Combine(draftRoot, "SKILL.md");
+        EnsureContained(skillRoot, skillFile);
+        if (File.Exists(skillFile))
+        {
+            RejectReparsePoint(skillFile);
+            File.Delete(skillFile);
+        }
+
+        if (Directory.Exists(draftRoot) &&
+            !Directory.EnumerateFileSystemEntries(draftRoot).Any())
+        {
+            RejectReparsePoint(draftRoot);
+            Directory.Delete(draftRoot);
+        }
+
+        if (Directory.Exists(skillRoot) &&
+            !Directory.EnumerateFileSystemEntries(skillRoot).Any())
+        {
+            RejectReparsePoint(skillRoot);
+            Directory.Delete(skillRoot);
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task<IReadOnlyList<SkillFileEntry>> ListDraftAsync(
@@ -112,7 +145,7 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        string root = DraftRoot(skillCode, create: true);
+        string root = DraftRoot(skillCode, create: false);
         RejectTreeReparsePoints(root);
         IReadOnlyList<SkillFileEntry> entries = SkillContractCloner.ReadOnly(
             Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
@@ -433,6 +466,15 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
             throw Error(
                 SkillErrorCodes.PathInvalid,
                 "Skill files must be under references, assets, tests, or scripts.");
+        }
+
+        string fileName = segments[^1];
+        string extension = Path.GetExtension(fileName).TrimStart('.');
+        if (fileName.Length > 64 || extension.Length > 10)
+        {
+            throw Error(
+                SkillErrorCodes.PathInvalid,
+                "Skill file names are limited to 64 characters and extensions to 10 characters.");
         }
 
         return string.Join('/', segments);

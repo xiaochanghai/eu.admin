@@ -1,5 +1,7 @@
 using EU.Core.Agent.Application.Skills;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 #nullable enable
@@ -14,6 +16,8 @@ public sealed class AgSkillDefinitionServices :
     IAgSkillDefinitionServices,
     IPublishedSkillVersionCatalog
 {
+    private const string DraftAttachmentType = "agent-skill-draft";
+    private const string PublishedAttachmentType = "agent-skill-version";
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> Locks = new();
     private readonly ISkillFileStore _fileStore;
 
@@ -55,6 +59,7 @@ public sealed class AgSkillDefinitionServices :
             SkillContractCloner.ReadOnly(Array.Empty<SkillVersion>()));
 
         cancellationToken.ThrowIfCancellationRequested();
+        bool draftCreated = false;
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
         try
         {
@@ -68,20 +73,41 @@ public sealed class AgSkillDefinitionServices :
             }
 
             await Db.Insertable(MapDefinitionEntity(definition)).ExecuteCommandAsync();
+            draftCreated = await _fileStore.EnsureDraftAsync(
+                code,
+                definition.Name,
+                definition.Description,
+                cancellationToken);
+            IReadOnlyList<SkillFileEntry> draftFiles =
+                await _fileStore.ListDraftAsync(code, cancellationToken);
+            await ReconcileAttachmentGroupAsync(
+                definition.Id,
+                DraftAttachmentType,
+                MapDraftAttachments(definition.Id, code, draftFiles));
             cancellationToken.ThrowIfCancellationRequested();
             await Db.Ado.CommitTranAsync();
         }
-        catch
+        catch (Exception exception)
         {
             await Db.Ado.RollbackTranAsync();
+            if (!draftCreated)
+            {
+                throw;
+            }
+
+            try
+            {
+                await _fileStore.RollbackDraftCreationAsync(code, CancellationToken.None);
+            }
+            catch (Exception compensationException)
+            {
+                throw new InvalidOperationException(
+                    "Skill creation failed and its Draft scaffold could not be rolled back.",
+                    new AggregateException(exception, compensationException));
+            }
+
             throw;
         }
-
-        await _fileStore.EnsureDraftAsync(
-            code,
-            definition.Name,
-            definition.Description,
-            cancellationToken);
         return SkillOperationResult<SkillDefinition>.Success(definition);
     }
 
@@ -240,23 +266,18 @@ public sealed class AgSkillDefinitionServices :
                     "An archived Skill must be restored before its Draft files can be edited.");
             }
 
-            try
-            {
-                await _fileStore.WriteDraftTextAsync(
+            SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
+            return await ExecuteDraftMutationAsync(
+                existing,
+                updated,
+                command.RelativePath,
+                async token => await _fileStore.WriteDraftTextAsync(
                     existing.Code,
                     command.RelativePath,
                     command.Content,
-                    cancellationToken);
-            }
-            catch (SkillFileStoreException exception)
-            {
-                return Failure(exception.Code, exception.Message);
-            }
-
-            SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
-            return await TryUpdateDefinitionAsync(updated, existing.DraftRevision, cancellationToken)
-                ? SkillOperationResult<SkillDefinition>.Success(updated)
-                : RevisionConflict();
+                    token),
+                requireExistingFile: false,
+                cancellationToken);
         }, cancellationToken);
     }
 
@@ -285,22 +306,17 @@ public sealed class AgSkillDefinitionServices :
                     "An archived Skill must be restored before its Draft files can be deleted.");
             }
 
-            try
-            {
-                await _fileStore.DeleteDraftAsync(
+            SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
+            return await ExecuteDraftMutationAsync(
+                existing,
+                updated,
+                command.RelativePath,
+                async token => await _fileStore.DeleteDraftAsync(
                     existing.Code,
                     command.RelativePath,
-                    cancellationToken);
-            }
-            catch (SkillFileStoreException exception)
-            {
-                return Failure(exception.Code, exception.Message);
-            }
-
-            SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
-            return await TryUpdateDefinitionAsync(updated, existing.DraftRevision, cancellationToken)
-                ? SkillOperationResult<SkillDefinition>.Success(updated)
-                : RevisionConflict();
+                    token),
+                requireExistingFile: true,
+                cancellationToken);
         }, cancellationToken);
     }
 
@@ -384,6 +400,10 @@ public sealed class AgSkillDefinitionServices :
                 {
                     await Db.Insertable(files).ExecuteCommandAsync();
                 }
+                await ReconcileAttachmentGroupAsync(
+                    version.Id,
+                    PublishedAttachmentType,
+                    MapPublishedAttachments(existing.Code, version));
 
                 cancellationToken.ThrowIfCancellationRequested();
                 await Db.Ado.CommitTranAsync();
@@ -489,6 +509,98 @@ public sealed class AgSkillDefinitionServices :
         catch (SkillFileStoreException exception)
         {
             return SkillOperationResult<string>.Failure(exception.Code, exception.Message);
+        }
+    }
+
+    public async Task ReconcileFileAttachmentsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            List<AgSkillDefinition> definitions = await Db.Queryable<AgSkillDefinition>()
+                .Where(value => !value.IsDeleted)
+                .OrderBy(value => value.Code)
+                .ToListAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            Guid[] skillIds = definitions.Select(value => value.ID).ToArray();
+            List<AgSkillVersion> versions = skillIds.Length == 0
+                ? []
+                : await Db.Queryable<AgSkillVersion>()
+                    .Where(value =>
+                        value.SkillId.HasValue &&
+                        skillIds.Contains(value.SkillId.Value) &&
+                        !value.IsDeleted)
+                    .OrderBy(value => value.SkillId)
+                    .OrderBy(value => value.Ordinal)
+                    .ToListAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            Guid[] versionIds = versions.Select(value => value.ID).ToArray();
+            List<AgSkillVersionFile> versionFiles = versionIds.Length == 0
+                ? []
+                : await Db.Queryable<AgSkillVersionFile>()
+                    .Where(value =>
+                        value.VersionId.HasValue &&
+                        versionIds.Contains(value.VersionId.Value) &&
+                        !value.IsDeleted)
+                    .OrderBy(value => value.VersionId)
+                    .OrderBy(value => value.Ordinal)
+                    .ToListAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            IReadOnlyDictionary<Guid, AgSkillVersionFile[]> filesByVersion = versionFiles
+                .GroupBy(value => Required(value.VersionId, "VersionFile.VersionId"))
+                .ToDictionary(group => group.Key, group => group.ToArray());
+            IReadOnlyDictionary<Guid, AgSkillDefinition> definitionsById = definitions
+                .ToDictionary(value => value.ID);
+
+            var draftAttachments = new Dictionary<Guid, IReadOnlyList<FileAttachment>>();
+            foreach (AgSkillDefinition definition in definitions)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string code = Required(definition.Code, "Code");
+                IReadOnlyList<SkillFileEntry> draftFiles =
+                    await _fileStore.ListDraftAsync(code, cancellationToken);
+                draftAttachments[definition.ID] =
+                    MapDraftAttachments(definition.ID, code, draftFiles);
+            }
+
+            await DeleteStaleAttachmentGroupsAsync(
+                DraftAttachmentType,
+                skillIds,
+                cancellationToken);
+            await DeleteStaleAttachmentGroupsAsync(
+                PublishedAttachmentType,
+                versionIds,
+                cancellationToken);
+            foreach ((Guid skillId, IReadOnlyList<FileAttachment> attachments) in draftAttachments)
+            {
+                await ReconcileAttachmentGroupAsync(
+                    skillId,
+                    DraftAttachmentType,
+                    attachments);
+            }
+            foreach (AgSkillVersion version in versions)
+            {
+                Guid skillId = Required(version.SkillId, "Version.SkillId");
+                AgSkillDefinition definition = definitionsById[skillId];
+                SkillVersion mapped = MapVersion(
+                    version,
+                    filesByVersion.GetValueOrDefault(version.ID) ?? []);
+                await ReconcileAttachmentGroupAsync(
+                    version.ID,
+                    PublishedAttachmentType,
+                    MapPublishedAttachments(
+                        Required(definition.Code, "Code"),
+                        mapped));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await Db.Ado.CommitTranAsync();
+        }
+        catch
+        {
+            await Db.Ado.RollbackTranAsync();
+            throw;
         }
     }
 
@@ -655,6 +767,293 @@ public sealed class AgSkillDefinitionServices :
         return versions
             .GroupBy(value => Required(value.SkillId, "Version.SkillId"))
             .ToDictionary(group => group.Key, group => group.ToArray());
+    }
+
+    private async Task<SkillOperationResult<SkillDefinition>> ExecuteDraftMutationAsync(
+        SkillDefinition existing,
+        SkillDefinition updated,
+        string relativePath,
+        Func<CancellationToken, Task> mutation,
+        bool requireExistingFile,
+        CancellationToken cancellationToken)
+    {
+        string? previousContent = null;
+        try
+        {
+            previousContent = await _fileStore.ReadDraftTextAsync(
+                existing.Code,
+                relativePath,
+                cancellationToken);
+        }
+        catch (SkillFileStoreException exception) when (
+            !requireExistingFile && exception.Code == SkillErrorCodes.FileMissing)
+        {
+            // A new Draft file has no content to restore if the transaction fails.
+        }
+        catch (SkillFileStoreException exception)
+        {
+            return Failure(exception.Code, exception.Message);
+        }
+
+        bool mutationAttempted = false;
+        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            int affected = await UpdateDefinitionEntityAsync(
+                updated,
+                existing.DraftRevision);
+            if (affected != 1)
+            {
+                await Db.Ado.RollbackTranAsync();
+                return RevisionConflict();
+            }
+
+            mutationAttempted = true;
+            await mutation(cancellationToken);
+            IReadOnlyList<SkillFileEntry> draftFiles =
+                await _fileStore.ListDraftAsync(existing.Code, cancellationToken);
+            await ReconcileAttachmentGroupAsync(
+                existing.Id,
+                DraftAttachmentType,
+                MapDraftAttachments(existing.Id, existing.Code, draftFiles));
+            cancellationToken.ThrowIfCancellationRequested();
+            await Db.Ado.CommitTranAsync();
+            return SkillOperationResult<SkillDefinition>.Success(updated);
+        }
+        catch (SkillFileStoreException exception)
+        {
+            await Db.Ado.RollbackTranAsync();
+            if (mutationAttempted)
+            {
+                await CompensateDraftMutationAsync(
+                    existing.Code,
+                    relativePath,
+                    previousContent,
+                    exception);
+            }
+
+            return Failure(exception.Code, exception.Message);
+        }
+        catch (Exception exception)
+        {
+            await Db.Ado.RollbackTranAsync();
+            if (mutationAttempted)
+            {
+                await CompensateDraftMutationAsync(
+                    existing.Code,
+                    relativePath,
+                    previousContent,
+                    exception);
+            }
+
+            throw;
+        }
+    }
+
+    private async Task CompensateDraftMutationAsync(
+        string skillCode,
+        string relativePath,
+        string? previousContent,
+        Exception originalException)
+    {
+        try
+        {
+            if (previousContent is null)
+            {
+                await _fileStore.DeleteDraftAsync(
+                    skillCode,
+                    relativePath,
+                    CancellationToken.None);
+            }
+            else
+            {
+                await _fileStore.WriteDraftTextAsync(
+                    skillCode,
+                    relativePath,
+                    previousContent,
+                    CancellationToken.None);
+            }
+        }
+        catch (SkillFileStoreException exception) when (
+            previousContent is null && exception.Code == SkillErrorCodes.FileMissing)
+        {
+            // The failed write did not create a file, so there is nothing to remove.
+        }
+        catch (Exception compensationException)
+        {
+            throw new InvalidOperationException(
+                "The Skill Draft mutation failed and its file change could not be rolled back.",
+                new AggregateException(originalException, compensationException));
+        }
+    }
+
+    private async Task DeleteStaleAttachmentGroupsAsync(
+        string attachmentType,
+        IReadOnlyCollection<Guid> retainedMasterIds,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        List<FileAttachment> existing = await Db.Queryable<FileAttachment>()
+            .Filter(null, true)
+            .Where(value =>
+                value.ImageType == attachmentType)
+            .ToListAsync();
+        Guid[] staleIds = existing
+            .Where(value =>
+                !value.MasterId.HasValue ||
+                !retainedMasterIds.Contains(value.MasterId.Value))
+            .Select(value => value.ID)
+            .ToArray();
+        if (staleIds.Length > 0)
+        {
+            await Db.Deleteable<FileAttachment>()
+                .Where(value => staleIds.Contains(value.ID))
+                .ExecuteCommandAsync();
+        }
+    }
+
+    private async Task ReconcileAttachmentGroupAsync(
+        Guid masterId,
+        string attachmentType,
+        IReadOnlyList<FileAttachment> desired)
+    {
+        List<FileAttachment> existing = await Db.Queryable<FileAttachment>()
+            .Filter(null, true)
+            .Where(value =>
+                value.MasterId == masterId &&
+                value.ImageType == attachmentType)
+            .ToListAsync();
+        IReadOnlyDictionary<Guid, FileAttachment> desiredById = desired
+            .ToDictionary(value => value.ID);
+        Guid[] staleIds = existing
+            .Where(value => !desiredById.ContainsKey(value.ID))
+            .Select(value => value.ID)
+            .ToArray();
+        if (staleIds.Length > 0)
+        {
+            await Db.Deleteable<FileAttachment>()
+                .Where(value => staleIds.Contains(value.ID))
+                .ExecuteCommandAsync();
+        }
+
+        IReadOnlyDictionary<Guid, FileAttachment> existingById = existing
+            .Where(value => desiredById.ContainsKey(value.ID))
+            .ToDictionary(value => value.ID);
+        foreach (FileAttachment attachment in desired)
+        {
+            if (!existingById.TryGetValue(attachment.ID, out FileAttachment? current))
+            {
+                await Db.Insertable(attachment).ExecuteCommandAsync();
+                continue;
+            }
+
+            if (AttachmentMatches(current, attachment))
+            {
+                continue;
+            }
+
+            await Db.Updateable(attachment)
+                .UpdateColumns(value => new
+                {
+                    value.MasterId,
+                    value.OriginalFileName,
+                    value.FileName,
+                    value.FileExt,
+                    value.Path,
+                    value.Length,
+                    value.ImageType,
+                    value.IsDeleted,
+                    value.IsActive
+                })
+                .Where(value => value.ID == attachment.ID)
+                .ExecuteCommandAsync();
+        }
+    }
+
+    private static bool AttachmentMatches(
+        FileAttachment current,
+        FileAttachment desired) =>
+        current.MasterId == desired.MasterId &&
+        string.Equals(current.OriginalFileName, desired.OriginalFileName, StringComparison.Ordinal) &&
+        string.Equals(current.FileName, desired.FileName, StringComparison.Ordinal) &&
+        string.Equals(current.FileExt, desired.FileExt, StringComparison.Ordinal) &&
+        string.Equals(current.Path, desired.Path, StringComparison.Ordinal) &&
+        current.Length == desired.Length &&
+        string.Equals(current.ImageType, desired.ImageType, StringComparison.Ordinal) &&
+        !current.IsDeleted &&
+        current.IsActive == true;
+
+    private static IReadOnlyList<FileAttachment> MapDraftAttachments(
+        Guid skillId,
+        string skillCode,
+        IReadOnlyList<SkillFileEntry> files) => files
+        .Select(file => MapAttachment(
+            skillId,
+            DraftAttachmentType,
+            skillCode,
+            "draft",
+            file.Path,
+            file.Size))
+        .ToArray();
+
+    private static IReadOnlyList<FileAttachment> MapPublishedAttachments(
+        string skillCode,
+        SkillVersion version) => version.Files
+        .Select(file => MapAttachment(
+            version.Id,
+            PublishedAttachmentType,
+            skillCode,
+            $"versions/{version.Label}",
+            file.Path,
+            file.Size))
+        .ToArray();
+
+    private static FileAttachment MapAttachment(
+        Guid masterId,
+        string attachmentType,
+        string skillCode,
+        string scopePath,
+        string relativePath,
+        long size)
+    {
+        string normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
+        string fileName = normalizedPath.Split('/').Last();
+        string extension = Path.GetExtension(fileName).TrimStart('.');
+        if (fileName.Length > 64 || extension.Length > 10)
+        {
+            throw new SkillFileStoreException(
+                SkillErrorCodes.PathInvalid,
+                "Skill file names are limited to 64 characters and extensions to 10 characters.");
+        }
+        string? relativeDirectory = Path.GetDirectoryName(normalizedPath)?
+            .Replace('\\', '/')
+            .Trim('/');
+        string directory = string.IsNullOrEmpty(relativeDirectory)
+            ? $"{skillCode}/{scopePath}/"
+            : $"{skillCode}/{scopePath}/{relativeDirectory}/";
+        return new FileAttachment
+        {
+            ID = DeterministicAttachmentId(masterId, attachmentType, normalizedPath),
+            MasterId = masterId,
+            OriginalFileName = fileName,
+            FileName = fileName,
+            FileExt = extension,
+            Path = directory,
+            Length = size,
+            ImageType = attachmentType,
+            IsDeleted = false,
+            IsActive = true
+        };
+    }
+
+    private static Guid DeterministicAttachmentId(
+        Guid masterId,
+        string attachmentType,
+        string relativePath)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(
+            $"{attachmentType}\n{masterId:N}\n{relativePath}"));
+        return new Guid(hash.AsSpan(0, 16));
     }
 
     private async Task<bool> TryUpdateDefinitionAsync(

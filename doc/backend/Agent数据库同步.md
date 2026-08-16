@@ -42,6 +42,10 @@ Content-Type: application/json
 
 `tables` 为空时处理全部 Agent 表；指定表名时仅处理所选表。同步器会使用内置的父表到子表顺序写入，并按相反顺序清理目标数据，不依赖请求中的表名顺序。
 
+同步 Skill 表时还会同步共享 `FileAttachment` 表中的 Skill 文件路径索引：选择 `AgSkillDefinition` 时处理 `agent-skill-draft`，选择 `AgSkillVersion` 或 `AgSkillVersionFile` 时处理 `agent-skill-version`。同步器只替换这两类记录，不会删除或覆盖其他业务附件。附件记录的 `Path` 是相对于 `AgentStorage:SkillRootPath` 的目录，`FileName` 是目录内文件名。Skill 文件内容仍存放在该受控目录，数据库同步不会复制物理文件，部署或迁移时必须同步复制该目录。
+
+Skill 文件名最多 64 个字符，扩展名最多 10 个字符，以保证路径索引可无损写入共享 `FileAttachment` 表。应用启动时只读扫描已有 Skill 目录并重建索引；目录缺失或不可访问会阻止启动，不会自动创建空目录并清除索引。
+
 ## 安全边界
 
 - 源连接和目标连接必须显式指定、已启用且不能相同。
@@ -51,6 +55,7 @@ Content-Type: application/json
 - SqlSugar `CodeFirst` 结构同步先于数据事务执行。数据库 DDL 是否支持事务取决于数据库引擎，因此执行前仍应备份目标库并先做结构同步验证。
 - 目标为 SQL Server 时，Agent 结构同步会临时关闭 SqlSugar 的 `nvarchar` 默认映射，所有字符串栏位按 `varchar` 创建；同步完成后恢复连接原配置。
 - 同步器只接受已登记的 Agent 实体表，不接受任意表名或 SQL。
+- `FileAttachment` 不能作为请求表名单独传入；它只会随 Skill 表按附件类型过滤同步，避免影响共享附件数据。
 - 同一张表不能重复指定，`batchSize` 只能设置为 `1` 至 `10000`。
 - 包含自增列的表会被拒绝，避免隐式改变主键生成语义。
 - 当前实现一次读取一张源表，再按 `batchSize` 分批写入；超大表应在维护窗口执行并关注应用内存。

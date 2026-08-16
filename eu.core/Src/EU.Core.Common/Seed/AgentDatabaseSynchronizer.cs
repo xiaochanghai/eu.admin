@@ -9,6 +9,8 @@ namespace EU.Core.Common.Seed;
 /// <summary>基于 SqlSugar 的 Agent 表结构与数据同步器。</summary>
 public static class AgentDatabaseSynchronizer
 {
+    private const string DraftSkillAttachmentType = "agent-skill-draft";
+    private const string PublishedSkillAttachmentType = "agent-skill-version";
     private static readonly SemaphoreSlim SyncLock = new(1, 1);
 
     private static readonly string[] AgentTableOrder =
@@ -96,22 +98,26 @@ public static class AgentDatabaseSynchronizer
         IReadOnlyList<(string TableName, Type EntityType)> tables = ResolveAgentTables(
             request.Tables ?? [],
             entityTypes);
+        AttachmentSyncPlan attachmentPlan = ResolveAttachmentSyncPlan(tables);
         ValidateSourceTables(source, tables, cancellationToken);
+        ValidateAttachmentSource(source, attachmentPlan);
 
         if (request.SyncStructure)
         {
-            SyncTargetStructure(target, tables);
+            SyncTargetStructure(target, tables, attachmentPlan);
         }
         ValidateTargetTables(target, tables);
+        ValidateAttachmentTarget(target, attachmentPlan);
 
         if (!request.ReplaceData)
         {
-            IReadOnlyList<AgentDatabaseSyncTableResult> structureResults = tables
+            var structureResults = tables
                 .Select(table => new AgentDatabaseSyncTableResult(
                     table.TableName,
                     CountRows(source, table.TableName),
                     CountRows(target, table.TableName)))
-                .ToArray();
+                .ToList();
+            AddAttachmentResult(structureResults, source, target, attachmentPlan);
             return new AgentDatabaseSyncResult(
                 sourceConfigId,
                 targetConfigId,
@@ -124,6 +130,7 @@ public static class AgentDatabaseSynchronizer
         await target.Ado.BeginTranAsync();
         try
         {
+            DeleteTargetAttachments(target, attachmentPlan);
             foreach ((string tableName, _) in tables.Reverse())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -149,6 +156,13 @@ public static class AgentDatabaseSynchronizer
                 totalRows = checked(totalRows + sourceRows);
                 results.Add(new AgentDatabaseSyncTableResult(tableName, sourceRows, targetRows));
             }
+            totalRows = checked(totalRows + CopyAttachments(
+                source,
+                target,
+                attachmentPlan,
+                request.BatchSize,
+                results,
+                cancellationToken));
 
             await target.Ado.CommitTranAsync();
             return new AgentDatabaseSyncResult(
@@ -225,9 +239,32 @@ public static class AgentDatabaseSynchronizer
         }
     }
 
+    private static void ValidateAttachmentSource(
+        SqlSugarScopeProvider source,
+        AttachmentSyncPlan plan)
+    {
+        if (plan.Enabled && !source.DbMaintenance.IsAnyTable(nameof(FileAttachment)))
+        {
+            throw new InvalidOperationException(
+                $"源数据库缺少 Skill 附件索引表 {nameof(FileAttachment)}。");
+        }
+    }
+
+    private static void ValidateAttachmentTarget(
+        SqlSugarScopeProvider target,
+        AttachmentSyncPlan plan)
+    {
+        if (plan.Enabled && !target.DbMaintenance.IsAnyTable(nameof(FileAttachment)))
+        {
+            throw new InvalidOperationException(
+                $"目标数据库缺少 Skill 附件索引表 {nameof(FileAttachment)}，请启用 SyncStructure。");
+        }
+    }
+
     private static void SyncTargetStructure(
         SqlSugarScopeProvider target,
-        IReadOnlyList<(string TableName, Type EntityType)> tables)
+        IReadOnlyList<(string TableName, Type EntityType)> tables,
+        AttachmentSyncPlan attachmentPlan)
     {
         ConnectionConfig config = target.CurrentConnectionConfig;
         ConnMoreSettings originalSettings = config.MoreSettings;
@@ -242,7 +279,10 @@ public static class AgentDatabaseSynchronizer
 
         try
         {
-            target.CodeFirst.InitTables(tables.Select(table => table.EntityType).ToArray());
+            Type[] types = attachmentPlan.Enabled
+                ? tables.Select(table => table.EntityType).Append(typeof(FileAttachment)).ToArray()
+                : tables.Select(table => table.EntityType).ToArray();
+            target.CodeFirst.InitTables(types);
         }
         finally
         {
@@ -260,6 +300,116 @@ public static class AgentDatabaseSynchronizer
                 }
             }
         }
+    }
+
+    private static AttachmentSyncPlan ResolveAttachmentSyncPlan(
+        IReadOnlyList<(string TableName, Type EntityType)> tables)
+    {
+        bool includeDraft = tables.Any(table => string.Equals(
+            table.TableName,
+            nameof(AgSkillDefinition),
+            StringComparison.OrdinalIgnoreCase));
+        bool includePublished = tables.Any(table =>
+            string.Equals(
+                table.TableName,
+                nameof(AgSkillVersion),
+                StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(
+                table.TableName,
+                nameof(AgSkillVersionFile),
+                StringComparison.OrdinalIgnoreCase));
+        return new AttachmentSyncPlan(includeDraft, includePublished);
+    }
+
+    private static void AddAttachmentResult(
+        ICollection<AgentDatabaseSyncTableResult> results,
+        SqlSugarScopeProvider source,
+        SqlSugarScopeProvider target,
+        AttachmentSyncPlan plan)
+    {
+        if (!plan.Enabled)
+        {
+            return;
+        }
+
+        results.Add(new AgentDatabaseSyncTableResult(
+            nameof(FileAttachment),
+            CountAttachments(source, plan),
+            CountAttachments(target, plan)));
+    }
+
+    private static void DeleteTargetAttachments(
+        SqlSugarScopeProvider target,
+        AttachmentSyncPlan plan)
+    {
+        if (!plan.Enabled)
+        {
+            return;
+        }
+
+        target.Deleteable<FileAttachment>()
+            .Where(BuildAttachmentPredicate(plan))
+            .ExecuteCommand();
+    }
+
+    private static long CopyAttachments(
+        SqlSugarScopeProvider source,
+        SqlSugarScopeProvider target,
+        AttachmentSyncPlan plan,
+        int batchSize,
+        ICollection<AgentDatabaseSyncTableResult> results,
+        CancellationToken cancellationToken)
+    {
+        if (!plan.Enabled)
+        {
+            return 0;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        DataTable sourceData = source.Queryable<FileAttachment>()
+            .Where(BuildAttachmentPredicate(plan))
+            .ToDataTable();
+        CopyBatches(
+            target,
+            nameof(FileAttachment),
+            sourceData,
+            batchSize,
+            cancellationToken);
+        long sourceRows = sourceData.Rows.Count;
+        long targetRows = CountAttachments(target, plan);
+        if (targetRows != sourceRows)
+        {
+            throw new InvalidOperationException(
+                $"Skill 附件索引同步后行数不一致：源 {sourceRows}，目标 {targetRows}。");
+        }
+
+        results.Add(new AgentDatabaseSyncTableResult(
+            nameof(FileAttachment),
+            sourceRows,
+            targetRows));
+        return sourceRows;
+    }
+
+    private static long CountAttachments(
+        SqlSugarScopeProvider provider,
+        AttachmentSyncPlan plan) => provider.Queryable<FileAttachment>()
+        .Where(BuildAttachmentPredicate(plan))
+        .Count();
+
+    private static System.Linq.Expressions.Expression<Func<FileAttachment, bool>>
+        BuildAttachmentPredicate(AttachmentSyncPlan plan)
+    {
+        if (plan.IncludeDraft && plan.IncludePublished)
+        {
+            return value =>
+                value.ImageType == DraftSkillAttachmentType ||
+                value.ImageType == PublishedSkillAttachmentType;
+        }
+        if (plan.IncludeDraft)
+        {
+            return value => value.ImageType == DraftSkillAttachmentType;
+        }
+        return value => value.ImageType == PublishedSkillAttachmentType;
     }
 
     private static void CopyBatches(
@@ -359,4 +509,11 @@ public static class AgentDatabaseSynchronizer
         Convert.ToInt64(
             provider.Ado.GetScalar($"SELECT COUNT(*) FROM {QuoteTable(provider, tableName)}"),
             CultureInfo.InvariantCulture);
+
+    private sealed record AttachmentSyncPlan(
+        bool IncludeDraft,
+        bool IncludePublished)
+    {
+        public bool Enabled => IncludeDraft || IncludePublished;
+    }
 }

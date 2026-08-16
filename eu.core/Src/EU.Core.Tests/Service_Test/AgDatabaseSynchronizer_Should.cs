@@ -28,7 +28,7 @@ public sealed class AgDatabaseSynchronizer_Should
         source.Ado.Open();
         target.Ado.Open();
         Type[] entityTypes = GetAgentEntityTypes();
-        source.CodeFirst.InitTables(entityTypes);
+        source.CodeFirst.InitTables(entityTypes.Append(typeof(FileAttachment)).ToArray());
         string[] missingSourceTables = entityTypes
             .Select(type => source.EntityMaintenance.GetEntityInfo(type).DbTableName)
             .Where(tableName => !source.DbMaintenance.IsAnyTable(tableName, false))
@@ -48,9 +48,9 @@ public sealed class AgDatabaseSynchronizer_Should
                 ReplaceData = false
             });
 
-        Assert.Equal(entityTypes.Length, result.Tables.Count);
+        Assert.Equal(entityTypes.Length + 1, result.Tables.Count);
         Assert.Equal(
-            entityTypes.Length,
+            entityTypes.Length + 1,
             result.Tables.Select(value => value.TableName)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Count());
@@ -59,6 +59,88 @@ public sealed class AgDatabaseSynchronizer_Should
             table => Assert.True(
                 target.DbMaintenance.IsAnyTable(table.TableName, false),
                 $"Target Agent table was not created: {table.TableName}"));
+    }
+
+    [Fact]
+    public async Task Replace_skill_attachment_index_without_touching_other_attachments()
+    {
+        using var db = CreateScope("skill-attachments");
+        SqlSugarScopeProvider source = db.GetConnectionScope("source-skill-attachments");
+        SqlSugarScopeProvider target = db.GetConnectionScope("target-skill-attachments");
+        source.Ado.Open();
+        target.Ado.Open();
+        source.CodeFirst.InitTables(typeof(AgSkillDefinition), typeof(FileAttachment));
+        target.CodeFirst.InitTables(typeof(AgSkillDefinition), typeof(FileAttachment));
+
+        Guid skillId = Guid.NewGuid();
+        await source.Insertable(new AgSkillDefinition
+        {
+            ID = skillId,
+            Code = "sync-skill",
+            Name = "Synchronized Skill",
+            Description = string.Empty,
+            Category = string.Empty,
+            Status = "Active",
+            DraftRevision = 0
+        }).ExecuteCommandAsync();
+        Guid sourceAttachmentId = Guid.NewGuid();
+        await source.Insertable(new FileAttachment
+        {
+            ID = sourceAttachmentId,
+            MasterId = skillId,
+            OriginalFileName = "SKILL.md",
+            FileName = "SKILL.md",
+            FileExt = "md",
+            Path = "sync-skill/draft/",
+            Length = 12,
+            ImageType = "agent-skill-draft"
+        }).ExecuteCommandAsync();
+        Guid unrelatedAttachmentId = Guid.NewGuid();
+        await target.Insertable(new FileAttachment
+        {
+            ID = unrelatedAttachmentId,
+            MasterId = Guid.NewGuid(),
+            OriginalFileName = "report.pdf",
+            FileName = "report.pdf",
+            FileExt = "pdf",
+            Path = "upload/report.pdf",
+            Length = 24,
+            ImageType = "business-document"
+        }).ExecuteCommandAsync();
+        await target.Insertable(new FileAttachment
+        {
+            ID = Guid.NewGuid(),
+            MasterId = Guid.NewGuid(),
+            OriginalFileName = "obsolete.md",
+            FileName = "obsolete.md",
+            FileExt = "md",
+            Path = "obsolete/draft/obsolete.md",
+            Length = 1,
+            ImageType = "agent-skill-draft"
+        }).ExecuteCommandAsync();
+
+        AgentDatabaseSyncResult result = await AgentDatabaseSynchronizer.SyncAsync(
+            db,
+            new AgentDatabaseSyncRequest
+            {
+                SourceConfigId = "source-skill-attachments",
+                TargetConfigId = "target-skill-attachments",
+                Tables = ["AgSkillDefinition"],
+                SyncStructure = false,
+                ReplaceData = true,
+                ConfirmReplaceData = true
+            });
+
+        Assert.Equal(2, result.TotalRows);
+        Assert.Equal(2, result.Tables.Count);
+        FileAttachment copied = Assert.Single(
+            await target.Queryable<FileAttachment>()
+                .Where(value => value.ImageType == "agent-skill-draft")
+                .ToListAsync());
+        Assert.Equal(sourceAttachmentId, copied.ID);
+        Assert.Equal(skillId, copied.MasterId);
+        Assert.NotNull(await target.Queryable<FileAttachment>()
+            .InSingleAsync(unrelatedAttachmentId));
     }
 
     [Fact]

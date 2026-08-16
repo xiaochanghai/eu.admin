@@ -147,7 +147,9 @@ public interface IPublishedSkillContentStore
 
 public interface ISkillFileStore
 {
-    Task EnsureDraftAsync(string skillCode, string name, string description, CancellationToken cancellationToken = default);
+    Task<bool> EnsureDraftAsync(string skillCode, string name, string description, CancellationToken cancellationToken = default);
+
+    Task RollbackDraftCreationAsync(string skillCode, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SkillFileEntry>> ListDraftAsync(string skillCode, CancellationToken cancellationToken = default);
 

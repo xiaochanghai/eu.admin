@@ -12,12 +12,37 @@ namespace EU.Core.Tests.Service_Test;
 public sealed class AgSkillPersistence_Should
 {
     [Fact]
+    public async Task Roll_back_created_draft_scaffold_when_database_work_fails()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgSkillDefinition),
+            typeof(AgSkillVersion),
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment));
+        var fileStore = new StubSkillFileStore { FailNextList = true };
+        var service = new AgSkillDefinitionServices(
+            fixture.CreateRepository<AgSkillDefinition>(),
+            fileStore);
+
+        await Assert.ThrowsAsync<SkillFileStoreException>(() => service.CreateAsync(
+            new CreateSkillCommand(
+                $"skill-{Guid.NewGuid():N}",
+                "Failed Skill",
+                string.Empty,
+                string.Empty)));
+
+        Assert.Empty(fileStore.Draft);
+        Assert.Equal(0, await fixture.Db.Queryable<AgSkillDefinition>().CountAsync());
+    }
+
+    [Fact]
     public async Task Persist_draft_revision_published_manifest_and_file_hashes()
     {
         using var fixture = new AgentPersistenceSqliteFixture(
             typeof(AgSkillDefinition),
             typeof(AgSkillVersion),
-            typeof(AgSkillVersionFile));
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment));
         var fileStore = new StubSkillFileStore();
         var service = new AgSkillDefinitionServices(
             fixture.CreateRepository<AgSkillDefinition>(),
@@ -28,6 +53,14 @@ public sealed class AgSkillPersistence_Should
             new CreateSkillCommand(code, "Skill A", "description", "business"));
         Assert.True(created.Succeeded);
         SkillDefinition initial = Assert.IsType<SkillDefinition>(created.Value);
+        FileAttachment initialAttachment = Assert.Single(
+            await fixture.Db.Queryable<FileAttachment>()
+                .Where(value =>
+                    value.MasterId == initial.Id &&
+                    value.ImageType == "agent-skill-draft")
+                .ToListAsync());
+        Assert.Equal("SKILL.md", initialAttachment.OriginalFileName);
+        Assert.Equal($"{code}/draft/", initialAttachment.Path);
         Assert.False((await service.CreateAsync(
             new CreateSkillCommand(code, "Duplicate", string.Empty, string.Empty))).Succeeded);
         SkillOperationResult<string> initialFile = await service.ReadFileAsync(
@@ -46,6 +79,14 @@ public sealed class AgSkillPersistence_Should
             new SaveSkillFileCommand(initial.Id, 0, "SKILL.md", "stale"))).Succeeded);
         SkillDefinition draft = Assert.IsType<SkillDefinition>(saved.Value);
         Assert.Equal(1, draft.DraftRevision);
+        FileAttachment savedAttachment = Assert.Single(
+            await fixture.Db.Queryable<FileAttachment>()
+                .Where(value =>
+                    value.MasterId == initial.Id &&
+                    value.ImageType == "agent-skill-draft")
+                .ToListAsync());
+        Assert.Equal(initialAttachment.ID, savedAttachment.ID);
+        Assert.Equal(fileStore.Draft["SKILL.md"].Length, savedAttachment.Length);
         Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<SkillFileEntry>>(
             (await service.ListFilesAsync(initial.Id)).Value));
 
@@ -59,6 +100,13 @@ public sealed class AgSkillPersistence_Should
         SkillFileHash file = Assert.Single(version.Files);
         Assert.Equal("SKILL.md", file.Path);
         Assert.Equal(fileStore.Draft["SKILL.md"].Length, file.Size);
+        FileAttachment publishedAttachment = Assert.Single(
+            await fixture.Db.Queryable<FileAttachment>()
+                .Where(value =>
+                    value.MasterId == version.Id &&
+                    value.ImageType == "agent-skill-version")
+                .ToListAsync());
+        Assert.Equal($"{code}/versions/1.0.0/", publishedAttachment.Path);
         Assert.True(await service.ExistsAsync(version.Id));
 
         PublishedSkillReference reference = Assert.Single(
@@ -70,13 +118,146 @@ public sealed class AgSkillPersistence_Should
         Assert.Equal(version.ManifestSha256, Assert.Single(persisted.PublishedVersions).ManifestSha256);
         Assert.Equal("1.0.0", Assert.Single(
             await service.ListAsync(new SkillQuery(Search: "Skill A"))).CurrentPublishedLabel);
+
+        await fixture.Db.Deleteable<FileAttachment>().ExecuteCommandAsync();
+        await service.ReconcileFileAttachmentsAsync();
+        Assert.Equal(
+            2,
+            await fixture.Db.Queryable<FileAttachment>()
+                .Where(value =>
+                    value.ImageType == "agent-skill-draft" ||
+                    value.ImageType == "agent-skill-version")
+                .CountAsync());
+
+        FileAttachment draftAttachment = await fixture.Db.Queryable<FileAttachment>()
+            .Where(value => value.ImageType == "agent-skill-draft")
+            .FirstAsync();
+        await fixture.Db.Updateable<FileAttachment>()
+            .SetColumns(value => value.IsDeleted == true)
+            .Where(value => value.ID == draftAttachment.ID)
+            .ExecuteCommandAsync();
+        await service.ReconcileFileAttachmentsAsync();
+        FileAttachment restoredAttachment = await fixture.Db.Queryable<FileAttachment>()
+            .Filter(null, true)
+            .Where(value => value.ID == draftAttachment.ID)
+            .SingleAsync();
+        Assert.False(restoredAttachment.IsDeleted);
+        Assert.True(restoredAttachment.IsActive);
+    }
+
+    [Fact]
+    public async Task Roll_back_file_when_attachment_index_update_fails()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgSkillDefinition),
+            typeof(AgSkillVersion),
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment));
+        var fileStore = new StubSkillFileStore();
+        var service = new AgSkillDefinitionServices(
+            fixture.CreateRepository<AgSkillDefinition>(),
+            fileStore);
+        SkillDefinition definition = Assert.IsType<SkillDefinition>((await service.CreateAsync(
+            new CreateSkillCommand(
+                $"skill-{Guid.NewGuid():N}",
+                "Rollback Skill",
+                string.Empty,
+                string.Empty))).Value);
+        string original = fileStore.Draft["SKILL.md"];
+        fileStore.FailNextList = true;
+
+        SkillOperationResult<SkillDefinition> result = await service.SaveFileAsync(
+            new SaveSkillFileCommand(definition.Id, 0, "SKILL.md", "changed"));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(SkillErrorCodes.PathInvalid, result.Error?.Code);
+        Assert.Equal(original, fileStore.Draft["SKILL.md"]);
+        Assert.Equal(0, (await service.GetAsync(definition.Id))!.DraftRevision);
+    }
+
+    [Fact]
+    public async Task Reject_file_name_that_cannot_be_represented_by_attachment_schema()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgSkillDefinition),
+            typeof(AgSkillVersion),
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment));
+        var fileStore = new StubSkillFileStore();
+        var service = new AgSkillDefinitionServices(
+            fixture.CreateRepository<AgSkillDefinition>(),
+            fileStore);
+        SkillDefinition definition = Assert.IsType<SkillDefinition>((await service.CreateAsync(
+            new CreateSkillCommand(
+                $"skill-{Guid.NewGuid():N}",
+                "Path Skill",
+                string.Empty,
+                string.Empty))).Value);
+        string longName = $"references/{new string('a', 61)}.txt";
+
+        SkillOperationResult<SkillDefinition> result = await service.SaveFileAsync(
+            new SaveSkillFileCommand(definition.Id, 0, longName, "content"));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(SkillErrorCodes.PathInvalid, result.Error?.Code);
+        Assert.DoesNotContain(longName, fileStore.Draft.Keys);
+        Assert.Equal(0, (await service.GetAsync(definition.Id))!.DraftRevision);
+    }
+
+    [Fact]
+    public async Task Track_nested_draft_attachment_and_remove_it_on_delete()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgSkillDefinition),
+            typeof(AgSkillVersion),
+            typeof(AgSkillVersionFile),
+            typeof(FileAttachment));
+        var fileStore = new StubSkillFileStore();
+        var service = new AgSkillDefinitionServices(
+            fixture.CreateRepository<AgSkillDefinition>(),
+            fileStore);
+        string code = $"skill-{Guid.NewGuid():N}";
+        SkillDefinition definition = Assert.IsType<SkillDefinition>((await service.CreateAsync(
+            new CreateSkillCommand(code, "Nested Skill", string.Empty, string.Empty))).Value);
+
+        SkillOperationResult<SkillDefinition> saved = await service.SaveFileAsync(
+            new SaveSkillFileCommand(
+                definition.Id,
+                0,
+                "references/guide.md",
+                "nested content"));
+        Assert.True(saved.Succeeded);
+        FileAttachment nested = Assert.Single(
+            await fixture.Db.Queryable<FileAttachment>()
+                .Where(value =>
+                    value.MasterId == definition.Id &&
+                    value.FileName == "guide.md")
+                .ToListAsync());
+        Assert.Equal($"{code}/draft/references/", nested.Path);
+
+        SkillOperationResult<SkillDefinition> deleted = await service.DeleteFileAsync(
+            new DeleteSkillFileCommand(
+                definition.Id,
+                1,
+                "references/guide.md"));
+        Assert.True(deleted.Succeeded);
+        Assert.False(await fixture.Db.Queryable<FileAttachment>()
+            .Where(value => value.ID == nested.ID)
+            .AnyAsync());
+        Assert.Single(await fixture.Db.Queryable<FileAttachment>()
+            .Where(value =>
+                value.MasterId == definition.Id &&
+                value.ImageType == "agent-skill-draft")
+            .ToListAsync());
     }
 
     private sealed class StubSkillFileStore : ISkillFileStore
     {
         public Dictionary<string, string> Draft { get; } = new(StringComparer.Ordinal);
 
-        public Task EnsureDraftAsync(
+        public bool FailNextList { get; set; }
+
+        public Task<bool> EnsureDraftAsync(
             string skillCode,
             string name,
             string description,
@@ -84,6 +265,15 @@ public sealed class AgSkillPersistence_Should
         {
             cancellationToken.ThrowIfCancellationRequested();
             Draft["SKILL.md"] = $"# {name}\n\n{description}";
+            return Task.FromResult(true);
+        }
+
+        public Task RollbackDraftCreationAsync(
+            string skillCode,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Draft.Clear();
             return Task.CompletedTask;
         }
 
@@ -92,6 +282,14 @@ public sealed class AgSkillPersistence_Should
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (FailNextList)
+            {
+                FailNextList = false;
+                throw new SkillFileStoreException(
+                    SkillErrorCodes.PathInvalid,
+                    "Simulated attachment indexing failure.");
+            }
+
             return Task.FromResult<IReadOnlyList<SkillFileEntry>>(Draft
                 .OrderBy(value => value.Key, StringComparer.Ordinal)
                 .Select(value => new SkillFileEntry(value.Key, value.Value.Length))
@@ -104,7 +302,14 @@ public sealed class AgSkillPersistence_Should
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(Draft[relativePath]);
+            if (!Draft.TryGetValue(relativePath, out string? content))
+            {
+                throw new SkillFileStoreException(
+                    SkillErrorCodes.FileMissing,
+                    "The Skill file was not found.");
+            }
+
+            return Task.FromResult(content);
         }
 
         public Task WriteDraftTextAsync(

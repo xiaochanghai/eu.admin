@@ -269,6 +269,9 @@ public sealed class AgSqlServerPersistence_Should
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
         Assert.True(missing.Length == 0, $"Missing Agent tables: {string.Join(", ", missing)}");
+        Assert.True(
+            db.DbMaintenance.IsAnyTable(nameof(FileAttachment), false),
+            "Missing shared Skill attachment index table: FileAttachment");
     }
 
     private static void AssertNoUnicodeCharacterColumns(SqlSugarScope db)

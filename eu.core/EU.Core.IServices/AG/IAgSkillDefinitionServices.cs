@@ -50,4 +50,10 @@ public interface IAgSkillDefinitionServices : IBaseServices<AgSkillDefinition>
         Guid id,
         string relativePath,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根据受控 Skill 文件目录和发布清单重建附件路径索引。
+    /// </summary>
+    Task ReconcileFileAttachmentsAsync(
+        CancellationToken cancellationToken = default);
 }

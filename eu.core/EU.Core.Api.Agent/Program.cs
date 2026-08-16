@@ -307,6 +307,10 @@ app.ConfigureApplication();
 HostDrainState hostDrainState = app.Services.GetRequiredService<HostDrainState>();
 app.Lifetime.ApplicationStopping.Register(hostDrainState.BeginDrain);
 
+await app.Services
+    .GetRequiredService<EU.Core.IServices.IAgSkillDefinitionServices>()
+    .ReconcileFileAttachmentsAsync(CancellationToken.None);
+
 if (app.Services.GetRequiredService<IEvaluationBatchRepository>()
     is IEvaluationBatchRecovery evaluationBatchRecovery)
 {
