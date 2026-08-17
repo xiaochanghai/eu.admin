@@ -145,6 +145,44 @@ public sealed class AgAgentHostErrorResponse_Should
             "REQUEST_UNSUPPORTED_MEDIA_TYPE");
     }
 
+    [Fact]
+    public async Task Replace_the_framework_problem_details_for_unsupported_media_type()
+    {
+        DefaultHttpContext httpContext = Context();
+        var actionContext = new ActionContext(
+            httpContext,
+            new RouteData(),
+            new ActionDescriptor(),
+            new ModelStateDictionary());
+        var resultContext = new ResultExecutingContext(
+            actionContext,
+            [],
+            new ObjectResult(new ProblemDetails
+            {
+                Status = StatusCodes.Status415UnsupportedMediaType,
+                Title = "Unsupported Media Type"
+            })
+            {
+                StatusCode = StatusCodes.Status415UnsupportedMediaType
+            },
+            new object());
+        Type filterType = typeof(AgentRunsController).Assembly.GetType(
+            "EU.Core.Api.Agent.Errors.AgentApiValidationResultFilter",
+            throwOnError: true)!;
+        var filter = Assert.IsAssignableFrom<IAlwaysRunResultFilter>(
+            Activator.CreateInstance(filterType));
+
+        filter.OnResultExecuting(resultContext);
+        JsonResult result = Assert.IsType<JsonResult>(resultContext.Result);
+        await result.ExecuteResultAsync(actionContext);
+
+        await AssertErrorAsync(
+            httpContext,
+            StatusCodes.Status415UnsupportedMediaType,
+            600012,
+            "REQUEST_UNSUPPORTED_MEDIA_TYPE");
+    }
+
     [Theory]
     [InlineData(typeof(RequestBodyTooLargeException), 413, 600002, "REQUEST_BODY_TOO_LARGE")]
     [InlineData(typeof(JsonException), 400, 600001, "REQUEST_INVALID")]

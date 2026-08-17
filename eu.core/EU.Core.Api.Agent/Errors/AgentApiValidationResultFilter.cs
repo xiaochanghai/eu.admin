@@ -30,7 +30,12 @@ internal sealed class AgentApiValidationResultFilter : IAlwaysRunResultFilter
 
     public void OnResultExecuting(ResultExecutingContext context)
     {
-        if (context.Result is UnsupportedMediaTypeResult)
+        if (context.Result is UnsupportedMediaTypeResult
+            || context.Result is ObjectResult
+            {
+                StatusCode: StatusCodes.Status415UnsupportedMediaType,
+                Value: ProblemDetails
+            })
         {
             context.Result = Create(
                 context.HttpContext,
