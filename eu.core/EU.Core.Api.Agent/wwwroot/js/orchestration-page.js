@@ -1,5 +1,109 @@
 import { clear, element, option, setText } from "./dom.js";
 
+export function orchestrationListItemPresentation(value) {
+  return {
+    id: value.Id,
+    code: value.Code,
+    name: value.Name,
+    description: value.Description,
+    draftNodeCount: value.DraftNodeCount,
+    currentPublishedLabel: value.CurrentPublishedLabel,
+    status: value.Status
+  };
+}
+
+export function orchestrationAgentOptionPresentation(value) {
+  return {
+    id: value.Id,
+    code: value.Code,
+    name: value.Name,
+    runtimeStatus: value.RuntimeStatus,
+    currentPublishedLabel: value.CurrentPublishedLabel
+  };
+}
+
+function orchestrationNodePresentation(value) {
+  return {
+    id: value.Id,
+    name: value.Name,
+    agentId: value.AgentId,
+    inputMode: value.InputMode,
+    inputTemplate: value.InputTemplate,
+    maximumRetries: value.MaximumRetries,
+    timeoutSeconds: value.TimeoutSeconds
+  };
+}
+
+function orchestrationEdgePresentation(value) {
+  return {
+    fromNodeId: value.FromNodeId,
+    toNodeId: value.ToNodeId,
+    condition: value.Condition,
+    conditionValue: value.ConditionValue,
+    order: value.Order
+  };
+}
+
+function orchestrationDefinitionPresentation(value) {
+  return {
+    id: value.Id,
+    code: value.Code,
+    name: value.Name,
+    description: value.Description,
+    status: value.Status,
+    logicalRevision: value.LogicalRevision,
+    draft: {
+      label: value.Draft.Label,
+      nodes: (value.Draft.Nodes || []).map(orchestrationNodePresentation),
+      edges: (value.Draft.Edges || []).map(orchestrationEdgePresentation)
+    },
+    publishedVersions: (value.PublishedVersions || []).map(version => ({
+      id: version.Id,
+      label: version.Label
+    }))
+  };
+}
+
+export function orchestrationRunPresentation(value) {
+  return {
+    id: value.Id,
+    status: value.Status,
+    errorCode: value.ErrorCode,
+    nodes: (value.Nodes || []).map(node => ({
+      nodeId: node.NodeId,
+      nodeName: node.NodeName,
+      status: node.Status,
+      attempts: node.Attempts,
+      outputCharacters: node.OutputCharacters,
+      errorCode: node.ErrorCode
+    }))
+  };
+}
+
+function orchestrationRunDetailsPresentation(value) {
+  return {
+    runId: value.RunId,
+    orchestrationId: value.OrchestrationId,
+    input: value.Input,
+    output: value.Output,
+    attempts: (value.Attempts || []).map(attempt => ({
+      nodeId: attempt.NodeId,
+      attempt: attempt.Attempt,
+      status: attempt.Status,
+      errorCode: attempt.ErrorCode,
+      input: attempt.Input,
+      output: attempt.Output,
+      toolCalls: (attempt.ToolCalls || []).map(tool => ({
+        toolName: tool.ToolName,
+        status: tool.Status,
+        errorCode: tool.ErrorCode,
+        argumentsJson: tool.ArgumentsJson,
+        resultContent: tool.ResultContent
+      }))
+    }))
+  };
+}
+
 export function createOrchestrationPage({ api, toast }) {
   const rows = document.querySelector("#orchestrationRows");
   const listStatus = document.querySelector("#orchestrationListStatus");
@@ -30,8 +134,8 @@ export function createOrchestrationPage({ api, toast }) {
         api.orchestrations(statusFilter.value),
         api.list()
       ]);
-      agents = agentValues;
-      renderList(values);
+      agents = agentValues.map(orchestrationAgentOptionPresentation);
+      renderList(values.map(orchestrationListItemPresentation));
     } catch (error) {
       setText(listStatus, error.message);
     }
@@ -111,7 +215,7 @@ export function createOrchestrationPage({ api, toast }) {
   }
 
   async function open(id) {
-    current = await api.orchestration(id);
+    current = orchestrationDefinitionPresentation(await api.orchestration(id));
     workbench.hidden = false;
     setText(document.querySelector("#orchestrationWorkbenchTitle"), current.name || current.code);
     setText(document.querySelector("#orchestrationWorkbenchMeta"),
@@ -204,15 +308,15 @@ export function createOrchestrationPage({ api, toast }) {
     try {
       if (!current) {
         const code = document.querySelector("#orchestrationCodeInput").value.trim();
-        current = await api.createOrchestration({
+        current = orchestrationDefinitionPresentation(await api.createOrchestration({
           code,
           name: document.querySelector("#orchestrationNameInput").value.trim(),
           description: document.querySelector("#orchestrationDescriptionInput").value
-        });
+        }));
         document.querySelector("#orchestrationCodeInput").readOnly = true;
       }
       const nodes = readNodes();
-      current = await api.saveOrchestration(current.id, {
+      current = orchestrationDefinitionPresentation(await api.saveOrchestration(current.id, {
         expectedLogicalRevision: current.logicalRevision,
         name: document.querySelector("#orchestrationNameInput").value.trim(),
         description: document.querySelector("#orchestrationDescriptionInput").value,
@@ -220,7 +324,7 @@ export function createOrchestrationPage({ api, toast }) {
         startNodeId: nodes[0]?.id || "",
         nodes,
         edges: readEdges()
-      });
+      }));
       setText(message, "Draft 已保存。");
       message.dataset.tone = "success";
       document.querySelector("#orchestrationStatusInput").value = current.status;
@@ -238,7 +342,8 @@ export function createOrchestrationPage({ api, toast }) {
   async function publish() {
     if (!(await save()) || !current) return;
     try {
-      current = await api.publishOrchestration(current.id, current.logicalRevision);
+      current = orchestrationDefinitionPresentation(
+        await api.publishOrchestration(current.id, current.logicalRevision));
       runPanel.hidden = false;
       setText(message, `已发布 v${current.publishedVersions.at(-1).label}。`);
       message.dataset.tone = "success";
@@ -273,10 +378,10 @@ export function createOrchestrationPage({ api, toast }) {
       return;
     }
     try {
-      current = await api.setOrchestrationArchived(current.id, {
+      current = orchestrationDefinitionPresentation(await api.setOrchestrationArchived(current.id, {
         expectedLogicalRevision: current.logicalRevision,
         archived: !restoring
-      });
+      }));
       document.querySelector("#orchestrationStatusInput").value = current.status;
       dirty = false;
       setArchivedState();
@@ -365,7 +470,8 @@ export function createOrchestrationPage({ api, toast }) {
     const input = document.querySelector("#orchestrationRunInput").value.trim();
     if (!current || !input) return;
     try {
-      activeRun = await api.startOrchestration(current.id, input);
+      activeRun = orchestrationRunPresentation(
+        await api.startOrchestration(current.id, input));
       activeDetails = null;
       document.querySelector("#orchestrationRunOutput").hidden = true;
       renderRun(activeRun);
@@ -379,12 +485,14 @@ export function createOrchestrationPage({ api, toast }) {
     window.clearTimeout(pollTimer);
     if (!current || !activeRun) return;
     try {
-      activeRun = await api.orchestrationRun(current.id, activeRun.id);
+      activeRun = orchestrationRunPresentation(
+        await api.orchestrationRun(current.id, activeRun.id));
       renderRun(activeRun);
       if (activeRun.status === "Running") {
         pollTimer = window.setTimeout(poll, 800);
       } else {
-        activeDetails = await api.orchestrationRunDetails(current.id, activeRun.id);
+        activeDetails = orchestrationRunDetailsPresentation(
+          await api.orchestrationRunDetails(current.id, activeRun.id));
         renderRun(activeRun);
         const output = document.querySelector("#orchestrationRunOutput");
         if (activeDetails?.output) {

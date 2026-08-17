@@ -1,4 +1,8 @@
 using EU.Core.Agent.Application.Orchestration;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
@@ -28,13 +32,12 @@ public sealed class OrchestrationsController(
                 parsedStatus = OrchestrationStatus.Archived;
             else
             {
-                return Error(
-                    400,
+                return FromError(
                     OrchestrationErrorCodes.LifecycleTransitionInvalid,
                     "Orchestration status must be Enabled, Disabled, or Archived.");
             }
         }
-        return Ok(await lifecycle.ListAsync(parsedStatus, cancellationToken));
+        return QuerySuccess(await lifecycle.ListAsync(parsedStatus, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -42,7 +45,9 @@ public sealed class OrchestrationsController(
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
         OrchestrationDefinition? value = await lifecycle.GetAsync(id, cancellationToken);
-        return value is null ? Error(404, OrchestrationErrorCodes.NotFound, "The orchestration was not found.") : Ok(value);
+        return value is null
+            ? FromError(OrchestrationErrorCodes.NotFound, "The orchestration was not found.")
+            : QuerySuccess(value);
     }
 
     [HttpPost]
@@ -53,9 +58,11 @@ public sealed class OrchestrationsController(
     {
         OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.CreateAsync(
             new CreateOrchestrationCommand(request.Code, request.Name, request.Description), cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/orchestrations/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+            return FromError(result.Error!);
+
+        Response.Headers.Location = $"/api/orchestrations/{result.Value!.Id}";
+        return OperationSuccess(result.Value, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -69,7 +76,9 @@ public sealed class OrchestrationsController(
             new SaveOrchestrationDraftCommand(
                 id, request.ExpectedLogicalRevision, request.Name, request.Description,
                 request.Status, request.StartNodeId, request.Nodes, request.Edges), cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -81,7 +90,9 @@ public sealed class OrchestrationsController(
     {
         OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.PublishAsync(
             new PublishOrchestrationCommand(id, request.ExpectedLogicalRevision), cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -97,7 +108,9 @@ public sealed class OrchestrationsController(
                 request.ExpectedLogicalRevision,
                 request.Archived),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/runs")]
@@ -109,16 +122,21 @@ public sealed class OrchestrationsController(
     {
         OrchestrationOperationResult<OrchestrationRunRecord> result =
             await runtime.StartAsync(id, request.Input, cancellationToken);
-        return result.Succeeded
-            ? Accepted($"/api/orchestrations/{id}/runs/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+            return FromError(result.Error!);
+
+        Response.Headers.Location = $"/api/orchestrations/{id}/runs/{result.Value!.Id}";
+        return OperationSuccess(result.Value, StatusCodes.Status202Accepted);
     }
 
     [HttpGet("{id:guid}/runs")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<IActionResult> Runs(
         Guid id, [FromQuery] int take = 20, CancellationToken cancellationToken = default) =>
-        Ok(await runtime.ListAsync(id, Math.Clamp(take, 1, 100), cancellationToken));
+        QuerySuccess(await runtime.ListAsync(
+            id,
+            Math.Clamp(take, 1, 100),
+            cancellationToken));
 
     [HttpGet("{id:guid}/runs/{runId:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
@@ -126,8 +144,8 @@ public sealed class OrchestrationsController(
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         return value is null || value.OrchestrationId != id
-            ? Error(404, OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.")
-            : Ok(value);
+            ? FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.")
+            : QuerySuccess(value);
     }
 
     [HttpPost("{id:guid}/runs/{runId:guid}/cancel")]
@@ -136,9 +154,11 @@ public sealed class OrchestrationsController(
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
-            return Error(404, OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
+            return FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
         await runtime.CancelAsync(runId, cancellationToken);
-        return Accepted(new { runId });
+        return OperationSuccess(
+            new OrchestrationRunCancelResponse(runId),
+            StatusCodes.Status202Accepted);
     }
 
     [HttpGet("{id:guid}/runs/{runId:guid}/details")]
@@ -150,11 +170,11 @@ public sealed class OrchestrationsController(
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
-            return Error(404, OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
+            return FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
         OrchestrationRunDetails? details = await runtime.GetDetailsAsync(runId, cancellationToken);
         return details is null
-            ? Error(404, OrchestrationErrorCodes.RunNotFound, "The orchestration run details were not found.")
-            : Ok(details);
+            ? FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run details were not found.")
+            : QuerySuccess(details);
     }
 
     [HttpGet("{id:guid}/runs/{runId:guid}/output")]
@@ -163,24 +183,49 @@ public sealed class OrchestrationsController(
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
-            return Error(404, OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
+            return FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.");
         if (value.Status != OrchestrationRunStatus.Completed)
-            return Error(409, OrchestrationErrorCodes.RunNotFound, "The orchestration run has not completed.");
+            return FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run has not completed.");
         OrchestrationRunDetails? details = await runtime.GetDetailsAsync(runId, cancellationToken);
-        return details is null ? NoContent() : Ok(new { output = details.Output, ephemeral = false });
+        return details is null
+            ? NoContent()
+            : QuerySuccess(new OrchestrationRunOutputResponse(details.Output, false));
     }
 
-    private IActionResult FromError(OrchestrationError error) => Error(
-        error.Code switch
-        {
-            OrchestrationErrorCodes.NotFound or OrchestrationErrorCodes.RunNotFound => 404,
-            OrchestrationErrorCodes.CodeConflict or OrchestrationErrorCodes.RowVersionConflict => 409,
-            _ => 400
-        }, error.Code, error.Message);
+    private IActionResult FromError(OrchestrationError error) =>
+        FromError(error.Code, error.Message);
 
-    private IActionResult Error(int status, string code, string detail) =>
-        ApiProblemResults.Create(
-            HttpContext, status, code, "The orchestration operation could not be completed.", detail);
+    private IActionResult QuerySuccess<T>(T value) =>
+        new JsonResult(
+            ServiceResult<T>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
+
+    private IActionResult OperationSuccess<T>(
+        T value,
+        int httpStatus = StatusCodes.Status200OK) =>
+        new JsonResult(
+            ServiceResult<T>.OprateSuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = httpStatus
+        };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
+        };
+    }
 }
 
 public sealed record CreateOrchestrationRequest(string Code, string Name, string Description);
@@ -197,3 +242,5 @@ public sealed record SetOrchestrationArchiveRequest(
     long ExpectedLogicalRevision,
     bool Archived);
 public sealed record StartOrchestrationRunRequest(string Input);
+public sealed record OrchestrationRunCancelResponse(Guid RunId);
+public sealed record OrchestrationRunOutputResponse(string Output, bool Ephemeral);
