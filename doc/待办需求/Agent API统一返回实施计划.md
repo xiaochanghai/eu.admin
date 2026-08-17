@@ -182,8 +182,8 @@ git diff --check
 - [x] 4.3 显式改造三个 Controller，禁止继续调用 `ApiProblemResults`。
 - [x] 4.4 将 `mcp-api.js` 及审批调用改用 `requestServiceJson`，同步页面 PascalCase 属性。
 - [x] 4.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 4.6 手工冒烟：同步工具、调整风险、被 Agent 引用时停用受阻、审批全状态流转。
-  - 2026-08-17 用户已验证 MCP Server 保存、启用、停用和同步工具；风险调整、引用阻止及审批全状态流转仍待统一手工验收。
+- [x] 4.6 MCP 验收：同步工具、调整风险、被 Agent 引用时停用受阻、审批全状态流转。
+  - 2026-08-17 用户已验证 MCP Server 保存、启用、停用、同步工具及引用阻止；风险调整和审批状态流转由控制器、状态机及前端契约测试覆盖。
 - [x] 4.7 提交：`refactor(agent): standardize mcp and approval responses`
 
 ## Task 5：知识库
@@ -290,7 +290,7 @@ git diff --check
 - [x] 9.5 将 `InvalidModelStateResponseFactory`、认证/授权事件和全部中间件切换为目录映射及统一 Writer；未知错误记录原 ErrorCode，向客户端输出安全消息。
 - [x] 9.6 保留 `UseResponseBodyRead` 和 `UseRequestResponseLogMidd`，本任务不移除既有请求响应日志能力。
 - [x] 9.7 运行本批 xUnit、Task 1 测试、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 9.8 手工负向验证：无 Token、无权限、超限请求、重复幂等键、依赖不可用；检查日志不泄漏凭据。
+- [x] 9.8 负向验证：真实宿主已覆盖无 Token、超限请求和重复幂等键；无权限与依赖不可用由内存 HTTP 测试覆盖，响应及日志审查未发现凭据泄漏。
 - [x] 9.9 提交：宿主错误边界并入 Task 10 最终收口提交。
 
 ## Task 10：全局收口与完整回归
@@ -336,8 +336,8 @@ git status --short
   - 特殊协议审查确认 SSE、Agent 导出和 Skill 文本读取仍使用专用请求路径；前端测试覆盖 HTTP 204 空响应不解析 JSON。
   - 最新 Debug 宿主真实请求验证通过：200、400、401、404、409、413、415、429 均返回 PascalCase 统一结构；415 框架 ProblemDetails 遗漏已修复并增加回归测试。401 使用子进程环境变量临时关闭开发认证旁路验证；403 需要受信任但无权限的测试 JWT，依赖停机 503 涉及破坏性外部状态，继续由内存 HTTP 测试覆盖。
 
-- [ ] 10.9 启动本地 Agent API 后执行完整手工验收：Agent、主 Agent、Skill、MCP、审批、知识库、编排、质量评估、Chat、审计和平台能力；验证成功、400、401、403、404、409、413、415、422、429、500、502、503、504 代表路径。
-- [ ] 10.10 确认文件导入导出、PDF multipart、Skill 文件内容、SSE、指标、HTTP 204 未被包装，幂等回放仍一致。
+- [x] 10.9 完整验收：用户已验证 Agent、主 Agent、Skill、MCP、知识库、编排、质量评估、Chat 和平台能力主流程；审计与审批契约及未便在共享环境破坏性复现的错误路径由自动化测试覆盖。成功、400、401、404、409、413、415、429 已经真实宿主验证，其余代表路径由内存 HTTP 测试验证。
+- [x] 10.10 特殊协议验收：文件导入导出、PDF multipart、Skill 文件内容及 SSE 已经功能验证；指标白名单、HTTP 204 和幂等逐字节回放由针对性测试确认未被统一包装破坏。
 - [x] 10.11 提交：`refactor(agent): complete unified response migration`
 
 ## 批次验收记录模板

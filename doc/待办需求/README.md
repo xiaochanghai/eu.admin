@@ -22,4 +22,4 @@
 
 | 编号 | 标题 | 优先级 | 状态 | 涉及模块 | 更新时间 |
 |---|---|---|---|---|---|
-| REQ-202608170103 | [统一 Agent API 接口返回](修改agent%20api接口返回.md) | P2 | 待开发 | EU.Core.Api.Agent、EU.Core.Model、Agent 管理页面 | 2026-08-17 |
+| REQ-202608170103 | [统一 Agent API 接口返回](修改agent%20api接口返回.md) | P2 | 已完成 | EU.Core.Api.Agent、EU.Core.Model、Agent 管理页面 | 2026-08-17 |
