@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using EU.Core.Agent.Application.Abstractions.Auditing;
 using EU.Core.Agent.Application.Abstractions.Security;
@@ -285,9 +286,10 @@ public sealed class AgAgentHostErrorResponse_Should
         string errorCode)
     {
         DefaultHttpContext context = Context();
-        context.RequestServices = new ServiceCollection()
-            .AddSingleton<IAuthenticationService>(new PassiveAuthenticationService())
-            .BuildServiceProvider();
+        var services = new ServiceCollection();
+        services.AddSingleton<IAuthenticationService>(new PassiveAuthenticationService());
+        AddAgentJsonOptions(services);
+        context.RequestServices = services.BuildServiceProvider();
         var handler = new AgentAuthorizationResultHandler();
         AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
@@ -362,6 +364,7 @@ public sealed class AgAgentHostErrorResponse_Should
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(metrics);
+        AddAgentJsonOptions(services);
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -418,12 +421,21 @@ public sealed class AgAgentHostErrorResponse_Should
             if (loggerProvider is not null)
                 builder.AddProvider(loggerProvider);
         });
-        services.AddMvcCore()
-            .AddJsonOptions(AgentJsonSerialization.ConfigureMvc);
+        AddAgentJsonOptions(services);
         context.RequestServices = services.BuildServiceProvider();
         context.Response.Body = new MemoryStream();
         return context;
     }
+
+    private static void AddAgentJsonOptions(IServiceCollection services) =>
+        services.AddMvcCore()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                options.JsonSerializerOptions.DictionaryKeyPolicy = null;
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false));
+            });
 
     private static HttpIdempotencyMiddleware IdempotencyMiddleware(
         RequestDelegate next,

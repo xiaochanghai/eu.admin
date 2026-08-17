@@ -4,6 +4,7 @@ using EU.Core.Common.Core;
 using EU.Core.Common.Caches;
 using EU.Core.Extensions;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
@@ -66,7 +67,13 @@ builder.Services
         options.Filters.Add<AgentApiValidationResultFilter>();
         options.Conventions.Add(new AgentApiResponseMetadataConvention());
     })
-    .AddJsonOptions(AgentJsonSerialization.ConfigureMvc);
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = null;
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false));
+    });
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
     options.InvalidModelStateResponseFactory = AgentApiValidationResultFilter.InvalidModelState);
 builder.Services.AddAgentApiOptions();

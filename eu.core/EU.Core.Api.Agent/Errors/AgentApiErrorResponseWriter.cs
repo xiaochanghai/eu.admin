@@ -1,8 +1,9 @@
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Errors;
 
@@ -31,12 +32,16 @@ public static class AgentApiErrorResponseWriter
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/json; charset=utf-8";
         context.Response.Headers[CorrelationIdMiddleware.HeaderName] = traceId;
+        var jsonOptions = context.RequestServices
+            .GetRequiredService<IOptions<JsonOptions>>()
+            .Value
+            .JsonSerializerOptions;
         return context.Response.WriteAsJsonAsync(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 message,
                 new AgentApiErrorData(errorCode, traceId)),
-            AgentJsonSerialization.PascalCase,
+            jsonOptions,
             cancellationToken);
     }
 }

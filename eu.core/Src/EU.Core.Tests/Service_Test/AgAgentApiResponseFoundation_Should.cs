@@ -98,7 +98,7 @@ public sealed class AgAgentApiResponseFoundation_Should
         ServiceResult<Dictionary<string, object?>> result =
             ServiceResult<Dictionary<string, object?>>.QuerySuccess(data);
 
-        string json = JsonSerializer.Serialize(result, AgentJsonSerialization.PascalCase);
+        string json = JsonSerializer.Serialize(result);
         using JsonDocument document = JsonDocument.Parse(json);
         JsonElement root = document.RootElement;
 

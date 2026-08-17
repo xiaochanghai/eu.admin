@@ -18,16 +18,12 @@ namespace EU.Core.Tests.Service_Test;
 public sealed class AgAgentApiMigrationCompletion_Should
 {
     [Fact]
-    public void Configure_mvc_json_as_pascal_case_without_renaming_dictionary_keys()
+    public void System_text_json_preserves_pascal_case_and_dynamic_dictionary_keys()
     {
-        var options = new JsonOptions();
-
-        AgentJsonSerialization.ConfigureMvc(options);
         string json = JsonSerializer.Serialize(
             new SerializationProbe(
                 "value",
-                new Dictionary<string, bool> { ["dynamic_key"] = true }),
-            options.JsonSerializerOptions);
+                new Dictionary<string, bool> { ["dynamic_key"] = true }));
 
         Assert.Equal(
             "{\"Name\":\"value\",\"DynamicData\":{\"dynamic_key\":true}}",

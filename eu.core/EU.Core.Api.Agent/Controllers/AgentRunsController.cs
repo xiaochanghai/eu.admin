@@ -5,7 +5,6 @@ using EU.Core.Agent.Application.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
@@ -39,17 +38,11 @@ public sealed class AgentRunsController(
         if (!preparation.Succeeded)
         {
             AgentRunError error = preparation.Error!;
-            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
-            HttpContext.Response.StatusCode =
-                descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
-            HttpContext.Response.ContentType = "application/json; charset=utf-8";
-            await HttpContext.Response.WriteAsJsonAsync(
-                ServiceResult<AgentApiErrorData>.Failure(
-                    descriptor.Status,
-                    "The Agent run could not be started.",
-                    new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
-                AgentJsonSerialization.PascalCase,
-                cancellationToken);
+            await AgentApiErrorResponseWriter.WriteAsync(
+                HttpContext,
+                error.Code,
+                "The Agent run could not be started.",
+                cancellationToken: cancellationToken);
             return;
         }
 

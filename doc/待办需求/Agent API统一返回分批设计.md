@@ -140,7 +140,7 @@ Controller 结果帮助器。
 
 - 补充 `ServiceResult<T>` 所需的非破坏性构造方法；
 - 新增 `AgentApiErrorData`、`AgentApiErrorDescriptor` 和 `AgentApiErrorCatalog`；
-- 新增只保存 PascalCase `JsonSerializerOptions` 的 `AgentJsonSerialization`，不得包含结果包装逻辑；
+- 分批迁移期间新增只保存 PascalCase `JsonSerializerOptions` 的 `AgentJsonSerialization`，不得包含结果包装逻辑；最终收口后由 `Program.cs` 集中配置 MVC JSON 并删除该临时类型；
 - 将固定清单中的 187 个现有错误码和 1 个目标新增错误码（共 188 个专属映射）写入映射；
 - 添加映射完整性、唯一性、号段和兜底测试；
 - 不改变任何现有接口返回。
