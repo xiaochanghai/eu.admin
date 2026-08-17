@@ -1,4 +1,6 @@
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
@@ -35,11 +37,16 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             }
             else
             {
-                return ApiProblemResults.Create(
-                    HttpContext,
-                    StatusCodes.Status400BadRequest,
-                    "REQUEST_INVALID",
-                    "The status filter is invalid.");
+                AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve("REQUEST_INVALID");
+                return new JsonResult(
+                    ServiceResult<AgentApiErrorData>.Failure(
+                        descriptor.Status,
+                        "The status filter is invalid.",
+                        new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)),
+                    AgentJsonSerialization.PascalCase)
+                {
+                    StatusCode = descriptor.HttpStatus
+                };
             }
         }
 
@@ -61,7 +68,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             definition.DraftLabel,
             definition.DraftModelProfileId,
             definition.CurrentPublishedLabel)).ToArray();
-        return Ok(values);
+        return new JsonResult(
+            ServiceResult<AgentListItem[]>.QuerySuccess(values),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpGet("{id:guid}")]
@@ -70,13 +82,17 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         AgAgentDefinitionDetailDto? value = await agentDefinitionServices.QueryAgent(
             id,
             cancellationToken);
-        return value is null
-            ? ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status404NotFound,
-                AgentErrorCodes.NotFound,
-                "The Agent was not found.")
-            : Ok(value);
+        if (value is null)
+        {
+            return FromError(new AgentError(AgentErrorCodes.NotFound, "The Agent was not found."));
+        }
+
+        return new JsonResult(
+            ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpPost]
@@ -85,19 +101,20 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         var result = await agentDefinitionServices.CreateAsync( new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
         if (!result.Success)
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status409Conflict,
-                AgentErrorCodes.CodeConflict,
-                "The Agent operation could not be completed.",
-                result.Message);
+            return FromError(new AgentError(AgentErrorCodes.CodeConflict, result.Message));
         }
 
         AgAgentDefinitionDetailDto value = await agentDefinitionServices.QueryAgent(
             result.Data,
             cancellationToken)
             ?? throw new InvalidDataException("The newly created Agent could not be loaded.");
-        return Created($"/api/agents/{result.Data}", value);
+        Response.Headers.Location = $"/api/agents/{result.Data}";
+        return new JsonResult(
+            ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status201Created
+        };
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -106,11 +123,9 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status400BadRequest,
+            return FromError(new AgentError(
                 AgentErrorCodes.ReferenceMissing,
-                "The selected model profile is not available.");
+                "The selected model profile is not available."));
         }
 
         AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
@@ -131,7 +146,14 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                 OrchestrationIds = request.OrchestrationIds
             },
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -140,7 +162,14 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.PublishAsync(
             new PublishAgentCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/status")]
@@ -152,7 +181,14 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                 request.ExpectedLogicalRevision,
                 request.RuntimeStatus),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpGet("{id:guid}/export")]
@@ -172,11 +208,17 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     {
         if (!IsJsonContentType(Request.ContentType))
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status415UnsupportedMediaType,
-                "REQUEST_INVALID",
-                "The Agent package must use a JSON content type.");
+            const string errorCode = "REQUEST_UNSUPPORTED_MEDIA_TYPE";
+            AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+            return new JsonResult(
+                ServiceResult<AgentApiErrorData>.Failure(
+                    descriptor.Status,
+                    "The Agent package must use a JSON content type.",
+                    new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = descriptor.HttpStatus
+            };
         }
 
         using var reader = new StreamReader(
@@ -188,28 +230,32 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         string json = await reader.ReadToEndAsync(cancellationToken);
         AgentOperationResult<AgentDefinition> result =
             await agentDefinitionServices.ImportAsync(json, cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/agents/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+        {
+            return FromError(result.Error!);
+        }
+
+        Response.Headers.Location = $"/api/agents/{result.Value!.Id}";
+        return new JsonResult(
+            ServiceResult<AgentDefinition>.OprateSuccess(result.Value, "导入成功"),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status201Created
+        };
     }
 
     private IActionResult FromError(AgentError error)
     {
-        int status = error.Code switch
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                error.Message,
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
         {
-            AgentErrorCodes.CodeConflict or AgentErrorCodes.RowVersionConflict =>
-                StatusCodes.Status409Conflict,
-            AgentErrorCodes.NotFound =>
-                StatusCodes.Status404NotFound,
-            _ =>
-                StatusCodes.Status400BadRequest
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };
-        return ApiProblemResults.Create(
-            HttpContext,
-            status,
-            error.Code,
-            "The Agent operation could not be completed.",
-            error.Message);
     }
 
     private static bool IsJsonContentType(string? contentType)

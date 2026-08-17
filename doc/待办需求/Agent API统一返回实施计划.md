@@ -135,6 +135,8 @@ node --test wwwroot\js\tests\http.test.js
 - Modify: `eu.core/EU.Core.Api.Agent/Controllers/SkillVersionsController.cs`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/api-client.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/skills-api.js`
+- Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/app.js`
+- Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/chat-page.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/agent-editor.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/agent-runner.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/skill-editor.js`
@@ -142,12 +144,12 @@ node --test wwwroot\js\tests\http.test.js
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgAgentAndSkillApiResponse_Should.cs`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/tests/http.test.js`
 
-- [ ] 3.1 写 Controller 契约测试，覆盖 Agents 列表/详情/创建/保存草稿/发布/状态/导入，MainAgent 查询/设置，Skills 列表/详情/创建/保存/文件列表/文件写入/删除/发布/归档，SkillVersions 列表。
-- [ ] 3.2 RED 断言至少包括：查询体为 `ServiceResult<T>`、创建 HTTP 201 且 `Status=200`、冲突和未找到返回固定业务 Status、文件内容成功响应保持原协议。
-- [ ] 3.3 逐 Action 显式返回统一模型；仅保留 Agent 包导出和 Skill 文件内容读取的原始文件/文本响应，上传、导入及写入结果仍包装。
-- [ ] 3.4 将本批前端 API 方法改用 `requestServiceJson`；页面将已迁移 DTO 属性访问显式改为 PascalCase。
-- [ ] 3.5 扩展前端测试，使用本批代表性响应验证列表、单项和失败解包；不得添加两种格式自动识别。
-- [ ] 3.6 运行：
+- [x] 3.1 写 Controller 契约测试，覆盖 Agents 列表/详情/创建/保存草稿/发布/状态/导入，MainAgent 查询/设置，Skills 列表/详情/创建/保存/文件列表/文件写入/删除/发布/归档，SkillVersions 列表。
+- [x] 3.2 RED 断言至少包括：查询体为 `ServiceResult<T>`、创建 HTTP 201 且 `Status=200`、冲突和未找到返回固定业务 Status、文件内容成功响应保持原协议。
+- [x] 3.3 逐 Action 显式返回统一模型；仅保留 Agent 包导出和 Skill 文件内容读取的原始文件/文本响应，上传、导入及写入结果仍包装。
+- [x] 3.4 将本批前端 API 方法改用 `requestServiceJson`；页面将已迁移 DTO 属性访问显式改为 PascalCase。
+- [x] 3.5 扩展前端测试，使用本批代表性响应验证列表、单项和失败解包；不得添加两种格式自动识别。
+- [x] 3.6 运行：
 
 ```powershell
 cd E:\EU\EU.Admin\eu.core
@@ -159,8 +161,10 @@ dotnet build EU.Core.Api.Agent\EU.Core.Api.Agent.csproj -c Release -p:GenerateDo
 git diff --check
 ```
 
-- [ ] 3.7 手工冒烟：Agent 列表/编辑/发布/导入导出、主 Agent 设置、Skill 文件增删和发布归档。
-- [ ] 3.8 提交：`refactor(agent): standardize agent and skill responses`
+- [x] 3.7 手工冒烟：Agent 列表/编辑/发布/导入导出、主 Agent 设置、Skill 文件增删和发布归档。
+  - 2026-08-17 已通过本地 `http://localhost:62844` 真实接口验证：Agent 创建、草稿、发布、停用、归档、导出、导入；Main Agent 同对象/同最新版本重新设置；Skill 创建、修改、文件列表、文本读取、文件新增/删除、发布和归档。
+  - 验证数据 `codex-smoke-agent-20260817120147`、`codex-smoke-import-20260817120147`、`codex-smoke-skill-20260817120147` 均已归档；Main Agent 仍指向原 Agent 与原版本，仅绑定修订号由 15 更新为 16。
+- [x] 3.8 提交：`refactor(agent): standardize agent and skill responses`
 
 ## Task 4：MCP 与工具审批
 

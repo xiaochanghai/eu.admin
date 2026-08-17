@@ -87,7 +87,7 @@ async function refreshPublishedOrchestrations() {
   try {
     const references = await agentApi.orchestrations();
     editor.setPublishedOrchestrations(references.filter(reference =>
-      reference.status === "Enabled" && Boolean(reference.currentPublishedLabel)));
+      reference.runtimeStatus === "Enabled" && Boolean(reference.currentPublishedLabel)));
   } catch (error) {
     toast(`orchestration 读取失败：${error.message}`, "error");
   }
@@ -97,7 +97,7 @@ async function refreshMainAssignment() {
   try {
     state.mainAssignment = await agentApi.mainAgent();
     state.mainAgentDefinition = state.mainAssignment
-      ? await agentApi.get(state.mainAssignment.agentId)
+      ? await agentApi.get(state.mainAssignment.AgentId)
       : null;
     editor.setMainAssignment(state.mainAssignment);
     chatPage.setMainAgent(state.mainAssignment, state.mainAgentDefinition);
@@ -160,15 +160,15 @@ async function assignMainAgent(agent) {
   let assignment;
   try {
     assignment = await agentApi.setMainAgent(
-      agent.id,
-      state.mainAssignment?.logicalRevision ?? null);
+      agent.Id,
+      state.mainAssignment?.LogicalRevision ?? null);
   } catch (error) {
     if (error.status !== 409) throw error;
     state.mainAssignment = await agentApi.mainAgent();
     editor.setMainAssignment(state.mainAssignment);
     assignment = await agentApi.setMainAgent(
-      agent.id,
-      state.mainAssignment?.logicalRevision ?? null);
+      agent.Id,
+      state.mainAssignment?.LogicalRevision ?? null);
   }
   state.mainAssignment = assignment;
   state.mainAgentDefinition = agent;
@@ -191,24 +191,24 @@ function renderAgents() {
   emptyState.hidden = state.agents.length !== 0;
   for (const agent of state.agents) {
     const name = element("strong");
-    name.textContent = agent.name || agent.code;
+    name.textContent = agent.Name || agent.Code;
     const code = element("code");
-    code.textContent = agent.code;
+    code.textContent = agent.Code;
     const description = element("p", { className: "row-description" });
-    description.textContent = agent.description || "尚未填写职责说明";
+    description.textContent = agent.Description || "尚未填写职责说明";
     const model = element("span", { className: "muted" });
-    model.textContent = agent.draftModelProfileId || "未选择";
+    model.textContent = agent.DraftModelProfileId || "未选择";
     const version = element("span");
-    version.textContent = agent.currentPublishedLabel ? `v${agent.currentPublishedLabel}` : "仅 Draft";
-    const openButton = element("button", { className: "row-action", type: "button", ariaLabel: `编辑 ${agent.name || agent.code}` });
+    version.textContent = agent.CurrentPublishedLabel ? `v${agent.CurrentPublishedLabel}` : "仅 Draft";
+    const openButton = element("button", { className: "row-action", type: "button", ariaLabel: `编辑 ${agent.Name || agent.Code}` });
     openButton.textContent = "管理";
-    openButton.addEventListener("click", () => openAgent(agent.id, openButton));
+    openButton.addEventListener("click", () => openAgent(agent.Id, openButton));
     const row = element("tr", {},
-      element("td", {}, element("div", { className: "agent-identity" }, element("span", { className: "agent-avatar", ariaHidden: "true" }, (agent.name || agent.code).slice(0, 1).toUpperCase()), element("div", {}, name, code))),
+      element("td", {}, element("div", { className: "agent-identity" }, element("span", { className: "agent-avatar", ariaHidden: "true" }, (agent.Name || agent.Code).slice(0, 1).toUpperCase()), element("div", {}, name, code))),
       element("td", {}, description),
       element("td", {}, model),
       element("td", {}, version),
-      element("td", {}, statusBadge(agent.runtimeStatus)),
+      element("td", {}, statusBadge(agent.RuntimeStatus)),
       element("td", {}, openButton)
     );
     rows.append(row);
@@ -227,7 +227,7 @@ async function loadAgents() {
     ]);
     state.agents = listedAgents;
     editor.setPublishedAgents(enabledAgents.filter(reference =>
-      reference.runtimeStatus === "Enabled" && Boolean(reference.currentPublishedLabel)));
+      reference.RuntimeStatus === "Enabled" && Boolean(reference.CurrentPublishedLabel)));
     renderAgents();
   } catch (error) {
     clear(listStatus);
@@ -255,11 +255,11 @@ async function openAgent(id, trigger) {
 }
 
 async function downloadPackage(agent) {
-  const blob = await agentApi.exportPackage(agent.id);
+  const blob = await agentApi.exportPackage(agent.Id);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${agent.code}.agent.json`;
+  link.download = `${agent.Code}.agent.json`;
   link.click();
   URL.revokeObjectURL(url);
 }

@@ -1,4 +1,4 @@
-import { requestJson as request } from "./http.js";
+import { parseServiceResponse, requestServiceJson as request } from "./http.js";
 
 const base = "/api/skills";
 
@@ -16,8 +16,17 @@ export const skillsApi = {
     method: "PUT", body: JSON.stringify(body)
   }),
   files: id => request(`${base}/${encodeURIComponent(id)}/files`),
-  readFile: (id, path) => request(
-    `${base}/${encodeURIComponent(id)}/files/content?path=${encodeURIComponent(path)}`),
+  readFile: async (id, path) => {
+    const response = await fetch(
+      `${base}/${encodeURIComponent(id)}/files/content?path=${encodeURIComponent(path)}`,
+      { headers: { Accept: "text/plain" } });
+    if (!response.ok) {
+      let payload;
+      try { payload = await response.json(); } catch { payload = null; }
+      parseServiceResponse(payload, response.status, `读取文件失败 (${response.status})`);
+    }
+    return response.text();
+  },
   saveFile: (id, body) => request(`${base}/${encodeURIComponent(id)}/files/content`, {
     method: "PUT", body: JSON.stringify(body)
   }),

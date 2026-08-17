@@ -1,4 +1,8 @@
 using EU.Core.Agent.Application.MainAgent;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
@@ -16,7 +20,14 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
         MainAgentOperationResult result = await _assignments.GetAsync(cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<MainAgentAssignment>.QuerySuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpPut]
@@ -27,23 +38,28 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
         MainAgentOperationResult result = await _assignments.SetAsync(
             new SetMainAgentCommand(request.AgentId, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<MainAgentAssignment>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     private IActionResult FromError(MainAgentError error)
     {
-        int status = error.Code switch
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                error.Message,
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
         {
-            MainAgentErrorCodes.NotConfigured or MainAgentErrorCodes.AgentNotFound => StatusCodes.Status404NotFound,
-            MainAgentErrorCodes.RowVersionConflict => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };
-        return ApiProblemResults.Create(
-            HttpContext,
-            status,
-            error.Code,
-            "The Main Agent assignment could not be completed.",
-            error.Message);
     }
 }
 

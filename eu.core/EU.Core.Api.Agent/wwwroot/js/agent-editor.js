@@ -36,11 +36,11 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
   function setBusy(value) {
     busy = value;
     for (const button of [saveButton, publishButton, statusButton, archiveButton, exportButton, reloadButton, setMainAgentButton]) button.disabled = value;
-    if (!value && current?.runtimeStatus === "Archived") {
+    if (!value && current?.RuntimeStatus === "Archived") {
       saveButton.disabled = true;
       publishButton.disabled = true;
     }
-    runButton.disabled = value || !current || current.runtimeStatus !== "Enabled" || !(current.publishedVersions?.length);
+    runButton.disabled = value || !current || current.RuntimeStatus !== "Enabled" || !(current.PublishedVersions?.length);
     refreshMainButton();
   }
 
@@ -78,7 +78,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
   }
 
   function setArchivedFieldState(agent) {
-    const archived = agent?.runtimeStatus === "Archived";
+    const archived = agent?.RuntimeStatus === "Archived";
     Object.values(fields).forEach(field => { field.disabled = archived; });
     if (archived) {
       form.querySelectorAll(".binding-options input").forEach(input => {
@@ -88,36 +88,36 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
   }
 
   function fill(agent) {
-    fields.code.value = agent?.code ?? "";
-    fields.name.value = agent?.name ?? "";
-    fields.description.value = agent?.description ?? "";
-    fields.instructions.value = agent?.draft?.instructions ?? "";
-    fields.modelProfileId.value = agent?.draft?.modelProfileId ?? "";
-    fields.outputMode.value = agent?.draft?.outputMode ?? "Text";
-    fields.outputJsonSchema.value = agent?.draft?.outputJsonSchema ?? "";
+    fields.code.value = agent?.Code ?? "";
+    fields.name.value = agent?.Name ?? "";
+    fields.description.value = agent?.Description ?? "";
+    fields.instructions.value = agent?.Draft?.Instructions ?? "";
+    fields.modelProfileId.value = agent?.Draft?.ModelProfileId ?? "";
+    fields.outputMode.value = agent?.Draft?.OutputMode ?? "Text";
+    fields.outputJsonSchema.value = agent?.Draft?.OutputJsonSchema ?? "";
     fields.code.readOnly = Boolean(agent);
     document.querySelector("#schemaField").hidden = fields.outputMode.value !== "Structured";
-    setText(document.querySelector("#drawerTitle"), agent ? agent.name || agent.code : "创建 Agent");
-    setText(document.querySelector("#drawerEyebrow"), agent ? `DRAFT ${agent.draft.label} · REV ${agent.logicalRevision}` : "NEW AGENT");
+    setText(document.querySelector("#drawerTitle"), agent ? agent.Name || agent.Code : "创建 Agent");
+    setText(document.querySelector("#drawerEyebrow"), agent ? `DRAFT ${agent.Draft.Label} · REV ${agent.LogicalRevision}` : "NEW AGENT");
     publishButton.hidden = !agent;
-    statusButton.hidden = !agent || agent.runtimeStatus === "Archived";
+    statusButton.hidden = !agent || agent.RuntimeStatus === "Archived";
     archiveButton.hidden = !agent;
     exportButton.hidden = !agent;
     runButton.hidden = !agent;
     setMainAgentButton.hidden = !agent;
-    runButton.disabled = !agent || agent.runtimeStatus !== "Enabled" || !(agent.publishedVersions?.length);
+    runButton.disabled = !agent || agent.RuntimeStatus !== "Enabled" || !(agent.PublishedVersions?.length);
     runButton.title = runButton.disabled ? "需要已启用且至少发布一个版本" : "";
     reloadButton.hidden = true;
-    if (agent) setText(statusButton, agent.runtimeStatus === "Enabled" ? "停用" : "启用");
-    if (agent) setText(archiveButton, agent.runtimeStatus === "Archived" ? "恢复" : "归档");
-    saveButton.disabled = agent?.runtimeStatus === "Archived";
-    publishButton.disabled = agent?.runtimeStatus === "Archived";
-    renderVersions(agent?.publishedVersions ?? []);
-    renderSkillBindings(agent?.draft?.skillVersionIds ?? []);
-    renderToolBindings(agent?.draft?.toolVersionIds ?? []);
-    renderKnowledgeBindings(agent?.draft?.knowledgeBaseIds ?? []);
-    renderChildBindings(agent?.draft?.childAgentIds ?? []);
-    renderOrchestrationBindings(agent?.draft?.orchestrationIds ?? []);
+    if (agent) setText(statusButton, agent.RuntimeStatus === "Enabled" ? "停用" : "启用");
+    if (agent) setText(archiveButton, agent.RuntimeStatus === "Archived" ? "恢复" : "归档");
+    saveButton.disabled = agent?.RuntimeStatus === "Archived";
+    publishButton.disabled = agent?.RuntimeStatus === "Archived";
+    renderVersions(agent?.PublishedVersions ?? []);
+    renderSkillBindings(agent?.Draft?.SkillVersionIds ?? []);
+    renderToolBindings(agent?.Draft?.ToolVersionIds ?? []);
+    renderKnowledgeBindings(agent?.Draft?.KnowledgeBaseIds ?? []);
+    renderChildBindings(agent?.Draft?.ChildAgentIds ?? []);
+    renderOrchestrationBindings(agent?.Draft?.OrchestrationIds ?? []);
     setArchivedFieldState(agent);
     refreshMainButton();
     dirty = false;
@@ -128,11 +128,11 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
       setMainAgentButton.hidden = true;
       return;
     }
-    const currentPublishedVersionId = current.publishedVersions?.at(-1)?.id;
-    const isAssignedAgent = String(mainAssignment?.agentId) === String(current.id);
+    const currentPublishedVersionId = current.PublishedVersions?.at(-1)?.Id;
+    const isAssignedAgent = String(mainAssignment?.AgentId) === String(current.Id);
     const isCurrent = isAssignedAgent &&
-      String(mainAssignment?.agentVersionId) === String(currentPublishedVersionId);
-    const canAssign = current.runtimeStatus === "Enabled" && Boolean(current.publishedVersions?.length);
+      String(mainAssignment?.AgentVersionId) === String(currentPublishedVersionId);
+    const canAssign = current.RuntimeStatus === "Enabled" && Boolean(current.PublishedVersions?.length);
     setMainAgentButton.hidden = false;
     setMainAgentButton.disabled = busy || isCurrent || !canAssign;
     setMainAgentButton.textContent = isCurrent
@@ -153,13 +153,13 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     const selected = new Set(selectedIds.map(String));
     for (const reference of publishedSkills) {
       const checkbox = element("input", { type: "checkbox" });
-      checkbox.value = reference.versionId;
-      checkbox.checked = selected.has(String(reference.versionId));
+      checkbox.value = reference.VersionId;
+      checkbox.checked = selected.has(String(reference.VersionId));
       checkbox.addEventListener("change", () => { dirty = true; });
       const title = element("strong");
-      title.textContent = reference.skillName || reference.skillCode;
+      title.textContent = reference.SkillName || reference.SkillCode;
       const detail = element("small");
-      detail.textContent = `${reference.skillCode} · v${reference.versionLabel} · ${reference.manifestSha256.slice(0, 10)}`;
+      detail.textContent = `${reference.SkillCode} · v${reference.VersionLabel} · ${reference.ManifestSha256.slice(0, 10)}`;
       container.append(element("label", { className: "binding-option" }, checkbox, element("span", {}, title, detail)));
     }
   }
@@ -214,16 +214,16 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     const selected = new Set(selectedIds.map(String));
     for (const reference of publishedAgents) {
       const checkbox = element("input", { type: "checkbox" });
-      checkbox.value = reference.id;
-      checkbox.checked = selected.has(String(reference.id));
-      checkbox.disabled = Boolean(current && reference.id === current.id);
+      checkbox.value = reference.Id;
+      checkbox.checked = selected.has(String(reference.Id));
+      checkbox.disabled = Boolean(current && reference.Id === current.Id);
       checkbox.addEventListener("change", () => { dirty = true; });
       const title = element("strong");
-      title.textContent = reference.name || reference.code;
+      title.textContent = reference.Name || reference.Code;
       const detail = element("small");
       detail.textContent = checkbox.disabled
-        ? `${reference.code} · 不能选择当前 Agent 自身`
-        : `${reference.code} · v${reference.currentPublishedLabel}`;
+        ? `${reference.Code} · 不能选择当前 Agent 自身`
+        : `${reference.Code} · v${reference.CurrentPublishedLabel}`;
       container.append(element("label", {
         className: `binding-option${checkbox.disabled ? " is-disabled" : ""}`
       }, checkbox, element("span", {}, title, detail)));
@@ -261,11 +261,11 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     }
     [...versions].reverse().forEach((version, index) => {
       const title = element("strong");
-      title.textContent = `v${version.label}`;
+      title.textContent = `v${version.Label}`;
       const mode = element("span", { className: "version-mode" });
-      mode.textContent = version.outputMode;
+      mode.textContent = version.OutputMode;
       const detail = element("p");
-      detail.textContent = `${version.modelProfileId} · ${index === 0 ? "当前最新发布" : "不可变历史"}`;
+      detail.textContent = `${version.ModelProfileId} · ${index === 0 ? "当前最新发布" : "不可变历史"}`;
       list.append(element("li", {}, element("div", {}, title, mode), detail));
     });
   }
@@ -279,7 +279,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     backdrop.hidden = false;
     document.body.classList.add("drawer-open");
     requestAnimationFrame(() => {
-      const focusTarget = agent?.runtimeStatus === "Archived"
+      const focusTarget = agent?.RuntimeStatus === "Archived"
         ? archiveButton
         : fields[agent ? "name" : "code"];
       focusTarget.focus();
@@ -343,15 +343,15 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
         const created = await onCreate({ code: value.code, name: value.name, description: value.description });
         current = created;
         fields.code.readOnly = true;
-        setText(document.querySelector("#drawerTitle"), value.name || created.code);
-        setText(document.querySelector("#drawerEyebrow"), `DRAFT ${created.draft.label} · REV ${created.logicalRevision}`);
+        setText(document.querySelector("#drawerTitle"), value.name || created.Code);
+        setText(document.querySelector("#drawerEyebrow"), `DRAFT ${created.Draft.Label} · REV ${created.LogicalRevision}`);
         publishButton.hidden = false;
         statusButton.hidden = false;
         exportButton.hidden = false;
-        setText(statusButton, created.runtimeStatus === "Enabled" ? "停用" : "启用");
+        setText(statusButton, created.RuntimeStatus === "Enabled" ? "停用" : "启用");
         dirty = true;
-        return onSave(created.id, {
-          expectedLogicalRevision: created.logicalRevision,
+        return onSave(created.Id, {
+          expectedLogicalRevision: created.LogicalRevision,
           name: value.name,
           description: value.description,
           instructions: value.instructions,
@@ -366,8 +366,8 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
         });
       }, "Agent 已创建，Draft 已保存。");
     } else {
-      execute(() => onSave(current.id, {
-        expectedLogicalRevision: current.logicalRevision,
+      execute(() => onSave(current.Id, {
+        expectedLogicalRevision: current.LogicalRevision,
         name: value.name,
         description: value.description,
         instructions: value.instructions,
@@ -407,7 +407,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
         "发布前必须填写 JSON Schema；请定义结构化输出格式并保存 Draft 后重试。");
       return;
     }
-    execute(() => onPublish(current.id, current.logicalRevision), "新版本已发布，历史版本保持不变。");
+    execute(() => onPublish(current.Id, current.LogicalRevision), "新版本已发布，历史版本保持不变。");
   });
 
   function showConfigurationField(field, text) {
@@ -423,8 +423,8 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
       showMessage("当前表单有未保存修改，请先保存 Draft 再变更运行状态。", "warning");
       return;
     }
-    const next = current.runtimeStatus === "Enabled" ? "Disabled" : "Enabled";
-    execute(() => onStatus(current.id, next, current.logicalRevision), next === "Enabled" ? "Agent 已启用。" : "Agent 已停用。");
+    const next = current.RuntimeStatus === "Enabled" ? "Disabled" : "Enabled";
+    execute(() => onStatus(current.Id, next, current.LogicalRevision), next === "Enabled" ? "Agent 已启用。" : "Agent 已停用。");
   });
 
   archiveButton.addEventListener("click", () => {
@@ -433,13 +433,13 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
       showMessage("当前表单有未保存修改，请先保存 Draft 再变更归档状态。", "warning");
       return;
     }
-    if (current.runtimeStatus === "Enabled") {
+    if (current.RuntimeStatus === "Enabled") {
       showMessage("请先停用 Agent，再执行归档。", "warning");
       return;
     }
-    const restoring = current.runtimeStatus === "Archived";
+    const restoring = current.RuntimeStatus === "Archived";
     execute(
-      () => onStatus(current.id, restoring ? "Disabled" : "Archived", current.logicalRevision),
+      () => onStatus(current.Id, restoring ? "Disabled" : "Archived", current.LogicalRevision),
       restoring ? "Agent 已恢复为停用状态。" : "Agent 已归档。可通过状态筛选恢复。");
   });
 
@@ -489,7 +489,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     setBusy(true);
     showMessage("正在重新加载服务端最新 Draft…");
     try {
-      const latest = await onReload(current.id);
+      const latest = await onReload(current.Id);
       current = latest;
       fill(latest);
       showMessage("已重新加载最新 Draft。", "success");
@@ -578,23 +578,23 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     },
     setPublishedSkills(references) {
       publishedSkills = [...references];
-      renderSkillBindings(current?.draft?.skillVersionIds ?? []);
+      renderSkillBindings(current?.Draft?.SkillVersionIds ?? []);
     },
     setPublishedTools(references) {
       publishedTools = [...references];
-      renderToolBindings(current?.draft?.toolVersionIds ?? []);
+      renderToolBindings(current?.Draft?.ToolVersionIds ?? []);
     },
     setKnowledgeBases(references) {
       publishedKnowledge = [...references];
-      renderKnowledgeBindings(current?.draft?.knowledgeBaseIds ?? []);
+      renderKnowledgeBindings(current?.Draft?.KnowledgeBaseIds ?? []);
     },
     setPublishedAgents(references) {
       publishedAgents = [...references];
-      renderChildBindings(current?.draft?.childAgentIds ?? []);
+      renderChildBindings(current?.Draft?.ChildAgentIds ?? []);
     },
     setPublishedOrchestrations(references) {
       publishedOrchestrations = [...references];
-      renderOrchestrationBindings(current?.draft?.orchestrationIds ?? []);
+      renderOrchestrationBindings(current?.Draft?.OrchestrationIds ?? []);
     },
     setMainAssignment(value) {
       mainAssignment = value;

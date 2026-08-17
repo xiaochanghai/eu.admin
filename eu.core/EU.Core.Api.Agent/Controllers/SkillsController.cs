@@ -1,10 +1,14 @@
 using EU.Core.Agent.Application.Agents;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Skills;
 using EU.Core.IServices;
+using EU.Core.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
+using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -35,16 +39,28 @@ public sealed class SkillsController(
             }
             else
             {
-                return ApiProblemResults.Create(
-                    HttpContext,
-                    StatusCodes.Status400BadRequest,
-                    SkillErrorCodes.LifecycleTransitionInvalid,
-                    "Skill status must be Active or Archived.");
+                const string errorCode = "REQUEST_INVALID";
+                AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+                return new JsonResult(
+                    ServiceResult<AgentApiErrorData>.Failure(
+                        descriptor.Status,
+                        "Skill status must be Active or Archived.",
+                        new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+                    AgentJsonSerialization.PascalCase)
+                {
+                    StatusCode = descriptor.HttpStatus
+                };
             }
         }
 
-        return Ok(await lifecycle.ListAsync(
-            new SkillQuery(search, category, parsedStatus), cancellationToken));
+        IReadOnlyList<SkillListItem> values = await lifecycle.ListAsync(
+            new SkillQuery(search, category, parsedStatus), cancellationToken);
+        return new JsonResult(
+            ServiceResult<IReadOnlyList<SkillListItem>>.QuerySuccess(values),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpGet("{id:guid}")]
@@ -53,18 +69,13 @@ public sealed class SkillsController(
         SkillDefinition? skill = await lifecycle.GetAsync(id, cancellationToken);
         if (skill is null)
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status404NotFound,
-                SkillErrorCodes.NotFound,
-                "The Skill was not found.");
+            return FromError(new SkillError(SkillErrorCodes.NotFound, "The Skill was not found."));
         }
 
         IReadOnlyList<AgentDefinition> agentDefinitions = await agents.ListDefinitionsAsync(
             new AgentDefinitionQuery(),
             cancellationToken);
-        return Ok(new
-        {
+        var value = new SkillDefinitionDetailResponse(
             skill.Id,
             skill.Code,
             skill.Name,
@@ -72,24 +83,29 @@ public sealed class SkillsController(
             skill.Category,
             skill.Status,
             skill.DraftRevision,
-            publishedVersions = skill.PublishedVersions.Select(version => new
-            {
+            skill.PublishedVersions.Select(version => new SkillPublishedVersionResponse(
                 version.Id,
                 version.Label,
                 version.ManifestSha256,
                 version.PublishedAtUtc,
                 version.Files,
-                boundAgents = agentDefinitions
+                agentDefinitions
                     .Where(agent =>
                         agent.Draft.SkillVersionIds.Contains(version.Id) ||
                         agent.PublishedVersions.Any(published =>
                             published.Snapshot?.Skills.Any(binding =>
                                 binding.SkillVersionId == version.Id) == true))
-                    .Select(agent => new { agent.Id, agent.Code, agent.Name })
+                    .Select(agent => new SkillBoundAgentResponse(agent.Id, agent.Code, agent.Name))
                     .DistinctBy(agent => agent.Id)
                     .OrderBy(agent => agent.Code, StringComparer.Ordinal)
-            })
-        });
+                    .ToArray()))
+                .ToArray());
+        return new JsonResult(
+            ServiceResult<SkillDefinitionDetailResponse>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpPost]
@@ -104,9 +120,18 @@ public sealed class SkillsController(
                 request.Description,
                 request.Category),
             cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/skills/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+        {
+            return FromError(result.Error!);
+        }
+
+        Response.Headers.Location = $"/api/skills/{result.Value!.Id}";
+        return new JsonResult(
+            ServiceResult<SkillDefinition>.OprateSuccess(result.Value, "创建成功"),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status201Created
+        };
     }
 
     [HttpPut("{id:guid}")]
@@ -123,7 +148,14 @@ public sealed class SkillsController(
                 request.Description,
                 request.Category),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpGet("{id:guid}/files")]
@@ -131,7 +163,14 @@ public sealed class SkillsController(
     {
         SkillOperationResult<IReadOnlyList<SkillFileEntry>> result =
             await lifecycle.ListFilesAsync(id, cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<IReadOnlyList<SkillFileEntry>>.QuerySuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpGet("{id:guid}/files/content")]
@@ -145,7 +184,7 @@ public sealed class SkillsController(
             path ?? string.Empty,
             cancellationToken);
         return result.Succeeded
-            ? Ok(new { path, content = result.Value })
+            ? Content(result.Value!, "text/plain", Encoding.UTF8)
             : FromError(result.Error!);
     }
 
@@ -162,7 +201,14 @@ public sealed class SkillsController(
                 request.Path,
                 request.Content),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpDelete("{id:guid}/files/content")]
@@ -177,7 +223,14 @@ public sealed class SkillsController(
                 request.ExpectedDraftRevision,
                 request.Path),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -192,7 +245,14 @@ public sealed class SkillsController(
                 request.ExpectedDraftRevision,
                 request.VersionLabel),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -204,30 +264,28 @@ public sealed class SkillsController(
         SkillOperationResult<SkillDefinition> result = await lifecycle.SetArchivedAsync(
             new SetSkillArchiveCommand(id, request.ExpectedDraftRevision, request.Archived),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? new JsonResult(
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
+                AgentJsonSerialization.PascalCase)
+            {
+                StatusCode = StatusCodes.Status200OK
+            }
+            : FromError(result.Error!);
     }
 
     private IActionResult FromError(SkillError error)
     {
-        int status = error.Code switch
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                error.Message,
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
         {
-            SkillErrorCodes.NotFound or SkillErrorCodes.FileMissing =>
-                StatusCodes.Status404NotFound,
-            SkillErrorCodes.CodeConflict or
-                SkillErrorCodes.RevisionConflict or
-                SkillErrorCodes.VersionConflict =>
-                StatusCodes.Status409Conflict,
-            SkillErrorCodes.FileTooLarge =>
-                StatusCodes.Status413PayloadTooLarge,
-            _ =>
-                StatusCodes.Status400BadRequest
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };
-        return ApiProblemResults.Create(
-            HttpContext,
-            status,
-            error.Code,
-            "The Skill operation could not be completed.",
-            error.Message);
     }
 }
 
@@ -259,3 +317,23 @@ public sealed record PublishSkillRequest(
 public sealed record SetSkillArchiveRequest(
     long ExpectedDraftRevision,
     bool Archived);
+
+public sealed record SkillDefinitionDetailResponse(
+    Guid Id,
+    string Code,
+    string Name,
+    string Description,
+    string Category,
+    SkillStatus Status,
+    long DraftRevision,
+    IReadOnlyList<SkillPublishedVersionResponse> PublishedVersions);
+
+public sealed record SkillPublishedVersionResponse(
+    Guid Id,
+    string Label,
+    string ManifestSha256,
+    DateTimeOffset PublishedAtUtc,
+    IReadOnlyList<SkillFileHash> Files,
+    IReadOnlyList<SkillBoundAgentResponse> BoundAgents);
+
+public sealed record SkillBoundAgentResponse(Guid Id, string Code, string Name);

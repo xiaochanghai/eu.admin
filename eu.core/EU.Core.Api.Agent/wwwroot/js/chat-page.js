@@ -107,27 +107,27 @@ export function mainAgentPresentation(assignment, agent) {
     };
   }
 
-  const versions = Array.isArray(agent.publishedVersions)
-    ? agent.publishedVersions
+  const versions = Array.isArray(agent.PublishedVersions)
+    ? agent.PublishedVersions
     : [];
   const pinned = versions.find(version =>
-    String(version.id) === String(assignment.agentVersionId));
+    String(version.Id) === String(assignment.AgentVersionId));
   const latest = versions.at(-1);
-  const version = pinned?.label ? `v${pinned.label}` : "绑定版本不可用";
-  const status = agent.runtimeStatus === "Enabled" ? "已启用" : "已停用";
+  const version = pinned?.Label ? `v${pinned.Label}` : "绑定版本不可用";
+  const status = agent.RuntimeStatus === "Enabled" ? "已启用" : "已停用";
   const freshness = !pinned
     ? "请重新指派"
-    : latest && String(latest.id) !== String(pinned.id)
-      ? `可更新至 v${latest.label}`
+    : latest && String(latest.Id) !== String(pinned.Id)
+      ? `可更新至 v${latest.Label}`
       : "当前绑定版本";
   const canUpdate = Boolean(
-    pinned && latest && String(latest.id) !== String(pinned.id));
+    pinned && latest && String(latest.Id) !== String(pinned.Id));
   return {
-    state: agent.runtimeStatus === "Enabled" && pinned ? "ready" : "warning",
-    name: `Main Agent · ${agent.name || agent.code}`,
-    detail: [agent.code, version, status, freshness].filter(Boolean).join(" · "),
+    state: agent.RuntimeStatus === "Enabled" && pinned ? "ready" : "warning",
+    name: `Main Agent · ${agent.Name || agent.Code}`,
+    detail: [agent.Code, version, status, freshness].filter(Boolean).join(" · "),
     canUpdate,
-    updateLabel: canUpdate ? `更新至 v${latest.label}` : ""
+    updateLabel: canUpdate ? `更新至 v${latest.Label}` : ""
   };
 }
 

@@ -34,7 +34,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
 
   function setBusy(value) {
     busy = value;
-    const archived = current?.status === "Archived";
+    const archived = current?.Status === "Archived";
     for (const button of [metadataButton, fileButton, publishButton]) button.disabled = value || archived;
     archiveButton.disabled = value;
     newFilePath.disabled = value || archived;
@@ -43,7 +43,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   }
 
   function syncDeleteFileButton() {
-    const archived = current?.status === "Archived";
+    const archived = current?.Status === "Archived";
     const isProtectedFile = !currentPath || currentPath.toUpperCase() === "SKILL.MD";
     deleteFileButton.hidden = !current;
     deleteFileButton.disabled = busy || archived || isProtectedFile;
@@ -67,22 +67,22 @@ export function createSkillEditor({ api, onChanged, toast }) {
   }
 
   function nextVersion() {
-    const majors = (current?.publishedVersions ?? [])
-      .map(version => Number.parseInt(version.label.split(".")[0], 10))
+    const majors = (current?.PublishedVersions ?? [])
+      .map(version => Number.parseInt(version.Label.split(".")[0], 10))
       .filter(Number.isFinite);
     return `${(majors.length ? Math.max(...majors) : 0) + 1}.0.0`;
   }
 
   function fill(skill) {
     current = skill;
-    const archived = skill?.status === "Archived";
-    fields.code.value = skill?.code ?? "";
-    fields.name.value = skill?.name ?? "";
-    fields.category.value = skill?.category ?? "";
-    fields.description.value = skill?.description ?? "";
+    const archived = skill?.Status === "Archived";
+    fields.code.value = skill?.Code ?? "";
+    fields.name.value = skill?.Name ?? "";
+    fields.category.value = skill?.Category ?? "";
+    fields.description.value = skill?.Description ?? "";
     fields.code.readOnly = Boolean(skill);
-    setText(document.querySelector("#skillDrawerTitle"), skill ? skill.name || skill.code : "创建 Skill");
-    setText(document.querySelector("#skillDrawerEyebrow"), skill ? `DRAFT REV ${skill.draftRevision}` : "NEW SKILL");
+    setText(document.querySelector("#skillDrawerTitle"), skill ? skill.Name || skill.Code : "创建 Skill");
+    setText(document.querySelector("#skillDrawerEyebrow"), skill ? `DRAFT REV ${skill.DraftRevision}` : "NEW SKILL");
     setText(metadataButton, skill ? "保存信息" : "创建 Skill");
     fileWorkspace.hidden = !skill;
     document.querySelector("#skillVersionSection").hidden = !skill;
@@ -99,7 +99,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
     newFilePath.disabled = archived;
     newFileButton.disabled = archived;
     syncDeleteFileButton();
-    renderVersions(skill?.publishedVersions ?? []);
+    renderVersions(skill?.PublishedVersions ?? []);
     metadataDirty = false;
   }
 
@@ -112,38 +112,38 @@ export function createSkillEditor({ api, onChanged, toast }) {
     }
     [...versions].reverse().forEach(version => {
       const title = element("strong");
-      title.textContent = `v${version.label}`;
+      title.textContent = `v${version.Label}`;
       const hash = element("code");
-      hash.textContent = version.manifestSha256.slice(0, 12);
+      hash.textContent = version.ManifestSha256.slice(0, 12);
       const detail = element("p");
-      const bound = version.boundAgents?.length
-        ? ` · 绑定 ${version.boundAgents.map(agent => agent.name || agent.code).join("、")}`
+      const bound = version.BoundAgents?.length
+        ? ` · 绑定 ${version.BoundAgents.map(agent => agent.Name || agent.Code).join("、")}`
         : " · 尚未绑定 Agent";
-      detail.textContent = `${version.files.length} 个文件 · ${new Date(version.publishedAtUtc).toLocaleString()}${bound}`;
+      detail.textContent = `${version.Files.length} 个文件 · ${new Date(version.PublishedAtUtc).toLocaleString()}${bound}`;
       list.append(element("li", {}, element("div", {}, title, hash), detail));
     });
   }
 
   async function loadFiles(preferredPath = "") {
     if (!current) return;
-    const files = await api.files(current.id);
+    const files = await api.files(current.Id);
     clear(fileList);
     setText(document.querySelector("#skillFileCount"), `${files.length} 个`);
     for (const file of files) {
       const button = element("button", {
-        className: `skill-file-item ${file.path === currentPath ? "is-active" : ""}`,
+        className: `skill-file-item ${file.Path === currentPath ? "is-active" : ""}`,
         type: "button"
       });
       const label = element("span");
-      label.textContent = file.path;
+      label.textContent = file.Path;
       const size = element("small");
-      size.textContent = `${file.size} B`;
+      size.textContent = `${file.Size} B`;
       button.append(label, size);
-      button.addEventListener("click", () => selectFile(file.path));
+      button.addEventListener("click", () => selectFile(file.Path));
       fileList.append(button);
     }
-    const target = preferredPath || currentPath || files[0]?.path;
-    if (target && files.some(file => file.path === target)) await selectFile(target, true);
+    const target = preferredPath || currentPath || files[0]?.Path;
+    if (target && files.some(file => file.Path === target)) await selectFile(target, true);
   }
 
   async function selectFile(path, force = false) {
@@ -155,11 +155,11 @@ export function createSkillEditor({ api, onChanged, toast }) {
     const wasBusy = busy;
     setBusy(true);
     try {
-      const result = await api.readFile(current.id, path);
+      const result = await api.readFile(current.Id, path);
       currentPath = path;
       currentFilePersisted = true;
-      content.value = result.content;
-      content.disabled = current.status === "Archived";
+      content.value = result;
+      content.disabled = current.Status === "Archived";
       fileDirty = false;
       setText(document.querySelector("#currentSkillFile"), path);
       setText(document.querySelector("#skillFileState"), "已同步");
@@ -180,7 +180,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
     currentFilePersisted = false;
     fill(skill);
     content.value = "";
-    content.disabled = !skill || skill.status === "Archived";
+    content.disabled = !skill || skill.Status === "Archived";
     showMessage("");
     drawer.setAttribute("aria-hidden", "false");
     backdrop.hidden = false;
@@ -189,7 +189,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
       try { await loadFiles("SKILL.md"); }
       catch (error) { showMessage(`${error.message} · ${error.errorCode ?? "LIST_FAILED"}`, "error"); }
     }
-    requestAnimationFrame(() => (skill?.status === "Archived"
+    requestAnimationFrame(() => (skill?.Status === "Archived"
       ? archiveButton
       : fields[skill ? "name" : "code"]).focus());
   }
@@ -214,8 +214,8 @@ export function createSkillEditor({ api, onChanged, toast }) {
     setBusy(true);
     try {
       current = current
-        ? await api.update(current.id, {
-            expectedDraftRevision: current.draftRevision,
+        ? await api.update(current.Id, {
+            expectedDraftRevision: current.DraftRevision,
             name: fields.name.value.trim(),
             description: fields.description.value,
             category: fields.category.value.trim()
@@ -249,8 +249,8 @@ export function createSkillEditor({ api, onChanged, toast }) {
     }
     setBusy(true);
     try {
-      current = await api.saveFile(current.id, {
-        expectedDraftRevision: current.draftRevision,
+      current = await api.saveFile(current.Id, {
+        expectedDraftRevision: current.DraftRevision,
         path: currentPath,
         content: content.value
       });
@@ -273,7 +273,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   });
 
   async function deleteFile(path) {
-    if (!current || busy || current.status === "Archived") return;
+    if (!current || busy || current.Status === "Archived") return;
     if (fileDirty || metadataDirty) {
       showMessage("存在未保存修改，请先保存后再删除文件。", "warning");
       return;
@@ -282,8 +282,8 @@ export function createSkillEditor({ api, onChanged, toast }) {
 
     setBusy(true);
     try {
-      current = await api.deleteFile(current.id, {
-        expectedDraftRevision: current.draftRevision,
+      current = await api.deleteFile(current.Id, {
+        expectedDraftRevision: current.DraftRevision,
         path
       });
       const deletedCurrentFile = currentPath === path;
@@ -310,7 +310,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   }
 
   deleteFileButton.addEventListener("click", async () => {
-    if (!current || !currentPath || busy || current.status === "Archived") return;
+    if (!current || !currentPath || busy || current.Status === "Archived") return;
     if (!currentFilePersisted) {
       currentPath = "";
       currentFilePersisted = false;
@@ -332,8 +332,8 @@ export function createSkillEditor({ api, onChanged, toast }) {
     }
     setBusy(true);
     try {
-      current = await api.publish(current.id, {
-        expectedDraftRevision: current.draftRevision,
+      current = await api.publish(current.Id, {
+        expectedDraftRevision: current.DraftRevision,
         versionLabel: nextVersion()
       });
       fill(current);
@@ -353,12 +353,12 @@ export function createSkillEditor({ api, onChanged, toast }) {
       showMessage("存在未保存修改，请先保存后再变更归档状态。", "warning");
       return;
     }
-    const restoring = current.status === "Archived";
+    const restoring = current.Status === "Archived";
     setBusy(true);
     showMessage(restoring ? "正在恢复 Skill…" : "正在归档 Skill…");
     try {
-      current = await api.setArchived(current.id, {
-        expectedDraftRevision: current.draftRevision,
+      current = await api.setArchived(current.Id, {
+        expectedDraftRevision: current.DraftRevision,
         archived: !restoring
       });
       fill(current);
@@ -373,7 +373,7 @@ export function createSkillEditor({ api, onChanged, toast }) {
   });
 
   newFileButton.addEventListener("click", async () => {
-    if (!current || busy || current.status === "Archived") return;
+    if (!current || busy || current.Status === "Archived") return;
     if (fileDirty) {
       showMessage("请先保存当前文件。", "warning");
       return;

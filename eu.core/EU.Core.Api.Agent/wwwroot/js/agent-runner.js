@@ -19,8 +19,8 @@ export function createAgentRunner({ api, toast }) {
 
   function open(agent) {
     current = agent;
-    setText(document.querySelector("#runDrawerTitle"), agent.name || agent.code);
-    setText(document.querySelector("#runDrawerEyebrow"), `PUBLISHED v${agent.publishedVersions.at(-1)?.label ?? "—"} · ${agent.code}`);
+    setText(document.querySelector("#runDrawerTitle"), agent.Name || agent.Code);
+    setText(document.querySelector("#runDrawerEyebrow"), `PUBLISHED v${agent.PublishedVersions.at(-1)?.Label ?? "—"} · ${agent.Code}`);
     drawer.setAttribute("aria-hidden", "false");
     backdrop.hidden = false;
     document.body.classList.add("drawer-open");
@@ -115,7 +115,7 @@ export function createAgentRunner({ api, toast }) {
     setRunning(true);
     resetRun();
     try {
-      await api.run(current.id, input.value.trim(), handleEvent, controller.signal);
+      await api.run(current.Id, input.value.trim(), handleEvent, controller.signal);
     } catch (error) {
       if (error.name === "AbortError") {
         setText(status, "取消请求已发送。");
@@ -136,7 +136,7 @@ export function createAgentRunner({ api, toast }) {
   async function loadHistory() {
     if (!current) return;
     try {
-      const values = await api.runHistory(current.id, 10);
+      const values = await api.runHistory(current.Id, 10);
       clear(history);
       if (!values.length) {
         history.append(element("p", { className: "binding-empty" }, "尚无运行记录。"));

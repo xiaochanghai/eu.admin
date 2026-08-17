@@ -27,19 +27,19 @@ export function createSkillsPage({ toast, onPublishedChanged }) {
     empty.hidden = state.skills.length !== 0;
     for (const skill of state.skills) {
       const name = element("strong");
-      name.textContent = skill.name || skill.code;
+      name.textContent = skill.Name || skill.Code;
       const code = element("code");
-      code.textContent = skill.code;
+      code.textContent = skill.Code;
       const statusBadge = element("span", {
-        className: `badge ${skill.status === "Archived" ? "disabled" : "enabled"}`
-      }, skill.status === "Archived" ? "已归档" : "Active");
+        className: `badge ${skill.Status === "Archived" ? "disabled" : "enabled"}`
+      }, skill.Status === "Archived" ? "已归档" : "Active");
       const description = element("p", { className: "row-description" });
-      description.textContent = skill.description || "尚未填写说明";
+      description.textContent = skill.Description || "尚未填写说明";
       const open = element("button", { className: "row-action", type: "button" });
       open.textContent = "管理";
       open.addEventListener("click", async () => {
         open.disabled = true;
-        try { await editor.open(await skillsApi.get(skill.id)); }
+        try { await editor.open(await skillsApi.get(skill.Id)); }
         catch (error) { toast(error.message, "error"); }
         finally { open.disabled = false; }
       });
@@ -48,10 +48,10 @@ export function createSkillsPage({ toast, onPublishedChanged }) {
           element("span", { className: "agent-avatar", ariaHidden: "true" }, "◇"),
           element("div", {}, name, code, statusBadge))),
         element("td", {}, description),
-        element("td", {}, skill.category || "未分类"),
-        element("td", {}, skill.status === "Archived" ? "已归档" : "正常"),
-        element("td", {}, `rev ${skill.draftRevision}`),
-        element("td", {}, skill.currentPublishedLabel ? `v${skill.currentPublishedLabel}` : "仅 Draft"),
+        element("td", {}, skill.Category || "未分类"),
+        element("td", {}, skill.Status === "Archived" ? "已归档" : "正常"),
+        element("td", {}, `rev ${skill.DraftRevision}`),
+        element("td", {}, skill.CurrentPublishedLabel ? `v${skill.CurrentPublishedLabel}` : "仅 Draft"),
         element("td", {}, open)));
     }
     renderCategories();
@@ -60,7 +60,7 @@ export function createSkillsPage({ toast, onPublishedChanged }) {
   function renderCategories() {
     const select = document.querySelector("#skillCategoryFilter");
     const selected = select.value;
-    const categories = [...new Set(state.skills.map(skill => skill.category).filter(Boolean))].sort();
+    const categories = [...new Set(state.skills.map(skill => skill.Category).filter(Boolean))].sort();
     clear(select);
     const all = element("option");
     all.value = "";

@@ -1,4 +1,9 @@
-import { createApiError, requestJson as request } from "./http.js";
+import {
+  createApiError,
+  parseServiceResponse,
+  requestJson as request,
+  requestServiceJson as serviceRequest
+} from "./http.js";
 
 const base = "/api/agents";
 
@@ -108,26 +113,28 @@ export const agentApi = {
     if (search) query.set("search", search);
     if (status) query.set("status", status);
     const suffix = query.toString();
-    return request(`${base}${suffix ? `?${suffix}` : ""}`);
+    return serviceRequest(`${base}${suffix ? `?${suffix}` : ""}`);
   },
-  get: id => request(`${base}/${encodeURIComponent(id)}`),
-  create: body => request(base, { method: "POST", body: JSON.stringify(body) }),
-  saveDraft: (id, body) => request(`${base}/${encodeURIComponent(id)}/draft`, { method: "PUT", body: JSON.stringify(body) }),
-  publish: (id, expectedLogicalRevision) => request(`${base}/${encodeURIComponent(id)}/publish`, {
+  get: id => serviceRequest(`${base}/${encodeURIComponent(id)}`),
+  create: body => serviceRequest(base, { method: "POST", body: JSON.stringify(body) }),
+  saveDraft: (id, body) => serviceRequest(`${base}/${encodeURIComponent(id)}/draft`, { method: "PUT", body: JSON.stringify(body) }),
+  publish: (id, expectedLogicalRevision) => serviceRequest(`${base}/${encodeURIComponent(id)}/publish`, {
     method: "POST", body: JSON.stringify({ expectedLogicalRevision })
   }),
-  setStatus: (id, runtimeStatus, expectedLogicalRevision) => request(`${base}/${encodeURIComponent(id)}/status`, {
+  setStatus: (id, runtimeStatus, expectedLogicalRevision) => serviceRequest(`${base}/${encodeURIComponent(id)}/status`, {
     method: "PUT", body: JSON.stringify({ runtimeStatus, expectedLogicalRevision })
   }),
   exportPackage: async id => {
     const response = await fetch(`${base}/${encodeURIComponent(id)}/export`, { headers: { Accept: "application/json" } });
     if (!response.ok) {
-      throw await createApiError(response, `导出失败 (${response.status})`);
+      let payload;
+      try { payload = await response.json(); } catch { payload = null; }
+      parseServiceResponse(payload, response.status, `导出失败 (${response.status})`);
     }
     return response.blob();
   },
-  importPackage: json => request(`${base}/import`, { method: "POST", body: json }),
-  publishedSkills: () => request("/api/skill-versions"),
+  importPackage: json => serviceRequest(`${base}/import`, { method: "POST", body: json }),
+  publishedSkills: () => serviceRequest("/api/skill-versions"),
   publishedTools: () => request("/api/mcp/tool-versions"),
   knowledgeReferences: () => request("/api/knowledge-base-references"),
   knowledgeBases: (status = "") => request(`/api/knowledge-bases${status ? `?status=${encodeURIComponent(status)}` : ""}`),
@@ -174,13 +181,13 @@ export const agentApi = {
   orchestrationOutput: (id, runId) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/output`),
   mainAgent: async () => {
     try {
-      return await request("/api/platform/main-agent");
+      return await serviceRequest("/api/platform/main-agent");
     } catch (error) {
       if (error.status === 404 && error.errorCode === "MAIN_AGENT_NOT_CONFIGURED") return null;
       throw error;
     }
   },
-  setMainAgent: (agentId, expectedLogicalRevision) => request("/api/platform/main-agent", {
+  setMainAgent: (agentId, expectedLogicalRevision) => serviceRequest("/api/platform/main-agent", {
     method: "PUT",
     body: JSON.stringify({ agentId, expectedLogicalRevision })
   }),

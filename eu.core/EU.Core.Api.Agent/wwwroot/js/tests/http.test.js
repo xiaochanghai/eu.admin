@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as http from "../http.js";
+import { agentApi } from "../api-client.js";
+import { mainAgentPresentation } from "../chat-page.js";
+import { skillsApi } from "../skills-api.js";
 
 test("exports the strict service response client", () => {
   assert.equal(typeof http.parseServiceResponse, "function");
@@ -100,4 +103,75 @@ test("requestServiceJson sends JSON headers and unwraps Data", async t => {
     body: "{}"
   });
   assert.deepEqual(result, [{ ID: "agent-1" }]);
+});
+
+test("agent API unwraps migrated list responses without renaming DTO fields", async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  const agents = [{ Id: "agent-1", Code: "main", RuntimeStatus: "Enabled" }];
+  globalThis.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      Status: 200,
+      Success: true,
+      Message: "查询成功！",
+      Count: 0,
+      Data: agents
+    })
+  });
+
+  const result = await agentApi.list({ status: "Enabled" });
+
+  assert.strictEqual(result, agents);
+  assert.equal(result[0].RuntimeStatus, "Enabled");
+  assert.equal(result[0].runtimeStatus, undefined);
+});
+
+test("skill file content keeps its text protocol", async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => "# Skill"
+  });
+
+  const result = await skillsApi.readFile("skill-1", "SKILL.md");
+
+  assert.equal(result, "# Skill");
+});
+
+test("Agent export parses migrated service errors before returning a file", async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({
+      Status: 610001,
+      Success: false,
+      Message: "The Agent was not found.",
+      Data: { ErrorCode: "AGENT_NOT_FOUND", TraceId: "trace-export" }
+    })
+  });
+
+  await assert.rejects(
+    () => agentApi.exportPackage("missing"),
+    error => error.errorCode === "AGENT_NOT_FOUND" && error.traceId === "trace-export");
+});
+
+test("main Agent presentation consumes PascalCase assignment and Agent DTOs", () => {
+  const versionId = "version-1";
+  const result = mainAgentPresentation(
+    { AgentVersionId: versionId, LogicalRevision: 3 },
+    {
+      Code: "main",
+      Name: "Main Agent",
+      RuntimeStatus: "Enabled",
+      PublishedVersions: [{ Id: versionId, Label: "1.0.0" }]
+    });
+
+  assert.equal(result.state, "ready");
+  assert.equal(result.name, "Main Agent · Main Agent");
+  assert.match(result.detail, /v1\.0\.0/);
 });
