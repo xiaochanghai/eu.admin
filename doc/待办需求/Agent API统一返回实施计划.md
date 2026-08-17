@@ -69,7 +69,7 @@ return new JsonResult(response)
 - Modify: `eu.core/EU.Core.Model/ServiceResult.cs`
 - Create: `eu.core/EU.Core.Model/ViewModels/Extend/AgentApiResponseContracts.cs`
 - Create: `eu.core/EU.Core.Api.Agent/Errors/AgentApiErrorCatalog.cs`
-- Create（分批迁移期间临时使用，Task 10 删除）: `eu.core/EU.Core.Api.Agent/Configuration/AgentJsonSerialization.cs`
+- Create（分批迁移期间临时使用，Task 10 删除）: PascalCase JSON 临时配置类型
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgAgentApiResponseFoundation_Should.cs`
 - Reference: `doc/待办需求/Agent API ErrorCode固定清单.md`
 
@@ -89,7 +89,7 @@ dotnet test Src\EU.Core.Tests\EU.Core.Tests.csproj -c Release -p:GenerateDocumen
 - [x] 1.6 在 `ServiceResult<T>` 新增非破坏性 `Failure(int status, string message, T data = default, string messageDev = null)` 工厂；不改变现有工厂行为。
 - [x] 1.7 新增不可变 `AgentApiErrorData` 和 `AgentApiErrorDescriptor`，字段分别覆盖 ErrorCode/TraceId 与 Status/可空 HttpStatus；固定清单 HTTP 为“—”时保存 `null`。
 - [x] 1.8 将固定清单整体录入 `AgentApiErrorCatalog`；公开只读枚举用于完整性测试，`Resolve` 提供 699999/500 兜底。
-- [x] 1.9 分批迁移期间新增 `AgentJsonSerialization.PascalCase`，仅配置命名和项目已有 JSON 行为，不承载响应包装；最终收口时删除。
+- [x] 1.9 分批迁移期间新增 PascalCase JSON 临时配置，仅配置命名和项目已有 JSON 行为，不承载响应包装；最终收口时删除。
 - [x] 1.10 重跑测试至 GREEN，并执行：
 
 ```powershell
@@ -299,7 +299,7 @@ git diff --check
 
 - Delete: `eu.core/EU.Core.Api.Agent/Controllers/ApiProblemResults.cs`
 - Modify: `eu.core/EU.Core.Api.Agent/Program.cs`
-- Delete: `eu.core/EU.Core.Api.Agent/Configuration/AgentJsonSerialization.cs`
+- Delete: 分批迁移期间使用的 PascalCase JSON 临时配置类型
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/http.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/api-client.js`
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/skills-api.js`
@@ -311,7 +311,7 @@ git diff --check
 
 - [x] 10.1 写收口 RED 测试：MVC 默认序列化 PascalCase；普通 JSON 路由均声明统一成功/失败响应；特殊协议路由在明确白名单；Swagger 能解析 `ServiceResult<T>` / `ServicePageResult<T>`。
 - [x] 10.2 使用 `rg` 生成并人工审查接口清单，逐个确认每个 Action 属于“统一 JSON”或“特殊协议”，不以源码字符串扫描代替行为测试。
-- [x] 10.3 参照 `EU.Core.Api` 在 `Program.cs` 的 `AddControllers` 链中集中配置 MVC JSON；移除 Controller 中临时显式序列化参数并删除 `AgentJsonSerialization`，Controller 仍显式构造 `ServiceResult<T>`。
+- [x] 10.3 参照 `EU.Core.Api` 在 `Program.cs` 的 `AddControllers` 链中集中配置 MVC JSON；移除 Controller 中临时显式序列化参数并删除临时配置类型，Controller 仍显式构造 `ServiceResult<T>`。
 - [x] 10.4 删除全部 `ApiProblemResults` 调用及文件；确认未新增同职责 Controller 结果帮助器。
 - [x] 10.5 删除前端裸数据请求实现，仅保留严格统一结构的 `requestJson` 普通 JSON 请求语义，并清理所有旧导入。
 - [x] 10.6 通过统一 MVC Convention 补齐 Controller 的精确 `ServiceResult<T>` / OpenAPI 响应模型，不使用 `ServiceResult<object>` 模糊 `Data`；特殊协议声明真实 Content-Type。

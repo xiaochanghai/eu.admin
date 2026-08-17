@@ -24,15 +24,16 @@
 
 普通 JSON Action 显式构造 `ServiceResult<T>` 或 `ServicePageResult<T>`，并通过 MVC
 结果设置实际 HTTP 状态码。Controller 返回类型应尽量使用明确 DTO，不新增匿名返回结构。
-分批期间，已迁移 Action 使用共享的 PascalCase `JsonSerializerOptions` 创建 `JsonResult`；这样
-不会提前改变尚未迁移接口的裸数据序列化格式。
+分批期间，已迁移 Action 曾使用共享的 PascalCase `JsonSerializerOptions` 创建 `JsonResult`，
+避免提前改变尚未迁移接口的裸数据序列化格式。以下示例展示最终收口后的写法，命名规则由
+`Program.cs` 中的 MVC JSON 配置统一提供。
 
 成功示意：
 
 ```csharp
 ServiceResult<AgAgentDefinitionDetailDto> response =
     ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value);
-return new JsonResult(response, AgentJsonSerialization.PascalCase)
+return new JsonResult(response)
 {
     StatusCode = StatusCodes.Status200OK
 };
@@ -44,7 +45,7 @@ return new JsonResult(response, AgentJsonSerialization.PascalCase)
 ServiceResult<AgAgentDefinitionDetailDto> response =
     ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功");
 Response.Headers.Location = $"/api/agents/{value.ID}";
-return new JsonResult(response, AgentJsonSerialization.PascalCase)
+return new JsonResult(response)
 {
     StatusCode = StatusCodes.Status201Created
 };
@@ -62,7 +63,7 @@ var response = new ServiceResult<AgentApiErrorData>
     Count = 0,
     Data = new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)
 };
-return new JsonResult(response, AgentJsonSerialization.PascalCase)
+return new JsonResult(response)
 {
     StatusCode = descriptor.HttpStatus
 };
@@ -140,7 +141,7 @@ Controller 结果帮助器。
 
 - 补充 `ServiceResult<T>` 所需的非破坏性构造方法；
 - 新增 `AgentApiErrorData`、`AgentApiErrorDescriptor` 和 `AgentApiErrorCatalog`；
-- 分批迁移期间新增只保存 PascalCase `JsonSerializerOptions` 的 `AgentJsonSerialization`，不得包含结果包装逻辑；最终收口后由 `Program.cs` 集中配置 MVC JSON 并删除该临时类型；
+- 分批迁移期间新增仅保存 PascalCase `JsonSerializerOptions` 的临时配置类型，不得包含结果包装逻辑；最终收口后由 `Program.cs` 集中配置 MVC JSON 并删除该临时类型；
 - 将固定清单中的 187 个现有错误码和 1 个目标新增错误码（共 188 个专属映射）写入映射；
 - 添加映射完整性、唯一性、号段和兜底测试；
 - 不改变任何现有接口返回。
