@@ -1,6 +1,9 @@
 using EU.Core.Api.Agent.Security;
+using EU.Core.Api.Agent.Configuration;
 using EU.Core.Agent.Application.Abstractions.Auditing;
 using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +20,12 @@ public sealed class AuditController(
     public async Task<IActionResult> List(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default) =>
-        Ok(await repository.ListAsync(
-            caller.TenantId,
-            Math.Clamp(take, 1, 100),
-            cancellationToken));
+        new JsonResult(
+            ServiceResult<IReadOnlyList<AgentOperationAuditRecord>>.QuerySuccess(
+                await repository.ListAsync(
+                    caller.TenantId,
+                    Math.Clamp(take, 1, 100),
+                    cancellationToken)),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = StatusCodes.Status200OK };
 }

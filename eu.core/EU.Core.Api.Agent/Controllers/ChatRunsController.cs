@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -131,11 +135,12 @@ public sealed class ChatRunsController : ControllerBase
         [FromQuery] int take = DefaultPageSize,
         CancellationToken cancellationToken = default) =>
         await ExecutePersistenceOperationAsync(
-            async () => Ok(await _repository.ListConversationsForOwnerAsync(
-                _caller.TenantId,
-                _caller.UserId,
-                Bound(take),
-                cancellationToken)),
+            async () => QuerySuccess(
+                await _repository.ListConversationsForOwnerAsync(
+                    _caller.TenantId,
+                    _caller.UserId,
+                    Bound(take),
+                    cancellationToken)),
             cancellationToken);
 
     [HttpGet("conversations/{conversationId}")]
@@ -175,10 +180,10 @@ public sealed class ChatRunsController : ControllerBase
                         _caller.UserId,
                         take,
                         cancellationToken);
-                return Ok(new
+                return QuerySuccess(new
                 {
-                    conversation,
-                    messages = BusinessQueryResultProjector.ProjectMessages(
+                    Conversation = conversation,
+                    Messages = BusinessQueryResultProjector.ProjectMessages(
                         messages, IncludeBusinessPresentation())
                 });
             },
@@ -209,7 +214,7 @@ public sealed class ChatRunsController : ControllerBase
                     return ConversationNotFound();
                 }
 
-                return Ok(await _repository.ListRunsForOwnerAsync(
+                return QuerySuccess(await _repository.ListRunsForOwnerAsync(
                     id,
                     _caller.TenantId,
                     _caller.UserId,
@@ -236,7 +241,7 @@ public sealed class ChatRunsController : ControllerBase
                 UnifiedEntryRunRecord? run =
                     await _repository.GetRunForOwnerAsync(
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
-                return run is null ? RunNotFound() : Ok(run);
+                return run is null ? RunNotFound() : QuerySuccess(run);
             },
             cancellationToken);
     }
@@ -260,7 +265,7 @@ public sealed class ChatRunsController : ControllerBase
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
                 return details is null
                     ? RunNotFound()
-                    : Ok(BusinessQueryResultProjector.ProjectDetails(
+                    : QuerySuccess(BusinessQueryResultProjector.ProjectDetails(
                         details, IncludeBusinessPresentation()));
             },
             cancellationToken);
@@ -295,7 +300,7 @@ public sealed class ChatRunsController : ControllerBase
                 IReadOnlyList<UnifiedRunEventRecord> events =
                     await _repository.ListEventsForOwnerAsync(
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
-                return Ok(BusinessQueryResultProjector.ProjectEvents(
+                return QuerySuccess(BusinessQueryResultProjector.ProjectEvents(
                     events.TakeLast(take).ToArray(),
                     IncludeBusinessPresentation()));
             },
@@ -321,7 +326,7 @@ public sealed class ChatRunsController : ControllerBase
                     ExecutionIdentity(),
                     cancellationToken);
                 return cancelled
-                    ? Accepted(new { runId = id })
+                    ? OperationSuccess(new ChatRunCancelResponse(id), StatusCodes.Status202Accepted)
                     : RunNotFound();
             },
             cancellationToken);
@@ -412,13 +417,26 @@ public sealed class ChatRunsController : ControllerBase
         int status,
         string code,
         string title,
-        string? detail = null) =>
-        ApiProblemResults.Create(
-            HttpContext,
-            status,
-            code,
-            title,
-            detail);
+        string? detail = null)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(code);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                title,
+                new AgentApiErrorData(code, HttpContext.TraceIdentifier),
+                detail),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = descriptor.HttpStatus ?? status };
+    }
+
+    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
+
+    private IActionResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
+        ServiceResult<T>.OprateSuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = httpStatus };
 
     private async Task<IActionResult> ExecutePersistenceOperationAsync(
         Func<Task<IActionResult>> operation,
@@ -477,6 +495,8 @@ public static class ChatApiErrorCodes
     public const string InvalidTake = "REQUEST_INVALID_TAKE";
     public const string RunNotFound = "UNIFIED_ENTRY_RUN_NOT_FOUND";
 }
+
+public sealed record ChatRunCancelResponse(Guid RunId);
 
 public sealed record StartChatRunRequest(
     string? Input,

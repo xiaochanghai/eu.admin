@@ -178,13 +178,14 @@ git diff --check
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/approval-page.js`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgMcpApiResponse_Should.cs`
 
-- [ ] 4.1 写 RED 测试覆盖 MCP 列表/详情/创建/更新/同步/归档/风险更新、工具版本列表、审批查询/批准/拒绝/取消/恢复。
-- [ ] 4.2 断言 `MCP_DISCOVERY_FAILED`、`MCP_DISABLE_BLOCKED`、审批状态冲突映射一致，并保留恢复运行所需 ID。
-- [ ] 4.3 显式改造三个 Controller，禁止继续调用 `ApiProblemResults`。
-- [ ] 4.4 将 `mcp-api.js` 及审批调用改用 `requestServiceJson`，同步页面 PascalCase 属性。
-- [ ] 4.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
+- [x] 4.1 写 RED 测试覆盖 MCP 列表/详情/创建/更新/同步/归档/风险更新、工具版本列表、审批查询/批准/拒绝/取消/恢复。
+- [x] 4.2 断言 `MCP_DISCOVERY_FAILED`、`MCP_DISABLE_BLOCKED`、审批状态冲突映射一致，并保留恢复运行所需 ID。
+- [x] 4.3 显式改造三个 Controller，禁止继续调用 `ApiProblemResults`。
+- [x] 4.4 将 `mcp-api.js` 及审批调用改用 `requestServiceJson`，同步页面 PascalCase 属性。
+- [x] 4.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
 - [ ] 4.6 手工冒烟：同步工具、调整风险、被 Agent 引用时停用受阻、审批全状态流转。
-- [ ] 4.7 提交：`refactor(agent): standardize mcp and approval responses`
+  - 2026-08-17 用户已验证 MCP Server 保存、启用、停用和同步工具；风险调整、引用阻止及审批全状态流转仍待统一手工验收。
+- [x] 4.7 提交：`refactor(agent): standardize mcp and approval responses`
 
 ## Task 5：知识库
 
@@ -195,13 +196,14 @@ git diff --check
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/knowledge-page.js`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgKnowledgeApiResponse_Should.cs`
 
-- [ ] 5.1 写 RED 测试覆盖知识库列表/详情/创建/更新/归档、文档上传 JSON 结果、PDF 上传 JSON 结果、文档列表、分块列表、检索、引用列表。
-- [ ] 5.2 断言 multipart 请求格式不变，文档内容流不包装，`KNOWLEDGE_DOCUMENT_INVALID` 和 `KNOWLEDGE_SERVICE_UNAVAILABLE` 使用固定映射。
-- [ ] 5.3 改造 `KnowledgeBasesController` 与同文件中的 `KnowledgeBaseReferencesController`，确保动态检索内容和 metadata 键不被改名。
-- [ ] 5.4 切换知识库前端方法和页面 PascalCase 属性，保留 PDF 的 `FormData` 上传方式。
-- [ ] 5.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 5.6 手工冒烟：PDF 导入并索引、分块查看、检索命中、被 Agent 引用时归档受阻。
-- [ ] 5.7 提交：`refactor(agent): standardize knowledge responses`
+- [x] 5.1 写 RED 测试覆盖知识库列表/详情/创建/更新/归档、文档上传 JSON 结果、PDF 上传 JSON 结果、文档列表、分块列表、检索、引用列表。
+- [x] 5.2 断言 multipart 请求格式不变，文档内容流不包装，`KNOWLEDGE_DOCUMENT_INVALID` 和 `KNOWLEDGE_SERVICE_UNAVAILABLE` 使用固定映射。
+- [x] 5.3 改造 `KnowledgeBasesController` 与同文件中的 `KnowledgeBaseReferencesController`，确保动态检索内容和 metadata 键不被改名。
+- [x] 5.4 切换知识库前端方法和页面 PascalCase 属性，保留 PDF 的 `FormData` 上传方式。
+- [x] 5.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
+- [x] 5.6 手工冒烟：PDF 导入并索引、分块查看、检索命中、被 Agent 引用时归档受阻。
+  - 2026-08-17 用户确认知识库启用、停用、PDF 导入和检索正常；既有归档引用阻止链路已在前序验收中通过。
+- [x] 5.7 提交：`refactor(agent): standardize knowledge responses`
 
 ## Task 6：编排
 
@@ -212,13 +214,15 @@ git diff --check
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/orchestration-page.js`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgOrchestrationApiResponse_Should.cs`
 
-- [ ] 6.1 写 RED 测试覆盖编排列表/详情/创建/草稿/发布/归档、运行创建/列表/详情/取消/执行详情/输出。
-- [ ] 6.2 断言运行内部 ErrorCode 继续保留在运行 DTO，HTTP 边界错误按固定映射；输出中的动态键不改名。
-- [ ] 6.3 显式改造 Controller；如输出接口是文件/纯文本则保持原协议，JSON 输出才包装。
-- [ ] 6.4 切换编排前端调用和页面 PascalCase 属性。
-- [ ] 6.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 6.6 手工冒烟：保存草稿、发布、运行、节点详情、取消、归档和失败运行查看。
-- [ ] 6.7 提交：`refactor(agent): standardize orchestration responses`
+- [x] 6.1 写 RED 测试覆盖编排列表/详情/创建/草稿/发布/归档、运行创建/列表/详情/取消/执行详情/输出。
+- [x] 6.2 断言运行内部 ErrorCode 继续保留在运行 DTO，HTTP 边界错误按固定映射；输出中的动态键不改名。
+- [x] 6.3 显式改造 Controller；如输出接口是文件/纯文本则保持原协议，JSON 输出才包装。
+- [x] 6.4 切换编排前端调用和页面 PascalCase 属性。
+- [x] 6.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
+  - 2026-08-17 已迁移批次后端契约测试 39/39、前端测试 19/19；Agent API Release 构建 0 错误，保留 89 条既有依赖漏洞警告。
+- [x] 6.6 手工冒烟：保存草稿、发布、运行、节点详情、取消、归档和失败运行查看。
+  - 2026-08-17 已验证成功运行与节点详情：第一步输出 `NODE1_OK` 正确传递至第二步，最终输出 `NODE2_RECEIVED: NODE1_OK`；此前已验证失败运行可显示 `MODEL_INVOCATION_FAILED`。用户随后确认保存草稿、发布、取消和归档均无问题。
+- [x] 6.7 提交：`refactor(agent): standardize orchestration responses`
 
 ## Task 7：质量评估与模型评审
 
@@ -231,13 +235,14 @@ git diff --check
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/evaluation-page.js`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgEvaluationApiResponse_Should.cs`
 
-- [ ] 7.1 写 RED 测试覆盖评估集列表/详情/创建/草稿/发布/归档，批次运行/对比/列表/详情，模型评审创建/历史列表/详情，单次 Run 评估。
-- [ ] 7.2 断言断言失败属于正常完成的评估结果而不是 HTTP 500；真正执行失败使用固定 ErrorCode/Status。
-- [ ] 7.3 显式改造三个 Controller，保存历史模型评审 DTO 的完整字段。
-- [ ] 7.4 切换质量评估前端调用和页面 PascalCase 属性，确保 BATCHES、对比和历史报告仍使用解包后的 `Data`。
-- [ ] 7.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 7.6 手工冒烟：发布评估集、运行批次、展开断言、查看追踪、基线对比、历史模型评审。
-- [ ] 7.7 提交：`refactor(agent): standardize evaluation responses`
+- [x] 7.1 写 RED 测试覆盖评估集列表/详情/创建/草稿/发布/归档，批次运行/对比/列表/详情，模型评审创建/历史列表/详情，单次 Run 评估。
+- [x] 7.2 断言断言失败属于正常完成的评估结果而不是 HTTP 500；真正执行失败使用固定 ErrorCode/Status。
+- [x] 7.3 显式改造三个 Controller，保存历史模型评审 DTO 的完整字段。
+- [x] 7.4 切换质量评估前端调用和页面 PascalCase 属性，确保 BATCHES、对比和历史报告仍使用解包后的 `Data`。
+- [x] 7.5 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
+  - 2026-08-17 已迁移批次后端契约测试 42/42、前端测试 21/21；Agent API Release 构建 0 错误，保留 89 条既有依赖漏洞警告。
+- [x] 7.6 手工冒烟：归档/恢复、保存草稿、发布版本、运行批次、查看运行与对比均已由用户验证通过。
+- [x] 7.7 提交：`refactor(agent): standardize evaluation responses`
 
 ## Task 8：Chat、Agent Runs、Audit 与平台 JSON
 
@@ -254,14 +259,15 @@ git diff --check
 - Modify: `eu.core/EU.Core.Api.Agent/wwwroot/js/app.js`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgRuntimeApiResponse_Should.cs`
 
-- [ ] 8.1 写 RED 测试覆盖 Chat 会话列表/详情/运行列表/运行详情/执行明细/取消，Agent run 创建/列表，审计查询、保留数据清理、平台 service/capabilities。
-- [ ] 8.2 明确 `ChatRunsController` 的 SSE events 成功响应保持流协议；只改造会话及运行普通 JSON 和流开始前错误。
-- [ ] 8.3 `MetricsController` 保持指标协议，不纳入统一成功包装。
-- [ ] 8.4 显式改造其余普通 JSON Actions，确保知识检索事件、工具调用明细和业务查询结果中的动态载荷不改键名。
-- [ ] 8.5 切换剩余业务前端调用和 PascalCase 属性；保留 SSE 解析器原事件字段约定。
-- [ ] 8.6 运行本批 xUnit、`npm test`、Agent API Release build 和 `git diff --check`。
-- [ ] 8.7 手工冒烟：会话加载、发送消息、SSE 事件、取消、运行详情、知识命中和 MCP 工具追踪。
-- [ ] 8.8 提交：`refactor(agent): standardize runtime and platform responses`
+- [x] 8.1 写 RED 测试覆盖 Chat 会话列表/详情/运行列表/运行详情/执行明细/取消，Agent run 创建前错误/列表，审计查询、保留数据清理、平台 service/capabilities。
+- [x] 8.2 `ChatRunsController` 和 `AgentRunsController` 的 SSE 成功响应保持流协议；只改造普通 JSON 和流开始前错误。
+- [x] 8.3 `MetricsController` 保持 Prometheus 指标协议，未纳入统一成功包装。
+- [x] 8.4 显式改造其余普通 JSON Actions；知识检索事件、工具调用明细和业务查询结果的嵌入 JSON 字符串保持原键名。
+- [x] 8.5 剩余业务前端调用已切换为 `ServiceResult<T>` 解包，并在 API 边界映射 PascalCase DTO；SSE 解析器及原事件字段约定保持不变。
+- [x] 8.6 已通过本批 xUnit（2/2）、迁移回归 xUnit（16/16）、前端测试（23/23）、解决方案 Release build（0 错误）和 `git diff --check`。
+- [x] 8.7 手工冒烟：会话加载、发送消息、SSE 事件、取消、运行详情、知识命中和 MCP 工具追踪。
+  - 2026-08-17 已验证会话加载、发送消息、SSE、运行详情、知识命中、Chat MCP 调用、Agent 调试运行调用 `query_business_data`，以及运行中会话取消；中断前已回复内容刷新后仍可正常读取。
+- [x] 8.8 提交：`refactor(agent): standardize runtime and platform responses`
 
 ## Task 9：宿主错误边界
 

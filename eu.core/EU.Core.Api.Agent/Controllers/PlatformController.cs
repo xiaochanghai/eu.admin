@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.Model;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -22,38 +23,51 @@ public sealed class PlatformController(
 {
     [HttpGet("service")]
     public IActionResult Service() =>
-        Ok(new
-        {
-            service = platform.Value.ServiceName,
-            replicaMode = ReplicaModeHealthCheck.ReplicaMode
-        });
+        QuerySuccess(new PlatformServiceResponse(
+            platform.Value.ServiceName,
+            ReplicaModeHealthCheck.ReplicaMode));
 
     [HttpGet("capabilities")]
     public async Task<IActionResult> Capabilities(CancellationToken cancellationToken)
     {
         bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Succeeded;
-        return Ok(new
-        {
-            storageMode = "sqlsugar",
-            @volatile = false,
-            deployment = new
-            {
-                target = AgentDefinition.ServerDeploymentTarget,
-                host = AgentDefinition.ApiHost
-            },
-            modelProfileIds = modelProfiles.ProfileIds,
-            features = new
-            {
-                agentControl = true,
-                runtime = true,
-                skills = true,
-                mcp = true,
-                knowledge = true,
-                orchestration = true,
-                modelJudge = evaluation.Value.EnableModelJudge,
+        return QuerySuccess(new PlatformCapabilitiesResponse(
+            "sqlsugar",
+            false,
+            new PlatformDeploymentResponse(
+                AgentDefinition.ServerDeploymentTarget,
+                AgentDefinition.ApiHost),
+            modelProfiles.ProfileIds,
+            new PlatformFeatureResponse(
+                true, true, true, true, true, true,
+                evaluation.Value.EnableModelJudge,
                 mainAgent,
-                schedules = false
-            }
-        });
+                false)));
     }
+
+    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
 }
+
+public sealed record PlatformServiceResponse(string Service, string ReplicaMode);
+
+public sealed record PlatformCapabilitiesResponse(
+    string StorageMode,
+    bool Volatile,
+    PlatformDeploymentResponse Deployment,
+    IReadOnlyList<string> ModelProfileIds,
+    PlatformFeatureResponse Features);
+
+public sealed record PlatformDeploymentResponse(string Target, string Host);
+
+public sealed record PlatformFeatureResponse(
+    bool AgentControl,
+    bool Runtime,
+    bool Skills,
+    bool Mcp,
+    bool Knowledge,
+    bool Orchestration,
+    bool ModelJudge,
+    bool MainAgent,
+    bool Schedules);

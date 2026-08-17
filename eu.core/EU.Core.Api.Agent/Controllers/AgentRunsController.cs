@@ -5,6 +5,11 @@ using EU.Core.Agent.Application.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Agent.Application.Abstractions.Security;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -12,7 +17,8 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/agents/{agentId:guid}")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class AgentRunsController(
-    AgentRuntimeService runtime) : ControllerBase
+    AgentRuntimeService runtime,
+    ICallerContext caller) : ControllerBase
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -33,30 +39,29 @@ public sealed class AgentRunsController(
         if (!preparation.Succeeded)
         {
             AgentRunError error = preparation.Error!;
-            int status = error.Code switch
-            {
-                AgentRunErrorCodes.AgentNotFound => StatusCodes.Status404NotFound,
-                AgentRunErrorCodes.AgentDisabled
-                    or AgentRunErrorCodes.KnowledgeRevisionStale
-                    or AgentRunErrorCodes.KnowledgeBindingUnavailable =>
-                    StatusCodes.Status409Conflict,
-                AgentRunErrorCodes.KnowledgeServiceUnavailable =>
-                    StatusCodes.Status503ServiceUnavailable,
-                _ => StatusCodes.Status400BadRequest
-            };
-            HttpContext.Response.StatusCode = status;
-            HttpContext.Response.ContentType = "application/problem+json";
+            AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+            HttpContext.Response.StatusCode =
+                descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
+            HttpContext.Response.ContentType = "application/json; charset=utf-8";
             await HttpContext.Response.WriteAsJsonAsync(
-                new
-                {
-                    title = "The Agent run could not be started.",
-                    status,
-                    errorCode = error.Code,
-                    detail = error.Message
-                },
+                ServiceResult<AgentApiErrorData>.Failure(
+                    descriptor.Status,
+                    "The Agent run could not be started.",
+                    new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier),
+                    error.Message),
+                AgentJsonSerialization.PascalCase,
                 cancellationToken);
             return;
         }
+
+        AgentRunContext context = preparation.Context! with
+        {
+            ExecutionIdentity = new AgentExecutionIdentity(
+                caller.UserId,
+                caller.TenantId,
+                caller.Permissions,
+                caller.CorrelationId)
+        };
 
         Response.StatusCode = StatusCodes.Status200OK;
         Response.ContentType = "text/event-stream";
@@ -64,7 +69,7 @@ public sealed class AgentRunsController(
         Response.Headers.Append("X-Accel-Buffering", "no");
         await Response.StartAsync(cancellationToken);
         await foreach (AgentRunEvent value in runtime
-            .StreamAsync(preparation.Context!, cancellationToken)
+            .StreamAsync(context, cancellationToken)
             .WithCancellation(cancellationToken))
         {
             string eventName = ToEventName(value.Kind);
@@ -78,7 +83,11 @@ public sealed class AgentRunsController(
         Guid agentId,
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default) =>
-        Ok(await runtime.ListAuditAsync(agentId, take, cancellationToken));
+        new JsonResult(
+            ServiceResult<IReadOnlyList<AgentRunAuditRecord>>.QuerySuccess(
+                await runtime.ListAuditAsync(agentId, take, cancellationToken)),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = StatusCodes.Status200OK };
 
     private async Task WriteFrameAsync(
         string eventName,

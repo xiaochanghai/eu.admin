@@ -1,6 +1,8 @@
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -16,12 +18,17 @@ public sealed class BusinessQueryRetentionController(
     TimeProvider timeProvider) : ControllerBase
 {
     [HttpPost("cleanup")]
-    public async Task<ActionResult<BusinessQueryCleanupResult>> Cleanup(
+    public async Task<IActionResult> Cleanup(
         CancellationToken cancellationToken)
     {
         DateTimeOffset cutoff = timeProvider.GetUtcNow().AddDays(
             -options.Value.RetentionDays);
-        return Ok(await repository.RedactExpiredBusinessQueryResultsAsync(
-            cutoff, cancellationToken));
+        BusinessQueryCleanupResult result =
+            await repository.RedactExpiredBusinessQueryResultsAsync(
+                cutoff, cancellationToken);
+        return new JsonResult(
+            ServiceResult<BusinessQueryCleanupResult>.OprateSuccess(result),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = StatusCodes.Status200OK };
     }
 }

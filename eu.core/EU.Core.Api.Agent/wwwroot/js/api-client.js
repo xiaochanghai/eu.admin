@@ -1,11 +1,34 @@
 import {
   createApiError,
   parseServiceResponse,
-  requestJson as request,
   requestServiceJson as serviceRequest
 } from "./http.js";
 
 const base = "/api/agents";
+
+function lowerDto(value) {
+  if (Array.isArray(value)) return value.map(lowerDto);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+    key ? `${key[0].toLowerCase()}${key.slice(1)}` : key,
+    lowerDto(item)
+  ]));
+}
+
+export const platformCapabilitiesPresentation = value => lowerDto(value);
+export const chatConversationPresentation = value => lowerDto(value);
+export const chatMessagePresentation = value => lowerDto(value);
+export const chatRunPresentation = value => lowerDto(value);
+export const chatRunDetailsPresentation = value => lowerDto(value);
+export const chatRunEventPresentation = value => lowerDto(value);
+export const agentRunAuditPresentation = value => lowerDto(value);
+
+function chatConversationDetailsPresentation(value) {
+  return {
+    conversation: chatConversationPresentation(value?.Conversation),
+    messages: (value?.Messages ?? []).map(chatMessagePresentation)
+  };
+}
 
 export function createSseParser(onEvent) {
   const decoder = new TextDecoder("utf-8");
@@ -107,7 +130,8 @@ export async function streamChatRun({ input, conversationId, onOpen, onEvent, si
 }
 
 export const agentApi = {
-  capabilities: () => request("/api/platform/capabilities"),
+  capabilities: async () => platformCapabilitiesPresentation(
+    await serviceRequest("/api/platform/capabilities")),
   list: ({ search = "", status = "" } = {}) => {
     const query = new URLSearchParams();
     if (search) query.set("search", search);
@@ -135,50 +159,50 @@ export const agentApi = {
   },
   importPackage: json => serviceRequest(`${base}/import`, { method: "POST", body: json }),
   publishedSkills: () => serviceRequest("/api/skill-versions"),
-  publishedTools: () => request("/api/mcp/tool-versions"),
-  knowledgeReferences: () => request("/api/knowledge-base-references"),
-  knowledgeBases: (status = "") => request(`/api/knowledge-bases${status ? `?status=${encodeURIComponent(status)}` : ""}`),
-  knowledgeBase: id => request(`/api/knowledge-bases/${encodeURIComponent(id)}`),
-  knowledgeDocuments: id => request(`/api/knowledge-bases/${encodeURIComponent(id)}/documents`),
-  knowledgeDocumentChunks: (id, documentId, skip = 0, take = 10) => request(
+  publishedTools: () => serviceRequest("/api/mcp/tool-versions"),
+  knowledgeReferences: () => serviceRequest("/api/knowledge-base-references"),
+  knowledgeBases: (status = "") => serviceRequest(`/api/knowledge-bases${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  knowledgeBase: id => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}`),
+  knowledgeDocuments: id => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}/documents`),
+  knowledgeDocumentChunks: (id, documentId, skip = 0, take = 10) => serviceRequest(
     `/api/knowledge-bases/${encodeURIComponent(id)}/documents/${encodeURIComponent(documentId)}/chunks?skip=${encodeURIComponent(skip)}&take=${encodeURIComponent(take)}`),
-  createKnowledgeBase: body => request("/api/knowledge-bases", { method: "POST", body: JSON.stringify(body) }),
-  updateKnowledgeBase: (id, body) => request(`/api/knowledge-bases/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
-  setKnowledgeBaseArchived: (id, body) => request(`/api/knowledge-bases/${encodeURIComponent(id)}/archive`, { method: "PUT", body: JSON.stringify(body) }),
-  importKnowledgeDocument: (id, body) => request(`/api/knowledge-bases/${encodeURIComponent(id)}/documents`, { method: "POST", body: JSON.stringify(body) }),
+  createKnowledgeBase: body => serviceRequest("/api/knowledge-bases", { method: "POST", body: JSON.stringify(body) }),
+  updateKnowledgeBase: (id, body) => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
+  setKnowledgeBaseArchived: (id, body) => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}/archive`, { method: "PUT", body: JSON.stringify(body) }),
+  importKnowledgeDocument: (id, body) => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}/documents`, { method: "POST", body: JSON.stringify(body) }),
   importKnowledgePdf: (id, expectedLogicalRevision, file) => {
     const body = new FormData();
     body.set("expectedLogicalRevision", String(expectedLogicalRevision));
     body.set("file", file, file.name);
-    return request(`/api/knowledge-bases/${encodeURIComponent(id)}/documents/pdf`, {
+    return serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}/documents/pdf`, {
       method: "POST",
       body
     });
   },
-  searchKnowledge: (id, query, take = 6) => request(`/api/knowledge-bases/${encodeURIComponent(id)}/search`, {
+  searchKnowledge: (id, query, take = 6) => serviceRequest(`/api/knowledge-bases/${encodeURIComponent(id)}/search`, {
     method: "POST", body: JSON.stringify({ query, take })
   }),
-  orchestrations: (status = "") => request(`/api/orchestrations${status ? `?status=${encodeURIComponent(status)}` : ""}`),
-  orchestration: id => request(`/api/orchestrations/${encodeURIComponent(id)}`),
-  createOrchestration: body => request("/api/orchestrations", { method: "POST", body: JSON.stringify(body) }),
-  saveOrchestration: (id, body) => request(`/api/orchestrations/${encodeURIComponent(id)}/draft`, {
+  orchestrations: (status = "") => serviceRequest(`/api/orchestrations${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  orchestration: id => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}`),
+  createOrchestration: body => serviceRequest("/api/orchestrations", { method: "POST", body: JSON.stringify(body) }),
+  saveOrchestration: (id, body) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/draft`, {
     method: "PUT", body: JSON.stringify(body)
   }),
-  publishOrchestration: (id, expectedLogicalRevision) => request(`/api/orchestrations/${encodeURIComponent(id)}/publish`, {
+  publishOrchestration: (id, expectedLogicalRevision) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/publish`, {
     method: "POST", body: JSON.stringify({ expectedLogicalRevision })
   }),
-  setOrchestrationArchived: (id, body) => request(`/api/orchestrations/${encodeURIComponent(id)}/archive`, {
+  setOrchestrationArchived: (id, body) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/archive`, {
     method: "PUT", body: JSON.stringify(body)
   }),
-  startOrchestration: (id, input) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs`, {
+  startOrchestration: (id, input) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/runs`, {
     method: "POST", body: JSON.stringify({ input })
   }),
-  orchestrationRun: (id, runId) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}`),
-  orchestrationRunDetails: (id, runId) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/details`),
-  cancelOrchestrationRun: (id, runId) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/cancel`, {
+  orchestrationRun: (id, runId) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}`),
+  orchestrationRunDetails: (id, runId) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/details`),
+  cancelOrchestrationRun: (id, runId) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/cancel`, {
     method: "POST"
   }),
-  orchestrationOutput: (id, runId) => request(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/output`),
+  orchestrationOutput: (id, runId) => serviceRequest(`/api/orchestrations/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/output`),
   mainAgent: async () => {
     try {
       return await serviceRequest("/api/platform/main-agent");
@@ -191,69 +215,87 @@ export const agentApi = {
     method: "PUT",
     body: JSON.stringify({ agentId, expectedLogicalRevision })
   }),
-  listChatConversations: (take = 40) => request(`/api/chat/conversations?take=${encodeURIComponent(take)}`),
-  chatConversation: (conversationId, take = 160) => request(
-    `/api/chat/conversations/${encodeURIComponent(conversationId)}?take=${encodeURIComponent(take)}`),
-  chatConversationRuns: (conversationId, take = 20) => request(
-    `/api/chat/conversations/${encodeURIComponent(conversationId)}/runs?take=${encodeURIComponent(take)}`),
-  chatRun: runId => request(`/api/chat/runs/${encodeURIComponent(runId)}`),
-  chatRunDetails: runId => request(`/api/chat/runs/${encodeURIComponent(runId)}/details`),
-  chatRunEvents: (runId, take = 160) => request(
-    `/api/chat/runs/${encodeURIComponent(runId)}/events?take=${encodeURIComponent(take)}`),
-  cancelChatRun: runId => request(`/api/chat/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" }),
+  listChatConversations: async (take = 40) => (
+    await serviceRequest(`/api/chat/conversations?take=${encodeURIComponent(take)}`)
+  ).map(chatConversationPresentation),
+  chatConversation: async (conversationId, take = 160) => chatConversationDetailsPresentation(
+    await serviceRequest(
+      `/api/chat/conversations/${encodeURIComponent(conversationId)}?take=${encodeURIComponent(take)}`)),
+  chatConversationRuns: async (conversationId, take = 20) => (
+    await serviceRequest(
+      `/api/chat/conversations/${encodeURIComponent(conversationId)}/runs?take=${encodeURIComponent(take)}`)
+  ).map(chatRunPresentation),
+  chatRun: async runId => chatRunPresentation(
+    await serviceRequest(`/api/chat/runs/${encodeURIComponent(runId)}`)),
+  chatRunDetails: async runId => chatRunDetailsPresentation(
+    await serviceRequest(`/api/chat/runs/${encodeURIComponent(runId)}/details`)),
+  chatRunEvents: async (runId, take = 160) => (
+    await serviceRequest(
+      `/api/chat/runs/${encodeURIComponent(runId)}/events?take=${encodeURIComponent(take)}`)
+  ).map(chatRunEventPresentation),
+  cancelChatRun: async runId => lowerDto(await serviceRequest(
+    `/api/chat/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" })),
   toolApprovals: ({ status = "", take = 100 } = {}) => {
     const query = new URLSearchParams({ take: String(take) });
     if (status) query.set("status", status);
-    return request(`/api/tool-approvals?${query}`);
+    return serviceRequest(`/api/tool-approvals?${query}`);
   },
-  toolApproval: id => request(`/api/tool-approvals/${encodeURIComponent(id)}`),
-  approveToolApproval: (id, reason = "") => request(
+  toolApproval: id => serviceRequest(`/api/tool-approvals/${encodeURIComponent(id)}`),
+  approveToolApproval: (id, reason = "") => serviceRequest(
     `/api/tool-approvals/${encodeURIComponent(id)}/approve`,
     { method: "POST", body: JSON.stringify({ reason }) }),
-  rejectToolApproval: (id, reason = "") => request(
+  rejectToolApproval: (id, reason = "") => serviceRequest(
     `/api/tool-approvals/${encodeURIComponent(id)}/reject`,
     { method: "POST", body: JSON.stringify({ reason }) }),
-  cancelToolApproval: (id, reason = "") => request(
+  cancelToolApproval: (id, reason = "") => serviceRequest(
     `/api/tool-approvals/${encodeURIComponent(id)}/cancel`,
     { method: "POST", body: JSON.stringify({ reason }) }),
-  resumeToolApproval: id => request(
+  resumeToolApproval: id => serviceRequest(
     `/api/tool-approvals/${encodeURIComponent(id)}/resume`,
     { method: "POST" }),
-  evaluationSuites: (status = "") => request(
+  evaluationSuites: (status = "") => serviceRequest(
     `/api/evaluation-suites${status ? `?status=${encodeURIComponent(status)}` : ""}`),
-  evaluationSuite: id => request(`/api/evaluation-suites/${encodeURIComponent(id)}`),
-  createEvaluationSuite: body => request("/api/evaluation-suites", {
+  evaluationSuite: id => serviceRequest(`/api/evaluation-suites/${encodeURIComponent(id)}`),
+  createEvaluationSuite: body => serviceRequest("/api/evaluation-suites", {
     method: "POST", body: JSON.stringify(body)
   }),
-  saveEvaluationSuiteDraft: (id, body) => request(
+  saveEvaluationSuiteDraft: (id, body) => serviceRequest(
     `/api/evaluation-suites/${encodeURIComponent(id)}/draft`, {
       method: "PUT", body: JSON.stringify(body)
     }),
-  publishEvaluationSuite: (id, expectedLogicalRevision) => request(
+  publishEvaluationSuite: (id, expectedLogicalRevision) => serviceRequest(
     `/api/evaluation-suites/${encodeURIComponent(id)}/publish`, {
       method: "POST", body: JSON.stringify({ expectedLogicalRevision })
     }),
-  archiveEvaluationSuite: (id, expectedLogicalRevision, archived) => request(
+  archiveEvaluationSuite: (id, expectedLogicalRevision, archived) => serviceRequest(
     `/api/evaluation-suites/${encodeURIComponent(id)}/archive`, {
       method: "PUT", body: JSON.stringify({ expectedLogicalRevision, archived })
     }),
-  evaluationBatches: (suiteId, take = 50) => request(
+  evaluationBatches: (suiteId, take = 50) => serviceRequest(
     `/api/evaluation-batches?suiteId=${encodeURIComponent(suiteId)}&take=${encodeURIComponent(take)}`),
-  evaluationBatch: id => request(`/api/evaluation-batches/${encodeURIComponent(id)}`),
-  runEvaluationBatch: (suiteId, suiteVersionId) => request("/api/evaluation-batches", {
+  evaluationBatch: id => serviceRequest(`/api/evaluation-batches/${encodeURIComponent(id)}`),
+  runEvaluationBatch: (suiteId, suiteVersionId) => serviceRequest("/api/evaluation-batches", {
     method: "POST", body: JSON.stringify({ suiteId, suiteVersionId })
   }),
-  compareEvaluationBatches: body => request("/api/evaluation-batches/compare", {
+  compareEvaluationBatches: body => serviceRequest("/api/evaluation-batches/compare", {
     method: "POST", body: JSON.stringify(body)
   }),
-  modelJudgeReports: (batchId, take = 20) => request(
+  modelJudgeReports: (batchId, take = 20) => serviceRequest(
     `/api/evaluation-batches/${encodeURIComponent(batchId)}/model-judge-reports?take=${encodeURIComponent(take)}`),
-  runModelJudge: (batchId, body) => request(
+  modelJudgeReport: (batchId, reportId) => serviceRequest(
+    `/api/evaluation-batches/${encodeURIComponent(batchId)}/model-judge-reports/${encodeURIComponent(reportId)}`),
+  runModelJudge: (batchId, body) => serviceRequest(
     `/api/evaluation-batches/${encodeURIComponent(batchId)}/model-judge`, {
       method: "POST", body: JSON.stringify(body)
     }),
+  evaluateRun: (runId, body) => serviceRequest(
+    `/api/evaluations/runs/${encodeURIComponent(runId)}`, {
+      method: "POST", body: JSON.stringify(body)
+    }),
   streamChatRun,
-  runHistory: (id, take = 20) => request(`${base}/${encodeURIComponent(id)}/runs?take=${encodeURIComponent(take)}`),
+  runHistory: async (id, take = 20) => (
+    await serviceRequest(`${base}/${encodeURIComponent(id)}/runs?take=${encodeURIComponent(take)}`)
+  ).map(agentRunAuditPresentation),
   run: async (id, input, onEvent, signal) => {
     const response = await fetch(`${base}/${encodeURIComponent(id)}/runs`, {
       method: "POST",

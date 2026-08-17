@@ -846,10 +846,10 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
             active.approvalId = approvalId;
             assistant.article.classList.remove("is-streaming");
             renderApprovalCard(assistant.body, {
-              id: approvalId,
-              status: "Pending",
-              toolName: payload.toolName,
-              risk: payload.risk
+              Id: approvalId,
+              Status: "Pending",
+              ToolName: payload.toolName,
+              Risk: payload.risk
             });
             setStatus("等待人工审批", "warning");
             watchApproval({
@@ -969,7 +969,7 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
 
   function renderApprovalCard(body, approval) {
     clear(body);
-    const highRisk = approval?.risk === "HighRisk";
+    const highRisk = approval?.Risk === "HighRisk";
     const card = element("div", {
       className: `chat-approval-card${highRisk ? " is-high" : ""}`
     });
@@ -983,18 +983,18 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
       Consumed: "工具已执行",
       Failed: "工具执行失败",
       Invalidated: "审批已失效"
-    }[approval?.status] || "审批状态已更新";
+    }[approval?.Status] || "审批状态已更新";
     heading.textContent = statusLabel;
     const copy = element("p");
-    copy.textContent = approval?.status === "Pending"
-      ? `${approval.toolName || "该工具"} 在调用 MCP 前已暂停；批准只适用于本次冻结参数。`
+    copy.textContent = approval?.Status === "Pending"
+      ? `${approval.ToolName || "该工具"} 在调用 MCP 前已暂停；批准只适用于本次冻结参数。`
       : "审批与执行状态已写入服务端，可在审批中心查看完整安全摘要和决定记录。";
     const actions = element("div", { className: "chat-approval-actions" });
     const open = element("button", { className: "button secondary", type: "button" });
     open.textContent = "查看审批详情";
-    open.addEventListener("click", () => onOpenApproval?.(approval.id));
+    open.addEventListener("click", () => onOpenApproval?.(approval.Id));
     actions.append(open);
-    if (approval?.status === "Pending") {
+    if (approval?.Status === "Pending") {
       const cancel = element("button", { className: "button ghost", type: "button" });
       cancel.textContent = "取消申请";
       let armed = false;
@@ -1006,7 +1006,7 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
         }
         cancel.disabled = true;
         try {
-          await api.cancelToolApproval(approval.id, "Requester cancelled from Unified Chat.");
+          await api.cancelToolApproval(approval.Id, "Requester cancelled from Unified Chat.");
           await pollApproval();
         } catch (error) {
           cancel.disabled = false;
@@ -1015,12 +1015,12 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
       });
       actions.append(cancel);
     }
-    if (approval?.status === "Approved") {
+    if (approval?.Status === "Approved") {
       const resume = element("button", { className: "button primary", type: "button" });
       resume.textContent = "恢复执行";
       resume.addEventListener("click", async () => {
         resume.disabled = true;
-        await resumeApproval(approval.id);
+        await resumeApproval(approval.Id);
       });
       actions.append(resume);
     }
@@ -1048,19 +1048,19 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
     try {
       const value = await api.toolApproval(waiting.id);
       if (state.waitingApproval !== waiting) return;
-      const approval = value.approval;
+      const approval = value.Approval;
       renderApprovalCard(waiting.body, approval);
-      if (approval.status === "Approved" && !waiting.resuming) {
+      if (approval.Status === "Approved" && !waiting.resuming) {
         waiting.resuming = true;
-        await resumeApproval(approval.id);
+        await resumeApproval(approval.Id);
         return;
       }
-      if (["Rejected", "Cancelled", "Expired", "Invalidated", "Failed"].includes(approval.status)) {
+      if (["Rejected", "Cancelled", "Expired", "Invalidated", "Failed"].includes(approval.Status)) {
         waiting.resuming = true;
-        await resumeApproval(approval.id);
+        await resumeApproval(approval.Id);
         return;
       }
-      if (approval.status === "Consumed") {
+      if (approval.Status === "Consumed") {
         const conversationId = waiting.conversationId;
         stopApprovalWatch();
         if (conversationId) await selectConversation(conversationId);
@@ -1080,14 +1080,14 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
   async function restoreWaitingApproval(run) {
     try {
       const approvals = await api.toolApprovals({ take: 200 });
-      const approval = approvals.find(value => String(value.entryRunId) === String(run.id));
+      const approval = approvals.find(value => String(value.EntryRunId) === String(run.id));
       if (!approval) return;
       const rendered = messageNode("Assistant", "");
       timeline.append(rendered.article);
       renderApprovalCard(rendered.body, approval);
       setStatus("等待人工审批", "warning");
       watchApproval({
-        id: approval.id,
+        id: approval.Id,
         conversationId: run.conversationId,
         runId: run.id,
         body: rendered.body
