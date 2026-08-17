@@ -389,3 +389,4 @@ eu.core/EU.Core.Api/Logs
 .docs/.vuepress/dist/
 .claude.json
 .cursor
+.worktrees/
