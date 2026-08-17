@@ -1,10 +1,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Approvals;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Runtime;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,17 +30,17 @@ public sealed class ToolApprovalsController(
     {
         if (take is < 1 or > ToolApprovalStateMachine.MaximumTake)
         {
-            return Problem(
-                StatusCodes.Status400BadRequest,
+            return FromError(
                 ToolApprovalErrorCodes.Invalid,
                 "The approval page size is invalid.");
         }
 
-        return Ok(await approvals.ListAsync(
+        IReadOnlyList<ToolApprovalRequestRecord> values = await approvals.ListAsync(
             caller.TenantId,
             status,
             take,
-            cancellationToken));
+            cancellationToken);
+        return QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
@@ -54,14 +58,12 @@ public sealed class ToolApprovalsController(
             return NotFoundProblem();
         }
 
-        return Ok(new
-        {
+        return QuerySuccess(new ToolApprovalDetailResponse(
             approval,
-            decisions = await approvals.ListDecisionsAsync(
+            await approvals.ListDecisionsAsync(
                 id,
                 caller.TenantId,
-                cancellationToken)
-        });
+                cancellationToken)));
     }
 
     [HttpPost("{id:guid}/approve")]
@@ -99,35 +101,26 @@ public sealed class ToolApprovalsController(
                 ToolApprovalConversationResumeService>();
         if (resumeService is null)
         {
-            return Problem(
-                StatusCodes.Status503ServiceUnavailable,
+            return FromError(
                 "TOOL_APPROVAL_DISABLED",
                 "Tool approval execution is not enabled.");
         }
 
         try
         {
-            return Ok(await resumeService.ResumeAsync(
+            ToolApprovalConversationResumeResult value = await resumeService.ResumeAsync(
                 id,
                 new AgentExecutionIdentity(
                     caller.UserId,
                     caller.TenantId,
                     caller.Permissions,
                     caller.CorrelationId),
-                cancellationToken));
+                cancellationToken);
+            return OperationSuccess(value);
         }
         catch (ToolApprovalException exception)
         {
-            int status = exception.ErrorCode switch
-            {
-                ToolApprovalErrorCodes.InvalidState =>
-                    StatusCodes.Status409Conflict,
-                ToolApprovalErrorCodes.Expired =>
-                    StatusCodes.Status409Conflict,
-                _ => StatusCodes.Status422UnprocessableEntity
-            };
-            return Problem(
-                status,
+            return FromError(
                 exception.ErrorCode,
                 "The approved tool call could not be resumed.");
         }
@@ -141,8 +134,7 @@ public sealed class ToolApprovalsController(
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
-            return Problem(
-                StatusCodes.Status400BadRequest,
+            return FromError(
                 ToolApprovalErrorCodes.Invalid,
                 "The approval decision contains an unsupported property.");
         }
@@ -161,8 +153,7 @@ public sealed class ToolApprovalsController(
             && !HasPermission(
                 AgentAuthorizationPolicies.ApprovalDecideHighRiskPermission))
         {
-            return Problem(
-                StatusCodes.Status403Forbidden,
+            return FromError(
                 "AUTHORIZATION_DENIED",
                 "High-risk approval permission is required.");
         }
@@ -178,24 +169,11 @@ public sealed class ToolApprovalsController(
                     request.Reason ?? string.Empty,
                     timeProvider.GetUtcNow()),
                 cancellationToken);
-            return Ok(decided);
+            return OperationSuccess(decided);
         }
         catch (ToolApprovalException exception)
         {
-            int status = exception.ErrorCode switch
-            {
-                ToolApprovalErrorCodes.SelfApprovalForbidden
-                    or ToolApprovalErrorCodes.CancellationForbidden =>
-                    StatusCodes.Status403Forbidden,
-                ToolApprovalErrorCodes.Invalid =>
-                    StatusCodes.Status400BadRequest,
-                ToolApprovalErrorCodes.Expired
-                    or ToolApprovalErrorCodes.InvalidState =>
-                    StatusCodes.Status409Conflict,
-                _ => StatusCodes.Status409Conflict
-            };
-            return Problem(
-                status,
+            return FromError(
                 exception.ErrorCode,
                 "The approval decision could not be completed.");
         }
@@ -208,14 +186,44 @@ public sealed class ToolApprovalsController(
             StringComparer.Ordinal);
 
     private IActionResult NotFoundProblem() =>
-        Problem(
-            StatusCodes.Status404NotFound,
+        FromError(
             "TOOL_APPROVAL_NOT_FOUND",
             "The tool approval was not found.");
 
-    private IActionResult Problem(int status, string errorCode, string title) =>
-        ApiProblemResults.Create(HttpContext, status, errorCode, title);
+    private IActionResult QuerySuccess<T>(T value) =>
+        new JsonResult(
+            ServiceResult<T>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
+
+    private IActionResult OperationSuccess<T>(T value) =>
+        new JsonResult(
+            ServiceResult<T>.OprateSuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
+        };
+    }
 }
+
+public sealed record ToolApprovalDetailResponse(
+    ToolApprovalRequestRecord Approval,
+    IReadOnlyList<ToolApprovalDecisionRecord> Decisions);
 
 public sealed class ToolApprovalDecisionApiRequest
 {

@@ -1,8 +1,12 @@
 using EU.Core.Agent.Application.Mcp;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -22,9 +26,7 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         {
             if (!Enum.TryParse(status, ignoreCase: false, out McpServerStatus value))
             {
-                return ApiProblemResults.Create(
-                    HttpContext,
-                    StatusCodes.Status400BadRequest,
+                return FromError(
                     "REQUEST_INVALID",
                     "The MCP status filter is invalid.");
             }
@@ -32,9 +34,10 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
             parsedStatus = value;
         }
 
-        return Ok(await lifecycle.ListAsync(
+        IReadOnlyList<McpServerDefinition> values = await lifecycle.ListAsync(
             new McpServerQuery(search, parsedStatus),
-            cancellationToken));
+            cancellationToken);
+        return QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
@@ -42,12 +45,8 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
     {
         McpServerDefinition? server = await lifecycle.GetAsync(id, cancellationToken);
         return server is null
-            ? ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status404NotFound,
-                McpErrorCodes.NotFound,
-                "The MCP Server was not found.")
-            : Ok(server);
+            ? FromError(McpErrorCodes.NotFound, "The MCP Server was not found.")
+            : QuerySuccess(server);
     }
 
     [HttpPost]
@@ -67,9 +66,13 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/mcp/servers/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+        {
+            return FromError(result.Error!);
+        }
+
+        Response.Headers.Location = $"/api/mcp/servers/{result.Value!.Id}";
+        return OperationSuccess(result.Value, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}")]
@@ -91,7 +94,9 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/sync")]
@@ -103,7 +108,9 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         McpOperationResult<McpServerDefinition> result = await lifecycle.SyncAsync(
             new SyncMcpServerCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -119,7 +126,9 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                     request.ExpectedLogicalRevision,
                     request.Archived),
                 cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/tools/{toolVersionId:guid}/risk")]
@@ -137,28 +146,44 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                     request.ExpectedLogicalRevision,
                     request.Risk),
                 cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!);
     }
 
-    private IActionResult FromError(McpError error)
-    {
-        int status = error.Code switch
+    private IActionResult QuerySuccess<T>(T value) =>
+        new JsonResult(
+            ServiceResult<T>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
         {
-            McpErrorCodes.NotFound or McpErrorCodes.ToolNotFound =>
-                StatusCodes.Status404NotFound,
-            McpErrorCodes.CodeConflict or McpErrorCodes.RevisionConflict =>
-                StatusCodes.Status409Conflict,
-            McpErrorCodes.DiscoveryFailed =>
-                StatusCodes.Status502BadGateway,
-            _ =>
-                StatusCodes.Status400BadRequest
+            StatusCode = StatusCodes.Status200OK
         };
-        return ApiProblemResults.Create(
-            HttpContext,
-            status,
-            error.Code,
-            "The MCP operation could not be completed.",
-            error.Message);
+
+    private IActionResult OperationSuccess<T>(
+        T value,
+        int httpStatus = StatusCodes.Status200OK) =>
+        new JsonResult(
+            ServiceResult<T>.OprateSuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = httpStatus
+        };
+
+    private IActionResult FromError(McpError error) =>
+        FromError(error.Code, error.Message);
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
+        };
     }
 }
 

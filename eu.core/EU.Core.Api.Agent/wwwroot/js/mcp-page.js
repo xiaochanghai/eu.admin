@@ -33,7 +33,7 @@ export function createMcpPage({ toast, onToolsChanged }) {
 
   function setBusy(value) {
     busy = value;
-    const archived = current?.status === "Archived";
+    const archived = current?.Status === "Archived";
     saveButton.disabled = value || archived;
     syncButton.disabled = value || archived;
     statusButton.disabled = value || archived;
@@ -74,13 +74,13 @@ export function createMcpPage({ toast, onToolsChanged }) {
     empty.hidden = state.servers.length !== 0;
     for (const server of state.servers) {
       const name = element("strong");
-      name.textContent = server.name || server.code;
+      name.textContent = server.Name || server.Code;
       const code = element("code");
-      code.textContent = server.code;
+      code.textContent = server.Code;
       const open = element("button", { className: "row-action", type: "button" }, "管理");
       open.addEventListener("click", async () => {
         open.disabled = true;
-        try { openEditor(await mcpApi.get(server.id)); }
+        try { openEditor(await mcpApi.get(server.Id)); }
         catch (error) { toast(error.message, "error"); }
         finally { open.disabled = false; }
       });
@@ -88,11 +88,11 @@ export function createMcpPage({ toast, onToolsChanged }) {
         element("td", {}, element("div", { className: "agent-identity" },
           element("span", { className: "agent-avatar", ariaHidden: "true" }, "◆"),
           element("div", {}, name, code))),
-        element("td", {}, server.transport),
+        element("td", {}, server.Transport),
         element("td", {}, element("span", { className: "mcp-target" },
-          server.transport === "Stdio" ? server.command : server.endpoint)),
-        element("td", {}, String(server.currentToolVersionIds?.length ?? 0)),
-        element("td", {}, statusBadge(server.status)),
+          server.Transport === "Stdio" ? server.Command : server.Endpoint)),
+        element("td", {}, String(server.CurrentToolVersionIds?.length ?? 0)),
+        element("td", {}, statusBadge(server.Status)),
         element("td", {}, open)));
     }
   }
@@ -142,25 +142,25 @@ export function createMcpPage({ toast, onToolsChanged }) {
 
   function openEditor(server = null) {
     current = server;
-    const archived = server?.status === "Archived";
-    fields.code.value = server?.code ?? "";
+    const archived = server?.Status === "Archived";
+    fields.code.value = server?.Code ?? "";
     fields.code.readOnly = Boolean(server);
-    fields.name.value = server?.name ?? "";
-    fields.description.value = server?.description ?? "";
-    fields.transport.value = server?.transport ?? "StreamableHttp";
-    fields.endpoint.value = server?.endpoint ?? "";
-    fields.command.value = server?.command ?? "";
-    fields.arguments.value = (server?.arguments ?? []).join("\n");
-    fields.credentialAlias.value = server?.credentialAlias ?? "";
-    fields.enabled.checked = server?.enabled ?? true;
-    setText(document.querySelector("#mcpDrawerTitle"), server ? server.name || server.code : "创建 MCP Server");
-    setText(document.querySelector("#mcpDrawerEyebrow"), server ? `REV ${server.logicalRevision} · ${server.status}` : "NEW MCP SERVER");
+    fields.name.value = server?.Name ?? "";
+    fields.description.value = server?.Description ?? "";
+    fields.transport.value = server?.Transport ?? "StreamableHttp";
+    fields.endpoint.value = server?.Endpoint ?? "";
+    fields.command.value = server?.Command ?? "";
+    fields.arguments.value = (server?.Arguments ?? []).join("\n");
+    fields.credentialAlias.value = server?.CredentialAlias ?? "";
+    fields.enabled.checked = server?.Enabled ?? true;
+    setText(document.querySelector("#mcpDrawerTitle"), server ? server.Name || server.Code : "创建 MCP Server");
+    setText(document.querySelector("#mcpDrawerEyebrow"), server ? `REV ${server.LogicalRevision} · ${server.Status}` : "NEW MCP SERVER");
     setText(saveButton, server ? "保存配置" : "创建 Server");
     syncButton.hidden = !server;
     statusButton.hidden = !server || archived;
     archiveButton.hidden = !server;
-    if (server) setText(statusButton, server.enabled ? "停用" : "启用");
-    if (server) setText(archiveButton, server.status === "Archived" ? "恢复" : "归档");
+    if (server) setText(statusButton, server.Enabled ? "停用" : "启用");
+    if (server) setText(archiveButton, server.Status === "Archived" ? "恢复" : "归档");
     saveButton.disabled = archived;
     syncButton.disabled = archived;
     document.querySelector("#mcpToolsSection").hidden = !server;
@@ -184,27 +184,27 @@ export function createMcpPage({ toast, onToolsChanged }) {
   function renderTools() {
     const container = document.querySelector("#mcpToolList");
     clear(container);
-    if (!current?.currentToolVersionIds?.length) {
+    if (!current?.CurrentToolVersionIds?.length) {
       container.append(element("p", { className: "binding-empty" }, "尚未发现工具。保存配置后执行“同步工具”。"));
       return;
     }
-    const versions = new Map((current.toolVersions ?? []).map(tool => [String(tool.id), tool]));
-    for (const id of current.currentToolVersionIds) {
+    const versions = new Map((current.ToolVersions ?? []).map(tool => [String(tool.Id), tool]));
+    for (const id of current.CurrentToolVersionIds) {
       const tool = versions.get(String(id));
       if (!tool) continue;
-      const select = element("select", { ariaLabel: `${tool.name} 风险等级` },
+      const select = element("select", { ariaLabel: `${tool.Name} 风险等级` },
         ...["Unknown", "ReadOnly", "Mutating", "HighRisk"].map(risk => {
           const item = element("option", { value: risk }, risk);
-          item.selected = risk === tool.risk;
+          item.selected = risk === tool.Risk;
           return item;
         }));
-      select.disabled = busy || current?.status === "Archived";
+      select.disabled = busy || current?.Status === "Archived";
       select.addEventListener("change", async () => {
         setBusy(true);
-        showMessage(`正在更新 ${tool.name}…`);
+        showMessage(`正在更新 ${tool.Name}…`);
         try {
-          current = await mcpApi.classify(current.id, tool.id, {
-            expectedLogicalRevision: current.logicalRevision,
+          current = await mcpApi.classify(current.Id, tool.Id, {
+            expectedLogicalRevision: current.LogicalRevision,
             risk: select.value
           });
           renderTools();
@@ -216,9 +216,9 @@ export function createMcpPage({ toast, onToolsChanged }) {
         } finally { setBusy(false); }
       });
       const title = element("strong");
-      title.textContent = tool.name;
+      title.textContent = tool.Name;
       const description = element("small");
-      description.textContent = tool.description || "无说明";
+      description.textContent = tool.Description || "无说明";
       container.append(element("div", { className: "mcp-tool-row" },
         element("div", {}, title, description), select));
     }
@@ -231,7 +231,7 @@ export function createMcpPage({ toast, onToolsChanged }) {
     showMessage("正在保存…");
     const value = values();
     const action = current
-      ? mcpApi.update(current.id, { ...value, expectedLogicalRevision: current.logicalRevision })
+      ? mcpApi.update(current.Id, { ...value, expectedLogicalRevision: current.LogicalRevision })
       : mcpApi.create(value);
     action.then(async server => {
       current = server;
@@ -248,28 +248,28 @@ export function createMcpPage({ toast, onToolsChanged }) {
     setBusy(true);
     showMessage("正在连接并发现工具…");
     try {
-      current = await mcpApi.sync(current.id, current.logicalRevision);
+      current = await mcpApi.sync(current.Id, current.LogicalRevision);
       renderTools();
       await load();
       await onToolsChanged();
-      showMessage(`同步完成，共发现 ${current.currentToolVersionIds.length} 个工具。`, "success");
+      showMessage(`同步完成，共发现 ${current.CurrentToolVersionIds.length} 个工具。`, "success");
     } catch (error) {
-      try { current = await mcpApi.get(current.id); renderTools(); } catch { /* retain original failure */ }
+      try { current = await mcpApi.get(current.Id); renderTools(); } catch { /* retain original failure */ }
       showMessage(`${error.message} · ${error.errorCode || "MCP_DISCOVERY_FAILED"}`, "error");
       await load();
     } finally { setBusy(false); }
   });
 
   statusButton.addEventListener("click", async () => {
-    if (!current || busy || current.status === "Archived") return;
+    if (!current || busy || current.Status === "Archived") return;
     if (!form.reportValidity()) return;
-    const enabling = !current.enabled;
+    const enabling = !current.Enabled;
     setBusy(true);
     showMessage(enabling ? "正在启用 MCP Server…" : "正在停用 MCP Server…");
     try {
-      current = await mcpApi.update(current.id, {
+      current = await mcpApi.update(current.Id, {
         ...values(),
-        expectedLogicalRevision: current.logicalRevision,
+        expectedLogicalRevision: current.LogicalRevision,
         enabled: enabling
       });
       openEditor(current);
@@ -283,8 +283,8 @@ export function createMcpPage({ toast, onToolsChanged }) {
 
   archiveButton.addEventListener("click", async () => {
     if (!current || busy) return;
-    const restoring = current.status === "Archived";
-    if (!restoring && current.enabled) {
+    const restoring = current.Status === "Archived";
+    if (!restoring && current.Enabled) {
       showMessage("请先点击“停用”，再归档 MCP Server。", "warning");
       return;
     }
@@ -292,8 +292,8 @@ export function createMcpPage({ toast, onToolsChanged }) {
     showMessage(restoring ? "正在恢复 MCP Server…" : "正在归档 MCP Server…");
     try {
       current = await mcpApi.setArchived(
-        current.id,
-        current.logicalRevision,
+        current.Id,
+        current.LogicalRevision,
         !restoring);
       openEditor(current);
       await load();

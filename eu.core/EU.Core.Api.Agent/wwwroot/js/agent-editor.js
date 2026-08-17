@@ -1,5 +1,21 @@
 import { clear, element, option, setText } from "./dom.js";
 
+export function mcpToolReferencePresentation(reference) {
+  return {
+    id: reference.ToolVersionId,
+    title: reference.ToolName,
+    detail: `${reference.ServerCode} · ${reference.Risk} · ${reference.Sha256.slice(0, 10)}`
+  };
+}
+
+export function knowledgeReferencePresentation(reference) {
+  return {
+    id: reference.KnowledgeBaseId,
+    title: reference.Name || reference.Code,
+    detail: `${reference.Code} · REV ${reference.LogicalRevision}`
+  };
+}
+
 export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onStatus, onExport, onRun, onSetMain }) {
   const drawer = document.querySelector("#agentDrawer");
   const backdrop = document.querySelector("#drawerBackdrop");
@@ -173,14 +189,15 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     }
     const selected = new Set(selectedIds.map(String));
     for (const reference of publishedTools) {
+      const presentation = mcpToolReferencePresentation(reference);
       const checkbox = element("input", { type: "checkbox" });
-      checkbox.value = reference.toolVersionId;
-      checkbox.checked = selected.has(String(reference.toolVersionId));
+      checkbox.value = presentation.id;
+      checkbox.checked = selected.has(String(presentation.id));
       checkbox.addEventListener("change", () => { dirty = true; });
       const title = element("strong");
-      title.textContent = reference.toolName;
+      title.textContent = presentation.title;
       const detail = element("small");
-      detail.textContent = `${reference.serverCode} · ${reference.risk} · ${reference.sha256.slice(0, 10)}`;
+      detail.textContent = presentation.detail;
       container.append(element("label", { className: "binding-option" }, checkbox, element("span", {}, title, detail)));
     }
   }
@@ -194,13 +211,14 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
     }
     const selected = new Set(selectedIds.map(String));
     for (const reference of publishedKnowledge) {
+      const presentation = knowledgeReferencePresentation(reference);
       const checkbox = element("input", { type: "checkbox" });
-      checkbox.value = reference.knowledgeBaseId;
-      checkbox.checked = selected.has(String(reference.knowledgeBaseId));
+      checkbox.value = presentation.id;
+      checkbox.checked = selected.has(String(presentation.id));
       checkbox.addEventListener("change", () => { dirty = true; });
       container.append(element("label", { className: "binding-option" }, checkbox,
-        element("span", {}, element("strong", {}, reference.name || reference.code),
-          element("small", {}, `${reference.code} · REV ${reference.logicalRevision}`))));
+        element("span", {}, element("strong", {}, presentation.title),
+          element("small", {}, presentation.detail))));
     }
   }
 
