@@ -1,10 +1,14 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Application.Runtime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -26,7 +30,7 @@ public sealed class EvaluationBatchesController(
             || request.SuiteId == Guid.Empty
             || request.SuiteVersionId == Guid.Empty)
         {
-            return Error(400, EvaluationBatchErrorCodes.RequestInvalid);
+            return FromError(EvaluationBatchErrorCodes.RequestInvalid, "The evaluation batch request is invalid.");
         }
 
         EvaluationBatchOperationResult result = await service.RunAsync(
@@ -38,7 +42,7 @@ public sealed class EvaluationBatchesController(
                 caller.Permissions,
                 caller.CorrelationId),
             cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
     }
 
     [HttpPost("compare")]
@@ -50,7 +54,7 @@ public sealed class EvaluationBatchesController(
             || request.Gate is null
             || request.Gate.AdditionalProperties is { Count: > 0 })
         {
-            return Error(400, EvaluationComparisonErrorCodes.SpecificationInvalid);
+            return FromError(EvaluationComparisonErrorCodes.SpecificationInvalid, "The evaluation comparison specification is invalid.");
         }
 
         EvaluationComparisonOperationResult result = await comparisons.CompareAsync(
@@ -67,14 +71,8 @@ public sealed class EvaluationBatchesController(
                 request.Gate.RequireStableRoutes),
             cancellationToken);
         return result.Succeeded
-            ? Ok(result.Value)
-            : Error(result.Error!.Code switch
-            {
-                EvaluationComparisonErrorCodes.BatchNotFound => 404,
-                EvaluationComparisonErrorCodes.BatchNotTerminal
-                    or EvaluationComparisonErrorCodes.SuiteMismatch => 409,
-                _ => 400
-            }, result.Error.Code, result.Error.Message);
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!.Code, result.Error.Message);
     }
 
     [HttpGet]
@@ -85,10 +83,10 @@ public sealed class EvaluationBatchesController(
     {
         if (suiteId == Guid.Empty || take is < 1 or > 100)
         {
-            return Error(400, EvaluationBatchErrorCodes.RequestInvalid);
+            return FromError(EvaluationBatchErrorCodes.RequestInvalid, "The evaluation batch request is invalid.");
         }
 
-        return Ok(await service.ListAsync(
+        return QuerySuccess(await service.ListAsync(
             suiteId, caller.TenantId, take, cancellationToken));
     }
 
@@ -98,8 +96,8 @@ public sealed class EvaluationBatchesController(
         EvaluationBatchRecord? value = await service.GetAsync(
             id, caller.TenantId, cancellationToken);
         return value is null
-            ? Error(404, EvaluationBatchErrorCodes.BatchNotFound)
-            : Ok(value);
+            ? FromError(EvaluationBatchErrorCodes.BatchNotFound, "The evaluation batch was not found.")
+            : QuerySuccess(value);
     }
 
     [HttpPost("{id:guid}/model-judge")]
@@ -112,7 +110,7 @@ public sealed class EvaluationBatchesController(
             || request.Evaluators is null
             || request.MinimumScores is null)
         {
-            return Error(400, ModelJudgeErrorCodes.RequestInvalid);
+            return FromError(ModelJudgeErrorCodes.RequestInvalid, "The model judge request is invalid.");
         }
 
         ModelJudgeOperationResult result = await modelJudge.EvaluateAsync(
@@ -126,16 +124,8 @@ public sealed class EvaluationBatchesController(
                 request.MinimumScores),
             cancellationToken);
         return result.Succeeded
-            ? Ok(result.Value)
-            : Error(result.Error!.Code switch
-            {
-                ModelJudgeErrorCodes.BatchNotFound => 404,
-                ModelJudgeErrorCodes.Disabled
-                    or ModelJudgeErrorCodes.BatchNotCompleted => 409,
-                ModelJudgeErrorCodes.ExecutionFailed => 502,
-                ModelJudgeErrorCodes.PersistenceConflict => 409,
-                _ => 400
-            }, result.Error.Code, result.Error.Message);
+            ? OperationSuccess(result.Value!)
+            : FromError(result.Error!.Code, result.Error.Message);
     }
 
     [HttpGet("{id:guid}/model-judge-reports")]
@@ -146,10 +136,10 @@ public sealed class EvaluationBatchesController(
     {
         if (id == Guid.Empty || take is < 1 or > 50)
         {
-            return Error(400, ModelJudgeErrorCodes.RequestInvalid);
+            return FromError(ModelJudgeErrorCodes.RequestInvalid, "The model judge request is invalid.");
         }
 
-        return Ok(await modelJudge.ListAsync(id, caller.TenantId, take, cancellationToken));
+        return QuerySuccess(await modelJudge.ListAsync(id, caller.TenantId, take, cancellationToken));
     }
 
     [HttpGet("{id:guid}/model-judge-reports/{reportId:guid}")]
@@ -161,27 +151,31 @@ public sealed class EvaluationBatchesController(
         ModelJudgeReport? value = await modelJudge.GetAsync(
             reportId, caller.TenantId, cancellationToken);
         return value is null || value.BatchId != id
-            ? Error(404, ModelJudgeErrorCodes.BatchNotFound)
-            : Ok(value);
+            ? FromError(ModelJudgeErrorCodes.BatchNotFound, "The model judge report was not found.")
+            : QuerySuccess(value);
     }
 
-    private IActionResult FromError(EvaluationBatchError error) =>
-        Error(error.Code switch
-        {
-            EvaluationBatchErrorCodes.SuiteNotFound
-                or EvaluationBatchErrorCodes.VersionNotFound => 404,
-            EvaluationBatchErrorCodes.PersistenceConflict => 409,
-            EvaluationBatchErrorCodes.ExecutionFailed => 500,
-            _ => 400
-        }, error.Code, error.Message);
+    private IActionResult FromError(EvaluationBatchError error) => FromError(error.Code, error.Message);
 
-    private IActionResult Error(int status, string code, string? detail = null) =>
-        ApiProblemResults.Create(
-            HttpContext,
-            status,
-            code,
-            "The evaluation batch operation could not be completed.",
-            detail);
+    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
+
+    private IActionResult OperationSuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.OprateSuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
+    }
 }
 
 public sealed record StartEvaluationBatchRequest(Guid SuiteId, Guid SuiteVersionId)

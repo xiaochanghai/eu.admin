@@ -1,10 +1,14 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Application.UnifiedEntry;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -23,21 +27,13 @@ public sealed class RunEvaluationsController(
     {
         if (!Guid.TryParse(runId, out Guid id) || id == Guid.Empty)
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status400BadRequest,
-                RunEvaluationErrorCodes.SpecificationInvalid,
-                "The run evaluation request is invalid.");
+            return FromError(RunEvaluationErrorCodes.SpecificationInvalid, "The run evaluation request is invalid.");
         }
 
         if (request.AdditionalProperties is { Count: > 0 }
             || !TryStatus(request.ExpectedStatus, out UnifiedRunStatus? expectedStatus))
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status400BadRequest,
-                RunEvaluationErrorCodes.SpecificationInvalid,
-                "The run evaluation request is invalid.");
+            return FromError(RunEvaluationErrorCodes.SpecificationInvalid, "The run evaluation request is invalid.");
         }
 
         try
@@ -55,20 +51,12 @@ public sealed class RunEvaluationsController(
                     request.MaximumDurationMilliseconds),
                 cancellationToken);
             return report is null
-                ? ApiProblemResults.Create(
-                    HttpContext,
-                    StatusCodes.Status404NotFound,
-                    RunEvaluationErrorCodes.RunNotFound,
-                    "The run was not found.")
-                : Ok(report);
+                ? FromError(RunEvaluationErrorCodes.RunNotFound, "The run was not found.")
+                : OperationSuccess(report);
         }
         catch (RunEvaluationException exception)
         {
-            return ApiProblemResults.Create(
-                HttpContext,
-                StatusCodes.Status400BadRequest,
-                exception.ErrorCode,
-                exception.Message);
+            return FromError(exception.ErrorCode, exception.Message);
         }
     }
 
@@ -88,6 +76,22 @@ public sealed class RunEvaluationsController(
 
         status = parsed;
         return true;
+    }
+
+    private IActionResult OperationSuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.OprateSuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
     }
 }
 

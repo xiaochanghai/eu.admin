@@ -15,6 +15,196 @@ export function evaluationStatusLabel(status) {
   return STATUS_LABELS[status] || String(status || "未知");
 }
 
+function evaluationSpecificationPresentation(value = {}) {
+  return {
+    expectedStatus: value.ExpectedStatus ?? null,
+    outputContains: value.OutputContains || [],
+    outputExcludes: value.OutputExcludes || [],
+    requiredEventKinds: value.RequiredEventKinds || [],
+    maximumToolCalls: value.MaximumToolCalls ?? null,
+    maximumDurationMilliseconds: value.MaximumDurationMilliseconds ?? null
+  };
+}
+
+function evaluationCasePresentation(value = {}) {
+  return {
+    id: value.Id,
+    name: value.Name,
+    input: value.Input,
+    targetAgentId: value.TargetAgentId,
+    targetAgentVersionId: value.TargetAgentVersionId,
+    specification: evaluationSpecificationPresentation(value.Specification)
+  };
+}
+
+export function evaluationSuitePresentation(value = {}) {
+  return {
+    id: value.Id,
+    tenantId: value.TenantId,
+    code: value.Code,
+    name: value.Name,
+    description: value.Description,
+    logicalRevision: value.LogicalRevision,
+    createdAtUtc: value.CreatedAtUtc,
+    updatedAtUtc: value.UpdatedAtUtc,
+    createdBy: value.CreatedBy,
+    updatedBy: value.UpdatedBy,
+    status: value.Status,
+    draft: { cases: (value.Draft?.Cases || []).map(evaluationCasePresentation) },
+    publishedVersions: (value.PublishedVersions || []).map(version => ({
+      id: version.Id,
+      label: version.Label,
+      contentSha256: version.ContentSha256,
+      publishedAtUtc: version.PublishedAtUtc,
+      publishedBy: version.PublishedBy,
+      cases: (version.Cases || []).map(evaluationCasePresentation)
+    }))
+  };
+}
+
+function runEvaluationReportPresentation(value) {
+  if (!value) return null;
+  return {
+    runId: value.RunId,
+    evaluatedAtUtc: value.EvaluatedAtUtc,
+    passed: value.Passed,
+    score: value.Score,
+    outputSha256: value.OutputSha256,
+    outputUtf8Bytes: value.OutputUtf8Bytes,
+    checks: (value.Checks || []).map(check => ({
+      code: check.Code,
+      passed: check.Passed,
+      expected: check.Expected,
+      actual: check.Actual
+    }))
+  };
+}
+
+export function evaluationBatchPresentation(value = {}) {
+  return {
+    id: value.Id,
+    tenantId: value.TenantId,
+    requestedBy: value.RequestedBy,
+    suiteId: value.SuiteId,
+    suiteVersionId: value.SuiteVersionId,
+    suiteVersionContentSha256: value.SuiteVersionContentSha256,
+    status: value.Status,
+    logicalRevision: value.LogicalRevision,
+    startedAtUtc: value.StartedAtUtc,
+    finishedAtUtc: value.FinishedAtUtc,
+    errorCode: value.ErrorCode,
+    cases: (value.Cases || []).map(item => ({
+      caseId: item.CaseId,
+      caseName: item.CaseName,
+      targetAgentId: item.TargetAgentId,
+      targetAgentVersionId: item.TargetAgentVersionId,
+      status: item.Status,
+      unifiedRunId: item.UnifiedRunId,
+      unifiedRunStatus: item.UnifiedRunStatus,
+      report: runEvaluationReportPresentation(item.Report),
+      errorCode: item.ErrorCode,
+      durationMilliseconds: item.DurationMilliseconds,
+      toolCallCount: item.ToolCallCount,
+      observedEventKinds: item.ObservedEventKinds || [],
+      observedRoutes: item.ObservedRoutes || []
+    }))
+  };
+}
+
+function evaluationMetricsPresentation(value = {}) {
+  return {
+    totalCases: value.TotalCases,
+    passedCases: value.PassedCases,
+    failedCases: value.FailedCases,
+    passRate: value.PassRate,
+    averageDurationMilliseconds: value.AverageDurationMilliseconds,
+    totalToolCalls: value.TotalToolCalls
+  };
+}
+
+export function evaluationComparisonContractPresentation(value = {}) {
+  return {
+    baselineBatchId: value.BaselineBatchId,
+    candidateBatchId: value.CandidateBatchId,
+    suiteId: value.SuiteId,
+    baselineSuiteVersionId: value.BaselineSuiteVersionId,
+    candidateSuiteVersionId: value.CandidateSuiteVersionId,
+    baseline: evaluationMetricsPresentation(value.Baseline),
+    candidate: evaluationMetricsPresentation(value.Candidate),
+    addedCaseIds: value.AddedCaseIds || [],
+    removedCaseIds: value.RemovedCaseIds || [],
+    cases: (value.Cases || []).map(item => ({
+      caseId: item.CaseId,
+      caseName: item.CaseName,
+      baselineStatus: item.BaselineStatus,
+      candidateStatus: item.CandidateStatus,
+      baselineDurationMilliseconds: item.BaselineDurationMilliseconds,
+      candidateDurationMilliseconds: item.CandidateDurationMilliseconds,
+      toolCallDelta: item.ToolCallDelta,
+      routesChanged: item.RoutesChanged,
+      eventKindsChanged: item.EventKindsChanged,
+      newFailure: item.NewFailure
+    })),
+    gateChecks: (value.GateChecks || []).map(check => ({
+      code: check.Code,
+      passed: check.Passed,
+      expected: check.Expected,
+      actual: check.Actual
+    })),
+    gatePassed: value.GatePassed,
+    comparedAtUtc: value.ComparedAtUtc
+  };
+}
+
+export function modelJudgeContractPresentation(value = {}) {
+  return {
+    id: value.Id,
+    tenantId: value.TenantId,
+    requestedBy: value.RequestedBy,
+    batchId: value.BatchId,
+    suiteId: value.SuiteId,
+    suiteVersionId: value.SuiteVersionId,
+    suiteVersionContentSha256: value.SuiteVersionContentSha256,
+    provider: value.Provider,
+    packageVersion: value.PackageVersion,
+    modelProfileId: value.ModelProfileId,
+    evaluators: value.Evaluators || [],
+    minimumScores: value.MinimumScores || {},
+    configurationSha256: value.ConfigurationSha256,
+    promptVersion: value.PromptVersion,
+    startedAtUtc: value.StartedAtUtc,
+    finishedAtUtc: value.FinishedAtUtc,
+    advisoryPassed: value.AdvisoryPassed,
+    cases: (value.Cases || []).map(item => ({
+      caseId: item.CaseId,
+      caseName: item.CaseName,
+      unifiedRunId: item.UnifiedRunId,
+      inputSha256: item.InputSha256,
+      outputSha256: item.OutputSha256,
+      metrics: (item.Metrics || []).map(metric => ({
+        name: metric.Name,
+        score: metric.Score,
+        minimumScore: metric.MinimumScore,
+        passed: metric.Passed,
+        diagnosticCodes: metric.DiagnosticCodes || []
+      }))
+    }))
+  };
+}
+
+function evaluationAgentPresentation(value = {}) {
+  return {
+    id: value.Id,
+    code: value.Code,
+    name: value.Name,
+    publishedVersions: (value.PublishedVersions || []).map(version => ({
+      id: version.Id,
+      label: version.Label,
+      snapshot: version.Snapshot
+    }))
+  };
+}
+
 export function evaluationComparisonPresentation(report) {
   return {
     title: report?.gatePassed ? "质量门禁通过" : "质量门禁阻断",
@@ -100,10 +290,11 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
         api.list({ status: "Enabled" }),
         api.capabilities()
       ]);
-      state.suites = suites;
+      state.suites = suites.map(evaluationSuitePresentation);
       state.capabilities = capabilities;
-      const published = summaries.filter(value => value.currentPublishedLabel);
-      state.agents = await Promise.all(published.map(value => api.get(value.id)));
+      const published = summaries.filter(value => value.CurrentPublishedLabel);
+      state.agents = (await Promise.all(published.map(value => api.get(value.Id))))
+        .map(evaluationAgentPresentation);
       renderSuites();
       if (state.current) {
         const exists = suites.some(value => value.id === state.current.id);
@@ -152,7 +343,7 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
 
   async function openSuite(id, scroll = true) {
     try {
-      state.current = await api.evaluationSuite(id);
+      state.current = evaluationSuitePresentation(await api.evaluationSuite(id));
       document.querySelector("#evaluationEmpty").hidden = true;
       document.querySelector("#evaluationCreatePanel").hidden = true;
       document.querySelector("#evaluationWorkbench").hidden = false;
@@ -186,11 +377,11 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
 
   async function createSuite() {
     try {
-      const created = await api.createEvaluationSuite({
+      const created = evaluationSuitePresentation(await api.createEvaluationSuite({
         code: document.querySelector("#evaluationCreateCode").value.trim(),
         name: document.querySelector("#evaluationCreateName").value.trim(),
         description: document.querySelector("#evaluationCreateDescription").value.trim()
-      });
+      }));
       toast("评估 Suite 已创建。", "success");
       await load();
       await openSuite(created.id);
@@ -313,12 +504,12 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
   async function saveDraft(quiet = false) {
     if (!state.current || state.current.status === "Archived") return false;
     try {
-      state.current = await api.saveEvaluationSuiteDraft(state.current.id, {
+      state.current = evaluationSuitePresentation(await api.saveEvaluationSuiteDraft(state.current.id, {
         expectedLogicalRevision: state.current.logicalRevision,
         name: document.querySelector("#evaluationNameInput").value.trim(),
         description: document.querySelector("#evaluationDescriptionInput").value,
         cases: readCases()
-      });
+      }));
       renderVersions();
       setText(document.querySelector("#evaluationSuiteMeta"),
         `REV ${state.current.logicalRevision} · ${state.current.publishedVersions.length} 个不可变版本`);
@@ -334,7 +525,8 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
   async function publishSuite() {
     if (!(await saveDraft(true)) || !state.current) return;
     try {
-      state.current = await api.publishEvaluationSuite(state.current.id, state.current.logicalRevision);
+      state.current = evaluationSuitePresentation(
+        await api.publishEvaluationSuite(state.current.id, state.current.logicalRevision));
       renderVersions();
       showMessage(`已发布 v${state.current.publishedVersions.at(-1).label}。`, false);
       await refreshSuiteList();
@@ -366,8 +558,8 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
     if (!state.current) return;
     const archived = state.current.status === "Archived";
     try {
-      state.current = await api.archiveEvaluationSuite(
-        state.current.id, state.current.logicalRevision, !archived);
+      state.current = evaluationSuitePresentation(await api.archiveEvaluationSuite(
+        state.current.id, state.current.logicalRevision, !archived));
       document.querySelector("#evaluationSuiteStatusFilter").value = archived ? "" : "Archived";
       await refreshSuiteList();
       setArchivedState();
@@ -405,7 +597,8 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
     button.disabled = true;
     setText(button, "运行中…");
     try {
-      const batch = await api.runEvaluationBatch(state.current.id, versionId);
+      const batch = evaluationBatchPresentation(
+        await api.runEvaluationBatch(state.current.id, versionId));
       state.selectedBatchId = batch.id;
       toast(`评估批次 ${shortId(batch.id)} 已完成。`, "success");
       await loadBatches();
@@ -420,7 +613,8 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
 
   async function loadBatches() {
     if (!state.current) return;
-    state.batches = await api.evaluationBatches(state.current.id, 50);
+    state.batches = (await api.evaluationBatches(state.current.id, 50))
+      .map(evaluationBatchPresentation);
     renderBatches();
   }
 
@@ -502,7 +696,8 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
     const container = document.querySelector("#evaluationModelJudgeReports");
     clear(container);
     try {
-      const reports = await api.modelJudgeReports(batchId, 20);
+      const reports = (await api.modelJudgeReports(batchId, 20))
+        .map(modelJudgeContractPresentation);
       if (!reports.length) {
         container.append(element("p", { className: "evaluation-hint" }, "尚无模型裁判报告。"));
         return;
@@ -546,12 +741,12 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
     button.disabled = true;
     setText(button, "模型评估中…");
     try {
-      const report = await api.runModelJudge(batch.id, {
+      const report = modelJudgeContractPresentation(await api.runModelJudge(batch.id, {
         explicitlyEnabled: document.querySelector("#evaluationJudgeExplicit").checked,
         modelProfileId: document.querySelector("#evaluationJudgeModel").value,
         evaluators,
         minimumScores
-      });
+      }));
       toast(report.advisoryPassed ? "模型裁判 advisory 通过。" : "模型裁判 advisory 未通过。",
         report.advisoryPassed ? "success" : "error");
       document.querySelector("#evaluationJudgeExplicit").checked = false;
@@ -596,7 +791,7 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
       return;
     }
     try {
-      const report = await api.compareEvaluationBatches({
+      const report = evaluationComparisonContractPresentation(await api.compareEvaluationBatches({
         baselineBatchId,
         candidateBatchId,
         gate: {
@@ -608,7 +803,7 @@ export function createEvaluationPage({ api, toast, onOpenTrace }) {
           requireSameCaseSet: document.querySelector("#evaluationSameCaseSet").checked,
           requireStableRoutes: document.querySelector("#evaluationStableRoutes").checked
         }
-      });
+      }));
       renderComparison(report);
     } catch (error) {
       toast(`${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`, "error");

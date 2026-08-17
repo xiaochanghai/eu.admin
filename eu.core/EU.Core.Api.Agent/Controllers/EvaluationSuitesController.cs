@@ -1,8 +1,12 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Security;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,11 +32,11 @@ public sealed class EvaluationSuitesController(
             else if (string.Equals(status, nameof(EvaluationSuiteStatus.Archived), StringComparison.Ordinal))
                 parsedStatus = EvaluationSuiteStatus.Archived;
             else
-                return Error(400, EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
+                return FromError(EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
                     "Evaluation suite status must be Active or Archived.");
         }
 
-        return Ok(await lifecycle.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
+        return QuerySuccess(await lifecycle.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -40,7 +44,9 @@ public sealed class EvaluationSuitesController(
     {
         EvaluationSuiteDefinition? value = await lifecycle.GetAsync(
             id, caller.TenantId, cancellationToken);
-        return value is null ? Error(404, EvaluationSuiteErrorCodes.NotFound) : Ok(value);
+        return value is null
+            ? FromError(EvaluationSuiteErrorCodes.NotFound, "The evaluation suite was not found.")
+            : QuerySuccess(value);
     }
 
     [HttpPost]
@@ -50,7 +56,7 @@ public sealed class EvaluationSuitesController(
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
-            return Error(400, EvaluationSuiteErrorCodes.DefinitionInvalid);
+            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
@@ -62,9 +68,9 @@ public sealed class EvaluationSuitesController(
                     request.Name,
                     request.Description),
                 cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/evaluation-suites/{result.Value!.Id}", result.Value)
-            : FromError(result.Error!);
+        if (!result.Succeeded) return FromError(result.Error!);
+        Response.Headers.Location = $"/api/evaluation-suites/{result.Value!.Id}";
+        return OperationSuccess(result.Value, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -75,7 +81,7 @@ public sealed class EvaluationSuitesController(
     {
         if (!TryMapCases(request, out IReadOnlyList<EvaluationCaseDefinition> cases))
         {
-            return Error(400, EvaluationSuiteErrorCodes.DefinitionInvalid);
+            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
@@ -89,7 +95,7 @@ public sealed class EvaluationSuitesController(
                     request.Description,
                     cases),
                 cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -100,7 +106,7 @@ public sealed class EvaluationSuitesController(
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
-            return Error(400, EvaluationSuiteErrorCodes.DefinitionInvalid);
+            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
@@ -111,7 +117,7 @@ public sealed class EvaluationSuitesController(
                     caller.UserId,
                     request.ExpectedLogicalRevision),
                 cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -121,7 +127,7 @@ public sealed class EvaluationSuitesController(
         CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
-            return Error(400, EvaluationSuiteErrorCodes.DefinitionInvalid);
+            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
 
         EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
             await lifecycle.SetArchivedAsync(
@@ -132,7 +138,7 @@ public sealed class EvaluationSuitesController(
                     request.ExpectedLogicalRevision,
                     request.Archived),
                 cancellationToken);
-        return result.Succeeded ? Ok(result.Value) : FromError(result.Error!);
+        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
     }
 
     private static bool TryMapCases(
@@ -193,22 +199,27 @@ public sealed class EvaluationSuitesController(
         return true;
     }
 
-    private IActionResult FromError(EvaluationSuiteError error) =>
-        Error(error.Code switch
-        {
-            EvaluationSuiteErrorCodes.NotFound => 404,
-            EvaluationSuiteErrorCodes.CodeConflict
-                or EvaluationSuiteErrorCodes.RowVersionConflict => 409,
-            _ => 400
-        }, error.Code, error.Message);
+    private IActionResult FromError(EvaluationSuiteError error) => FromError(error.Code, error.Message);
 
-    private IActionResult Error(int status, string code, string? detail = null) =>
-        ApiProblemResults.Create(
-            HttpContext,
-            status,
-            code,
-            "The evaluation suite operation could not be completed.",
-            detail);
+    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
+        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+    { StatusCode = StatusCodes.Status200OK };
+
+    private IActionResult OperationSuccess<T>(T value, int httpStatus = StatusCodes.Status200OK) =>
+        new JsonResult(ServiceResult<T>.OprateSuccess(value), AgentJsonSerialization.PascalCase)
+        { StatusCode = httpStatus };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
+    }
 }
 
 public sealed record CreateEvaluationSuiteRequest(
