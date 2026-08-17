@@ -178,7 +178,7 @@ HTTP 404，但响应体可以是 `Status=610001`。
 ## 补充资料
 
 - 相关页面或接口：`/api/agents`、`/api/skills`、`/api/mcp/**`、`/api/knowledge-bases`、`/api/orchestrations`、`/api/chat/**`、`/api/evaluation-*`
-- 相关文件：[分批设计](Agent%20API统一返回分批设计.md)、`EU.Core.Model/ServiceResult.cs`、`EU.Core.Api/Filter/GlobalActionFilter.cs`、`EU.Core.Api.Agent/Controllers/ApiProblemResults.cs`、`EU.Core.Api.Agent/Errors/ProblemDetailsMiddleware.cs`、`EU.Core.Api.Agent/wwwroot/js/http.js`
+- 相关文件：[分批设计](Agent%20API统一返回分批设计.md)、[实施计划](Agent%20API统一返回实施计划.md)、`EU.Core.Model/ServiceResult.cs`、`EU.Core.Api/Filter/GlobalActionFilter.cs`、`EU.Core.Api.Agent/Controllers/ApiProblemResults.cs`、`EU.Core.Api.Agent/Errors/ProblemDetailsMiddleware.cs`、`EU.Core.Api.Agent/wwwroot/js/http.js`
 - 截图或附件：无
 - 依赖或前置条件：完成 Agent API 响应清单及前端调用方清单；以 [`Agent API ErrorCode 固定清单`](Agent%20API%20ErrorCode固定清单.md) 为映射事实源
 - 其他说明：优先复用公共响应模型，不在 Agent 宿主内复制另一套同名模型。
@@ -193,6 +193,7 @@ HTTP 404，但响应体可以是 `Status=610001`。
 | 2026-08-17 | Codex | 待开发 | Agent 业务 Status 调整为 600000–699999 独立号段，HTTP 状态码单独保留 |
 | 2026-08-17 | Codex | 待开发 | 完成当前 Agent ErrorCode 全量盘点并建立固定注册表 |
 | 2026-08-17 | Codex | 待开发 | 确认逐 Controller 显式改造方案并形成十批次设计 |
+| 2026-08-17 | Codex | 待开发 | 补齐十批次逐文件、测试驱动和独立提交的实施计划 |
 
 ## 实施与验证
 

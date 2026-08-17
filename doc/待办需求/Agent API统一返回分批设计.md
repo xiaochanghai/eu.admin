@@ -16,6 +16,7 @@
 
 - [统一 Agent API 接口返回](修改agent%20api接口返回.md)
 - [Agent API ErrorCode 固定清单](Agent%20API%20ErrorCode固定清单.md)
+- [Agent API 统一返回实施计划](Agent%20API统一返回实施计划.md)
 
 ## 2. 核心设计
 
@@ -136,7 +137,7 @@ Controller 结果帮助器。
 - 补充 `ServiceResult<T>` 所需的非破坏性构造方法；
 - 新增 `AgentApiErrorData`、`AgentApiErrorDescriptor` 和 `AgentApiErrorCatalog`；
 - 新增只保存 PascalCase `JsonSerializerOptions` 的 `AgentJsonSerialization`，不得包含结果包装逻辑；
-- 将固定清单中的 187 个现有错误码和 1 个目标新增错误码写入映射；
+- 将固定清单中的 186 个现有错误码和 1 个目标新增错误码（共 187 个专属映射）写入映射；
 - 添加映射完整性、唯一性、号段和兜底测试；
 - 不改变任何现有接口返回。
 
