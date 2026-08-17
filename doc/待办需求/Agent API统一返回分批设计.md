@@ -76,6 +76,10 @@ return new JsonResult(response, AgentJsonSerialization.PascalCase)
 - 根据 ErrorCode 返回不可变的 `AgentApiErrorDescriptor`；
 - 未登记错误码返回业务 `Status=699999`、HTTP 500，并允许调用方记录告警。
 
+固定清单中 HTTP 为“—”的运行期错误，其 `AgentApiErrorDescriptor.HttpStatus` 为 `null`；这类错误
+只进入运行记录或已开始的流式事件，不应虚构 HTTP 状态。若它们异常泄漏到尚未开始的 HTTP
+错误边界，由该边界记录告警并安全兜底为 HTTP 500。
+
 它不创建 `IActionResult`、不访问 `HttpContext`、不序列化响应，也不承担 Controller 逻辑。
 这样可以集中固化错误码，同时满足最终移除 `AgentApiResults` 类结果帮助器的目标。
 
@@ -137,7 +141,7 @@ Controller 结果帮助器。
 - 补充 `ServiceResult<T>` 所需的非破坏性构造方法；
 - 新增 `AgentApiErrorData`、`AgentApiErrorDescriptor` 和 `AgentApiErrorCatalog`；
 - 新增只保存 PascalCase `JsonSerializerOptions` 的 `AgentJsonSerialization`，不得包含结果包装逻辑；
-- 将固定清单中的 186 个现有错误码和 1 个目标新增错误码（共 187 个专属映射）写入映射；
+- 将固定清单中的 187 个现有错误码和 1 个目标新增错误码（共 188 个专属映射）写入映射；
 - 添加映射完整性、唯一性、号段和兜底测试；
 - 不改变任何现有接口返回。
 

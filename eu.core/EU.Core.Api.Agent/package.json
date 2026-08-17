@@ -1,0 +1,8 @@
+{
+  "name": "eu-core-api-agent-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test wwwroot/js/tests/*.test.js"
+  }
+}

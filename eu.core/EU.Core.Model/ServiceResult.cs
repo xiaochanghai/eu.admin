@@ -116,6 +116,28 @@ public class ServiceResult<T>
     public static ServiceResult<T> OprateFailed(string message, T data) => OprateSuccess(false, message, data);
 
     /// <summary>
+    /// 返回带业务状态码的失败结果
+    /// </summary>
+    /// <param name="status">业务状态码</param>
+    /// <param name="message">用户可理解的失败信息</param>
+    /// <param name="data">结构化失败数据</param>
+    /// <param name="messageDev">仅供开发环境使用的诊断信息</param>
+    /// <returns></returns>
+    public static ServiceResult<T> Failure(
+        int status,
+        string message,
+        T data = default,
+        string messageDev = null) => new()
+        {
+            Status = status,
+            Success = false,
+            Message = message,
+            MessageDev = messageDev,
+            Count = 0,
+            Data = data
+        };
+
+    /// <summary>
     /// 返回消息
     /// </summary>
     /// <param name="success">失败/成功</param>

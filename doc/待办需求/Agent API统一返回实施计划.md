@@ -11,7 +11,7 @@
 ## 全局约束
 
 - 任务分类：`BACKEND-BUSINESS`、`BACKEND-HOST`、`API-CONTRACT`、`CROSS-END-CONTRACT`、`TESTS`；不涉及数据库结构。
-- 每批严格执行：失败测试（RED）→ 最小实现（GREEN）→ 后端构建/前端脚本测试 → `git diff --check` → 独立提交。
+- 每批严格执行：失败测试（RED）→ 最小实现（GREEN）→ 后端构建/前端脚本测试 → `git diff --check` → 用户确认后独立提交。
 - 不新增全局 Action 结果过滤器，不新增承担响应创建职责的 `AgentApiResults`。
 - `AgentApiErrorCatalog` 不依赖 `HttpContext`、`IActionResult` 或 JSON 序列化。
 - Controller 使用真实 HTTP 状态码；响应体成功 `Status=200`，失败使用固定的 `600000–699999` 业务状态。
@@ -74,11 +74,11 @@ return new JsonResult(response, AgentJsonSerialization.PascalCase)
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgAgentApiResponseFoundation_Should.cs`
 - Reference: `doc/待办需求/Agent API ErrorCode固定清单.md`
 
-- [ ] 1.1 新增失败契约测试，逐项断言固定清单中的 187 个专属 ErrorCode（186 个现有、1 个目标新增）均已登记、ErrorCode 和 Status 均唯一、Status 位于所属号段。
-- [ ] 1.2 增加代表性映射断言：`REQUEST_INVALID`、`AGENT_NOT_FOUND`、`SKILL_ARCHIVE_BLOCKED`、`MCP_DISABLE_BLOCKED`、`KNOWLEDGE_SERVICE_UNAVAILABLE`、`ORCHESTRATION_RUN_INPUT_INVALID`、`MODEL_INVOCATION_FAILED`、`MODEL_JUDGE_EXECUTION_FAILED`、`AGENT_AUDIT_UNAVAILABLE`、`UNEXPECTED_ERROR`。
-- [ ] 1.3 增加未知错误断言：任意未登记 ErrorCode 必须解析为业务 `699999` 和 HTTP 500，且保留原始 ErrorCode 供调用方记录。
-- [ ] 1.4 增加 JSON 测试：外层及 DTO 属性为 PascalCase，`Dictionary<string, object>` 中的 `json_schema_key` 原样保留。
-- [ ] 1.5 运行 RED：
+- [x] 1.1 新增失败契约测试，逐项断言固定清单中的 188 个专属 ErrorCode（187 个现有、1 个目标新增）均已登记、ErrorCode 和 Status 均唯一、Status 位于所属号段。
+- [x] 1.2 增加代表性映射断言：`REQUEST_INVALID`、`AGENT_NOT_FOUND`、`SKILL_ARCHIVE_BLOCKED`、`MCP_DISABLE_BLOCKED`、`KNOWLEDGE_SERVICE_UNAVAILABLE`、`ORCHESTRATION_RUN_INPUT_INVALID`、`MODEL_INVOCATION_FAILED`、`MODEL_JUDGE_EXECUTION_FAILED`、`AGENT_AUDIT_UNAVAILABLE`、`UNEXPECTED_ERROR`。
+- [x] 1.3 增加未知错误断言：任意未登记 ErrorCode 必须解析为业务 `699999` 和 HTTP 500，且保留原始 ErrorCode 供调用方记录。
+- [x] 1.4 增加 JSON 测试：外层及 DTO 属性为 PascalCase，`Dictionary<string, object>` 中的 `json_schema_key` 原样保留。
+- [x] 1.5 运行 RED：
 
 ```powershell
 cd E:\EU\EU.Admin\eu.core
@@ -87,18 +87,18 @@ dotnet test Src\EU.Core.Tests\EU.Core.Tests.csproj -c Release -p:GenerateDocumen
 
 预期：因契约、目录和序列化选项尚不存在而失败。
 
-- [ ] 1.6 在 `ServiceResult<T>` 新增非破坏性 `Failure(int status, string message, T data = default, string messageDev = null)` 工厂；不改变现有工厂行为。
-- [ ] 1.7 新增不可变 `AgentApiErrorData` 和 `AgentApiErrorDescriptor`，字段分别覆盖 ErrorCode/TraceId 与 Status/HttpStatus。
-- [ ] 1.8 将固定清单整体录入 `AgentApiErrorCatalog`；公开只读枚举用于完整性测试，`Resolve` 提供 699999/500 兜底。
-- [ ] 1.9 新增 `AgentJsonSerialization.PascalCase`，仅配置命名和项目已有 JSON 行为，不承载响应包装。
-- [ ] 1.10 重跑测试至 GREEN，并执行：
+- [x] 1.6 在 `ServiceResult<T>` 新增非破坏性 `Failure(int status, string message, T data = default, string messageDev = null)` 工厂；不改变现有工厂行为。
+- [x] 1.7 新增不可变 `AgentApiErrorData` 和 `AgentApiErrorDescriptor`，字段分别覆盖 ErrorCode/TraceId 与 Status/可空 HttpStatus；固定清单 HTTP 为“—”时保存 `null`。
+- [x] 1.8 将固定清单整体录入 `AgentApiErrorCatalog`；公开只读枚举用于完整性测试，`Resolve` 提供 699999/500 兜底。
+- [x] 1.9 新增 `AgentJsonSerialization.PascalCase`，仅配置命名和项目已有 JSON 行为，不承载响应包装。
+- [x] 1.10 重跑测试至 GREEN，并执行：
 
 ```powershell
 dotnet build EU.Core.Api.Agent\EU.Core.Api.Agent.csproj -c Release -p:GenerateDocumentationFile=false
 git diff --check
 ```
 
-- [ ] 1.11 提交：`feat(agent): add service response contracts and error catalog`
+- [x] 1.11 用户确认后提交：`feat(agent): add service response contracts and error catalog`
 
 ## Task 2：前端严格统一请求入口
 
@@ -108,9 +108,9 @@ git diff --check
 - Create: `eu.core/EU.Core.Api.Agent/wwwroot/js/tests/http.test.js`
 - Create: `eu.core/EU.Core.Api.Agent/package.json`
 
-- [ ] 2.1 先写 `node:test`：完整成功结构只返回 `Data`；HTTP 201 + `Status=200` 成功；`Success=false` 抛出带 `businessStatus`、`errorCode`、`traceId` 的 Error；裸数组、裸对象和缺失字段必须拒绝。
-- [ ] 2.2 增加动态数据测试，确认 `Data.schema.required_field` 和任意业务键不会被改名。
-- [ ] 2.3 运行 RED：
+- [x] 2.1 先写 `node:test`：完整成功结构只返回 `Data`；HTTP 201 + `Status=200` 成功；`Success=false` 抛出带 `businessStatus`、`errorCode`、`traceId` 的 Error；裸数组、裸对象和缺失字段必须拒绝。
+- [x] 2.2 增加动态数据测试，确认 `Data.schema.required_field` 和任意业务键不会被改名。
+- [x] 2.3 运行 RED：
 
 ```powershell
 cd E:\EU\EU.Admin\eu.core\EU.Core.Api.Agent
@@ -119,11 +119,11 @@ node --test wwwroot\js\tests\http.test.js
 
 预期：`requestServiceJson` 或可测试的解析函数尚不存在而失败。
 
-- [ ] 2.4 在 `http.js` 提取纯函数 `parseServiceResponse(payload, httpStatus, fallbackMessage)`，新增 `requestServiceJson`；保留现有 `requestJson` 和 `createApiError`。
-- [ ] 2.5 `requestServiceJson` 对非 2xx 和 `Success=false` 使用同一 PascalCase 错误结构；不回退读取旧 ProblemDetails 字段。
-- [ ] 2.6 在 `package.json` 仅声明 ES Module 和 `test` 脚本，不引入第三方依赖或锁文件。
-- [ ] 2.7 重跑 Node 测试至 GREEN，并运行 Task 1 测试和 `git diff --check`。
-- [ ] 2.8 提交：`feat(agent-ui): add strict service response client`
+- [x] 2.4 在 `http.js` 提取纯函数 `parseServiceResponse(payload, httpStatus, fallbackMessage)`，新增 `requestServiceJson`；保留现有 `requestJson` 和 `createApiError`。
+- [x] 2.5 `requestServiceJson` 对非 2xx 和 `Success=false` 使用同一 PascalCase 错误结构；不回退读取旧 ProblemDetails 字段。
+- [x] 2.6 在 `package.json` 仅声明 ES Module 和 `test` 脚本，不引入第三方依赖或锁文件。
+- [x] 2.7 重跑 Node 测试至 GREEN，并运行 Task 1 测试和 `git diff --check`。
+- [x] 2.8 用户确认后提交：`feat(agent-ui): add strict service response client`
 
 ## Task 3：Agent、主 Agent 与 Skill
 
