@@ -41,11 +41,11 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
 
   function updateWorkbenchMeta() {
     setText(document.querySelector("#knowledgeWorkbenchMeta"),
-      `${current.documentCount} 个文档 · ${current.chunkCount} 个分块 · REV ${current.logicalRevision}`);
+      `${current.DocumentCount} 个文档 · ${current.ChunkCount} 个分块 · REV ${current.LogicalRevision}`);
   }
 
   function setArchivedState() {
-    const archived = current?.status === "Archived";
+    const archived = current?.Status === "Archived";
     for (const id of ["knowledgeNameInput", "knowledgeDescriptionInput", "knowledgeStatusInput", "knowledgeFileInput", "knowledgeQueryInput"])
       document.querySelector(`#${id}`).disabled = archived;
     saveButton.disabled = archived;
@@ -53,7 +53,7 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     statusButton.hidden = !current || archived;
     archiveButton.hidden = !current;
     document.querySelector("#searchKnowledgeButton").disabled = archived;
-    if (current) setText(statusButton, current.status === "Enabled" ? "停用" : "启用");
+    if (current) setText(statusButton, current.Status === "Enabled" ? "停用" : "启用");
     if (current) setText(archiveButton, archived ? "恢复" : "归档");
   }
 
@@ -104,17 +104,17 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     documentsStatus.hidden = true;
     for (const documentValue of documents) {
       const button = element("button", {
-        className: `knowledge-document-item${documentValue.id === selectedDocumentId ? " is-active" : ""}`,
+        className: `knowledge-document-item${documentValue.Id === selectedDocumentId ? " is-active" : ""}`,
         type: "button",
-        ariaPressed: documentValue.id === selectedDocumentId,
-        dataset: { documentId: documentValue.id }
+        ariaPressed: documentValue.Id === selectedDocumentId,
+        dataset: { documentId: documentValue.Id }
       },
-      element("span", { className: "knowledge-document-name" }, documentValue.fileName),
+      element("span", { className: "knowledge-document-name" }, documentValue.FileName),
       element("span", { className: "knowledge-document-facts" },
-        `${documentValue.chunkCount} 个分块 · ${documentValue.characterCount.toLocaleString("zh-CN")} 字符`),
+        `${documentValue.ChunkCount} 个分块 · ${documentValue.CharacterCount.toLocaleString("zh-CN")} 字符`),
       element("span", { className: "knowledge-document-facts" },
-        `${formatImportedAt(documentValue.importedAtUtc)} · SHA ${documentValue.sha256.slice(0, 10)}`));
-      button.addEventListener("click", () => selectDocument(documentValue.id));
+        `${formatImportedAt(documentValue.ImportedAtUtc)} · SHA ${documentValue.Sha256.slice(0, 10)}`));
+      button.addEventListener("click", () => selectDocument(documentValue.Id));
       documentList.append(button);
     }
   }
@@ -130,15 +130,15 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     documentsStatus.hidden = false;
     setText(documentsStatus, "正在读取文档…");
     try {
-      const loaded = await api.knowledgeDocuments(current.id);
+      const loaded = await api.knowledgeDocuments(current.Id);
       if (requestSequence !== contentRequestSequence) return;
       documents = loaded;
-      const availableIds = new Set(documents.map(item => item.id));
+      const availableIds = new Set(documents.map(item => item.Id));
       selectedDocumentId = preferredDocumentId && availableIds.has(preferredDocumentId)
         ? preferredDocumentId
         : selectedDocumentId && availableIds.has(selectedDocumentId)
           ? selectedDocumentId
-          : documents[0]?.id ?? null;
+          : documents[0]?.Id ?? null;
       renderDocuments();
       if (selectedDocumentId) await loadChunks(selectedDocumentId, 0);
       else resetChunkPanel();
@@ -170,15 +170,15 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     if (!current || !documentId) return;
     const requestSequence = ++contentRequestSequence;
     currentChunkPage = null;
-    const selected = documents.find(item => item.id === documentId);
-    setText(document.querySelector("#knowledgeChunksTitle"), selected?.fileName ?? "文档分块");
+    const selected = documents.find(item => item.Id === documentId);
+    setText(document.querySelector("#knowledgeChunksTitle"), selected?.FileName ?? "文档分块");
     setText(document.querySelector("#knowledgeChunksMeta"), "正在读取分块…");
     setText(document.querySelector("#knowledgeChunkRange"), "");
     clear(chunkList);
     chunkList.append(element("p", { className: "binding-empty" }, "正在读取分块…"));
     chunkPager.hidden = true;
     try {
-      const page = await api.knowledgeDocumentChunks(current.id, documentId, skip, chunkPageSize);
+      const page = await api.knowledgeDocumentChunks(current.Id, documentId, skip, chunkPageSize);
       if (requestSequence !== contentRequestSequence || selectedDocumentId !== documentId) return;
       currentChunkPage = page;
       renderChunks();
@@ -194,28 +194,28 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   function renderChunks() {
     const page = currentChunkPage;
     clear(chunkList);
-    setText(document.querySelector("#knowledgeChunksTitle"), page.fileName);
-    setText(document.querySelector("#knowledgeChunksMeta"), `${page.totalCount} 个索引分块`);
-    if (!page.items.length) {
+    setText(document.querySelector("#knowledgeChunksTitle"), page.FileName);
+    setText(document.querySelector("#knowledgeChunksMeta"), `${page.TotalCount} 个索引分块`);
+    if (!page.Items.length) {
       chunkList.append(element("p", { className: "binding-empty" }, "该文档没有可显示的分块。"));
       setText(document.querySelector("#knowledgeChunkRange"), "0 / 0");
       chunkPager.hidden = true;
       return;
     }
 
-    for (const chunk of page.items) {
+    for (const chunk of page.Items) {
       chunkList.append(element("article", { className: "knowledge-chunk-item" },
         element("div", { className: "knowledge-chunk-item-heading" },
-          element("strong", {}, `#${chunk.sequence}`),
-          element("small", {}, `${chunk.characterCount.toLocaleString("zh-CN")} 字符`)),
-        element("pre", { className: "knowledge-chunk-content" }, chunk.content)));
+          element("strong", {}, `#${chunk.Sequence}`),
+          element("small", {}, `${chunk.CharacterCount.toLocaleString("zh-CN")} 字符`)),
+        element("pre", { className: "knowledge-chunk-content" }, chunk.Content)));
     }
-    const first = page.skip + 1;
-    const last = Math.min(page.skip + page.items.length, page.totalCount);
-    setText(document.querySelector("#knowledgeChunkRange"), `${first}–${last} / ${page.totalCount}`);
-    previousChunksButton.disabled = page.skip === 0;
-    nextChunksButton.disabled = page.skip + page.items.length >= page.totalCount;
-    chunkPager.hidden = page.totalCount <= page.take;
+    const first = page.Skip + 1;
+    const last = Math.min(page.Skip + page.Items.length, page.TotalCount);
+    setText(document.querySelector("#knowledgeChunkRange"), `${first}–${last} / ${page.TotalCount}`);
+    previousChunksButton.disabled = page.Skip === 0;
+    nextChunksButton.disabled = page.Skip + page.Items.length >= page.TotalCount;
+    chunkPager.hidden = page.TotalCount <= page.Take;
   }
 
   function render() {
@@ -226,15 +226,15 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     empty.hidden = values.length !== 0;
     for (const value of values) {
       const manage = element("button", { className: "row-action", type: "button" }, "管理");
-      manage.addEventListener("click", () => open(value.id));
+      manage.addEventListener("click", () => open(value.Id));
       rows.append(element("tr", {},
         element("td", {}, element("div", { className: "agent-identity" },
           element("span", { className: "agent-avatar", ariaHidden: "true" }, "K"),
-          element("div", {}, element("strong", {}, value.name || value.code), element("code", {}, value.code)))),
-        element("td", {}, value.description || "尚未填写说明"),
-        element("td", {}, String(value.documentCount)),
-        element("td", {}, String(value.chunkCount)),
-        element("td", {}, element("span", { className: `badge ${value.status === "Enabled" ? "enabled" : "disabled"}` }, value.status)),
+          element("div", {}, element("strong", {}, value.Name || value.Code), element("code", {}, value.Code)))),
+        element("td", {}, value.Description || "尚未填写说明"),
+        element("td", {}, String(value.DocumentCount)),
+        element("td", {}, String(value.ChunkCount)),
+        element("td", {}, element("span", { className: `badge ${value.Status === "Enabled" ? "enabled" : "disabled"}` }, value.Status)),
         element("td", {}, manage)));
     }
   }
@@ -242,13 +242,13 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   async function open(id) {
     current = await api.knowledgeBase(id);
     workbench.hidden = false;
-    setText(document.querySelector("#knowledgeWorkbenchTitle"), current.name || current.code);
+    setText(document.querySelector("#knowledgeWorkbenchTitle"), current.Name || current.Code);
     updateWorkbenchMeta();
-    document.querySelector("#knowledgeNameInput").value = current.name;
-    document.querySelector("#knowledgeCodeInput").value = current.code;
+    document.querySelector("#knowledgeNameInput").value = current.Name;
+    document.querySelector("#knowledgeCodeInput").value = current.Code;
     document.querySelector("#knowledgeCodeInput").readOnly = true;
-    document.querySelector("#knowledgeDescriptionInput").value = current.description;
-    document.querySelector("#knowledgeStatusInput").value = current.status;
+    document.querySelector("#knowledgeDescriptionInput").value = current.Description;
+    document.querySelector("#knowledgeStatusInput").value = current.Status;
     dirty = false;
     setArchivedState();
     setText(message, "");
@@ -278,8 +278,8 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     const code = document.querySelector("#knowledgeCodeInput").value.trim();
     try {
       if (current) {
-        current = await api.updateKnowledgeBase(current.id, {
-          expectedLogicalRevision: current.logicalRevision,
+        current = await api.updateKnowledgeBase(current.Id, {
+          expectedLogicalRevision: current.LogicalRevision,
           name: document.querySelector("#knowledgeNameInput").value.trim(),
           description: document.querySelector("#knowledgeDescriptionInput").value,
           status: document.querySelector("#knowledgeStatusInput").value
@@ -326,14 +326,14 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     }
     try {
       current = isPdf
-        ? await api.importKnowledgePdf(current.id, current.logicalRevision, file)
-        : await api.importKnowledgeDocument(current.id, {
-            expectedLogicalRevision: current.logicalRevision,
+        ? await api.importKnowledgePdf(current.Id, current.LogicalRevision, file)
+        : await api.importKnowledgeDocument(current.Id, {
+            expectedLogicalRevision: current.LogicalRevision,
             fileName: file.name,
             mediaType: /\.md$/i.test(file.name) ? "text/markdown" : "text/plain",
             content: await file.text()
           });
-      setText(message, `已导入 ${file.name}，当前共 ${current.chunkCount} 个分块。`);
+      setText(message, `已导入 ${file.name}，当前共 ${current.ChunkCount} 个分块。`);
       message.dataset.tone = "success";
       updateWorkbenchMeta();
       selectedDocumentId = null;
@@ -351,7 +351,7 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     if (!current || !query) return;
     const container = document.querySelector("#knowledgeSearchResults");
     try {
-      const results = await api.searchKnowledge(current.id, query);
+      const results = await api.searchKnowledge(current.Id, query);
       clear(container);
       if (!results.length) {
         container.append(element("p", { className: "binding-empty" }, "没有召回相关分块。"));
@@ -360,9 +360,9 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
       for (const result of results) {
         container.append(element("div", { className: "run-tool-event tool-succeeded" },
           element("div", { className: "run-tool-heading" },
-            element("strong", {}, `${result.fileName} #${result.chunkSequence}`),
-            element("small", {}, `score ${result.score.toFixed(3)}`)),
-          element("pre", { className: "run-tool-result" }, result.content)));
+            element("strong", {}, `${result.FileName} #${result.ChunkSequence}`),
+            element("small", {}, `score ${result.Score.toFixed(3)}`)),
+          element("pre", { className: "run-tool-result" }, result.Content)));
       }
     } catch (error) {
       toast(error.message, "error");
@@ -370,16 +370,16 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   }
 
   async function setStatus() {
-    if (!current || current.status === "Archived") return;
-    const target = current.status === "Enabled" ? "Disabled" : "Enabled";
+    if (!current || current.Status === "Archived") return;
+    const target = current.Status === "Enabled" ? "Disabled" : "Enabled";
     try {
-      current = await api.updateKnowledgeBase(current.id, {
-        expectedLogicalRevision: current.logicalRevision,
+      current = await api.updateKnowledgeBase(current.Id, {
+        expectedLogicalRevision: current.LogicalRevision,
         name: document.querySelector("#knowledgeNameInput").value.trim(),
         description: document.querySelector("#knowledgeDescriptionInput").value,
         status: target
       });
-      document.querySelector("#knowledgeStatusInput").value = current.status;
+      document.querySelector("#knowledgeStatusInput").value = current.Status;
       dirty = false;
       updateWorkbenchMeta();
       setArchivedState();
@@ -402,18 +402,18 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
       message.dataset.tone = "warning";
       return;
     }
-    const restoring = current.status === "Archived";
-    if (!restoring && current.status !== "Disabled") {
+    const restoring = current.Status === "Archived";
+    if (!restoring && current.Status !== "Disabled") {
       setText(message, "请先点击“停用”，再归档知识库。");
       message.dataset.tone = "warning";
       return;
     }
     try {
-      current = await api.setKnowledgeBaseArchived(current.id, {
-        expectedLogicalRevision: current.logicalRevision,
+      current = await api.setKnowledgeBaseArchived(current.Id, {
+        expectedLogicalRevision: current.LogicalRevision,
         archived: !restoring
       });
-      document.querySelector("#knowledgeStatusInput").value = current.status;
+      document.querySelector("#knowledgeStatusInput").value = current.Status;
       updateWorkbenchMeta();
       setArchivedState();
       setText(message, restoring ? "知识库已恢复为停用状态。" : "知识库已归档。");
@@ -437,11 +437,11 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     document.querySelector(`#${id}`).addEventListener("input", () => { dirty = true; });
   previousChunksButton.addEventListener("click", () => {
     if (!currentChunkPage) return;
-    loadChunks(currentChunkPage.documentId, Math.max(0, currentChunkPage.skip - currentChunkPage.take));
+    loadChunks(currentChunkPage.DocumentId, Math.max(0, currentChunkPage.Skip - currentChunkPage.Take));
   });
   nextChunksButton.addEventListener("click", () => {
     if (!currentChunkPage) return;
-    loadChunks(currentChunkPage.documentId, currentChunkPage.skip + currentChunkPage.take);
+    loadChunks(currentChunkPage.DocumentId, currentChunkPage.Skip + currentChunkPage.Take);
   });
   return { load };
 }

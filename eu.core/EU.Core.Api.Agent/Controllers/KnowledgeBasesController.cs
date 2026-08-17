@@ -1,4 +1,8 @@
 using EU.Core.Agent.Application.Knowledge;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
@@ -26,13 +30,15 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                 parsedStatus = KnowledgeBaseStatus.Archived;
             else
             {
-                return Problem(
-                    KnowledgeErrorCodes.LifecycleTransitionInvalid,
-                    "Knowledge base status must be Enabled, Disabled, or Archived.",
-                    400);
+                return FromError(
+                    "REQUEST_INVALID",
+                    "Knowledge base status must be Enabled, Disabled, or Archived.");
             }
         }
-        return Ok(await lifecycle.ListAsync(new KnowledgeBaseQuery(parsedStatus), cancellationToken));
+        IReadOnlyList<KnowledgeBaseListItem> values = await lifecycle.ListAsync(
+            new KnowledgeBaseQuery(parsedStatus),
+            cancellationToken);
+        return QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
@@ -40,8 +46,8 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
     {
         KnowledgeBaseDefinition? value = await lifecycle.GetAsync(id, cancellationToken);
         return value is null
-            ? Problem(KnowledgeErrorCodes.NotFound, "The knowledge base was not found.", 404)
-            : Ok(ToDetail(value));
+            ? FromError(KnowledgeErrorCodes.NotFound, "The knowledge base was not found.")
+            : QuerySuccess(ToDetail(value));
     }
 
     [HttpPost]
@@ -52,9 +58,15 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
         KnowledgeOperationResult<KnowledgeBaseDefinition> result = await lifecycle.CreateAsync(
             new CreateKnowledgeBaseCommand(request.Code, request.Name, request.Description),
             cancellationToken);
-        return result.Succeeded
-            ? Created($"/api/knowledge-bases/{result.Value!.Id}", ToDetail(result.Value))
-            : FromError(result.Error!);
+        if (!result.Succeeded)
+        {
+            return FromError(result.Error!);
+        }
+
+        Response.Headers.Location = $"/api/knowledge-bases/{result.Value!.Id}";
+        return OperationSuccess(
+            ToDetail(result.Value),
+            StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}")]
@@ -68,7 +80,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                 id, request.ExpectedLogicalRevision, request.Name,
                 request.Description, request.Status),
             cancellationToken);
-        return result.Succeeded ? Ok(ToDetail(result.Value!)) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(ToDetail(result.Value!))
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/documents")]
@@ -83,7 +97,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                     id, request.ExpectedLogicalRevision, request.FileName,
                     request.MediaType, request.Content),
                 cancellationToken);
-        return result.Succeeded ? Ok(ToDetail(result.Value!)) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(ToDetail(result.Value!))
+            : FromError(result.Error!);
     }
 
     [HttpPost("{id:guid}/documents/pdf")]
@@ -100,10 +116,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
         if (file is null
             || file.Length is 0 or > KnowledgeLifecycleService.MaximumPdfBytes)
         {
-            return Problem(
+            return FromError(
                 KnowledgeErrorCodes.DocumentInvalid,
-                $"A PDF file up to {KnowledgeLifecycleService.MaximumPdfBytes} bytes is required.",
-                400);
+                $"A PDF file up to {KnowledgeLifecycleService.MaximumPdfBytes} bytes is required.");
         }
 
         using var buffer = new MemoryStream(checked((int)file.Length));
@@ -117,7 +132,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                     file.ContentType,
                     buffer.ToArray()),
                 cancellationToken);
-        return result.Succeeded ? Ok(ToDetail(result.Value!)) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(ToDetail(result.Value!))
+            : FromError(result.Error!);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -132,7 +149,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                 request.ExpectedLogicalRevision,
                 request.Archived),
             cancellationToken);
-        return result.Succeeded ? Ok(ToDetail(result.Value!)) : FromError(result.Error!);
+        return result.Succeeded
+            ? OperationSuccess(ToDetail(result.Value!))
+            : FromError(result.Error!);
     }
 
     [HttpGet("{id:guid}/documents")]
@@ -143,7 +162,9 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
         KnowledgeBaseDefinition? value = await lifecycle.GetAsync(id, cancellationToken);
         if (value is null)
         {
-            return Problem(KnowledgeErrorCodes.NotFound, "The knowledge base was not found.", 404);
+            return FromError(
+                KnowledgeErrorCodes.NotFound,
+                "The knowledge base was not found.");
         }
 
         IReadOnlyDictionary<Guid, int> chunkCounts = value.Chunks
@@ -161,7 +182,7 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                 chunkCounts.GetValueOrDefault(document.Id),
                 document.ImportedAtUtc))
             .ToArray();
-        return Ok(documents);
+        return QuerySuccess(documents);
     }
 
     [HttpGet("{id:guid}/documents/{documentId:guid}/chunks")]
@@ -174,25 +195,25 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
     {
         if (skip < 0 || take is < 1 or > 50)
         {
-            return Problem(
+            return FromError(
                 KnowledgeErrorCodes.DocumentInvalid,
-                "Chunk paging requires skip >= 0 and take between 1 and 50.",
-                400);
+                "Chunk paging requires skip >= 0 and take between 1 and 50.");
         }
 
         KnowledgeBaseDefinition? value = await lifecycle.GetAsync(id, cancellationToken);
         if (value is null)
         {
-            return Problem(KnowledgeErrorCodes.NotFound, "The knowledge base was not found.", 404);
+            return FromError(
+                KnowledgeErrorCodes.NotFound,
+                "The knowledge base was not found.");
         }
 
         KnowledgeDocument? document = value.Documents.FirstOrDefault(item => item.Id == documentId);
         if (document is null)
         {
-            return Problem(
+            return FromError(
                 KnowledgeErrorCodes.DocumentNotFound,
-                "The knowledge document was not found.",
-                404);
+                "The knowledge document was not found.");
         }
 
         KnowledgeChunk[] allChunks = value.Chunks
@@ -208,7 +229,7 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
                 chunk.Content,
                 chunk.Content.Length))
             .ToArray();
-        return Ok(new KnowledgeChunkPageResponse(
+        return QuerySuccess(new KnowledgeChunkPageResponse(
             document.Id,
             document.FileName,
             skip,
@@ -225,26 +246,52 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
     {
         if (string.IsNullOrWhiteSpace(request.Query))
         {
-            return Problem(KnowledgeErrorCodes.DocumentInvalid, "Search query is required.", 400);
+            return FromError(
+                KnowledgeErrorCodes.DocumentInvalid,
+                "Search query is required.");
         }
-        return Ok(await lifecycle.SearchAsync(id, request.Query.Trim(), request.Take, cancellationToken));
+        IReadOnlyList<KnowledgeSearchResult> values = await lifecycle.SearchAsync(
+            id,
+            request.Query.Trim(),
+            request.Take,
+            cancellationToken);
+        return QuerySuccess(values);
     }
 
     private IActionResult FromError(KnowledgeError error) =>
-        Problem(
-            error.Code,
-            error.Message,
-            error.Code switch
-            {
-                KnowledgeErrorCodes.NotFound => 404,
-                KnowledgeErrorCodes.DocumentNotFound => 404,
-                KnowledgeErrorCodes.CodeConflict or KnowledgeErrorCodes.RowVersionConflict => 409,
-                _ => 400
-            });
+        FromError(error.Code, error.Message);
 
-    private IActionResult Problem(string code, string detail, int status) =>
-        ApiProblemResults.Create(
-            HttpContext, status, code, "The knowledge operation could not be completed.", detail);
+    private IActionResult QuerySuccess<T>(T value) =>
+        new JsonResult(
+            ServiceResult<T>.QuerySuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
+
+    private IActionResult OperationSuccess<T>(
+        T value,
+        int httpStatus = StatusCodes.Status200OK) =>
+        new JsonResult(
+            ServiceResult<T>.OprateSuccess(value),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = httpStatus
+        };
+
+    private IActionResult FromError(string errorCode, string message)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        return new JsonResult(
+            ServiceResult<AgentApiErrorData>.Failure(
+                descriptor.Status,
+                message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
+        };
+    }
 
     private static KnowledgeBaseDetailResponse ToDetail(KnowledgeBaseDefinition value) =>
         new(
@@ -265,8 +312,17 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
 public sealed class KnowledgeBaseReferencesController(IPublishedKnowledgeCatalog catalog) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken cancellationToken) =>
-        Ok(await catalog.ListAsync(cancellationToken));
+    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PublishedKnowledgeReference> values =
+            await catalog.ListAsync(cancellationToken);
+        return new JsonResult(
+            ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values),
+            AgentJsonSerialization.PascalCase)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
+    }
 }
 
 public sealed record CreateKnowledgeBaseRequest(string Code, string Name, string Description);
