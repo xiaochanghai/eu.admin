@@ -199,6 +199,6 @@ HTTP 404，但响应体可以是 `Status=610001`。
 ## 实施与验证
 
 - 实施说明：普通 JSON Action 已显式返回 `ServiceResult<T>`，宿主错误边界统一返回 `ServiceResult<AgentApiErrorData>`；MVC 全局改为 PascalCase；OpenAPI 按 Action 声明精确的 `ServiceResult<T>` 数据类型；前端普通 JSON 请求只保留严格 `requestJson` 单入口；`ApiProblemResults` 已删除；SSE、文件、指标和 204 保持原协议。宿主边界不向客户端填充 `MessageDev`，遗漏登记的 ErrorCode 会先记录告警再使用安全兜底映射。
-- 验证结果：2026-08-17 `AgAgent*` xUnit 71/71、统一返回相关 xUnit 61/61、Agent 前端 Node 测试 25/25、React 管理端 `pnpm type:check` 通过；`dotnet build EU.Core.sln -c Release --no-restore -p:GenerateDocumentationFile=false` 0 错误、133 个既有警告。宿主 Writer 已自动覆盖 HTTP 400、401、403、404、409、413、415、422、429、500、502、503、504；最新 Debug 宿主真实请求验证 200、400、404、409、413、415、429 通过，并修复 MVC 已转换 415 ProblemDetails 的遗漏；特殊协议审查确认 SSE、Agent 导出、Skill 文本和 HTTP 204 仍保持原语义。用户已完成 Agent、Skill、MCP、知识库、编排、质量评估和 Chat 主要功能回归；开发认证旁路下无法产生真实 401/403，依赖停机 503 不做破坏性验证，继续由自动化覆盖。
+- 验证结果：2026-08-17 `AgAgent*` xUnit 71/71、统一返回相关 xUnit 61/61、Agent 前端 Node 测试 25/25、React 管理端 `pnpm type:check` 通过；`dotnet build EU.Core.sln -c Release --no-restore -p:GenerateDocumentationFile=false` 0 错误、133 个既有警告。宿主 Writer 已自动覆盖 HTTP 400、401、403、404、409、413、415、422、429、500、502、503、504；最新 Debug 宿主真实请求验证 200、400、401、404、409、413、415、429 通过，并修复 MVC 已转换 415 ProblemDetails 的遗漏；特殊协议审查确认 SSE、Agent 导出、Skill 文本和 HTTP 204 仍保持原语义。用户已完成 Agent、Skill、MCP、知识库、编排、质量评估和 Chat 主要功能回归；真实 401 使用子进程临时关闭开发认证旁路验证，403 需要受信任但无权限的测试 JWT，依赖停机 503 不做破坏性验证，后二者继续由自动化覆盖。
 - 关联提交：前八批已分别提交；宿主错误边界与最终收口合并为最终提交 `refactor(agent): complete unified response migration`。
 - 遗留风险：本次是破坏性契约变更，后端与内置前端必须同版本发布和回滚；仓库外调用方已确认不存在。构建仍报告既有依赖漏洞警告，本需求不处理。
