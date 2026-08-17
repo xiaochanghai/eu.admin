@@ -2,11 +2,11 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.RateLimiting;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -53,12 +53,11 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                         HttpIdempotencyMiddleware.ReplayedHeaderName)
                     .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
             }));
-        services.AddRateLimiter(options =>
-        {
-            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        services.AddPartitionedFixedWindowRateLimit(
+            context =>
             {
                 if (!rateLimit.Enabled || !context.Request.Path.StartsWithSegments("/api"))
-                    return RateLimitPartition.GetNoLimiter("not-limited");
+                    return null;
 
                 string userId = context.User.FindFirst(authentication.UserIdClaimType)?.Value
                     ?.Trim() ?? "anonymous";
@@ -69,16 +68,12 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                 int permitLimit = workload == "expensive"
                     ? rateLimit.ExpensivePermitLimit
                     : rateLimit.GeneralPermitLimit;
-                return RateLimitPartition.GetFixedWindowLimiter(partition, _ =>
-                    new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = permitLimit,
-                        Window = TimeSpan.FromSeconds(rateLimit.WindowSeconds),
-                        QueueLimit = 0,
-                        AutoReplenishment = true
-                    });
-            });
-            options.OnRejected = async (context, cancellationToken) =>
+                return new FixedWindowRateLimitPartition(
+                    partition,
+                    permitLimit,
+                    TimeSpan.FromSeconds(rateLimit.WindowSeconds));
+            },
+            async (context, cancellationToken) =>
             {
                 context.HttpContext.RequestServices.GetRequiredService<AgentMetrics>()
                     .RecordResilience(AgentResilienceEvent.RateLimitRejected);
@@ -89,8 +84,7 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                     "AGENT_RATE_LIMIT_EXCEEDED",
                     "The request rate limit was exceeded. Retry after the indicated interval.",
                     cancellationToken: cancellationToken);
-            };
-        });
+            });
 
         string authenticationScheme =
             environment.IsDevelopment() && authentication.DevelopmentBypassEnabled
