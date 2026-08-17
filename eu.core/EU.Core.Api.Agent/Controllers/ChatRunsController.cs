@@ -180,12 +180,10 @@ public sealed class ChatRunsController : ControllerBase
                         _caller.UserId,
                         take,
                         cancellationToken);
-                return QuerySuccess(new
-                {
-                    Conversation = conversation,
-                    Messages = BusinessQueryResultProjector.ProjectMessages(
-                        messages, IncludeBusinessPresentation())
-                });
+                return QuerySuccess(new ChatConversationDetailResponse(
+                    conversation,
+                    BusinessQueryResultProjector.ProjectMessages(
+                        messages, IncludeBusinessPresentation())));
             },
             cancellationToken);
     }
@@ -419,23 +417,22 @@ public sealed class ChatRunsController : ControllerBase
         string title,
         string? detail = null)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(code);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, code);
+        string message = string.IsNullOrWhiteSpace(detail) ? title : detail;
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
-                title,
-                new AgentApiErrorData(code, HttpContext.TraceIdentifier),
-                detail),
-            AgentJsonSerialization.PascalCase)
+                message,
+                new AgentApiErrorData(code, HttpContext.TraceIdentifier)))
         { StatusCode = descriptor.HttpStatus ?? status };
     }
 
     private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+        ServiceResult<T>.QuerySuccess(value))
     { StatusCode = StatusCodes.Status200OK };
 
     private IActionResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
-        ServiceResult<T>.OprateSuccess(value), AgentJsonSerialization.PascalCase)
+        ServiceResult<T>.OprateSuccess(value))
     { StatusCode = httpStatus };
 
     private async Task<IActionResult> ExecutePersistenceOperationAsync(
@@ -497,6 +494,10 @@ public static class ChatApiErrorCodes
 }
 
 public sealed record ChatRunCancelResponse(Guid RunId);
+
+public sealed record ChatConversationDetailResponse(
+    ConversationRecord Conversation,
+    IReadOnlyList<ConversationMessageRecord> Messages);
 
 public sealed record StartChatRunRequest(
     string? Input,

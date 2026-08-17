@@ -192,29 +192,26 @@ public sealed class ToolApprovalsController(
 
     private IActionResult QuerySuccess<T>(T value) =>
         new JsonResult(
-            ServiceResult<T>.QuerySuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.QuerySuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
 
     private IActionResult OperationSuccess<T>(T value) =>
         new JsonResult(
-            ServiceResult<T>.OprateSuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.OprateSuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
 
     private IActionResult FromError(string errorCode, string message)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

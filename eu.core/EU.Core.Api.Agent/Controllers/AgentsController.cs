@@ -37,13 +37,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             }
             else
             {
-                AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve("REQUEST_INVALID");
+                AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "REQUEST_INVALID");
                 return new JsonResult(
                     ServiceResult<AgentApiErrorData>.Failure(
                         descriptor.Status,
                         "The status filter is invalid.",
-                        new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)),
-                    AgentJsonSerialization.PascalCase)
+                        new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)))
                 {
                     StatusCode = descriptor.HttpStatus
                 };
@@ -69,8 +68,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             definition.DraftModelProfileId,
             definition.CurrentPublishedLabel)).ToArray();
         return new JsonResult(
-            ServiceResult<AgentListItem[]>.QuerySuccess(values),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<AgentListItem[]>.QuerySuccess(values))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -88,8 +86,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         }
 
         return new JsonResult(
-            ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -110,8 +107,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             ?? throw new InvalidDataException("The newly created Agent could not be loaded.");
         Response.Headers.Location = $"/api/agents/{result.Data}";
         return new JsonResult(
-            ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };
@@ -148,8 +144,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -164,8 +159,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -183,8 +177,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -209,13 +202,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         if (!IsJsonContentType(Request.ContentType))
         {
             const string errorCode = "REQUEST_UNSUPPORTED_MEDIA_TYPE";
-            AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
             return new JsonResult(
                 ServiceResult<AgentApiErrorData>.Failure(
                     descriptor.Status,
                     "The Agent package must use a JSON content type.",
-                    new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
-                AgentJsonSerialization.PascalCase)
+                    new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
             {
                 StatusCode = descriptor.HttpStatus
             };
@@ -237,8 +229,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
 
         Response.Headers.Location = $"/api/agents/{result.Value!.Id}";
         return new JsonResult(
-            ServiceResult<AgentDefinition>.OprateSuccess(result.Value, "导入成功"),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<AgentDefinition>.OprateSuccess(result.Value, "导入成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };
@@ -246,13 +237,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
 
     private IActionResult FromError(AgentError error)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 error.Message,
-                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

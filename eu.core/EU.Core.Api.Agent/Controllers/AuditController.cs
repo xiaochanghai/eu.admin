@@ -25,7 +25,6 @@ public sealed class AuditController(
                 await repository.ListAsync(
                     caller.TenantId,
                     Math.Clamp(take, 1, 100),
-                    cancellationToken)),
-            AgentJsonSerialization.PascalCase)
+                    cancellationToken)))
         { StatusCode = StatusCodes.Status200OK };
 }

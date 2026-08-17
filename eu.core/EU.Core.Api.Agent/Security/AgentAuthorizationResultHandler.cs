@@ -1,17 +1,13 @@
-using System.Text.Json;
+using EU.Core.Api.Agent.Errors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Security;
 
 public sealed class AgentAuthorizationResultHandler
     : IAuthorizationMiddlewareResultHandler
 {
-    private static readonly JsonSerializerOptions SerializerOptions =
-        new(JsonSerializerDefaults.Web);
-
     public async Task HandleAsync(
         RequestDelegate next,
         HttpContext context,
@@ -37,29 +33,16 @@ public sealed class AgentAuthorizationResultHandler
         int status = forbidden
             ? StatusCodes.Status403Forbidden
             : StatusCodes.Status401Unauthorized;
-        var problem = new ProblemDetails
-        {
-            Status = status,
-            Title = forbidden
-                ? "The caller is not authorized for this operation."
-                : "Authentication is required.",
-            Type = $"https://httpstatuses.com/{status}",
-            Instance = context.Request.Path
-        };
         string errorCode = forbidden
             ? "AUTHORIZATION_DENIED"
             : "AUTHENTICATION_REQUIRED";
-        problem.Extensions["errorCode"] = errorCode;
-        problem.Extensions["traceId"] = context.TraceIdentifier;
-        problem.Extensions["code"] = errorCode;
-        problem.Extensions["correlationId"] = context.TraceIdentifier;
-
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
-        await JsonSerializer.SerializeAsync(
-            context.Response.Body,
-            problem,
-            SerializerOptions,
-            context.RequestAborted);
+        await AgentApiErrorResponseWriter.WriteAsync(
+            context,
+            errorCode,
+            forbidden
+                ? "The caller is not authorized for this operation."
+                : "Authentication is required.",
+            httpStatus: status,
+            cancellationToken: context.RequestAborted);
     }
 }

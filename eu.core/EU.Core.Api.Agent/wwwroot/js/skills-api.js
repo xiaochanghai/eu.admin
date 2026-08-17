@@ -1,4 +1,4 @@
-import { parseServiceResponse, requestServiceJson as request } from "./http.js";
+import { parseServiceResponse, requestJson as request } from "./http.js";
 
 const base = "/api/skills";
 

@@ -3,7 +3,7 @@
 ## 基本信息
 
 - 编号：REQ-202608170103
-- 状态：待开发
+- 状态：待验收
 - 优先级：P2
 - 提出人：sah
 - 负责人：sah
@@ -162,23 +162,23 @@ HTTP 404，但响应体可以是 `Status=610001`。
 
 ## 验收标准
 
-- [ ] 除明确列出的特殊协议接口外，Agent API 所有 JSON 响应均使用 `ServiceResult<T>` 或 `ServicePageResult<T>`。
-- [ ] 返回属性及 `Data` 内 DTO 属性统一采用 PascalCase，与 `EU.Core.Api` 保持一致。
-- [ ] 成功、创建、参数错误、未授权、未找到、业务冲突、限流和未处理异常均有契约测试。
-- [ ] 成功响应体 `Status=200`；Agent 业务失败只使用 `600000–699999`，不使用 4 或 5 开头的业务状态码。
-- [ ] HTTP 状态码保持标准 HTTP 语义，响应体 `Status` 按 ErrorCode 对照表返回，`Success` 值正确。
-- [ ] 所有现有 `ErrorCode` 已登记到集中映射器，同一错误码在不同接口中返回相同的业务 `Status` 和 HTTP 状态码。
-- [ ] 未登记错误码返回业务 `Status=699999`、HTTP 500，保留原错误码并产生告警日志。
-- [ ] 原有稳定错误码和追踪标识可由前端继续获取。
-- [ ] Agent 管理页面的 Agent、Skill、MCP、知识库、编排、聊天和质量评估功能能够正常加载及操作。
-- [ ] 文件导入导出、PDF 上传、SSE 聊天和运行事件流保持原协议并通过回归测试。
-- [ ] Swagger/OpenAPI 能展示统一后的成功与失败响应模型。
-- [ ] 后端构建和针对性测试通过，Agent 前端脚本测试或关键页面回归通过。
+- [x] 除明确列出的特殊协议接口外，Agent API 所有 JSON 响应均使用 `ServiceResult<T>` 或 `ServicePageResult<T>`。
+- [x] 返回属性及 `Data` 内 DTO 属性统一采用 PascalCase，与 `EU.Core.Api` 保持一致。
+- [x] 成功、创建、参数错误、未授权、未找到、业务冲突、限流和未处理异常均有契约测试。
+- [x] 成功响应体 `Status=200`；Agent 业务失败只使用 `600000–699999`，不使用 4 或 5 开头的业务状态码。
+- [x] HTTP 状态码保持标准 HTTP 语义，响应体 `Status` 按 ErrorCode 对照表返回，`Success` 值正确。
+- [x] 所有现有 `ErrorCode` 已登记到集中映射器，同一错误码在不同接口中返回相同的业务 `Status` 和 HTTP 状态码。
+- [x] 未登记错误码返回业务 `Status=699999`、HTTP 500，保留原错误码并产生告警日志。
+- [x] 原有稳定错误码和追踪标识可由前端继续获取。
+- [x] Agent 管理页面的 Agent、Skill、MCP、知识库、编排、聊天和质量评估功能能够正常加载及操作。
+- [x] 文件导入导出、PDF 上传、SSE 聊天和运行事件流保持原协议并通过回归测试。
+- [x] Swagger/OpenAPI 能展示统一后的成功与失败响应模型。
+- [x] 后端构建和针对性测试通过，Agent 前端脚本测试或关键页面回归通过。
 
 ## 补充资料
 
 - 相关页面或接口：`/api/agents`、`/api/skills`、`/api/mcp/**`、`/api/knowledge-bases`、`/api/orchestrations`、`/api/chat/**`、`/api/evaluation-*`
-- 相关文件：[分批设计](Agent%20API统一返回分批设计.md)、[实施计划](Agent%20API统一返回实施计划.md)、`EU.Core.Model/ServiceResult.cs`、`EU.Core.Api/Filter/GlobalActionFilter.cs`、`EU.Core.Api.Agent/Controllers/ApiProblemResults.cs`、`EU.Core.Api.Agent/Errors/ProblemDetailsMiddleware.cs`、`EU.Core.Api.Agent/wwwroot/js/http.js`
+- 相关文件：[分批设计](Agent%20API统一返回分批设计.md)、[实施计划](Agent%20API统一返回实施计划.md)、`EU.Core.Model/ServiceResult.cs`、`EU.Core.Api/Filter/GlobalActionFilter.cs`、`EU.Core.Api.Agent/Errors/AgentApiErrorResponseWriter.cs`、`EU.Core.Api.Agent/Errors/ProblemDetailsMiddleware.cs`、`EU.Core.Api.Agent/wwwroot/js/http.js`（原 `ApiProblemResults.cs` 已删除）
 - 截图或附件：无
 - 依赖或前置条件：完成 Agent API 响应清单及前端调用方清单；以 [`Agent API ErrorCode 固定清单`](Agent%20API%20ErrorCode固定清单.md) 为映射事实源
 - 其他说明：优先复用公共响应模型，不在 Agent 宿主内复制另一套同名模型。
@@ -194,10 +194,11 @@ HTTP 404，但响应体可以是 `Status=610001`。
 | 2026-08-17 | Codex | 待开发 | 完成当前 Agent ErrorCode 全量盘点并建立固定注册表 |
 | 2026-08-17 | Codex | 待开发 | 确认逐 Controller 显式改造方案并形成十批次设计 |
 | 2026-08-17 | Codex | 待开发 | 补齐十批次逐文件、测试驱动和独立提交的实施计划 |
+| 2026-08-17 | Codex | 待开发 → 待验收 | 完成全部普通 JSON Controller、宿主错误边界、内置前端单入口、PascalCase 与 OpenAPI 收口；自动验证通过 |
 
 ## 实施与验证
 
-- 实施说明：待开发
-- 验证结果：待验证
-- 关联提交：
-- 遗留风险：响应包装和属性大小写变化会影响所有现有 Agent API 调用方，必须同步修改并发布前端消费者。
+- 实施说明：普通 JSON Action 已显式返回 `ServiceResult<T>`，宿主错误边界统一返回 `ServiceResult<AgentApiErrorData>`；MVC 全局改为 PascalCase；OpenAPI 按 Action 声明精确的 `ServiceResult<T>` 数据类型；前端普通 JSON 请求只保留严格 `requestJson` 单入口；`ApiProblemResults` 已删除；SSE、文件、指标和 204 保持原协议。宿主边界不向客户端填充 `MessageDev`，遗漏登记的 ErrorCode 会先记录告警再使用安全兜底映射。
+- 验证结果：2026-08-17 `AgAgent*` xUnit 70/70、统一返回相关 xUnit 60/60、Agent 前端 Node 测试 25/25、React 管理端 `pnpm type:check` 通过；`dotnet build EU.Core.sln -c Release --no-restore -p:GenerateDocumentationFile=false` 0 错误、133 个既有警告。宿主 Writer 已自动覆盖 HTTP 400、401、403、404、409、413、415、422、429、500、502、503、504；特殊协议审查确认 SSE、Agent 导出、Skill 文本和 HTTP 204 仍保持原语义；用户已完成 Agent、Skill、MCP、知识库、编排、质量评估和 Chat 主要功能回归；真实认证配置、限流窗口和依赖停机的完整手工负向组合仍列在实施计划 Task 9.8。
+- 关联提交：前八批已分别提交；宿主错误边界与最终收口合并为最终提交 `refactor(agent): complete unified response migration`。
+- 遗留风险：本次是破坏性契约变更，后端与内置前端必须同版本发布和回滚；仓库外调用方已确认不存在。构建仍报告既有依赖漏洞警告，本需求不处理。

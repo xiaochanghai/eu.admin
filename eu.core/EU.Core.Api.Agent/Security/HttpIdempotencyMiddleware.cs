@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Agent.Application.Abstractions.Security;
 using Microsoft.Extensions.Options;
@@ -230,20 +231,11 @@ public sealed class HttpIdempotencyMiddleware(
         string code,
         string detail)
     {
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsJsonAsync(new
-        {
-            type = $"https://httpstatuses.com/{status}",
-            title = status == StatusCodes.Status400BadRequest
-                ? "Invalid idempotency request."
-                : "Idempotency conflict.",
-            status,
-            errorCode = code,
-            traceId = context.TraceIdentifier,
+        await AgentApiErrorResponseWriter.WriteAsync(
+            context,
             code,
             detail,
-            correlationId = context.TraceIdentifier
-        }, context.RequestAborted);
+            httpStatus: status,
+            cancellationToken: context.RequestAborted);
     }
 }

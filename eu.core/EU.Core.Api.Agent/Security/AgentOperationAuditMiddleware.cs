@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Agent.Application.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
@@ -83,21 +84,10 @@ public sealed class AgentOperationAuditMiddleware(
                 StatusCodes.Status503ServiceUnavailable,
                 "Failed",
                 ElapsedMilliseconds(started));
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            context.Response.ContentType = "application/problem+json";
-            await context.Response.WriteAsJsonAsync(
-                new
-                {
-                    type = "https://httpstatuses.com/503",
-                    title = "The audit service is unavailable.",
-                    status = StatusCodes.Status503ServiceUnavailable,
-                    errorCode = "AGENT_AUDIT_UNAVAILABLE",
-                    traceId = context.TraceIdentifier,
-                    code = "AGENT_AUDIT_UNAVAILABLE",
-                    correlationId = context.TraceIdentifier
-                },
-                options: null,
-                contentType: "application/problem+json",
+            await AgentApiErrorResponseWriter.WriteAsync(
+                context,
+                "AGENT_AUDIT_UNAVAILABLE",
+                "The audit service is unavailable.",
                 cancellationToken: context.RequestAborted);
             return;
         }

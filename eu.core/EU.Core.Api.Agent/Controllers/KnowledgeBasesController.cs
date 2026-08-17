@@ -263,8 +263,7 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
 
     private IActionResult QuerySuccess<T>(T value) =>
         new JsonResult(
-            ServiceResult<T>.QuerySuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.QuerySuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -273,21 +272,19 @@ public sealed class KnowledgeBasesController(KnowledgeLifecycleService lifecycle
         T value,
         int httpStatus = StatusCodes.Status200OK) =>
         new JsonResult(
-            ServiceResult<T>.OprateSuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.OprateSuccess(value))
         {
             StatusCode = httpStatus
         };
 
     private IActionResult FromError(string errorCode, string message)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };
@@ -317,8 +314,7 @@ public sealed class KnowledgeBaseReferencesController(IPublishedKnowledgeCatalog
         IReadOnlyList<PublishedKnowledgeReference> values =
             await catalog.ListAsync(cancellationToken);
         return new JsonResult(
-            ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values))
         {
             StatusCode = StatusCodes.Status200OK
         };

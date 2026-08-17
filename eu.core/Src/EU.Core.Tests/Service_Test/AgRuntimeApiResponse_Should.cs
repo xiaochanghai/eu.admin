@@ -170,7 +170,7 @@ public sealed class AgRuntimeApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         object body = Assert.IsAssignableFrom<object>(json.Value);
         Assert.Equal(200, body.GetType().GetProperty("Status")?.GetValue(body));
         Assert.Equal(true, body.GetType().GetProperty("Success")?.GetValue(body));
@@ -188,7 +188,7 @@ public sealed class AgRuntimeApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<AgentApiErrorData> body = Assert.IsType<ServiceResult<AgentApiErrorData>>(json.Value);
         Assert.False(body.Success);
         Assert.Equal(businessStatus, body.Status);

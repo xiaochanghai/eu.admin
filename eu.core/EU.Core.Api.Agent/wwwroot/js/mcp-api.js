@@ -1,4 +1,4 @@
-import { requestServiceJson as request } from "./http.js";
+import { requestJson as request } from "./http.js";
 
 const base = "/api/mcp";
 

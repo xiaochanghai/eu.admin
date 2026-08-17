@@ -27,8 +27,7 @@ public sealed class BusinessQueryRetentionController(
             await repository.RedactExpiredBusinessQueryResultsAsync(
                 cutoff, cancellationToken);
         return new JsonResult(
-            ServiceResult<BusinessQueryCleanupResult>.OprateSuccess(result),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<BusinessQueryCleanupResult>.OprateSuccess(result))
         { StatusCode = StatusCodes.Status200OK };
     }
 }

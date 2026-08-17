@@ -4,7 +4,6 @@ using System.Reflection;
 using EU.Core.Agent.Application.Abstractions.Security;
 using EU.Core.Agent.Application.Approvals;
 using EU.Core.Agent.Application.Mcp;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.IServices;
 using EU.Core.Model;
@@ -322,7 +321,7 @@ public sealed class AgMcpApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         return json;
     }
 
@@ -334,7 +333,7 @@ public sealed class AgMcpApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<AgentApiErrorData> body =
             Assert.IsType<ServiceResult<AgentApiErrorData>>(json.Value);
         Assert.False(body.Success);

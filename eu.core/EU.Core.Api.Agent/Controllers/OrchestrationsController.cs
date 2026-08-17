@@ -197,8 +197,7 @@ public sealed class OrchestrationsController(
 
     private IActionResult QuerySuccess<T>(T value) =>
         new JsonResult(
-            ServiceResult<T>.QuerySuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.QuerySuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -207,21 +206,19 @@ public sealed class OrchestrationsController(
         T value,
         int httpStatus = StatusCodes.Status200OK) =>
         new JsonResult(
-            ServiceResult<T>.OprateSuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<T>.OprateSuccess(value))
         {
             StatusCode = httpStatus
         };
 
     private IActionResult FromError(string errorCode, string message)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

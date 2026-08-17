@@ -39,7 +39,7 @@ public sealed class AgentRunsController(
         if (!preparation.Succeeded)
         {
             AgentRunError error = preparation.Error!;
-            AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
             HttpContext.Response.StatusCode =
                 descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
             HttpContext.Response.ContentType = "application/json; charset=utf-8";
@@ -47,8 +47,7 @@ public sealed class AgentRunsController(
                 ServiceResult<AgentApiErrorData>.Failure(
                     descriptor.Status,
                     "The Agent run could not be started.",
-                    new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier),
-                    error.Message),
+                    new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
                 AgentJsonSerialization.PascalCase,
                 cancellationToken);
             return;
@@ -85,8 +84,7 @@ public sealed class AgentRunsController(
         CancellationToken cancellationToken = default) =>
         new JsonResult(
             ServiceResult<IReadOnlyList<AgentRunAuditRecord>>.QuerySuccess(
-                await runtime.ListAuditAsync(agentId, take, cancellationToken)),
-            AgentJsonSerialization.PascalCase)
+                await runtime.ListAuditAsync(agentId, take, cancellationToken)))
         { StatusCode = StatusCodes.Status200OK };
 
     private async Task WriteFrameAsync(

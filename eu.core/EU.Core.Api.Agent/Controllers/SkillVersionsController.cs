@@ -18,8 +18,7 @@ public sealed class SkillVersionsController(
     {
         IReadOnlyList<PublishedSkillReference> values = await catalog.ListAsync(cancellationToken);
         return new JsonResult(
-            ServiceResult<IReadOnlyList<PublishedSkillReference>>.QuerySuccess(values),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<IReadOnlyList<PublishedSkillReference>>.QuerySuccess(values))
         {
             StatusCode = StatusCodes.Status200OK
         };

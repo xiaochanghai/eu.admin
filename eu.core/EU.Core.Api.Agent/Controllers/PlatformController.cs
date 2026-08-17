@@ -46,7 +46,7 @@ public sealed class PlatformController(
     }
 
     private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value), AgentJsonSerialization.PascalCase)
+        ServiceResult<T>.QuerySuccess(value))
     { StatusCode = StatusCodes.Status200OK };
 }
 

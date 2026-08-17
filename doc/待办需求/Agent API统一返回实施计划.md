@@ -4,7 +4,7 @@
 
 **目标：** 将 `EU.Core.Api.Agent` 的普通 JSON 接口按 Controller 分批改为显式返回 `ServiceResult<T>` / `ServicePageResult<T>`，同步切换内置前端，最终删除 `ApiProblemResults` 和裸数据请求路径。
 
-**架构：** Controller 负责显式构造响应并设置 HTTP 状态；`AgentApiErrorCatalog` 只保存 `ErrorCode → 业务 Status + HTTP Status`；迁移期间已改造 Action 使用共享 PascalCase 序列化选项，前端通过严格的 `requestServiceJson` 解包，未改造接口继续使用 `requestJson`。全部完成后再切换宿主全局 PascalCase 并清理临时双入口。
+**架构：** Controller 负责显式构造响应并设置 HTTP 状态；`AgentApiErrorCatalog` 只保存 `ErrorCode → 业务 Status + HTTP Status`；MVC 全局使用 PascalCase，前端普通 JSON 请求统一经严格的 `requestJson` 解包。SSE、文件、指标和 HTTP 204 保留原协议。
 
 **技术栈：** .NET 10、ASP.NET Core MVC、`EU.Core.Model.ServiceResult<T>`、xUnit、原生 ES Module、Node.js `node:test`。
 
@@ -12,11 +12,11 @@
 
 - 任务分类：`BACKEND-BUSINESS`、`BACKEND-HOST`、`API-CONTRACT`、`CROSS-END-CONTRACT`、`TESTS`；不涉及数据库结构。
 - 每批严格执行：失败测试（RED）→ 最小实现（GREEN）→ 后端构建/前端脚本测试 → `git diff --check` → 用户确认后独立提交。
-- 不新增全局 Action 结果过滤器，不新增承担响应创建职责的 `AgentApiResults`。
+- 不新增替普通 Action 包装响应的全局结果过滤器，不新增承担 Controller 响应创建职责的 `AgentApiResults`；模型校验与 415 等宿主错误可由专用边界过滤器统一处理。
 - `AgentApiErrorCatalog` 不依赖 `HttpContext`、`IActionResult` 或 JSON 序列化。
 - Controller 使用真实 HTTP 状态码；响应体成功 `Status=200`，失败使用固定的 `600000–699999` 业务状态。
 - 失败数据统一为 `AgentApiErrorData { ErrorCode, TraceId }`；生产环境不向 `MessageDev` 或 `Data` 写入异常堆栈、配置和凭据。
-- `requestServiceJson` 只接受 PascalCase 统一结构，不自动探测或兼容裸数据。
+- `requestJson` 只接受 PascalCase 统一结构，不自动探测或兼容裸数据。
 - `Data` 只解包、不递归改键名；JSON Schema、工具参数、模型输出、查询结果等动态键保持原值。
 - SSE、文件内容/下载、指标、健康检查和 HTTP 204 的成功响应不包装；在响应开始前产生的错误仍统一。
 - 测试不连接 SQL Server、Redis、RabbitMQ、外部模型或 MCP；需要真实交互的部分集中到最终手工验收。
@@ -30,7 +30,7 @@
 ServiceResult<AgAgentDefinitionDetailDto> response =
     ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value);
 
-return new JsonResult(response, AgentJsonSerialization.PascalCase)
+return new JsonResult(response)
 {
     StatusCode = StatusCodes.Status200OK
 };
@@ -41,8 +41,7 @@ return new JsonResult(response, AgentJsonSerialization.PascalCase)
 ```csharp
 Response.Headers.Location = $"/api/agents/{value.ID}";
 return new JsonResult(
-    ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"),
-    AgentJsonSerialization.PascalCase)
+    ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"))
 {
     StatusCode = StatusCodes.Status201Created
 };
@@ -57,7 +56,7 @@ var response = ServiceResult<AgentApiErrorData>.Failure(
     message,
     new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier));
 
-return new JsonResult(response, AgentJsonSerialization.PascalCase)
+return new JsonResult(response)
 {
     StatusCode = descriptor.HttpStatus
 };
@@ -284,15 +283,15 @@ git diff --check
 - Create: `eu.core/EU.Core.Api.Agent/Errors/AgentApiErrorResponseWriter.cs`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgAgentHostErrorResponse_Should.cs`
 
-- [ ] 9.1 写内存 HTTP RED 测试，覆盖模型校验 400、认证 401、授权 403、请求体 413、媒体类型 415、限流 429、审计/依赖 503、未处理异常 500。
-- [ ] 9.2 对每种错误同时断言：真实 HTTP 状态、业务 Status、`Success=false`、`Data.ErrorCode`、`Data.TraceId`、`application/json` 和现有关联 ID 响应头。
-- [ ] 9.3 写幂等回放测试：第一次和回放的 HTTP status、Content-Type、统一响应体逐字节相同；冲突使用固定错误映射。
-- [ ] 9.4 新增仅供中间件使用的 `AgentApiErrorResponseWriter`，职责是把明确参数序列化为 `ServiceResult<AgentApiErrorData>`；它不返回 `IActionResult`，不替 Controller 决策。
-- [ ] 9.5 将 `InvalidModelStateResponseFactory`、认证/授权事件和全部中间件切换为目录映射及统一 Writer；未知错误记录原 ErrorCode，向客户端输出安全消息。
-- [ ] 9.6 保留 `UseResponseBodyRead` 和 `UseRequestResponseLogMidd`，本任务不移除既有请求响应日志能力。
-- [ ] 9.7 运行本批 xUnit、Task 1 测试、`npm test`、Agent API Release build 和 `git diff --check`。
+- [x] 9.1 写内存 HTTP RED 测试，覆盖模型校验 400、认证 401、授权 403、请求体 413、媒体类型 415、限流 429、审计/依赖 503、未处理异常 500。
+- [x] 9.2 对每种错误同时断言：真实 HTTP 状态、业务 Status、`Success=false`、`Data.ErrorCode`、`Data.TraceId`、`application/json` 和现有关联 ID 响应头。
+- [x] 9.3 写幂等回放测试：第一次和回放的 HTTP status、Content-Type、统一响应体逐字节相同；冲突使用固定错误映射。
+- [x] 9.4 新增仅供中间件使用的 `AgentApiErrorResponseWriter`，职责是把明确参数序列化为 `ServiceResult<AgentApiErrorData>`；它不返回 `IActionResult`，不替 Controller 决策。
+- [x] 9.5 将 `InvalidModelStateResponseFactory`、认证/授权事件和全部中间件切换为目录映射及统一 Writer；未知错误记录原 ErrorCode，向客户端输出安全消息。
+- [x] 9.6 保留 `UseResponseBodyRead` 和 `UseRequestResponseLogMidd`，本任务不移除既有请求响应日志能力。
+- [x] 9.7 运行本批 xUnit、Task 1 测试、`npm test`、Agent API Release build 和 `git diff --check`。
 - [ ] 9.8 手工负向验证：无 Token、无权限、超限请求、重复幂等键、依赖不可用；检查日志不泄漏凭据。
-- [ ] 9.9 提交：`refactor(agent): standardize host error responses`
+- [x] 9.9 提交：宿主错误边界并入 Task 10 最终收口提交。
 
 ## Task 10：全局收口与完整回归
 
@@ -310,14 +309,14 @@ git diff --check
 - Modify: `doc/待办需求/修改agent api接口返回.md`
 - Create: `eu.core/Src/EU.Core.Tests/Service_Test/AgAgentApiMigrationCompletion_Should.cs`
 
-- [ ] 10.1 写收口 RED 测试：MVC 默认序列化 PascalCase；普通 JSON 路由均声明统一成功/失败响应；特殊协议路由在明确白名单；Swagger 能解析 `ServiceResult<T>` / `ServicePageResult<T>`。
-- [ ] 10.2 使用 `rg` 生成并人工审查接口清单，逐个确认每个 Action 属于“统一 JSON”或“特殊协议”，不以源码字符串扫描代替行为测试。
-- [ ] 10.3 将 MVC 全局 JSON 命名策略切换为 PascalCase，随后移除 Controller 中临时显式 `AgentJsonSerialization.PascalCase` 参数，Controller 仍显式构造 `ServiceResult<T>`。
-- [ ] 10.4 删除全部 `ApiProblemResults` 调用及文件；确认未新增同职责 Controller 结果帮助器。
-- [ ] 10.5 删除前端裸数据 `requestJson`，将唯一请求入口命名为 `requestJson` 或保留 `requestServiceJson`，但项目内只能有一种普通 JSON 请求语义；清理所有旧导入。
-- [ ] 10.6 补齐 Controller 的 `ProducesResponseType` / OpenAPI 响应模型；特殊协议声明真实 Content-Type。
-- [ ] 10.7 更新需求文档验收勾选、实施记录、验证结果和批次提交；记录任何未执行的外部依赖测试。
-- [ ] 10.8 运行自动验证：
+- [x] 10.1 写收口 RED 测试：MVC 默认序列化 PascalCase；普通 JSON 路由均声明统一成功/失败响应；特殊协议路由在明确白名单；Swagger 能解析 `ServiceResult<T>` / `ServicePageResult<T>`。
+- [x] 10.2 使用 `rg` 生成并人工审查接口清单，逐个确认每个 Action 属于“统一 JSON”或“特殊协议”，不以源码字符串扫描代替行为测试。
+- [x] 10.3 将 MVC 全局 JSON 命名策略切换为 PascalCase，随后移除 Controller 中临时显式 `AgentJsonSerialization.PascalCase` 参数，Controller 仍显式构造 `ServiceResult<T>`。
+- [x] 10.4 删除全部 `ApiProblemResults` 调用及文件；确认未新增同职责 Controller 结果帮助器。
+- [x] 10.5 删除前端裸数据请求实现，仅保留严格统一结构的 `requestJson` 普通 JSON 请求语义，并清理所有旧导入。
+- [x] 10.6 通过统一 MVC Convention 补齐 Controller 的精确 `ServiceResult<T>` / OpenAPI 响应模型，不使用 `ServiceResult<object>` 模糊 `Data`；特殊协议声明真实 Content-Type。
+- [x] 10.7 更新需求文档验收勾选、实施记录和验证结果；提交项继续等待用户确认。
+- [x] 10.8 运行自动验证：
 
 ```powershell
 cd E:\EU\EU.Admin\eu.core
@@ -331,9 +330,14 @@ git diff --check
 git status --short
 ```
 
+  - 2026-08-17：`AgAgent*` 专项测试 70/70 通过；统一返回相关测试 60/60 通过；Agent 前端脚本测试 25/25 通过；React 管理端 `pnpm type:check` 通过；`EU.Core.sln` Release 构建 0 错误、133 个既有警告。
+  - Review 收口：宿主错误响应不再填充 `MessageDev`；遗漏登记的 ErrorCode 在安全兜底前写入告警日志；OpenAPI 成功响应按 Action 显示实际 `Data` DTO。
+  - 宿主 Writer 自动化覆盖 HTTP 400、401、403、404、409、413、415、422、429、500、502、503、504；涉及真实认证配置、限流窗口和依赖停机的手工组合仍保留在 9.8。
+  - 特殊协议审查确认 SSE、Agent 导出和 Skill 文本读取仍使用专用请求路径；前端测试覆盖 HTTP 204 空响应不解析 JSON。
+
 - [ ] 10.9 启动本地 Agent API 后执行完整手工验收：Agent、主 Agent、Skill、MCP、审批、知识库、编排、质量评估、Chat、审计和平台能力；验证成功、400、401、403、404、409、413、415、422、429、500、502、503、504 代表路径。
 - [ ] 10.10 确认文件导入导出、PDF multipart、Skill 文件内容、SSE、指标、HTTP 204 未被包装，幂等回放仍一致。
-- [ ] 10.11 提交：`refactor(agent): complete unified response migration`
+- [x] 10.11 提交：`refactor(agent): complete unified response migration`
 
 ## 批次验收记录模板
 

@@ -19,8 +19,7 @@ public sealed class McpToolVersionsController(
         IReadOnlyList<PublishedMcpToolReference> values =
             await catalog.ListAsync(cancellationToken);
         return new JsonResult(
-            ServiceResult<IReadOnlyList<PublishedMcpToolReference>>.QuerySuccess(values),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<IReadOnlyList<PublishedMcpToolReference>>.QuerySuccess(values))
         {
             StatusCode = StatusCodes.Status200OK
         };

@@ -1,30 +1,27 @@
 export async function createApiError(response, fallbackMessage) {
-  let problem = {};
-  try { problem = await response.json(); } catch { problem = {}; }
+  let payload = {};
+  try { payload = await response.json(); } catch { payload = {}; }
 
-  const error = new Error(problem.detail || problem.title || fallbackMessage);
-  error.status = response.status;
-  error.errorCode = problem.errorCode || problem.code;
-  error.traceId = problem.traceId || problem.correlationId;
-  return error;
-}
-
-export async function requestJson(path, options = {}) {
-  const { headers = {}, body, ...requestOptions } = options;
-  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  const response = await fetch(path, {
-    ...requestOptions,
-    body,
-    headers: {
-      Accept: "application/json",
-      ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
-      ...headers
-    }
-  });
-  if (!response.ok) {
-    throw await createApiError(response, `请求失败 (${response.status})`);
+  const serviceResponse = payload !== null
+    && typeof payload === "object"
+    && !Array.isArray(payload)
+    && Number.isInteger(payload.Status)
+    && typeof payload.Success === "boolean"
+    && Object.prototype.hasOwnProperty.call(payload, "Data");
+  if (serviceResponse) {
+    const error = new Error(payload.Message || fallbackMessage);
+    error.status = response.status;
+    error.businessStatus = payload.Status;
+    error.errorCode = payload.Data?.ErrorCode;
+    error.traceId = payload.Data?.TraceId;
+    return error;
   }
-  return response.status === 204 ? null : response.json();
+
+  const error = new Error(payload.detail || payload.title || fallbackMessage);
+  error.status = response.status;
+  error.errorCode = payload.errorCode || payload.code;
+  error.traceId = payload.traceId || payload.correlationId;
+  return error;
 }
 
 export function parseServiceResponse(payload, httpStatus, fallbackMessage) {
@@ -55,7 +52,7 @@ export function parseServiceResponse(payload, httpStatus, fallbackMessage) {
   return payload.Data;
 }
 
-export async function requestServiceJson(path, options = {}) {
+export async function requestJson(path, options = {}) {
   const { headers = {}, body, ...requestOptions } = options;
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const response = await fetch(path, {

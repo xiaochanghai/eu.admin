@@ -40,13 +40,12 @@ public sealed class SkillsController(
             else
             {
                 const string errorCode = "REQUEST_INVALID";
-                AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(errorCode);
+                AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
                 return new JsonResult(
                     ServiceResult<AgentApiErrorData>.Failure(
                         descriptor.Status,
                         "Skill status must be Active or Archived.",
-                        new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)),
-                    AgentJsonSerialization.PascalCase)
+                        new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
                 {
                     StatusCode = descriptor.HttpStatus
                 };
@@ -56,8 +55,7 @@ public sealed class SkillsController(
         IReadOnlyList<SkillListItem> values = await lifecycle.ListAsync(
             new SkillQuery(search, category, parsedStatus), cancellationToken);
         return new JsonResult(
-            ServiceResult<IReadOnlyList<SkillListItem>>.QuerySuccess(values),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<IReadOnlyList<SkillListItem>>.QuerySuccess(values))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -101,8 +99,7 @@ public sealed class SkillsController(
                     .ToArray()))
                 .ToArray());
         return new JsonResult(
-            ServiceResult<SkillDefinitionDetailResponse>.QuerySuccess(value),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<SkillDefinitionDetailResponse>.QuerySuccess(value))
         {
             StatusCode = StatusCodes.Status200OK
         };
@@ -127,8 +124,7 @@ public sealed class SkillsController(
 
         Response.Headers.Location = $"/api/skills/{result.Value!.Id}";
         return new JsonResult(
-            ServiceResult<SkillDefinition>.OprateSuccess(result.Value, "创建成功"),
-            AgentJsonSerialization.PascalCase)
+            ServiceResult<SkillDefinition>.OprateSuccess(result.Value, "创建成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };
@@ -150,8 +146,7 @@ public sealed class SkillsController(
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -165,8 +160,7 @@ public sealed class SkillsController(
             await lifecycle.ListFilesAsync(id, cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<IReadOnlyList<SkillFileEntry>>.QuerySuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<IReadOnlyList<SkillFileEntry>>.QuerySuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -203,8 +197,7 @@ public sealed class SkillsController(
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -225,8 +218,7 @@ public sealed class SkillsController(
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -247,8 +239,7 @@ public sealed class SkillsController(
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -266,8 +257,7 @@ public sealed class SkillsController(
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<SkillDefinition>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -276,13 +266,12 @@ public sealed class SkillsController(
 
     private IActionResult FromError(SkillError error)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 error.Message,
-                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

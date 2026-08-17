@@ -1,8 +1,6 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Security;
 
 namespace EU.Core.Api.Agent.Errors;
@@ -26,76 +24,50 @@ public sealed class ProblemDetailsMiddleware(RequestDelegate next, ILoggerFactor
         }
         catch (RequestBodyTooLargeException) when (!context.Response.HasStarted)
         {
-            await WriteProblemAsync(
+            await AgentApiErrorResponseWriter.WriteAsync(
                 context,
-                StatusCodes.Status413PayloadTooLarge,
+                "REQUEST_BODY_TOO_LARGE",
                 "The request body exceeds the supported size.",
-                "REQUEST_BODY_TOO_LARGE");
+                clearResponse: true,
+                cancellationToken: context.RequestAborted);
         }
         catch (BadHttpRequestException exception) when (!context.Response.HasStarted)
         {
             int status = exception.StatusCode is StatusCodes.Status413PayloadTooLarge
                 ? StatusCodes.Status413PayloadTooLarge
                 : StatusCodes.Status400BadRequest;
-            await WriteProblemAsync(
+            await AgentApiErrorResponseWriter.WriteAsync(
                 context,
-                status,
+                status == StatusCodes.Status413PayloadTooLarge
+                    ? "REQUEST_BODY_TOO_LARGE"
+                    : "REQUEST_INVALID",
                 status == StatusCodes.Status413PayloadTooLarge
                     ? "The request body exceeds the supported size."
                     : "The request body is invalid.",
-                status == StatusCodes.Status413PayloadTooLarge
-                    ? "REQUEST_BODY_TOO_LARGE"
-                    : "REQUEST_INVALID");
+                httpStatus: status,
+                clearResponse: true,
+                cancellationToken: context.RequestAborted);
         }
         catch (JsonException) when (!context.Response.HasStarted)
         {
-            await WriteProblemAsync(
+            await AgentApiErrorResponseWriter.WriteAsync(
                 context,
-                StatusCodes.Status400BadRequest,
+                "REQUEST_INVALID",
                 "The request body is invalid.",
-                "REQUEST_INVALID");
+                clearResponse: true,
+                cancellationToken: context.RequestAborted);
         }
         catch (Exception exception) when (!context.Response.HasStarted)
         {
-            string traceId = ResolveTraceId(context);
+            string traceId = context.TraceIdentifier;
             logger.LogError(exception, "Unhandled request failed. TraceId: {TraceId}", traceId);
 
-            await WriteProblemAsync(
+            await AgentApiErrorResponseWriter.WriteAsync(
                 context,
-                StatusCodes.Status500InternalServerError,
+                "UNEXPECTED_ERROR",
                 "An unexpected error occurred.",
-                "UNEXPECTED_ERROR");
+                clearResponse: true,
+                cancellationToken: context.RequestAborted);
         }
-    }
-
-    private static async Task WriteProblemAsync(
-        HttpContext context,
-        int status,
-        string title,
-        string? errorCode = null)
-    {
-        string traceId = ResolveTraceId(context);
-        context.Response.Clear();
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json; charset=utf-8";
-        context.Response.Headers[CorrelationIdMiddleware.HeaderName] = traceId;
-        var problem = new Dictionary<string, object?>
-        {
-            ["type"] = "about:blank",
-            ["title"] = title,
-            ["status"] = status,
-            ["traceId"] = traceId
-        };
-        if (errorCode is not null)
-        {
-            problem["errorCode"] = errorCode;
-        }
-
-        await JsonSerializer.SerializeAsync(context.Response.Body, problem);
-    }
-
-    private static string ResolveTraceId(HttpContext context)
-    {
-        return context.TraceIdentifier ?? Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N");
     }
 }

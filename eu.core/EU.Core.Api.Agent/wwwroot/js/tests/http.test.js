@@ -17,7 +17,8 @@ import { skillsApi } from "../skills-api.js";
 
 test("exports the strict service response client", () => {
   assert.equal(typeof http.parseServiceResponse, "function");
-  assert.equal(typeof http.requestServiceJson, "function");
+  assert.equal(typeof http.requestJson, "function");
+  assert.equal(http.requestServiceJson, undefined);
 });
 
 test("returns Data from a successful PascalCase response", () => {
@@ -74,6 +75,29 @@ test("throws structured error from a failed service response", () => {
     });
 });
 
+test("createApiError preserves unified errors for SSE requests", async () => {
+  const error = await http.createApiError({
+    status: 429,
+    async json() {
+      return {
+        Status: 600008,
+        Success: false,
+        Message: "请求过于频繁。",
+        Data: {
+          ErrorCode: "AGENT_RATE_LIMIT_EXCEEDED",
+          TraceId: "trace-sse"
+        }
+      };
+    }
+  }, "运行失败");
+
+  assert.equal(error.message, "请求过于频繁。");
+  assert.equal(error.status, 429);
+  assert.equal(error.businessStatus, 600008);
+  assert.equal(error.errorCode, "AGENT_RATE_LIMIT_EXCEEDED");
+  assert.equal(error.traceId, "trace-sse");
+});
+
 test("rejects raw and incomplete payloads", () => {
   const invalidPayloads = [
     [],
@@ -88,7 +112,7 @@ test("rejects raw and incomplete payloads", () => {
   }
 });
 
-test("requestServiceJson sends JSON headers and unwraps Data", async t => {
+test("requestJson sends JSON headers and unwraps Data", async t => {
   const originalFetch = globalThis.fetch;
   t.after(() => { globalThis.fetch = originalFetch; });
   globalThis.fetch = async (path, options) => {
@@ -108,11 +132,26 @@ test("requestServiceJson sends JSON headers and unwraps Data", async t => {
       }
     };
   };
-  const result = await http.requestServiceJson("/api/agents", {
+  const result = await http.requestJson("/api/agents", {
     method: "POST",
     body: "{}"
   });
   assert.deepEqual(result, [{ ID: "agent-1" }]);
+});
+
+test("requestJson preserves HTTP 204 without parsing an empty body", async t => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async () => ({
+    status: 204,
+    async json() {
+      throw new Error("A 204 response must not be parsed as JSON.");
+    }
+  });
+
+  const result = await http.requestJson("/api/orchestrations/flow-1/runs/run-1/output");
+
+  assert.equal(result, null);
 });
 
 test("agent API unwraps migrated list responses without renaming DTO fields", async t => {

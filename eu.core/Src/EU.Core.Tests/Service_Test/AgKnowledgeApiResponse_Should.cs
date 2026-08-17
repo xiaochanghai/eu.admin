@@ -1,7 +1,6 @@
 #nullable enable
 
 using EU.Core.Agent.Application.Knowledge;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;
@@ -204,7 +203,7 @@ public sealed class AgKnowledgeApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
         Assert.Equal(200, body.Status);
         Assert.True(body.Success);
@@ -219,7 +218,7 @@ public sealed class AgKnowledgeApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<AgentApiErrorData> body =
             Assert.IsType<ServiceResult<AgentApiErrorData>>(json.Value);
         Assert.False(body.Success);

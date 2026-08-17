@@ -5,7 +5,6 @@ using System.Text;
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.Skills;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.IServices;
 using EU.Core.Model;
@@ -370,7 +369,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
         Assert.Equal(200, body.Status);
         Assert.True(body.Success);
@@ -385,7 +384,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
         Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Same(AgentJsonSerialization.PascalCase, json.SerializerSettings);
+        Assert.Null(json.SerializerSettings);
         ServiceResult<AgentApiErrorData> body =
             Assert.IsType<ServiceResult<AgentApiErrorData>>(json.Value);
         Assert.False(body.Success);

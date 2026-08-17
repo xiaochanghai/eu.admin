@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -81,21 +82,13 @@ internal static class AgentApiSecurityServiceCollectionExtensions
             {
                 context.HttpContext.RequestServices.GetRequiredService<AgentMetrics>()
                     .RecordResilience(AgentResilienceEvent.RateLimitRejected);
-                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                context.HttpContext.Response.ContentType = "application/problem+json";
                 context.HttpContext.Response.Headers.RetryAfter =
                     rateLimit.WindowSeconds.ToString(CultureInfo.InvariantCulture);
-                await context.HttpContext.Response.WriteAsJsonAsync(new
-                {
-                    type = "https://httpstatuses.com/429",
-                    title = "Too many requests.",
-                    status = StatusCodes.Status429TooManyRequests,
-                    errorCode = "AGENT_RATE_LIMIT_EXCEEDED",
-                    traceId = context.HttpContext.TraceIdentifier,
-                    code = "AGENT_RATE_LIMIT_EXCEEDED",
-                    detail = "The request rate limit was exceeded. Retry after the indicated interval.",
-                    correlationId = context.HttpContext.TraceIdentifier
-                }, cancellationToken);
+                await AgentApiErrorResponseWriter.WriteAsync(
+                    context.HttpContext,
+                    "AGENT_RATE_LIMIT_EXCEEDED",
+                    "The request rate limit was exceeded. Retry after the indicated interval.",
+                    cancellationToken: cancellationToken);
             };
         });
 

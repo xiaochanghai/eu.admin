@@ -22,8 +22,7 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
         MainAgentOperationResult result = await _assignments.GetAsync(cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<MainAgentAssignment>.QuerySuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<MainAgentAssignment>.QuerySuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -40,8 +39,7 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
             cancellationToken);
         return result.Succeeded
             ? new JsonResult(
-                ServiceResult<MainAgentAssignment>.OprateSuccess(result.Value!),
-                AgentJsonSerialization.PascalCase)
+                ServiceResult<MainAgentAssignment>.OprateSuccess(result.Value!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
@@ -50,13 +48,12 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
 
     private IActionResult FromError(MainAgentError error)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorCatalog.Resolve(error.Code);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
                 error.Message,
-                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)),
-            AgentJsonSerialization.PascalCase)
+                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

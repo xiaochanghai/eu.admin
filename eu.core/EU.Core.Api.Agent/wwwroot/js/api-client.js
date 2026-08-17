@@ -1,7 +1,7 @@
 import {
   createApiError,
   parseServiceResponse,
-  requestServiceJson as serviceRequest
+  requestJson as serviceRequest
 } from "./http.js";
 
 const base = "/api/agents";

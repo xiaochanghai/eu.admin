@@ -4,7 +4,6 @@ using EU.Core.Common.Core;
 using EU.Core.Common.Caches;
 using EU.Core.Extensions;
 using System.Security.Cryptography;
-using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
@@ -62,12 +61,14 @@ builder.Services.AddSingleton<ICaching, Caching>();
 builder.Services.AddSqlsugarSetup();
 builder.Services.AddOpenApi();
 builder.Services
-    .AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(
-            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false)));
+    .AddControllers(options =>
+    {
+        options.Filters.Add<AgentApiValidationResultFilter>();
+        options.Conventions.Add(new AgentApiResponseMetadataConvention());
+    })
+    .AddJsonOptions(AgentJsonSerialization.ConfigureMvc);
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
-    options.InvalidModelStateResponseFactory = ApiProblemResults.InvalidModelState);
+    options.InvalidModelStateResponseFactory = AgentApiValidationResultFilter.InvalidModelState);
 builder.Services.AddAgentApiOptions();
 builder.Services.AddAgentApiHttpSecurity(builder.Configuration, builder.Environment);
 builder.Services.AddHttpContextAccessor();
