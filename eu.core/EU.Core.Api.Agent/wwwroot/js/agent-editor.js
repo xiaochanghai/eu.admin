@@ -66,31 +66,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
   }
 
   function formatEditorError(error) {
-    if (error.errorCode === "OUTPUT_SCHEMA_INVALID") {
-      const backendMessage = error.message || "";
-      if (backendMessage === "A structured output schema is required.") {
-        return `暂时无法发布：输出模式为 Structured 时，必须填写 JSON Schema。请补充输出结构并保存 Draft 后重试。· 错误码：${error.errorCode}`;
-      }
-      if (backendMessage === "Text output cannot carry a JSON schema.") {
-        return `暂时无法发布：输出模式为 Text 时不能配置 JSON Schema。请清空 JSON Schema 并保存 Draft 后重试。· 错误码：${error.errorCode}`;
-      }
-      return `JSON Schema 不符合发布要求。请检查 JSON 语法，以及根节点的 type、properties 和 required 配置。· 错误码：${error.errorCode}`;
-    }
-    if (error.errorCode === "AGENT_ARCHIVE_BLOCKED") {
-      const marker = "referenced by ";
-      const backendMessage = error.message || "";
-      const markerIndex = backendMessage.indexOf(marker);
-      const rawReferences = markerIndex >= 0
-        ? backendMessage.slice(markerIndex + marker.length).replace(/\.$/, "")
-        : "其他已启用对象";
-      const references = rawReferences
-        .replace(/Agent '([^']+)'/g, "Agent“$1”")
-        .replace(/orchestration '([^']+)'/g, "编排“$1”")
-        .replace(/the Main Agent assignment/g, "Main Agent 设置")
-        .replace(/, /g, "、");
-      return `暂时无法归档：${references}仍在使用该 Agent。请先解除引用或停用引用方，再重新归档。· 错误码：${error.errorCode}`;
-    }
-    return `${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`;
+    return error?.message || "Agent 操作失败。";
   }
 
   function setArchivedFieldState(agent) {
@@ -341,12 +317,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
       }
       showMessage(successMessage, "success");
     } catch (error) {
-      if (error.status === 409) {
-        showMessage("数据已被其他操作更新。你的输入仍保留，请复制确认后重新加载。", "warning");
-        reloadButton.hidden = !current;
-      } else {
-        showMessage(formatEditorError(error), "error");
-      }
+      showMessage(formatEditorError(error), "error");
     } finally {
       setBusy(false);
     }
@@ -473,7 +444,7 @@ export function createAgentEditor({ onCreate, onReload, onSave, onPublish, onSta
       await onExport(current);
       showMessage("配置包已导出。", "success");
     } catch (error) {
-      showMessage(`${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`, "error");
+      showMessage(formatEditorError(error), "error");
     } finally {
       setBusy(false);
     }

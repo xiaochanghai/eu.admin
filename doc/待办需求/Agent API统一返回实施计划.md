@@ -1,5 +1,7 @@
 # Agent API 统一返回实施计划
 
+> 2026-08-19 实现偏差说明：AgentDefinition 服务层业务失败已按 EU.Core 现有模式落地为 HTTP 200 + `ServiceResult<T>`，使用 `Success=false`、`Status=500` 和 `Message`，不再使用该管理链路的专用 `ErrorCode` 或语义化 HTTP 4xx。Create/Import 成功保留 HTTP 201，导出成功保留文件响应，请求边界校验保留通用错误码。下文相关步骤是历史计划，不代表该链路当前契约。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **目标：** 将 `EU.Core.Api.Agent` 的普通 JSON 接口按 Controller 分批改为显式返回 `ServiceResult<T>` / `ServicePageResult<T>`，同步切换内置前端，最终删除 `ApiProblemResults` 和裸数据请求路径。

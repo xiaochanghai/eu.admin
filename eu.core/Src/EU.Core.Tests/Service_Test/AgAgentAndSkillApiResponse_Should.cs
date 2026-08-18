@@ -111,6 +111,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
         FileContentResult file = Assert.IsType<FileContentResult>(action);
         Assert.Equal("application/json", file.ContentType);
         Assert.Equal("agent-package.json", file.FileDownloadName);
+        Assert.Equal("{}", Encoding.UTF8.GetString(file.FileContents));
     }
 
     [Fact]

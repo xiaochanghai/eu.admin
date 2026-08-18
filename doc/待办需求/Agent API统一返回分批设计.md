@@ -1,5 +1,7 @@
 # Agent API 统一返回分批设计
 
+> 2026-08-19 实现偏差说明：AgentDefinition 服务层业务失败现已统一为 HTTP 200 + `ServiceResult<T>`，通过 `Success=false`、`Status=500` 和 `Message` 表达，不再使用 AgentDefinition 专用 `ErrorCode`。Create/Import 成功保留 HTTP 201，导出成功保留文件响应，请求边界校验保留通用错误码。下文涉及该管理链路专用错误码和 HTTP 4xx 的内容仅作为历史设计记录，其他模块仍以当前代码为准。
+
 ## 1. 目标
 
 将 `EU.Core.Api.Agent` 的普通 JSON 接口分批改造成与 `EU.Core.Api` 一致的

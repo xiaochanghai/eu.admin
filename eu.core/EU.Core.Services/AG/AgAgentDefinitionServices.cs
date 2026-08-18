@@ -1784,7 +1784,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         string? referenceError = await ValidatePackageReferencesAsync(
             verifiedPackage!, cancellationToken);
         return referenceError is null
-            ? Success<string>(json)
+            ? Success(data: json)
             : Failed<string>(referenceError);
     }
 

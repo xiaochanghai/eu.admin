@@ -1,5 +1,7 @@
 # REQ-202608170103 统一 Agent API 接口返回
 
+> 2026-08-19 补充：AgentDefinition 管理操作最终采用 EU.Core 业务服务的现有约定。服务层业务失败返回 HTTP 200 + `ServiceResult<T>`，使用 `Success=false`、`Status=500` 和 `Message`，不再返回 AgentDefinition 专用 `ErrorCode`；Create/Import 成功仍返回 HTTP 201，导出成功仍返回文件。列表筛选、Content-Type 等 HTTP 请求边界校验可继续返回通用 `AgentApiErrorData`。本文中关于 AgentDefinition 专用错误码及其 HTTP 4xx 映射的内容仅保留为历史设计记录；其他 Agent 模块仍按各自现行契约处理。
+
 ## 基本信息
 
 - 编号：REQ-202608170103

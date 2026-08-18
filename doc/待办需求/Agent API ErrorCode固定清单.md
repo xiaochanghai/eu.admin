@@ -1,5 +1,7 @@
 # Agent API ErrorCode 固定清单
 
+> 2026-08-19 现行实现说明：AgentDefinition 服务层返回的管理操作失败使用 HTTP 200 + `ServiceResult<T>`，响应体为 `Success=false`、`Status=500`，具体原因放在 `Message`，不再分配 AgentDefinition 专用 `ErrorCode`。列表筛选、Content-Type 等 HTTP 请求边界校验仍可使用通用错误码；运行时、MainAgent、Skill、MCP、编排等模块继续使用本清单中各自的错误码。
+
 本清单是 `EU.Core.Api.Agent` 错误码、业务 `Status` 与默认 HTTP 状态码的固定注册表，
 基线日期为 2026-08-17。
 
@@ -29,23 +31,12 @@
 | `OPERATION_CANCELLED` | 600011 | — |
 | `REQUEST_UNSUPPORTED_MEDIA_TYPE`（目标新增） | 600012 | 415 |
 
-## Agent 定义与主 Agent：610000–619999
+## Agent 运行时与主 Agent：610000–619999
 
 | ErrorCode | Status | HTTP |
 |---|---:|---:|
 | `AGENT_NOT_FOUND` | 610001 | 404 |
-| `AGENT_CODE_CONFLICT` | 610002 | 409 |
-| `AGENT_ROW_VERSION_CONFLICT` | 610003 | 409 |
 | `MAIN_AGENT_NOT_CONFIGURED` | 610004 | 404 |
-| `AGENT_CODE_INVALID` | 610005 | 400 |
-| `AGENT_RUNTIME_STATUS_INVALID` | 610006 | 400 |
-| `AGENT_LIFECYCLE_TRANSITION_INVALID` | 610007 | 409 |
-| `AGENT_ARCHIVE_BLOCKED` | 610008 | 409 |
-| `AGENT_PACKAGE_INVALID` | 610009 | 400 |
-| `AGENT_PACKAGE_VERSION_UNSUPPORTED` | 610010 | 400 |
-| `AGENT_REFERENCE_MISSING` | 610011 | 400 |
-| `AGENT_VERSION_NOT_PUBLISHABLE` | 610012 | 409 |
-| `OUTPUT_SCHEMA_INVALID` | 610013 | 400 |
 | `AGENT_RUNTIME_DISABLED` | 610014 | 409 |
 | `AGENT_PUBLISHED_VERSION_MISSING` | 610015 | 409 |
 | `AGENT_OUTPUT_INVALID` | 610016 | 422 |
