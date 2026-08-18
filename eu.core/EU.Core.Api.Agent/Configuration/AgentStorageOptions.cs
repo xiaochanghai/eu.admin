@@ -6,7 +6,7 @@ public sealed class AgentStorageOptions
 {
     public const string SectionName = "AgentStorage";
 
-    public string SkillRootPath { get; init; } = "agent-data/skills";
+    public string SkillRootPath { get; init; } = "wwwroot/skills";
 
     public string ResolveSkillRootPath(string contentRootPath) =>
         ResolvePath(contentRootPath, SkillRootPath);

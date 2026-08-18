@@ -411,7 +411,7 @@ public sealed class ControlledSkillFileStore : ISkillFileStore, IPublishedSkillC
     private string DraftRoot(string skillCode, bool create)
     {
         string path = Path.Combine(SkillRoot(skillCode, create), "draft");
-        if (create)
+        if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
         }

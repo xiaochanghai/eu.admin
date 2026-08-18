@@ -46,6 +46,8 @@ Content-Type: application/json
 
 Skill 文件名最多 64 个字符，扩展名最多 10 个字符，以保证路径索引可无损写入共享 `FileAttachment` 表。应用启动时只读扫描已有 Skill 目录并重建索引；目录缺失或不可访问会阻止启动，不会自动创建空目录并清除索引。
 
+Skill 文件默认存放在 Agent Host 内容根目录下的 `wwwroot/skills`。Docker 镜像中的绝对路径为 `/app/wwwroot/skills`，部署时应将命名卷或宿主机目录挂载到该路径，并与 Agent 数据库一同备份、恢复和迁移。虽然目录位于 `wwwroot` 下，Agent Host 会阻断 `/skills` 静态访问；文件内容仍只能通过受认证、授权的 Skill API 访问。
+
 ## 安全边界
 
 - 源连接和目标连接必须显式指定、已启用且不能相同。

@@ -364,6 +364,16 @@ app.UseMiddleware<RequestBodyLimitMiddleware>();
 app.UseAuthorization();
 app.UseMiddleware<HttpIdempotencyMiddleware>();
 app.UseMiddleware<ExpensiveRequestAdmissionMiddleware>();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/skills"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next(context);
+});
 app.UseDefaultFiles();
 app.UseStaticFiles();
 

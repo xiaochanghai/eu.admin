@@ -15,17 +15,17 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/lib/eu-core-agent/skills \
-    && chown -R app:app /var/lib/eu-core-agent /app
+    && mkdir -p /app/wwwroot/skills \
+    && chown -R app:app /app
 
 COPY --from=build --chown=app:app /app/publish/ ./
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=8080 \
-    AgentStorage__SkillRootPath=/var/lib/eu-core-agent/skills
+    AgentStorage__SkillRootPath=/app/wwwroot/skills
 
 EXPOSE 8080
-VOLUME ["/var/lib/eu-core-agent"]
+VOLUME ["/app/wwwroot/skills"]
 USER app
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
