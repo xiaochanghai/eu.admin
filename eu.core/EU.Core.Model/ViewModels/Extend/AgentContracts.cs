@@ -175,36 +175,6 @@ public sealed record AgentListItem(
     string DraftModelProfileId,
     string? CurrentPublishedLabel);
 
-public sealed record AgentError(string Code, string Message);
-
-public static class AgentErrorCodes
-{
-    public const string CodeConflict = "AGENT_CODE_CONFLICT";
-    public const string RowVersionConflict = "AGENT_ROW_VERSION_CONFLICT";
-    public const string VersionNotPublishable = "AGENT_VERSION_NOT_PUBLISHABLE";
-    public const string OutputSchemaInvalid = "OUTPUT_SCHEMA_INVALID";
-    public const string CodeInvalid = "AGENT_CODE_INVALID";
-    public const string NotFound = "AGENT_NOT_FOUND";
-    public const string RuntimeStatusInvalid = "AGENT_RUNTIME_STATUS_INVALID";
-    public const string LifecycleTransitionInvalid = "AGENT_LIFECYCLE_TRANSITION_INVALID";
-    public const string ArchiveBlocked = "AGENT_ARCHIVE_BLOCKED";
-    public const string PackageInvalid = "AGENT_PACKAGE_INVALID";
-    public const string PackageVersionUnsupported = "AGENT_PACKAGE_VERSION_UNSUPPORTED";
-    public const string ReferenceMissing = "AGENT_REFERENCE_MISSING";
-    public const string SkillVersionNotPublished = "SKILL_VERSION_NOT_PUBLISHED";
-    public const string ToolVersionNotAvailable = "MCP_TOOL_VERSION_NOT_AVAILABLE";
-    public const string KnowledgeBaseUnavailable = "KNOWLEDGE_BASE_UNAVAILABLE";
-}
-
-public sealed record AgentOperationResult<T>(T? Value, AgentError? Error)
-{
-    public bool Succeeded => Error is null;
-
-    public static AgentOperationResult<T> Success(T value) => new(value, null);
-
-    public static AgentOperationResult<T> Failure(string code, string message) => new(default, new AgentError(code, message));
-}
-
 public interface IAgentDefinitionCatalog
 {
     Task<AgentDefinition?> GetDefinitionAsync(

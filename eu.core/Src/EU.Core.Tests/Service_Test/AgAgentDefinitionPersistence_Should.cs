@@ -1,6 +1,7 @@
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.Orchestration;
+using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
@@ -38,7 +39,7 @@ public sealed class AgAgentDefinitionPersistence_Should
         Assert.True(initial.Draft.IsDraft);
         Assert.Empty(initial.PublishedVersions);
 
-        AgentOperationResult<AgentDefinition> saved = await service.SaveDraftAsync(
+        ServiceResult<AgentDefinition> saved = await service.SaveDraftAsync(
             new SaveAgentDraftCommand(
                 initial.Id,
                 0,
@@ -48,11 +49,11 @@ public sealed class AgAgentDefinitionPersistence_Should
                 null,
                 "Agent A updated",
                 "updated description"));
-        Assert.True(saved.Succeeded);
-        AgentDefinition draft = Assert.IsType<AgentDefinition>(saved.Value);
+        Assert.True(saved.Success);
+        AgentDefinition draft = Assert.IsType<AgentDefinition>(saved.Data);
         Assert.Equal(1, draft.LogicalRevision);
         Assert.Equal("Always return AGENT_OK.", draft.Draft.Instructions);
-        AgentOperationResult<AgentDefinition> staleSave = await service.SaveDraftAsync(
+        ServiceResult<AgentDefinition> staleSave = await service.SaveDraftAsync(
             new SaveAgentDraftCommand(
                 initial.Id,
                 0,
@@ -60,13 +61,14 @@ public sealed class AgAgentDefinitionPersistence_Should
                 modelProfileId,
                 AgentOutputMode.Text,
                 null));
-        Assert.False(staleSave.Succeeded);
-        Assert.Equal(AgentErrorCodes.RowVersionConflict, staleSave.Error?.Code);
+        Assert.False(staleSave.Success);
+        Assert.Equal(500, staleSave.Status);
+        Assert.Contains("changed before this operation completed", staleSave.Message);
 
-        AgentOperationResult<AgentDefinition> published = await service.PublishAsync(
+        ServiceResult<AgentDefinition> published = await service.PublishAsync(
             new PublishAgentCommand(initial.Id, 1));
-        Assert.True(published.Succeeded);
-        AgentDefinition publishedDefinition = Assert.IsType<AgentDefinition>(published.Value);
+        Assert.True(published.Success);
+        AgentDefinition publishedDefinition = Assert.IsType<AgentDefinition>(published.Data);
         Assert.Equal(2, publishedDefinition.LogicalRevision);
         AgentVersion version = Assert.Single(publishedDefinition.PublishedVersions);
         Assert.Equal("1.0.0", version.Label);
@@ -85,12 +87,12 @@ public sealed class AgAgentDefinitionPersistence_Should
         Assert.NotNull(await service.QueryAgent(initial.Id));
         Assert.Single(await service.QueryAgentList(search: code));
 
-        AgentOperationResult<AgentDefinition> disabled = await service.SetRuntimeStatusAsync(
+        ServiceResult<AgentDefinition> disabled = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(initial.Id, 2, AgentRuntimeStatus.Disabled));
-        Assert.True(disabled.Succeeded);
-        AgentOperationResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
+        Assert.True(disabled.Success);
+        ServiceResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(initial.Id, 3, AgentRuntimeStatus.Archived));
-        Assert.True(archived.Succeeded);
+        Assert.True(archived.Success);
         Assert.Empty(await service.ListAsync(new AgentDefinitionQuery(Search: code)));
         AgentListItem archivedItem = Assert.Single(await service.ListAsync(
             new AgentDefinitionQuery(code, AgentRuntimeStatus.Archived)));
@@ -121,9 +123,9 @@ public sealed class AgAgentDefinitionPersistence_Should
                 "Return CHILD_OK.",
                 modelProfileId,
                 AgentOutputMode.Text,
-                null))).Value);
+                null))).Data);
         AgentDefinition childPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
-            new PublishAgentCommand(childId, childDraft.LogicalRevision))).Value);
+            new PublishAgentCommand(childId, childDraft.LogicalRevision))).Data);
         Guid childVersionId = Assert.Single(childPublished.PublishedVersions).Id;
 
         Guid parentId = (await service.CreateAsync(
@@ -150,37 +152,37 @@ public sealed class AgAgentDefinitionPersistence_Should
             ]
         };
         AgentDefinition parentDraft = Assert.IsType<AgentDefinition>(
-            (await service.SaveDraftAsync(saveParent)).Value);
+            (await service.SaveDraftAsync(saveParent)).Data);
         AgentDefinition parentPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
-            new PublishAgentCommand(parentId, parentDraft.LogicalRevision))).Value);
+            new PublishAgentCommand(parentId, parentDraft.LogicalRevision))).Data);
 
         AgentDefinition childDisabled = Assert.IsType<AgentDefinition>((await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 childId,
                 childPublished.LogicalRevision,
-                AgentRuntimeStatus.Disabled))).Value);
-        AgentOperationResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
+                AgentRuntimeStatus.Disabled))).Data);
+        ServiceResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 childId,
                 childDisabled.LogicalRevision,
                 AgentRuntimeStatus.Archived));
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(AgentErrorCodes.ArchiveBlocked, blocked.Error?.Code);
-        Assert.Contains(parentPublished.Code, blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Equal(500, blocked.Status);
+        Assert.Contains(parentPublished.Code, blocked.Message);
 
         Assert.True((await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 parentId,
                 parentPublished.LogicalRevision,
-                AgentRuntimeStatus.Disabled))).Succeeded);
-        AgentOperationResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
+                AgentRuntimeStatus.Disabled))).Success);
+        ServiceResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 childId,
                 childDisabled.LogicalRevision,
                 AgentRuntimeStatus.Archived));
-        Assert.True(archived.Succeeded);
-        Assert.Equal(AgentRuntimeStatus.Archived, archived.Value?.RuntimeStatus);
+        Assert.True(archived.Success);
+        Assert.Equal(AgentRuntimeStatus.Archived, archived.Data.RuntimeStatus);
     }
 
     [Fact]
@@ -210,9 +212,9 @@ public sealed class AgAgentDefinitionPersistence_Should
                 "Return VERSION_1.",
                 modelProfileId,
                 AgentOutputMode.Text,
-                null))).Value);
+                null))).Data);
         AgentDefinition firstPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
-            new PublishAgentCommand(agentId, firstDraft.LogicalRevision))).Value);
+            new PublishAgentCommand(agentId, firstDraft.LogicalRevision))).Data);
         Guid firstVersionId = Assert.Single(firstPublished.PublishedVersions).Id;
         Assert.True(await assignments.TryReplaceAsync(
             new MainAgentAssignment(agentId, firstVersionId, 0, DateTimeOffset.UtcNow),
@@ -225,9 +227,9 @@ public sealed class AgAgentDefinitionPersistence_Should
                 "Return VERSION_2.",
                 modelProfileId,
                 AgentOutputMode.Text,
-                null))).Value);
+                null))).Data);
         AgentDefinition secondPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
-            new PublishAgentCommand(agentId, secondDraft.LogicalRevision))).Value);
+            new PublishAgentCommand(agentId, secondDraft.LogicalRevision))).Data);
 
         MainAgentAssignment assignment = Assert.IsType<MainAgentAssignment>(
             await assignments.GetAsync());
@@ -270,9 +272,9 @@ public sealed class AgAgentDefinitionPersistence_Should
                 "Return REFERENCED_OK.",
                 modelProfileId,
                 AgentOutputMode.Text,
-                null))).Value);
+                null))).Data);
         AgentDefinition published = Assert.IsType<AgentDefinition>((await service.PublishAsync(
-            new PublishAgentCommand(agentId, draft.LogicalRevision))).Value);
+            new PublishAgentCommand(agentId, draft.LogicalRevision))).Data);
         Guid agentVersionId = Assert.Single(published.PublishedVersions).Id;
         Assert.True(await assignments.TryReplaceAsync(
             new MainAgentAssignment(
@@ -334,17 +336,17 @@ public sealed class AgAgentDefinitionPersistence_Should
             new SetAgentRuntimeStatusCommand(
                 agentId,
                 published.LogicalRevision,
-                AgentRuntimeStatus.Disabled))).Value);
-        AgentOperationResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
+                AgentRuntimeStatus.Disabled))).Data);
+        ServiceResult<AgentDefinition> blocked = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 agentId,
                 disabled.LogicalRevision,
                 AgentRuntimeStatus.Archived));
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(AgentErrorCodes.ArchiveBlocked, blocked.Error?.Code);
-        Assert.Contains("Main Agent assignment", blocked.Error?.Message);
-        Assert.Contains(orchestrationCode, blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Equal(500, blocked.Status);
+        Assert.Contains("Main Agent assignment", blocked.Message);
+        Assert.Contains(orchestrationCode, blocked.Message);
 
         Assert.True(await assignments.TryReplaceAsync(
             new MainAgentAssignment(
@@ -360,12 +362,12 @@ public sealed class AgAgentDefinitionPersistence_Should
                 LogicalRevision = 1
             },
             0));
-        AgentOperationResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
+        ServiceResult<AgentDefinition> archived = await service.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 agentId,
                 disabled.LogicalRevision,
                 AgentRuntimeStatus.Archived));
-        Assert.True(archived.Succeeded);
-        Assert.Equal(AgentRuntimeStatus.Archived, archived.Value?.RuntimeStatus);
+        Assert.True(archived.Success);
+        Assert.Equal(AgentRuntimeStatus.Archived, archived.Data.RuntimeStatus);
     }
 }

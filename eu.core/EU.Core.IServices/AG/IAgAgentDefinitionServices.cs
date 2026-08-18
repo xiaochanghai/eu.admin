@@ -37,15 +37,15 @@ public interface IAgAgentDefinitionServices : IBaseServices<AgAgentDefinition, A
     Task<AgAgentDefinitionDetailDto?> QueryAgent(Guid id, CancellationToken cancellationToken = default);
 
     Task<ServiceResult<Guid>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default);
-    Task<AgentOperationResult<AgentDefinition>> CreateImportedAsync(ImportAgentCommand command, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AgentDefinition>> CreateImportedAsync(ImportAgentCommand command, CancellationToken cancellationToken = default);
 
-    Task<AgentOperationResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default);
 
-    Task<AgentOperationResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default);
 
-    Task<AgentOperationResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default);
 
-    Task<AgentOperationResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default);
+    Task<ServiceResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default);
 
-    Task<AgentOperationResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default);
 }

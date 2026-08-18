@@ -195,19 +195,38 @@ test("Agent export parses migrated service errors before returning a file", asyn
   const previousFetch = globalThis.fetch;
   t.after(() => { globalThis.fetch = previousFetch; });
   globalThis.fetch = async () => ({
-    ok: false,
-    status: 404,
-    json: async () => ({
-      Status: 610001,
+    ok: true,
+    status: 200,
+    blob: async () => new Blob([JSON.stringify({
+      Status: 500,
       Success: false,
       Message: "The Agent was not found.",
-      Data: { ErrorCode: "AGENT_NOT_FOUND", TraceId: "trace-export" }
-    })
+      Data: null
+    })], { type: "application/json" })
   });
 
   await assert.rejects(
     () => agentApi.exportPackage("missing"),
-    error => error.errorCode === "AGENT_NOT_FOUND" && error.traceId === "trace-export");
+    error => error.message === "The Agent was not found."
+      && error.status === 200
+      && error.businessStatus === 500);
+});
+
+test("Agent export returns a successful JSON package Blob", async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  const packageBlob = new Blob([
+    JSON.stringify({ format: "eu-agent-package", version: "1.0.0" })
+  ], { type: "application/json" });
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    blob: async () => packageBlob
+  });
+
+  const result = await agentApi.exportPackage("agent-1");
+
+  assert.strictEqual(result, packageBlob);
 });
 
 test("main Agent presentation consumes PascalCase assignment and Agent DTOs", () => {

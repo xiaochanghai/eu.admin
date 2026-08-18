@@ -44,7 +44,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                         "The status filter is invalid.",
                         new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)))
                 {
-                    StatusCode = descriptor.HttpStatus
+                    StatusCode = StatusCodes.Status200OK
                 };
             }
         }
@@ -82,7 +82,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken);
         if (value is null)
         {
-            return FromError(new AgentError(AgentErrorCodes.NotFound, "The Agent was not found."));
+            return new JsonResult(
+                ServiceResult<AgAgentDefinitionDetailDto>.OprateFailed(
+                    "The Agent was not found."))
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
         return new JsonResult(
@@ -98,7 +103,10 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         var result = await agentDefinitionServices.CreateAsync( new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
         if (!result.Success)
         {
-            return FromError(new AgentError(AgentErrorCodes.CodeConflict, result.Message));
+            return new JsonResult(result)
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
         AgAgentDefinitionDetailDto value = await agentDefinitionServices.QueryAgent(
@@ -119,12 +127,15 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
         {
-            return FromError(new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The selected model profile is not available."));
+            return new JsonResult(
+                ServiceResult<AgentDefinition>.OprateFailed(
+                    "The selected model profile is not available."))
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
-        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
+        ServiceResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
             new SaveAgentDraftCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -142,58 +153,52 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                 OrchestrationIds = request.OrchestrationIds
             },
             cancellationToken);
-        return result.Succeeded
-            ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
-            {
-                StatusCode = StatusCodes.Status200OK
-            }
-            : FromError(result.Error!);
+        return new JsonResult(result)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpPost("{id:guid}/publish")]
     public async Task<IActionResult> Publish(Guid id, [FromBody] ExpectedRevisionRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.PublishAsync(
+        ServiceResult<AgentDefinition> result = await agentDefinitionServices.PublishAsync(
             new PublishAgentCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded
-            ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
-            {
-                StatusCode = StatusCodes.Status200OK
-            }
-            : FromError(result.Error!);
+        return new JsonResult(result)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpPut("{id:guid}/status")]
     public async Task<IActionResult> SetStatus(Guid id, [FromBody] SetAgentStatusRequest request, CancellationToken cancellationToken)
     {
-        AgentOperationResult<AgentDefinition> result = await agentDefinitionServices.SetRuntimeStatusAsync(
+        ServiceResult<AgentDefinition> result = await agentDefinitionServices.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 id,
                 request.ExpectedLogicalRevision,
                 request.RuntimeStatus),
             cancellationToken);
-        return result.Succeeded
-            ? new JsonResult(
-                ServiceResult<AgentDefinition>.OprateSuccess(result.Value!))
-            {
-                StatusCode = StatusCodes.Status200OK
-            }
-            : FromError(result.Error!);
+        return new JsonResult(result)
+        {
+            StatusCode = StatusCodes.Status200OK
+        };
     }
 
     [HttpGet("{id:guid}/export")]
     public async Task<IActionResult> Export(Guid id, CancellationToken cancellationToken)
     {
-        AgentOperationResult<string> result = await agentDefinitionServices.ExportAsync(id, cancellationToken);
-        return result.Succeeded
+        ServiceResult<string> result = await agentDefinitionServices.ExportAsync(id, cancellationToken);
+        return result.Success
             ? File(
-                Encoding.UTF8.GetBytes(result.Value!),
+                Encoding.UTF8.GetBytes(result.Data),
                 "application/json",
                 "agent-package.json")
-            : FromError(result.Error!);
+            : new JsonResult(result)
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
     }
 
     [HttpPost("import")]
@@ -209,7 +214,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                     "The Agent package must use a JSON content type.",
                     new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
             {
-                StatusCode = descriptor.HttpStatus
+                StatusCode = StatusCodes.Status200OK
             };
         }
 
@@ -220,31 +225,21 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             bufferSize: 4096,
             leaveOpen: true);
         string json = await reader.ReadToEndAsync(cancellationToken);
-        AgentOperationResult<AgentDefinition> result =
+        ServiceResult<AgentDefinition> result =
             await agentDefinitionServices.ImportAsync(json, cancellationToken);
-        if (!result.Succeeded)
+        if (!result.Success)
         {
-            return FromError(result.Error!);
+            return new JsonResult(result)
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
-        Response.Headers.Location = $"/api/agents/{result.Value!.Id}";
+        Response.Headers.Location = $"/api/agents/{result.Data.Id}";
         return new JsonResult(
-            ServiceResult<AgentDefinition>.OprateSuccess(result.Value, "导入成功"))
+            ServiceResult<AgentDefinition>.OprateSuccess(result.Data, "导入成功"))
         {
             StatusCode = StatusCodes.Status201Created
-        };
-    }
-
-    private IActionResult FromError(AgentError error)
-    {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
-        return new JsonResult(
-            ServiceResult<AgentApiErrorData>.Failure(
-                descriptor.Status,
-                error.Message,
-                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)))
-        {
-            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };
     }
 

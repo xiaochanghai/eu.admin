@@ -979,7 +979,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (!TryNormalizeCode(command.Code, out string? normalizedCode))
         {
             return Failed<Guid>("Agent code must normalize to lowercase kebab-case.");
-            //return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.CodeInvalid, "Agent code must normalize to lowercase kebab-case.");
         }
 
         Guid id = Guid.NewGuid();
@@ -1010,7 +1009,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return Success(id);
     }
 
-    public async Task<AgentOperationResult<AgentDefinition>> CreateImportedAsync(
+    public async Task<ServiceResult<AgentDefinition>> CreateImportedAsync(
         ImportAgentCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -1019,15 +1018,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (!TryNormalizeCode(command.Code, out string? normalizedCode) ||
             !string.Equals(command.Code, normalizedCode, StringComparison.Ordinal))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.CodeInvalid,
+            return Failed<AgentDefinition>(
                 "Imported Agent code must already be lowercase kebab-case.");
         }
 
         if (!Enum.IsDefined(command.RuntimeStatus))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.RuntimeStatusInvalid,
+            return Failed<AgentDefinition>(
                 "Runtime status must be Enabled, Disabled, or Archived.");
         }
 
@@ -1035,8 +1032,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         {
             if (command.OutputJsonSchema is not null)
             {
-                return AgentOperationResult<AgentDefinition>.Failure(
-                    AgentErrorCodes.PackageInvalid,
+                return Failed<AgentDefinition>(
                     "Text output cannot carry a JSON schema.");
             }
         }
@@ -1045,21 +1041,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             JsonSchemaValidationResult validation = _jsonSchemaValidator.Validate(command.OutputJsonSchema);
             if (!validation.IsValid)
             {
-                return AgentOperationResult<AgentDefinition>.Failure(
-                    AgentErrorCodes.OutputSchemaInvalid,
-                    validation.Error!);
+                return Failed<AgentDefinition>(validation.Error!);
             }
         }
         else
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.PackageInvalid,
-                "Output mode is not supported.");
+            return Failed<AgentDefinition>("Output mode is not supported.");
         }
 
         IReadOnlyList<Guid> importedSkillVersionIds =
             command.SkillVersionIds ?? Array.Empty<Guid>();
-        AgentOperationResult<AgentDefinition>? importedSkillError =
+        ServiceResult<AgentDefinition>? importedSkillError =
             await ValidateSkillVersionsAsync(importedSkillVersionIds, cancellationToken);
         if (importedSkillError is not null)
         {
@@ -1068,7 +1060,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         IReadOnlyList<Guid> importedToolVersionIds =
             command.ToolVersionIds ?? Array.Empty<Guid>();
-        AgentOperationResult<AgentDefinition>? importedToolError =
+        ServiceResult<AgentDefinition>? importedToolError =
             await ValidateToolVersionsAsync(importedToolVersionIds, cancellationToken);
         if (importedToolError is not null)
         {
@@ -1077,7 +1069,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         IReadOnlyList<Guid> importedKnowledgeBaseIds =
             command.KnowledgeBaseIds ?? Array.Empty<Guid>();
-        AgentOperationResult<AgentDefinition>? importedKnowledgeError =
+        ServiceResult<AgentDefinition>? importedKnowledgeError =
             await ValidateKnowledgeBasesAsync(importedKnowledgeBaseIds, cancellationToken);
         if (importedKnowledgeError is not null)
         {
@@ -1116,15 +1108,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             AgentContractCloner.ReadOnly(Array.Empty<AgentVersion>()));
         if (!await CreateAgentAsync(definition, cancellationToken))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.CodeConflict,
-                "An Agent already uses this code.");
+            return Failed<AgentDefinition>("An Agent already uses this code.");
         }
 
-        return AgentOperationResult<AgentDefinition>.Success(definition);
+        return Success(definition);
     }
 
-    public async Task<AgentOperationResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
@@ -1141,14 +1131,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         if (existing.RuntimeStatus is AgentRuntimeStatus.Archived)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.LifecycleTransitionInvalid,
+            return Failed<AgentDefinition>(
                 "An archived Agent must be restored before its Draft can be edited.");
         }
 
         IReadOnlyList<Guid> skillVersionIds = command.SkillVersionIds ??
                                               existing.Draft.SkillVersionIds;
-        AgentOperationResult<AgentDefinition>? skillError =
+        ServiceResult<AgentDefinition>? skillError =
             await ValidateSkillVersionsAsync(skillVersionIds, cancellationToken);
         if (skillError is not null)
         {
@@ -1157,7 +1146,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         IReadOnlyList<Guid> toolVersionIds = command.ToolVersionIds ??
                                              existing.Draft.ToolVersionIds;
-        AgentOperationResult<AgentDefinition>? toolError =
+        ServiceResult<AgentDefinition>? toolError =
             await ValidateToolVersionsAsync(toolVersionIds, cancellationToken);
         if (toolError is not null)
         {
@@ -1166,7 +1155,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         IReadOnlyList<Guid> knowledgeBaseIds = command.KnowledgeBaseIds ??
                                                existing.Draft.KnowledgeBaseIds;
-        AgentOperationResult<AgentDefinition>? knowledgeError =
+        ServiceResult<AgentDefinition>? knowledgeError =
             await ValidateKnowledgeBasesAsync(knowledgeBaseIds, cancellationToken);
         if (knowledgeError is not null)
         {
@@ -1202,16 +1191,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return RowVersionConflict();
         }
 
-        return AgentOperationResult<AgentDefinition>.Success(updated);
+        return Success(updated);
     }
 
-    public async Task<AgentOperationResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         if (!Enum.IsDefined(command.RuntimeStatus))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RuntimeStatusInvalid, "Runtime status must be Enabled, Disabled, or Archived.");
+            return Failed<AgentDefinition>("Runtime status must be Enabled, Disabled, or Archived.");
         }
 
         AgentDefinition? existing = await GetDefinitionAsync(command.AgentId, cancellationToken);
@@ -1228,8 +1217,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (command.RuntimeStatus is AgentRuntimeStatus.Archived &&
             existing.RuntimeStatus is not AgentRuntimeStatus.Disabled)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.LifecycleTransitionInvalid,
+            return Failed<AgentDefinition>(
                 "An Agent must be disabled before it can be archived.");
         }
 
@@ -1240,8 +1228,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 cancellationToken);
             if (blockers.Count > 0)
             {
-                return AgentOperationResult<AgentDefinition>.Failure(
-                    AgentErrorCodes.ArchiveBlocked,
+                return Failed<AgentDefinition>(
                     $"The Agent is still referenced by {string.Join(", ", blockers)}.");
             }
         }
@@ -1249,8 +1236,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (existing.RuntimeStatus is AgentRuntimeStatus.Archived &&
             command.RuntimeStatus is not AgentRuntimeStatus.Disabled)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.LifecycleTransitionInvalid,
+            return Failed<AgentDefinition>(
                 "An archived Agent must be restored to Disabled before it can be enabled.");
         }
 
@@ -1260,18 +1246,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return RowVersionConflict();
         }
 
-        return AgentOperationResult<AgentDefinition>.Success(updated);
+        return Success(updated);
     }
 
-    public async Task<AgentOperationResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
         AgentDefinition? existing = await GetDefinitionAsync(command.AgentId, cancellationToken);
         if (existing is null)
-        {
             return NotFound();
-        }
 
         if (existing.LogicalRevision != command.ExpectedLogicalRevision)
         {
@@ -1280,15 +1264,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         if (existing.RuntimeStatus is AgentRuntimeStatus.Archived)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.LifecycleTransitionInvalid,
+            return Failed<AgentDefinition>(
                 "An archived Agent must be restored before a version can be published.");
         }
 
         AgentVersion draft = existing.Draft;
         if (string.IsNullOrWhiteSpace(draft.Instructions) || string.IsNullOrWhiteSpace(draft.ModelProfileId))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.VersionNotPublishable, "Instructions and ModelProfileId are required before publish.");
+            return Failed<AgentDefinition>("Instructions and ModelProfileId are required before publish.");
         }
 
         string? canonicalSchema = null;
@@ -1297,7 +1280,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         {
             if (draft.OutputJsonSchema is not null)
             {
-                return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.OutputSchemaInvalid, "Text output cannot carry a JSON schema.");
+                return Failed<AgentDefinition>("Text output cannot carry a JSON schema.");
             }
         }
         else if (draft.OutputMode is AgentOutputMode.Structured)
@@ -1305,7 +1288,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             JsonSchemaValidationResult validation = _jsonSchemaValidator.Validate(draft.OutputJsonSchema);
             if (!validation.IsValid)
             {
-                return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.OutputSchemaInvalid, validation.Error!);
+                return Failed<AgentDefinition>(validation.Error!);
             }
 
             canonicalSchema = validation.CanonicalJson;
@@ -1313,23 +1296,21 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         }
         else
         {
-            return AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.VersionNotPublishable, "Output mode is not supported.");
+            return Failed<AgentDefinition>("Output mode is not supported.");
         }
 
-        AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>> childBindings =
+        ServiceResult<IReadOnlyList<AgentChildBindingSnapshot>> childBindings =
             await ResolveChildAgentBindingsAsync(existing.Id, draft, cancellationToken);
-        if (!childBindings.Succeeded)
+        if (!childBindings.Success)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                childBindings.Error!.Code, childBindings.Error.Message);
+            return Failed<AgentDefinition>(childBindings.Message);
         }
 
-        AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>> orchestrationBindings =
+        ServiceResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>> orchestrationBindings =
             await ResolveOrchestrationBindingsAsync(draft, cancellationToken);
-        if (!orchestrationBindings.Succeeded)
+        if (!orchestrationBindings.Success)
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                orchestrationBindings.Error!.Code, orchestrationBindings.Error.Message);
+            return Failed<AgentDefinition>(orchestrationBindings.Message);
         }
 
         string label = $"{existing.PublishedVersions.Count + 1}.0.0";
@@ -1352,8 +1333,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 (await GetKnowledgeReferencesAsync(draft.KnowledgeBaseIds, cancellationToken))
                 .Select(value => new AgentKnowledgeBindingSnapshot(
                     value.KnowledgeBaseId, value.LogicalRevision))),
-            ChildAgents = childBindings.Value!,
-            Orchestrations = orchestrationBindings.Value!
+            ChildAgents = childBindings.Data,
+            Orchestrations = orchestrationBindings.Data
         };
         var published = new AgentVersion(versionId, label, false, draft.Instructions, draft.ModelProfileId, draft.OutputMode, canonicalSchema, schemaHash, snapshot);
         AgentDefinition updated = existing with
@@ -1370,7 +1351,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return RowVersionConflict();
         }
 
-        return AgentOperationResult<AgentDefinition>.Success(updated);
+        return Success(updated);
     }
 
     public async Task<IReadOnlyList<AgentListItem>> ListAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default)
@@ -1389,27 +1370,31 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             definition.Draft.ModelProfileId,
             definition.PublishedVersions.LastOrDefault()?.Label)));
     }
-
+    #region 检查当前 Host 是否启用了 Agent 管理能力
+    /// <summary>
+    /// 检查当前 Host 是否启用了 Agent 管理能力。
+    /// 仅负责运行 Agent 的 Host 可以不注册管理依赖；如果误调用创建、编辑、发布、
+    /// 导入或导出等管理操作，则在这里提前抛出明确的配置异常。
+    /// </summary>
+    /// <remarks>
+    /// 模型配置目录是 Agent 管理操作必须具备的依赖，因此使用
+    /// <see cref="_modelProfiles"/> 是否已注册作为管理能力可用性的判断标志。
+    /// </remarks>
     private void EnsureAgentManagementAvailable()
     {
+        // 避免管理依赖缺失时继续执行，并在后续流程中产生不明确的空引用异常。
         if (_modelProfiles is null)
-        {
             throw AgentManagementUnavailable();
-        }
     }
+    #endregion
 
-    private static InvalidOperationException AgentManagementUnavailable() =>
-        new("Agent management dependencies are not registered in this Host.");
+    private static InvalidOperationException AgentManagementUnavailable() => new("Agent management dependencies are not registered in this Host.");
 
-    private static AgentOperationResult<AgentDefinition> NotFound() =>
-        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.NotFound, "The Agent was not found.");
+    private ServiceResult<AgentDefinition> NotFound() => Failed<AgentDefinition>("The Agent was not found.");
 
-    private static AgentOperationResult<AgentDefinition> RowVersionConflict() =>
-        AgentOperationResult<AgentDefinition>.Failure(AgentErrorCodes.RowVersionConflict, "The Agent changed before this operation completed.");
+    private ServiceResult<AgentDefinition> RowVersionConflict() => Failed<AgentDefinition>("The Agent changed before this operation completed.");
 
-    private async Task<IReadOnlyList<string>> FindArchiveBlockersAsync(
-        Guid agentId,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<string>> FindArchiveBlockersAsync(Guid agentId, CancellationToken cancellationToken)
     {
         var blockers = new List<string>();
         IReadOnlyList<AgentDefinition> enabledAgents = await ListDefinitionsAsync(
@@ -1441,14 +1426,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return AgentContractCloner.ReadOnly(blockers.Take(8));
     }
 
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateSkillVersionsAsync(
+    private async Task<ServiceResult<AgentDefinition>?> ValidateSkillVersionsAsync(
         IReadOnlyList<Guid> versionIds,
         CancellationToken cancellationToken)
     {
         if (versionIds.Count != versionIds.Distinct().Count())
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.SkillVersionNotPublished,
+            return Failed<AgentDefinition>(
                 "Agent Skill bindings must not contain duplicate versions.");
         }
 
@@ -1465,23 +1449,21 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (versionIds.Any(versionId =>
                 versionId == Guid.Empty || !available.Contains(versionId)))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.SkillVersionNotPublished,
+            return Failed<AgentDefinition>(
                 "Agent Drafts may bind only published Skill versions.");
         }
 
         return null;
     }
 
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateToolVersionsAsync(
+    private async Task<ServiceResult<AgentDefinition>?> ValidateToolVersionsAsync(
         IReadOnlyList<Guid> versionIds,
         CancellationToken cancellationToken)
     {
         if (versionIds.Count > 128 ||
             versionIds.Count != versionIds.Distinct().Count())
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.ToolVersionNotAvailable,
+            return Failed<AgentDefinition>(
                 "Agent MCP tool bindings must contain no more than 128 unique versions.");
         }
 
@@ -1498,22 +1480,20 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (versionIds.Any(versionId =>
                 versionId == Guid.Empty || !available.Contains(versionId)))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.ToolVersionNotAvailable,
+            return Failed<AgentDefinition>(
                 "Agent Drafts may bind only classified MCP tool versions.");
         }
 
         return null;
     }
 
-    private async Task<AgentOperationResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(
+    private async Task<ServiceResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(
         IReadOnlyList<Guid> ids,
         CancellationToken cancellationToken)
     {
         if (ids.Count > 32 || ids.Count != ids.Distinct().Count())
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.KnowledgeBaseUnavailable,
+            return Failed<AgentDefinition>(
                 "Agent knowledge bindings must contain no more than 32 unique knowledge bases.");
         }
 
@@ -1522,8 +1502,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             .ToHashSet();
         if (ids.Any(id => id == Guid.Empty || !available.Contains(id)))
         {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.KnowledgeBaseUnavailable,
+            return Failed<AgentDefinition>(
                 "Agent Drafts may bind only enabled and indexed knowledge bases.");
         }
 
@@ -1550,7 +1529,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             .Where(value => selected.Contains(value.KnowledgeBaseId)));
     }
 
-    private async Task<AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>> ResolveChildAgentBindingsAsync(
+    private async Task<ServiceResult<IReadOnlyList<AgentChildBindingSnapshot>>> ResolveChildAgentBindingsAsync(
         Guid agentId,
         AgentVersion draft,
         CancellationToken cancellationToken)
@@ -1558,16 +1537,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IReadOnlyList<Guid> childAgentIds = draft.ChildAgentIds;
         if (childAgentIds.Count > AgentDelegationPolicy.MaximumChildAgentBindings)
         {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
+            return Failed<IReadOnlyList<AgentChildBindingSnapshot>>(
                 $"Main Agent publications may bind no more than {AgentDelegationPolicy.MaximumChildAgentBindings} child Agents.");
         }
 
         if (childAgentIds.Count != childAgentIds.Distinct().Count() ||
             childAgentIds.Any(id => id == Guid.Empty || id == agentId))
         {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
+            return Failed<IReadOnlyList<AgentChildBindingSnapshot>>(
                 "Child Agent bindings must contain unique published Agent identities other than the Agent itself.");
         }
 
@@ -1577,8 +1554,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
              draft.ChildAgentPins.Select(value => value.AgentId).Except(childAgentIds).Any() ||
              draft.ChildAgentPins.Any(value => value.AgentVersionId == Guid.Empty)))
         {
-            return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
+            return Failed<IReadOnlyList<AgentChildBindingSnapshot>>(
                 "Imported child Agent pins must match unique child Agent identities.");
         }
         IReadOnlyDictionary<Guid, AgentChildBindingSnapshot> pins = draft.ChildAgentPins
@@ -1592,8 +1568,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 child.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 child.PublishedVersions.Count == 0)
             {
-                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
+                return Failed<IReadOnlyList<AgentChildBindingSnapshot>>(
                     "Child Agent bindings must reference enabled published Agents.");
             }
 
@@ -1604,8 +1579,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 .FirstOrDefault(version => version.Id == versionId);
             if (selectedVersion is null)
             {
-                return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
+                return Failed<IReadOnlyList<AgentChildBindingSnapshot>>(
                     "The imported child Agent version is no longer available.");
             }
             resolved.Add(new AgentChildBindingSnapshot(childAgentId, versionId)
@@ -1621,11 +1595,11 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             });
         }
 
-        return AgentOperationResult<IReadOnlyList<AgentChildBindingSnapshot>>.Success(
+        return Success<IReadOnlyList<AgentChildBindingSnapshot>>(
             AgentContractCloner.ReadOnly(resolved));
     }
 
-    private async Task<AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>> ResolveOrchestrationBindingsAsync(
+    private async Task<ServiceResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>> ResolveOrchestrationBindingsAsync(
         AgentVersion draft,
         CancellationToken cancellationToken)
     {
@@ -1634,8 +1608,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             orchestrationIds.Any(id => id == Guid.Empty) ||
             (orchestrationIds.Count > 0 && _orchestrationCatalog is null))
         {
-            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
+            return Failed<IReadOnlyList<AgentOrchestrationBindingSnapshot>>(
                 "Orchestration bindings must contain unique enabled published orchestrations.");
         }
 
@@ -1648,8 +1621,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
              draft.OrchestrationPins.Select(value => value.OrchestrationId).Except(orchestrationIds).Any() ||
              draft.OrchestrationPins.Any(value => value.OrchestrationVersionId == Guid.Empty)))
         {
-            return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                AgentErrorCodes.ReferenceMissing,
+            return Failed<IReadOnlyList<AgentOrchestrationBindingSnapshot>>(
                 "Imported orchestration pins must match unique orchestration identities.");
         }
         IReadOnlyDictionary<Guid, AgentOrchestrationBindingSnapshot> pins = draft.OrchestrationPins
@@ -1663,14 +1635,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 : values.LastOrDefault(value => value.OrchestrationId == orchestrationId);
             if (selected is null || !selected.Enabled)
             {
-                return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Failure(
-                    AgentErrorCodes.ReferenceMissing,
+                return Failed<IReadOnlyList<AgentOrchestrationBindingSnapshot>>(
                     "Orchestration bindings must reference enabled published orchestrations.");
             }
             resolved.Add(new AgentOrchestrationBindingSnapshot(orchestrationId, selected.OrchestrationVersionId));
         }
 
-        return AgentOperationResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>.Success(
+        return Success<IReadOnlyList<AgentOrchestrationBindingSnapshot>>(
             AgentContractCloner.ReadOnly(resolved));
     }
 
@@ -1739,7 +1710,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         "accesstoken"
     };
 
-    public async Task<AgentOperationResult<string>> ExportAsync(
+    public async Task<ServiceResult<string>> ExportAsync(
         Guid agentId,
         CancellationToken cancellationToken = default)
     {
@@ -1747,23 +1718,21 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         AgentDefinition? definition = await GetDefinitionAsync(agentId, cancellationToken);
         if (definition is null)
         {
-            return AgentOperationResult<string>.Failure(
-                AgentErrorCodes.NotFound,
-                "The Agent was not found.");
+            return Failed<string>("The Agent was not found.");
         }
 
-        AgentError? bindingError = await ValidateDraftChildReferencesAsync(
+        string? bindingError = await ValidateDraftChildReferencesAsync(
             definition.Draft.ChildAgentIds, definition.Draft.ChildAgentPins, cancellationToken);
         if (bindingError is not null)
         {
-            return new AgentOperationResult<string>(null, bindingError);
+            return Failed<string>(bindingError);
         }
 
         bindingError = await ValidateDraftOrchestrationReferencesAsync(
             definition.Draft.OrchestrationIds, definition.Draft.OrchestrationPins, cancellationToken);
         if (bindingError is not null)
         {
-            return new AgentOperationResult<string>(null, bindingError);
+            return Failed<string>(bindingError);
         }
 
         var package = new AgentPackageV1(
@@ -1802,31 +1771,31 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             });
 
         string json = JsonSerializer.Serialize(package, AgentPackageSerializerOptions);
-        if (!TryReadPackage(json, out AgentPackageV1? verifiedPackage, out AgentError? safetyError))
+        if (!TryReadPackage(json, out AgentPackageV1? verifiedPackage, out string? safetyError))
         {
-            return new AgentOperationResult<string>(null, safetyError);
+            return Failed<string>(safetyError!);
         }
 
-        if (!TryValidatePackage(verifiedPackage!, out _, out _, out AgentError? contractError))
+        if (!TryValidatePackage(verifiedPackage!, out _, out _, out string? contractError))
         {
-            return new AgentOperationResult<string>(null, contractError);
+            return Failed<string>(contractError!);
         }
 
-        AgentError? referenceError = await ValidatePackageReferencesAsync(
+        string? referenceError = await ValidatePackageReferencesAsync(
             verifiedPackage!, cancellationToken);
         return referenceError is null
-            ? AgentOperationResult<string>.Success(json)
-            : new AgentOperationResult<string>(null, referenceError);
+            ? Success<string>(json)
+            : Failed<string>(referenceError);
     }
 
-    public async Task<AgentOperationResult<AgentDefinition>> ImportAsync(
+    public async Task<ServiceResult<AgentDefinition>> ImportAsync(
         string json,
         CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
-        if (!TryReadPackage(json, out AgentPackageV1? package, out AgentError? error))
+        if (!TryReadPackage(json, out AgentPackageV1? package, out string? error))
         {
-            return new AgentOperationResult<AgentDefinition>(null, error);
+            return Failed<AgentDefinition>(error!);
         }
 
         if (!TryValidatePackage(
@@ -1835,17 +1804,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 out AgentOutputMode outputMode,
                 out error))
         {
-            return new AgentOperationResult<AgentDefinition>(null, error);
+            return Failed<AgentDefinition>(error!);
         }
 
-        AgentError? referenceError = await ValidatePackageReferencesAsync(
+        string? referenceError = await ValidatePackageReferencesAsync(
             package!, cancellationToken);
         if (referenceError is not null)
         {
-            return new AgentOperationResult<AgentDefinition>(null, referenceError);
+            return Failed<AgentDefinition>(referenceError);
         }
 
-        AgentOperationResult<AgentDefinition> result = await CreateImportedAsync(
+        ServiceResult<AgentDefinition> result = await CreateImportedAsync(
             new ImportAgentCommand(
                 package!.Agent.Code,
                 package.Agent.Name,
@@ -1877,21 +1846,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             },
             cancellationToken);
 
-        if (result.Error?.Code is AgentErrorCodes.CodeInvalid or AgentErrorCodes.RuntimeStatusInvalid)
-        {
-            return AgentOperationResult<AgentDefinition>.Failure(
-                AgentErrorCodes.PackageInvalid,
-                result.Error.Message);
-        }
-
         return result;
     }
 
-    private async Task<AgentError?> ValidatePackageReferencesAsync(
+    private async Task<string?> ValidatePackageReferencesAsync(
         AgentPackageV1 package,
         CancellationToken cancellationToken)
     {
-        AgentError? error = await ValidateModelReferenceAsync(
+        string? error = await ValidateModelReferenceAsync(
             package.Agent.Draft.ModelProfileId, cancellationToken);
         if (error is not null)
         {
@@ -1923,22 +1885,20 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             package.Agent.Orchestrations ?? [], cancellationToken);
     }
 
-    private async Task<AgentError?> ValidateModelReferenceAsync(
+    private async Task<string?> ValidateModelReferenceAsync(
         string modelProfileId,
         CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(modelProfileId) &&
             !await ModelProfiles.ExistsAsync(modelProfileId, cancellationToken))
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package references a model profile that is not available.");
+            return "The package references a model profile that is not available.";
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateToolReferencesAsync(
+    private async Task<string?> ValidateToolReferencesAsync(
         IReadOnlyList<string> references,
         CancellationToken cancellationToken)
     {
@@ -1956,15 +1916,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 !Guid.TryParseExact(reference, "D", out Guid versionId) ||
                 !available.Contains(versionId)))
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package references an MCP tool version that is not available.");
+            return "The package references an MCP tool version that is not available.";
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateSkillReferencesAsync(
+    private async Task<string?> ValidateSkillReferencesAsync(
         IReadOnlyList<string> references,
         CancellationToken cancellationToken)
     {
@@ -1982,15 +1940,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 !Guid.TryParseExact(reference, "D", out Guid versionId) ||
                 !available.Contains(versionId)))
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package references a Skill version that is not published.");
+            return "The package references a Skill version that is not published.";
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateKnowledgeReferencesAsync(
+    private async Task<string?> ValidateKnowledgeReferencesAsync(
         IReadOnlyList<string> references,
         CancellationToken cancellationToken)
     {
@@ -2003,25 +1959,21 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         {
             if (!Guid.TryParseExact(reference, "D", out Guid id) || !available.Contains(id))
             {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references a knowledge base that is not enabled and indexed.");
+                return "The package references a knowledge base that is not enabled and indexed.";
             }
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateDraftChildReferencesAsync(
+    private async Task<string?> ValidateDraftChildReferencesAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentChildBindingSnapshot> pins,
         CancellationToken cancellationToken)
     {
         if (pins.Count > 0 && pins.Select(value => value.AgentId).Distinct().Count() != pins.Count)
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package child Agent pins contain duplicate identities.");
+            return "The package child Agent pins contain duplicate identities.";
         }
 
         IReadOnlyDictionary<Guid, AgentChildBindingSnapshot>? byId = pins.Count == 0
@@ -2029,9 +1981,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             : pins.ToDictionary(value => value.AgentId);
         if (byId is not null && (byId.Count != ids.Count || byId.Keys.Except(ids).Any()))
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package child Agent pins do not match its identities.");
+            return "The package child Agent pins do not match its identities.";
         }
 
         foreach (Guid id in ids)
@@ -2044,16 +1994,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 !agent.PublishedVersions.Any(value => value.Id == versionId))
             {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references an enabled published child Agent that is not available.");
+                return "The package references an enabled published child Agent that is not available.";
             }
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateDraftOrchestrationReferencesAsync(
+    private async Task<string?> ValidateDraftOrchestrationReferencesAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentOrchestrationBindingSnapshot> pins,
         CancellationToken cancellationToken)
@@ -2064,9 +2012,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         if (pins.Count > 0 &&
             pins.Select(value => value.OrchestrationId).Distinct().Count() != pins.Count)
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package orchestration pins contain duplicate identities.");
+            return "The package orchestration pins contain duplicate identities.";
         }
 
         IReadOnlyDictionary<Guid, AgentOrchestrationBindingSnapshot>? byId = pins.Count == 0
@@ -2074,9 +2020,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             : pins.ToDictionary(value => value.OrchestrationId);
         if (byId is not null && (byId.Count != ids.Count || byId.Keys.Except(ids).Any()))
         {
-            return new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package orchestration pins do not match its identities.");
+            return "The package orchestration pins do not match its identities.";
         }
 
         return ids.Any(id =>
@@ -2085,9 +2029,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     value.OrchestrationId == id &&
                     value.OrchestrationVersionId == pin.OrchestrationVersionId)
                 : values.LastOrDefault(value => value.OrchestrationId == id)) is not { Enabled: true })
-            ? new AgentError(
-                AgentErrorCodes.ReferenceMissing,
-                "The package references an enabled published orchestration that is not available.")
+            ? "The package references an enabled published orchestration that is not available."
             : null;
     }
 
@@ -2149,7 +2091,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 values[id].OrchestrationVersionId.ToString("D"))));
     }
 
-    private async Task<AgentError?> ValidateChildBindingReferencesAsync(
+    private async Task<string?> ValidateChildBindingReferencesAsync(
         IReadOnlyList<AgentPackageChildBindingV1> references,
         CancellationToken cancellationToken)
     {
@@ -2158,9 +2100,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             if (!Guid.TryParseExact(reference.AgentId, "D", out Guid id) ||
                 !Guid.TryParseExact(reference.AgentVersionId, "D", out Guid versionId))
             {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references an invalid child Agent version.");
+                return "The package references an invalid child Agent version.";
             }
 
             AgentDefinition? agent = await GetDefinitionAsync(id, cancellationToken);
@@ -2168,16 +2108,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 agent.RuntimeStatus is not AgentRuntimeStatus.Enabled ||
                 !agent.PublishedVersions.Any(value => value.Id == versionId))
             {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references a child Agent version that is not available.");
+                return "The package references a child Agent version that is not available.";
             }
         }
 
         return null;
     }
 
-    private async Task<AgentError?> ValidateOrchestrationBindingReferencesAsync(
+    private async Task<string?> ValidateOrchestrationBindingReferencesAsync(
         IReadOnlyList<AgentPackageOrchestrationBindingV1> references,
         CancellationToken cancellationToken)
     {
@@ -2193,9 +2131,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     value.OrchestrationVersionId == versionId &&
                     value.Enabled))
             {
-                return new AgentError(
-                    AgentErrorCodes.ReferenceMissing,
-                    "The package references an orchestration version that is not available.");
+                return "The package references an orchestration version that is not available.";
             }
         }
 
@@ -2205,7 +2141,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private static bool TryReadPackage(
         string? json,
         out AgentPackageV1? package,
-        out AgentError? error)
+        out string? error)
     {
         package = null;
         error = null;
@@ -2266,7 +2202,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         AgentPackageV1 package,
         out AgentRuntimeStatus runtimeStatus,
         out AgentOutputMode outputMode,
-        out AgentError? error)
+        out string? error)
     {
         runtimeStatus = default;
         outputMode = default;
@@ -2289,9 +2225,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         if (major != 1)
         {
-            error = new AgentError(
-                AgentErrorCodes.PackageVersionUnsupported,
-                "The Agent package major version is not supported.");
+            error = "The Agent package major version is not supported.";
             return false;
         }
 
@@ -2455,9 +2389,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 _jsonSchemaValidator.Validate(agent.Draft.OutputJsonSchema);
             if (!schema.IsValid)
             {
-                error = new AgentError(
-                    AgentErrorCodes.OutputSchemaInvalid,
-                    schema.Error!);
+                error = schema.Error!;
                 return false;
             }
         }
@@ -2612,6 +2544,5 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         value.Contains("connection string=", StringComparison.OrdinalIgnoreCase) ||
         value.Contains("data source=", StringComparison.OrdinalIgnoreCase);
 
-    private static AgentError PackageInvalid(string message) =>
-        new(AgentErrorCodes.PackageInvalid, message);
+    private static string PackageInvalid(string message) => message;
 }

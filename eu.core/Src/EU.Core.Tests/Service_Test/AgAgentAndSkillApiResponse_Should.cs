@@ -27,7 +27,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
 
         IActionResult action = await controller.List(null, "Unknown", CancellationToken.None);
 
-        AssertServiceError(action, StatusCodes.Status400BadRequest, 600001, "REQUEST_INVALID");
+        AssertServiceError(action, StatusCodes.Status200OK, 600001, "REQUEST_INVALID");
     }
 
     [Fact]
@@ -72,18 +72,14 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var agentsController = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), agentService));
 
-        AssertServiceError(
+        AssertServiceFailure<Guid>(
             await agentsController.Create(
                 new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
                 CancellationToken.None),
-            StatusCodes.Status409Conflict,
-            610002,
-            AgentErrorCodes.CodeConflict);
-        AssertServiceError(
+            "The Agent code already exists.");
+        AssertServiceFailure<AgAgentDefinitionDetailDto>(
             await agentsController.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status404NotFound,
-            610001,
-            AgentErrorCodes.NotFound);
+            "The Agent was not found.");
 
         IAgSkillDefinitionServices skillService = Proxy<IAgSkillDefinitionServices>((method, _) =>
             method.Name == nameof(IAgSkillDefinitionServices.GetAsync)
@@ -105,7 +101,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
     {
         IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
             method.Name == nameof(IAgAgentDefinitionServices.ExportAsync)
-                ? Task.FromResult(AgentOperationResult<string>.Success("{}"))
+                ? Task.FromResult(ServiceResult<string>.OprateSuccess("{}", "操作成功"))
                 : throw new InvalidOperationException(method.Name));
         var controller = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), service));
@@ -138,7 +134,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
                 nameof(IAgAgentDefinitionServices.PublishAsync) or
                 nameof(IAgAgentDefinitionServices.SetRuntimeStatusAsync) or
                 nameof(IAgAgentDefinitionServices.ImportAsync) =>
-                    Task.FromResult(AgentOperationResult<AgentDefinition>.Success(definition)),
+                    Task.FromResult(ServiceResult<AgentDefinition>.OprateSuccess(definition)),
                 _ => throw new InvalidOperationException(method.Name)
             });
         var controller = WithHttpContext(new AgentsController(
@@ -373,6 +369,17 @@ public sealed class AgAgentAndSkillApiResponse_Should
         ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
         Assert.Equal(200, body.Status);
         Assert.True(body.Success);
+        return body;
+    }
+
+    private static ServiceResult<T> AssertServiceFailure<T>(IActionResult action, string message)
+    {
+        JsonResult json = Assert.IsType<JsonResult>(action);
+        Assert.Equal(StatusCodes.Status200OK, json.StatusCode);
+        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
+        Assert.False(body.Success);
+        Assert.Equal(500, body.Status);
+        Assert.Equal(message, body.Message);
         return body;
     }
 

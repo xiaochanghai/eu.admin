@@ -150,12 +150,24 @@ export const agentApi = {
   }),
   exportPackage: async id => {
     const response = await fetch(`${base}/${encodeURIComponent(id)}/export`, { headers: { Accept: "application/json" } });
-    if (!response.ok) {
-      let payload;
-      try { payload = await response.json(); } catch { payload = null; }
+    const blob = await response.blob();
+    let payload = null;
+    try { payload = JSON.parse(await blob.text()); } catch { /* The export may be a non-JSON transport error. */ }
+    const isServiceResponse = payload !== null
+      && typeof payload === "object"
+      && !Array.isArray(payload)
+      && Number.isInteger(payload.Status)
+      && typeof payload.Success === "boolean"
+      && Object.prototype.hasOwnProperty.call(payload, "Data");
+    if (isServiceResponse) {
       parseServiceResponse(payload, response.status, `导出失败 (${response.status})`);
     }
-    return response.blob();
+    if (!response.ok) {
+      const error = new Error(`导出失败 (${response.status})`);
+      error.status = response.status;
+      throw error;
+    }
+    return blob;
   },
   importPackage: json => serviceRequest(`${base}/import`, { method: "POST", body: json }),
   publishedSkills: () => serviceRequest("/api/skill-versions"),

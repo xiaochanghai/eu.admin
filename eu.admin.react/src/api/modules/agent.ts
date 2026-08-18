@@ -103,6 +103,41 @@ export interface SaveAgentDraftInput {
   orchestrationIds: string[];
 }
 
+interface AgentServiceResponse {
+  Status: number;
+  Success: boolean;
+  Message?: string | null;
+  Data: unknown;
+}
+
+export class AgentExportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AgentExportError";
+  }
+}
+
+const throwAgentExportFailure = async (blob: Blob) => {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(await blob.text());
+  } catch {
+    return;
+  }
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    "Status" in payload &&
+    "Success" in payload &&
+    "Data" in payload
+  ) {
+    const result = payload as AgentServiceResponse;
+    if (!result.Success || result.Status !== 200) {
+      throw new AgentExportError(result.Message || "Agent 导出失败");
+    }
+  }
+};
+
 const agentUrl = (path: string) => `/Agent${path}`;
 
 export const getAgent = async (id: string) =>
@@ -160,5 +195,7 @@ export const exportAgent = async (id: string) => {
   const response = await http.service.get<Blob>(agentUrl(`/api/agents/${encodeURIComponent(id)}/export`), {
     responseType: "blob"
   });
-  return response as unknown as Blob;
+  const blob = response as unknown as Blob;
+  await throwAgentExportFailure(blob);
+  return blob;
 };

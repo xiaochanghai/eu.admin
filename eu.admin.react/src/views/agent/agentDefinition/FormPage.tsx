@@ -20,6 +20,7 @@ import { DownloadOutlined, RocketOutlined, SyncOutlined } from "@ant-design/icon
 import { message } from "@/hooks/useMessage";
 import {
   AgentDefinition,
+  AgentExportError,
   AgentOutputMode,
   AgentRuntimeStatus,
   createAgent,
@@ -257,13 +258,19 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
 
   const handleExport = async () => {
     if (!agent || !requireSaved()) return;
-    const blob = await exportAgent(agent.Id);
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${agent.Code}.agent-package.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const blob = await exportAgent(agent.Id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${agent.Code}.agent-package.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      if (error instanceof AgentExportError) {
+        message.error(error.message);
+      }
+    }
   };
 
   const skillOptions = references.skills.map(item => ({
