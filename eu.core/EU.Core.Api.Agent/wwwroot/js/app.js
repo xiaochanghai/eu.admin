@@ -44,6 +44,9 @@ editor = createAgentEditor({
   onPublish: async (id, revision) => {
     const result = await agentApi.publish(id, revision);
     await loadAgents();
+    if (String(state.mainAssignment?.AgentId || "") === String(id)) {
+      await refreshMainAssignment();
+    }
     return result;
   },
   onStatus: async (id, status, revision) => {

@@ -184,6 +184,58 @@ public sealed class AgAgentDefinitionPersistence_Should
     }
 
     [Fact]
+    public async Task Advance_main_agent_assignment_when_its_new_version_is_published()
+    {
+        using var fixture = new AgentPersistenceSqliteFixture(
+            typeof(AgAgentDefinition),
+            typeof(AgAgentVersion),
+            typeof(AgAgentVersionBinding),
+            typeof(AgAgentVersionSnapshot),
+            typeof(AgMainAgentAssignment));
+        var assignments = new AgMainAgentAssignmentServices(
+            fixture.CreateRepository<AgMainAgentAssignment>());
+        const string modelProfileId = "test-model";
+        var service = new AgAgentDefinitionServices(
+            fixture.CreateRepository<AgAgentDefinition>(),
+            mainAgentAssignments: assignments,
+            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+
+        Guid agentId = (await service.CreateAsync(new CreateAgentCommand(
+            $"main-{Guid.NewGuid():N}",
+            "Main Agent"))).Data;
+        AgentDefinition firstDraft = Assert.IsType<AgentDefinition>((await service.SaveDraftAsync(
+            new SaveAgentDraftCommand(
+                agentId,
+                0,
+                "Return VERSION_1.",
+                modelProfileId,
+                AgentOutputMode.Text,
+                null))).Value);
+        AgentDefinition firstPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
+            new PublishAgentCommand(agentId, firstDraft.LogicalRevision))).Value);
+        Guid firstVersionId = Assert.Single(firstPublished.PublishedVersions).Id;
+        Assert.True(await assignments.TryReplaceAsync(
+            new MainAgentAssignment(agentId, firstVersionId, 0, DateTimeOffset.UtcNow),
+            null));
+
+        AgentDefinition secondDraft = Assert.IsType<AgentDefinition>((await service.SaveDraftAsync(
+            new SaveAgentDraftCommand(
+                agentId,
+                firstPublished.LogicalRevision,
+                "Return VERSION_2.",
+                modelProfileId,
+                AgentOutputMode.Text,
+                null))).Value);
+        AgentDefinition secondPublished = Assert.IsType<AgentDefinition>((await service.PublishAsync(
+            new PublishAgentCommand(agentId, secondDraft.LogicalRevision))).Value);
+
+        MainAgentAssignment assignment = Assert.IsType<MainAgentAssignment>(
+            await assignments.GetAsync());
+        Assert.Equal(secondPublished.PublishedVersions[^1].Id, assignment.AgentVersionId);
+        Assert.Equal(1, assignment.LogicalRevision);
+    }
+
+    [Fact]
     public async Task Block_archive_while_agent_is_main_assignment_or_used_by_orchestration()
     {
         using var fixture = new AgentPersistenceSqliteFixture(

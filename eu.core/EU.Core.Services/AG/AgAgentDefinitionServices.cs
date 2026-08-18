@@ -36,6 +36,7 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgentDefinitionDto, InsertAgAgentDefinitionInput, EditAgAgentDefinitionInput>, IAgAgentDefinitionServices, IAgentDefinitionCatalog
 {
+    private const string MainAgentAssignmentKey = "platform-main-agent";
     private readonly JsonSchemaValidator _jsonSchemaValidator;
     private readonly IPublishedSkillVersionCatalog? _skillVersions;
     private readonly IPublishedMcpToolCatalog? _toolVersions;
@@ -757,7 +758,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private async Task<bool> TryReplaceAgentAsync(
         AgentDefinition definition,
         long expectedLogicalRevision,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? advanceMainAgentToVersionId = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
         if (expectedLogicalRevision == long.MaxValue ||
@@ -837,6 +839,39 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     definition.Id,
                     index,
                     definition.PublishedVersions[index]);
+            }
+
+            if (advanceMainAgentToVersionId.HasValue && _mainAgentAssignments is not null)
+            {
+                AgMainAgentAssignment? assignment = await Db.Queryable<AgMainAgentAssignment>()
+                    .Where(value =>
+                        value.AssignmentKey == MainAgentAssignmentKey &&
+                        value.AgentId == definition.Id &&
+                        !value.IsDeleted)
+                    .FirstAsync();
+                if (assignment is not null)
+                {
+                    long assignmentRevision = assignment.LogicalRevision
+                        ?? throw new InvalidDataException(
+                            "Main Agent assignment field 'LogicalRevision' is missing.");
+                    int assignmentAffected = await Db.Updateable<AgMainAgentAssignment>()
+                        .SetColumns(_ => new AgMainAgentAssignment
+                        {
+                            AgentVersionId = advanceMainAgentToVersionId.Value,
+                            LogicalRevision = assignmentRevision + 1,
+                            UpdatedAtUtc = DateTime.UtcNow
+                        })
+                        .Where(value =>
+                            value.ID == assignment.ID &&
+                            value.LogicalRevision == assignmentRevision &&
+                            !value.IsDeleted)
+                        .ExecuteCommandAsync();
+                    if (assignmentAffected != 1)
+                    {
+                        throw new InvalidOperationException(
+                            "The Main Agent assignment changed while publishing its new version.");
+                    }
+                }
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -1326,7 +1361,11 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             LogicalRevision = existing.LogicalRevision + 1,
             PublishedVersions = AgentContractCloner.ReadOnly(existing.PublishedVersions.Append(published))
         };
-        if (!await TryReplaceAgentAsync(updated, command.ExpectedLogicalRevision, cancellationToken))
+        if (!await TryReplaceAgentAsync(
+                updated,
+                command.ExpectedLogicalRevision,
+                cancellationToken,
+                versionId))
         {
             return RowVersionConflict();
         }
