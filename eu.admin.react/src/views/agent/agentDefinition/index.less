@@ -1,0 +1,40 @@
+.agent-definition-form {
+  min-height: 420px;
+
+  &__statusbar {
+    padding-bottom: 4px;
+
+    .ant-descriptions {
+      flex: 1;
+      min-width: 520px;
+    }
+  }
+
+  &__section {
+    max-width: 1120px;
+    padding-top: 8px;
+  }
+
+  &__half {
+    min-width: 280px;
+    flex: 1;
+  }
+
+  &__bindings .ant-select {
+    width: 100%;
+  }
+
+  &__code {
+    font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (max-width: 768px) {
+    &__statusbar .ant-descriptions {
+      min-width: 100%;
+    }
+
+    &__half {
+      min-width: 100%;
+    }
+  }
+}
