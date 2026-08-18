@@ -229,7 +229,9 @@ public class SmUsersServices : BaseServices<SmUsers, SmUsersDto, InsertSmUsersIn
 
         var claims = new List<Claim>
         {
+            new(ClaimTypes.Name, user.ID.ObjToString()),
             new(JwtRegisteredClaimNames.Jti, user.ID.ObjToString()),
+            new("TenantId", "0"),
             new("SessionId", sessionId),
             new(JwtRegisteredClaimNames.Iat, DateTime.Now.DateToTimeStamp()),
             new(ClaimTypes.Expiration, expirationTime.ToString())

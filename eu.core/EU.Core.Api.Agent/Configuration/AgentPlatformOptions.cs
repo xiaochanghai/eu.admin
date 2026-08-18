@@ -90,8 +90,12 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             bool isSqlSugarConnection =
                 key.StartsWith("DBS:", StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(propertyName, "Connection", StringComparison.OrdinalIgnoreCase);
+            bool isSharedAuthenticationCredential =
+                string.Equals(key, "Audience:Secret", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(key, "Audience:SecretFile", StringComparison.OrdinalIgnoreCase);
             if (!isCredentialAlias && !isRuntimeSecret && !isNonSecretLifetime &&
-                !isSqlSugarConnection && (SensitiveKeyPattern().IsMatch(propertyName) ||
+                !isSqlSugarConnection && !isSharedAuthenticationCredential &&
+                (SensitiveKeyPattern().IsMatch(propertyName) ||
                 SensitiveValuePattern().IsMatch(value) ||
                 ConnectionStringValuePattern().IsMatch(value) ||
                 CredentialValuePattern().IsMatch(value)))

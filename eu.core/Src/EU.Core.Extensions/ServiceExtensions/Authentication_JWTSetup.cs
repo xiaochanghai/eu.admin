@@ -15,7 +15,9 @@ namespace EU.Core.Extensions;
 /// </summary>
 public static class Authentication_JWTSetup
 {
-    public static void AddAuthentication_JWTSetup(this IServiceCollection services)
+    public static void AddAuthentication_JWTSetup(
+        this IServiceCollection services,
+        JwtBearerAuthenticationSchemes schemes = null)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -43,68 +45,66 @@ public static class Authentication_JWTSetup
         };
 
         // 开启Bearer认证
-        services.AddAuthentication(o =>
-        {
-            o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            o.DefaultChallengeScheme = nameof(ApiResponseHandler);
-            o.DefaultForbidScheme = nameof(ApiResponseHandler);
-        })
-         // 添加JwtBearer服务
-         .AddJwtBearer(o =>
-         {
-             o.TokenValidationParameters = tokenValidationParameters;
-             o.Events = new JwtBearerEvents
-             {
-                 OnMessageReceived = context =>
-                 {
-                     var accessToken = context.Request.Query["access_token"];
+        services.AddJwtBearerAuthentication(
+            schemes ?? new JwtBearerAuthenticationSchemes(
+                JwtBearerDefaults.AuthenticationScheme,
+                nameof(ApiResponseHandler),
+                nameof(ApiResponseHandler)),
+            o =>
+            {
+                o.TokenValidationParameters = tokenValidationParameters;
+                o.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
 
-                     // If the request is for our hub...
-                     var path = context.HttpContext.Request.Path;
-                     if (!string.IsNullOrEmpty(accessToken) &&
-                         (path.StartsWithSegments("/api2/chathub")))
-                     {
-                         // Read the token out of the query string
-                         context.Token = accessToken;
-                     }
-                     return Task.CompletedTask;
-                 },
-                 OnChallenge = context =>
-                 {
-                     context.Response.Headers["Token-Error"] = context.ErrorDescription;
-                     return Task.CompletedTask;
-                 },
-                 OnAuthenticationFailed = context =>
-                 {
-                     var jwtHandler = new JwtSecurityTokenHandler();
-                     var token = context.Request.Headers["Authorization"].ObjToString().Replace("Bearer ", "");
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/api2/chathub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        context.Response.Headers["Token-Error"] = context.ErrorDescription;
+                        return Task.CompletedTask;
+                    },
+                    OnAuthenticationFailed = context =>
+                    {
+                        var jwtHandler = new JwtSecurityTokenHandler();
+                        var token = context.Request.Headers["Authorization"].ObjToString().Replace("Bearer ", "");
 
-                     if (token.IsNotEmptyOrNull() && jwtHandler.CanReadToken(token))
-                     {
-                         var jwtToken = jwtHandler.ReadJwtToken(token);
+                        if (token.IsNotEmptyOrNull() && jwtHandler.CanReadToken(token))
+                        {
+                            var jwtToken = jwtHandler.ReadJwtToken(token);
 
-                         if (jwtToken.Issuer != Issuer)
-                         {
-                             context.Response.Headers["Token-Error-Iss"] = "issuer is wrong!";
-                         }
+                            if (jwtToken.Issuer != Issuer)
+                            {
+                                context.Response.Headers["Token-Error-Iss"] = "issuer is wrong!";
+                            }
 
-                         if (jwtToken.Audiences.FirstOrDefault() != Audience)
-                         {
-                             context.Response.Headers["Token-Error-Aud"] = "Audience is wrong!";
-                         }
-                     }
+                            if (jwtToken.Audiences.FirstOrDefault() != Audience)
+                            {
+                                context.Response.Headers["Token-Error-Aud"] = "Audience is wrong!";
+                            }
+                        }
 
 
-                     // 如果过期，则把<是否过期>添加到，返回头信息中
-                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                     {
-                         context.Response.Headers["Token-Expired"] = "true";
-                     }
-                     return Task.CompletedTask;
-                 }
-             };
-         })
-         .AddScheme<AuthenticationSchemeOptions, ApiResponseHandler>(nameof(ApiResponseHandler), o => { });
+                        // 如果过期，则把<是否过期>添加到，返回头信息中
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        {
+                            context.Response.Headers["Token-Expired"] = "true";
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            })
+            .AddScheme<AuthenticationSchemeOptions, ApiResponseHandler>(nameof(ApiResponseHandler), o => { });
 
     }
 }

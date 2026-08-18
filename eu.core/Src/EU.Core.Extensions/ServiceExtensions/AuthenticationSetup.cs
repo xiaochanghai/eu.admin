@@ -13,6 +13,16 @@ public static class AuthenticationSetup
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
+        services.AddAuthorizationSetup();
+        services.AddAuthenticationSetup();
+    }
+
+    public static void AddAuthenticationSetup(
+        this IServiceCollection services,
+        JwtBearerAuthenticationSchemes schemes = null)
+    {
+        if (services == null) throw new ArgumentNullException(nameof(services));
+
         Permissions.IsUseIds4 = AppSettings.app(["Startup", "IdentityServer4", "Enabled"]).ObjToBool();
         Permissions.IsUseAuthing = AppSettings.app(["Startup", "Authing", "Enabled"]).ObjToBool();
 
@@ -23,19 +33,18 @@ public static class AuthenticationSetup
         }
 
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-        services.AddAuthorizationSetup();
 
         if (Permissions.IsUseIds4)
         {
-            services.AddAuthentication_Ids4Setup();
+            services.AddAuthentication_Ids4Setup(schemes);
         }
         else if (Permissions.IsUseAuthing)
         {
-            services.AddAuthentication_AuthingSetup();
+            services.AddAuthentication_AuthingSetup(schemes);
         }
         else
         {
-            services.AddAuthentication_JWTSetup();
+            services.AddAuthentication_JWTSetup(schemes);
         }
     }
 

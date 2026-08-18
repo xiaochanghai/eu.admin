@@ -10,6 +10,7 @@ using EU.Core.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Security;
 
@@ -90,24 +91,39 @@ internal static class AgentApiSecurityServiceCollectionExtensions
             environment.IsDevelopment() && authentication.DevelopmentBypassEnabled
                 ? DevelopmentAuthenticationHandler.SchemeName
                 : JwtBearerDefaults.AuthenticationScheme;
-        AuthenticationBuilder authenticationBuilder = services
-            .AddAuthentication(authenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.Authority = authentication.Authority;
-                options.Audience = authentication.Audience;
-                options.RequireHttpsMetadata = authentication.RequireHttpsMetadata;
-                options.MapInboundClaims = false;
-            });
         if (string.Equals(
                 authenticationScheme,
                 DevelopmentAuthenticationHandler.SchemeName,
                 StringComparison.Ordinal))
         {
-            authenticationBuilder.AddScheme<AuthenticationSchemeOptions,
-                DevelopmentAuthenticationHandler>(
-                DevelopmentAuthenticationHandler.SchemeName,
-                _ => { });
+            services.AddAuthentication(authenticationScheme)
+                .AddScheme<AuthenticationSchemeOptions,
+                    DevelopmentAuthenticationHandler>(
+                    DevelopmentAuthenticationHandler.SchemeName,
+                    _ => { });
+        }
+        else
+        {
+            services.AddAuthenticationSetup(
+                new JwtBearerAuthenticationSchemes(authenticationScheme));
+            services.PostConfigure<JwtBearerOptions>(
+                JwtBearerDefaults.AuthenticationScheme,
+                options =>
+                {
+                    JwtBearerEvents events = options.Events ?? new JwtBearerEvents();
+                    Func<TokenValidatedContext, Task> previous = events.OnTokenValidated;
+                    events.OnTokenValidated = async context =>
+                    {
+                        await previous(context);
+                        if (context.Result?.Failure is null && context.Principal is not null)
+                        {
+                            AgentSharedTokenClaimsNormalizer.Normalize(
+                                context.Principal,
+                                authentication);
+                        }
+                    };
+                    options.Events = events;
+                });
         }
 
         services.AddAuthorization(options =>
@@ -139,7 +155,8 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                     .RequireClaim(authentication.UserIdClaimType)
                     .RequireAssertion(context =>
                         HasFixedTenant(context, authentication)
-                        && (HasPermission(
+                        && (!authentication.EnforcePermissionClaims
+                            || HasPermission(
                                 context.User,
                                 authentication.PermissionClaimType,
                                 AgentAuthorizationPolicies.ChatPermission)
@@ -168,17 +185,16 @@ internal static class AgentApiSecurityServiceCollectionExtensions
             .RequireAuthenticatedUser()
             .RequireClaim(authentication.UserIdClaimType)
             .RequireAssertion(context => HasFixedTenant(context, authentication))
-            .RequireAssertion(context => context.User.Claims.Any(claim =>
-                string.Equals(
-                    claim.Type,
-                    authentication.PermissionClaimType,
-                    StringComparison.Ordinal) &&
-                (string.Equals(claim.Value, permission, StringComparison.Ordinal) ||
-                 string.Equals(
-                     claim.Value,
-                     AgentAuthorizationPolicies.AdminPermission,
-                     StringComparison.Ordinal)))));
+            .RequireAssertion(context =>
+                HasRequiredPermission(context.User, authentication, permission)));
     }
+
+    internal static bool HasRequiredPermission(
+        ClaimsPrincipal user,
+        AgentAuthenticationOptions authentication,
+        string permission) =>
+        !authentication.EnforcePermissionClaims ||
+        HasPermission(user, authentication.PermissionClaimType, permission);
 
     private static bool HasFixedTenant(
         AuthorizationHandlerContext context,

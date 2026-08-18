@@ -13,7 +13,9 @@ namespace EU.Core.Extensions;
 /// </summary>
 public static class Authentication_AuthingSetup
 {
-    public static void AddAuthentication_AuthingSetup(this IServiceCollection services)
+    public static void AddAuthentication_AuthingSetup(
+        this IServiceCollection services,
+        JwtBearerAuthenticationSchemes schemes = null)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -27,24 +29,21 @@ public static class Authentication_AuthingSetup
             //RequireExpirationTime = true,
         };
 
-        services.AddAuthentication(o =>
-        {
-            //认证middleware配置
-            o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            o.DefaultChallengeScheme = nameof(ApiResponseHandler);
-            o.DefaultForbidScheme = nameof(ApiResponseHandler);
-        })
-        .AddJwtBearer(o =>
-        {
-            //主要是jwt  token参数设置
-            o.TokenValidationParameters = tokenValidationParameters;
-            o.RequireHttpsMetadata = false;
-            o.SaveToken = false;
-            o.IncludeErrorDetails = true;
-            o.SetJwksOptions(new JwkOptions(AppSettings.app(new string[] { "Startup", "Authing", "JwksUri" }), AppSettings.app(new string[] { "Startup", "Authing", "Issuer" }), new TimeSpan(TimeSpan.TicksPerDay)));
-        })
-        .AddScheme<AuthenticationSchemeOptions, ApiResponseHandler>(nameof(ApiResponseHandler), o => { });
+        services.AddJwtBearerAuthentication(
+            schemes ?? new JwtBearerAuthenticationSchemes(
+                JwtBearerDefaults.AuthenticationScheme,
+                nameof(ApiResponseHandler),
+                nameof(ApiResponseHandler)),
+            o =>
+            {
+                //主要是jwt  token参数设置
+                o.TokenValidationParameters = tokenValidationParameters;
+                o.RequireHttpsMetadata = false;
+                o.SaveToken = false;
+                o.IncludeErrorDetails = true;
+                o.SetJwksOptions(new JwkOptions(AppSettings.app(new string[] { "Startup", "Authing", "JwksUri" }), AppSettings.app(new string[] { "Startup", "Authing", "Issuer" }), new TimeSpan(TimeSpan.TicksPerDay)));
+            })
+            .AddScheme<AuthenticationSchemeOptions, ApiResponseHandler>(nameof(ApiResponseHandler), o => { });
 
     }
 }
