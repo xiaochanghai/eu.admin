@@ -326,6 +326,8 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
         return await BaseDal.QueryPageSplit(whereExpression, beginTime, endTime, pageIndex, pageSize, orderByFields);
     }
 
-    #endregion
+    #endregion 
+    public static ServiceResult<T> Success<T>(T data) => ServiceResult<T>.OprateSuccess(data);
+
+    public static ServiceResult<T> Failed<T>(string message) => ServiceResult<T>.OprateFailed(message);
 }
- 
