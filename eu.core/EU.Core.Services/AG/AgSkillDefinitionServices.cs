@@ -1,7 +1,6 @@
 using EU.Core.Agent.Application.Skills;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 
 #nullable enable
@@ -60,12 +59,10 @@ public sealed class AgSkillDefinitionServices :
 
         cancellationToken.ThrowIfCancellationRequested();
         bool draftCreated = false;
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        await Db.Ado.BeginTranAsync(IsolationLevel.Serializable);
         try
         {
-            bool exists = await Db.Queryable<AgSkillDefinition>()
-                .Where(value => value.ID == definition.Id || value.Code == definition.Code)
-                .AnyAsync();
+            bool exists = await AnyAsync(value => value.ID == definition.Id || value.Code == definition.Code);
             if (exists)
             {
                 await Db.Ado.RollbackTranAsync();
@@ -78,8 +75,7 @@ public sealed class AgSkillDefinitionServices :
                 definition.Name,
                 definition.Description,
                 cancellationToken);
-            IReadOnlyList<SkillFileEntry> draftFiles =
-                await _fileStore.ListDraftAsync(code, cancellationToken);
+            var draftFiles = await _fileStore.ListDraftAsync(code, cancellationToken);
             await ReconcileAttachmentGroupAsync(
                 definition.Id,
                 DraftAttachmentType,
@@ -1166,32 +1162,19 @@ public sealed class AgSkillDefinitionServices :
             ? status
             : throw new InvalidDataException($"Skill Status contains unsupported value '{value}'.");
 
-    private static string Required(string? value, string name) =>
-        value ?? throw new InvalidDataException($"Skill {name} is required.");
+    private static string Required(string? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private static Guid Required(Guid? value, string name) =>
-        value ?? throw new InvalidDataException($"Skill {name} is required.");
+    private static Guid Required(Guid? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private static long Required(long? value, string name) =>
-        value ?? throw new InvalidDataException($"Skill {name} is required.");
+    private static long Required(long? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private static int Required(int? value, string name) =>
-        value ?? throw new InvalidDataException($"Skill {name} is required.");
+    private static int Required(int? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private static DateTime Required(DateTime? value, string name) =>
-        value ?? throw new InvalidDataException($"Skill {name} is required.");
+    private static DateTime Required(DateTime? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private static ServiceResult<T> Success<T>(T data) =>
-        ServiceResult<T>.OprateSuccess(data);
+    private ServiceResult<SkillDefinition> RevisionConflict() => Failure("The Skill Draft changed before this operation completed.");
 
-    private static ServiceResult<T> Failed<T>(string message) =>
-        ServiceResult<T>.OprateFailed(message);
-
-    private ServiceResult<SkillDefinition> Failure(string message) =>
-        Failed<SkillDefinition>(message);
-
-    private ServiceResult<SkillDefinition> RevisionConflict() =>
-        Failure("The Skill Draft changed before this operation completed.");
+    public ServiceResult<SkillDefinition> Failure(string message) => Failed<SkillDefinition>(message);
 
     private static async Task<T> WithLockAsync<T>(
         Guid id,
