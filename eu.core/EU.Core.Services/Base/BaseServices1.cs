@@ -326,7 +326,32 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
         return await BaseDal.QueryPageSplit(whereExpression, beginTime, endTime, pageIndex, pageSize, orderByFields);
     }
 
-    #endregion 
+    #endregion
+
+
+
+    #region 数据存在性检查
+
+    /// <summary>
+    /// 根据主键ID检查数据是否存在
+    /// </summary>
+    /// <param name="objId">主键ID（必须在实体上标记[SugarColumn(IsPrimaryKey=true)]特性）</param>
+    /// <returns>存在返回true，否则返回false</returns>
+    public async Task<bool> AnyAsync(object objId) => await BaseDal.AnyAsync(objId);
+
+    /// <summary>
+    /// 根据条件表达式检查数据是否存在
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>存在返回true，否则返回false</returns>
+    /// <example>
+    /// bool exists = await AnyAsync(x => x.Code == "USER001" && x.IsDeleted == false);
+    /// </example>
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression) => await BaseDal.AnyAsync(whereExpression);
+
+    #endregion
+
+
     public static ServiceResult<T> Success<T>(T data) => ServiceResult<T>.OprateSuccess(data);
 
     public static ServiceResult<T> Failed<T>(string message) => ServiceResult<T>.OprateFailed(message);
