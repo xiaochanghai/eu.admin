@@ -1,0 +1,58 @@
+.mcp-server-page {
+  min-height: 520px;
+  &__toolbar {
+    margin-bottom: 16px;
+  }
+  &__code {
+    font-family: "Cascadia Code", SFMono-Regular, Consolas, monospace;
+  }
+  &__alert {
+    margin-bottom: 16px;
+  }
+  &__half {
+    flex: 1;
+    min-width: 280px;
+  }
+  &__tools {
+    padding-top: 20px;
+    margin-top: 8px;
+    border-top: 1px solid var(--ant-color-border-secondary);
+    .ant-typography {
+      margin-top: 0;
+      margin-bottom: 2px;
+    }
+    .ant-empty {
+      margin-block: 24px 8px;
+    }
+  }
+  &__tool-row {
+    padding: 12px;
+    margin-top: 10px;
+    background: var(--ant-color-fill-quaternary);
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: var(--ant-border-radius-lg);
+  }
+  &__tool-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  &__risk {
+    width: 140px;
+  }
+
+  @media (max-width: 768px) {
+    &__half {
+      min-width: 100%;
+    }
+    &__tool-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    &__risk {
+      width: 100%;
+    }
+  }
+}

@@ -17,7 +17,7 @@
 - Agent 强制约束：[`../../eu.admin.react/AGENTS.md`](../../eu.admin.react/AGENTS.md)
 - 前端项目配置：[`../../eu.admin.react/package.json`](../../eu.admin.react/package.json)
 - SmModule 动态页面专题索引：[`SmModule/README.md`](SmModule/README.md)
-- Agent Definition React 管理页：[`Agent/README.md`](Agent/README.md)
+- Agent React 管理页：[`Agent/README.md`](Agent/README.md)
 - 工作流模块：[`../../eu.admin.react/src/workflow/README.md`](../../eu.admin.react/src/workflow/README.md)
 - 新版工作流编辑器：[`../../eu.admin.react/src/workflow-editor/README.md`](../../eu.admin.react/src/workflow-editor/README.md)
 
