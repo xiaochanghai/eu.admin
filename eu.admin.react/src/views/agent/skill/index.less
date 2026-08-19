@@ -1,0 +1,32 @@
+.skill-form {
+  &__loading {
+    display: block;
+    margin: 80px auto;
+  }
+
+  &__actions {
+    margin-bottom: 12px;
+  }
+
+  &__files {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  &__file--active {
+    background: rgba(22, 119, 255, 8%);
+  }
+
+  &__editor {
+    min-height: 360px;
+    margin-top: 12px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  @media (max-width: 900px) {
+    &__files {
+      grid-template-columns: 1fr;
+    }
+  }
+}

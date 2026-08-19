@@ -89,11 +89,9 @@ public sealed class AgAgentAndSkillApiResponse_Should
             skillService,
             new StubAgentDefinitionCatalog()));
 
-        AssertServiceError(
+        AssertServiceFailure<SkillDefinitionDetailResponse>(
             await skillsController.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status404NotFound,
-            620001,
-            SkillErrorCodes.NotFound);
+            "The Skill was not found.");
     }
 
     [Fact]
@@ -177,7 +175,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
     {
         IAgSkillDefinitionServices lifecycle = Proxy<IAgSkillDefinitionServices>((method, _) =>
             method.Name == nameof(IAgSkillDefinitionServices.ReadFileAsync)
-                ? Task.FromResult(SkillOperationResult<string>.Success("# Skill"))
+                ? Task.FromResult(ServiceResult<string>.QuerySuccess("# Skill"))
                 : throw new InvalidOperationException(method.Name));
         var controller = WithHttpContext(new SkillsController(
             lifecycle,
@@ -197,7 +195,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
         SkillDefinition skill = CreateSkill();
         IAgSkillDefinitionServices lifecycle = Proxy<IAgSkillDefinitionServices>((method, _) =>
             method.Name == nameof(IAgSkillDefinitionServices.CreateAsync)
-                ? Task.FromResult(SkillOperationResult<SkillDefinition>.Success(skill))
+                ? Task.FromResult(ServiceResult<SkillDefinition>.OprateSuccess(skill))
                 : throw new InvalidOperationException(method.Name));
         var controller = WithHttpContext(new SkillsController(
             lifecycle,
@@ -208,7 +206,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
             CancellationToken.None);
 
         ServiceResult<SkillDefinition> body =
-            AssertServiceSuccess<SkillDefinition>(action, StatusCodes.Status201Created);
+            AssertServiceSuccess<SkillDefinition>(action, StatusCodes.Status200OK);
         Assert.Same(skill, body.Data);
         Assert.Equal($"/api/skills/{skill.Id}", controller.Response.Headers.Location);
     }
@@ -226,7 +224,9 @@ public sealed class AgAgentAndSkillApiResponse_Should
             "Unknown",
             CancellationToken.None);
 
-        AssertServiceError(action, StatusCodes.Status400BadRequest, 600001, "REQUEST_INVALID");
+        AssertServiceFailure<IReadOnlyList<SkillListItem>>(
+            action,
+            "Skill status must be Active or Archived.");
     }
 
     [Fact]
@@ -244,13 +244,13 @@ public sealed class AgAgentAndSkillApiResponse_Should
                 nameof(IAgSkillDefinitionServices.ListAsync) => Task.FromResult(list),
                 nameof(IAgSkillDefinitionServices.GetAsync) => Task.FromResult<SkillDefinition?>(skill),
                 nameof(IAgSkillDefinitionServices.ListFilesAsync) =>
-                    Task.FromResult(SkillOperationResult<IReadOnlyList<SkillFileEntry>>.Success(files)),
+                    Task.FromResult(ServiceResult<IReadOnlyList<SkillFileEntry>>.QuerySuccess(files)),
                 nameof(IAgSkillDefinitionServices.UpdateAsync) or
                 nameof(IAgSkillDefinitionServices.SaveFileAsync) or
                 nameof(IAgSkillDefinitionServices.DeleteFileAsync) or
                 nameof(IAgSkillDefinitionServices.PublishAsync) or
                 nameof(IAgSkillDefinitionServices.SetArchivedAsync) =>
-                    Task.FromResult(SkillOperationResult<SkillDefinition>.Success(skill)),
+                    Task.FromResult(ServiceResult<SkillDefinition>.OprateSuccess(skill)),
                 _ => throw new InvalidOperationException(method.Name)
             });
         var controller = WithHttpContext(new SkillsController(

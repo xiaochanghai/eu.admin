@@ -1,6 +1,6 @@
 # Agent API 统一返回实施计划
 
-> 2026-08-19 实现偏差说明：AgentDefinition 服务层业务失败已按 EU.Core 现有模式落地为 HTTP 200 + `ServiceResult<T>`，使用 `Success=false`、`Status=500` 和 `Message`，不再使用该管理链路的专用 `ErrorCode` 或语义化 HTTP 4xx。Create/Import 成功保留 HTTP 201，导出成功保留文件响应，请求边界校验保留通用错误码。下文相关步骤是历史计划，不代表该链路当前契约。
+> 2026-08-19 实现偏差说明：AgentDefinition 与 Skill 服务层业务失败已按 EU.Core 现有模式落地为 HTTP 200 + `ServiceResult<T>`，使用 `Success=false`、`Status=500` 和 `Message`，不再向 API 消费者返回这两条管理链路的专用 `ErrorCode` 或语义化 HTTP 4xx。Agent Create/Import 成功保留 HTTP 201，Skill Create 成功返回 HTTP 200；Agent 导出和 Skill 文件内容读取保留原响应。下文相关步骤是历史计划，不代表这两条管理链路的当前契约。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

@@ -1,6 +1,6 @@
 # Agent API ErrorCode 固定清单
 
-> 2026-08-19 现行实现说明：AgentDefinition 服务层返回的管理操作失败使用 HTTP 200 + `ServiceResult<T>`，响应体为 `Success=false`、`Status=500`，具体原因放在 `Message`，不再分配 AgentDefinition 专用 `ErrorCode`。列表筛选、Content-Type 等 HTTP 请求边界校验仍可使用通用错误码；运行时、MainAgent、Skill、MCP、编排等模块继续使用本清单中各自的错误码。
+> 2026-08-19 现行实现说明：AgentDefinition 与 Skill 服务层返回的管理操作失败使用 HTTP 200 + `ServiceResult<T>`，响应体为 `Success=false`、`Status=500`，具体原因放在 `Message`，不再向 API 消费者返回这两条管理链路的专用 `ErrorCode`。Skill 错误码仍可供受控文件存储内部分类；本清单中的 Skill HTTP 映射仅作为历史记录。其他运行时、MainAgent、MCP、编排等模块继续使用各自现行错误码。
 
 本清单是 `EU.Core.Api.Agent` 错误码、业务 `Status` 与默认 HTTP 状态码的固定注册表，
 基线日期为 2026-08-17。

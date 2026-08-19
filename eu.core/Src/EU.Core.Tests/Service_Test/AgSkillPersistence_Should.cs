@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using EU.Core.Agent.Application.Skills;
+using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Services;
 using Xunit;
@@ -49,10 +50,10 @@ public sealed class AgSkillPersistence_Should
             fileStore);
         string code = $"skill-{Guid.NewGuid():N}";
 
-        SkillOperationResult<SkillDefinition> created = await service.CreateAsync(
+        ServiceResult<SkillDefinition> created = await service.CreateAsync(
             new CreateSkillCommand(code, "Skill A", "description", "business"));
-        Assert.True(created.Succeeded);
-        SkillDefinition initial = Assert.IsType<SkillDefinition>(created.Value);
+        Assert.True(created.Success);
+        SkillDefinition initial = Assert.IsType<SkillDefinition>(created.Data);
         FileAttachment initialAttachment = Assert.Single(
             await fixture.Db.Queryable<FileAttachment>()
                 .Where(value =>
@@ -62,22 +63,22 @@ public sealed class AgSkillPersistence_Should
         Assert.Equal("SKILL.md", initialAttachment.OriginalFileName);
         Assert.Equal($"{code}/draft/", initialAttachment.Path);
         Assert.False((await service.CreateAsync(
-            new CreateSkillCommand(code, "Duplicate", string.Empty, string.Empty))).Succeeded);
-        SkillOperationResult<string> initialFile = await service.ReadFileAsync(
+            new CreateSkillCommand(code, "Duplicate", string.Empty, string.Empty))).Success);
+        ServiceResult<string> initialFile = await service.ReadFileAsync(
             initial.Id,
             "SKILL.md");
-        Assert.Equal("# Skill A\n\ndescription", initialFile.Value);
+        Assert.Equal("# Skill A\n\ndescription", initialFile.Data);
 
-        SkillOperationResult<SkillDefinition> saved = await service.SaveFileAsync(
+        ServiceResult<SkillDefinition> saved = await service.SaveFileAsync(
             new SaveSkillFileCommand(
                 initial.Id,
                 0,
                 "SKILL.md",
                 "# Skill A\n\nAlways return SKILL_OK."));
-        Assert.True(saved.Succeeded);
+        Assert.True(saved.Success);
         Assert.False((await service.SaveFileAsync(
-            new SaveSkillFileCommand(initial.Id, 0, "SKILL.md", "stale"))).Succeeded);
-        SkillDefinition draft = Assert.IsType<SkillDefinition>(saved.Value);
+            new SaveSkillFileCommand(initial.Id, 0, "SKILL.md", "stale"))).Success);
+        SkillDefinition draft = Assert.IsType<SkillDefinition>(saved.Data);
         Assert.Equal(1, draft.DraftRevision);
         FileAttachment savedAttachment = Assert.Single(
             await fixture.Db.Queryable<FileAttachment>()
@@ -88,12 +89,12 @@ public sealed class AgSkillPersistence_Should
         Assert.Equal(initialAttachment.ID, savedAttachment.ID);
         Assert.Equal(fileStore.Draft["SKILL.md"].Length, savedAttachment.Length);
         Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<SkillFileEntry>>(
-            (await service.ListFilesAsync(initial.Id)).Value));
+            (await service.ListFilesAsync(initial.Id)).Data));
 
-        SkillOperationResult<SkillDefinition> published = await service.PublishAsync(
+        ServiceResult<SkillDefinition> published = await service.PublishAsync(
             new PublishSkillCommand(initial.Id, 1, "1.0.0"));
-        Assert.True(published.Succeeded);
-        SkillDefinition ready = Assert.IsType<SkillDefinition>(published.Value);
+        Assert.True(published.Success);
+        SkillDefinition ready = Assert.IsType<SkillDefinition>(published.Data);
         Assert.Equal(2, ready.DraftRevision);
         SkillVersion version = Assert.Single(ready.PublishedVersions);
         Assert.Equal("1.0.0", version.Label);
@@ -162,15 +163,15 @@ public sealed class AgSkillPersistence_Should
                 $"skill-{Guid.NewGuid():N}",
                 "Rollback Skill",
                 string.Empty,
-                string.Empty))).Value);
+                string.Empty))).Data);
         string original = fileStore.Draft["SKILL.md"];
         fileStore.FailNextList = true;
 
-        SkillOperationResult<SkillDefinition> result = await service.SaveFileAsync(
+        ServiceResult<SkillDefinition> result = await service.SaveFileAsync(
             new SaveSkillFileCommand(definition.Id, 0, "SKILL.md", "changed"));
 
-        Assert.False(result.Succeeded);
-        Assert.Equal(SkillErrorCodes.PathInvalid, result.Error?.Code);
+        Assert.False(result.Success);
+        Assert.Equal("Simulated attachment indexing failure.", result.Message);
         Assert.Equal(original, fileStore.Draft["SKILL.md"]);
         Assert.Equal(0, (await service.GetAsync(definition.Id))!.DraftRevision);
     }
@@ -192,14 +193,14 @@ public sealed class AgSkillPersistence_Should
                 $"skill-{Guid.NewGuid():N}",
                 "Path Skill",
                 string.Empty,
-                string.Empty))).Value);
+                string.Empty))).Data);
         string longName = $"references/{new string('a', 61)}.txt";
 
-        SkillOperationResult<SkillDefinition> result = await service.SaveFileAsync(
+        ServiceResult<SkillDefinition> result = await service.SaveFileAsync(
             new SaveSkillFileCommand(definition.Id, 0, longName, "content"));
 
-        Assert.False(result.Succeeded);
-        Assert.Equal(SkillErrorCodes.PathInvalid, result.Error?.Code);
+        Assert.False(result.Success);
+        Assert.Contains("64 characters", result.Message);
         Assert.DoesNotContain(longName, fileStore.Draft.Keys);
         Assert.Equal(0, (await service.GetAsync(definition.Id))!.DraftRevision);
     }
@@ -218,15 +219,15 @@ public sealed class AgSkillPersistence_Should
             fileStore);
         string code = $"skill-{Guid.NewGuid():N}";
         SkillDefinition definition = Assert.IsType<SkillDefinition>((await service.CreateAsync(
-            new CreateSkillCommand(code, "Nested Skill", string.Empty, string.Empty))).Value);
+            new CreateSkillCommand(code, "Nested Skill", string.Empty, string.Empty))).Data);
 
-        SkillOperationResult<SkillDefinition> saved = await service.SaveFileAsync(
+        ServiceResult<SkillDefinition> saved = await service.SaveFileAsync(
             new SaveSkillFileCommand(
                 definition.Id,
                 0,
                 "references/guide.md",
                 "nested content"));
-        Assert.True(saved.Succeeded);
+        Assert.True(saved.Success);
         FileAttachment nested = Assert.Single(
             await fixture.Db.Queryable<FileAttachment>()
                 .Where(value =>
@@ -235,12 +236,12 @@ public sealed class AgSkillPersistence_Should
                 .ToListAsync());
         Assert.Equal($"{code}/draft/references/", nested.Path);
 
-        SkillOperationResult<SkillDefinition> deleted = await service.DeleteFileAsync(
+        ServiceResult<SkillDefinition> deleted = await service.DeleteFileAsync(
             new DeleteSkillFileCommand(
                 definition.Id,
                 1,
                 "references/guide.md"));
-        Assert.True(deleted.Succeeded);
+        Assert.True(deleted.Success);
         Assert.False(await fixture.Db.Queryable<FileAttachment>()
             .Where(value => value.ID == nested.ID)
             .AnyAsync());
@@ -270,9 +271,9 @@ public sealed class AgSkillPersistence_Should
                 $"skill-{Guid.NewGuid():N}",
                 "Referenced Skill",
                 string.Empty,
-                string.Empty))).Value);
+                string.Empty))).Data);
         SkillDefinition published = Assert.IsType<SkillDefinition>((await service.PublishAsync(
-            new PublishSkillCommand(definition.Id, 0, "1.0.0"))).Value);
+            new PublishSkillCommand(definition.Id, 0, "1.0.0"))).Data);
         Guid skillVersionId = Assert.Single(published.PublishedVersions).Id;
         Guid agentId = Guid.NewGuid();
         Guid agentVersionId = Guid.NewGuid();
@@ -309,21 +310,20 @@ public sealed class AgSkillPersistence_Should
             ReferenceDescription = string.Empty
         }).ExecuteCommandAsync();
 
-        SkillOperationResult<SkillDefinition> blocked = await service.SetArchivedAsync(
+        ServiceResult<SkillDefinition> blocked = await service.SetArchivedAsync(
             new SetSkillArchiveCommand(definition.Id, published.DraftRevision, true));
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(SkillErrorCodes.ArchiveBlocked, blocked.Error?.Code);
-        Assert.Contains("skill-consumer", blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Contains("skill-consumer", blocked.Message);
 
         await fixture.Db.Updateable<AgAgentDefinition>()
             .SetColumns(value => value.RuntimeStatus == "Disabled")
             .Where(value => value.ID == agentId)
             .ExecuteCommandAsync();
-        SkillOperationResult<SkillDefinition> archived = await service.SetArchivedAsync(
+        ServiceResult<SkillDefinition> archived = await service.SetArchivedAsync(
             new SetSkillArchiveCommand(definition.Id, published.DraftRevision, true));
-        Assert.True(archived.Succeeded);
-        Assert.Equal(SkillStatus.Archived, archived.Value?.Status);
+        Assert.True(archived.Success);
+        Assert.Equal(SkillStatus.Archived, archived.Data?.Status);
     }
 
     private sealed class StubSkillFileStore : ISkillFileStore

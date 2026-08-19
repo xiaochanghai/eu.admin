@@ -101,8 +101,6 @@ public sealed record SkillQuery(
     string? Category = null,
     SkillStatus? Status = null);
 
-public sealed record SkillError(string Code, string Message);
-
 public static class SkillErrorCodes
 {
     public const string CodeInvalid = "SKILL_CODE_INVALID";
@@ -118,16 +116,6 @@ public static class SkillErrorCodes
     public const string PublishInvalid = "SKILL_PUBLISH_INVALID";
     public const string LifecycleTransitionInvalid = "SKILL_LIFECYCLE_TRANSITION_INVALID";
     public const string ArchiveBlocked = "SKILL_ARCHIVE_BLOCKED";
-}
-
-public sealed record SkillOperationResult<T>(T? Value, SkillError? Error)
-{
-    public bool Succeeded => Error is null;
-
-    public static SkillOperationResult<T> Success(T value) => new(value, null);
-
-    public static SkillOperationResult<T> Failure(string code, string message) =>
-        new(default, new SkillError(code, message));
 }
 
 public interface IPublishedSkillVersionCatalog

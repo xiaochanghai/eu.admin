@@ -10,7 +10,7 @@ namespace EU.Core.IServices;
 /// </summary>
 public interface IAgSkillDefinitionServices : IBaseServices<AgSkillDefinition>
 {
-    Task<SkillOperationResult<SkillDefinition>> CreateAsync(
+    Task<ServiceResult<SkillDefinition>> CreateAsync(
         CreateSkillCommand command,
         CancellationToken cancellationToken = default);
 
@@ -22,31 +22,31 @@ public interface IAgSkillDefinitionServices : IBaseServices<AgSkillDefinition>
         SkillQuery query,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<SkillDefinition>> UpdateAsync(
+    Task<ServiceResult<SkillDefinition>> UpdateAsync(
         UpdateSkillCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<SkillDefinition>> SaveFileAsync(
+    Task<ServiceResult<SkillDefinition>> SaveFileAsync(
         SaveSkillFileCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<SkillDefinition>> DeleteFileAsync(
+    Task<ServiceResult<SkillDefinition>> DeleteFileAsync(
         DeleteSkillFileCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<SkillDefinition>> PublishAsync(
+    Task<ServiceResult<SkillDefinition>> PublishAsync(
         PublishSkillCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<IReadOnlyList<SkillFileEntry>>> ListFilesAsync(
+    Task<ServiceResult<IReadOnlyList<SkillFileEntry>>> ListFilesAsync(
         Guid id,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<SkillDefinition>> SetArchivedAsync(
+    Task<ServiceResult<SkillDefinition>> SetArchivedAsync(
         SetSkillArchiveCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<SkillOperationResult<string>> ReadFileAsync(
+    Task<ServiceResult<string>> ReadFileAsync(
         Guid id,
         string relativePath,
         CancellationToken cancellationToken = default);
