@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.Skills;
@@ -108,7 +109,7 @@ public sealed record AgentRunContext(
         SkillContractCloner.ReadOnly(Array.Empty<PublishedSkillContent>());
 
     public IReadOnlyList<KnowledgeSearchResult> Knowledge { get; init; } =
-        KnowledgeContractCloner.ReadOnly(Array.Empty<KnowledgeSearchResult>());
+        Array.AsReadOnly(Array.Empty<KnowledgeSearchResult>());
 
     public IReadOnlyList<AgentConversationMessage> ConversationHistory { get; init; } =
         new ReadOnlyCollection<AgentConversationMessage>(

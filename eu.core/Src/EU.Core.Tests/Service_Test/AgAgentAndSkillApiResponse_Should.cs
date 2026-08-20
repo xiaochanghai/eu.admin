@@ -154,14 +154,12 @@ public sealed class AgAgentAndSkillApiResponse_Should
                 CancellationToken.None),
             StatusCodes.Status200OK);
         AssertServiceSuccess<AgentDefinition>(
-            await controller.Publish(definition.Id, new ExpectedRevisionRequest(0), CancellationToken.None),
-            StatusCodes.Status200OK);
+            await controller.Publish(definition.Id, new ExpectedRevisionRequest(0), CancellationToken.None));
         AssertServiceSuccess<AgentDefinition>(
             await controller.SetStatus(
                 definition.Id,
                 new SetAgentStatusRequest(0, AgentRuntimeStatus.Disabled),
-                CancellationToken.None),
-            StatusCodes.Status200OK);
+                CancellationToken.None));
 
         controller.Request.ContentType = "application/json";
         controller.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
@@ -360,6 +358,13 @@ public sealed class AgAgentAndSkillApiResponse_Should
             HttpContext = new DefaultHttpContext { TraceIdentifier = "trace-contract" }
         };
         return controller;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(ServiceResult<T> body)
+    {
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        return body;
     }
 
     private static ServiceResult<T> AssertServiceSuccess<T>(IActionResult action, int httpStatus)

@@ -1,5 +1,4 @@
 using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Orchestration;
@@ -40,7 +39,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private readonly JsonSchemaValidator _jsonSchemaValidator;
     private readonly IPublishedSkillVersionCatalog? _skillVersions;
     private readonly IPublishedMcpToolCatalog? _toolVersions;
-    private readonly IPublishedKnowledgeCatalog? _knowledgeBases;
+    private readonly IAgKnowledgeBaseDefinitionServices? _knowledgeBases;
     private readonly IPublishedOrchestrationCatalog? _orchestrationCatalog;
     private readonly IOrchestrationRepository? _orchestrations;
     private readonly IMainAgentAssignmentRepository? _mainAgentAssignments;
@@ -50,7 +49,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         JsonSchemaValidator? jsonSchemaValidator = null,
         IPublishedSkillVersionCatalog? skillVersions = null,
         IPublishedMcpToolCatalog? toolVersions = null,
-        IPublishedKnowledgeCatalog? knowledgeBases = null,
+        IAgKnowledgeBaseDefinitionServices? knowledgeBases = null,
         IPublishedOrchestrationCatalog? orchestrationCatalog = null,
         IOrchestrationRepository? orchestrations = null,
         IMainAgentAssignmentRepository? mainAgentAssignments = null,
@@ -75,7 +74,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         cancellationToken.ThrowIfCancellationRequested();
         string? normalizedSearch = search?.Trim().ToLowerInvariant();
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
+        await Db.Ado.BeginTranAsync(IsolationLevel.RepeatableRead);
         try
         {
             var definitions = await Db.Queryable<AgAgentDefinition>()
@@ -420,14 +419,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        await Db.Ado.BeginTranAsync(IsolationLevel.Serializable);
         try
         {
-
-            bool exists = await Db.Queryable<AgAgentDefinition>()
-                .Where(value => value.ID == definition.Id || value.Code == definition.Code)
-                .AnyAsync();
-            if (exists)
+            if (await AnyAsync(value => value.ID == definition.Id || value.Code == definition.Code))
             {
                 await Db.Ado.RollbackTranAsync();
                 return false;
@@ -442,15 +437,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 RuntimeStatus = definition.RuntimeStatus.ToString(),
                 LogicalRevision = definition.LogicalRevision
             };
-            AgAgentVersion draft = MapVersionEntity(definition.Id, 0, definition.Draft);
-            List<AgAgentVersionBinding> bindings = MapVersionBindingEntities(definition.Draft);
+            var draft = MapVersionEntity(definition.Id, 0, definition.Draft);
+            var bindings = MapVersionBindingEntities(definition.Draft);
 
             await Db.Insertable(entity).ExecuteCommandAsync();
             await Db.Insertable(draft).ExecuteCommandAsync();
-            if (bindings.Count > 0)
-            {
+            if (bindings.Any())
                 await Db.Insertable(bindings).ExecuteCommandAsync();
-            }
 
             cancellationToken.ThrowIfCancellationRequested();
             await Db.Ado.CommitTranAsync();
@@ -769,7 +762,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        await Db.Ado.BeginTranAsync(IsolationLevel.Serializable);
         try
         {
             var entity = new AgAgentDefinition
@@ -1524,8 +1517,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         }
 
         IReadOnlySet<Guid> selected = ids.ToHashSet();
-        return KnowledgeContractCloner.ReadOnly(
-            (await _knowledgeBases.ListAsync(cancellationToken))
+        return Common.Extensions.CollectionExtensions.ToReadOnlyList(
+            (await _knowledgeBases.ListPublishedAsync(cancellationToken))
             .Where(value => selected.Contains(value.KnowledgeBaseId)));
     }
 
@@ -1952,7 +1945,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     {
         IReadOnlySet<Guid> available = _knowledgeBases is null
             ? new HashSet<Guid>()
-            : (await _knowledgeBases.ListAsync(cancellationToken))
+            : (await _knowledgeBases.ListPublishedAsync(cancellationToken))
                 .Select(value => value.KnowledgeBaseId)
                 .ToHashSet();
         foreach (string reference in references)

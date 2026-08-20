@@ -1,5 +1,6 @@
 using System.Text;
 using EU.Core.Agent.Application.Knowledge;
+using EU.Core.Model;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 using UglyToad.PdfPig.Exceptions;

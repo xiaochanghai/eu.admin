@@ -100,7 +100,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
     {
-        var result = await agentDefinitionServices.CreateAsync( new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
+        var result = await agentDefinitionServices.CreateAsync(new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
         if (!result.Success)
         {
             return new JsonResult(result)
@@ -160,30 +160,22 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     }
 
     [HttpPost("{id:guid}/publish")]
-    public async Task<IActionResult> Publish(Guid id, [FromBody] ExpectedRevisionRequest request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<AgentDefinition>> Publish(Guid id, [FromBody] ExpectedRevisionRequest request, CancellationToken cancellationToken)
     {
-        ServiceResult<AgentDefinition> result = await agentDefinitionServices.PublishAsync(
+        return await agentDefinitionServices.PublishAsync(
             new PublishAgentCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return new JsonResult(result)
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
     }
 
     [HttpPut("{id:guid}/status")]
-    public async Task<IActionResult> SetStatus(Guid id, [FromBody] SetAgentStatusRequest request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<AgentDefinition>> SetStatus(Guid id, [FromBody] SetAgentStatusRequest request, CancellationToken cancellationToken)
     {
-        ServiceResult<AgentDefinition> result = await agentDefinitionServices.SetRuntimeStatusAsync(
+        return await agentDefinitionServices.SetRuntimeStatusAsync(
             new SetAgentRuntimeStatusCommand(
                 id,
                 request.ExpectedLogicalRevision,
                 request.RuntimeStatus),
             cancellationToken);
-        return new JsonResult(result)
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
     }
 
     [HttpGet("{id:guid}/export")]

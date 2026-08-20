@@ -9,7 +9,7 @@ public sealed class RequestBodyLimitMiddleware(RequestDelegate next)
     public const long MaximumRequestBodyBytes = 131_072;
     public const long MaximumSkillRequestBodyBytes = 2_129_920;
     public const long MaximumKnowledgePdfRequestBodyBytes =
-        KnowledgeLifecycleService.MaximumPdfBytes + 65_536;
+        EU.Core.Services.AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536;
 
     public async Task InvokeAsync(HttpContext context)
     {

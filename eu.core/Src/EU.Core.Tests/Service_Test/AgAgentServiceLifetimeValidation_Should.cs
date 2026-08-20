@@ -1,4 +1,3 @@
-using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Api.Agent.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,21 +7,6 @@ namespace EU.Core.Tests.Service_Test;
 
 public sealed class AgAgentServiceLifetimeValidation_Should
 {
-    [Fact]
-    public void Reject_database_backed_service_registered_as_singleton()
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton<KnowledgeLifecycleService>();
-
-        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-            () => services.ValidateAgentServiceLifetimes());
-
-        Assert.Contains(
-            typeof(KnowledgeLifecycleService).FullName!,
-            exception.Message,
-            StringComparison.Ordinal);
-    }
-
     [Fact]
     public void Reject_stateful_runtime_service_registered_as_scoped()
     {
@@ -42,7 +26,6 @@ public sealed class AgAgentServiceLifetimeValidation_Should
     public void Accept_expected_agent_service_lifetimes()
     {
         var services = new ServiceCollection();
-        services.AddScoped<KnowledgeLifecycleService>();
         services.AddSingleton<UnifiedEntryService>();
 
         IServiceCollection result = services.ValidateAgentServiceLifetimes();

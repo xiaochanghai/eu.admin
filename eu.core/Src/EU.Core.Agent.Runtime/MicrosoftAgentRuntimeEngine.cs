@@ -7,6 +7,7 @@ using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Approvals;
 using EU.Core.Agent.Application.Runtime;
 using EU.Core.Agent.Application.Knowledge;
+using EU.Core.Model;
 using EU.Core.Agent.Application.Skills;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;

@@ -1,0 +1,225 @@
+.knowledge-page {
+  min-height: 640px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--ant-color-primary) 7%, transparent), transparent 34%),
+    var(--ant-color-bg-layout);
+
+  &__header {
+    margin-bottom: 18px;
+
+    .ant-typography {
+      margin-top: 0;
+      margin-bottom: 2px;
+    }
+  }
+
+  &__status-filter {
+    width: 132px;
+  }
+
+  &__alert {
+    margin-bottom: 16px;
+  }
+
+  &__layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  &__catalog,
+  &__workspace {
+    background: var(--ant-color-bg-container);
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: var(--ant-border-radius-lg);
+  }
+
+  &__catalog {
+    position: sticky;
+    top: 12px;
+    overflow: hidden;
+
+    > .knowledge-page__section-title {
+      padding: 16px;
+      margin: 0;
+      border-bottom: 1px solid var(--ant-color-border-secondary);
+    }
+
+    .ant-table-row {
+      cursor: pointer;
+      transition: background-color 160ms ease;
+    }
+  }
+
+  &__row--active > td {
+    background: var(--ant-color-primary-bg) !important;
+  }
+
+  &__workspace {
+    min-height: 560px;
+    padding: 20px;
+    animation: knowledge-enter 180ms ease-out;
+
+    > .ant-empty {
+      margin-top: 160px;
+    }
+  }
+
+  &__workspace-heading {
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--ant-color-border-secondary);
+
+    .ant-typography {
+      margin-top: 0;
+      margin-bottom: 2px;
+    }
+  }
+
+  &__identity,
+  &__document-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__section {
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--ant-color-border-secondary);
+  }
+
+  &__section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__half {
+    flex: 1;
+    min-width: 260px;
+  }
+
+  &__browser {
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  &__documents {
+    padding-right: 20px;
+    border-right: 1px solid var(--ant-color-border-secondary);
+
+    .ant-list-item {
+      padding: 12px;
+      cursor: pointer;
+      border-radius: var(--ant-border-radius);
+      transition:
+        background-color 160ms ease,
+        transform 160ms ease;
+
+      &:hover {
+        background: var(--ant-color-fill-quaternary);
+        transform: translateX(2px);
+      }
+    }
+  }
+
+  &__document--active {
+    background: var(--ant-color-primary-bg) !important;
+  }
+
+  &__sha {
+    font-size: 12px;
+  }
+
+  &__chunks {
+    min-width: 0;
+  }
+
+  &__chunk-list,
+  &__search-results {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  &__chunk,
+  &__search-result {
+    padding: 14px;
+    background: var(--ant-color-fill-quaternary);
+    border-left: 3px solid var(--ant-color-primary);
+    border-radius: 0 var(--ant-border-radius) var(--ant-border-radius) 0;
+
+    pre {
+      max-height: 240px;
+      margin: 10px 0 0;
+      overflow: auto;
+      font-family: "Cascadia Code", SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--ant-color-text-secondary);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__search-result {
+    border-left-color: var(--ant-color-success);
+  }
+
+  @media (max-width: 1100px) {
+    &__layout {
+      grid-template-columns: 1fr;
+    }
+
+    &__catalog {
+      position: static;
+    }
+  }
+
+  @media (max-width: 720px) {
+    padding: 12px;
+
+    &__workspace {
+      padding: 16px;
+    }
+
+    &__browser {
+      grid-template-columns: 1fr;
+    }
+
+    &__documents {
+      padding-right: 0;
+      padding-bottom: 16px;
+      border-right: 0;
+      border-bottom: 1px solid var(--ant-color-border-secondary);
+    }
+
+    &__half {
+      min-width: 100%;
+    }
+  }
+}
+
+@keyframes knowledge-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knowledge-page__workspace {
+    animation: none;
+  }
+}

@@ -3,6 +3,7 @@
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
+using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Http;
@@ -19,11 +20,8 @@ public sealed class AgKnowledgeApiResponse_Should
     {
         KnowledgeBaseDefinition value = CreateKnowledgeBase();
         var repository = new KnowledgeRepository([value]);
-        var lifecycle = new KnowledgeLifecycleService(
-            repository,
-            new KnowledgeRetriever(value),
-            pdfTextExtractor: new PdfTextExtractor());
-        var controller = WithHttpContext(new KnowledgeBasesController(lifecycle));
+        var controller = WithHttpContext(new KnowledgeBasesController(
+            repository));
 
         AssertServiceSuccess<IReadOnlyList<KnowledgeBaseListItem>>(
             await controller.List(null, CancellationToken.None),
@@ -109,10 +107,9 @@ public sealed class AgKnowledgeApiResponse_Should
     [Fact]
     public async Task Return_fixed_knowledge_errors()
     {
-        var lifecycle = new KnowledgeLifecycleService(
-            new KnowledgeRepository([]),
-            new KnowledgeRetriever());
-        var controller = WithHttpContext(new KnowledgeBasesController(lifecycle));
+        var repository = new KnowledgeRepository([]);
+        var controller = WithHttpContext(new KnowledgeBasesController(
+            repository));
 
         AssertServiceError(
             await controller.Get(Guid.NewGuid(), CancellationToken.None),
@@ -143,10 +140,11 @@ public sealed class AgKnowledgeApiResponse_Should
     [Fact]
     public async Task Wrap_published_knowledge_references()
     {
+        KnowledgeBaseDefinition definition = CreateKnowledgeBase();
         PublishedKnowledgeReference reference =
-            new(Guid.NewGuid(), "atlas", "Atlas", 3);
+            new(definition.Id, definition.Code, definition.Name, definition.LogicalRevision);
         var controller = WithHttpContext(new KnowledgeBaseReferencesController(
-            new KnowledgeCatalog([reference])));
+            new KnowledgeRepository([definition])));
 
         ServiceResult<IReadOnlyList<PublishedKnowledgeReference>> result =
             AssertServiceSuccess<IReadOnlyList<PublishedKnowledgeReference>>(
@@ -228,7 +226,7 @@ public sealed class AgKnowledgeApiResponse_Should
     }
 
     private sealed class KnowledgeRepository(
-        IEnumerable<KnowledgeBaseDefinition> values) : IKnowledgeBaseRepository
+        IEnumerable<KnowledgeBaseDefinition> values) : IAgKnowledgeBaseDefinitionServices
     {
         private readonly Dictionary<Guid, KnowledgeBaseDefinition> _values =
             values.ToDictionary(value => value.Id);
@@ -249,6 +247,45 @@ public sealed class AgKnowledgeApiResponse_Should
             Task.FromResult<IReadOnlyList<KnowledgeBaseDefinition>>(_values.Values
                 .Where(value => query.Status is null || value.Status == query.Status)
                 .ToArray());
+
+        public Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<PublishedKnowledgeReference>>(_values.Values
+                .Where(value => value.Status == KnowledgeBaseStatus.Enabled && value.Chunks.Count > 0)
+                .OrderBy(value => value.Code, StringComparer.Ordinal)
+                .Select(value => new PublishedKnowledgeReference(
+                    value.Id,
+                    value.Code,
+                    value.Name,
+                    value.LogicalRevision))
+                .ToArray());
+
+        public Task<IReadOnlyList<KnowledgeSearchResult>> SearchAsync(
+            IReadOnlyList<Guid> knowledgeBaseIds,
+            string query,
+            int take,
+            CancellationToken cancellationToken = default)
+        {
+            KnowledgeBaseDefinition? value = _values.Values.FirstOrDefault(candidate =>
+                knowledgeBaseIds.Contains(candidate.Id) &&
+                candidate.Status == KnowledgeBaseStatus.Enabled &&
+                candidate.Chunks.Count > 0);
+            IReadOnlyList<KnowledgeSearchResult> result = value is null
+                ? []
+                :
+                [
+                    new KnowledgeSearchResult(
+                        value.Id,
+                        value.Code,
+                        value.Documents[0].Id,
+                        value.Documents[0].FileName,
+                        value.Chunks[0].Id,
+                        value.Chunks[0].Sequence,
+                        value.Chunks[0].Content,
+                        1)
+                ];
+            return Task.FromResult(result);
+        }
 
         public Task<bool> TryCreateAsync(
             KnowledgeBaseDefinition value,
@@ -273,52 +310,72 @@ public sealed class AgKnowledgeApiResponse_Should
             _values[value.Id] = value;
             return Task.FromResult(true);
         }
-    }
 
-    private sealed class KnowledgeRetriever(KnowledgeBaseDefinition? value = null)
-        : IKnowledgeRetriever
-    {
-        public Task<IReadOnlyList<KnowledgeSearchResult>> SearchAsync(
-            IReadOnlyList<Guid> knowledgeBaseIds,
-            string query,
-            int take,
-            CancellationToken cancellationToken = default)
+        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> CreateAsync(
+            CreateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<KnowledgeSearchResult> result = value is null
-                ? []
-                :
-                [
-                    new KnowledgeSearchResult(
-                        value.Id,
-                        value.Code,
-                        value.Documents[0].Id,
-                        value.Documents[0].FileName,
-                        value.Chunks[0].Id,
-                        value.Chunks[0].Sequence,
-                        value.Chunks[0].Content,
-                        1)
-                ];
-            return Task.FromResult(result);
+            var value = new KnowledgeBaseDefinition(
+                Guid.NewGuid(), command.Code, command.Name, command.Description,
+                KnowledgeBaseStatus.Enabled, 0, [], [], null);
+            await TryCreateAsync(value, cancellationToken);
+            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+        }
+
+        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> UpdateAsync(
+            UpdateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
+        {
+            KnowledgeBaseDefinition current = _values[command.Id];
+            KnowledgeBaseDefinition value = current with
+            {
+                Name = command.Name, Description = command.Description, Status = command.Status,
+                LogicalRevision = current.LogicalRevision + 1
+            };
+            await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
+            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+        }
+
+        public Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
+            ImportKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
+            ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
+                command.FileName, command.MediaType, command.Content, cancellationToken);
+
+        public Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
+            ImportPdfKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
+            ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
+                command.FileName, command.MediaType, "PDF extracted content.", cancellationToken);
+
+        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> SetArchivedAsync(
+            SetKnowledgeBaseArchiveCommand command, CancellationToken cancellationToken = default)
+        {
+            KnowledgeBaseDefinition current = _values[command.Id];
+            KnowledgeBaseDefinition value = current with
+            {
+                Status = command.Archived ? KnowledgeBaseStatus.Archived : KnowledgeBaseStatus.Disabled,
+                LogicalRevision = current.LogicalRevision + 1
+            };
+            await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
+            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+        }
+
+        private async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportAsync(
+            Guid id, long revision, string fileName, string mediaType, string content,
+            CancellationToken cancellationToken)
+        {
+            KnowledgeBaseDefinition current = _values[id];
+            Guid documentId = Guid.NewGuid();
+            var document = new KnowledgeDocument(
+                documentId, fileName, mediaType, new string('a', 64), content, DateTimeOffset.UtcNow);
+            var chunk = new KnowledgeChunk(Guid.NewGuid(), documentId, 0, content);
+            KnowledgeBaseDefinition value = current with
+            {
+                LogicalRevision = current.LogicalRevision + 1,
+                Documents = [.. current.Documents, document],
+                Chunks = [.. current.Chunks, chunk],
+                IndexedAtUtc = DateTimeOffset.UtcNow
+            };
+            await TryReplaceAsync(value, revision, cancellationToken);
+            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
         }
     }
 
-    private sealed class PdfTextExtractor : IKnowledgePdfTextExtractor
-    {
-        public Task<KnowledgePdfExtractionResult> ExtractAsync(
-            ReadOnlyMemory<byte> content,
-            int maximumPages,
-            int maximumCharacters,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(KnowledgePdfExtractionResult.Success(
-                "PDF extracted content.",
-                1));
-    }
-
-    private sealed class KnowledgeCatalog(
-        IReadOnlyList<PublishedKnowledgeReference> values) : IPublishedKnowledgeCatalog
-    {
-        public Task<IReadOnlyList<PublishedKnowledgeReference>> ListAsync(
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(values);
-    }
 }

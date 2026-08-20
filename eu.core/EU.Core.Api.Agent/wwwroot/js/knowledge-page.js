@@ -26,15 +26,22 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   let selectedDocumentId = null;
   let currentChunkPage = null;
   let contentRequestSequence = 0;
+  let listRequestSequence = 0;
+  let searchRequestSequence = 0;
+  let operationPending = false;
   const chunkPageSize = 10;
 
   async function load() {
+    const requestSequence = ++listRequestSequence;
     status.hidden = false;
     setText(status, "正在加载知识库…");
     try {
-      values = await api.knowledgeBases(statusFilter.value);
+      const loaded = await api.knowledgeBases(statusFilter.value);
+      if (requestSequence !== listRequestSequence) return;
+      values = loaded;
       render();
     } catch (error) {
+      if (requestSequence !== listRequestSequence) return;
       setText(status, error.message);
     }
   }
@@ -48,8 +55,10 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     const archived = current?.Status === "Archived";
     for (const id of ["knowledgeNameInput", "knowledgeDescriptionInput", "knowledgeStatusInput", "knowledgeFileInput", "knowledgeQueryInput"])
       document.querySelector(`#${id}`).disabled = archived;
-    saveButton.disabled = archived;
-    importButton.disabled = archived;
+    saveButton.disabled = operationPending || archived;
+    importButton.disabled = operationPending || archived;
+    statusButton.disabled = operationPending;
+    archiveButton.disabled = operationPending;
     statusButton.hidden = !current || archived;
     archiveButton.hidden = !current;
     document.querySelector("#searchKnowledgeButton").disabled = archived;
@@ -240,7 +249,11 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   }
 
   async function open(id) {
+    const requestSequence = ++contentRequestSequence;
+    searchRequestSequence += 1;
     current = await api.knowledgeBase(id);
+    if (requestSequence !== contentRequestSequence) return;
+    clear(document.querySelector("#knowledgeSearchResults"));
     workbench.hidden = false;
     setText(document.querySelector("#knowledgeWorkbenchTitle"), current.Name || current.Code);
     updateWorkbenchMeta();
@@ -257,7 +270,10 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   }
 
   function create() {
+    contentRequestSequence += 1;
+    searchRequestSequence += 1;
     current = null;
+    clear(document.querySelector("#knowledgeSearchResults"));
     workbench.hidden = false;
     setText(document.querySelector("#knowledgeWorkbenchTitle"), "创建知识库");
     setText(document.querySelector("#knowledgeWorkbenchMeta"), "先保存元数据，再导入文本并建立索引。");
@@ -275,7 +291,10 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
   }
 
   async function save() {
+    if (operationPending) return;
     const code = document.querySelector("#knowledgeCodeInput").value.trim();
+    operationPending = true;
+    setArchivedState();
     try {
       if (current) {
         current = await api.updateKnowledgeBase(current.Id, {
@@ -308,10 +327,14 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     } catch (error) {
       setText(message, `${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`);
       message.dataset.tone = "error";
+    } finally {
+      operationPending = false;
+      setArchivedState();
     }
   }
 
   async function importDocument() {
+    if (operationPending) return;
     const file = document.querySelector("#knowledgeFileInput").files?.[0];
     if (!current || !file) {
       setText(message, "请选择 .txt、.md 或 .pdf 文件。");
@@ -324,14 +347,29 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
       message.dataset.tone = "error";
       return;
     }
+    operationPending = true;
+    setArchivedState();
     try {
+      let textContent = null;
+      if (!isPdf) {
+        textContent = await file.text();
+        const normalizedText = textContent
+          .replace(/\r\n/g, "\n")
+          .replace(/\r/g, "\n")
+          .trim();
+        if (normalizedText.length > 1_000_000) {
+          setText(message, "TXT/Markdown 文档规范化后不能超过 1,000,000 个字符。");
+          message.dataset.tone = "error";
+          return;
+        }
+      }
       current = isPdf
         ? await api.importKnowledgePdf(current.Id, current.LogicalRevision, file)
         : await api.importKnowledgeDocument(current.Id, {
             expectedLogicalRevision: current.LogicalRevision,
             fileName: file.name,
             mediaType: /\.md$/i.test(file.name) ? "text/markdown" : "text/plain",
-            content: await file.text()
+            content: textContent
           });
       setText(message, `已导入 ${file.name}，当前共 ${current.ChunkCount} 个分块。`);
       message.dataset.tone = "success";
@@ -343,15 +381,21 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     } catch (error) {
       setText(message, `${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`);
       message.dataset.tone = "error";
+    } finally {
+      operationPending = false;
+      setArchivedState();
     }
   }
 
   async function search() {
     const query = document.querySelector("#knowledgeQueryInput").value.trim();
     if (!current || !query) return;
+    const knowledgeBaseId = current.Id;
+    const requestSequence = ++searchRequestSequence;
     const container = document.querySelector("#knowledgeSearchResults");
     try {
-      const results = await api.searchKnowledge(current.Id, query);
+      const results = await api.searchKnowledge(knowledgeBaseId, query);
+      if (requestSequence !== searchRequestSequence || current?.Id !== knowledgeBaseId) return;
       clear(container);
       if (!results.length) {
         container.append(element("p", { className: "binding-empty" }, "没有召回相关分块。"));
@@ -365,13 +409,16 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
           element("pre", { className: "run-tool-result" }, result.Content)));
       }
     } catch (error) {
+      if (requestSequence !== searchRequestSequence || current?.Id !== knowledgeBaseId) return;
       toast(error.message, "error");
     }
   }
 
   async function setStatus() {
-    if (!current || current.Status === "Archived") return;
+    if (!current || current.Status === "Archived" || operationPending) return;
     const target = current.Status === "Enabled" ? "Disabled" : "Enabled";
+    operationPending = true;
+    setArchivedState();
     try {
       current = await api.updateKnowledgeBase(current.Id, {
         expectedLogicalRevision: current.LogicalRevision,
@@ -392,11 +439,14 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     } catch (error) {
       setText(message, `${error.message}${error.errorCode ? ` · ${error.errorCode}` : ""}`);
       message.dataset.tone = "error";
+    } finally {
+      operationPending = false;
+      setArchivedState();
     }
   }
 
   async function setArchived() {
-    if (!current) return;
+    if (!current || operationPending) return;
     if (dirty) {
       setText(message, "存在未保存修改，请先保存后再变更归档状态。");
       message.dataset.tone = "warning";
@@ -408,6 +458,8 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
       message.dataset.tone = "warning";
       return;
     }
+    operationPending = true;
+    setArchivedState();
     try {
       current = await api.setKnowledgeBaseArchived(current.Id, {
         expectedLogicalRevision: current.LogicalRevision,
@@ -423,6 +475,9 @@ export function createKnowledgePage({ api, toast, onReferencesChanged }) {
     } catch (error) {
       setText(message, formatArchiveError(error));
       message.dataset.tone = "error";
+    } finally {
+      operationPending = false;
+      setArchivedState();
     }
   }
 

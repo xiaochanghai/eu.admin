@@ -1,13 +1,13 @@
+using EU.Core.Agent.Application.Knowledge;
+using EU.Core.Agent.Application.Mcp;
+using EU.Core.Agent.Application.Skills;
+using EU.Core.Agent.Application.Validation;
+using EU.Core.Model;
+using EU.Core.Model.ViewModels.Extend;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Channels;
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Validation;
-using EU.Core.Agent.Application.Knowledge;
-using EU.Core.Agent.Application.Skills;
 
 namespace EU.Core.Agent.Application.Runtime;
 
@@ -17,7 +17,6 @@ public sealed class AgentRuntimeService(
     IAgentRuntimeEngine engine,
     IAgentRunAuditRepository auditRepository,
     JsonSchemaValidator schemaValidator,
-    IPublishedKnowledgeCatalog? knowledgeCatalog = null,
     IKnowledgeRetriever? knowledgeRetriever = null,
     IPublishedSkillVersionCatalog? skillCatalog = null,
     IPublishedSkillContentStore? skillContentStore = null)
@@ -142,7 +141,7 @@ public sealed class AgentRuntimeService(
         IReadOnlyList<KnowledgeSearchResult> knowledge = Array.Empty<KnowledgeSearchResult>();
         if (snapshot.KnowledgeBases.Count > 0)
         {
-            if (knowledgeCatalog is null || knowledgeRetriever is null)
+            if (knowledgeRetriever is null)
             {
                 return AgentRunPreparationResult.Failure(
                     AgentRunErrorCodes.KnowledgeServiceUnavailable,
@@ -150,7 +149,7 @@ public sealed class AgentRuntimeService(
             }
 
             IReadOnlyDictionary<Guid, PublishedKnowledgeReference> availableKnowledge =
-                (await knowledgeCatalog.ListAsync(cancellationToken))
+                (await knowledgeRetriever.ListPublishedAsync(cancellationToken))
                 .ToDictionary(value => value.KnowledgeBaseId);
             foreach (AgentKnowledgeBindingSnapshot binding in snapshot.KnowledgeBases)
             {
@@ -190,7 +189,7 @@ public sealed class AgentRuntimeService(
         {
             Skills = SkillContractCloner.ReadOnly(
                 selectedSkills.Select(SkillContractCloner.Clone)),
-            Knowledge = KnowledgeContractCloner.ReadOnly(knowledge)
+            Knowledge = Array.AsReadOnly(knowledge.ToArray())
         };
         await auditRepository.SaveAsync(CreateAudit(
             context,

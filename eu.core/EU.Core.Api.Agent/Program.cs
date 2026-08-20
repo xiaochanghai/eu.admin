@@ -279,7 +279,6 @@ builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
 builder.Services.AddSingleton<MainAgentAssignmentService>();
-builder.Services.AddScoped<KnowledgeLifecycleService>();
 builder.Services.AddScoped<OrchestrationLifecycleService>();
 builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
     new PublicModelProfileCatalog(

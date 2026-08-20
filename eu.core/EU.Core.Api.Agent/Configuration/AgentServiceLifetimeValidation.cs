@@ -16,7 +16,6 @@ public static class AgentServiceLifetimeValidation
     [
         typeof(ToolApprovalManagementService),
         typeof(ToolApprovalConversationResumeService),
-        typeof(KnowledgeLifecycleService),
         typeof(OrchestrationLifecycleService),
         typeof(RunEvaluationService),
         typeof(IEvaluationTargetCatalog),
