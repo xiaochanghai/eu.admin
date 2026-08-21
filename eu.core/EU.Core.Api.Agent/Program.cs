@@ -21,7 +21,6 @@ using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Agent.Infrastructure.Mcp;
-using EU.Core.Agent.Infrastructure.Knowledge;
 using EU.Core.Agent.Infrastructure.Skills;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -96,7 +95,6 @@ builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
     .Enrich.FromLogContext()
     .Enrich.With<LogRedactionEnricher>()
     .WriteTo.Console());
-builder.Services.AddSingleton<IKnowledgePdfTextExtractor, PdfPigKnowledgePdfTextExtractor>();
 builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
 {
     AgentMcpOptions options =

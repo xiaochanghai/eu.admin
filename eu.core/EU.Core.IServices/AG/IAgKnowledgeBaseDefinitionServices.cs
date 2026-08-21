@@ -5,10 +5,16 @@ using EU.Core.Agent.Application.Knowledge;
 namespace EU.Core.IServices;
 
 /// <summary>
-/// 鐭ヨ瘑搴撹鑼冨寲鎸佷箙鍖栨湇鍔°€?
+/// 知识库定义、文档导入、发布目录和检索服务契约。
 /// </summary>
-public interface IAgKnowledgeBaseDefinitionServices
+public interface IAgKnowledgeBaseDefinitionServices : IKnowledgeRetriever
 {
+    Task<KnowledgePdfExtractionResult> ExtractAsync(
+        ReadOnlyMemory<byte> content,
+        int maximumPages,
+        int maximumCharacters,
+        CancellationToken cancellationToken = default);
+
     Task<KnowledgeBaseDefinition?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);
@@ -40,14 +46,4 @@ public interface IAgKnowledgeBaseDefinitionServices
     Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
         SetKnowledgeBaseArchiveCommand command,
         CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<KnowledgeSearchResult>> SearchAsync(
-        IReadOnlyList<Guid> knowledgeBaseIds,
-        string query,
-        int take,
-        CancellationToken cancellationToken = default);
 }
-

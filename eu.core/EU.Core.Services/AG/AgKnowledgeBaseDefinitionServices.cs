@@ -2,18 +2,20 @@ using EU.Core.Agent.Application.Knowledge;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
+using UglyToad.PdfPig.Exceptions;
 
 #nullable enable
 
 namespace EU.Core.Services;
 
 /// <summary>
-/// 鐭ヨ瘑搴撳畾涔夈€佹枃妗ｅ拰妫€绱㈠垎鍧楃殑瑙勮寖鍖栨寔涔呭寲鏈嶅姟銆?
+/// 知识库定义、文档和检索分块的规范化持久化服务。
 /// </summary>
 public sealed class AgKnowledgeBaseDefinitionServices :
     BaseServices<AgKnowledgeBaseDefinition>,
-    IAgKnowledgeBaseDefinitionServices,
-    IKnowledgeRetriever
+    IAgKnowledgeBaseDefinitionServices
 {
     public const int MaximumDocumentCharacters = 1_000_000;
     public const int MaximumDocuments = 100;
@@ -21,16 +23,12 @@ public sealed class AgKnowledgeBaseDefinitionServices :
     public const int MaximumPdfPages = 200;
 
     private readonly Lazy<IAgentDefinitionCatalog>? agents;
-    private readonly IKnowledgePdfTextExtractor? pdfTextExtractor;
-
     public AgKnowledgeBaseDefinitionServices(
         IBaseRepository<AgKnowledgeBaseDefinition> dal,
-        Lazy<IAgentDefinitionCatalog>? agents = null,
-        IKnowledgePdfTextExtractor? pdfTextExtractor = null)
+        Lazy<IAgentDefinitionCatalog>? agents = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         this.agents = agents;
-        this.pdfTextExtractor = pdfTextExtractor;
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
@@ -102,7 +100,7 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         string fileName = Path.GetFileName(command.FileName?.Trim() ?? string.Empty);
         string mediaType = command.MediaType?.Trim().ToLowerInvariant() ?? string.Empty;
         ReadOnlyMemory<byte> bytes = command.Content;
-        if (pdfTextExtractor is null || string.IsNullOrWhiteSpace(fileName)
+        if (string.IsNullOrWhiteSpace(fileName)
             || !string.Equals(Path.GetExtension(fileName), ".pdf", StringComparison.OrdinalIgnoreCase)
             || !string.Equals(mediaType, "application/pdf", StringComparison.Ordinal)
             || bytes.Length is 0 or > MaximumPdfBytes || !HasPdfSignature(bytes.Span))
@@ -113,12 +111,101 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         ServiceResult<KnowledgeBaseDefinition>? targetError =
             ValidateImportTarget(target, command.ExpectedLogicalRevision);
         if (targetError is not null) return targetError;
-        KnowledgePdfExtractionResult extraction = await pdfTextExtractor.ExtractAsync(
+        KnowledgePdfExtractionResult extraction = await ExtractAsync(
             bytes, MaximumPdfPages, MaximumDocumentCharacters, cancellationToken);
         if (!extraction.Succeeded) return InvalidDocument(PdfFailureMessage(extraction.Failure));
         return await PersistDocumentAsync(
             command.KnowledgeBaseId, command.ExpectedLogicalRevision, fileName,
             mediaType, NormalizeContent(extraction.Content), cancellationToken);
+    }
+
+    public Task<KnowledgePdfExtractionResult> ExtractAsync(
+        ReadOnlyMemory<byte> content,
+        int maximumPages,
+        int maximumCharacters,
+        CancellationToken cancellationToken = default)
+    {
+        if (content.IsEmpty || maximumPages < 1 || maximumCharacters < 1)
+        {
+            return Task.FromResult(KnowledgePdfExtractionResult.Failed(
+                KnowledgePdfExtractionFailure.Invalid));
+        }
+
+        return Task.Run(
+            () => ExtractPdf(content, maximumPages, maximumCharacters, cancellationToken),
+            cancellationToken);
+    }
+
+    private static KnowledgePdfExtractionResult ExtractPdf(
+        ReadOnlyMemory<byte> content,
+        int maximumPages,
+        int maximumCharacters,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using PdfDocument document = PdfDocument.Open(content);
+            if (document.IsEncrypted)
+            {
+                return KnowledgePdfExtractionResult.Failed(
+                    KnowledgePdfExtractionFailure.Encrypted);
+            }
+
+            if (document.NumberOfPages is < 1 || document.NumberOfPages > maximumPages)
+            {
+                return KnowledgePdfExtractionResult.Failed(
+                    KnowledgePdfExtractionFailure.PageLimitExceeded);
+            }
+
+            var builder = new StringBuilder();
+            for (int pageNumber = 1; pageNumber <= document.NumberOfPages; pageNumber++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string pageText = ContentOrderTextExtractor.GetText(
+                    document.GetPage(pageNumber),
+                    addDoubleNewline: true)
+                    .Replace("\r\n", "\n", StringComparison.Ordinal)
+                    .Replace('\r', '\n')
+                    .Trim();
+                if (pageText.Length == 0)
+                {
+                    continue;
+                }
+
+                string prefix = builder.Length == 0
+                    ? $"[Page {pageNumber}]\n"
+                    : $"\n\n[Page {pageNumber}]\n";
+                if (builder.Length + prefix.Length + pageText.Length > maximumCharacters)
+                {
+                    return KnowledgePdfExtractionResult.Failed(
+                        KnowledgePdfExtractionFailure.TextLimitExceeded);
+                }
+
+                builder.Append(prefix);
+                builder.Append(pageText);
+            }
+
+            return builder.Length == 0
+                ? KnowledgePdfExtractionResult.Failed(
+                    KnowledgePdfExtractionFailure.NoExtractableText)
+                : KnowledgePdfExtractionResult.Success(
+                    builder.ToString(),
+                    document.NumberOfPages);
+        }
+        catch (PdfDocumentEncryptedException)
+        {
+            return KnowledgePdfExtractionResult.Failed(
+                KnowledgePdfExtractionFailure.Encrypted);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return KnowledgePdfExtractionResult.Failed(
+                KnowledgePdfExtractionFailure.Invalid);
+        }
     }
 
     private async Task<ServiceResult<KnowledgeBaseDefinition>> PersistDocumentAsync(

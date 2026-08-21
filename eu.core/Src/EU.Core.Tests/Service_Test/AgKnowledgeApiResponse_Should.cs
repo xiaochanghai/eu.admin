@@ -231,6 +231,14 @@ public sealed class AgKnowledgeApiResponse_Should
         private readonly Dictionary<Guid, KnowledgeBaseDefinition> _values =
             values.ToDictionary(value => value.Id);
 
+        public Task<KnowledgePdfExtractionResult> ExtractAsync(
+            ReadOnlyMemory<byte> content,
+            int maximumPages,
+            int maximumCharacters,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(KnowledgePdfExtractionResult.Failed(
+                KnowledgePdfExtractionFailure.Invalid));
+
         public Task<KnowledgeBaseDefinition?> GetByIdAsync(
             Guid id,
             CancellationToken cancellationToken = default) =>

@@ -2,6 +2,9 @@ using EU.Core.Model;
 
 namespace EU.Core.Agent.Application.Knowledge;
 
+/// <summary>
+/// Agent 运行时所需的已发布知识库目录和检索能力。
+/// </summary>
 public interface IKnowledgeRetriever
 {
     Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(

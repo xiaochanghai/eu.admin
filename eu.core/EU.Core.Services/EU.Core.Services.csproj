@@ -17,6 +17,7 @@
 	 
 
 	<ItemGroup>
+		<PackageReference Include="PdfPig" Version="0.1.15" />
 		<ProjectReference Include="..\EU.Core.IServices\EU.Core.IServices.csproj" />
 		<ProjectReference Include="..\EU.Core.Repository\EU.Core.Repository.csproj" />
 		<ProjectReference Include="..\Src\EU.Core.DataAccess\EU.Core.DataAccess.csproj" />
