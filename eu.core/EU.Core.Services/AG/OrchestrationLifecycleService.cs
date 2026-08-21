@@ -1,8 +1,11 @@
+using EU.Core.Agent.Application.Orchestration;
 using System.Text.RegularExpressions;
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
-namespace EU.Core.Agent.Application.Orchestration;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,

@@ -35,6 +35,8 @@ using EU.Core.Agent.Application.Approvals;
 using EU.Core.Agent.Application.Evaluation;
 using EU.Core.Agent.Infrastructure.Security;
 using EU.Core.Extensions.Middlewares;
+using EU.Core.Services;
+using EU.Core.IServices;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
@@ -296,7 +298,7 @@ builder.Services.AddScoped<RunEvaluationService>();
 builder.Services.AddScoped<IEvaluationTargetCatalog,
     PublishedAgentEvaluationTargetCatalog>();
 builder.Services.AddScoped<EvaluationSuiteLifecycleService>();
-builder.Services.AddScoped<EvaluationBatchService>();
+builder.Services.AddScoped<IAgEvaluationBatchExecutionServices, EvaluationBatchService>();
 builder.Services.AddScoped<EvaluationBatchComparisonService>();
 builder.Services.AddSingleton(services =>
 {

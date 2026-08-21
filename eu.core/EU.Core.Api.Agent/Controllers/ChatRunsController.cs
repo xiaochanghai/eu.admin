@@ -13,6 +13,7 @@ using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 

@@ -11,6 +11,7 @@ using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 

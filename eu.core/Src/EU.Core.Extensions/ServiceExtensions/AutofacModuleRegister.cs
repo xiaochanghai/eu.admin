@@ -15,6 +15,17 @@ namespace EU.Core.Extensions;
 
 public class AutofacModuleRegister : Autofac.Module
 {
+    private static readonly IReadOnlySet<string> ManuallyRegisteredServiceTypeNames =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            "EU.Core.Services.DelegateToAgentTool",
+            "EU.Core.Services.EvaluationBatchService",
+            "EU.Core.Services.RunOrchestrationTool",
+            "EU.Core.Services.ToolApprovalRuntimeService",
+            "EU.Core.Services.DefaultToolApprovalExecutionPolicy",
+            "EU.Core.Services.UseSkillTool"
+        };
+
     protected override void Load(ContainerBuilder builder)
     {
         var basePath = AppContext.BaseDirectory;
@@ -66,6 +77,8 @@ public class AutofacModuleRegister : Autofac.Module
         // 获取 Service.dll 程序集服务，并注册
         var assemblysServices = Assembly.LoadFrom(servicesDllFile);
         builder.RegisterAssemblyTypes(assemblysServices)
+            .Where(type => !ManuallyRegisteredServiceTypeNames.Contains(
+                type.FullName ?? string.Empty))
             .AsImplementedInterfaces()
             .InstancePerDependency()
             .PropertiesAutowired()

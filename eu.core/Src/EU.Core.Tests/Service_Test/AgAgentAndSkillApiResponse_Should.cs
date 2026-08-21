@@ -13,6 +13,7 @@ using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
+using EU.Core.Services;
 
 namespace EU.Core.Tests.Service_Test;
 

@@ -1,7 +1,10 @@
+using EU.Core.Agent.Application.MainAgent;
 using EU.Core.Agent.Application.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
-namespace EU.Core.Agent.Application.MainAgent;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class MainAgentAssignmentService(
     IAgentDefinitionCatalog agents,

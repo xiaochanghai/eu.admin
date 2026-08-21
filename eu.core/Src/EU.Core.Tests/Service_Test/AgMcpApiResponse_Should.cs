@@ -11,6 +11,7 @@ using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using EU.Core.Services;
 using Xunit;
 
 namespace EU.Core.Tests.Service_Test;

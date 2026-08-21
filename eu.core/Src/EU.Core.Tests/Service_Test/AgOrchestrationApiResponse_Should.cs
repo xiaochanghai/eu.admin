@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using EU.Core.Services;
 
 namespace EU.Core.Tests.Service_Test;
 

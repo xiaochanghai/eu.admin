@@ -1,7 +1,10 @@
+using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Agent.Application.Runtime;
 using EU.Core.Agent.Application.Skills;
 
-namespace EU.Core.Agent.Application.UnifiedEntry;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class UseSkillTool : IAgentInternalTool
 {

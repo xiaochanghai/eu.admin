@@ -2,6 +2,7 @@ using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Api.Agent.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using EU.Core.Services;
 
 namespace EU.Core.Tests.Service_Test;
 

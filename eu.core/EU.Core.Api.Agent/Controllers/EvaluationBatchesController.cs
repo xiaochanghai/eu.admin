@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Services;
+using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -16,7 +18,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/evaluation-batches")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
-    EvaluationBatchService service,
+    IAgEvaluationBatchExecutionServices service,
     EvaluationBatchComparisonService comparisons,
     ModelJudgeService modelJudge,
     ICallerContext caller) : ControllerBase

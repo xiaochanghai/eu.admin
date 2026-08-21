@@ -1,3 +1,4 @@
+using EU.Core.Agent.Application.Runtime;
 using EU.Core.Agent.Application.Knowledge;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Skills;
@@ -9,7 +10,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Channels;
 
-namespace EU.Core.Agent.Application.Runtime;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class AgentRuntimeService(
     IAgentDefinitionCatalog agents,

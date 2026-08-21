@@ -7,6 +7,8 @@ using EU.Core.Agent.Application.Orchestration;
 using EU.Core.Agent.Application.Runtime;
 using EU.Core.Agent.Application.UnifiedEntry;
 using EU.Core.Agent.Infrastructure.Mcp;
+using EU.Core.Services;
+using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Configuration;
 
@@ -20,7 +22,7 @@ public static class AgentServiceLifetimeValidation
         typeof(RunEvaluationService),
         typeof(IEvaluationTargetCatalog),
         typeof(EvaluationSuiteLifecycleService),
-        typeof(EvaluationBatchService),
+        typeof(IAgEvaluationBatchExecutionServices),
         typeof(EvaluationBatchComparisonService),
         typeof(ModelJudgeService)
     ];

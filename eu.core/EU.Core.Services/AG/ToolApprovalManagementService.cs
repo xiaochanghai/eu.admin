@@ -1,4 +1,7 @@
-namespace EU.Core.Agent.Application.Approvals;
+using EU.Core.Agent.Application.Approvals;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class ToolApprovalManagementService(
     IToolApprovalRepository approvals,

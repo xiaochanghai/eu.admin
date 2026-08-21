@@ -1,3 +1,4 @@
+using EU.Core.Agent.Application.UnifiedEntry;
 using System.Text;
 using System.Text.Json;
 using EU.Core.Agent.Application.Agents;
@@ -5,7 +6,9 @@ using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Agent.Application.Mcp;
 using EU.Core.Agent.Application.Runtime;
 
-namespace EU.Core.Agent.Application.UnifiedEntry;
+#nullable enable
+
+namespace EU.Core.Services;
 
 public sealed class DelegateToAgentTool : IAgentInternalTool
 {

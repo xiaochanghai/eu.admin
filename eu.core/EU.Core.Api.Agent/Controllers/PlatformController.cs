@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Model;
+using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
