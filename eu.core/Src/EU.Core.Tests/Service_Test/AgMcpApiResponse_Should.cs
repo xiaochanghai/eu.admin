@@ -33,7 +33,7 @@ public sealed class AgMcpApiResponse_Should
                 nameof(IAgMcpServerDefinitionServices.SyncAsync) or
                 nameof(IAgMcpServerDefinitionServices.SetArchivedAsync) or
                 nameof(IAgMcpServerDefinitionServices.ClassifyToolAsync) =>
-                    Task.FromResult(McpOperationResult<McpServerDefinition>.Success(server)),
+                    Task.FromResult(ServiceResult<McpServerDefinition>.OprateSuccess(server)),
                 _ => throw new InvalidOperationException(method.Name)
             });
         var controller = WithHttpContext(new McpServersController(lifecycle));
@@ -78,12 +78,12 @@ public sealed class AgMcpApiResponse_Should
                 nameof(IAgMcpServerDefinitionServices.GetAsync) =>
                     Task.FromResult<McpServerDefinition?>(null),
                 nameof(IAgMcpServerDefinitionServices.SyncAsync) =>
-                    Task.FromResult(McpOperationResult<McpServerDefinition>.Failure(
-                        McpErrorCodes.DiscoveryFailed,
+                    Task.FromResult(ServiceResult<McpServerDefinition>.Failure(
+                        McpServiceStatusCodes.DiscoveryFailed,
                         "Discovery failed.")),
                 nameof(IAgMcpServerDefinitionServices.UpdateAsync) =>
-                    Task.FromResult(McpOperationResult<McpServerDefinition>.Failure(
-                        McpErrorCodes.DisableBlocked,
+                    Task.FromResult(ServiceResult<McpServerDefinition>.Failure(
+                        McpServiceStatusCodes.DisableBlocked,
                         "The MCP Server is still referenced.")),
                 _ => throw new InvalidOperationException(method.Name)
             });

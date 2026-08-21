@@ -108,18 +108,6 @@ public sealed record SetMcpServerArchiveCommand(
     long ExpectedLogicalRevision,
     bool Archived);
 
-public sealed record McpError(string Code, string Message);
-
-public sealed record McpOperationResult<T>(T? Value, McpError? Error)
-{
-    public bool Succeeded => Error is null;
-
-    public static McpOperationResult<T> Success(T value) => new(value, null);
-
-    public static McpOperationResult<T> Failure(string code, string message) =>
-        new(default, new McpError(code, message));
-}
-
 public static class McpErrorCodes
 {
     public const string NotFound = "MCP_SERVER_NOT_FOUND";
@@ -133,6 +121,53 @@ public static class McpErrorCodes
     public const string LifecycleTransitionInvalid = "MCP_LIFECYCLE_TRANSITION_INVALID";
     public const string DisableBlocked = "MCP_DISABLE_BLOCKED";
     public const string ArchiveBlocked = "MCP_ARCHIVE_BLOCKED";
+}
+
+public static class McpServiceStatusCodes
+{
+    public const int NotFound = 630001;
+    public const int CodeInvalid = 630002;
+    public const int CodeConflict = 630003;
+    public const int ConfigurationInvalid = 630004;
+    public const int RevisionConflict = 630005;
+    public const int DiscoveryFailed = 630006;
+    public const int ToolNotFound = 630007;
+    public const int RiskInvalid = 630008;
+    public const int LifecycleTransitionInvalid = 630009;
+    public const int DisableBlocked = 630010;
+    public const int ArchiveBlocked = 630011;
+
+    public static int FromErrorCode(string errorCode) => errorCode switch
+    {
+        McpErrorCodes.NotFound => NotFound,
+        McpErrorCodes.CodeInvalid => CodeInvalid,
+        McpErrorCodes.CodeConflict => CodeConflict,
+        McpErrorCodes.ConfigurationInvalid => ConfigurationInvalid,
+        McpErrorCodes.RevisionConflict => RevisionConflict,
+        McpErrorCodes.DiscoveryFailed => DiscoveryFailed,
+        McpErrorCodes.ToolNotFound => ToolNotFound,
+        McpErrorCodes.RiskInvalid => RiskInvalid,
+        McpErrorCodes.LifecycleTransitionInvalid => LifecycleTransitionInvalid,
+        McpErrorCodes.DisableBlocked => DisableBlocked,
+        McpErrorCodes.ArchiveBlocked => ArchiveBlocked,
+        _ => throw new ArgumentOutOfRangeException(nameof(errorCode), errorCode, null)
+    };
+
+    public static string ToErrorCode(int status) => status switch
+    {
+        NotFound => McpErrorCodes.NotFound,
+        CodeInvalid => McpErrorCodes.CodeInvalid,
+        CodeConflict => McpErrorCodes.CodeConflict,
+        ConfigurationInvalid => McpErrorCodes.ConfigurationInvalid,
+        RevisionConflict => McpErrorCodes.RevisionConflict,
+        DiscoveryFailed => McpErrorCodes.DiscoveryFailed,
+        ToolNotFound => McpErrorCodes.ToolNotFound,
+        RiskInvalid => McpErrorCodes.RiskInvalid,
+        LifecycleTransitionInvalid => McpErrorCodes.LifecycleTransitionInvalid,
+        DisableBlocked => McpErrorCodes.DisableBlocked,
+        ArchiveBlocked => McpErrorCodes.ArchiveBlocked,
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+    };
 }
 
 public interface IMcpServerDefinitionCatalog

@@ -1,4 +1,5 @@
 using EU.Core.Agent.Application.Mcp;
+using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Services;
 using Xunit;
@@ -38,31 +39,31 @@ public sealed class AgMcpPersistence_Should
             "alias:business-query",
             true);
 
-        McpOperationResult<McpServerDefinition> created = await service.CreateAsync(create);
-        Assert.True(created.Succeeded);
-        McpServerDefinition initial = Assert.IsType<McpServerDefinition>(created.Value);
+        ServiceResult<McpServerDefinition> created = await service.CreateAsync(create);
+        Assert.True(created.Success);
+        McpServerDefinition initial = Assert.IsType<McpServerDefinition>(created.Data);
         Assert.Equal(McpServerStatus.NotSynced, initial.Status);
         Assert.Equal(["--tenant", "development"], initial.Arguments);
-        Assert.False((await service.CreateAsync(create)).Succeeded);
+        Assert.False((await service.CreateAsync(create)).Success);
 
-        McpOperationResult<McpServerDefinition> synchronized = await service.SyncAsync(
+        ServiceResult<McpServerDefinition> synchronized = await service.SyncAsync(
             new SyncMcpServerCommand(initial.Id, 0));
-        Assert.True(synchronized.Succeeded);
-        McpServerDefinition synced = Assert.IsType<McpServerDefinition>(synchronized.Value);
+        Assert.True(synchronized.Success);
+        McpServerDefinition synced = Assert.IsType<McpServerDefinition>(synchronized.Data);
         Assert.Equal(McpServerStatus.Healthy, synced.Status);
         McpToolVersion discovered = Assert.Single(synced.ToolVersions);
         Assert.Equal(McpToolRisk.Unknown, discovered.Risk);
         Assert.False(await service.ExistsAsync(discovered.Id));
         Assert.Empty(await ((IPublishedMcpToolCatalog)service).ListAsync());
 
-        McpOperationResult<McpServerDefinition> classified = await service.ClassifyToolAsync(
+        ServiceResult<McpServerDefinition> classified = await service.ClassifyToolAsync(
             new ClassifyMcpToolCommand(
                 initial.Id,
                 discovered.Id,
                 synced.LogicalRevision,
                 McpToolRisk.ReadOnly));
-        Assert.True(classified.Succeeded);
-        McpServerDefinition ready = Assert.IsType<McpServerDefinition>(classified.Value);
+        Assert.True(classified.Success);
+        McpServerDefinition ready = Assert.IsType<McpServerDefinition>(classified.Data);
         Assert.Equal(2, ready.ToolVersions.Count);
         Guid classifiedId = Assert.Single(ready.CurrentToolVersionIds);
         Assert.NotEqual(discovered.Id, classifiedId);
@@ -84,7 +85,7 @@ public sealed class AgMcpPersistence_Should
                 initial.Id,
                 classifiedId,
                 synced.LogicalRevision,
-                McpToolRisk.Mutating))).Succeeded);
+                McpToolRisk.Mutating))).Success);
     }
 
     [Fact]
@@ -117,16 +118,16 @@ public sealed class AgMcpPersistence_Should
                 string.Empty,
                 [],
                 string.Empty,
-                true))).Value);
+                true))).Data);
         McpServerDefinition synced = Assert.IsType<McpServerDefinition>((await service.SyncAsync(
-            new SyncMcpServerCommand(created.Id, 0))).Value);
+            new SyncMcpServerCommand(created.Id, 0))).Data);
         McpToolVersion discovered = Assert.Single(synced.ToolVersions);
         McpServerDefinition classified = Assert.IsType<McpServerDefinition>((await service.ClassifyToolAsync(
             new ClassifyMcpToolCommand(
                 created.Id,
                 discovered.Id,
                 synced.LogicalRevision,
-                McpToolRisk.ReadOnly))).Value);
+                McpToolRisk.ReadOnly))).Data);
         Guid toolVersionId = Assert.Single(classified.CurrentToolVersionIds);
         Guid agentId = Guid.NewGuid();
         Guid agentVersionId = Guid.NewGuid();
@@ -186,20 +187,20 @@ public sealed class AgMcpPersistence_Should
             classified.CredentialAlias,
             false);
 
-        McpOperationResult<McpServerDefinition> blocked = await service.UpdateAsync(disable);
+        ServiceResult<McpServerDefinition> blocked = await service.UpdateAsync(disable);
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(McpErrorCodes.DisableBlocked, blocked.Error?.Code);
-        Assert.Contains("mcp-consumer", blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Equal(McpServiceStatusCodes.DisableBlocked, blocked.Status);
+        Assert.Contains("mcp-consumer", blocked.Message);
 
         await fixture.Db.Updateable<AgAgentDefinition>()
             .SetColumns(value => value.RuntimeStatus == "Disabled")
             .Where(value => value.ID == agentId)
             .ExecuteCommandAsync();
-        McpOperationResult<McpServerDefinition> disabled = await service.UpdateAsync(disable);
-        Assert.True(disabled.Succeeded);
-        Assert.False(disabled.Value?.Enabled);
-        Assert.Equal(McpServerStatus.Disabled, disabled.Value?.Status);
+        ServiceResult<McpServerDefinition> disabled = await service.UpdateAsync(disable);
+        Assert.True(disabled.Success);
+        Assert.False(disabled.Data.Enabled);
+        Assert.Equal(McpServerStatus.Disabled, disabled.Data.Status);
     }
 
     private sealed class StubMcpToolDiscovery(

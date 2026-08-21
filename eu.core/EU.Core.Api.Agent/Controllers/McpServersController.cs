@@ -54,7 +54,7 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         [FromBody] CreateMcpServerRequest request,
         CancellationToken cancellationToken)
     {
-        McpOperationResult<McpServerDefinition> result = await lifecycle.CreateAsync(
+        ServiceResult<McpServerDefinition> result = await lifecycle.CreateAsync(
             new CreateMcpServerCommand(
                 request.Code,
                 request.Name,
@@ -66,13 +66,13 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        if (!result.Succeeded)
+        if (!result.Success)
         {
-            return FromError(result.Error!);
+            return FromServiceError(result);
         }
 
-        Response.Headers.Location = $"/api/mcp/servers/{result.Value!.Id}";
-        return OperationSuccess(result.Value, StatusCodes.Status201Created);
+        Response.Headers.Location = $"/api/mcp/servers/{result.Data.Id}";
+        return OperationSuccess(result.Data, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}")]
@@ -81,7 +81,7 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         [FromBody] UpdateMcpServerRequest request,
         CancellationToken cancellationToken)
     {
-        McpOperationResult<McpServerDefinition> result = await lifecycle.UpdateAsync(
+        ServiceResult<McpServerDefinition> result = await lifecycle.UpdateAsync(
             new UpdateMcpServerCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -94,9 +94,9 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data)
+            : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/sync")]
@@ -105,12 +105,12 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         [FromBody] SyncMcpServerRequest request,
         CancellationToken cancellationToken)
     {
-        McpOperationResult<McpServerDefinition> result = await lifecycle.SyncAsync(
+        ServiceResult<McpServerDefinition> result = await lifecycle.SyncAsync(
             new SyncMcpServerCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data)
+            : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -119,16 +119,16 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         [FromBody] SetMcpServerArchiveRequest request,
         CancellationToken cancellationToken)
     {
-        McpOperationResult<McpServerDefinition> result =
+        ServiceResult<McpServerDefinition> result =
             await lifecycle.SetArchivedAsync(
                 new SetMcpServerArchiveCommand(
                     id,
                     request.ExpectedLogicalRevision,
                     request.Archived),
                 cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data)
+            : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/tools/{toolVersionId:guid}/risk")]
@@ -138,7 +138,7 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         [FromBody] ClassifyMcpToolRequest request,
         CancellationToken cancellationToken)
     {
-        McpOperationResult<McpServerDefinition> result =
+        ServiceResult<McpServerDefinition> result =
             await lifecycle.ClassifyToolAsync(
                 new ClassifyMcpToolCommand(
                     id,
@@ -146,9 +146,9 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                     request.ExpectedLogicalRevision,
                     request.Risk),
                 cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data)
+            : FromServiceError(result);
     }
 
     private IActionResult QuerySuccess<T>(T value) =>
@@ -167,8 +167,8 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
             StatusCode = httpStatus
         };
 
-    private IActionResult FromError(McpError error) =>
-        FromError(error.Code, error.Message);
+    private IActionResult FromServiceError(ServiceResult<McpServerDefinition> result) =>
+        FromError(McpServiceStatusCodes.ToErrorCode(result.Status), result.Message);
 
     private IActionResult FromError(string errorCode, string message)
     {

@@ -23,7 +23,7 @@ public sealed class AgMcpServerDefinitionServices :
         _discovery = discovery ?? throw new ArgumentNullException(nameof(discovery));
     }
 
-    public async Task<McpOperationResult<McpServerDefinition>> CreateAsync(
+    public async Task<ServiceResult<McpServerDefinition>> CreateAsync(
         CreateMcpServerCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -32,7 +32,7 @@ public sealed class AgMcpServerDefinitionServices :
             return Failure(McpErrorCodes.CodeInvalid, "MCP Server code must normalize to lowercase kebab-case.");
         }
 
-        McpError? configurationError = ValidateConfiguration(
+        ServiceResult<McpServerDefinition>? configurationError = ValidateConfiguration(
             command.Transport,
             command.Endpoint,
             command.Command,
@@ -40,7 +40,7 @@ public sealed class AgMcpServerDefinitionServices :
             command.CredentialAlias);
         if (configurationError is not null)
         {
-            return new McpOperationResult<McpServerDefinition>(null, configurationError);
+            return configurationError;
         }
 
         var definition = new McpServerDefinition(
@@ -61,7 +61,7 @@ public sealed class AgMcpServerDefinitionServices :
             McpContractCloner.ReadOnly(Array.Empty<Guid>()),
             McpContractCloner.ReadOnly(Array.Empty<McpToolVersion>()));
         return await TryCreateDefinitionAsync(definition, cancellationToken)
-            ? McpOperationResult<McpServerDefinition>.Success(definition)
+            ? ServiceResult<McpServerDefinition>.OprateSuccess(definition)
             : Failure(McpErrorCodes.CodeConflict, "An MCP Server already uses this code.");
     }
 
@@ -75,7 +75,7 @@ public sealed class AgMcpServerDefinitionServices :
         CancellationToken cancellationToken = default) =>
         QueryDefinitionsAsync(query, cancellationToken);
 
-    public async Task<McpOperationResult<McpServerDefinition>> UpdateAsync(
+    public async Task<ServiceResult<McpServerDefinition>> UpdateAsync(
         UpdateMcpServerCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -98,7 +98,7 @@ public sealed class AgMcpServerDefinitionServices :
                 "An archived MCP Server must be restored before its configuration can be edited.");
         }
 
-        McpError? configurationError = ValidateConfiguration(
+        ServiceResult<McpServerDefinition>? configurationError = ValidateConfiguration(
             command.Transport,
             command.Endpoint,
             command.Command,
@@ -106,7 +106,7 @@ public sealed class AgMcpServerDefinitionServices :
             command.CredentialAlias);
         if (configurationError is not null)
         {
-            return new McpOperationResult<McpServerDefinition>(null, configurationError);
+            return configurationError;
         }
 
         if (existing.Enabled && !command.Enabled)
@@ -152,11 +152,11 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? McpOperationResult<McpServerDefinition>.Success(updated)
+            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before this operation completed.");
     }
 
-    public async Task<McpOperationResult<McpServerDefinition>> SyncAsync(
+    public async Task<ServiceResult<McpServerDefinition>> SyncAsync(
         SyncMcpServerCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -206,10 +206,10 @@ public sealed class AgMcpServerDefinitionServices :
             return Failure(McpErrorCodes.DiscoveryFailed, reason);
         }
 
-        McpError? discoveryError = ValidateDiscoveredTools(discovered);
+        ServiceResult<McpServerDefinition>? discoveryError = ValidateDiscoveredTools(discovered);
         if (discoveryError is not null)
         {
-            return new McpOperationResult<McpServerDefinition>(null, discoveryError);
+            return discoveryError;
         }
 
         DateTimeOffset synchronizedAt = DateTimeOffset.UtcNow;
@@ -258,11 +258,11 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? McpOperationResult<McpServerDefinition>.Success(updated)
+            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before synchronization completed.");
     }
 
-    public async Task<McpOperationResult<McpServerDefinition>> ClassifyToolAsync(
+    public async Task<ServiceResult<McpServerDefinition>> ClassifyToolAsync(
         ClassifyMcpToolCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -322,11 +322,11 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? McpOperationResult<McpServerDefinition>.Success(updated)
+            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before classification completed.");
     }
 
-    public async Task<McpOperationResult<McpServerDefinition>> SetArchivedAsync(
+    public async Task<ServiceResult<McpServerDefinition>> SetArchivedAsync(
         SetMcpServerArchiveCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -387,7 +387,7 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? McpOperationResult<McpServerDefinition>.Success(updated)
+            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
             : Failure(
                 McpErrorCodes.RevisionConflict,
                 "The MCP Server changed before this operation completed.");
@@ -917,7 +917,7 @@ public sealed class AgMcpServerDefinitionServices :
     private static DateTime Required(DateTime? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
 
-    private static McpError? ValidateConfiguration(
+    private static ServiceResult<McpServerDefinition>? ValidateConfiguration(
         McpTransportKind transport,
         string? endpoint,
         string? command,
@@ -926,7 +926,7 @@ public sealed class AgMcpServerDefinitionServices :
     {
         if (!Enum.IsDefined(transport))
         {
-            return new McpError(McpErrorCodes.ConfigurationInvalid, "The MCP transport is invalid.");
+            return Failure(McpErrorCodes.ConfigurationInvalid, "The MCP transport is invalid.");
         }
 
         if (transport is McpTransportKind.StreamableHttp or McpTransportKind.Sse)
@@ -936,20 +936,20 @@ public sealed class AgMcpServerDefinitionServices :
                  uri.Scheme != Uri.UriSchemeHttps) ||
                 !string.IsNullOrEmpty(uri.UserInfo))
             {
-                return new McpError(
+                return Failure(
                     McpErrorCodes.ConfigurationInvalid,
                     "HTTP MCP endpoints must be absolute HTTP or HTTPS URIs without embedded credentials.");
             }
         }
         else if (string.IsNullOrWhiteSpace(command) || command.Length > 512)
         {
-            return new McpError(McpErrorCodes.ConfigurationInvalid, "Stdio MCP command is required.");
+            return Failure(McpErrorCodes.ConfigurationInvalid, "Stdio MCP command is required.");
         }
 
         if ((arguments?.Count ?? 0) > 32 ||
             (arguments?.Any(argument => argument is null || argument.Length > 1024) ?? false))
         {
-            return new McpError(McpErrorCodes.ConfigurationInvalid, "MCP command arguments exceed the supported limits.");
+            return Failure(McpErrorCodes.ConfigurationInvalid, "MCP command arguments exceed the supported limits.");
         }
 
         if (!string.IsNullOrWhiteSpace(credentialAlias) &&
@@ -960,7 +960,7 @@ public sealed class AgMcpServerDefinitionServices :
                  !char.IsAsciiLetterOrDigit(character) &&
                  character is not ('.' or '_' or '-'))))
         {
-            return new McpError(
+            return Failure(
                 McpErrorCodes.ConfigurationInvalid,
                 "MCP credentials must be represented by an alias: identifier.");
         }
@@ -968,11 +968,11 @@ public sealed class AgMcpServerDefinitionServices :
         return null;
     }
 
-    private static McpError? ValidateDiscoveredTools(IReadOnlyList<DiscoveredMcpTool>? tools)
+    private static ServiceResult<McpServerDefinition>? ValidateDiscoveredTools(IReadOnlyList<DiscoveredMcpTool>? tools)
     {
         if (tools is null || tools.Count > MaximumTools)
         {
-            return new McpError(McpErrorCodes.DiscoveryFailed, "MCP discovery returned an unsupported tool count.");
+            return Failure(McpErrorCodes.DiscoveryFailed, "MCP discovery returned an unsupported tool count.");
         }
 
         if (tools.Any(tool =>
@@ -982,7 +982,7 @@ public sealed class AgMcpServerDefinitionServices :
                 tool.InputSchemaJson?.Length > 65_536) ||
             tools.Select(tool => tool.Name).Distinct(StringComparer.Ordinal).Count() != tools.Count)
         {
-            return new McpError(McpErrorCodes.DiscoveryFailed, "MCP discovery returned invalid or duplicate tools.");
+            return Failure(McpErrorCodes.DiscoveryFailed, "MCP discovery returned invalid or duplicate tools.");
         }
 
         try
@@ -992,13 +992,13 @@ public sealed class AgMcpServerDefinitionServices :
                 using JsonDocument schema = JsonDocument.Parse(tool.InputSchemaJson);
                 if (schema.RootElement.ValueKind is not JsonValueKind.Object)
                 {
-                    return new McpError(McpErrorCodes.DiscoveryFailed, "MCP tool input schemas must be JSON objects.");
+                    return Failure(McpErrorCodes.DiscoveryFailed, "MCP tool input schemas must be JSON objects.");
                 }
             }
         }
         catch (JsonException)
         {
-            return new McpError(McpErrorCodes.DiscoveryFailed, "MCP discovery returned an invalid input schema.");
+            return Failure(McpErrorCodes.DiscoveryFailed, "MCP discovery returned an invalid input schema.");
         }
 
         return null;
@@ -1044,8 +1044,10 @@ public sealed class AgMcpServerDefinitionServices :
         return value.Length <= 500 ? value : value[..500];
     }
 
-    private static McpOperationResult<McpServerDefinition> Failure(string code, string message) =>
-        McpOperationResult<McpServerDefinition>.Failure(code, message);
+    private static ServiceResult<McpServerDefinition> Failure(string code, string message) =>
+        ServiceResult<McpServerDefinition>.Failure(
+            McpServiceStatusCodes.FromErrorCode(code),
+            message);
 
     private static bool TryNormalizeCode(string? value, out string? normalized)
     {
