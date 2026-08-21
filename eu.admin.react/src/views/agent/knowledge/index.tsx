@@ -47,6 +47,7 @@ import {
   type KnowledgeSearchResult,
   type KnowledgeStatus
 } from "@/api/modules/agentKnowledge";
+import useAuthButton from "@/hooks/useAuthButton";
 import { message } from "@/hooks/useMessage";
 import "./index.less";
 
@@ -67,6 +68,7 @@ const chunkPageSize = 10;
 
 const KnowledgePage = () => {
   const [form] = Form.useForm<KnowledgeFormValues>();
+  const { BUTTONS } = useAuthButton();
   const [statusFilter, setStatusFilter] = useState<KnowledgeStatus | undefined>();
   const [items, setItems] = useState<KnowledgeListItem[]>([]);
   const [current, setCurrent] = useState<KnowledgeDetail | null>(null);
@@ -373,9 +375,11 @@ const KnowledgePage = () => {
           <Button icon={<ReloadOutlined />} loading={listLoading} onClick={() => void loadList()}>
             刷新
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={startCreate}>
-            新建知识库
-          </Button>
+          {BUTTONS.add && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={startCreate}>
+              新建知识库
+            </Button>
+          )}
         </Space>
       </Flex>
 
@@ -420,12 +424,12 @@ const KnowledgePage = () => {
                 {current && (
                   <Space wrap>
                     <Tag color={statusMeta[current.Status].color}>{statusMeta[current.Status].text}</Tag>
-                    {!archived && (
+                    {BUTTONS.edit && !archived && (
                       <Button onClick={() => void toggleStatus()} disabled={saving}>
                         {current.Status === "Enabled" ? "停用" : "启用"}
                       </Button>
                     )}
-                    <Popconfirm
+                    {BUTTONS.edit && <Popconfirm
                       title={archived ? "恢复此知识库？" : "归档此知识库？"}
                       description={!archived && current.Status === "Enabled" ? "已启用的知识库可能被 Agent 引用，请先确认影响。" : undefined}
                       onConfirm={() => void toggleArchived()}
@@ -438,7 +442,7 @@ const KnowledgePage = () => {
                       >
                         {archived ? "恢复" : "归档"}
                       </Button>
-                    </Popconfirm>
+                    </Popconfirm>}
                   </Space>
                 )}
               </Flex>
@@ -447,7 +451,12 @@ const KnowledgePage = () => {
 
               <section className="knowledge-page__section">
                 <div className="knowledge-page__section-title">基础信息</div>
-                <Form<KnowledgeFormValues> form={form} layout="vertical" requiredMark="optional" disabled={archived || saving}>
+                <Form<KnowledgeFormValues>
+                  form={form}
+                  layout="vertical"
+                  requiredMark="optional"
+                  disabled={archived || saving || !(creating ? BUTTONS.add : BUTTONS.edit)}
+                >
                   <Flex gap={16} wrap>
                     <Form.Item
                       name="code"
@@ -467,7 +476,7 @@ const KnowledgePage = () => {
                   <Form.Item name="description" label="说明">
                     <Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} maxLength={1000} showCount />
                   </Form.Item>
-                  {!archived && (
+                  {!archived && (creating ? BUTTONS.add : BUTTONS.edit) && (
                     <Button type="primary" loading={saving} onClick={() => void save()}>
                       {creating ? "创建知识库" : "保存基础信息"}
                     </Button>
@@ -493,10 +502,10 @@ const KnowledgePage = () => {
                         maxCount={1}
                         beforeUpload={() => false}
                         fileList={fileList}
-                        disabled={archived || importing}
+                        disabled={archived || importing || !BUTTONS.edit}
                         onChange={({ fileList: next }) => setFileList(next.slice(-1))}
                       >
-                        <Button icon={<FileTextOutlined />} disabled={archived || importing}>
+                        <Button icon={<FileTextOutlined />} disabled={archived || importing || !BUTTONS.edit}>
                           选择文档
                         </Button>
                       </Upload>
@@ -504,7 +513,7 @@ const KnowledgePage = () => {
                         type="primary"
                         icon={<UploadOutlined />}
                         loading={importing}
-                        disabled={archived || fileList.length === 0}
+                        disabled={archived || fileList.length === 0 || !BUTTONS.edit}
                         onClick={() => void importDocument()}
                       >
                         导入并索引

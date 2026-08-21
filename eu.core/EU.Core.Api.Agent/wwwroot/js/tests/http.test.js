@@ -10,7 +10,10 @@ import {
   chatRunEventPresentation,
   agentRunAuditPresentation
 } from "../api-client.js";
-import { mainAgentPresentation } from "../chat-page.js";
+import {
+  mainAgentPresentation,
+  typingCharactersPerSecond
+} from "../chat-page.js";
 import { approvalPresentation } from "../approval-page.js";
 import { mcpApi } from "../mcp-api.js";
 import { skillsApi } from "../skills-api.js";
@@ -19,6 +22,13 @@ test("exports the strict service response client", () => {
   assert.equal(typeof http.parseServiceResponse, "function");
   assert.equal(typeof http.requestJson, "function");
   assert.equal(http.requestServiceJson, undefined);
+});
+
+test("chat typewriter accelerates only when its backlog crosses a threshold", () => {
+  assert.deepEqual(
+    [0, 12, 13, 48, 49, 120, 121, 240, 241]
+      .map(typingCharactersPerSecond),
+    [45, 45, 70, 70, 100, 100, 160, 160, 240]);
 });
 
 test("returns Data from a successful PascalCase response", () => {

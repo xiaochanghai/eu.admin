@@ -112,14 +112,17 @@ public sealed class AgentRuntimeService(
         string normalizedInput,
         CancellationToken cancellationToken)
     {
-        IReadOnlyList<PublishedSkillContent> selectedSkills =
+        SkillMaterializationResult skillMaterialization =
             await MaterializeSkillsAsync(snapshot, cancellationToken);
-        if (selectedSkills.Count != snapshot.Skills.Count)
+        if (!skillMaterialization.Succeeded)
         {
             return AgentRunPreparationResult.Failure(
                 AgentRunErrorCodes.SkillUnavailable,
-                $"One or more frozen Skill versions are unavailable or exceed the {MaximumSkillInstructionCharacters}-character instruction limit.");
+                skillMaterialization.ErrorMessage);
         }
+
+        IReadOnlyList<PublishedSkillContent> selectedSkills =
+            skillMaterialization.Skills;
 
         IReadOnlyDictionary<Guid, PublishedMcpToolReference> available =
             (await toolCatalog.ListAsync(cancellationToken))
@@ -201,20 +204,20 @@ public sealed class AgentRuntimeService(
         return AgentRunPreparationResult.Success(context);
     }
 
-    private async Task<IReadOnlyList<PublishedSkillContent>> MaterializeSkillsAsync(
+    private async Task<SkillMaterializationResult> MaterializeSkillsAsync(
         AgentVersionSnapshot snapshot,
         CancellationToken cancellationToken)
     {
         if (snapshot.Skills.Count == 0)
         {
-            return SkillContractCloner.ReadOnly(
+            return SkillMaterializationResult.Success(
                 Array.Empty<PublishedSkillContent>());
         }
 
         if (skillCatalog is null || skillContentStore is null)
         {
-            return SkillContractCloner.ReadOnly(
-                Array.Empty<PublishedSkillContent>());
+            return SkillMaterializationResult.Failure(
+                "The Skill runtime service is not configured. Remove the Skill bindings or configure Skill storage before running the Agent.");
         }
 
         IReadOnlyList<PublishedSkillReference> catalogValues;
@@ -226,10 +229,10 @@ public sealed class AgentRuntimeService(
         {
             throw;
         }
-        catch
+        catch (Exception exception)
         {
-            return SkillContractCloner.ReadOnly(
-                Array.Empty<PublishedSkillContent>());
+            return SkillMaterializationResult.Failure(
+                $"The published Skill catalog could not be read ({exception.GetType().Name}). Retry the request or check the Skill storage service.");
         }
 
         var available = new Dictionary<Guid, PublishedSkillReference>();
@@ -237,8 +240,8 @@ public sealed class AgentRuntimeService(
         {
             if (!available.TryAdd(reference.VersionId, reference))
             {
-                return SkillContractCloner.ReadOnly(
-                    Array.Empty<PublishedSkillContent>());
+                return SkillMaterializationResult.Failure(
+                    $"Published Skill version '{reference.VersionId}' occurs more than once in the catalog. Correct the Skill catalog before running the Agent.");
             }
         }
 
@@ -250,8 +253,8 @@ public sealed class AgentRuntimeService(
                     binding.SkillVersionId,
                     out PublishedSkillReference? reference))
             {
-                return SkillContractCloner.ReadOnly(
-                    Array.Empty<PublishedSkillContent>());
+                return SkillMaterializationResult.Failure(
+                    $"Frozen Skill version '{binding.SkillVersionId}' is not published or is no longer available. Review the Agent's Skill bindings and publish a new Agent version.");
             }
 
             PublishedSkillContent? content;
@@ -265,14 +268,19 @@ public sealed class AgentRuntimeService(
             {
                 throw;
             }
-            catch
+            catch (Exception exception)
             {
-                return SkillContractCloner.ReadOnly(
-                    Array.Empty<PublishedSkillContent>());
+                return SkillMaterializationResult.Failure(
+                    $"The artifact for Skill '{reference.SkillName}' version '{reference.VersionLabel}' could not be read ({exception.GetType().Name}). Restore or republish the Skill, then publish a new Agent version.");
             }
 
-            if (content is null ||
-                content.Instructions is null ||
+            if (content is null)
+            {
+                return SkillMaterializationResult.Failure(
+                    $"The artifact for Skill '{reference.SkillName}' version '{reference.VersionLabel}' is missing. Restore or republish the Skill, then publish a new Agent version.");
+            }
+
+            if (content.Instructions is null ||
                 content.SkillVersionId != reference.VersionId ||
                 !string.Equals(
                     content.SkillCode,
@@ -287,15 +295,15 @@ public sealed class AgentRuntimeService(
                     reference.ManifestSha256,
                     StringComparison.Ordinal))
             {
-                return SkillContractCloner.ReadOnly(
-                    Array.Empty<PublishedSkillContent>());
+                return SkillMaterializationResult.Failure(
+                    $"The artifact for Skill '{reference.SkillName}' version '{reference.VersionLabel}' does not match its published metadata. Republish the Skill, then publish a new Agent version.");
             }
 
             if (content.Instructions.Length >
                 MaximumSkillInstructionCharacters - combinedCharacters)
             {
-                return SkillContractCloner.ReadOnly(
-                    Array.Empty<PublishedSkillContent>());
+                return SkillMaterializationResult.Failure(
+                    $"The frozen Skills contain more than {MaximumSkillInstructionCharacters} instruction characters in total. Reduce the bound Skill instructions and publish a new Agent version.");
             }
 
             combinedCharacters += content.Instructions.Length;
@@ -305,7 +313,24 @@ public sealed class AgentRuntimeService(
             });
         }
 
-        return SkillContractCloner.ReadOnly(materialized);
+        return SkillMaterializationResult.Success(materialized);
+    }
+
+    private sealed record SkillMaterializationResult(
+        IReadOnlyList<PublishedSkillContent> Skills,
+        string ErrorMessage)
+    {
+        public bool Succeeded => string.IsNullOrEmpty(ErrorMessage);
+
+        public static SkillMaterializationResult Success(
+            IEnumerable<PublishedSkillContent> skills) =>
+            new(SkillContractCloner.ReadOnly(skills), string.Empty);
+
+        public static SkillMaterializationResult Failure(string errorMessage) =>
+            new(
+                SkillContractCloner.ReadOnly(
+                    Array.Empty<PublishedSkillContent>()),
+                errorMessage);
     }
 
     public async IAsyncEnumerable<AgentRunEvent> StreamAsync(

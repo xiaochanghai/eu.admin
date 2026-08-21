@@ -147,9 +147,9 @@ internal sealed class ActiveUnifiedEntryExecution(
 
 public sealed class UnifiedEntryService
 {
-    private const int MaximumPendingDeltaEvents = 8;
+    private const int MaximumPendingDeltaEvents = 4;
     private static readonly TimeSpan MaximumDeltaPersistenceInterval =
-        TimeSpan.FromMilliseconds(250);
+        TimeSpan.FromMilliseconds(75);
     private const int MaximumStoredPayloadBytes =
         AgentRuntimeService.MaximumInputCharacters * 4;
     public const int MaximumConversationHistoryMessages = 40;

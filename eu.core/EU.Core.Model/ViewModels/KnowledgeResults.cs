@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace EU.Core.Model;
 
 public enum KnowledgePdfExtractionFailure

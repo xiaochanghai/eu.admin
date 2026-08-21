@@ -131,6 +131,14 @@ export function mainAgentPresentation(assignment, agent) {
   };
 }
 
+export function typingCharactersPerSecond(backlog) {
+  if (backlog > 240) return 240;
+  if (backlog > 120) return 160;
+  if (backlog > 48) return 100;
+  if (backlog > 12) return 70;
+  return 45;
+}
+
 function traceCapabilityPresentation(kind, payload) {
   const toolName = payload.toolName || payload.ToolName || "";
   if (payload.capability === "business-query") {
@@ -795,6 +803,77 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
       approvalId: null,
       assistantBody: assistant.body
     };
+    const pendingCharacters = [];
+    const typingWaiters = [];
+    let typingFrame = 0;
+    let typingLastFrameAt = 0;
+    let typingCharacterCredit = 0;
+    let terminalEvent = null;
+    const reduceTypingMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const resolveTypingWaiters = () => {
+      while (typingWaiters.length) typingWaiters.shift()();
+    };
+    const renderTypingFrame = timestamp => {
+      typingFrame = 0;
+      if (!pendingCharacters.length) {
+        typingLastFrameAt = 0;
+        typingCharacterCredit = 0;
+        resolveTypingWaiters();
+        return;
+      }
+
+      const backlog = pendingCharacters.length;
+      const charactersPerSecond = typingCharactersPerSecond(backlog);
+      if (!typingLastFrameAt) {
+        typingLastFrameAt = timestamp;
+        typingCharacterCredit = 1;
+      } else {
+        const elapsedMilliseconds = Math.min(100, timestamp - typingLastFrameAt);
+        typingLastFrameAt = timestamp;
+        typingCharacterCredit += elapsedMilliseconds * charactersPerSecond / 1000;
+      }
+
+      const characterCount = Math.min(
+        backlog,
+        Math.floor(typingCharacterCredit));
+      if (characterCount > 0) {
+        typingCharacterCredit -= characterCount;
+        assistant.body.append(
+          pendingCharacters.splice(0, characterCount).join(""));
+        scrollTimeline();
+      }
+      typingFrame = requestAnimationFrame(renderTypingFrame);
+    };
+    const enqueueTyping = text => {
+      if (!text) return;
+      if (reduceTypingMotion || document.hidden) {
+        assistant.body.append(text);
+        scrollTimeline();
+        return;
+      }
+      pendingCharacters.push(...Array.from(text));
+      if (!typingFrame) typingFrame = requestAnimationFrame(renderTypingFrame);
+    };
+    const finishTyping = () => {
+      if (!pendingCharacters.length && !typingFrame) return Promise.resolve();
+      return new Promise(resolve => typingWaiters.push(resolve));
+    };
+    const flushTyping = () => {
+      if (typingFrame) cancelAnimationFrame(typingFrame);
+      typingFrame = 0;
+      typingLastFrameAt = 0;
+      typingCharacterCredit = 0;
+      if (pendingCharacters.length) {
+        assistant.body.append(pendingCharacters.splice(0).join(""));
+        scrollTimeline();
+      }
+      resolveTypingWaiters();
+    };
+    const handleTypingVisibilityChange = () => {
+      if (document.hidden) flushTyping();
+    };
+    document.addEventListener("visibilitychange", handleTypingVisibilityChange);
     setComposerState("running");
     cancelButton.focus({ preventScroll: true });
 
@@ -837,10 +916,10 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
           if (event.kind === "message" &&
               (event.depth ?? 0) === 0 &&
               payload.eventKind === "Delta") {
-            assistant.body.textContent += payload.text || "";
-            scrollTimeline();
+            enqueueTyping(payload.text || "");
           }
           if (event.kind === "approval-required") {
+            flushTyping();
             const approvalId = event.approvalId || payload.approvalId;
             active.waitingApproval = true;
             active.approvalId = approvalId;
@@ -862,7 +941,7 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
           }
           if (TERMINAL_EVENTS.has(event.kind)) {
             active.terminal = true;
-            terminalMessage(event, assistant.body);
+            terminalEvent = event;
           }
         }
       });
@@ -873,6 +952,7 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
       }
     } catch (error) {
       if (state.activeRun?.revision !== runRevision) return;
+      await finishTyping();
       if (state.activeRun.terminal || state.activeRun.waitingApproval) {
         // A durable terminal or approval event is authoritative even if the
         // transport reports a late close while releasing the response body.
@@ -896,7 +976,10 @@ export function createChatPage({ api, toast, onUpdateMain, onOpenApproval }) {
       }
       assistant.article.classList.remove("is-streaming");
     } finally {
+      document.removeEventListener("visibilitychange", handleTypingVisibilityChange);
       if (state.activeRun?.revision !== runRevision) return;
+      await finishTyping();
+      if (terminalEvent) terminalMessage(terminalEvent, assistant.body);
       await finalizeActiveRunUi(state.activeRun);
     }
   }

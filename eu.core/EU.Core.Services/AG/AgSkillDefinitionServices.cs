@@ -19,13 +19,16 @@ public sealed class AgSkillDefinitionServices :
     private const string PublishedAttachmentType = "agent-skill-version";
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> Locks = new();
     private readonly ISkillFileStore _fileStore;
+    private readonly IPublishedSkillContentStore? _publishedContentStore;
 
     public AgSkillDefinitionServices(
         IBaseRepository<AgSkillDefinition> dal,
-        ISkillFileStore fileStore)
+        ISkillFileStore fileStore,
+        IPublishedSkillContentStore? publishedContentStore = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         _fileStore = fileStore ?? throw new ArgumentNullException(nameof(fileStore));
+        _publishedContentStore = publishedContentStore;
     }
 
     private static readonly Regex CodePattern = new(
@@ -691,7 +694,8 @@ public sealed class AgSkillDefinitionServices :
             .ToListAsync();
         IReadOnlyDictionary<Guid, AgSkillVersion[]> versionsBySkill =
             await LoadVersionsBySkillAsync(definitions.Select(value => value.ID), cancellationToken);
-        return SkillContractCloner.ReadOnly(definitions.SelectMany(definition =>
+        IReadOnlyList<PublishedSkillReference> references =
+            SkillContractCloner.ReadOnly(definitions.SelectMany(definition =>
             (versionsBySkill.GetValueOrDefault(definition.ID) ?? []).Select(version =>
                 new PublishedSkillReference(
                     definition.ID,
@@ -700,6 +704,40 @@ public sealed class AgSkillDefinitionServices :
                     Required(definition.Name, "Name"),
                     Required(version.Label, "Version.Label"),
                     Required(version.ManifestSha256, "Version.ManifestSha256")))));
+        if (_publishedContentStore is null)
+        {
+            return references;
+        }
+
+        var available = new List<PublishedSkillReference>(references.Count);
+        foreach (PublishedSkillReference reference in references)
+        {
+            PublishedSkillContent? content;
+            try
+            {
+                content = await _publishedContentStore.ReadAsync(reference, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                continue;
+            }
+
+            if (content is not null &&
+                content.Instructions is not null &&
+                content.SkillVersionId == reference.VersionId &&
+                string.Equals(content.SkillCode, reference.SkillCode, StringComparison.Ordinal) &&
+                string.Equals(content.VersionLabel, reference.VersionLabel, StringComparison.Ordinal) &&
+                string.Equals(content.ManifestSha256, reference.ManifestSha256, StringComparison.Ordinal))
+            {
+                available.Add(reference);
+            }
+        }
+
+        return SkillContractCloner.ReadOnly(available);
     }
 
     private async Task<SkillDefinition> LoadDefinitionAsync(

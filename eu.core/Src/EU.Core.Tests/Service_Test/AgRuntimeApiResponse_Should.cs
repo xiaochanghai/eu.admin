@@ -159,7 +159,11 @@ public sealed class AgRuntimeApiResponse_Should
         HttpContext = new DefaultHttpContext
         {
             TraceIdentifier = "trace-runtime-contract",
-            RequestServices = new ServiceCollection().BuildServiceProvider()
+            RequestServices = new ServiceCollection()
+                .AddOptions()
+                .Configure<JsonOptions>(options =>
+                    options.JsonSerializerOptions.PropertyNamingPolicy = null)
+                .BuildServiceProvider()
         }
     };
 
