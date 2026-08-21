@@ -72,19 +72,48 @@ public sealed record EvaluationBatchRecord(
     IReadOnlyList<EvaluationCaseExecutionRecord> Cases,
     string ErrorCode);
 
-public sealed record EvaluationBatchError(string Code, string Message);
-
-public sealed record EvaluationBatchOperationResult(
-    EvaluationBatchRecord? Value,
-    EvaluationBatchError? Error)
+public static class EvaluationBatchServiceStatusCodes
 {
-    public bool Succeeded => Error is null;
+    public const int RequestInvalid = 670008;
+    public const int BatchNotFound = 670009;
+    public const int SuiteNotFound = 670010;
+    public const int VersionNotFound = 670011;
+    public const int CaseLimitExceeded = 670012;
+    public const int TargetUnavailable = 670013;
+    public const int PersistenceConflict = 670014;
+    public const int ExecutionFailed = 670015;
+    public const int AssertionFailed = 670016;
+    public const int Cancelled = 670017;
 
-    public static EvaluationBatchOperationResult Success(EvaluationBatchRecord value) =>
-        new(value, null);
+    public static int FromErrorCode(string code) => code switch
+    {
+        EvaluationBatchErrorCodes.RequestInvalid => RequestInvalid,
+        EvaluationBatchErrorCodes.BatchNotFound => BatchNotFound,
+        EvaluationBatchErrorCodes.SuiteNotFound => SuiteNotFound,
+        EvaluationBatchErrorCodes.VersionNotFound => VersionNotFound,
+        EvaluationBatchErrorCodes.CaseLimitExceeded => CaseLimitExceeded,
+        EvaluationBatchErrorCodes.TargetUnavailable => TargetUnavailable,
+        EvaluationBatchErrorCodes.PersistenceConflict => PersistenceConflict,
+        EvaluationBatchErrorCodes.ExecutionFailed => ExecutionFailed,
+        EvaluationBatchErrorCodes.AssertionFailed => AssertionFailed,
+        EvaluationBatchErrorCodes.Cancelled => Cancelled,
+        _ => 500
+    };
 
-    public static EvaluationBatchOperationResult Failure(string code, string message) =>
-        new(null, new EvaluationBatchError(code, message));
+    public static string ToErrorCode(int status) => status switch
+    {
+        RequestInvalid => EvaluationBatchErrorCodes.RequestInvalid,
+        BatchNotFound => EvaluationBatchErrorCodes.BatchNotFound,
+        SuiteNotFound => EvaluationBatchErrorCodes.SuiteNotFound,
+        VersionNotFound => EvaluationBatchErrorCodes.VersionNotFound,
+        CaseLimitExceeded => EvaluationBatchErrorCodes.CaseLimitExceeded,
+        TargetUnavailable => EvaluationBatchErrorCodes.TargetUnavailable,
+        PersistenceConflict => EvaluationBatchErrorCodes.PersistenceConflict,
+        ExecutionFailed => EvaluationBatchErrorCodes.ExecutionFailed,
+        AssertionFailed => EvaluationBatchErrorCodes.AssertionFailed,
+        Cancelled => EvaluationBatchErrorCodes.Cancelled,
+        _ => "INTERNAL_ERROR"
+    };
 }
 
 public interface IEvaluationBatchRepository

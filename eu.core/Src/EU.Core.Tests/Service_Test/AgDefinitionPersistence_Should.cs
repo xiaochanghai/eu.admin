@@ -1,6 +1,7 @@
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.UnifiedEntry;
+using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
@@ -177,20 +178,20 @@ public sealed class AgDefinitionPersistence_Should
             [CreateOrchestrationReferencingAgent(orchestrationId)]);
         var lifecycle = new OrchestrationLifecycleService(repository, agents);
 
-        OrchestrationOperationResult<OrchestrationDefinition> blocked =
+        ServiceResult<OrchestrationDefinition> blocked =
             await lifecycle.SetArchivedAsync(
                 new SetOrchestrationArchiveCommand(orchestrationId, 0, true));
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(OrchestrationErrorCodes.ArchiveBlocked, blocked.Error?.Code);
-        Assert.Contains("orchestration-consumer", blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Equal(OrchestrationServiceStatusCodes.ArchiveBlocked, blocked.Status);
+        Assert.Contains("orchestration-consumer", blocked.Message);
 
         agents.Definitions = [];
-        OrchestrationOperationResult<OrchestrationDefinition> archived =
+        ServiceResult<OrchestrationDefinition> archived =
             await lifecycle.SetArchivedAsync(
                 new SetOrchestrationArchiveCommand(orchestrationId, 0, true));
-        Assert.True(archived.Succeeded);
-        Assert.Equal(OrchestrationStatus.Archived, archived.Value?.Status);
+        Assert.True(archived.Success);
+        Assert.Equal(OrchestrationStatus.Archived, archived.Data?.Status);
     }
 
     private static EvaluationCaseDefinition CreateEvaluationCase(string name) => new(

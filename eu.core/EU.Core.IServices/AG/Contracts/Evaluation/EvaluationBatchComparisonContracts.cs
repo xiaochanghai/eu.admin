@@ -62,18 +62,28 @@ public sealed record EvaluationBatchComparisonReport(
     bool GatePassed,
     DateTimeOffset ComparedAtUtc);
 
-public sealed record EvaluationComparisonError(string Code, string Message);
-
-public sealed record EvaluationComparisonOperationResult(
-    EvaluationBatchComparisonReport? Value,
-    EvaluationComparisonError? Error)
+public static class EvaluationComparisonServiceStatusCodes
 {
-    public bool Succeeded => Error is null;
+    public const int BatchNotFound = 670018;
+    public const int BatchNotTerminal = 670019;
+    public const int SuiteMismatch = 670020;
+    public const int SpecificationInvalid = 670021;
 
-    public static EvaluationComparisonOperationResult Success(
-        EvaluationBatchComparisonReport value) => new(value, null);
+    public static int FromErrorCode(string code) => code switch
+    {
+        EvaluationComparisonErrorCodes.BatchNotFound => BatchNotFound,
+        EvaluationComparisonErrorCodes.BatchNotTerminal => BatchNotTerminal,
+        EvaluationComparisonErrorCodes.SuiteMismatch => SuiteMismatch,
+        EvaluationComparisonErrorCodes.SpecificationInvalid => SpecificationInvalid,
+        _ => 500
+    };
 
-    public static EvaluationComparisonOperationResult Failure(
-        string code,
-        string message) => new(null, new EvaluationComparisonError(code, message));
+    public static string ToErrorCode(int status) => status switch
+    {
+        BatchNotFound => EvaluationComparisonErrorCodes.BatchNotFound,
+        BatchNotTerminal => EvaluationComparisonErrorCodes.BatchNotTerminal,
+        SuiteMismatch => EvaluationComparisonErrorCodes.SuiteMismatch,
+        SpecificationInvalid => EvaluationComparisonErrorCodes.SpecificationInvalid,
+        _ => "INTERNAL_ERROR"
+    };
 }

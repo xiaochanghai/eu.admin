@@ -31,7 +31,7 @@ public sealed class PlatformController(
     [HttpGet("capabilities")]
     public async Task<IActionResult> Capabilities(CancellationToken cancellationToken)
     {
-        bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Succeeded;
+        bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Success;
         return QuerySuccess(new PlatformCapabilitiesResponse(
             "sqlsugar",
             false,

@@ -120,19 +120,45 @@ public interface IModelJudgeReportRepository
         CancellationToken cancellationToken = default);
 }
 
-public sealed record ModelJudgeError(string Code, string Message);
-
-public sealed record ModelJudgeOperationResult(
-    ModelJudgeReport? Value,
-    ModelJudgeError? Error)
+public static class ModelJudgeServiceStatusCodes
 {
-    public bool Succeeded => Error is null;
+    public const int Disabled = 670022;
+    public const int RequestInvalid = 670023;
+    public const int BatchNotFound = 670024;
+    public const int BatchNotCompleted = 670025;
+    public const int SuiteArchived = 670026;
+    public const int RunUnavailable = 670027;
+    public const int ModelUnavailable = 670028;
+    public const int ExecutionFailed = 670029;
+    public const int PersistenceConflict = 670030;
 
-    public static ModelJudgeOperationResult Success(ModelJudgeReport value) =>
-        new(value, null);
+    public static int FromErrorCode(string code) => code switch
+    {
+        ModelJudgeErrorCodes.Disabled => Disabled,
+        ModelJudgeErrorCodes.RequestInvalid => RequestInvalid,
+        ModelJudgeErrorCodes.BatchNotFound => BatchNotFound,
+        ModelJudgeErrorCodes.BatchNotCompleted => BatchNotCompleted,
+        ModelJudgeErrorCodes.SuiteArchived => SuiteArchived,
+        ModelJudgeErrorCodes.RunUnavailable => RunUnavailable,
+        ModelJudgeErrorCodes.ModelUnavailable => ModelUnavailable,
+        ModelJudgeErrorCodes.ExecutionFailed => ExecutionFailed,
+        ModelJudgeErrorCodes.PersistenceConflict => PersistenceConflict,
+        _ => 500
+    };
 
-    public static ModelJudgeOperationResult Failure(string code, string message) =>
-        new(null, new ModelJudgeError(code, message));
+    public static string ToErrorCode(int status) => status switch
+    {
+        Disabled => ModelJudgeErrorCodes.Disabled,
+        RequestInvalid => ModelJudgeErrorCodes.RequestInvalid,
+        BatchNotFound => ModelJudgeErrorCodes.BatchNotFound,
+        BatchNotCompleted => ModelJudgeErrorCodes.BatchNotCompleted,
+        SuiteArchived => ModelJudgeErrorCodes.SuiteArchived,
+        RunUnavailable => ModelJudgeErrorCodes.RunUnavailable,
+        ModelUnavailable => ModelJudgeErrorCodes.ModelUnavailable,
+        ExecutionFailed => ModelJudgeErrorCodes.ExecutionFailed,
+        PersistenceConflict => ModelJudgeErrorCodes.PersistenceConflict,
+        _ => "INTERNAL_ERROR"
+    };
 }
 
 public static class ModelJudgeContractCloner

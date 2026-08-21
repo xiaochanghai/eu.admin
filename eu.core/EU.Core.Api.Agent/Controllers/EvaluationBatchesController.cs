@@ -35,7 +35,7 @@ public sealed class EvaluationBatchesController(
             return FromError(EvaluationBatchErrorCodes.RequestInvalid, "The evaluation batch request is invalid.");
         }
 
-        EvaluationBatchOperationResult result = await service.RunAsync(
+        ServiceResult<EvaluationBatchRecord> result = await service.RunAsync(
             request.SuiteId,
             request.SuiteVersionId,
             new AgentExecutionIdentity(
@@ -44,7 +44,11 @@ public sealed class EvaluationBatchesController(
                 caller.Permissions,
                 caller.CorrelationId),
             cancellationToken);
-        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromError(
+                EvaluationBatchServiceStatusCodes.ToErrorCode(result.Status),
+                result.Message);
     }
 
     [HttpPost("compare")]
@@ -59,7 +63,7 @@ public sealed class EvaluationBatchesController(
             return FromError(EvaluationComparisonErrorCodes.SpecificationInvalid, "The evaluation comparison specification is invalid.");
         }
 
-        EvaluationComparisonOperationResult result = await comparisons.CompareAsync(
+        ServiceResult<EvaluationBatchComparisonReport> result = await comparisons.CompareAsync(
             request.BaselineBatchId,
             request.CandidateBatchId,
             caller.TenantId,
@@ -72,9 +76,11 @@ public sealed class EvaluationBatchesController(
                 request.Gate.RequireSameCaseSet,
                 request.Gate.RequireStableRoutes),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!.Code, result.Error.Message);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromError(
+                EvaluationComparisonServiceStatusCodes.ToErrorCode(result.Status),
+                result.Message);
     }
 
     [HttpGet]
@@ -115,7 +121,7 @@ public sealed class EvaluationBatchesController(
             return FromError(ModelJudgeErrorCodes.RequestInvalid, "The model judge request is invalid.");
         }
 
-        ModelJudgeOperationResult result = await modelJudge.EvaluateAsync(
+        ServiceResult<ModelJudgeReport> result = await modelJudge.EvaluateAsync(
             id,
             caller.TenantId,
             caller.UserId,
@@ -125,9 +131,11 @@ public sealed class EvaluationBatchesController(
                 request.Evaluators,
                 request.MinimumScores),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!.Code, result.Error.Message);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromError(
+                ModelJudgeServiceStatusCodes.ToErrorCode(result.Status),
+                result.Message);
     }
 
     [HttpGet("{id:guid}/model-judge-reports")]
@@ -156,8 +164,6 @@ public sealed class EvaluationBatchesController(
             ? FromError(ModelJudgeErrorCodes.BatchNotFound, "The model judge report was not found.")
             : QuerySuccess(value);
     }
-
-    private IActionResult FromError(EvaluationBatchError error) => FromError(error.Code, error.Message);
 
     private IActionResult QuerySuccess<T>(T value) => new JsonResult(
         ServiceResult<T>.QuerySuccess(value))

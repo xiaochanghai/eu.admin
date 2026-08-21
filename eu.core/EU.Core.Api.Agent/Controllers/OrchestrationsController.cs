@@ -57,13 +57,13 @@ public sealed class OrchestrationsController(
         [FromBody] CreateOrchestrationRequest request,
         CancellationToken cancellationToken)
     {
-        OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.CreateAsync(
+        ServiceResult<OrchestrationDefinition> result = await lifecycle.CreateAsync(
             new CreateOrchestrationCommand(request.Code, request.Name, request.Description), cancellationToken);
-        if (!result.Succeeded)
-            return FromError(result.Error!);
+        if (!result.Success)
+            return FromServiceError(result);
 
-        Response.Headers.Location = $"/api/orchestrations/{result.Value!.Id}";
-        return OperationSuccess(result.Value, StatusCodes.Status201Created);
+        Response.Headers.Location = $"/api/orchestrations/{result.Data!.Id}";
+        return OperationSuccess(result.Data, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -73,13 +73,13 @@ public sealed class OrchestrationsController(
         [FromBody] SaveOrchestrationRequest request,
         CancellationToken cancellationToken)
     {
-        OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.SaveDraftAsync(
+        ServiceResult<OrchestrationDefinition> result = await lifecycle.SaveDraftAsync(
             new SaveOrchestrationDraftCommand(
                 id, request.ExpectedLogicalRevision, request.Name, request.Description,
                 request.Status, request.StartNodeId, request.Nodes, request.Edges), cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -89,11 +89,11 @@ public sealed class OrchestrationsController(
         [FromBody] PublishOrchestrationRequest request,
         CancellationToken cancellationToken)
     {
-        OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.PublishAsync(
+        ServiceResult<OrchestrationDefinition> result = await lifecycle.PublishAsync(
             new PublishOrchestrationCommand(id, request.ExpectedLogicalRevision), cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -103,15 +103,15 @@ public sealed class OrchestrationsController(
         [FromBody] SetOrchestrationArchiveRequest request,
         CancellationToken cancellationToken)
     {
-        OrchestrationOperationResult<OrchestrationDefinition> result = await lifecycle.SetArchivedAsync(
+        ServiceResult<OrchestrationDefinition> result = await lifecycle.SetArchivedAsync(
             new SetOrchestrationArchiveCommand(
                 id,
                 request.ExpectedLogicalRevision,
                 request.Archived),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(result.Value!)
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(result.Data!)
+            : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/runs")]
@@ -121,13 +121,13 @@ public sealed class OrchestrationsController(
         [FromBody] StartOrchestrationRunRequest request,
         CancellationToken cancellationToken)
     {
-        OrchestrationOperationResult<OrchestrationRunRecord> result =
+        ServiceResult<OrchestrationRunRecord> result =
             await runtime.StartAsync(id, request.Input, cancellationToken);
-        if (!result.Succeeded)
-            return FromError(result.Error!);
+        if (!result.Success)
+            return FromServiceError(result);
 
-        Response.Headers.Location = $"/api/orchestrations/{id}/runs/{result.Value!.Id}";
-        return OperationSuccess(result.Value, StatusCodes.Status202Accepted);
+        Response.Headers.Location = $"/api/orchestrations/{id}/runs/{result.Data!.Id}";
+        return OperationSuccess(result.Data, StatusCodes.Status202Accepted);
     }
 
     [HttpGet("{id:guid}/runs")]
@@ -193,8 +193,10 @@ public sealed class OrchestrationsController(
             : QuerySuccess(new OrchestrationRunOutputResponse(details.Output, false));
     }
 
-    private IActionResult FromError(OrchestrationError error) =>
-        FromError(error.Code, error.Message);
+    private IActionResult FromServiceError<T>(ServiceResult<T> result) =>
+        FromError(
+            OrchestrationServiceStatusCodes.ToErrorCode(result.Status),
+            result.Message);
 
     private IActionResult QuerySuccess<T>(T value) =>
         new JsonResult(

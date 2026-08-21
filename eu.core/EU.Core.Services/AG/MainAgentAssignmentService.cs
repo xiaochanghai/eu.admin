@@ -1,6 +1,7 @@
 using EU.Core.IServices.MainAgent;
 using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -13,12 +14,12 @@ public sealed class MainAgentAssignmentService(
     private readonly IAgentDefinitionCatalog _agents = agents ?? throw new ArgumentNullException(nameof(agents));
     private readonly IMainAgentAssignmentRepository _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
 
-    public async Task<MainAgentOperationResult> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<MainAgentAssignment>> GetAsync(CancellationToken cancellationToken = default)
     {
         MainAgentAssignment? assignment = await _assignments.GetAsync(cancellationToken);
         if (assignment is null)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.NotConfigured,
                 "No Main Agent is configured.");
         }
@@ -26,14 +27,14 @@ public sealed class MainAgentAssignmentService(
         AgentDefinition? agent = await _agents.GetDefinitionAsync(assignment.AgentId, cancellationToken);
         if (agent is null)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.AgentNotFound,
                 "The configured Main Agent was not found.");
         }
 
         if (agent.RuntimeStatus != AgentRuntimeStatus.Enabled)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.AgentDisabled,
                 "The configured Main Agent is disabled.");
         }
@@ -42,15 +43,15 @@ public sealed class MainAgentAssignmentService(
             version => version.Id == assignment.AgentVersionId);
         if (pinnedVersion?.Snapshot is null)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.VersionMissing,
                 "The configured Main Agent version is unavailable.");
         }
 
-        return MainAgentOperationResult.Success(assignment);
+        return ServiceResult<MainAgentAssignment>.OprateSuccess(assignment);
     }
 
-    public async Task<MainAgentOperationResult> SetAsync(
+    public async Task<ServiceResult<MainAgentAssignment>> SetAsync(
         SetMainAgentCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -59,14 +60,14 @@ public sealed class MainAgentAssignmentService(
         AgentDefinition? agent = await _agents.GetDefinitionAsync(command.AgentId, cancellationToken);
         if (agent is null)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.AgentNotFound,
                 "The selected Main Agent was not found.");
         }
 
         if (agent.RuntimeStatus != AgentRuntimeStatus.Enabled)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.AgentDisabled,
                 "The selected Main Agent is disabled.");
         }
@@ -76,14 +77,14 @@ public sealed class MainAgentAssignmentService(
             : agent.PublishedVersions[^1];
         if (currentPublished?.Snapshot is null)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.VersionMissing,
                 "The selected Main Agent has no published snapshot.");
         }
 
         if (command.ExpectedLogicalRevision == long.MaxValue)
         {
-            return MainAgentOperationResult.Failure(
+            return Failure(
                 MainAgentErrorCodes.RowVersionConflict,
                 "The Main Agent assignment was changed by another request.");
         }
@@ -98,9 +99,14 @@ public sealed class MainAgentAssignmentService(
             command.ExpectedLogicalRevision,
             cancellationToken);
         return replaced
-            ? MainAgentOperationResult.Success(assignment)
-            : MainAgentOperationResult.Failure(
+            ? ServiceResult<MainAgentAssignment>.OprateSuccess(assignment)
+            : Failure(
                 MainAgentErrorCodes.RowVersionConflict,
                 "The Main Agent assignment was changed by another request.");
     }
+
+    private static ServiceResult<MainAgentAssignment> Failure(string code, string message) =>
+        ServiceResult<MainAgentAssignment>.Failure(
+            MainAgentServiceStatusCodes.FromErrorCode(code),
+            message);
 }

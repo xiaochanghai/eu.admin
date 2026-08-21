@@ -7,6 +7,7 @@ using EU.Core.IServices.MainAgent;
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Runtime;
 using EU.Core.IServices.UnifiedEntry;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -165,16 +166,16 @@ public sealed class UnifiedEntryService
         }
         else
         {
-            MainAgentOperationResult assignmentResult =
+            ServiceResult<MainAgentAssignment> assignmentResult =
                 await _mainAgents.GetAsync(cancellationToken).ConfigureAwait(false);
-            if (!assignmentResult.Succeeded)
+            if (!assignmentResult.Success)
             {
                 return UnifiedEntryPreparationResult.Failure(
-                    assignmentResult.Error!.Code,
-                    assignmentResult.Error.Message);
+                    MainAgentServiceStatusCodes.ToErrorCode(assignmentResult.Status),
+                    assignmentResult.Message);
             }
 
-            assignment = assignmentResult.Value!;
+            assignment = assignmentResult.Data!;
         }
         AgentRunPreparationResult prepared =
             await _agentRuntime.PrepareVersionAsync(

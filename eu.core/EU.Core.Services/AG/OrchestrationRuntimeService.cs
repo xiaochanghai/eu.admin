@@ -1,6 +1,7 @@
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Runtime;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,34 +28,34 @@ public sealed class OrchestrationRuntimeService(
     private readonly ConcurrentDictionary<Guid, string> _outputs = [];
     private readonly ConcurrentQueue<Guid> _outputOrder = [];
 
-    public async Task<OrchestrationOperationResult<OrchestrationRunRecord>> StartAsync(
+    public async Task<ServiceResult<OrchestrationRunRecord>> StartAsync(
         Guid orchestrationId,
         string? input,
         CancellationToken cancellationToken = default)
     {
         string normalized = input?.Trim() ?? "";
         if (normalized.Length is 0 or > MaximumInputCharacters)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.RunInputInvalid,
                 $"Input must contain from 1 through {MaximumInputCharacters} characters.");
         OrchestrationDefinition? definition =
             await orchestrations.GetByIdAsync(orchestrationId, cancellationToken);
         if (definition is null)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.NotFound, "The orchestration was not found.");
         if (definition.Status != OrchestrationStatus.Enabled)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.Disabled, "The orchestration is disabled.");
         OrchestrationVersionSnapshot? snapshot =
             definition.PublishedVersions.LastOrDefault()?.Snapshot;
         if (snapshot is null)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.VersionMissing, "The orchestration has no published version.");
 
         return await StartSnapshotAsync(definition, snapshot, normalized, cancellationToken);
     }
 
-    public async Task<OrchestrationOperationResult<OrchestrationRunRecord>> StartVersionAsync(
+    public async Task<ServiceResult<OrchestrationRunRecord>> StartVersionAsync(
         Guid orchestrationId,
         Guid orchestrationVersionId,
         string input,
@@ -66,7 +67,7 @@ public sealed class OrchestrationRuntimeService(
             executionOptions: null,
             cancellationToken);
 
-    public async Task<OrchestrationOperationResult<OrchestrationRunRecord>> StartVersionAsync(
+    public async Task<ServiceResult<OrchestrationRunRecord>> StartVersionAsync(
         Guid orchestrationId,
         Guid orchestrationVersionId,
         string input,
@@ -75,22 +76,22 @@ public sealed class OrchestrationRuntimeService(
     {
         string normalized = input?.Trim() ?? "";
         if (normalized.Length is 0 or > MaximumInputCharacters)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.RunInputInvalid,
                 $"Input must contain from 1 through {MaximumInputCharacters} characters.");
         OrchestrationDefinition? definition =
             await orchestrations.GetByIdAsync(orchestrationId, cancellationToken);
         if (definition is null)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.NotFound, "The orchestration was not found.");
         if (definition.Status != OrchestrationStatus.Enabled)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.Disabled, "The orchestration is disabled.");
         OrchestrationVersionSnapshot? snapshot = definition.PublishedVersions
             .FirstOrDefault(version => version.Id == orchestrationVersionId)
             ?.Snapshot;
         if (snapshot is null)
-            return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+            return Failure(
                 OrchestrationErrorCodes.VersionMissing,
                 "The requested orchestration version is not published by this orchestration.");
 
@@ -102,7 +103,7 @@ public sealed class OrchestrationRuntimeService(
             cancellationToken);
     }
 
-    private async Task<OrchestrationOperationResult<OrchestrationRunRecord>> StartSnapshotAsync(
+    private async Task<ServiceResult<OrchestrationRunRecord>> StartSnapshotAsync(
         OrchestrationDefinition definition,
         OrchestrationVersionSnapshot snapshot,
         string normalized,
@@ -114,7 +115,7 @@ public sealed class OrchestrationRuntimeService(
             executionOptions: null,
             cancellationToken);
 
-    private async Task<OrchestrationOperationResult<OrchestrationRunRecord>> StartSnapshotAsync(
+    private async Task<ServiceResult<OrchestrationRunRecord>> StartSnapshotAsync(
         OrchestrationDefinition definition,
         OrchestrationVersionSnapshot snapshot,
         string normalized,
@@ -126,7 +127,7 @@ public sealed class OrchestrationRuntimeService(
             AgentDefinition? agent = await agents.GetDefinitionAsync(binding.AgentId, cancellationToken);
             if (agent?.RuntimeStatus != AgentRuntimeStatus.Enabled ||
                 agent.PublishedVersions.LastOrDefault()?.Id != binding.AgentVersionId)
-                return OrchestrationOperationResult<OrchestrationRunRecord>.Failure(
+                return Failure(
                     OrchestrationErrorCodes.AgentUnavailable,
                     $"Bound Agent version '{binding.AgentVersionId}' is no longer current and enabled.");
         }
@@ -210,8 +211,13 @@ public sealed class OrchestrationRuntimeService(
         }
 
         registered.TrySetResult(true);
-        return OrchestrationOperationResult<OrchestrationRunRecord>.Success(record);
+        return ServiceResult<OrchestrationRunRecord>.OprateSuccess(record);
     }
+
+    private static ServiceResult<OrchestrationRunRecord> Failure(string code, string message) =>
+        ServiceResult<OrchestrationRunRecord>.Failure(
+            OrchestrationServiceStatusCodes.FromErrorCode(code),
+            message);
 
     private async Task ReconcileInitializationFailureAsync(
         Guid runId,

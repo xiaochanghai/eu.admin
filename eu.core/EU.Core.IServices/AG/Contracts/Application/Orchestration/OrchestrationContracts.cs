@@ -110,15 +110,6 @@ public sealed record OrchestrationRunRecord(
     string ErrorCode,
     IReadOnlyList<OrchestrationNodeRunRecord> Nodes);
 
-public sealed record OrchestrationError(string Code, string Message);
-public sealed record OrchestrationOperationResult<T>(T? Value, OrchestrationError? Error)
-{
-    public bool Succeeded => Error is null;
-    public static OrchestrationOperationResult<T> Success(T value) => new(value, null);
-    public static OrchestrationOperationResult<T> Failure(string code, string message) =>
-        new(default, new OrchestrationError(code, message));
-}
-
 public static class OrchestrationErrorCodes
 {
     public const string NotFound = "ORCHESTRATION_NOT_FOUND";
@@ -134,6 +125,59 @@ public static class OrchestrationErrorCodes
     public const string PayloadLimitExceeded = "ORCHESTRATION_PAYLOAD_LIMIT_EXCEEDED";
     public const string LifecycleTransitionInvalid = "ORCHESTRATION_LIFECYCLE_TRANSITION_INVALID";
     public const string ArchiveBlocked = "ORCHESTRATION_ARCHIVE_BLOCKED";
+}
+
+public static class OrchestrationServiceStatusCodes
+{
+    public const int NotFound = 650001;
+    public const int CodeInvalid = 650002;
+    public const int CodeConflict = 650003;
+    public const int RowVersionConflict = 650004;
+    public const int DefinitionInvalid = 650005;
+    public const int VersionMissing = 650006;
+    public const int Disabled = 650007;
+    public const int AgentUnavailable = 650008;
+    public const int RunNotFound = 650009;
+    public const int RunInputInvalid = 650010;
+    public const int PayloadLimitExceeded = 650011;
+    public const int LifecycleTransitionInvalid = 650012;
+    public const int ArchiveBlocked = 650013;
+
+    public static int FromErrorCode(string code) => code switch
+    {
+        OrchestrationErrorCodes.NotFound => NotFound,
+        OrchestrationErrorCodes.CodeInvalid => CodeInvalid,
+        OrchestrationErrorCodes.CodeConflict => CodeConflict,
+        OrchestrationErrorCodes.RowVersionConflict => RowVersionConflict,
+        OrchestrationErrorCodes.DefinitionInvalid => DefinitionInvalid,
+        OrchestrationErrorCodes.VersionMissing => VersionMissing,
+        OrchestrationErrorCodes.Disabled => Disabled,
+        OrchestrationErrorCodes.AgentUnavailable => AgentUnavailable,
+        OrchestrationErrorCodes.RunNotFound => RunNotFound,
+        OrchestrationErrorCodes.RunInputInvalid => RunInputInvalid,
+        OrchestrationErrorCodes.PayloadLimitExceeded => PayloadLimitExceeded,
+        OrchestrationErrorCodes.LifecycleTransitionInvalid => LifecycleTransitionInvalid,
+        OrchestrationErrorCodes.ArchiveBlocked => ArchiveBlocked,
+        _ => 500
+    };
+
+    public static string ToErrorCode(int status) => status switch
+    {
+        NotFound => OrchestrationErrorCodes.NotFound,
+        CodeInvalid => OrchestrationErrorCodes.CodeInvalid,
+        CodeConflict => OrchestrationErrorCodes.CodeConflict,
+        RowVersionConflict => OrchestrationErrorCodes.RowVersionConflict,
+        DefinitionInvalid => OrchestrationErrorCodes.DefinitionInvalid,
+        VersionMissing => OrchestrationErrorCodes.VersionMissing,
+        Disabled => OrchestrationErrorCodes.Disabled,
+        AgentUnavailable => OrchestrationErrorCodes.AgentUnavailable,
+        RunNotFound => OrchestrationErrorCodes.RunNotFound,
+        RunInputInvalid => OrchestrationErrorCodes.RunInputInvalid,
+        PayloadLimitExceeded => OrchestrationErrorCodes.PayloadLimitExceeded,
+        LifecycleTransitionInvalid => OrchestrationErrorCodes.LifecycleTransitionInvalid,
+        ArchiveBlocked => OrchestrationErrorCodes.ArchiveBlocked,
+        _ => "INTERNAL_ERROR"
+    };
 }
 
 public interface IOrchestrationRepository

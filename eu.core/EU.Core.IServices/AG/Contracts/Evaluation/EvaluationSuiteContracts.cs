@@ -92,20 +92,39 @@ public sealed record SetEvaluationSuiteArchiveCommand(
     long ExpectedLogicalRevision,
     bool Archived);
 
-public sealed record EvaluationSuiteError(string Code, string Message);
-
-public sealed record EvaluationSuiteOperationResult<T>(
-    bool Succeeded,
-    T? Value,
-    EvaluationSuiteError? Error)
+public static class EvaluationSuiteServiceStatusCodes
 {
-    public static EvaluationSuiteOperationResult<T> Success(T value) =>
-        new(true, value, null);
+    public const int NotFound = 670001;
+    public const int CodeInvalid = 670002;
+    public const int CodeConflict = 670003;
+    public const int DefinitionInvalid = 670004;
+    public const int RowVersionConflict = 670005;
+    public const int TargetUnavailable = 670006;
+    public const int LifecycleTransitionInvalid = 670007;
 
-    public static EvaluationSuiteOperationResult<T> Failure(
-        string code,
-        string message) =>
-        new(false, default, new EvaluationSuiteError(code, message));
+    public static int FromErrorCode(string code) => code switch
+    {
+        EvaluationSuiteErrorCodes.NotFound => NotFound,
+        EvaluationSuiteErrorCodes.CodeInvalid => CodeInvalid,
+        EvaluationSuiteErrorCodes.CodeConflict => CodeConflict,
+        EvaluationSuiteErrorCodes.DefinitionInvalid => DefinitionInvalid,
+        EvaluationSuiteErrorCodes.RowVersionConflict => RowVersionConflict,
+        EvaluationSuiteErrorCodes.TargetUnavailable => TargetUnavailable,
+        EvaluationSuiteErrorCodes.LifecycleTransitionInvalid => LifecycleTransitionInvalid,
+        _ => 500
+    };
+
+    public static string ToErrorCode(int status) => status switch
+    {
+        NotFound => EvaluationSuiteErrorCodes.NotFound,
+        CodeInvalid => EvaluationSuiteErrorCodes.CodeInvalid,
+        CodeConflict => EvaluationSuiteErrorCodes.CodeConflict,
+        DefinitionInvalid => EvaluationSuiteErrorCodes.DefinitionInvalid,
+        RowVersionConflict => EvaluationSuiteErrorCodes.RowVersionConflict,
+        TargetUnavailable => EvaluationSuiteErrorCodes.TargetUnavailable,
+        LifecycleTransitionInvalid => EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
+        _ => "INTERNAL_ERROR"
+    };
 }
 
 public interface IEvaluationSuiteRepository

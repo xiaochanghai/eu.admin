@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using EU.Core.IServices.Evaluation;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -11,7 +12,7 @@ public sealed class EvaluationBatchComparisonService(
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
-    public async Task<EvaluationComparisonOperationResult> CompareAsync(
+    public async Task<ServiceResult<EvaluationBatchComparisonReport>> CompareAsync(
         Guid baselineBatchId,
         Guid candidateBatchId,
         string tenantId,
@@ -88,7 +89,7 @@ public sealed class EvaluationBatchComparisonService(
             checks,
             checks.All(value => value.Passed),
             _timeProvider.GetUtcNow().ToUniversalTime());
-        return EvaluationComparisonOperationResult.Success(report);
+        return ServiceResult<EvaluationBatchComparisonReport>.OprateSuccess(report);
     }
 
     private static EvaluationCaseComparison CompareCase(
@@ -234,7 +235,9 @@ public sealed class EvaluationBatchComparisonService(
         string actual) =>
         checks.Add(new EvaluationGateCheck(code, passed, expected, actual));
 
-    private static EvaluationComparisonOperationResult Failure(
+    private static ServiceResult<EvaluationBatchComparisonReport> Failure(
         string code,
-        string message) => EvaluationComparisonOperationResult.Failure(code, message);
+        string message) => ServiceResult<EvaluationBatchComparisonReport>.Failure(
+            EvaluationComparisonServiceStatusCodes.FromErrorCode(code),
+            message);
 }

@@ -1,5 +1,6 @@
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.Runtime;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -18,7 +19,7 @@ public interface IAgEvaluationBatchExecutionServices
         int take,
         CancellationToken cancellationToken = default);
 
-    Task<EvaluationBatchOperationResult> RunAsync(
+    Task<ServiceResult<EvaluationBatchRecord>> RunAsync(
         Guid suiteId,
         Guid suiteVersionId,
         AgentExecutionIdentity identity,

@@ -20,8 +20,6 @@ public interface IMainAgentAssignmentRepository
 
 public sealed record SetMainAgentCommand(Guid AgentId, long? ExpectedLogicalRevision);
 
-public sealed record MainAgentError(string Code, string Message);
-
 public static class MainAgentErrorCodes
 {
     public const string NotConfigured = "MAIN_AGENT_NOT_CONFIGURED";
@@ -31,12 +29,31 @@ public static class MainAgentErrorCodes
     public const string RowVersionConflict = "MAIN_AGENT_ROW_VERSION_CONFLICT";
 }
 
-public sealed record MainAgentOperationResult(MainAgentAssignment? Value, MainAgentError? Error)
+public static class MainAgentServiceStatusCodes
 {
-    public bool Succeeded => Error is null;
+    public const int NotConfigured = 610004;
+    public const int AgentNotFound = 610018;
+    public const int AgentDisabled = 610019;
+    public const int VersionMissing = 610020;
+    public const int RowVersionConflict = 610021;
 
-    public static MainAgentOperationResult Success(MainAgentAssignment value) => new(value, null);
+    public static int FromErrorCode(string code) => code switch
+    {
+        MainAgentErrorCodes.NotConfigured => NotConfigured,
+        MainAgentErrorCodes.AgentNotFound => AgentNotFound,
+        MainAgentErrorCodes.AgentDisabled => AgentDisabled,
+        MainAgentErrorCodes.VersionMissing => VersionMissing,
+        MainAgentErrorCodes.RowVersionConflict => RowVersionConflict,
+        _ => 500
+    };
 
-    public static MainAgentOperationResult Failure(string code, string message) =>
-        new(null, new MainAgentError(code, message));
+    public static string ToErrorCode(int status) => status switch
+    {
+        NotConfigured => MainAgentErrorCodes.NotConfigured,
+        AgentNotFound => MainAgentErrorCodes.AgentNotFound,
+        AgentDisabled => MainAgentErrorCodes.AgentDisabled,
+        VersionMissing => MainAgentErrorCodes.VersionMissing,
+        RowVersionConflict => MainAgentErrorCodes.RowVersionConflict,
+        _ => "INTERNAL_ERROR"
+    };
 }

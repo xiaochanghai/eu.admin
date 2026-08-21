@@ -4,6 +4,7 @@ using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Runtime;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -134,7 +135,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                     _parentLease.CancellationToken);
             CancellationToken effectiveToken = effectiveCancellation.Token;
             effectiveToken.ThrowIfCancellationRequested();
-            OrchestrationOperationResult<OrchestrationRunRecord> start =
+            ServiceResult<OrchestrationRunRecord> start =
                 await _orchestrationRuntime.StartVersionAsync(
                     binding.OrchestrationId,
                     binding.OrchestrationVersionId,
@@ -149,14 +150,14 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                         ToolApprovalHandler = _toolApprovalHandler
                     },
                     effectiveToken).ConfigureAwait(false);
-            if (!start.Succeeded)
+            if (!start.Success)
             {
                 return Failure(
-                    start.Error!.Code,
+                    OrchestrationServiceStatusCodes.ToErrorCode(start.Status),
                     "The frozen orchestration version could not be started.");
             }
 
-            started = start.Value!;
+            started = start.Data!;
             await RegisterLinkAsync(
                 started,
                 arguments.Value,

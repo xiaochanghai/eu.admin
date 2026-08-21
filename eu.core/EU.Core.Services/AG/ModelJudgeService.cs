@@ -7,6 +7,7 @@ using EU.Core.IServices.Agents;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -40,7 +41,7 @@ public sealed class ModelJudgeService(
         CancellationToken cancellationToken = default) =>
         reports.ListAsync(batchId, tenantId, Math.Clamp(take, 1, 50), cancellationToken);
 
-    public async Task<ModelJudgeOperationResult> EvaluateAsync(
+    public async Task<ServiceResult<ModelJudgeReport>> EvaluateAsync(
         Guid batchId,
         string tenantId,
         string requestedBy,
@@ -105,7 +106,7 @@ public sealed class ModelJudgeService(
                 batch.Id, tenantId, configurationHash, cancellationToken);
             if (existing is not null)
             {
-                return ModelJudgeOperationResult.Success(existing);
+                return ServiceResult<ModelJudgeReport>.OprateSuccess(existing);
             }
 
             DateTimeOffset started = _timeProvider.GetUtcNow().ToUniversalTime();
@@ -208,12 +209,12 @@ public sealed class ModelJudgeService(
                 existing = await reports.GetByConfigurationAsync(
                     batch.Id, tenantId, configurationHash, cancellationToken);
                 return existing is not null
-                    ? ModelJudgeOperationResult.Success(existing)
+                    ? ServiceResult<ModelJudgeReport>.OprateSuccess(existing)
                     : Failure(ModelJudgeErrorCodes.PersistenceConflict,
                         "The model judge report could not be persisted.");
             }
 
-            return ModelJudgeOperationResult.Success(ModelJudgeContractCloner.Clone(report));
+            return ServiceResult<ModelJudgeReport>.OprateSuccess(ModelJudgeContractCloner.Clone(report));
         }
         finally
         {
@@ -266,6 +267,8 @@ public sealed class ModelJudgeService(
         return Convert.ToHexStringLower(SHA256.HashData(bytes));
     }
 
-    private static ModelJudgeOperationResult Failure(string code, string message) =>
-        ModelJudgeOperationResult.Failure(code, message);
+    private static ServiceResult<ModelJudgeReport> Failure(string code, string message) =>
+        ServiceResult<ModelJudgeReport>.Failure(
+            ModelJudgeServiceStatusCodes.FromErrorCode(code),
+            message);
 }

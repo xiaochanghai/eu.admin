@@ -20,14 +20,14 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        MainAgentOperationResult result = await _assignments.GetAsync(cancellationToken);
-        return result.Succeeded
+        ServiceResult<MainAgentAssignment> result = await _assignments.GetAsync(cancellationToken);
+        return result.Success
             ? new JsonResult(
-                ServiceResult<MainAgentAssignment>.QuerySuccess(result.Value!))
+                ServiceResult<MainAgentAssignment>.QuerySuccess(result.Data!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
-            : FromError(result.Error!);
+            : FromServiceError(result);
     }
 
     [HttpPut]
@@ -35,26 +35,27 @@ public sealed class MainAgentController(MainAgentAssignmentService assignments) 
         [FromBody] SetMainAgentRequest request,
         CancellationToken cancellationToken)
     {
-        MainAgentOperationResult result = await _assignments.SetAsync(
+        ServiceResult<MainAgentAssignment> result = await _assignments.SetAsync(
             new SetMainAgentCommand(request.AgentId, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Succeeded
+        return result.Success
             ? new JsonResult(
-                ServiceResult<MainAgentAssignment>.OprateSuccess(result.Value!))
+                ServiceResult<MainAgentAssignment>.OprateSuccess(result.Data!))
             {
                 StatusCode = StatusCodes.Status200OK
             }
-            : FromError(result.Error!);
+            : FromServiceError(result);
     }
 
-    private IActionResult FromError(MainAgentError error)
+    private IActionResult FromServiceError(ServiceResult<MainAgentAssignment> result)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, error.Code);
+        string errorCode = MainAgentServiceStatusCodes.ToErrorCode(result.Status);
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(
             ServiceResult<AgentApiErrorData>.Failure(
                 descriptor.Status,
-                error.Message,
-                new AgentApiErrorData(error.Code, HttpContext.TraceIdentifier)))
+                result.Message,
+                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         {
             StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
         };

@@ -2,6 +2,7 @@ using EU.Core.IServices.Orchestration;
 using System.Text.RegularExpressions;
 using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -11,7 +12,7 @@ public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
     IAgentDefinitionCatalog agents)
 {
-    public async Task<OrchestrationOperationResult<OrchestrationDefinition>> CreateAsync(
+    public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(
         CreateOrchestrationCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -27,11 +28,11 @@ public sealed class OrchestrationLifecycleService(
             command.Description?.Trim() ?? string.Empty, OrchestrationStatus.Enabled,
             0, draft, []);
         return await repository.TryCreateAsync(value, cancellationToken)
-            ? OrchestrationOperationResult<OrchestrationDefinition>.Success(value)
+            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(value)
             : Failure(OrchestrationErrorCodes.CodeConflict, "An orchestration already uses this code.");
     }
 
-    public async Task<OrchestrationOperationResult<OrchestrationDefinition>> SaveDraftAsync(
+    public async Task<ServiceResult<OrchestrationDefinition>> SaveDraftAsync(
         SaveOrchestrationDraftCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -62,10 +63,10 @@ public sealed class OrchestrationLifecycleService(
             }
         };
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? OrchestrationOperationResult<OrchestrationDefinition>.Success(updated) : Conflict();
+            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated) : Conflict();
     }
 
-    public async Task<OrchestrationOperationResult<OrchestrationDefinition>> PublishAsync(
+    public async Task<ServiceResult<OrchestrationDefinition>> PublishAsync(
         PublishOrchestrationCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -110,7 +111,7 @@ public sealed class OrchestrationLifecycleService(
                 existing.PublishedVersions.Append(published))
         };
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? OrchestrationOperationResult<OrchestrationDefinition>.Success(updated) : Conflict();
+            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated) : Conflict();
     }
 
     public Task<OrchestrationDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
@@ -129,7 +130,7 @@ public sealed class OrchestrationLifecycleService(
                 value.LogicalRevision, value.Draft.Nodes.Count,
                 value.PublishedVersions.LastOrDefault()?.Label)));
 
-    public async Task<OrchestrationOperationResult<OrchestrationDefinition>> SetArchivedAsync(
+    public async Task<ServiceResult<OrchestrationDefinition>> SetArchivedAsync(
         SetOrchestrationArchiveCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -169,7 +170,7 @@ public sealed class OrchestrationLifecycleService(
             LogicalRevision = existing.LogicalRevision + 1
         };
         return await repository.TryReplaceAsync(updated, existing.LogicalRevision, cancellationToken)
-            ? OrchestrationOperationResult<OrchestrationDefinition>.Success(updated)
+            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated)
             : Conflict();
     }
 
@@ -239,8 +240,10 @@ public sealed class OrchestrationLifecycleService(
         return Visit(start);
     }
 
-    private static OrchestrationOperationResult<OrchestrationDefinition> Failure(string code, string message) =>
-        OrchestrationOperationResult<OrchestrationDefinition>.Failure(code, message);
-    private static OrchestrationOperationResult<OrchestrationDefinition> Conflict() =>
+    private static ServiceResult<OrchestrationDefinition> Failure(string code, string message) =>
+        ServiceResult<OrchestrationDefinition>.Failure(
+            OrchestrationServiceStatusCodes.FromErrorCode(code),
+            message);
+    private static ServiceResult<OrchestrationDefinition> Conflict() =>
         Failure(OrchestrationErrorCodes.RowVersionConflict, "The orchestration changed; reload and retry.");
 }

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using EU.Core.IServices.Agents;
 using EU.Core.IServices.Evaluation;
 using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -19,7 +20,7 @@ public sealed class EvaluationSuiteLifecycleService(
     private static readonly JsonSerializerOptions HashJsonOptions = new(JsonSerializerDefaults.Web);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
-    public async Task<EvaluationSuiteOperationResult<EvaluationSuiteDefinition>> CreateAsync(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> CreateAsync(
         CreateEvaluationSuiteCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -54,7 +55,7 @@ public sealed class EvaluationSuiteLifecycleService(
             new EvaluationSuiteDraft([]),
             []);
         return await repository.TryCreateAsync(value, cancellationToken)
-            ? EvaluationSuiteOperationResult<EvaluationSuiteDefinition>.Success(value)
+            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(value)
             : Failure(EvaluationSuiteErrorCodes.CodeConflict, "An evaluation suite already uses this code.");
     }
 
@@ -73,7 +74,7 @@ public sealed class EvaluationSuiteLifecycleService(
                 ? value.Status == status.Value
                 : value.Status is not EvaluationSuiteStatus.Archived));
 
-    public async Task<EvaluationSuiteOperationResult<EvaluationSuiteDefinition>> SaveDraftAsync(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> SaveDraftAsync(
         SaveEvaluationSuiteDraftCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -114,11 +115,11 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? EvaluationSuiteOperationResult<EvaluationSuiteDefinition>.Success(updated)
+            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
             : Conflict();
     }
 
-    public async Task<EvaluationSuiteOperationResult<EvaluationSuiteDefinition>> PublishAsync(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> PublishAsync(
         PublishEvaluationSuiteCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -178,11 +179,11 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? EvaluationSuiteOperationResult<EvaluationSuiteDefinition>.Success(updated)
+            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
             : Conflict();
     }
 
-    public async Task<EvaluationSuiteOperationResult<EvaluationSuiteDefinition>> SetArchivedAsync(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> SetArchivedAsync(
         SetEvaluationSuiteArchiveCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -224,7 +225,7 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? EvaluationSuiteOperationResult<EvaluationSuiteDefinition>.Success(updated)
+            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
             : Conflict();
     }
 
@@ -297,15 +298,17 @@ public sealed class EvaluationSuiteLifecycleService(
         && name.Trim().Length <= 120
         && (description?.Trim().Length ?? 0) <= 1000;
 
-    private static EvaluationSuiteOperationResult<EvaluationSuiteDefinition> Invalid(
+    private static ServiceResult<EvaluationSuiteDefinition> Invalid(
         string message) =>
         Failure(EvaluationSuiteErrorCodes.DefinitionInvalid, message);
 
-    private static EvaluationSuiteOperationResult<EvaluationSuiteDefinition> Conflict() =>
+    private static ServiceResult<EvaluationSuiteDefinition> Conflict() =>
         Failure(EvaluationSuiteErrorCodes.RowVersionConflict, "The evaluation suite changed; reload and retry.");
 
-    private static EvaluationSuiteOperationResult<EvaluationSuiteDefinition> Failure(
+    private static ServiceResult<EvaluationSuiteDefinition> Failure(
         string code,
         string message) =>
-        EvaluationSuiteOperationResult<EvaluationSuiteDefinition>.Failure(code, message);
+        ServiceResult<EvaluationSuiteDefinition>.Failure(
+            EvaluationSuiteServiceStatusCodes.FromErrorCode(code),
+            message);
 }

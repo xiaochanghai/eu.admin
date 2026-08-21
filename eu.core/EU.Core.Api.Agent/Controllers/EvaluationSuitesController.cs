@@ -60,7 +60,7 @@ public sealed class EvaluationSuitesController(
             return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
-        EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
+        ServiceResult<EvaluationSuiteDefinition> result =
             await lifecycle.CreateAsync(
                 new CreateEvaluationSuiteCommand(
                     caller.TenantId,
@@ -69,9 +69,9 @@ public sealed class EvaluationSuitesController(
                     request.Name,
                     request.Description),
                 cancellationToken);
-        if (!result.Succeeded) return FromError(result.Error!);
-        Response.Headers.Location = $"/api/evaluation-suites/{result.Value!.Id}";
-        return OperationSuccess(result.Value, StatusCodes.Status201Created);
+        if (!result.Success) return FromServiceError(result);
+        Response.Headers.Location = $"/api/evaluation-suites/{result.Data!.Id}";
+        return OperationSuccess(result.Data, StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -85,7 +85,7 @@ public sealed class EvaluationSuitesController(
             return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
-        EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
+        ServiceResult<EvaluationSuiteDefinition> result =
             await lifecycle.SaveDraftAsync(
                 new SaveEvaluationSuiteDraftCommand(
                     id,
@@ -96,7 +96,7 @@ public sealed class EvaluationSuitesController(
                     request.Description,
                     cases),
                 cancellationToken);
-        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
+        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -110,7 +110,7 @@ public sealed class EvaluationSuitesController(
             return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
-        EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
+        ServiceResult<EvaluationSuiteDefinition> result =
             await lifecycle.PublishAsync(
                 new PublishEvaluationSuiteCommand(
                     id,
@@ -118,7 +118,7 @@ public sealed class EvaluationSuitesController(
                     caller.UserId,
                     request.ExpectedLogicalRevision),
                 cancellationToken);
-        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
+        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -130,7 +130,7 @@ public sealed class EvaluationSuitesController(
         if (request.AdditionalProperties is { Count: > 0 })
             return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
 
-        EvaluationSuiteOperationResult<EvaluationSuiteDefinition> result =
+        ServiceResult<EvaluationSuiteDefinition> result =
             await lifecycle.SetArchivedAsync(
                 new SetEvaluationSuiteArchiveCommand(
                     id,
@@ -139,7 +139,7 @@ public sealed class EvaluationSuitesController(
                     request.ExpectedLogicalRevision,
                     request.Archived),
                 cancellationToken);
-        return result.Succeeded ? OperationSuccess(result.Value!) : FromError(result.Error!);
+        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
     }
 
     private static bool TryMapCases(
@@ -200,7 +200,10 @@ public sealed class EvaluationSuitesController(
         return true;
     }
 
-    private IActionResult FromError(EvaluationSuiteError error) => FromError(error.Code, error.Message);
+    private IActionResult FromServiceError<T>(ServiceResult<T> result) =>
+        FromError(
+            EvaluationSuiteServiceStatusCodes.ToErrorCode(result.Status),
+            result.Message);
 
     private IActionResult QuerySuccess<T>(T value) => new JsonResult(
         ServiceResult<T>.QuerySuccess(value))

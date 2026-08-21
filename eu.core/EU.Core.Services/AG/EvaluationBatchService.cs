@@ -3,6 +3,7 @@ using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.Runtime;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.IServices;
+using EU.Core.Model;
 
 #nullable enable
 
@@ -33,7 +34,7 @@ public sealed class EvaluationBatchService(
         CancellationToken cancellationToken = default) =>
         batches.ListAsync(suiteId, tenantId, Math.Clamp(take, 1, 100), cancellationToken);
 
-    public async Task<EvaluationBatchOperationResult> RunAsync(
+    public async Task<ServiceResult<EvaluationBatchRecord>> RunAsync(
         Guid suiteId,
         Guid suiteVersionId,
         AgentExecutionIdentity identity,
@@ -130,7 +131,7 @@ public sealed class EvaluationBatchService(
                 EvaluationBatchStatus.Completed,
                 string.Empty,
                 cancellationToken);
-            return EvaluationBatchOperationResult.Success(batch);
+            return ServiceResult<EvaluationBatchRecord>.OprateSuccess(batch);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -393,8 +394,10 @@ public sealed class EvaluationBatchService(
         IEnumerable<EvaluationCaseExecutionRecord> values) =>
         EvaluationBatchContractCloner.CloneCases(values);
 
-    private static EvaluationBatchOperationResult Failure(string code, string message) =>
-        EvaluationBatchOperationResult.Failure(code, message);
+    private static ServiceResult<EvaluationBatchRecord> Failure(string code, string message) =>
+        ServiceResult<EvaluationBatchRecord>.Failure(
+            EvaluationBatchServiceStatusCodes.FromErrorCode(code),
+            message);
 
     private sealed class EvaluationBatchPersistenceException : Exception;
 }
