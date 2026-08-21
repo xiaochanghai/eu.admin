@@ -78,9 +78,11 @@ public sealed class AgAgentAndSkillApiResponse_Should
                 new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
                 CancellationToken.None),
             "The Agent code already exists.");
-        AssertServiceFailure<AgAgentDefinitionDetailDto>(
+        AssertServiceError(
             await agentsController.Get(Guid.NewGuid(), CancellationToken.None),
-            "The Agent was not found.");
+            StatusCodes.Status200OK,
+            610001,
+            "AGENT_NOT_FOUND");
 
         IAgSkillDefinitionServices skillService = Proxy<IAgSkillDefinitionServices>((method, _) =>
             method.Name == nameof(IAgSkillDefinitionServices.GetAsync)

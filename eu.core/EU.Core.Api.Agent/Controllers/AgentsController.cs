@@ -82,9 +82,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken);
         if (value is null)
         {
+            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "AGENT_NOT_FOUND");
             return new JsonResult(
-                ServiceResult<AgAgentDefinitionDetailDto>.OprateFailed(
-                    "The Agent was not found."))
+                ServiceResult<AgentApiErrorData>.Failure(
+                    descriptor.Status,
+                    "The Agent was not found.",
+                    new AgentApiErrorData("AGENT_NOT_FOUND", HttpContext.TraceIdentifier)))
             {
                 StatusCode = StatusCodes.Status200OK
             };
@@ -127,9 +130,12 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
         {
+            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "REQUEST_INVALID");
             return new JsonResult(
-                ServiceResult<AgentDefinition>.OprateFailed(
-                    "The selected model profile is not available."))
+                ServiceResult<AgentApiErrorData>.Failure(
+                    descriptor.Status,
+                    "The selected model profile is not available.",
+                    new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)))
             {
                 StatusCode = StatusCodes.Status200OK
             };
