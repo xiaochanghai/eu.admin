@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Errors;
@@ -83,15 +84,15 @@ public static class AgentApiErrorCatalog
                 ["TOOL_APPROVAL_REVALIDATION_FAILED"] = new(630033, 409),
                 ["TOOL_APPROVAL_DISABLED"] = new(630034, 503),
                 ["TOOL_APPROVAL_NOT_FOUND"] = new(630035, 404),
-                ["KNOWLEDGE_BASE_NOT_FOUND"] = new(640001, 404),
-                ["KNOWLEDGE_BASE_CODE_INVALID"] = new(640002, 400),
-                ["KNOWLEDGE_BASE_CODE_CONFLICT"] = new(640003, 409),
-                ["KNOWLEDGE_BASE_ROW_VERSION_CONFLICT"] = new(640004, 409),
-                ["KNOWLEDGE_DOCUMENT_INVALID"] = new(640005, 400),
-                ["KNOWLEDGE_DOCUMENT_NOT_FOUND"] = new(640006, 404),
-                ["KNOWLEDGE_BASE_UNAVAILABLE"] = new(640007, 503),
-                ["KNOWLEDGE_BASE_LIFECYCLE_TRANSITION_INVALID"] = new(640008, 409),
-                ["KNOWLEDGE_BASE_ARCHIVE_BLOCKED"] = new(640009, 409),
+                ["KNOWLEDGE_BASE_NOT_FOUND"] = new(KnowledgeServiceStatusCodes.NotFound, 404),
+                ["KNOWLEDGE_BASE_CODE_INVALID"] = new(KnowledgeServiceStatusCodes.CodeInvalid, 400),
+                ["KNOWLEDGE_BASE_CODE_CONFLICT"] = new(KnowledgeServiceStatusCodes.CodeConflict, 409),
+                ["KNOWLEDGE_BASE_ROW_VERSION_CONFLICT"] = new(KnowledgeServiceStatusCodes.RowVersionConflict, 409),
+                ["KNOWLEDGE_DOCUMENT_INVALID"] = new(KnowledgeServiceStatusCodes.DocumentInvalid, 400),
+                ["KNOWLEDGE_DOCUMENT_NOT_FOUND"] = new(KnowledgeServiceStatusCodes.DocumentNotFound, 404),
+                ["KNOWLEDGE_BASE_UNAVAILABLE"] = new(KnowledgeServiceStatusCodes.Unavailable, 503),
+                ["KNOWLEDGE_BASE_LIFECYCLE_TRANSITION_INVALID"] = new(KnowledgeServiceStatusCodes.LifecycleTransitionInvalid, 409),
+                ["KNOWLEDGE_BASE_ARCHIVE_BLOCKED"] = new(KnowledgeServiceStatusCodes.ArchiveBlocked, 409),
                 ["KNOWLEDGE_SERVICE_UNAVAILABLE"] = new(640010, 503),
                 ["KNOWLEDGE_REVISION_STALE"] = new(640011, 409),
                 ["KNOWLEDGE_BINDING_UNAVAILABLE"] = new(640012, 503),

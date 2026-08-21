@@ -5,7 +5,7 @@ using EU.Core.Agent.Application.Knowledge;
 namespace EU.Core.IServices;
 
 /// <summary>
-/// 知识库规范化持久化服务。
+/// 鐭ヨ瘑搴撹鑼冨寲鎸佷箙鍖栨湇鍔°€?
 /// </summary>
 public interface IAgKnowledgeBaseDefinitionServices
 {
@@ -21,23 +21,23 @@ public interface IAgKnowledgeBaseDefinitionServices
         KnowledgeBaseQuery query,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> CreateAsync(
+    Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
         CreateKnowledgeBaseCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> UpdateAsync(
+    Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
         UpdateKnowledgeBaseCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
+    Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
         ImportKnowledgeDocumentCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
+    Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
         ImportPdfKnowledgeDocumentCommand command,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> SetArchivedAsync(
+    Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
         SetKnowledgeBaseArchiveCommand command,
         CancellationToken cancellationToken = default);
 
@@ -50,3 +50,4 @@ public interface IAgKnowledgeBaseDefinitionServices
         int take,
         CancellationToken cancellationToken = default);
 }
+

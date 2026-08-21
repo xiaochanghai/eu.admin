@@ -311,17 +311,17 @@ public sealed class AgKnowledgeApiResponse_Should
             return Task.FromResult(true);
         }
 
-        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> CreateAsync(
+        public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
             CreateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
         {
             var value = new KnowledgeBaseDefinition(
                 Guid.NewGuid(), command.Code, command.Name, command.Description,
                 KnowledgeBaseStatus.Enabled, 0, [], [], null);
             await TryCreateAsync(value, cancellationToken);
-            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+            return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
-        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> UpdateAsync(
+        public async Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
             UpdateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
         {
             KnowledgeBaseDefinition current = _values[command.Id];
@@ -331,20 +331,20 @@ public sealed class AgKnowledgeApiResponse_Should
                 LogicalRevision = current.LogicalRevision + 1
             };
             await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
-            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+            return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
-        public Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
+        public Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
             ImportKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
             ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
                 command.FileName, command.MediaType, command.Content, cancellationToken);
 
-        public Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
+        public Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
             ImportPdfKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
             ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
                 command.FileName, command.MediaType, "PDF extracted content.", cancellationToken);
 
-        public async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> SetArchivedAsync(
+        public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
             SetKnowledgeBaseArchiveCommand command, CancellationToken cancellationToken = default)
         {
             KnowledgeBaseDefinition current = _values[command.Id];
@@ -354,10 +354,10 @@ public sealed class AgKnowledgeApiResponse_Should
                 LogicalRevision = current.LogicalRevision + 1
             };
             await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
-            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+            return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
-        private async Task<KnowledgeOperationResult<KnowledgeBaseDefinition>> ImportAsync(
+        private async Task<ServiceResult<KnowledgeBaseDefinition>> ImportAsync(
             Guid id, long revision, string fileName, string mediaType, string content,
             CancellationToken cancellationToken)
         {
@@ -374,8 +374,9 @@ public sealed class AgKnowledgeApiResponse_Should
                 IndexedAtUtc = DateTimeOffset.UtcNow
             };
             await TryReplaceAsync(value, revision, cancellationToken);
-            return KnowledgeOperationResult<KnowledgeBaseDefinition>.Success(value);
+            return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
     }
 
 }
+

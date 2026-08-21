@@ -70,17 +70,17 @@ public sealed class KnowledgeBasesController(
         [FromBody] CreateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        KnowledgeOperationResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.CreateAsync(
+        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.CreateAsync(
             new CreateKnowledgeBaseCommand(request.Code, request.Name, request.Description),
             cancellationToken);
-        if (!result.Succeeded)
+        if (!result.Success)
         {
-            return FromError(result.Error!);
+            return FromServiceError(result);
         }
 
-        Response.Headers.Location = $"/api/knowledge-bases/{result.Value!.Id}";
+        Response.Headers.Location = $"/api/knowledge-bases/{result.Data!.Id}";
         return OperationSuccess(
-            ToDetail(result.Value),
+            ToDetail(result.Data),
             StatusCodes.Status201Created);
     }
 
@@ -90,14 +90,14 @@ public sealed class KnowledgeBasesController(
         [FromBody] UpdateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        KnowledgeOperationResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.UpdateAsync(
+        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.UpdateAsync(
             new UpdateKnowledgeBaseCommand(
                 id, request.ExpectedLogicalRevision, request.Name,
                 request.Description, request.Status),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(ToDetail(result.Value!))
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(ToDetail(result.Data!))
+            : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/documents")]
@@ -106,15 +106,15 @@ public sealed class KnowledgeBasesController(
         [FromBody] ImportKnowledgeDocumentRequest request,
         CancellationToken cancellationToken)
     {
-        KnowledgeOperationResult<KnowledgeBaseDefinition> result =
+        ServiceResult<KnowledgeBaseDefinition> result =
             await knowledgeBaseDefinitionServices.ImportDocumentAsync(
                 new ImportKnowledgeDocumentCommand(
                     id, request.ExpectedLogicalRevision, request.FileName,
                     request.MediaType, request.Content),
                 cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(ToDetail(result.Value!))
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(ToDetail(result.Data!))
+            : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/documents/pdf")]
@@ -138,7 +138,7 @@ public sealed class KnowledgeBasesController(
 
         using var buffer = new MemoryStream(checked((int)file.Length));
         await file.CopyToAsync(buffer, cancellationToken);
-        KnowledgeOperationResult<KnowledgeBaseDefinition> result =
+        ServiceResult<KnowledgeBaseDefinition> result =
             await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
                 new ImportPdfKnowledgeDocumentCommand(
                     id,
@@ -147,9 +147,9 @@ public sealed class KnowledgeBasesController(
                     file.ContentType,
                     buffer.ToArray()),
                 cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(ToDetail(result.Value!))
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(ToDetail(result.Data!))
+            : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -158,15 +158,15 @@ public sealed class KnowledgeBasesController(
         [FromBody] SetKnowledgeBaseArchiveRequest request,
         CancellationToken cancellationToken)
     {
-        KnowledgeOperationResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.SetArchivedAsync(
+        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.SetArchivedAsync(
             new SetKnowledgeBaseArchiveCommand(
                 id,
                 request.ExpectedLogicalRevision,
                 request.Archived),
             cancellationToken);
-        return result.Succeeded
-            ? OperationSuccess(ToDetail(result.Value!))
-            : FromError(result.Error!);
+        return result.Success
+            ? OperationSuccess(ToDetail(result.Data!))
+            : FromServiceError(result);
     }
 
     [HttpGet("{id:guid}/documents")]
@@ -275,8 +275,11 @@ public sealed class KnowledgeBasesController(
         return QuerySuccess(values);
     }
 
-    private IActionResult FromError(KnowledgeError error) =>
-        FromError(error.Code, error.Message);
+    private IActionResult FromServiceError(
+        ServiceResult<KnowledgeBaseDefinition> result) =>
+        FromError(
+            KnowledgeServiceStatusCodes.ToErrorCode(result.Status),
+            result.Message);
 
     private IActionResult QuerySuccess<T>(T value) =>
         new JsonResult(
@@ -384,3 +387,4 @@ public sealed record KnowledgeChunkPageResponse(
     int Take,
     int TotalCount,
     IReadOnlyList<KnowledgeChunkResponse> Items);
+

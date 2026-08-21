@@ -20,23 +20,23 @@ public sealed class AgKnowledgePersistence_Should
         var service = new AgKnowledgeBaseDefinitionServices(
             fixture.CreateRepository<AgKnowledgeBaseDefinition>());
         string code = $"knowledge-{Guid.NewGuid():N}";
-        KnowledgeOperationResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
+        ServiceResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
             new CreateKnowledgeBaseCommand(code, "Atlas Knowledge", "description"));
-        Assert.True(created.Succeeded);
-        KnowledgeOperationResult<KnowledgeBaseDefinition> duplicate = await service.CreateAsync(
+        Assert.True(created.Success);
+        ServiceResult<KnowledgeBaseDefinition> duplicate = await service.CreateAsync(
             new CreateKnowledgeBaseCommand(code, "Duplicate", string.Empty));
-        Assert.False(duplicate.Succeeded);
-        Assert.Equal(KnowledgeErrorCodes.CodeConflict, duplicate.Error?.Code);
+        Assert.False(duplicate.Success);
+        Assert.Equal(KnowledgeServiceStatusCodes.CodeConflict, duplicate.Status);
 
-        KnowledgeOperationResult<KnowledgeBaseDefinition> imported = await service.ImportDocumentAsync(
+        ServiceResult<KnowledgeBaseDefinition> imported = await service.ImportDocumentAsync(
             new ImportKnowledgeDocumentCommand(
-                created.Value!.Id,
-                created.Value.LogicalRevision,
+                created.Data!.Id,
+                created.Data.LogicalRevision,
                 "atlas.txt",
                 "text/plain",
                 "Atlas service escalation code is ORCHID-7319."));
-        Assert.True(imported.Succeeded);
-        KnowledgeBaseDefinition definition = imported.Value!;
+        Assert.True(imported.Success);
+        KnowledgeBaseDefinition definition = imported.Data!;
         KnowledgeBaseDefinition persisted = Assert.IsType<KnowledgeBaseDefinition>(
             await service.GetByCodeAsync(definition.Code));
         Assert.Equal("Atlas service escalation code is ORCHID-7319.", Assert.Single(persisted.Documents).Content);
@@ -53,23 +53,23 @@ public sealed class AgKnowledgePersistence_Should
         Assert.Contains("ORCHID-7319", first.Content);
         Assert.True(first.Score > 0);
 
-        KnowledgeOperationResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
+        ServiceResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
             new UpdateKnowledgeBaseCommand(
                 definition.Id,
                 definition.LogicalRevision,
                 "Atlas Knowledge Updated",
                 definition.Description,
                 KnowledgeBaseStatus.Disabled));
-        Assert.True(disabled.Succeeded);
-        KnowledgeOperationResult<KnowledgeBaseDefinition> stale = await service.UpdateAsync(
+        Assert.True(disabled.Success);
+        ServiceResult<KnowledgeBaseDefinition> stale = await service.UpdateAsync(
             new UpdateKnowledgeBaseCommand(
                 definition.Id,
                 definition.LogicalRevision,
                 "Stale update",
                 definition.Description,
                 KnowledgeBaseStatus.Disabled));
-        Assert.False(stale.Succeeded);
-        Assert.Equal(KnowledgeErrorCodes.RowVersionConflict, stale.Error?.Code);
+        Assert.False(stale.Success);
+        Assert.Equal(KnowledgeServiceStatusCodes.RowVersionConflict, stale.Status);
         Assert.Empty(await service.SearchAsync([definition.Id], "Atlas", 10));
         Assert.DoesNotContain(
             await service.ListPublishedAsync(),
@@ -94,44 +94,44 @@ public sealed class AgKnowledgePersistence_Should
         var service = new AgKnowledgeBaseDefinitionServices(
             fixture.CreateRepository<AgKnowledgeBaseDefinition>(),
             new Lazy<IAgentDefinitionCatalog>(() => agents!));
-        KnowledgeOperationResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
+        ServiceResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
             new CreateKnowledgeBaseCommand(
                 $"knowledge-{Guid.NewGuid():N}",
                 "Referenced Knowledge",
                 string.Empty));
-        Assert.True(created.Succeeded);
-        Guid knowledgeBaseId = created.Value!.Id;
-        KnowledgeOperationResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
+        Assert.True(created.Success);
+        Guid knowledgeBaseId = created.Data!.Id;
+        ServiceResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
             new UpdateKnowledgeBaseCommand(
                 knowledgeBaseId,
-                created.Value.LogicalRevision,
-                created.Value.Name,
-                created.Value.Description,
+                created.Data.LogicalRevision,
+                created.Data.Name,
+                created.Data.Description,
                 KnowledgeBaseStatus.Disabled));
-        Assert.True(disabled.Succeeded);
+        Assert.True(disabled.Success);
         agents = new StubAgentDefinitionCatalog(
             [CreateReferencingAgent(knowledgeBaseId)]);
 
-        KnowledgeOperationResult<KnowledgeBaseDefinition> blocked =
+        ServiceResult<KnowledgeBaseDefinition> blocked =
             await service.SetArchivedAsync(
                 new SetKnowledgeBaseArchiveCommand(
                     knowledgeBaseId,
-                    disabled.Value!.LogicalRevision,
+                    disabled.Data!.LogicalRevision,
                     true));
 
-        Assert.False(blocked.Succeeded);
-        Assert.Equal(KnowledgeErrorCodes.ArchiveBlocked, blocked.Error?.Code);
-        Assert.Contains("knowledge-consumer", blocked.Error?.Message);
+        Assert.False(blocked.Success);
+        Assert.Equal(KnowledgeServiceStatusCodes.ArchiveBlocked, blocked.Status);
+        Assert.Contains("knowledge-consumer", blocked.Message);
 
         agents.Definitions = [];
-        KnowledgeOperationResult<KnowledgeBaseDefinition> archived =
+        ServiceResult<KnowledgeBaseDefinition> archived =
             await service.SetArchivedAsync(
                 new SetKnowledgeBaseArchiveCommand(
                     knowledgeBaseId,
-                    disabled.Value.LogicalRevision,
+                    disabled.Data.LogicalRevision,
                     true));
-        Assert.True(archived.Succeeded);
-        Assert.Equal(KnowledgeBaseStatus.Archived, archived.Value?.Status);
+        Assert.True(archived.Success);
+        Assert.Equal(KnowledgeBaseStatus.Archived, archived.Data?.Status);
     }
 
     private static AgentDefinition CreateReferencingAgent(Guid knowledgeBaseId)
@@ -182,3 +182,4 @@ public sealed class AgKnowledgePersistence_Should
     }
 
 }
+

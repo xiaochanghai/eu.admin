@@ -26,16 +26,45 @@ public sealed record KnowledgePdfExtractionResult(
         new(string.Empty, 0, failure);
 }
 
-public sealed record KnowledgeError(string Code, string Message);
-
-public sealed record KnowledgeOperationResult<T>(T? Value, KnowledgeError? Error)
+public static class KnowledgeServiceStatusCodes
 {
-    public bool Succeeded => Error is null;
+    public const int NotFound = 640001;
+    public const int CodeInvalid = 640002;
+    public const int CodeConflict = 640003;
+    public const int RowVersionConflict = 640004;
+    public const int DocumentInvalid = 640005;
+    public const int DocumentNotFound = 640006;
+    public const int Unavailable = 640007;
+    public const int LifecycleTransitionInvalid = 640008;
+    public const int ArchiveBlocked = 640009;
 
-    public static KnowledgeOperationResult<T> Success(T value) => new(value, null);
+    public static int FromErrorCode(string errorCode) => errorCode switch
+    {
+        KnowledgeErrorCodes.NotFound => NotFound,
+        KnowledgeErrorCodes.CodeInvalid => CodeInvalid,
+        KnowledgeErrorCodes.CodeConflict => CodeConflict,
+        KnowledgeErrorCodes.RowVersionConflict => RowVersionConflict,
+        KnowledgeErrorCodes.DocumentInvalid => DocumentInvalid,
+        KnowledgeErrorCodes.DocumentNotFound => DocumentNotFound,
+        KnowledgeErrorCodes.Unavailable => Unavailable,
+        KnowledgeErrorCodes.LifecycleTransitionInvalid => LifecycleTransitionInvalid,
+        KnowledgeErrorCodes.ArchiveBlocked => ArchiveBlocked,
+        _ => Unavailable
+    };
 
-    public static KnowledgeOperationResult<T> Failure(string code, string message) =>
-        new(default, new KnowledgeError(code, message));
+    public static string ToErrorCode(int status) => status switch
+    {
+        NotFound => KnowledgeErrorCodes.NotFound,
+        CodeInvalid => KnowledgeErrorCodes.CodeInvalid,
+        CodeConflict => KnowledgeErrorCodes.CodeConflict,
+        RowVersionConflict => KnowledgeErrorCodes.RowVersionConflict,
+        DocumentInvalid => KnowledgeErrorCodes.DocumentInvalid,
+        DocumentNotFound => KnowledgeErrorCodes.DocumentNotFound,
+        Unavailable => KnowledgeErrorCodes.Unavailable,
+        LifecycleTransitionInvalid => KnowledgeErrorCodes.LifecycleTransitionInvalid,
+        ArchiveBlocked => KnowledgeErrorCodes.ArchiveBlocked,
+        _ => KnowledgeErrorCodes.Unavailable
+    };
 }
 
 public static class KnowledgeErrorCodes
