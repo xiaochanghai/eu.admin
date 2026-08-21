@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Mcp;
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Services;

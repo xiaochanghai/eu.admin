@@ -1,9 +1,9 @@
-using EU.Core.Agent.Application.Abstractions.Auditing;
-using EU.Core.Agent.Application.Abstractions.Security;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Security;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model.Entity;
 using EU.Core.Repository.Base;
 using EU.Core.Repository.UnitOfWorks;

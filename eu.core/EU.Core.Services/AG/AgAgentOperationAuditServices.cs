@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Auditing;
 
 #nullable enable
 

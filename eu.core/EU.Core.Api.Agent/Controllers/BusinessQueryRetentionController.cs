@@ -1,6 +1,6 @@
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Security;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;

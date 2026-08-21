@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.Skills;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Model;
 using Microsoft.AspNetCore.Mvc;

@@ -3,8 +3,8 @@ using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Globalization;
 using System.Security.Cryptography;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
 using ModelContextProtocol.Client;
 
 namespace EU.Core.Agent.Infrastructure.Mcp;

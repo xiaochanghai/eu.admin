@@ -1,10 +1,10 @@
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.UnifiedEntry;
 using System.Text;
 using System.Text.Json;
-using EU.Core.Agent.Application.Agents;
+using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
 
 #nullable enable
 

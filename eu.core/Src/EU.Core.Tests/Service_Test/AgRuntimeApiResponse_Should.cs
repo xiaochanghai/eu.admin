@@ -2,14 +2,13 @@
 
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using EU.Core.Agent.Application.Abstractions.Auditing;
-using EU.Core.Agent.Application.Abstractions.Security;
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
-using EU.Core.Agent.Application.Validation;
+using EU.Core.IServices.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Security;
+using EU.Core.IServices.Agents;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;

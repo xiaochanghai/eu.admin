@@ -1,9 +1,9 @@
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Health;
-using EU.Core.Agent.Application.Agents;
+using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Skills;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;

@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 
 #nullable enable
 

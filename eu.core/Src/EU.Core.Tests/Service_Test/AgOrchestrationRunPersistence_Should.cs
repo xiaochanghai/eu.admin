@@ -1,5 +1,5 @@
-using EU.Core.Agent.Application.Orchestration;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Orchestration;
+using EU.Core.IServices.Runtime;
 using EU.Core.Model.Entity;
 using EU.Core.Services;
 using Xunit;

@@ -1,4 +1,4 @@
-﻿/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
+/*  代码由框架生成,任何更改都可能导致被代码生成器覆盖，可自行修改。
 * AgAgentDefinition.cs
 *
 * 功 能： N / A
@@ -14,7 +14,7 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
-using EU.Core.Agent.Application.Agents;
+using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
 #nullable enable

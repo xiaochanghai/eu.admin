@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.MainAgent;
+using EU.Core.IServices.MainAgent;
 
 #nullable enable
 

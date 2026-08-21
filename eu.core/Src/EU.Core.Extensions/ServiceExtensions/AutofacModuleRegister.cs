@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extras.DynamicProxy;
 using EU.Core.AOP;
 using EU.Core.Common;
@@ -16,9 +16,10 @@ namespace EU.Core.Extensions;
 public class AutofacModuleRegister : Autofac.Module
 {
     private static readonly IReadOnlySet<string> ManuallyRegisteredServiceTypeNames =
-        new HashSet<string>(StringComparer.Ordinal)
-        {
-            "EU.Core.Services.DelegateToAgentTool",
+    new HashSet<string>(StringComparer.Ordinal)
+    {
+        "EU.Core.Services.AesGcmToolApprovalPayloadProtector",
+        "EU.Core.Services.DelegateToAgentTool",
             "EU.Core.Services.EvaluationBatchService",
             "EU.Core.Services.RunOrchestrationTool",
             "EU.Core.Services.ToolApprovalRuntimeService",

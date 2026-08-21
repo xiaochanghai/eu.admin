@@ -1,6 +1,6 @@
 using System.Text.Json;
 using EU.Core.Api.Agent.Configuration;
-using EU.Core.Agent.Application.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.Agent.Infrastructure.Skills;
 using EU.Core.Agent.Runtime;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;

@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Mcp;
 using EU.Core.Api.Agent.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;

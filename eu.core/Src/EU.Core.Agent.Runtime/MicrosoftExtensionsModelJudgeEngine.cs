@@ -1,5 +1,5 @@
 using System.ClientModel;
-using EU.Core.Agent.Application.Evaluation;
+using EU.Core.IServices.Evaluation;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;

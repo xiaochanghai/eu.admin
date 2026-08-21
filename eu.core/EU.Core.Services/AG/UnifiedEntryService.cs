@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Orchestration;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Orchestration;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 
 #nullable enable
 

@@ -1,8 +1,8 @@
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Mcp;
 
 #nullable enable
 

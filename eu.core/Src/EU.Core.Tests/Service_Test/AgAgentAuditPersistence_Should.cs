@@ -1,6 +1,6 @@
-using EU.Core.Agent.Application.Abstractions.Auditing;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Abstractions.Auditing;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
 using EU.Core.Model.Entity;
 using EU.Core.Services;
 using Xunit;

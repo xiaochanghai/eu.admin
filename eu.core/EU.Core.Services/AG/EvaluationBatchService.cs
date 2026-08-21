@@ -1,7 +1,7 @@
 using System.Text.Json;
-using EU.Core.Agent.Application.Evaluation;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.IServices;
 
 #nullable enable

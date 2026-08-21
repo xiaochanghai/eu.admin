@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model.Entity;
 using EU.Core.Repository.Base;
 using EU.Core.Repository.UnitOfWorks;

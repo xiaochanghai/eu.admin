@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.Skills;
 
 #nullable enable
 

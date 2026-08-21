@@ -1,5 +1,5 @@
-using EU.Core.Agent.Application.Orchestration;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Orchestration;
+using EU.Core.IServices.Runtime;
 using EU.Core.Model.ViewModels.Extend;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;

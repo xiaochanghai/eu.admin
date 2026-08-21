@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.Evaluation;
+using EU.Core.IServices.Agents;
+using EU.Core.IServices.Evaluation;
 using EU.Core.Model.ViewModels.Extend;
 
 #nullable enable

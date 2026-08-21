@@ -1,8 +1,8 @@
 #nullable enable
 
 using System.Collections.Concurrent;
-using EU.Core.Agent.Application.Orchestration;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Orchestration;
+using EU.Core.IServices.Runtime;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;

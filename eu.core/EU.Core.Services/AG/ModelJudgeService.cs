@@ -3,9 +3,9 @@ using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.Evaluation;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Agents;
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model.ViewModels.Extend;
 
 #nullable enable

@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Knowledge;
+using EU.Core.IServices.Knowledge;
 
 #nullable enable
 

@@ -1,6 +1,6 @@
-using EU.Core.Agent.Application.UnifiedEntry;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.UnifiedEntry;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.Skills;
 
 #nullable enable
 

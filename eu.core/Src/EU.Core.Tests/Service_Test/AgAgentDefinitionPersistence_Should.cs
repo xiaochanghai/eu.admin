@@ -1,6 +1,6 @@
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Orchestration;
+using EU.Core.IServices.Agents;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Orchestration;
 using EU.Core.Model;
 using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;

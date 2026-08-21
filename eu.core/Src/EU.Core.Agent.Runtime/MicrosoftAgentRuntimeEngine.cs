@@ -3,19 +3,19 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.Knowledge;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.Knowledge;
 using EU.Core.Model;
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.Skills;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
 using AIChatMessage = Microsoft.Extensions.AI.ChatMessage;
-using RuntimeRunContext = EU.Core.Agent.Application.Runtime.AgentRunContext;
+using RuntimeRunContext = EU.Core.IServices.Runtime.AgentRunContext;
 
 namespace EU.Core.Agent.Runtime;
 

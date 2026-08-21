@@ -1,8 +1,7 @@
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.Knowledge;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Skills;
-using EU.Core.Agent.Application.Validation;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.Knowledge;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Skills;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using System.Runtime.CompilerServices;

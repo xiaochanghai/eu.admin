@@ -2,10 +2,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Security.Cryptography;
 using System.Text;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 

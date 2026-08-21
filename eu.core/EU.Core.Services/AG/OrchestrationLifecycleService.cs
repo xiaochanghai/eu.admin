@@ -1,6 +1,6 @@
-using EU.Core.Agent.Application.Orchestration;
+using EU.Core.IServices.Orchestration;
 using System.Text.RegularExpressions;
-using EU.Core.Agent.Application.Agents;
+using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
 #nullable enable

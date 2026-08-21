@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Mcp;
 using EU.Core.IServices.BASE;
 
 #nullable enable

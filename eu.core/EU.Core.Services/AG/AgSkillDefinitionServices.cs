@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.Skills;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -48,7 +48,7 @@ public sealed class AgSkillDefinitionServices :
         if (!CodePattern.IsMatch(code) ||
             !string.Equals(code, command.Code?.Trim(), StringComparison.Ordinal))
         {
-            return Failure("Skill code must be lowercase kebab-case.");
+            return Failure(SkillErrorCodes.CodeInvalid, "Skill code must be lowercase kebab-case.");
         }
 
         var definition = new SkillDefinition(
@@ -69,7 +69,7 @@ public sealed class AgSkillDefinitionServices :
             if (exists)
             {
                 await Db.Ado.RollbackTranAsync();
-                return Failure("A Skill already uses this code.");
+                return Failure(SkillErrorCodes.CodeConflict, "A Skill already uses this code.");
             }
 
             await Db.Insertable(MapDefinitionEntity(definition)).ExecuteCommandAsync();
@@ -212,7 +212,7 @@ public sealed class AgSkillDefinitionServices :
             SkillDefinition? existing = await GetAsync(command.SkillId, cancellationToken);
             if (existing is null)
             {
-                return Failure("The Skill was not found.");
+                return Failure(SkillErrorCodes.NotFound, "The Skill was not found.");
             }
 
             if (existing.DraftRevision != command.ExpectedDraftRevision)
@@ -222,7 +222,9 @@ public sealed class AgSkillDefinitionServices :
 
             if (existing.Status is SkillStatus.Archived)
             {
-                return Failure("An archived Skill must be restored before it can be edited.");
+                return Failure(
+                    SkillErrorCodes.LifecycleTransitionInvalid,
+                    "An archived Skill must be restored before it can be edited.");
             }
 
             SkillDefinition updated = existing with
@@ -248,7 +250,7 @@ public sealed class AgSkillDefinitionServices :
             SkillDefinition? existing = await GetAsync(command.SkillId, cancellationToken);
             if (existing is null)
             {
-                return Failure("The Skill was not found.");
+                return Failure(SkillErrorCodes.NotFound, "The Skill was not found.");
             }
 
             if (existing.DraftRevision != command.ExpectedDraftRevision)
@@ -258,7 +260,9 @@ public sealed class AgSkillDefinitionServices :
 
             if (existing.Status is SkillStatus.Archived)
             {
-                return Failure("An archived Skill must be restored before its Draft files can be edited.");
+                return Failure(
+                    SkillErrorCodes.LifecycleTransitionInvalid,
+                    "An archived Skill must be restored before its Draft files can be edited.");
             }
 
             SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
@@ -286,7 +290,7 @@ public sealed class AgSkillDefinitionServices :
             SkillDefinition? existing = await GetAsync(command.SkillId, cancellationToken);
             if (existing is null)
             {
-                return Failure("The Skill was not found.");
+                return Failure(SkillErrorCodes.NotFound, "The Skill was not found.");
             }
 
             if (existing.DraftRevision != command.ExpectedDraftRevision)
@@ -296,7 +300,9 @@ public sealed class AgSkillDefinitionServices :
 
             if (existing.Status is SkillStatus.Archived)
             {
-                return Failure("An archived Skill must be restored before its Draft files can be deleted.");
+                return Failure(
+                    SkillErrorCodes.LifecycleTransitionInvalid,
+                    "An archived Skill must be restored before its Draft files can be deleted.");
             }
 
             SkillDefinition updated = existing with { DraftRevision = existing.DraftRevision + 1 };
@@ -321,7 +327,9 @@ public sealed class AgSkillDefinitionServices :
         string versionLabel = command.VersionLabel ?? string.Empty;
         if (!VersionPattern.IsMatch(versionLabel))
         {
-            return Failure("Skill version must be strict SemVer major.minor.patch.");
+            return Failure(
+                SkillErrorCodes.VersionInvalid,
+                "Skill version must be strict SemVer major.minor.patch.");
         }
 
         return await WithLockAsync(command.SkillId, async () =>
@@ -329,7 +337,7 @@ public sealed class AgSkillDefinitionServices :
             SkillDefinition? existing = await GetAsync(command.SkillId, cancellationToken);
             if (existing is null)
             {
-                return Failure("The Skill was not found.");
+                return Failure(SkillErrorCodes.NotFound, "The Skill was not found.");
             }
 
             if (existing.DraftRevision != command.ExpectedDraftRevision)
@@ -339,13 +347,15 @@ public sealed class AgSkillDefinitionServices :
 
             if (existing.Status is SkillStatus.Archived)
             {
-                return Failure("An archived Skill must be restored before it can be published.");
+                return Failure(
+                    SkillErrorCodes.LifecycleTransitionInvalid,
+                    "An archived Skill must be restored before it can be published.");
             }
 
             if (existing.PublishedVersions.Any(version =>
                 string.Equals(version.Label, versionLabel, StringComparison.Ordinal)))
             {
-                return Failure("The Skill version already exists.");
+                return Failure(SkillErrorCodes.VersionConflict, "The Skill version already exists.");
             }
 
             SkillPublishArtifact artifact;
@@ -355,7 +365,7 @@ public sealed class AgSkillDefinitionServices :
             }
             catch (SkillFileStoreException exception)
             {
-                return Failure(exception.Message);
+                return Failure(exception.Code, exception.Message);
             }
 
             var version = new SkillVersion(
@@ -416,7 +426,9 @@ public sealed class AgSkillDefinitionServices :
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
         if (definition is null)
         {
-            return Failed<IReadOnlyList<SkillFileEntry>>("The Skill was not found.");
+            return Failure<IReadOnlyList<SkillFileEntry>>(
+                SkillErrorCodes.NotFound,
+                "The Skill was not found.");
         }
 
         try
@@ -426,7 +438,7 @@ public sealed class AgSkillDefinitionServices :
         }
         catch (SkillFileStoreException exception)
         {
-            return Failed<IReadOnlyList<SkillFileEntry>>(exception.Message);
+            return Failure<IReadOnlyList<SkillFileEntry>>(exception.Code, exception.Message);
         }
     }
 
@@ -440,7 +452,7 @@ public sealed class AgSkillDefinitionServices :
             SkillDefinition? existing = await GetAsync(command.SkillId, cancellationToken);
             if (existing is null)
             {
-                return Failure("The Skill was not found.");
+                return Failure(SkillErrorCodes.NotFound, "The Skill was not found.");
             }
 
             if (existing.DraftRevision != command.ExpectedDraftRevision)
@@ -452,6 +464,7 @@ public sealed class AgSkillDefinitionServices :
             if (existing.Status == target)
             {
                 return Failure(
+                    SkillErrorCodes.LifecycleTransitionInvalid,
                     command.Archived ? "The Skill is already archived." : "Only an archived Skill can be restored.");
             }
 
@@ -462,6 +475,7 @@ public sealed class AgSkillDefinitionServices :
                 if (blockers.Length > 0)
                 {
                     return Failure(
+                        SkillErrorCodes.ArchiveBlocked,
                         $"The Skill is still referenced by Agent(s): {string.Join(", ", blockers)}.");
                 }
             }
@@ -485,7 +499,7 @@ public sealed class AgSkillDefinitionServices :
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
         if (definition is null)
         {
-            return Failed<string>("The Skill was not found.");
+            return Failure<string>(SkillErrorCodes.NotFound, "The Skill was not found.");
         }
 
         try
@@ -495,7 +509,7 @@ public sealed class AgSkillDefinitionServices :
         }
         catch (SkillFileStoreException exception)
         {
-            return Failed<string>(exception.Message);
+            return Failure<string>(exception.Code, exception.Message);
         }
     }
 
@@ -814,7 +828,7 @@ public sealed class AgSkillDefinitionServices :
         }
         catch (SkillFileStoreException exception)
         {
-            return Failure(exception.Message);
+            return Failure(exception.Code, exception.Message);
         }
 
         bool mutationAttempted = false;
@@ -854,7 +868,7 @@ public sealed class AgSkillDefinitionServices :
                     exception);
             }
 
-            return Failure(exception.Message);
+            return Failure(exception.Code, exception.Message);
         }
         catch (Exception exception)
         {
@@ -1210,9 +1224,15 @@ public sealed class AgSkillDefinitionServices :
 
     private static DateTime Required(DateTime? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
 
-    private ServiceResult<SkillDefinition> RevisionConflict() => Failure("The Skill Draft changed before this operation completed.");
+    private ServiceResult<SkillDefinition> RevisionConflict() => Failure(
+        SkillErrorCodes.RevisionConflict,
+        "The Skill Draft changed before this operation completed.");
 
-    public ServiceResult<SkillDefinition> Failure(string message) => Failed<SkillDefinition>(message);
+    private static ServiceResult<SkillDefinition> Failure(string code, string message) =>
+        Failure<SkillDefinition>(code, message);
+
+    private static ServiceResult<T> Failure<T>(string code, string message) =>
+        ServiceResult<T>.Failure(SkillServiceStatusCodes.FromErrorCode(code), message);
 
     private static async Task<T> WithLockAsync<T>(
         Guid id,

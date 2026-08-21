@@ -1,5 +1,5 @@
-using EU.Core.Agent.Application.Evaluation;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.UnifiedEntry;
 
 #nullable enable
 

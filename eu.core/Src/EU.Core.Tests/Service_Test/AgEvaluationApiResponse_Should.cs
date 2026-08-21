@@ -1,9 +1,9 @@
 #nullable enable
 
 using System.Collections.Concurrent;
-using EU.Core.Agent.Application.Abstractions.Security;
-using EU.Core.Agent.Application.Evaluation;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.Abstractions.Security;
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;

@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Security.Cryptography;
 using System.Text;
-using EU.Core.Agent.Application.Skills;
+using EU.Core.IServices.Skills;
 
 namespace EU.Core.Agent.Infrastructure.Skills;
 

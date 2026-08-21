@@ -201,6 +201,27 @@ test("skill file content keeps its text protocol", async t => {
   assert.equal(result, "# Skill");
 });
 
+test("skill file content rejects a structured service failure", async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({
+      Status: 620007,
+      Success: false,
+      Message: "The Skill file was not found.",
+      Data: { ErrorCode: "SKILL_FILE_MISSING", TraceId: "trace-skill-file" }
+    })
+  });
+
+  await assert.rejects(
+    () => skillsApi.readFile("skill-1", "missing.md"),
+    error => error.status === 404
+      && error.businessStatus === 620007
+      && error.errorCode === "SKILL_FILE_MISSING");
+});
+
 test("Agent export parses migrated service errors before returning a file", async t => {
   const previousFetch = globalThis.fetch;
   t.after(() => { globalThis.fetch = previousFetch; });

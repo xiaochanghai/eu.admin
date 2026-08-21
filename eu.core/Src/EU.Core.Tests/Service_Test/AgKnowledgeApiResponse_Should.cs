@@ -1,6 +1,6 @@
 #nullable enable
 
-using EU.Core.Agent.Application.Knowledge;
+using EU.Core.IServices.Knowledge;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices;

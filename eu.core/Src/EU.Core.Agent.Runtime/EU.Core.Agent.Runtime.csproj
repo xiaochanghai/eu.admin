@@ -6,7 +6,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
+    <ProjectReference Include="..\..\EU.Core.IServices\EU.Core.IServices.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AgentSkillsDotNet" Version="1.15.0" />

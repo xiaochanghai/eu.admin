@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Mcp;
 using System.Security.Cryptography;
 using System.Text.Json;
 

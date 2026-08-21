@@ -1,9 +1,9 @@
 #nullable enable
 
 using System.Reflection;
-using EU.Core.Agent.Application.Abstractions.Security;
-using EU.Core.Agent.Application.Approvals;
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Abstractions.Security;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Mcp;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.IServices;
 using EU.Core.Model;

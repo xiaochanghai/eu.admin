@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Security;
 
 #nullable enable
 

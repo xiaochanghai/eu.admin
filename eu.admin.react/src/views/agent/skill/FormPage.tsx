@@ -62,6 +62,9 @@ const formatLocalDateTime = (value: string) => {
 const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, onDisabled }) => {
   const [form] = Form.useForm<SkillFormValues>();
   const onDisabledRef = useRef(onDisabled);
+  const loadRequestRef = useRef(0);
+  const fillRequestRef = useRef(0);
+  const fileRequestRef = useRef(0);
   const [skill, setSkill] = useState<SkillDefinition | null>(null);
   const [files, setFiles] = useState<SkillFileEntry[]>([]);
   const [filePath, setFilePath] = useState("");
@@ -85,6 +88,10 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
 
   const fillSkill = useCallback(
     async (value: SkillDefinition) => {
+      const request = ++fillRequestRef.current;
+      fileRequestRef.current += 1;
+      const loadedFiles = await listSkillFiles(value.Id);
+      if (request !== fillRequestRef.current) return;
       setSkill(value);
       form.setFieldsValue({
         code: value.Code,
@@ -92,7 +99,7 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
         description: value.Description,
         category: value.Category
       });
-      setFiles(await listSkillFiles(value.Id));
+      setFiles(loadedFiles);
       setFilePath("");
       setFileContent("");
       setBasicDirty(false);
@@ -104,6 +111,8 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
   );
 
   const resetEditor = useCallback(() => {
+    fillRequestRef.current += 1;
+    fileRequestRef.current += 1;
     setSkill(null);
     setFiles([]);
     setFilePath("");
@@ -116,15 +125,22 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
   }, [IsView, form]);
 
   const load = useCallback(async () => {
+    const request = ++loadRequestRef.current;
     setLoading(true);
     setLoadError("");
     try {
-      if (Id) await fillSkill(await getSkill(Id));
-      else resetEditor();
+      if (Id) {
+        const value = await getSkill(Id);
+        if (request === loadRequestRef.current) await fillSkill(value);
+      } else if (request === loadRequestRef.current) {
+        resetEditor();
+      }
     } catch (error) {
-      setLoadError(getAgentSkillErrorMessage(error, "Skill 加载失败"));
+      if (request === loadRequestRef.current) {
+        setLoadError(getAgentSkillErrorMessage(error, "Skill 加载失败"));
+      }
     } finally {
-      setLoading(false);
+      if (request === loadRequestRef.current) setLoading(false);
     }
   }, [Id, fillSkill, resetEditor]);
 
@@ -199,14 +215,18 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
       if (fileDirty) message.warning("请先保存当前 Draft 文件");
       return;
     }
+    const request = ++fileRequestRef.current;
     try {
       const content = await readSkillFile(skill.Id, path);
+      if (request !== fileRequestRef.current) return;
       setFilePath(path);
       setFileContent(content);
       setFileDirty(false);
       setFilePersisted(true);
     } catch (error) {
-      message.error(getAgentSkillErrorMessage(error, "Draft 文件读取失败"));
+      if (request === fileRequestRef.current) {
+        message.error(getAgentSkillErrorMessage(error, "Draft 文件读取失败"));
+      }
     }
   };
 

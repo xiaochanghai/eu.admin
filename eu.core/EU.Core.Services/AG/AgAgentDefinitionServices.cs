@@ -1,9 +1,8 @@
-using EU.Core.Agent.Application.Agents;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Mcp;
-using EU.Core.Agent.Application.Orchestration;
-using EU.Core.Agent.Application.Skills;
-using EU.Core.Agent.Application.Validation;
+using EU.Core.IServices.Agents;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Orchestration;
+using EU.Core.IServices.Skills;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;

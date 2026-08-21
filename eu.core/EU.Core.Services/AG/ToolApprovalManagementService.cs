@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Approvals;
+using EU.Core.IServices.Approvals;
 #nullable enable
 
 namespace EU.Core.Services;

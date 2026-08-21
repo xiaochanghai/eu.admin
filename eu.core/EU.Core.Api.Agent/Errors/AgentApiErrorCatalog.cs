@@ -41,7 +41,7 @@ public static class AgentApiErrorCatalog
                 ["SKILL_DRAFT_REVISION_CONFLICT"] = new(620004, 409),
                 ["SKILL_PATH_INVALID"] = new(620005, 400),
                 ["SKILL_FILE_TOO_LARGE"] = new(620006, 413),
-                ["SKILL_FILE_MISSING"] = new(620007, 400),
+                ["SKILL_FILE_MISSING"] = new(620007, 404),
                 ["SKILL_VERSION_INVALID"] = new(620008, 400),
                 ["SKILL_VERSION_CONFLICT"] = new(620009, 409),
                 ["SKILL_VERSION_NOT_PUBLISHED"] = new(620010, 409),

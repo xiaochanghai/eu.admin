@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

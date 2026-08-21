@@ -4,7 +4,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EU.Core.Model\EU.Core.Model.csproj" />
-    <ProjectReference Include="..\Src\EU.Core.Agent.Application\EU.Core.Agent.Application.csproj" />
     <ProjectReference Include="..\Src\EU.Core.Common\EU.Core.Common.csproj" />
   </ItemGroup>
 
@@ -17,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
-using EU.Core.Agent.Application.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;

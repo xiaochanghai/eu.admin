@@ -1,6 +1,6 @@
 namespace EU.Core.Api.Agent.Errors;
 
-using EU.Core.Agent.Application.Knowledge;
+using EU.Core.IServices.Knowledge;
 
 public sealed class RequestBodyTooLargeException : Exception;
 

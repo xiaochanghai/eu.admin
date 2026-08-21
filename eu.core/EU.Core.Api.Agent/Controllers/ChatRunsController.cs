@@ -1,13 +1,13 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using EU.Core.Agent.Application.MainAgent;
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.UnifiedEntry;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;

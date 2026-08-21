@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.MainAgent;
+using EU.Core.IServices.MainAgent;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;

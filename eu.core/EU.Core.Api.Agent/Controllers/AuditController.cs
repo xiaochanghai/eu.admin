@@ -1,7 +1,7 @@
 using EU.Core.Api.Agent.Security;
 using EU.Core.Api.Agent.Configuration;
-using EU.Core.Agent.Application.Abstractions.Auditing;
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Auditing;
+using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;

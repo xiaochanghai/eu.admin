@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model.Entity;
 using EU.Core.Services;
 using Xunit;

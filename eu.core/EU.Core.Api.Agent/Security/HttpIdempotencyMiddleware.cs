@@ -3,7 +3,7 @@ using System.Text;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Security;
 using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Security;

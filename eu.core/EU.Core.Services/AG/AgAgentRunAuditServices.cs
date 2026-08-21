@@ -1,5 +1,5 @@
-using EU.Core.Agent.Application.Runtime;
-using EU.Core.Agent.Application.Mcp;
+using EU.Core.IServices.Runtime;
+using EU.Core.IServices.Mcp;
 
 #nullable enable
 

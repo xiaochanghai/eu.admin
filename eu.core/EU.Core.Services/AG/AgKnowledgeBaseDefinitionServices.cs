@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Knowledge;
+using EU.Core.IServices.Knowledge;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;

@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.UnifiedEntry;
+using EU.Core.IServices.UnifiedEntry;
 using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Configuration;

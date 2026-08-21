@@ -1,5 +1,5 @@
-using EU.Core.Agent.Application.Evaluation;
-using EU.Core.Agent.Application.Runtime;
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.Runtime;
 
 #nullable enable
 

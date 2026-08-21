@@ -1,4 +1,4 @@
-using EU.Core.Agent.Application.Approvals;
+using EU.Core.IServices.Approvals;
 using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Configuration;

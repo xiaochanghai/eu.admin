@@ -1,5 +1,5 @@
 using EU.Core.Api.Agent.Configuration;
-using EU.Core.Agent.Application.Abstractions.Security;
+using EU.Core.IServices.Abstractions.Security;
 using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Security;
