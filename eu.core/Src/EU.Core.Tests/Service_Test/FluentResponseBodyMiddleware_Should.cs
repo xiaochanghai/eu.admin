@@ -8,8 +8,11 @@ namespace EU.Core.Tests.Service_Test;
 
 public sealed class FluentResponseBodyMiddleware_Should
 {
-    [Fact]
-    public async Task Preserve_the_response_stream_for_SSE_requests()
+    [Theory]
+    [InlineData("/api/chat/runs")]
+    [InlineData("/api/stream/chat/7f3c4d58-9d4d-4fc2-aef3-71c85c4bc661")]
+    [InlineData("/api/agents/9a17ab74-b87c-4980-b2e3-2715a40ee942/runs")]
+    public async Task Preserve_the_response_stream_for_known_SSE_requests(string path)
     {
         using ServiceProvider services = new ServiceCollection().BuildServiceProvider();
         var application = new ApplicationBuilder(services);
@@ -26,7 +29,7 @@ public sealed class FluentResponseBodyMiddleware_Should
         var responseBody = new MemoryStream();
         context.Response.Body = responseBody;
         context.Request.Method = HttpMethods.Post;
-        context.Request.Path = "/api/chat/runs";
+        context.Request.Path = path;
 
         await pipeline(context);
 
