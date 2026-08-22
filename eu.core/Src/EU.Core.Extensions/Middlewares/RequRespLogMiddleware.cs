@@ -35,7 +35,7 @@ public class RequRespLogMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (AcceptsEventStream(context.Request))
+        if (StreamingRequestPolicy.IsKnownEventStreamRequest(context.Request))
         {
             await _next(context);
             return;
@@ -114,11 +114,6 @@ public class RequRespLogMiddleware
 
     private static bool IsMultipartRequest(HttpRequest request) =>
         request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
-
-    private static bool AcceptsEventStream(HttpRequest request) =>
-        request.Headers.Accept.ToString().Contains(
-            "text/event-stream",
-            StringComparison.OrdinalIgnoreCase);
 
     private void ResponseDataLog(HttpResponse response)
     {

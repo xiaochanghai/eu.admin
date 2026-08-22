@@ -1,6 +1,5 @@
 using EU.Core.Common.Https;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace EU.Core.Extensions.Middlewares;
@@ -26,7 +25,7 @@ public static class FluentResponseBodyMiddleware
             // 大文件下载：跳过响应体拦截，避免 MemoryStream 全量缓存导致 CPU/内存飙升
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
             if (SkipPaths.Any(p => path.Contains(p)) ||
-                AcceptsEventStream(context.Request))
+                StreamingRequestPolicy.IsKnownEventStreamRequest(context.Request))
             {
                 await next(context);
                 return;
@@ -40,8 +39,4 @@ public static class FluentResponseBodyMiddleware
         });
     }
 
-    private static bool AcceptsEventStream(HttpRequest request) =>
-        request.Headers.Accept.ToString().Contains(
-            "text/event-stream",
-            StringComparison.OrdinalIgnoreCase);
 }
