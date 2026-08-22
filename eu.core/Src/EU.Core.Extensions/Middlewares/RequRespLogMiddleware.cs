@@ -35,6 +35,12 @@ public class RequRespLogMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        if (AcceptsEventStream(context.Request))
+        {
+            await _next(context);
+            return;
+        }
+
         if (AppSettings.app("Middleware", "RequestResponseLog", "Enabled").ObjToBool())
         {
             // 过滤，只有接口
@@ -108,6 +114,11 @@ public class RequRespLogMiddleware
 
     private static bool IsMultipartRequest(HttpRequest request) =>
         request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
+
+    private static bool AcceptsEventStream(HttpRequest request) =>
+        request.Headers.Accept.ToString().Contains(
+            "text/event-stream",
+            StringComparison.OrdinalIgnoreCase);
 
     private void ResponseDataLog(HttpResponse response)
     {
