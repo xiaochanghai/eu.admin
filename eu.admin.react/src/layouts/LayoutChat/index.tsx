@@ -185,6 +185,7 @@ const LayoutChat: React.FC = () => {
       active.terminal = true;
       updateAssistant(active.assistantId, { status: event.kind === "completed" ? "completed" : event.kind === "cancelled" ? "cancelled" : "failed" });
       setIsRunning(false);
+      void loadConversationsRef.current();
     }
   };
   useEffect(() => {
@@ -219,10 +220,10 @@ const LayoutChat: React.FC = () => {
             : item
         )
       );
+      void loadConversationsRef.current();
     }
     activeSdkRunRef.current = undefined;
     setIsRunning(false);
-    void loadConversationsRef.current();
   }, [flushTyping, isSdkRequesting, sdkMessages]);
   const loadConversations = useCallback(async () => {
     const revision = ++conversationRevisionRef.current;
