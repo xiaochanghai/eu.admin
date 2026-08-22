@@ -80,6 +80,54 @@ interface UnifiedChatRunDto {
   Id: string;
 }
 
+interface UnifiedChatRunStateDto {
+  Id: string;
+  Status: string | number;
+  Output?: string | null;
+  ErrorCode?: string | null;
+}
+
+interface UnifiedChatRunDetailsDto {
+  AgentRuns?: Array<{
+    EntryRunId: string;
+    Kind: string | number;
+    AgentVersionId: string;
+    Depth: number;
+    StartedAtUtc: string;
+    Output?: string | null;
+    ErrorCode?: string | null;
+  }>;
+  Orchestrations?: Array<{
+    EntryRunId: string;
+    OrchestrationVersionId: string;
+    Depth: number;
+    StartedAtUtc: string;
+    Output?: string | null;
+    ErrorCode?: string | null;
+  }>;
+  ToolCalls?: Array<{
+    EntryRunId: string;
+    ToolVersionId: string;
+    Depth: number;
+    Status: string | number;
+    StartedAtUtc: string;
+    ArgumentsJson?: string | null;
+    ResultContent?: string | null;
+    ErrorCode?: string | null;
+  }>;
+}
+
+export interface UnifiedChatRunState {
+  id: string;
+  status: string;
+  output: string;
+  errorCode: string;
+}
+
+const unifiedRunStatusNames = ["Pending", "Running", "WaitingForApproval", "Completed", "Failed", "Cancelled", "Blocked"];
+const normalizeRunStatus = (status: string | number) =>
+  typeof status === "number" ? unifiedRunStatusNames[status] || String(status) : status;
+
 interface UnifiedChatRunEventDto {
   EntryRunId: string;
   Sequence: number;
@@ -105,9 +153,13 @@ const readErrorMessage = async (response: Response) => {
   }
 };
 
-const requestJson = async <T>(path: string) => {
+const requestJson = async <T>(path: string, init?: RequestInit) => {
+  const headers = new Headers(init?.headers);
+  headers.set("Accept", "application/json");
+  headers.set("Authorization", `Bearer ${store.getState().user.token}`);
   const response = await fetch(`${apiBaseUrl()}/Agent${path}`, {
-    headers: { Accept: "application/json", Authorization: `Bearer ${store.getState().user.token}` }
+    ...init,
+    headers
   });
   if (!response.ok) throw new Error(await readErrorMessage(response));
   const body = (await response.json()) as { Success?: boolean; Message?: string; Data?: T };
@@ -149,6 +201,71 @@ export const listUnifiedChatRuns = (conversationId: string, take = 20) =>
     `/api/chat/conversations/${encodeURIComponent(conversationId)}/runs?take=${encodeURIComponent(take)}`
   ).then(values => values.map(value => value.Id));
 
+export const getUnifiedChatRun = (runId: string) =>
+  requestJson<UnifiedChatRunStateDto>(`/api/chat/runs/${encodeURIComponent(runId)}`).then(value => ({
+    id: value.Id,
+    status: normalizeRunStatus(value.Status),
+    output: value.Output || "",
+    errorCode: value.ErrorCode || ""
+  }));
+
+export const getUnifiedChatRunDetailEvents = (runId: string) =>
+  requestJson<UnifiedChatRunDetailsDto>(`/api/chat/runs/${encodeURIComponent(runId)}/details`).then(value => {
+    const events: UnifiedChatRunEvent[] = [];
+    for (const run of value.AgentRuns || []) {
+      events.push({
+        runId: run.EntryRunId,
+        conversationId: "",
+        sequence: 0,
+        kind: run.Kind === 0 || String(run.Kind).toLowerCase() === "main" ? "main-agent-started" : "child-agent-started",
+        occurredAtUtc: run.StartedAtUtc,
+        correlationId: "",
+        depth: run.Depth,
+        payloadJson: JSON.stringify({ agentVersionId: run.AgentVersionId, text: run.Output || "", errorCode: run.ErrorCode || "" }),
+        route: ""
+      });
+    }
+    for (const tool of value.ToolCalls || []) {
+      const status = normalizeRunStatus(tool.Status).toLowerCase();
+      events.push({
+        runId: tool.EntryRunId,
+        conversationId: "",
+        sequence: 0,
+        kind: status === "completed" ? "tool-succeeded" : status === "blocked" ? "tool-blocked" : "tool-failed",
+        occurredAtUtc: tool.StartedAtUtc,
+        correlationId: "",
+        depth: tool.Depth,
+        payloadJson: JSON.stringify({
+          toolName: tool.ToolVersionId,
+          argumentsJson: tool.ArgumentsJson || "",
+          text: tool.ResultContent || "",
+          errorCode: tool.ErrorCode || ""
+        }),
+        route: ""
+      });
+    }
+    for (const orchestration of value.Orchestrations || []) {
+      events.push({
+        runId: orchestration.EntryRunId,
+        conversationId: "",
+        sequence: 0,
+        kind: "orchestration-started",
+        occurredAtUtc: orchestration.StartedAtUtc,
+        correlationId: "",
+        depth: orchestration.Depth,
+        payloadJson: JSON.stringify({
+          orchestrationVersionId: orchestration.OrchestrationVersionId,
+          text: orchestration.Output || "",
+          errorCode: orchestration.ErrorCode || ""
+        }),
+        route: ""
+      });
+    }
+    return events
+      .sort((left, right) => Date.parse(left.occurredAtUtc) - Date.parse(right.occurredAtUtc))
+      .map((event, index) => ({ ...event, sequence: index + 1 }));
+  });
+
 export const listUnifiedChatRunEvents = (runId: string, take = 160) =>
   requestJson<UnifiedChatRunEventDto[]>(`/api/chat/runs/${encodeURIComponent(runId)}/events?take=${encodeURIComponent(take)}`).then(
     values =>
@@ -165,6 +282,9 @@ export const listUnifiedChatRunEvents = (runId: string, take = 160) =>
         route: ""
       }))
   );
+
+export const cancelUnifiedChatRun = (runId: string) =>
+  requestJson<{ RunId: string }>(`/api/chat/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
 
 const parseFrame = (frame: string): UnifiedChatRunEvent | null => {
   const fields = frame.split(/\r?\n/);

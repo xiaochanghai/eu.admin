@@ -9,7 +9,10 @@ import ToolBarRight from "@/layouts/components/Header/ToolBarRight";
 import logo from "@/assets/images/logo.png";
 import RouterGuard from "@/routers/helper/RouterGuard";
 import {
+  cancelUnifiedChatRun,
   getUnifiedChatConversation,
+  getUnifiedChatRun,
+  getUnifiedChatRunDetailEvents,
   listUnifiedChatConversations,
   listUnifiedChatRunEvents,
   listUnifiedChatRuns,
@@ -141,6 +144,14 @@ const ToolBarLeft: React.FC = () => (
 
 const NEW_CONVERSATION_KEY = "__new-conversation__";
 
+interface ActiveSdkRun {
+  requestId: number;
+  assistantId: string;
+  runId?: string;
+  terminal: boolean;
+  cancelRequested: boolean;
+}
+
 const LayoutChat: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -173,12 +184,7 @@ const LayoutChat: React.FC = () => {
   const typingCharacterCreditRef = useRef(0);
   const timelineRef = useRef<HTMLDivElement>(null);
   const conversationRevisionRef = useRef(0);
-  const activeSdkRunRef = useRef<{
-    requestId: number;
-    assistantId: string;
-    terminal: boolean;
-    cancelRequested: boolean;
-  }>();
+  const activeSdkRunRef = useRef<ActiveSdkRun>();
   const sdkRequestStartedRef = useRef(false);
   const loadConversationsRef = useRef<() => Promise<void>>(async () => undefined);
 
@@ -247,6 +253,7 @@ const LayoutChat: React.FC = () => {
   sdkEventHandlerRef.current = event => {
     const active = activeSdkRunRef.current;
     if (!active || active.requestId !== requestIdRef.current) return;
+    if (event.runId) active.runId ||= event.runId;
     if (event.conversationId) setConversationId(event.conversationId);
     const payload = parsePayload(event.payloadJson);
     if (event.kind === "message" && event.depth === 0 && payload.eventKind === "Delta") {
@@ -265,6 +272,46 @@ const LayoutChat: React.FC = () => {
       void loadConversationsRef.current();
     }
   };
+  const reconcileDisconnectedRun = useCallback(async (active: ActiveSdkRun) => {
+    if (!active.runId) return false;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        const run = await getUnifiedChatRun(active.runId);
+        const status = run.status.toLowerCase();
+        if (["completed", "failed", "cancelled", "blocked"].includes(status)) {
+          if (activeSdkRunRef.current !== active) return true;
+          const messageStatus = status === "completed" ? "completed" : status === "cancelled" ? "cancelled" : "failed";
+          setMessages(current =>
+            current.map(item =>
+              item.id === active.assistantId
+                ? {
+                    ...item,
+                    content: run.output || item.content || (messageStatus === "cancelled" ? "运行已取消。" : run.errorCode || "请求失败，请重试。"),
+                    status: messageStatus
+                  }
+                : item
+            )
+          );
+          try {
+            let events: UnifiedChatRunEvent[] = await listUnifiedChatRunEvents(active.runId);
+            if (!events.length) events = await getUnifiedChatRunDetailEvents(active.runId);
+            if (activeSdkRunRef.current === active) {
+              setTraces(events.filter(event => event.kind !== "message").map(getTrace));
+            }
+          } catch {
+            // The terminal Run remains authoritative when trace recovery fails.
+          }
+          active.terminal = true;
+          void loadConversationsRef.current();
+          return true;
+        }
+      } catch {
+        // Retry briefly because disconnect cleanup and persistence can race.
+      }
+      if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, 100 * 2 ** attempt));
+    }
+    return false;
+  }, []);
   useEffect(() => {
     const active = activeSdkRunRef.current;
     if (!active) return;
@@ -276,32 +323,36 @@ const LayoutChat: React.FC = () => {
 
     sdkRequestStartedRef.current = false;
     flushTyping();
-    if (!active.terminal) {
-      const fallback = [...sdkMessages]
-        .reverse()
-        .find(item => item.message.role === "assistant")?.message.content;
-      const fallbackText =
-        typeof fallback === "string" && fallback.trim()
-          ? fallback
-          : active.cancelRequested
-            ? "运行已取消。"
-            : "请求失败，请重试。";
-      setMessages(current =>
-        current.map(item =>
-          item.id === active.assistantId
-            ? {
-                ...item,
-                content: item.content || fallbackText,
-                status: active.cancelRequested ? "cancelled" : "failed"
-              }
-            : item
-        )
-      );
-      void loadConversationsRef.current();
-    }
-    activeSdkRunRef.current = undefined;
-    setIsRunning(false);
-  }, [flushTyping, isSdkRequesting, sdkMessages]);
+    void (async () => {
+      const reconciled = active.terminal ? true : await reconcileDisconnectedRun(active);
+      if (activeSdkRunRef.current !== active) return;
+      if (!reconciled) {
+        const fallback = [...sdkMessages]
+          .reverse()
+          .find(item => item.message.role === "assistant")?.message.content;
+        const fallbackText =
+          typeof fallback === "string" && fallback.trim()
+            ? fallback
+            : active.cancelRequested
+              ? "运行已取消。"
+              : "请求失败，请重试。";
+        setMessages(current =>
+          current.map(item =>
+            item.id === active.assistantId
+              ? {
+                  ...item,
+                  content: item.content || fallbackText,
+                  status: active.cancelRequested ? "cancelled" : "failed"
+                }
+              : item
+          )
+        );
+        void loadConversationsRef.current();
+      }
+      activeSdkRunRef.current = undefined;
+      setIsRunning(false);
+    })();
+  }, [flushTyping, isSdkRequesting, reconcileDisconnectedRun, sdkMessages]);
   const loadConversations = useCallback(async () => {
     const revision = ++conversationRevisionRef.current;
     try {
@@ -323,16 +374,32 @@ const LayoutChat: React.FC = () => {
     setTraces([]);
     try {
       const [detail, runs] = await Promise.all([getUnifiedChatConversation(id), listUnifiedChatRuns(id, 1)]);
-      const events = runs[0] ? await listUnifiedChatRunEvents(runs[0]) : [];
+      const latestRun = runs[0] ? await getUnifiedChatRun(runs[0]) : undefined;
+      let events: UnifiedChatRunEvent[] = runs[0] ? await listUnifiedChatRunEvents(runs[0]) : [];
+      if (!events.length && runs[0]) events = await getUnifiedChatRunDetailEvents(runs[0]);
       if (revision !== conversationRevisionRef.current) return;
-      setMessages(
-        detail.messages.map(item => ({
+      const loadedMessages: ChatMessage[] = detail.messages.map(item => ({
           id: item.id,
           role: item.role === 0 || String(item.role).toLowerCase() === "user" ? "user" : "assistant",
           content: item.content,
           citations: []
-        }))
-      );
+        }));
+      const latestStatus = latestRun?.status.toLowerCase();
+      if (
+        latestRun?.output.trim() &&
+        latestStatus &&
+        ["failed", "cancelled", "blocked"].includes(latestStatus) &&
+        !loadedMessages.some(item => item.role === "assistant" && item.content === latestRun.output)
+      ) {
+        loadedMessages.push({
+          id: `recovered-${latestRun.id}`,
+          role: "assistant",
+          content: latestRun.output,
+          citations: [],
+          status: latestStatus === "cancelled" ? "cancelled" : "failed"
+        });
+      }
+      setMessages(loadedMessages);
       setTraces(events.filter(event => event.kind !== "message").map(getTrace));
       const citations = events
         .filter(event => event.kind === "knowledge-citation")
@@ -385,11 +452,23 @@ const LayoutChat: React.FC = () => {
     setMobileHistoryOpen(false);
     if (shouldAbort) abortChat();
   };
-  const cancelRun = useCallback(() => {
+  const cancelRun = useCallback(async () => {
     const active = activeSdkRunRef.current;
-    if (active) active.cancelRequested = true;
-    abortChat();
-  }, [abortChat]);
+    if (!active || active.cancelRequested) return;
+    active.cancelRequested = true;
+    if (!active.runId) {
+      abortChat();
+      return;
+    }
+    try {
+      await cancelUnifiedChatRun(active.runId);
+    } catch (error) {
+      if (activeSdkRunRef.current === active && !active.terminal) {
+        messageApi.warning(error instanceof Error ? error.message : "取消请求失败，已中断当前连接。");
+        abortChat();
+      }
+    }
+  }, [abortChat, messageApi]);
   const bubbleRoles: BubbleListProps["role"] = {
     assistant: {
       placement: "start",
