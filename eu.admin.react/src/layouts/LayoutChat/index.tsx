@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Bubble, Conversations, Sender, ThoughtChain } from "@ant-design/x";
+import { Bubble, Conversations, Sender } from "@ant-design/x";
 import type { BubbleListProps } from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
 import { useXChat } from "@ant-design/x-sdk";
@@ -22,6 +22,7 @@ import "./index.less";
 const { Header, Sider } = Layout;
 const APP_TITLE = import.meta.env.VITE_GLOB_APP_TITLE;
 const terminalKinds = new Set(["completed", "failed", "cancelled"]);
+const MAX_TRACE_ROWS = 80;
 
 type ChatMessage = {
   id: string;
@@ -32,9 +33,19 @@ type ChatMessage = {
 };
 type TraceItem = {
   id: string;
+  kind: string;
+  sequence: number;
+  occurredAtUtc: string;
   title: string;
   description: string;
   tone: "success" | "error" | "loading";
+  payload: Record<string, unknown>;
+};
+type CitationReference = {
+  raw: string;
+  knowledgeBaseCode?: string;
+  fileName?: string;
+  chunkSequence?: string;
 };
 
 const traceTitles: Record<string, string> = {
@@ -48,6 +59,25 @@ const parsePayload = (value: string) => {
   try { return JSON.parse(value) as Record<string, unknown>; } catch { return {} as Record<string, unknown>; }
 };
 const getPayloadText = (payload: Record<string, unknown>) => (typeof payload.text === "string" ? payload.text : "");
+const getPayloadValue = (payload: Record<string, unknown>, ...keys: string[]) => {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "string" || typeof value === "number") return String(value);
+  }
+  return "";
+};
+const parseCitation = (raw: string): CitationReference => {
+  const match = /^\[kb:([^/]+)\/(.+)#(\d+)\]$/.exec(raw.trim());
+  return match
+    ? { raw, knowledgeBaseCode: match[1], fileName: match[2], chunkSequence: match[3] }
+    : { raw };
+};
+const formatTraceTime = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ""
+    : new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(date);
+};
 const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
   const payload = parsePayload(event.payloadJson);
   let description = getPayloadText(payload) || event.route || "正在处理";
@@ -55,9 +85,37 @@ const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
     description = `检索 ${Number(payload.knowledgeBaseCount || 0)} 个知识库，命中 ${Number(payload.knowledgeHitCount || 0)} 个分块`;
   }
   if (event.kind === "approval-required") description = "等待人工审批后继续";
+  if (event.kind === "route-selected") description = getPayloadValue(payload, "route", "Route") || event.route || "direct";
+  if (event.kind === "skill-started") {
+    description = getPayloadValue(payload, "skillName", "SkillName", "skillVersionId", "SkillVersionId") || "Skill";
+  }
+  if (event.kind.startsWith("tool-")) {
+    description = [
+      getPayloadValue(payload, "toolName", "ToolName", "toolVersionId", "ToolVersionId") || "MCP 工具",
+      getPayloadValue(payload, "errorCode", "ErrorCode")
+    ].filter(Boolean).join(" · ");
+  }
+  if (event.kind.startsWith("child-agent")) {
+    description = [
+      getPayloadValue(payload, "agentName", "AgentName", "agentVersionId", "AgentVersionId") || "子 Agent",
+      getPayloadValue(payload, "reason", "Reason", "errorCode", "ErrorCode")
+    ].filter(Boolean).join(" · ");
+  }
+  if (event.kind.startsWith("orchestration-")) {
+    description = [
+      getPayloadValue(payload, "orchestrationName", "OrchestrationName", "orchestrationVersionId", "OrchestrationVersionId") || "编排",
+      getPayloadValue(payload, "reason", "Reason", "errorCode", "ErrorCode")
+    ].filter(Boolean).join(" · ");
+  }
   return {
-    id: `${event.runId}-${event.sequence}`, title: traceTitles[event.kind] || event.kind, description,
-    tone: event.kind === "failed" || event.kind === "tool-failed" ? "error" : terminalKinds.has(event.kind) ? "success" : "loading"
+    id: `${event.runId}-${event.sequence}`,
+    kind: event.kind,
+    sequence: event.sequence,
+    occurredAtUtc: event.occurredAtUtc,
+    title: traceTitles[event.kind] || event.kind,
+    description,
+    tone: event.kind === "failed" || event.kind === "tool-failed" ? "error" : terminalKinds.has(event.kind) ? "success" : "loading",
+    payload
   };
 };
 
@@ -74,6 +132,7 @@ const LayoutChat: React.FC = () => {
   const [traces, setTraces] = useState<TraceItem[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const sdkEventHandlerRef = useRef<(event: UnifiedChatRunEvent) => void>(() => undefined);
   const sdkProviderRef = useRef<UnifiedChatProvider>();
   if (!sdkProviderRef.current) sdkProviderRef.current = new UnifiedChatProvider(event => sdkEventHandlerRef.current(event));
@@ -177,9 +236,9 @@ const LayoutChat: React.FC = () => {
     }
     if (event.kind === "knowledge-citation") {
       const citation = getPayloadText(payload);
-      if (citation) setMessages(current => current.map(item => (item.id === active.assistantId ? { ...item, citations: [...item.citations, citation] } : item)));
+      if (citation) setMessages(current => current.map(item => (item.id === active.assistantId && !item.citations.includes(citation) ? { ...item, citations: [...item.citations, citation] } : item)));
     }
-    if (event.kind !== "message") setTraces(current => [...current.slice(-11), getTrace(event)]);
+    if (event.kind !== "message") setTraces(current => [...current.slice(-(MAX_TRACE_ROWS - 1)), getTrace(event)]);
     if (terminalKinds.has(event.kind)) {
       flushTyping();
       active.terminal = true;
@@ -240,6 +299,7 @@ const LayoutChat: React.FC = () => {
   const selectConversation = useCallback(async (id: string) => {
     if (!id || isRunning) return;
     const revision = ++conversationRevisionRef.current;
+    setMobileHistoryOpen(false);
     setConversationId(id);
     setMessages([]);
     setTraces([]);
@@ -263,7 +323,7 @@ const LayoutChat: React.FC = () => {
       if (citations.length) {
         setMessages(current => {
           const lastAssistantIndex = current.map(item => item.role).lastIndexOf("assistant");
-          return current.map((item, index) => (index === lastAssistantIndex ? { ...item, citations } : item));
+          return current.map((item, index) => (index === lastAssistantIndex ? { ...item, citations: Array.from(new Set(citations)) } : item));
         });
       }
     } catch (error) {
@@ -303,6 +363,7 @@ const LayoutChat: React.FC = () => {
     setTraces([]);
     setInput("");
     setIsRunning(false);
+    setMobileHistoryOpen(false);
   };
   const cancelRun = useCallback(() => {
     const active = activeSdkRunRef.current;
@@ -320,14 +381,15 @@ const LayoutChat: React.FC = () => {
     },
     user: { placement: "end" as const }
   };
+  const citationReferences = Array.from(new Set(messages.flatMap(item => item.citations))).map(parseCitation);
 
   return (
     <RouterGuard>
       {contextHolder}
       <section className="layout-vertical layout-chat"><Layout>
-        <Header><ToolBarLeft /><div className="agent-chat-header-actions"><Tag color={isRunning ? "processing" : "success"}>{isRunning ? "运行中" : "Unified Chat"}</Tag><Button type="text" icon={<InfoCircleOutlined />} onClick={() => setInspectorOpen(value => !value)}>{inspectorOpen ? "收起详情" : "运行详情"}</Button><ToolBarRight layout="Chat" /></div></Header>
+        <Header><ToolBarLeft /><div className="agent-chat-header-actions"><Tag color={isRunning ? "processing" : "success"}>{isRunning ? "运行中" : "Unified Chat"}</Tag><Button className="agent-chat-mobile-history-button" type="text" aria-controls="agent-chat-conversation-list" aria-expanded={mobileHistoryOpen} onClick={() => { setMobileHistoryOpen(value => !value); setInspectorOpen(false); }}>会话</Button><Button type="text" icon={<InfoCircleOutlined />} aria-controls="agent-chat-inspector" aria-expanded={inspectorOpen} onClick={() => { setInspectorOpen(value => !value); setMobileHistoryOpen(false); }}>{inspectorOpen ? "收起详情" : "运行详情"}</Button><ToolBarRight layout="Chat" /></div></Header>
         <main className="agent-chat-main">
-          <aside className="agent-chat-sidebar"><Conversations items={conversations.map(item => ({ key: item.id, label: item.title || "未命名会话", group: "最近" }))} activeKey={conversationId} creation={{ onClick: startNewConversation }} onActiveChange={id => { if (isRunning) messageApi.warning("运行结束后才能切换会话。"); else void selectConversation(String(id)); }} className="agent-chat-conversations" /></aside>
+          <aside className={`agent-chat-sidebar${mobileHistoryOpen ? " is-mobile-open" : ""}`} id="agent-chat-conversation-list"><Conversations items={conversations.map(item => ({ key: item.id, label: item.title || "未命名会话", group: "最近" }))} activeKey={conversationId} creation={{ onClick: startNewConversation }} onActiveChange={id => { if (isRunning) messageApi.warning("运行结束后才能切换会话。"); else void selectConversation(String(id)); }} className="agent-chat-conversations" /></aside>
           <section className="agent-chat-workspace">
             <div className="agent-chat-timeline" ref={timelineRef}>
               {messages.length ? <Bubble.List items={messages.map(item => ({ key: item.id, role: item.role, content: item.content, status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success", loading: item.status === "streaming" && !item.content }))} role={bubbleRoles} /> :
@@ -335,19 +397,40 @@ const LayoutChat: React.FC = () => {
             </div>
             <div className="agent-chat-composer"><Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" /></div>
           </section>
-          <Sider className="agent-chat-inspector" width={340} collapsedWidth={0} collapsed={!inspectorOpen} trigger={null} theme="light">
+          <Sider className="agent-chat-inspector" id="agent-chat-inspector" width={340} collapsedWidth={0} collapsed={!inspectorOpen} trigger={null} theme="light">
             <div className="agent-chat-inspector-content">
               <Typography.Title level={5}>运行详情</Typography.Title>
               <section className="agent-chat-inspector-section">
                 <Typography.Text strong>知识库引用</Typography.Text>
-                {messages.flatMap(item => item.citations).length ? messages.flatMap(item => item.citations).map((citation, index) => <Typography.Paragraph key={`${citation}-${index}`}>{citation}</Typography.Paragraph>) : <Typography.Text type="secondary">本次对话暂无知识库引用。</Typography.Text>}
+                {citationReferences.length ? <div className="agent-chat-citation-list">{citationReferences.map(citation => (
+                  <article className="agent-chat-citation-card" key={citation.raw} title={citation.raw}>
+                    <div className="agent-chat-citation-title">
+                      <Typography.Text strong ellipsis>{citation.fileName || citation.raw}</Typography.Text>
+                      {citation.chunkSequence ? <Tag>分块 {citation.chunkSequence}</Tag> : null}
+                    </div>
+                    {citation.knowledgeBaseCode ? <Typography.Text type="secondary">知识库：{citation.knowledgeBaseCode}</Typography.Text> : null}
+                  </article>
+                ))}</div> : <Typography.Text type="secondary">本次对话暂无知识库引用。</Typography.Text>}
               </section>
               <section className="agent-chat-inspector-section">
                 <Typography.Text strong>运行轨迹</Typography.Text>
-                {traces.length ? traces.map(trace => <ThoughtChain.Item key={trace.id} title={trace.title} description={trace.description} status={trace.tone} />) : <Typography.Text type="secondary">运行后会显示调用轨迹。</Typography.Text>}
+                {traces.length ? <div className="agent-chat-trace-list">{traces.map(trace => (
+                  <details className="agent-chat-trace-row" data-tone={trace.tone} key={trace.id}>
+                    <summary>
+                      <span className="agent-chat-trace-sequence">{String(trace.sequence).padStart(2, "0")}</span>
+                      <span className="agent-chat-trace-copy"><strong>{trace.title}</strong><small>{trace.description}</small></span>
+                      <time>{formatTraceTime(trace.occurredAtUtc)}</time>
+                    </summary>
+                    <div className="agent-chat-trace-detail">
+                      <Typography.Text type="secondary">{trace.kind}</Typography.Text>
+                      <pre>{JSON.stringify(trace.payload, null, 2)}</pre>
+                    </div>
+                  </details>
+                ))}</div> : <Typography.Text type="secondary">运行后会显示调用轨迹。</Typography.Text>}
               </section>
             </div>
           </Sider>
+          {mobileHistoryOpen || inspectorOpen ? <button className="agent-chat-mobile-backdrop" type="button" aria-label="关闭侧栏" onClick={() => { setMobileHistoryOpen(false); setInspectorOpen(false); }} /> : null}
         </main>
       </Layout></section>
     </RouterGuard>
