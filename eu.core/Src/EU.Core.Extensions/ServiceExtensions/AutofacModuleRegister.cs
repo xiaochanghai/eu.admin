@@ -78,6 +78,7 @@ public class AutofacModuleRegister : Autofac.Module
         // 获取 Service.dll 程序集服务，并注册
         var assemblysServices = Assembly.LoadFrom(servicesDllFile);
         builder.RegisterAssemblyTypes(assemblysServices)
+            .PublicOnly()
             .Where(type => !ManuallyRegisteredServiceTypeNames.Contains(
                 type.FullName ?? string.Empty))
             .AsImplementedInterfaces()
