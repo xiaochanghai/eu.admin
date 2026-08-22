@@ -139,6 +139,8 @@ const ToolBarLeft: React.FC = () => (
   <div className="logo"><img src={logo} alt="logo" className="logo-img" /><h2 className="logo-text">{APP_TITLE}</h2></div>
 );
 
+const NEW_CONVERSATION_KEY = "__new-conversation__";
+
 const LayoutChat: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -368,10 +370,11 @@ const LayoutChat: React.FC = () => {
     requestChat({ messages: [{ role: "user", content: inputValue }], conversationId });
   };
   const startNewConversation = () => {
+    const shouldAbort = isRunning || isSdkRequesting;
     requestIdRef.current += 1;
+    conversationRevisionRef.current += 1;
     activeSdkRunRef.current = undefined;
     sdkRequestStartedRef.current = false;
-    abortChat();
     flushTyping();
     setSdkMessages([]);
     setConversationId(undefined);
@@ -380,6 +383,7 @@ const LayoutChat: React.FC = () => {
     setInput("");
     setIsRunning(false);
     setMobileHistoryOpen(false);
+    if (shouldAbort) abortChat();
   };
   const cancelRun = useCallback(() => {
     const active = activeSdkRunRef.current;
@@ -405,7 +409,7 @@ const LayoutChat: React.FC = () => {
       <section className="layout-vertical layout-chat"><Layout>
         <Header><ToolBarLeft /><div className="agent-chat-header-actions"><Tag color={isRunning ? "processing" : "success"}>{isRunning ? "运行中" : "Unified Chat"}</Tag><Button className="agent-chat-mobile-history-button" type="text" aria-controls="agent-chat-conversation-list" aria-expanded={mobileHistoryOpen} onClick={() => { setMobileHistoryOpen(value => !value); setInspectorOpen(false); }}>会话</Button><Button type="text" icon={<InfoCircleOutlined />} aria-controls="agent-chat-inspector" aria-expanded={inspectorOpen} onClick={() => { setInspectorOpen(value => !value); setMobileHistoryOpen(false); }}>{inspectorOpen ? "收起详情" : "运行详情"}</Button><ToolBarRight layout="Chat" /></div></Header>
         <main className="agent-chat-main">
-          <aside className={`agent-chat-sidebar${mobileHistoryOpen ? " is-mobile-open" : ""}`} id="agent-chat-conversation-list"><Conversations items={conversations.map(item => ({ key: item.id, label: item.title || "未命名会话", group: "最近" }))} activeKey={conversationId} creation={{ onClick: startNewConversation }} onActiveChange={id => { if (isRunning) messageApi.warning("运行结束后才能切换会话。"); else void selectConversation(String(id)); }} className="agent-chat-conversations" /></aside>
+          <aside className={`agent-chat-sidebar${mobileHistoryOpen ? " is-mobile-open" : ""}`} id="agent-chat-conversation-list"><Conversations items={conversations.map(item => ({ key: item.id, label: item.title || "未命名会话", group: "最近" }))} activeKey={conversationId ?? NEW_CONVERSATION_KEY} creation={{ onClick: startNewConversation }} onActiveChange={id => { if (isRunning) messageApi.warning("运行结束后才能切换会话。"); else void selectConversation(String(id)); }} className="agent-chat-conversations" /></aside>
           <section className="agent-chat-workspace">
             <div className="agent-chat-timeline" ref={timelineRef}>
               {messages.length ? <Bubble.List items={messages.map(item => ({ key: item.id, role: item.role, content: item.content, status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success", loading: item.status === "streaming" && !item.content }))} role={bubbleRoles} /> :

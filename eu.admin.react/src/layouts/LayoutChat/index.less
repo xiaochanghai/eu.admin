@@ -57,9 +57,9 @@
   .agent-chat-citation-title .ant-typography { min-width: 0; margin: 0; }
   .agent-chat-citation-title .ant-tag { flex-shrink: 0; margin: 0; }
   .agent-chat-trace-row { overflow: hidden; border: 1px solid var(--ant-color-border-secondary); border-radius: 10px; background: var(--ant-color-bg-container); }
-  .agent-chat-trace-row summary { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 11px 10px; cursor: pointer; list-style: none; }
+  .agent-chat-trace-row summary { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 11px 10px 11px 16px; cursor: pointer; list-style: none; }
   .agent-chat-trace-row summary::-webkit-details-marker { display: none; }
-  .agent-chat-trace-row summary::before { position: absolute; width: 3px; height: 28px; border-radius: 2px; background: var(--ant-color-primary); content: ""; }
+  .agent-chat-trace-row summary::before { position: absolute; top: 50%; left: 5px; width: 3px; height: 28px; border-radius: 2px; background: var(--ant-color-primary); content: ""; transform: translateY(-50%); }
   .agent-chat-trace-row[data-tone="success"] summary::before { background: var(--ant-color-success); }
   .agent-chat-trace-row[data-tone="error"] summary::before { background: var(--ant-color-error); }
   .agent-chat-trace-sequence { font-variant-numeric: tabular-nums; color: var(--ant-color-text-tertiary); text-align: right; }
@@ -87,7 +87,9 @@
     .agent-chat-sidebar.is-mobile-open { transform: translateX(0); }
     .agent-chat-timeline { padding: 20px 16px; }
     .agent-chat-composer { padding: 12px 16px 16px; }
-    .agent-chat-inspector { position: absolute; z-index: 12; right: 0; width: min(88vw, 340px) !important; max-width: 100%; height: 100%; box-shadow: -8px 0 24px rgb(0 0 0 / 10%); }
+    .agent-chat-inspector { position: absolute; z-index: 12; right: 0; height: 100%; box-shadow: -8px 0 24px rgb(0 0 0 / 10%); }
+    .agent-chat-inspector:not(.ant-layout-sider-collapsed) { flex: 0 0 min(88vw, 340px) !important; width: min(88vw, 340px) !important; min-width: min(88vw, 340px) !important; max-width: min(88vw, 340px) !important; }
+    .agent-chat-inspector.ant-layout-sider-collapsed { flex: 0 0 0 !important; width: 0 !important; min-width: 0 !important; max-width: 0 !important; }
     .agent-chat-inspector-content { width: 100%; }
     .agent-chat-mobile-backdrop { position: absolute; z-index: 11; inset: 0; display: block; padding: 0; border: 0; background: rgb(0 0 0 / 24%); }
   }
