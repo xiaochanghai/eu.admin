@@ -27,7 +27,6 @@ public sealed class FluentResponseBodyMiddleware_Should
         context.Response.Body = responseBody;
         context.Request.Method = HttpMethods.Post;
         context.Request.Path = "/api/chat/runs";
-        context.Request.Headers.Accept = "text/event-stream";
 
         await pipeline(context);
 

@@ -6,10 +6,7 @@ internal static class StreamingRequestPolicy
 {
     public static bool IsKnownEventStreamRequest(HttpRequest request)
     {
-        if (!HttpMethods.IsPost(request.Method) ||
-            !request.Headers.Accept.ToString().Contains(
-                "text/event-stream",
-                StringComparison.OrdinalIgnoreCase))
+        if (!HttpMethods.IsPost(request.Method))
         {
             return false;
         }
