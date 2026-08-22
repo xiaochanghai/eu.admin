@@ -78,6 +78,16 @@ const formatTraceTime = (value: string) => {
     ? ""
     : new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(date);
 };
+const formatPayloadValue = (value: unknown) => {
+  if (typeof value === "string") {
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
+  }
+  return JSON.stringify(value, null, 2) ?? String(value);
+};
 const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
   const payload = parsePayload(event.payloadJson);
   let description = getPayloadText(payload) || event.route || "正在处理";
@@ -105,6 +115,12 @@ const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
     description = [
       getPayloadValue(payload, "orchestrationName", "OrchestrationName", "orchestrationVersionId", "OrchestrationVersionId") || "编排",
       getPayloadValue(payload, "reason", "Reason", "errorCode", "ErrorCode")
+    ].filter(Boolean).join(" · ");
+  }
+  if (event.kind === "failed") {
+    description = [
+      getPayloadValue(payload, "errorCode", "ErrorCode") || "运行失败",
+      getPayloadValue(payload, "detail", "Detail")
     ].filter(Boolean).join(" · ");
   }
   return {
@@ -414,19 +430,26 @@ const LayoutChat: React.FC = () => {
               </section>
               <section className="agent-chat-inspector-section">
                 <Typography.Text strong>运行轨迹</Typography.Text>
-                {traces.length ? <div className="agent-chat-trace-list">{traces.map(trace => (
-                  <details className="agent-chat-trace-row" data-tone={trace.tone} key={trace.id}>
-                    <summary>
-                      <span className="agent-chat-trace-sequence">{String(trace.sequence).padStart(2, "0")}</span>
-                      <span className="agent-chat-trace-copy"><strong>{trace.title}</strong><small>{trace.description}</small></span>
-                      <time>{formatTraceTime(trace.occurredAtUtc)}</time>
-                    </summary>
-                    <div className="agent-chat-trace-detail">
-                      <Typography.Text type="secondary">{trace.kind}</Typography.Text>
-                      <pre>{JSON.stringify(trace.payload, null, 2)}</pre>
-                    </div>
-                  </details>
-                ))}</div> : <Typography.Text type="secondary">运行后会显示调用轨迹。</Typography.Text>}
+                {traces.length ? <div className="agent-chat-trace-list">{traces.map(trace => {
+                  const argumentsValue = trace.payload.argumentsJson ?? trace.payload.ArgumentsJson;
+                  const resultValue = trace.payload.text ?? trace.payload.Text ?? trace.payload.output ?? trace.payload.Output;
+                  const errorCode = getPayloadValue(trace.payload, "errorCode", "ErrorCode");
+                  const errorDetail = getPayloadValue(trace.payload, "detail", "Detail");
+                  return <details className="agent-chat-trace-row" data-tone={trace.tone} key={trace.id}>
+                      <summary>
+                        <span className="agent-chat-trace-sequence">{String(trace.sequence).padStart(2, "0")}</span>
+                        <span className="agent-chat-trace-copy"><strong>{trace.title}</strong><small>{trace.description}</small></span>
+                        <time>{formatTraceTime(trace.occurredAtUtc)}</time>
+                      </summary>
+                      <div className="agent-chat-trace-detail">
+                        <Typography.Text type="secondary">{trace.kind}</Typography.Text>
+                        {argumentsValue !== undefined ? <section className="agent-chat-trace-block"><strong>调用参数</strong><pre>{formatPayloadValue(argumentsValue)}</pre></section> : null}
+                        {resultValue !== undefined ? <section className="agent-chat-trace-block"><strong>原始结果</strong><pre>{formatPayloadValue(resultValue)}</pre></section> : null}
+                        {errorCode ? <section className="agent-chat-trace-failure"><strong>{errorCode}</strong>{errorDetail ? <span>{errorDetail}</span> : null}</section> : null}
+                        <details className="agent-chat-trace-raw"><summary>完整 payload</summary><pre>{formatPayloadValue(trace.payload)}</pre></details>
+                      </div>
+                    </details>;
+                })}</div> : <Typography.Text type="secondary">运行后会显示调用轨迹。</Typography.Text>}
               </section>
             </div>
           </Sider>
