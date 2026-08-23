@@ -1,0 +1,218 @@
+{
+  "catalogId": "sales-sqlite-demo",
+  "revision": 1,
+  "dataSourceCode": "sales-sqlite-demo",
+  "dialect": "sqlite",
+  "timeZoneId": "Asia/Shanghai",
+  "culture": "zh-CN",
+  "formatterVersion": "1.0",
+  "includeBoundaryTies": true,
+  "entities": [
+    {
+      "name": "orders",
+      "physicalTable": "orders",
+      "requiredPermission": "business.sales.read",
+      "requiresTimeRange": true,
+      "description": "虚构销售订单事实实体",
+      "grain": [
+        "order.id"
+      ],
+      "defaultScopeField": "order.tenantId",
+      "fields": [
+        {
+          "name": "order.id",
+          "physicalColumn": "order_id",
+          "kind": "dimension",
+          "dataType": "integer",
+          "requiredPermission": "business.sales.read",
+          "description": "虚构订单标识",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "order.customerId",
+          "physicalColumn": "customer_id",
+          "kind": "dimension",
+          "dataType": "integer",
+          "requiredPermission": "business.sales.read",
+          "description": "虚构客户关联标识",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "order.region",
+          "physicalColumn": "region_code",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.sales.read",
+          "description": "虚构销售区域范围",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "order.orderDate",
+          "physicalColumn": "ordered_at_utc",
+          "kind": "time",
+          "dataType": "dateTime",
+          "requiredPermission": "business.sales.read",
+          "description": "虚构订单发生时间",
+          "allowedOperators": [
+            "equal",
+            "greaterThanOrEqual",
+            "lessThan",
+            "between"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "order.profit",
+          "physicalColumn": "profit_amount",
+          "kind": "measure",
+          "dataType": "decimal",
+          "requiredPermission": "business.sales.profit.read",
+          "description": "虚构订单利润金额",
+          "allowedOperators": [
+            "equal",
+            "greaterThan",
+            "greaterThanOrEqual",
+            "lessThan",
+            "lessThanOrEqual",
+            "between"
+          ],
+          "allowedAggregations": [
+            "sum",
+            "average",
+            "minimum",
+            "maximum"
+          ],
+          "sensitivity": "confidential",
+          "additivity": "additive",
+          "unit": "currency",
+          "currency": "CNY",
+          "precision": 18,
+          "scale": 2,
+          "nullHandling": "zero"
+        },
+        {
+          "name": "order.tenantId",
+          "physicalColumn": "tenant_id",
+          "kind": "scope",
+          "dataType": "string",
+          "description": "可信租户隔离范围",
+          "requiredPermission": "business.sales.read",
+          "allowedOperators": [],
+          "allowedAggregations": [],
+          "sensitivity": "restricted",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        }
+      ]
+    },
+    {
+      "name": "customers",
+      "physicalTable": "customers",
+      "requiredPermission": "business.sales.read",
+      "requiresTimeRange": false,
+      "description": "虚构客户维度实体",
+      "grain": [
+        "customer.id"
+      ],
+      "defaultScopeField": "",
+      "fields": [
+        {
+          "name": "customer.id",
+          "physicalColumn": "customer_id",
+          "kind": "dimension",
+          "dataType": "integer",
+          "requiredPermission": "business.sales.read",
+          "description": "虚构客户标识",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "customer.name",
+          "physicalColumn": "customer_name",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.sales.customer.read",
+          "description": "虚构客户名称",
+          "allowedOperators": [
+            "equal",
+            "in",
+            "contains"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "confidential",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "name": "orders.customer",
+      "fromEntity": "orders",
+      "toEntity": "customers",
+      "fromField": "order.customerId",
+      "toField": "customer.id",
+      "cardinality": "manyToOne",
+      "fanOutPolicy": "notApplicable"
+    }
+  ]
+}

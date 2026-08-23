@@ -1,126 +1,80 @@
-﻿using System.Reflection;
-
 using Microsoft.AspNetCore.Authorization;
 
 namespace EU.Core.MCP.Controllers;
 
 /// <summary>
-/// MCP基础服务
+/// Shared MCP JSON-RPC controller behavior.
 /// </summary>
-/// <typeparam name="IServiceBase"></typeparam>
-[ApiController, Route("/[controller]"), Authorize(Permissions.Name)]
-public class BaseController<IServiceBase> : ControllerBase
+[ApiController, Authorize(Permissions.Name)]
+public abstract class BaseController<TService> : ControllerBase
+    where TService : class, IBaseService
 {
-    #region 初始化
-    protected readonly IServiceBase _service;
-    protected readonly ILogger<BaseController<IServiceBase>> _logger;
+    protected readonly TService? _service;
+    protected readonly ILogger<BaseController<TService>> _logger;
 
-    /// <summary>
-    /// 初始化 (注入)
-    /// </summary>
-    public BaseController(IServiceBase service, ILogger<BaseController<IServiceBase>> logger)
+    protected BaseController(
+        TService? service,
+        ILogger<BaseController<TService>> logger)
     {
         _service = service;
         _logger = logger;
     }
-    #endregion
 
-    #region MyRegion
-    /// <summary>
-    /// Health check endpoint
-    /// </summary>
-    [AllowAnonymous, HttpGet]
-    public IActionResult HealthCheck()
+    [NonAction]
+    protected async Task<JsonRpcResponse> HandleMcpRequestAsync(
+        JsonRpcRequest request,
+        CancellationToken cancellationToken)
     {
-        return Ok("MCP API is running!");
-    }
-    #endregion
-
-
-    /// <summary>
-    /// Main MCP endpoint for JSON-RPC requests
-    /// </summary>
-    [HttpPost("mcp")]
-    public async Task<JsonRpcResponse> HandleMcpRequest([FromBody] JsonRpcRequest request)
-    {
-        _logger.LogInformation($"Received MCP request: {request.Method}");
-
-
+        _logger.LogInformation("Received MCP request: {Method}", request.Method);
         try
         {
-            var result = await ProcessMcpMethod(request);
-
-            return new JsonRpcResponse
-            {
-                Result = result,
-                Id = request.Id
-                // Don't set Error field when there's no error
-            };
+            object result = await ProcessMcpMethodAsync(request, cancellationToken);
+            return new JsonRpcResponse { Result = result, Id = request.Id };
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _logger.LogError(ex, $"Error handling MCP request: {request.Method}");
-
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error handling MCP request: {Method}", request.Method);
             return new JsonRpcResponse
             {
                 Error = new JsonRpcError
                 {
-                    Code = GetErrorCode(ex),
-                    Message = ex.Message
+                    Code = GetErrorCode(exception),
+                    Message = exception is ArgumentException or NotSupportedException
+                        ? exception.Message
+                        : "Internal error."
                 },
                 Id = request.Id
             };
         }
     }
 
-    private async Task<object> ProcessMcpMethod(JsonRpcRequest request)
+    private async Task<object> ProcessMcpMethodAsync(
+        JsonRpcRequest request,
+        CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Received MCP request.Method: {request.Method}");
-
-        if (request.Method == "notifications/initialized")
+        if (_service is null)
         {
-            return new
-            {
-
-            };
+            throw new InvalidOperationException("MCP service is unavailable.");
         }
-        switch (request.Method)
-        {
-            case "initialize":
-                var result = InvokeService("HandleInitialize", [request.Params!]);
-                return result;
-            case "tools/list":
-                return InvokeService("GetAvailableTools", []);
 
-            case "tools/call":
-                return await InvokeServiceAsync("HandleToolCallAsync", [request.Params!]);
-            default:
-                throw new ArgumentException($"Unknown method: {request.Method}");
-        }
-    }
-
-    private static int GetErrorCode(Exception ex)
-    {
-        return ex switch
+        return request.Method switch
         {
-            ArgumentException => -32602, // Invalid params
-            NotSupportedException => -32601, // Method not found
-            _ => -32603 // Internal error
+            "notifications/initialized" => new { },
+            "initialize" => _service.HandleInitialize(request.Params),
+            "tools/list" => _service.GetAvailableTools(),
+            "tools/call" => await _service.HandleToolCallAsync(request.Params, cancellationToken),
+            _ => throw new NotSupportedException("Unknown MCP method.")
         };
     }
 
-    private object InvokeService(string methodName, object[] parameters)
+    private static int GetErrorCode(Exception exception) => exception switch
     {
-        return _service.GetType().GetMethod(methodName).Invoke(_service, parameters);
-    }
-
-
-    [NonAction]
-    private async Task<object> InvokeServiceAsync(string methodName, object[] parameters)
-    {
-        var task = _service.GetType().InvokeMember(methodName, BindingFlags.InvokeMethod, null, _service, parameters) as Task;
-        if (task != null) await task;
-        var result = task?.GetType().GetProperty("Result")?.GetValue(task);
-        return result;
-    }
+        ArgumentException => -32602,
+        NotSupportedException => -32601,
+        _ => -32603
+    };
 }

@@ -18,5 +18,7 @@ public interface IBaseService
     /// <summary>
     /// Execute a tool call
     /// </summary>
-    Task<McpToolResult> HandleToolCallAsync(JsonElement? parameters);
+    Task<object> HandleToolCallAsync(
+        JsonElement? parameters,
+        CancellationToken cancellationToken);
 }

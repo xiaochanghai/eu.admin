@@ -76,7 +76,9 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
         return new { tools = allTools };
     }
 
-    public virtual async Task<McpToolResult> HandleToolCallAsync(JsonElement? parameters)
+    public virtual async Task<object> HandleToolCallAsync(
+        JsonElement? parameters,
+        CancellationToken cancellationToken)
     {
         if (parameters == null)
             throw new ArgumentException("Missing parameters");

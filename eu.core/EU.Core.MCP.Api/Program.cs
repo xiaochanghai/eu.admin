@@ -5,6 +5,8 @@ using EU.Core.Common.Core;
 using EU.Core.Domain;
 using EU.Core.Extensions;
 using EU.Core.MCP.Api.Extensions;
+using EU.Core.Api.MCP.Services.BusinessQuery.Security;
+using ModelContextProtocol.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,6 @@ builder.Host
     .ConfigureContainer<ContainerBuilder>(builder =>
     {
         builder.RegisterModule(new AutofacModuleRegister());
-        builder.RegisterModule(new AutofacMCPModuleRegister());
         //builder.RegisterModule<AutofacPropertityModuleReg>();
 
         //注册仓储，所有IRepository接口到Repository的映射
@@ -66,7 +67,7 @@ builder.Services.AddHttpContextSetup();
 builder.Services.AddAuthenticationAndAuthorizationSetup();
 
 // Register our services
-builder.Services.AddMcpServices(); 
+builder.Services.AddMcpServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -83,11 +84,19 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+if (app.Configuration.GetValue<bool>("BusinessQuery:Enabled"))
+{
+    app.UseMiddleware<BusinessQueryAuthenticationMiddleware>();
+    // Standard MCP SDK endpoint is temporarily disabled. Keep the controller endpoint enabled.
+    // app.MapMcp("/mcp/business-query");
+}
 
 // Add request logging middleware
 app.Use(async (context, next) =>
 {
-    if (context.Request.Method == "POST" && context.Request.Path.StartsWithSegments("/mcp"))
+    if (context.Request.Method == "POST"
+        && context.Request.Path.StartsWithSegments("/mcp")
+        && !context.Request.Path.StartsWithSegments("/mcp/business-query"))
     {
         context.Request.EnableBuffering();
         var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
