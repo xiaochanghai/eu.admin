@@ -6,6 +6,9 @@ using EU.Core.Api.Agent.Security;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Mcp;
+using EU.Core.IServices;
+using EU.Core.IServices.Tasks;
+using EU.Core.IServices.UnifiedEntry;
 using EU.Core.IServices.Runtime;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
@@ -117,6 +120,24 @@ public sealed class ToolApprovalsController(
                     caller.Permissions,
                     caller.CorrelationId),
                 cancellationToken);
+            AgentTaskStatus taskStatus = value.Status switch
+            {
+                UnifiedRunStatus.Completed => AgentTaskStatus.Completed,
+                UnifiedRunStatus.Cancelled => AgentTaskStatus.Cancelled,
+                _ => AgentTaskStatus.Failed
+            };
+            IAgAgentTaskServices? agentTasks =
+                HttpContext.RequestServices.GetService<IAgAgentTaskServices>();
+            if (agentTasks is not null)
+            {
+                await agentTasks.SynchronizeRunAsync(new SynchronizeAgentTaskRunCommand(
+                    value.EntryRunId,
+                    caller.TenantId,
+                    caller.UserId,
+                    taskStatus,
+                    value.ErrorCode,
+                    timeProvider.GetUtcNow()), cancellationToken);
+            }
             return OperationSuccess(value);
         }
         catch (ToolApprovalException exception)

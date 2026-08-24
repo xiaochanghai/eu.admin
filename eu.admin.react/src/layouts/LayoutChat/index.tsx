@@ -1,22 +1,32 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Bubble, Conversations, Sender } from "@ant-design/x";
 import type { BubbleListProps } from "@ant-design/x";
-import XMarkdown from "@ant-design/x-markdown";
 import { useXChat } from "@ant-design/x-sdk";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { Button, Flex, Layout, Tag, Typography, message } from "antd";
 import ToolBarRight from "@/layouts/components/Header/ToolBarRight";
 import logo from "@/assets/images/logo.png";
 import RouterGuard from "@/routers/helper/RouterGuard";
+import EmbeddedModuleContent, {
+  extractEmbeddedModules,
+  type EmbeddedModuleReference
+} from "./EmbeddedModuleContent";
 import {
+  cancelAgentTask,
   cancelUnifiedChatRun,
+  createAgentTask,
   getUnifiedChatConversation,
+  getAgentTaskDetail,
   getUnifiedChatRun,
   getUnifiedChatRunDetailEvents,
   listUnifiedChatConversations,
+  listAgentTasks,
+  resumeAgentTaskWithUserInput,
   listUnifiedChatRunEvents,
   listUnifiedChatRuns,
   UnifiedChatProvider,
+  type AgentTask,
+  type AgentTaskDetail,
   type UnifiedChatConversation,
   type UnifiedChatRunEvent
 } from "@/api/modules/agentChat";
@@ -26,6 +36,32 @@ const { Header, Sider } = Layout;
 const APP_TITLE = import.meta.env.VITE_GLOB_APP_TITLE;
 const terminalKinds = new Set(["completed", "failed", "cancelled"]);
 const MAX_TRACE_ROWS = 80;
+const activeTaskStatuses = new Set(["Pending", "Running", "WaitingForApproval", "WaitingForUser"]);
+const taskStatusLabels: Record<string, string> = {
+  Pending: "等待执行",
+  Running: "执行中",
+  WaitingForApproval: "等待审批",
+  WaitingForUser: "等待回复",
+  Completed: "已完成",
+  Failed: "失败",
+  Cancelled: "已取消"
+};
+const taskStatusColors: Record<string, string> = {
+  Pending: "default",
+  Running: "processing",
+  WaitingForApproval: "warning",
+  WaitingForUser: "warning",
+  Completed: "success",
+  Failed: "error",
+  Cancelled: "default"
+};
+const taskAttemptStatusLabels: Record<string, string> = {
+  Running: "运行中",
+  Completed: "已完成",
+  Failed: "失败",
+  Cancelled: "已取消",
+  Paused: "已暂停"
+};
 
 type ChatMessage = {
   id: string;
@@ -33,6 +69,7 @@ type ChatMessage = {
   content: string;
   status?: "streaming" | "completed" | "failed" | "cancelled";
   citations: string[];
+  modules: EmbeddedModuleReference[];
 };
 type TraceItem = {
   id: string;
@@ -160,6 +197,13 @@ const LayoutChat: React.FC = () => {
   const [conversations, setConversations] = useState<UnifiedChatConversation[]>([]);
   const [traces, setTraces] = useState<TraceItem[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [agentTasks, setAgentTasks] = useState<AgentTask[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [queueingTask, setQueueingTask] = useState(false);
+  const [cancellingTaskId, setCancellingTaskId] = useState<string>();
+  const [resumingTaskId, setResumingTaskId] = useState<string>();
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<AgentTaskDetail>();
+  const [loadingTaskDetailId, setLoadingTaskDetailId] = useState<string>();
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const sdkEventHandlerRef = useRef<(event: UnifiedChatRunEvent) => void>(() => undefined);
@@ -187,6 +231,8 @@ const LayoutChat: React.FC = () => {
   const activeSdkRunRef = useRef<ActiveSdkRun>();
   const sdkRequestStartedRef = useRef(false);
   const loadConversationsRef = useRef<() => Promise<void>>(async () => undefined);
+  const knownTaskConversationIdsRef = useRef<Set<string>>(new Set());
+  const newConversationTaskIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     document.title = `AI 助手 - ${APP_TITLE}`;
@@ -200,6 +246,134 @@ const LayoutChat: React.FC = () => {
     };
   }, []);
   useEffect(() => { timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: "smooth" }); }, [messages, sdkMessages, traces]);
+
+  useEffect(() => {
+    if (!inspectorOpen) return;
+    let disposed = false;
+    let loading = false;
+    const loadTasks = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const values = await listAgentTasks();
+        if (!disposed) {
+          const conversationIds = values.flatMap(task => task.conversationId ? [task.conversationId] : []);
+          const discoveredConversation = conversationIds.some(id => !knownTaskConversationIdsRef.current.has(id));
+          knownTaskConversationIdsRef.current = new Set(conversationIds);
+          setAgentTasks(values);
+          if (discoveredConversation) void loadConversationsRef.current();
+        }
+      } catch (error) {
+        if (!disposed) messageApi.error(error instanceof Error ? error.message : "任务列表加载失败");
+      } finally {
+        loading = false;
+        if (!disposed) setTasksLoading(false);
+      }
+    };
+    setTasksLoading(true);
+    void loadTasks();
+    const timer = window.setInterval(() => void loadTasks(), 3000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [inspectorOpen, conversationId, messageApi]);
+
+  const queueAgentTask = useCallback(async () => {
+    const normalized = input.trim();
+    if (!normalized || queueingTask || isRunning) return;
+    setQueueingTask(true);
+    try {
+      const task = await createAgentTask({
+        title: normalized.slice(0, 80),
+        input: normalized,
+        conversationId,
+        idempotencyKey: crypto.randomUUID()
+      });
+      if (!conversationId) newConversationTaskIdsRef.current.add(task.id);
+      setAgentTasks(current => [task, ...current.filter(item => item.id !== task.id)]);
+      setInput("");
+      setInspectorOpen(true);
+      setMobileHistoryOpen(false);
+      messageApi.success("已加入后台任务");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "后台任务创建失败");
+    } finally {
+      setQueueingTask(false);
+    }
+  }, [conversationId, input, isRunning, messageApi, queueingTask]);
+
+  const cancelTask = useCallback(async (taskId: string) => {
+    if (cancellingTaskId) return;
+    setCancellingTaskId(taskId);
+    try {
+      const task = await cancelAgentTask(taskId);
+      setAgentTasks(current => current.map(item => (item.id === task.id ? task : item)));
+      messageApi.success("任务已取消");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "任务取消失败");
+    } finally {
+      setCancellingTaskId(undefined);
+    }
+  }, [cancellingTaskId, messageApi]);
+
+  const resumeTask = useCallback(async (task: AgentTask) => {
+    const normalized = input.trim();
+    if (!normalized || resumingTaskId) return;
+    setResumingTaskId(task.id);
+    try {
+      const resumed = await resumeAgentTaskWithUserInput(task.id, task.logicalRevision, normalized);
+      setAgentTasks(current => current.map(item => (item.id === resumed.id ? resumed : item)));
+      setInput("");
+      messageApi.success("回复已提交，任务将继续执行");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "任务继续失败");
+    } finally {
+      setResumingTaskId(undefined);
+    }
+  }, [input, messageApi, resumingTaskId]);
+
+  const loadTaskDetail = useCallback(async (taskId: string) => {
+    if (loadingTaskDetailId) return;
+    if (selectedTaskDetail?.task.id === taskId) {
+      setSelectedTaskDetail(undefined);
+      return;
+    }
+
+    setLoadingTaskDetailId(taskId);
+    try {
+      setSelectedTaskDetail(await getAgentTaskDetail(taskId));
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "任务轨迹加载失败");
+    } finally {
+      setLoadingTaskDetailId(undefined);
+    }
+  }, [loadingTaskDetailId, messageApi, selectedTaskDetail?.task.id]);
+
+  const selectedTaskId = selectedTaskDetail?.task.id;
+  const selectedTaskStatus = selectedTaskDetail?.task.status;
+  useEffect(() => {
+    if (!inspectorOpen || !selectedTaskId || !selectedTaskStatus || !activeTaskStatuses.has(selectedTaskStatus)) return;
+    let disposed = false;
+    let loading = false;
+    const refreshTaskDetail = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const detail = await getAgentTaskDetail(selectedTaskId);
+        if (!disposed) setSelectedTaskDetail(detail);
+      } catch (error) {
+        if (!disposed) messageApi.error(error instanceof Error ? error.message : "任务轨迹刷新失败");
+      } finally {
+        loading = false;
+      }
+    };
+    const timer = window.setInterval(() => void refreshTaskDetail(), 3000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [inspectorOpen, messageApi, selectedTaskId, selectedTaskStatus]);
 
   const appendAssistantText = useCallback((id: string, content: string) => {
     setMessages(current => current.map(item => (item.id === id ? { ...item, content: item.content + content } : item)));
@@ -250,6 +424,15 @@ const LayoutChat: React.FC = () => {
   const updateAssistant = useCallback((id: string, update: Partial<ChatMessage>) => {
     setMessages(current => current.map(item => (item.id === id ? { ...item, ...update } : item)));
   }, []);
+  const appendAssistantModules = useCallback((id: string, modules: EmbeddedModuleReference[]) => {
+    if (!modules.length) return;
+    setMessages(current => current.map(item => {
+      if (item.id !== id) return item;
+      const values = new Map(item.modules.map(module => [`${module.moduleCode}:${module.viewType}`, module]));
+      modules.forEach(module => values.set(`${module.moduleCode}:${module.viewType}`, module));
+      return { ...item, modules: Array.from(values.values()) };
+    }));
+  }, []);
   sdkEventHandlerRef.current = event => {
     const active = activeSdkRunRef.current;
     if (!active || active.requestId !== requestIdRef.current) return;
@@ -263,6 +446,7 @@ const LayoutChat: React.FC = () => {
       const citation = getPayloadText(payload);
       if (citation) setMessages(current => current.map(item => (item.id === active.assistantId && !item.citations.includes(citation) ? { ...item, citations: [...item.citations, citation] } : item)));
     }
+    if (event.kind === "tool-succeeded") appendAssistantModules(active.assistantId, extractEmbeddedModules(payload));
     if (event.kind !== "message") setTraces(current => [...current.slice(-(MAX_TRACE_ROWS - 1)), getTrace(event)]);
     if (terminalKinds.has(event.kind)) {
       flushTyping();
@@ -368,6 +552,8 @@ const LayoutChat: React.FC = () => {
   const selectConversation = useCallback(async (id: string) => {
     if (!id || isRunning) return;
     const revision = ++conversationRevisionRef.current;
+    newConversationTaskIdsRef.current.clear();
+    setSelectedTaskDetail(undefined);
     setMobileHistoryOpen(false);
     setConversationId(id);
     setMessages([]);
@@ -382,7 +568,8 @@ const LayoutChat: React.FC = () => {
           id: item.id,
           role: item.role === 0 || String(item.role).toLowerCase() === "user" ? "user" : "assistant",
           content: item.content,
-          citations: []
+          citations: [],
+          modules: []
         }));
       const latestStatus = latestRun?.status.toLowerCase();
       if (
@@ -396,6 +583,7 @@ const LayoutChat: React.FC = () => {
           role: "assistant",
           content: latestRun.output,
           citations: [],
+          modules: [],
           status: latestStatus === "cancelled" ? "cancelled" : "failed"
         });
       }
@@ -405,10 +593,17 @@ const LayoutChat: React.FC = () => {
         .filter(event => event.kind === "knowledge-citation")
         .map(event => getPayloadText(parsePayload(event.payloadJson)))
         .filter(Boolean);
-      if (citations.length) {
+      const embeddedModules = events
+        .filter(event => event.kind === "tool-succeeded")
+        .flatMap(event => extractEmbeddedModules(parsePayload(event.payloadJson)));
+      if (citations.length || embeddedModules.length) {
         setMessages(current => {
           const lastAssistantIndex = current.map(item => item.role).lastIndexOf("assistant");
-          return current.map((item, index) => (index === lastAssistantIndex ? { ...item, citations: Array.from(new Set(citations)) } : item));
+          return current.map((item, index) => (index === lastAssistantIndex ? {
+            ...item,
+            citations: Array.from(new Set(citations)),
+            modules: embeddedModules
+          } : item));
         });
       }
     } catch (error) {
@@ -432,7 +627,11 @@ const LayoutChat: React.FC = () => {
     };
     sdkRequestStartedRef.current = false;
     setInput(""); setIsRunning(true); setTraces([]);
-    setMessages(current => [...current, { id: createId(), role: "user", content: inputValue, citations: [] }, { id: assistantId, role: "assistant", content: "", citations: [], status: "streaming" }]);
+    setMessages(current => [
+      ...current,
+      { id: createId(), role: "user", content: inputValue, citations: [], modules: [] },
+      { id: assistantId, role: "assistant", content: "", citations: [], modules: [], status: "streaming" }
+    ]);
     setSdkMessages([]);
     requestChat({ messages: [{ role: "user", content: inputValue }], conversationId });
   };
@@ -444,6 +643,8 @@ const LayoutChat: React.FC = () => {
     sdkRequestStartedRef.current = false;
     flushTyping();
     setSdkMessages([]);
+    newConversationTaskIdsRef.current.clear();
+    setSelectedTaskDetail(undefined);
     setConversationId(undefined);
     setMessages([]);
     setTraces([]);
@@ -470,17 +671,13 @@ const LayoutChat: React.FC = () => {
     }
   }, [abortChat, messageApi]);
   const bubbleRoles: BubbleListProps["role"] = {
-    assistant: {
-      placement: "start",
-      contentRender: (content, { status }) => {
-        const text = typeof content === "string" ? content : "";
-        if (status === "updating") return <div style={{ whiteSpace: "pre-wrap" }}>{text}</div>;
-        return <XMarkdown paragraphTag="div">{text}</XMarkdown>;
-      }
-    },
+    assistant: { placement: "start" },
     user: { placement: "end" as const }
   };
   const citationReferences = Array.from(new Set(messages.flatMap(item => item.citations))).map(parseCitation);
+  const visibleAgentTasks = agentTasks.filter(task => conversationId
+    ? task.conversationId === conversationId
+    : !task.conversationId || newConversationTaskIdsRef.current.has(task.id));
 
   return (
     <RouterGuard>
@@ -491,14 +688,61 @@ const LayoutChat: React.FC = () => {
           <aside className={`agent-chat-sidebar${mobileHistoryOpen ? " is-mobile-open" : ""}`} id="agent-chat-conversation-list"><Conversations items={conversations.map(item => ({ key: item.id, label: item.title || "未命名会话", group: "最近" }))} activeKey={conversationId ?? NEW_CONVERSATION_KEY} creation={{ onClick: startNewConversation }} onActiveChange={id => { if (isRunning) messageApi.warning("运行结束后才能切换会话。"); else void selectConversation(String(id)); }} className="agent-chat-conversations" /></aside>
           <section className="agent-chat-workspace">
             <div className="agent-chat-timeline" ref={timelineRef}>
-              {messages.length ? <Bubble.List items={messages.map(item => ({ key: item.id, role: item.role, content: item.content, status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success", loading: item.status === "streaming" && !item.content }))} role={bubbleRoles} /> :
+              {messages.length ? <Bubble.List items={messages.map(item => ({
+                key: item.id,
+                role: item.role,
+                content: item.role === "assistant"
+                  ? <EmbeddedModuleContent content={item.content} modules={item.modules} streaming={item.status === "streaming"} />
+                  : item.content,
+                status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success",
+                loading: item.status === "streaming" && !item.content && !item.modules.length
+              }))} role={bubbleRoles} /> :
                 <Flex className="agent-chat-welcome" vertical align="center" justify="center" gap={12}><Typography.Title level={2}>Unified Chat</Typography.Title><Typography.Text type="secondary">与已发布的主 Agent 对话，回答会结合 Skills、知识库和 MCP 工具。</Typography.Text></Flex>}
             </div>
-            <div className="agent-chat-composer"><Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" /></div>
+            <div className="agent-chat-composer">
+              <div className="agent-chat-task-actions"><Button disabled={!input.trim() || isRunning} loading={queueingTask} onClick={() => void queueAgentTask()}>后台执行</Button></div>
+              <Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" />
+            </div>
           </section>
           <Sider className="agent-chat-inspector" id="agent-chat-inspector" width={340} collapsedWidth={0} collapsed={!inspectorOpen} trigger={null} theme="light">
             <div className="agent-chat-inspector-content">
               <Typography.Title level={5}>运行详情</Typography.Title>
+              <section className="agent-chat-inspector-section">
+                <div className="agent-chat-section-heading"><Typography.Text strong>后台任务</Typography.Text>{tasksLoading ? <Typography.Text type="secondary">加载中</Typography.Text> : null}</div>
+                {visibleAgentTasks.length ? (
+                  <div className="agent-chat-task-list">
+                    {visibleAgentTasks.map(task => (
+                      <article className="agent-chat-task-card" key={task.id}>
+                        <div className="agent-chat-task-heading"><Typography.Text strong ellipsis>{task.title}</Typography.Text><Tag color={taskStatusColors[task.status]}>{taskStatusLabels[task.status] || task.status}</Tag></div>
+                        <Typography.Text type="secondary">尝试 {task.attemptCount}/{task.maximumAttempts}</Typography.Text>
+                        {task.lastErrorCode ? <Typography.Text type="danger">{task.lastErrorCode}{task.lastErrorMessage ? ` · ${task.lastErrorMessage}` : ""}</Typography.Text> : null}
+                        {task.status === "WaitingForUser" ? <Button size="small" disabled={!input.trim()} loading={resumingTaskId === task.id} onClick={() => void resumeTask(task)}>使用当前输入继续</Button> : null}
+                        <Button size="small" loading={loadingTaskDetailId === task.id} onClick={() => void loadTaskDetail(task.id)}>{selectedTaskDetail?.task.id === task.id ? "收起轨迹" : "查看轨迹"}</Button>
+                        {selectedTaskDetail?.task.id === task.id ? (
+                          <div className="agent-chat-task-events">
+                            <Typography.Text strong>执行尝试</Typography.Text>
+                            {selectedTaskDetail.attempts.length ? selectedTaskDetail.attempts.map(attempt => (
+                              <div key={attempt.id} className="agent-chat-task-attempt">
+                                <div><Typography.Text>第 {attempt.attemptNumber} 次</Typography.Text><Tag>{taskAttemptStatusLabels[attempt.status] || attempt.status}</Tag></div>
+                                {attempt.runId ? <Typography.Text type="secondary" copyable={{ text: attempt.runId }}>Run {attempt.runId.slice(0, 8)}</Typography.Text> : null}
+                                {attempt.errorCode ? <Typography.Text type="danger">{attempt.errorCode}</Typography.Text> : null}
+                              </div>
+                            )) : <Typography.Text type="secondary">尚未开始执行</Typography.Text>}
+                            <Typography.Text strong>生命周期事件</Typography.Text>
+                            {selectedTaskDetail.events.length ? selectedTaskDetail.events.map(event => (
+                              <div key={event.id} className="agent-chat-task-event">
+                                <Typography.Text>{event.kind}</Typography.Text>
+                                <Typography.Text type="secondary">{new Date(event.occurredAtUtc).toLocaleString()} · {taskStatusLabels[event.status] || event.status}</Typography.Text>
+                              </div>
+                            )) : <Typography.Text type="secondary">暂无生命周期事件</Typography.Text>}
+                          </div>
+                        ) : null}
+                        {activeTaskStatuses.has(task.status) ? <Button danger size="small" loading={cancellingTaskId === task.id} onClick={() => void cancelTask(task.id)}>取消任务</Button> : null}
+                      </article>
+                    ))}
+                  </div>
+                ) : <Typography.Text type="secondary">当前会话暂无后台任务。</Typography.Text>}
+              </section>
               <section className="agent-chat-inspector-section">
                 <Typography.Text strong>知识库引用</Typography.Text>
                 {citationReferences.length ? <div className="agent-chat-citation-list">{citationReferences.map(citation => (

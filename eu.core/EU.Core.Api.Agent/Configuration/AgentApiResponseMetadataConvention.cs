@@ -8,6 +8,7 @@ using EU.Core.IServices.Mcp;
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Runtime;
 using EU.Core.IServices.Skills;
+using EU.Core.IServices.Tasks;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Model;
@@ -39,6 +40,16 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
             ["AuditController.List"] = Response<IReadOnlyList<AgentOperationAuditRecord>>(),
             ["BusinessQueryRetentionController.Cleanup"] = Response<BusinessQueryCleanupResult>(),
             ["AgentRunsController.List"] = Response<IReadOnlyList<AgentRunAuditRecord>>(),
+            ["AgentTasksController.Create"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.List"] = Response<IReadOnlyList<AgentTaskRecord>>(),
+            ["AgentTasksController.Get"] = Response<AgentTaskDetailResponse>(),
+            ["AgentTasksController.ClaimNext"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.Checkpoint"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.RenewLease"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.Complete"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.Fail"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.Cancel"] = Response<AgentTaskRecord>(),
+            ["AgentTasksController.ResumeWithUserInput"] = Response<AgentTaskRecord>(),
             ["AgentsController.List"] = Response<AgentListItem[]>(),
             ["AgentsController.Get"] = Response<AgAgentDefinitionDetailDto>(),
             ["AgentsController.Create"] = Response<AgAgentDefinitionDetailDto>(StatusCodes.Status201Created),

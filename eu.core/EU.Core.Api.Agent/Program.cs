@@ -292,6 +292,11 @@ builder.Services.AddSingleton(services =>
 // These runtime coordinators own active executions, cancellation tokens and
 // recovery gates that must remain available across HTTP request scopes.
 builder.Services.AddSingleton<UnifiedEntryService>();
+builder.Services.Configure<AgentTaskWorkerOptions>(
+    builder.Configuration.GetSection(AgentTaskWorkerOptions.SectionName));
+builder.Services.AddScoped<EU.Core.Api.Agent.Background.IAgentTaskExecutor,
+    EU.Core.Api.Agent.Background.ChatAgentTaskExecutor>();
+builder.Services.AddHostedService<EU.Core.Api.Agent.Background.AgentTaskWorker>();
 builder.Services.AddScoped<RunEvaluationService>();
 builder.Services.AddScoped<IEvaluationTargetCatalog,
     PublishedAgentEvaluationTargetCatalog>();

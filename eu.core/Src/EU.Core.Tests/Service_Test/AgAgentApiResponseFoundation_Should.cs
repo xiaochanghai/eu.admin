@@ -14,7 +14,7 @@ public sealed class AgAgentApiResponseFoundation_Should
     [Fact]
     public void Register_every_fixed_error_code_with_unique_business_status()
     {
-        Assert.Equal(177, AgentApiErrorCatalog.All.Count);
+        Assert.Equal(182, AgentApiErrorCatalog.All.Count);
         Assert.Equal(
             AgentApiErrorCatalog.All.Count,
             AgentApiErrorCatalog.All.Keys.Distinct(StringComparer.Ordinal).Count());

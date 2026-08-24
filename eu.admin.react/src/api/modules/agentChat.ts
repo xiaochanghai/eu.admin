@@ -56,6 +56,68 @@ export interface UnifiedChatConversationDetail {
   messages: UnifiedChatMessage[];
 }
 
+export type AgentTaskStatus =
+  | "Pending"
+  | "Running"
+  | "WaitingForApproval"
+  | "WaitingForUser"
+  | "Completed"
+  | "Failed"
+  | "Cancelled";
+
+export type AgentTaskAttemptStatus = "Running" | "Completed" | "Failed" | "Cancelled" | "Paused";
+
+export interface AgentTask {
+  id: string;
+  title: string;
+  conversationId?: string;
+  currentRunId?: string;
+  status: AgentTaskStatus;
+  attemptCount: number;
+  maximumAttempts: number;
+  logicalRevision: number;
+  availableAtUtc: string;
+  lastErrorCode: string;
+  lastErrorMessage: string;
+}
+
+export interface AgentTaskAttempt {
+  id: string;
+  attemptNumber: number;
+  runId?: string;
+  status: AgentTaskAttemptStatus;
+  workerId: string;
+  startedAtUtc: string;
+  finishedAtUtc?: string;
+  errorCode: string;
+}
+
+export interface AgentTaskEvent {
+  id: string;
+  attemptNumber?: number;
+  runId?: string;
+  kind: string;
+  status: AgentTaskStatus;
+  workerId: string;
+  occurredAtUtc: string;
+}
+
+export interface AgentTaskDetail {
+  task: AgentTask;
+  attempts: AgentTaskAttempt[];
+  events: AgentTaskEvent[];
+}
+
+export interface CreateAgentTaskRequest {
+  title: string;
+  description?: string;
+  input: string;
+  conversationId?: string;
+  idempotencyKey: string;
+  priority?: number;
+  maximumAttempts?: number;
+}
+
 interface UnifiedChatConversationDto {
   Id: string;
   Title: string;
@@ -85,6 +147,47 @@ interface UnifiedChatRunStateDto {
   Status: string | number;
   Output?: string | null;
   ErrorCode?: string | null;
+}
+
+interface AgentTaskDto {
+  Id: string;
+  Title: string;
+  ConversationId?: string | null;
+  CurrentRunId?: string | null;
+  Status: string | number;
+  AttemptCount: number;
+  MaximumAttempts: number;
+  LogicalRevision: number;
+  AvailableAtUtc: string;
+  LastErrorCode?: string | null;
+  LastErrorMessage?: string | null;
+}
+
+interface AgentTaskAttemptDto {
+  Id: string;
+  AttemptNumber: number;
+  RunId?: string | null;
+  Status: string | number;
+  WorkerId?: string | null;
+  StartedAtUtc: string;
+  FinishedAtUtc?: string | null;
+  ErrorCode?: string | null;
+}
+
+interface AgentTaskEventDto {
+  Id: string;
+  AttemptNumber?: number | null;
+  RunId?: string | null;
+  Kind: string;
+  Status: string | number;
+  WorkerId?: string | null;
+  OccurredAtUtc: string;
+}
+
+interface AgentTaskDetailDto {
+  Task: AgentTaskDto;
+  Attempts: AgentTaskAttemptDto[];
+  Events: AgentTaskEventDto[];
 }
 
 interface UnifiedChatRunDetailsDto {
@@ -127,6 +230,33 @@ export interface UnifiedChatRunState {
 const unifiedRunStatusNames = ["Pending", "Running", "WaitingForApproval", "Completed", "Failed", "Cancelled", "Blocked"];
 const normalizeRunStatus = (status: string | number) =>
   typeof status === "number" ? unifiedRunStatusNames[status] || String(status) : status;
+
+const agentTaskStatusNames: AgentTaskStatus[] = [
+  "Pending",
+  "Running",
+  "WaitingForApproval",
+  "WaitingForUser",
+  "Completed",
+  "Failed",
+  "Cancelled"
+];
+const agentTaskAttemptStatusNames: AgentTaskAttemptStatus[] = ["Running", "Completed", "Failed", "Cancelled", "Paused"];
+const mapAgentTask = (value: AgentTaskDto): AgentTask => ({
+  id: value.Id,
+  title: value.Title,
+  conversationId: value.ConversationId || undefined,
+  currentRunId: value.CurrentRunId || undefined,
+  status:
+    typeof value.Status === "number"
+      ? agentTaskStatusNames[value.Status] || "Failed"
+      : (value.Status as AgentTaskStatus),
+  attemptCount: value.AttemptCount,
+  maximumAttempts: value.MaximumAttempts,
+  logicalRevision: value.LogicalRevision,
+  availableAtUtc: value.AvailableAtUtc,
+  lastErrorCode: value.LastErrorCode || "",
+  lastErrorMessage: value.LastErrorMessage || ""
+});
 
 interface UnifiedChatRunEventDto {
   EntryRunId: string;
@@ -285,6 +415,66 @@ export const listUnifiedChatRunEvents = (runId: string, take = 160) =>
 
 export const cancelUnifiedChatRun = (runId: string) =>
   requestJson<{ RunId: string }>(`/api/chat/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
+
+export const listAgentTasks = (take = 100) =>
+  requestJson<AgentTaskDto[]>(`/api/agent-tasks?take=${encodeURIComponent(take)}`).then(values => values.map(mapAgentTask));
+
+export const getAgentTaskDetail = (taskId: string) =>
+  requestJson<AgentTaskDetailDto>(`/api/agent-tasks/${encodeURIComponent(taskId)}`).then(value => ({
+    task: mapAgentTask(value.Task),
+    attempts: value.Attempts.map(attempt => ({
+      id: attempt.Id,
+      attemptNumber: attempt.AttemptNumber,
+      runId: attempt.RunId || undefined,
+      status:
+        typeof attempt.Status === "number"
+          ? agentTaskAttemptStatusNames[attempt.Status] || "Failed"
+          : (attempt.Status as AgentTaskAttemptStatus),
+      workerId: attempt.WorkerId || "",
+      startedAtUtc: attempt.StartedAtUtc,
+      finishedAtUtc: attempt.FinishedAtUtc || undefined,
+      errorCode: attempt.ErrorCode || ""
+    })),
+    events: value.Events.map(event => ({
+      id: event.Id,
+      attemptNumber: event.AttemptNumber ?? undefined,
+      runId: event.RunId || undefined,
+      kind: event.Kind,
+      status:
+        typeof event.Status === "number"
+          ? agentTaskStatusNames[event.Status] || "Failed"
+          : (event.Status as AgentTaskStatus),
+      workerId: event.WorkerId || "",
+      occurredAtUtc: event.OccurredAtUtc
+    }))
+  }));
+
+export const createAgentTask = (request: CreateAgentTaskRequest) =>
+  requestJson<AgentTaskDto>("/api/agent-tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: request.title,
+      description: request.description || "",
+      input: request.input,
+      sourceType: "chat",
+      sourceId: "unified-chat",
+      idempotencyKey: request.idempotencyKey,
+      conversationId: request.conversationId,
+      priority: request.priority ?? 0,
+      maximumAttempts: request.maximumAttempts ?? 3
+    })
+  }).then(mapAgentTask);
+
+export const cancelAgentTask = (taskId: string) =>
+  requestJson<AgentTaskDto>(`/api/agent-tasks/${encodeURIComponent(taskId)}/cancel`, { method: "POST" }).then(mapAgentTask);
+
+export const resumeAgentTaskWithUserInput = (taskId: string, expectedLogicalRevision: number, input: string) =>
+  requestJson<AgentTaskDto>(`/api/agent-tasks/${encodeURIComponent(taskId)}/user-input`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedLogicalRevision, input })
+  }).then(mapAgentTask);
 
 const parseFrame = (frame: string): UnifiedChatRunEvent | null => {
   const fields = frame.split(/\r?\n/);
