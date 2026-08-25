@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EU Admin Agent / MCP 集成测试清单</title>
+  <style>
+    :root {
+      --ink: #16211b;
+      --muted: #66736b;
+      --paper: #f4f1e8;
+      --panel: #fffdf7;
+      --line: #d8d4c7;
+      --green: #176b4d;
+      --green-soft: #dcece3;
+      --amber: #a65f16;
+      --red: #a53c35;
+      --blue: #2f5d87;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: radial-gradient(circle at 10% 0, #e5ecdf 0, transparent 32rem), var(--paper); font: 14px/1.6 "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+    header { padding: 44px max(24px, calc((100vw - 1280px) / 2)); color: #f8f4e8; background: linear-gradient(120deg, #173f32, #244c3b 60%, #7b5a2e); }
+    h1 { margin: 0 0 8px; font: 700 clamp(28px, 4vw, 46px)/1.2 Georgia, "Microsoft YaHei", serif; letter-spacing: .02em; }
+    header p { max-width: 860px; margin: 0; color: #dce7df; }
+    main { width: min(1280px, calc(100% - 32px)); margin: -18px auto 56px; }
+    .toolbar, .card, details { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 10px 30px rgb(34 48 40 / 7%); }
+    .toolbar { position: sticky; top: 10px; z-index: 10; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px; }
+    button, select, input, textarea { border: 1px solid #bbb8ad; border-radius: 8px; color: var(--ink); background: #fff; font: inherit; }
+    button { padding: 8px 12px; cursor: pointer; }
+    button.primary { color: #fff; border-color: var(--green); background: var(--green); }
+    .progress { flex: 1 1 260px; min-width: 220px; }
+    .progress-track { height: 8px; overflow: hidden; border-radius: 999px; background: #ddd9cd; }
+    .progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, var(--green), #52a271); transition: width .25s; }
+    .progress-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+    .card { padding: 20px; margin-top: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    label span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    input, textarea, select { width: 100%; padding: 8px 10px; }
+    .notice { padding: 12px 14px; border-left: 4px solid var(--amber); border-radius: 8px; background: #fff4dd; }
+    code { padding: 2px 5px; border-radius: 4px; background: #edeae0; font-family: Consolas, monospace; }
+    details { margin-top: 16px; overflow: clip; }
+    summary { display: flex; gap: 12px; align-items: center; padding: 17px 20px; cursor: pointer; font-weight: 800; background: #f9f7ef; }
+    summary::marker { color: var(--green); }
+    .section-count { margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 500; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1040px; }
+    th { position: sticky; top: 0; z-index: 1; color: #fff; background: #294a3d; text-align: left; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    tbody tr:hover { background: #f7f5ed; }
+    td:nth-child(1) { width: 64px; font-weight: 800; color: var(--green); }
+    td:nth-child(2) { width: 150px; font-weight: 700; }
+    td:nth-child(3), td:nth-child(4) { min-width: 290px; }
+    td:nth-child(5) { width: 90px; }
+    td:nth-child(6) { width: 140px; }
+    td:nth-child(7) { min-width: 210px; }
+    .risk { display: inline-block; min-width: 42px; padding: 2px 7px; border-radius: 999px; color: #fff; text-align: center; font-size: 12px; font-weight: 800; }
+    .p0 { background: var(--red); } .p1 { background: var(--amber); } .p2 { background: var(--blue); }
+    .status-pass { border-color: #70a888; background: var(--green-soft); }
+    .status-fail { border-color: #d48b85; background: #f8dfdd; }
+    .status-blocked { border-color: #d9ad62; background: #fff0d2; }
+    .status-skip { color: var(--muted); background: #eee; }
+    textarea.note { min-height: 68px; resize: vertical; }
+    .commands { white-space: pre-wrap; padding: 14px; border-radius: 8px; color: #dfece5; background: #1d2923; font: 13px/1.7 Consolas, monospace; }
+    .hidden { display: none !important; }
+    footer { margin-top: 20px; color: var(--muted); text-align: center; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .toolbar { position: static; } main { width: min(100% - 20px, 1280px); } }
+    @media print { body { background: #fff; } header { padding: 20px; color: #000; background: #fff; } header p { color: #444; } main { width: 100%; margin: 0; } .toolbar { display: none; } details { break-inside: avoid; box-shadow: none; } details:not([open]) > *:not(summary) { display: block; } textarea { border: 0; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Agent / MCP 集成测试清单</h1>
+    <p>覆盖 Unified Chat、SSE 流式输出、会话与后台任务持久化、知识库、编排、运行轨迹、Supplier MCP、BusinessQuery、权限与恢复能力。建议按编号顺序执行，P0 失败时停止发布。</p>
+  </header>
+  <main>
+    <section class="toolbar">
+      <div class="progress">
+        <div class="progress-label"><strong id="progressText">0 / 0 已通过</strong><span id="progressPercent">0%</span></div>
+        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <select id="sectionFilter" aria-label="模块筛选"><option value="all">全部模块</option></select>
+      <select id="statusFilter" aria-label="状态筛选"><option value="all">全部状态</option><option value="todo">待测试</option><option value="pass">通过</option><option value="fail">失败</option><option value="blocked">阻塞</option><option value="skip">跳过</option></select>
+      <button id="expandAll">全部展开</button>
+      <button id="printPage">打印 / 导出 PDF</button>
+      <button id="resetAll">清空结果</button>
+    </section>
+
+    <section class="card">
+      <h2>执行信息</h2>
+      <div class="grid">
+        <label><span>测试版本 / Commit</span><input data-meta="version" placeholder="例如 c3ae90bb"></label>
+        <label><span>执行人</span><input data-meta="tester" placeholder="姓名"></label>
+        <label><span>执行日期</span><input data-meta="date" type="date"></label>
+        <label><span>React 地址</span><input data-meta="reactUrl" value="http://localhost"></label>
+        <label><span>Agent API 地址</span><input data-meta="agentUrl" placeholder="按本地网关配置填写"></label>
+        <label><span>MCP 地址</span><input data-meta="mcpUrl" value="http://localhost:8020"></label>
+      </div>
+      <p class="notice"><strong>数据边界：</strong>使用隔离测试租户和账号，测试数据统一以 <code>QA_AGENT_日期_</code> 开头。涉及创建、归档、取消、数据库重启的步骤不得在生产环境执行。服务令牌、签名密钥和连接串只通过安全环境变量提供，不记录在本清单。</p>
+    </section>
+
+    <section class="card">
+      <h2>执行顺序与准入条件</h2>
+      <ol>
+        <li>准备 SQL Server、Agent API、MCP API、React 管理端及隔离测试账号。</li>
+        <li>先执行 A 组冒烟测试；任一 P0 不通过，不进入业务回归。</li>
+        <li>依次执行 Unified Chat、后台任务、知识库、编排、MCP/BusinessQuery。</li>
+        <li>最后执行权限、异常恢复和发布门禁，记录 TraceId、RunId、TaskId 与截图。</li>
+        <li>发布标准：全部 P0/P1 通过；P2 失败必须有负责人、影响说明和修复计划。</li>
+      </ol>
+    </section>
+
+    <div id="checklist"></div>
+
+    <section class="card">
+      <h2>建议自动化命令</h2>
+      <p>先确认测试项目不会连接或写入共享环境，再执行测试命令。</p>
+      <div class="commands"># 后端解决方案编译
+cd eu.core
+dotnet build EU.Core.sln --configuration Release
+
+# Agent 针对性测试（确认 fixture 使用隔离环境后执行）
+dotnet test Src/EU.Core.Tests/EU.Core.Tests.csproj --configuration Release --filter "FullyQualifiedName~Agent"
+
+# MCP 项目编译
+dotnet build EU.Core.MCP.Api/EU.Core.Api.MCP.csproj --configuration Release
+
+# React 类型检查与开发环境构建
+cd ../eu.admin.react
+pnpm type:check
+pnpm build:dev
+
+# 工作区门禁
+cd ..
+git diff --check
+git status --short</div>
+    </section>
+    <footer>测试结果保存在当前浏览器 localStorage；更换浏览器或清除站点数据后不会保留。</footer>
+  </main>
+  <script>
+    const sections = [
+      { id: "A", title: "环境与服务冒烟", tests: [
+        ["A01", "SQL Server 连通", "启动 SQL Server，确认 Agent 与 MCP 使用的测试库可连接；检查迁移 070 已执行。", "两个宿主均能连接数据库；AgentTask 三张表存在且字段、默认值、索引完整。", "P0"],
+        ["A02", "Agent API 启动", "以测试配置启动 EU.Core.Api.Agent，观察启动日志和健康状态。", "进程稳定运行；无 DI 循环、OptionsValidationException 或数据库初始化错误。", "P0"],
+        ["A03", "MCP API 启动", "以安全环境变量提供 BusinessQuery 服务令牌和签名密钥，启动 EU.Core.MCP.Api。", "进程稳定运行；BusinessQuery 配置校验通过；日志不输出敏感值。", "P0"],
+        ["A04", "BusinessQuery 就绪", "请求 GET /health/business-query/live，再请求 GET /health/business-query/ready。", "live 与 ready 均返回 HTTP 200；ready 确实探测 SQL Server，而非只检查配置字符串。", "P0"],
+        ["A05", "React 管理端启动", "启动 eu.admin.react 并登录隔离测试账号，进入 Agent 菜单和 Unified Chat。", "页面加载无白屏、控制台错误或重复请求风暴；菜单权限正确。", "P0"],
+        ["A06", "响应包装", "分别调用一个 Agent 普通 JSON 接口和一个 MCP Controller 接口。", "普通接口维持 ServiceResult 包装；SSE/MCP 特殊协议不被错误包装或缓冲。", "P1"]
+      ]},
+      { id: "B", title: "Unified Chat 与 SSE 流式输出", tests: [
+        ["B01", "新建对话", "进入 Unified Chat，点击右上角 New Chat；输入“你好，请分三段回答”。", "立即进入空白新会话；用户消息出现；回答逐步增量渲染，不是完成后一次性出现。", "P0"],
+        ["B02", "连续流式稳定性", "首条回答仍在打字动画时观察滚动，完成后立刻发送第二条消息。", "内容自动滚至底部；首条缓冲已刷新；第二条增量不会写入上一条消息或丢失。", "P0"],
+        ["B03", "会话列表标题", "完成首次对话，观察左侧列表；刷新页面后再次查看。", "新会话自动加入列表；显示接口返回的 Title 而非空值/ID；刷新后仍可见。", "P0"],
+        ["B04", "历史会话恢复", "选择已有会话，核对消息；再切换另一会话并快速切回。", "消息、角色、顺序和状态正确；旧请求不会覆盖当前选择；页面滚动到最近消息。", "P0"],
+        ["B05", "New Chat 状态重置", "选择一条历史会话后，在非运行状态点击 New Chat。", "conversationId、消息、详情和选中项均清空；下一条消息创建新的会话，不追加到旧会话。", "P0"],
+        ["B06", "取消运行", "发送一个耗时问题，在流式输出期间点击停止/取消。", "请求被取消；消息显示已取消或明确状态，不永久停留在 loading；可继续发送。", "P1"],
+        ["B07", "网络失败恢复", "开始回答后临时断开 Agent API 或在开发者工具阻断请求，再恢复网络并重试。", "界面显示可理解的错误；streaming 状态结束；不会残留不可操作的加载图标。", "P1"],
+        ["B08", "卸载中止", "回答进行中切换到其他布局或退出登录，再返回聊天页。", "旧请求被中止；无卸载组件写状态警告；返回后可从服务端状态恢复。", "P1"],
+        ["B09", "知识引用详情", "询问已导入知识库中具有唯一答案的问题，展开右侧“知识库引用”。", "显示来源文档、分块/摘要和相关信息；可展开详情；引用属于当前 Run。", "P1"],
+        ["B10", "运行轨迹详情", "执行一次会调用 Agent/MCP/编排的对话，展开右侧“运行轨迹”及每一项。", "展示事件顺序、时间、类型、输入输出或错误；长内容可滚动；敏感值被遮蔽。", "P1"],
+        ["B11", "右侧面板折叠", "折叠和展开知识引用/运行轨迹，在窄屏重复操作。", "聊天主体宽度正确恢复；面板内容不丢失；无横向页面溢出。", "P2"],
+        ["B12", "嵌入供应商页面", "通过对话触发返回供应商模块，点击或打开消息中的嵌入页面。", "在对话中正确展示 basedata/supplier 页面；权限、路由和数据加载与直接打开页面一致。", "P1"]
+      ]},
+      { id: "C", title: "AgentTask 持久化与 Worker", tests: [
+        ["C01", "创建后台任务", "在 Unified Chat 选择/触发后台任务模式，提交带唯一标记的长任务。", "POST /api/agent-tasks 成功；页面出现任务卡；记录 TaskId；状态从 Pending 可见。", "P0"],
+        ["C02", "Worker 领取执行", "保持 Worker 运行，观察任务详情、Attempts 和 Events。", "任务仅被一个 Worker 领取；进入 Running；租约、尝试次数、事件顺序正确。", "P0"],
+        ["C03", "完成并回写会话", "等待任务完成，再刷新会话与任务详情。", "任务为 Completed；结果持久化并关联原 Conversation/Run；刷新后仍可读取。", "P0"],
+        ["C04", "宿主重启恢复", "任务 Running 时停止 Agent API/Worker，等待超过轮询间隔后重启。", "任务不会丢失；过期租约可被安全恢复或重试；最终无重复消息和重复副作用。", "P0"],
+        ["C05", "取消待执行任务", "创建任务后在 Worker 领取前立即取消。", "任务进入 Cancelled；Worker 不再执行；事件记录取消原因。", "P1"],
+        ["C06", "取消运行中任务", "任务进入 Running 后取消。", "取消意图持久化并传播；执行尽快停止；页面状态与服务端一致。", "P1"],
+        ["C07", "失败与重试", "构造可恢复的依赖失败，恢复依赖后观察 Worker 重试。", "失败被记录到 Attempt/Event；按策略重试，不无限循环；恢复后可完成。", "P1"],
+        ["C08", "等待用户输入", "触发需要用户补充信息的任务，再通过 /user-input 提交答案。", "任务进入等待态；输入后恢复执行；旧租约/旧输入不能覆盖新状态。", "P1"],
+        ["C09", "并发与幂等", "快速重复提交同一任务，并并行启动两个 Worker 实例。", "领取操作原子化；同一任务同一时刻只有一个有效租约；重复回调不重复完成。", "P1"],
+        ["C10", "租户与用户隔离", "使用第二测试账号/租户查询第一个账号的 TaskId。", "列表不泄露其他用户任务；详情、取消、恢复均返回无权限或不存在。", "P0"]
+      ]},
+      { id: "D", title: "知识库维护与检索", tests: [
+        ["D01", "创建知识库", "进入 Agent/知识库，新建 QA 知识库并保存。", "列表和详情显示正确；Code 不可随意变更；默认状态符合契约。", "P0"],
+        ["D02", "编辑保留状态", "先禁用知识库，再修改名称/描述并保存。", "元数据更新成功且仍为 Disabled，不因遗漏 status 被重新启用。", "P0"],
+        ["D03", "文本导入", "导入小于服务端限制的 UTF-8 txt/md，并查看文档与分块。", "导入成功；字符、SHA、分块顺序正确；页面可浏览分页。", "P1"],
+        ["D04", "PDF 导入", "导入有效 PDF，再测试超限、损坏和非 PDF 文件。", "有效文件可检索；非法文件被明确拒绝；无路径穿越或任意覆盖。", "P1"],
+        ["D05", "搜索并切换", "对知识库 A 发起搜索后立即切换到 B 并再次搜索。", "A 的迟到响应不会显示在 B；loading 与结果对应当前知识库。", "P1"],
+        ["D06", "未保存编辑保护", "修改名称但不保存，再执行文档导入或刷新详情动作。", "用户编辑不会被静默清除；页面要求确认或保留草稿。", "P1"],
+        ["D07", "生命周期", "依次测试 Enabled → Disabled → Archived，并尝试直接归档 Enabled。", "仅合法状态转换成功；非法转换有明确提示；归档后列表过滤正确。", "P1"],
+        ["D08", "对话检索引用", "将发布知识库关联 Agent，重新发布 Agent 后提问唯一事实。", "回答命中正确知识分块；右侧引用能定位来源；停用知识库后不再被检索。", "P0"]
+      ]},
+      { id: "E", title: "编排定义与运行", tests: [
+        ["E01", "创建草稿", "新建 QA 编排，配置最小可达图并保存草稿。", "定义和 Draft 均保存；刷新后节点、边和参数完整。", "P0"],
+        ["E02", "草稿校验恢复", "新建编排时提交重复节点 ID 或不可达节点，修正后重试。", "首次提示校验错误；已创建 Definition 保留；重试不会因 Code 冲突而卡死。", "P1"],
+        ["E03", "发布与运行", "发布有效编排，输入测试内容并启动 Run。", "状态从 Running 到终态；输出正确；运行详情和节点轨迹完整。", "P0"],
+        ["E04", "轮询短暂失败", "Run 运行中短暂阻断一次状态请求后恢复。", "页面提示或自动重试；轮询继续；最终状态不会永久卡在 Running。", "P1"],
+        ["E05", "取消运行", "启动耗时编排后取消，并刷新页面。", "后端停止可取消步骤；终态和轨迹记录取消；刷新后状态一致。", "P1"],
+        ["E06", "归档限制", "尝试归档启用中的编排，再按合法流程停用/归档。", "非法转换被拒绝且提示准确；合法归档成功。", "P2"],
+        ["E07", "聊天调用编排", "将发布编排关联 Agent，发布 Agent 后通过 Unified Chat 触发。", "对话获得编排输出；Run details 中 Orchestrations 与入口 RunId、深度正确。", "P0"]
+      ]},
+      { id: "F", title: "Supplier MCP 与 BusinessQuery", tests: [
+        ["F01", "MCP Initialize", "向 http://localhost:8020/Supplier/mcp/ 发送标准 JSON-RPC initialize。", "HTTP 200；返回 protocolVersion、serverInfo、capabilities；无 ServiceResult 包装。", "P0"],
+        ["F02", "MCP 工具发现", "发送 tools/list。", "返回 6 个供应商工具：查询、创建、文件创建、更新、删除、导入模板；Schema 可被客户端解析。", "P0"],
+        ["F03", "Agent 同步 MCP", "在 Agent/MCP 服务页面新增 Supplier/mcp 地址并点击同步工具。", "不再出现 MCP_DISCOVERY_FAILED/allowlist 错误；工具名称、版本和风险等级可见。", "P0"],
+        ["F04", "供应商查询", "在 Unified Chat 请求查询唯一测试供应商，并检查 MCP 调用轨迹。", "Agent 选择 get_supplier；返回数据与直接供应商页面一致；无写操作。", "P0"],
+        ["F05", "供应商写操作", "在隔离库通过对话创建、更新、删除 QA 供应商；每步核对确认与结果。", "参数校验、结果和数据库状态一致；重复提交不会产生非预期重复数据。", "P1"],
+        ["F06", "BusinessQuery Controller", "携带合法执行上下文调用 POST /mcp/business-query/controller，执行供应商目录允许的只读查询。", "查询使用配置的数据源和 SqlSugar 执行器；SQL 参数化；响应含结果与 receipt/审计信息。", "P0"],
+        ["F07", "目录与 Hash", "使用 supplier.sqlserver.json 启动，随后复制到隔离环境并篡改目录内容再次启动/调用。", "原目录通过规范化 SHA-256 校验；篡改目录被拒绝并返回明确错误。", "P1"],
+        ["F08", "聚合正确性", "针对维度、SUM/AVG/MIN/MAX、排序和 TopN 设计可人工核对的小数据集。", "结果与参数化 SQL 人工核算一致；禁止会重复计算相关实体度量的计划。", "P0"],
+        ["F09", "隐私最小分组", "构造含 null 的保密度量，小组总行数达阈值但非 null 贡献数不足。", "结果不会泄露单个贡献值；HAVING/保护逻辑按有效贡献数执行。", "P0"],
+        ["F10", "只读与取消", "尝试提交写入型/越权计划；再取消一个耗时查询。", "写入和目录外字段被拒绝；调用方取消保持取消语义，不被包装为普通执行失败。", "P0"],
+        ["F11", "配额与重放", "重复发送同一签名请求，随后超过测试配额。", "重放被拒绝；配额原子扣减；失败结算和审计记录正确。", "P1"],
+        ["F12", "标准 BusinessQuery MCP 状态", "请求 /mcp/business-query 标准 MCP 入口，并检查 Program 注册。", "按当前决定，该标准入口保持未注册/不可用；仅 /controller 路由可用，不误判为缺陷。", "P2"]
+      ]},
+      { id: "G", title: "权限、安全与故障恢复", tests: [
+        ["G01", "未认证访问", "无 Token 调用 Agent Chat、AgentTask、BusinessQuery Controller；另测 Supplier/mcp。", "受保护接口返回 401/403；Supplier/mcp 当前临时 AllowAnonymous 的例外被明确记录。", "P0"],
+        ["G02", "MCP 临时匿名风险", "在未登录浏览器/客户端调用 Supplier 查询及写工具。", "记录当前可访问范围和风险；上线前必须移除 AllowAnonymous 或配置等效认证。", "P0"],
+        ["G03", "跨租户对象 ID", "租户 B 使用租户 A 的 ConversationId、RunId、TaskId、KnowledgeId。", "所有详情、事件、取消、搜索和修改操作均不泄露或越权。", "P0"],
+        ["G04", "非法输入", "测试空 input、超长文本、未知 JSON 字段、非法 GUID、重复 Code、resultKey=rank。", "返回稳定错误码和 TraceId；无 500、堆栈或内部路径泄露。", "P1"],
+        ["G05", "并发切换", "快速切换会话、知识库状态筛选、编排运行，并制造响应乱序。", "序列号/取消机制阻止旧响应覆盖新状态；loading 不被旧请求提前清除。", "P1"],
+        ["G06", "服务依赖中断", "分别短暂停止 SQL Server、MCP API、Agent API 后恢复。", "错误可见且可恢复；健康检查准确降级；无无限重试或任务永久锁定。", "P1"],
+        ["G07", "敏感信息检查", "检查浏览器 Network、服务日志、运行轨迹、错误响应和审计库。", "不出现 Token、签名密钥、连接串、凭据环境变量值或非必要个人数据。", "P0"]
+      ]},
+      { id: "H", title: "发布回归与收尾", tests: [
+        ["H01", "前端类型检查", "在 eu.admin.react 执行 pnpm type:check。", "退出码 0，无 TypeScript 错误。", "P0"],
+        ["H02", "前端构建", "执行目标环境对应的 pnpm build:dev 或发布构建。", "退出码 0；产物生成；无新增关键警告。", "P1"],
+        ["H03", "后端构建", "在 eu.core 执行 dotnet build EU.Core.sln --configuration Release。", "0 errors；既有警告与新增警告分开记录。", "P0"],
+        ["H04", "响应式与浏览器", "在 Chrome/Edge，以桌面 1440px、笔记本 1024px、移动 390px 验证 Unified Chat。", "核心操作可达；无内容遮挡；引用、轨迹和任务卡可折叠查看。", "P2"],
+        ["H05", "刷新与重新登录", "分别在聊天、任务、知识库、编排页面刷新；退出后重新登录。", "持久状态从服务端恢复；临时状态被清理；无旧账号数据残留。", "P1"],
+        ["H06", "测试数据清理", "按 QA_AGENT_ 前缀列出本次创建的数据，经确认后按业务接口归档/删除。", "只清理本次隔离测试数据；保留必要审计记录和测试证据。", "P1"],
+        ["H07", "Git 门禁", "执行 git diff --check 与 git status --short，核对发布提交范围。", "无本次改动引入的空白错误；未提交文件来源明确；不包含密钥、日志或构建产物。", "P0"],
+        ["H08", "Agent 针对性自动化测试", "运行名称包含 Agent、Knowledge 或 Stream 的隔离测试集合。", "全部隔离测试通过；真实 SQL Server 用例保持显式跳过，除非单独授权。", "P0"]
+      ]}
+    ];
+
+    const storeKey = "eu-agent-mcp-test-checklist-v1";
+    const saved = JSON.parse(localStorage.getItem(storeKey) || "{}");
+    const baselineResults = {
+      A01: { status: "pass", note: "2026-08-26：MCP 启动日志确认 SQL Server 连接正常，BusinessQuery readiness 探测通过。" },
+      A02: { status: "pass", note: "2026-08-26：Agent API 以 Development 环境在 62844 启动成功；配置校验和 Worker 查询正常。" },
+      A03: { status: "pass", note: "2026-08-26：MCP API Release 进程在 8020 启动成功，临时密钥仅通过进程环境提供。" },
+      A04: { status: "pass", note: "2026-08-26：/health/business-query/live 与 /ready 均返回 HTTP 200。" },
+      A06: { status: "pass", note: "2026-08-26：会话和 AgentTask 列表返回 ServiceResult；Supplier MCP 返回原生 JSON-RPC。" },
+      F01: { status: "pass", note: "2026-08-26：/Supplier/mcp/ initialize 返回 HTTP 200，包含 result 和 serverInfo。" },
+      F02: { status: "pass", note: "2026-08-26：tools/list 返回 6 个预期供应商工具。" },
+      H01: { status: "pass", note: "2026-08-26：pnpm.cmd type:check 退出码 0。" },
+      H02: { status: "pass", note: "2026-08-26：pnpm.cmd build:dev 成功；保留既有 Browserslist、SignalR 注释及 eval 警告。" },
+      H03: { status: "pass", note: "2026-08-26：dotnet build EU.Core.sln --no-restore --configuration Release 成功，0 errors、73 warnings。" }
+      ,H08: { status: "pass", note: "2026-08-26：101 passed、0 failed、1 skipped；跳过项为真实 SQL Server 持久化测试。" }
+    };
+    const state = { ...baselineResults, ...(saved.results || {}) };
+    const meta = { version: "c3ae90bb", date: "2026-08-26", ...(saved.meta || {}) };
+    const checklist = document.getElementById("checklist");
+    const sectionFilter = document.getElementById("sectionFilter");
+
+    function save() {
+      const currentMeta = {};
+      document.querySelectorAll("[data-meta]").forEach(el => currentMeta[el.dataset.meta] = el.value);
+      localStorage.setItem(storeKey, JSON.stringify({ results: state, meta: currentMeta }));
+      updateProgress();
+    }
+
+    function statusSelect(id) {
+      const value = state[id]?.status || "todo";
+      return `<select class="test-status status-${value}" data-id="${id}" aria-label="${id} 测试状态"><option value="todo">待测试</option><option value="pass">通过</option><option value="fail">失败</option><option value="blocked">阻塞</option><option value="skip">跳过</option></select>`;
+    }
+
+    sections.forEach(section => {
+      sectionFilter.insertAdjacentHTML("beforeend", `<option value="${section.id}">${section.id} ${section.title}</option>`);
+      const detail = document.createElement("details");
+      detail.open = section.id === "A" || section.id === "B";
+      detail.dataset.section = section.id;
+      detail.innerHTML = `<summary><span>${section.id}</span><span>${section.title}</span><span class="section-count">${section.tests.length} 项</span></summary><div class="table-wrap"><table><thead><tr><th>编号</th><th>测试项</th><th>操作步骤</th><th>预期结果</th><th>风险</th><th>状态</th><th>备注 / 证据</th></tr></thead><tbody>${section.tests.map(test => `<tr data-test="${test[0]}"><td>${test[0]}</td><td>${test[1]}</td><td>${test[2]}</td><td>${test[3]}</td><td><span class="risk ${test[4].toLowerCase()}">${test[4]}</span></td><td>${statusSelect(test[0])}</td><td><textarea class="note" data-id="${test[0]}" placeholder="记录 RunId、TaskId、TraceId、截图路径或缺陷编号">${state[test[0]]?.note || ""}</textarea></td></tr>`).join("")}</tbody></table></div>`;
+      checklist.appendChild(detail);
+    });
+
+    document.querySelectorAll("[data-meta]").forEach(el => {
+      if (meta[el.dataset.meta] !== undefined) el.value = meta[el.dataset.meta];
+      el.addEventListener("input", save);
+    });
+    if (!document.querySelector('[data-meta="date"]').value) document.querySelector('[data-meta="date"]').valueAsDate = new Date();
+
+    document.querySelectorAll(".test-status").forEach(el => el.addEventListener("change", event => {
+      const id = event.target.dataset.id;
+      state[id] = state[id] || {};
+      state[id].status = event.target.value;
+      event.target.className = `test-status status-${event.target.value}`;
+      save(); filterRows();
+    }));
+    document.querySelectorAll(".note").forEach(el => el.addEventListener("input", event => {
+      const id = event.target.dataset.id;
+      state[id] = state[id] || {};
+      state[id].note = event.target.value;
+      save();
+    }));
+
+    function updateProgress() {
+      const tests = sections.flatMap(section => section.tests);
+      const pass = tests.filter(test => state[test[0]]?.status === "pass").length;
+      const decided = tests.filter(test => ["pass", "fail", "blocked", "skip"].includes(state[test[0]]?.status)).length;
+      const percent = tests.length ? Math.round(pass / tests.length * 100) : 0;
+      document.getElementById("progressText").textContent = `${pass} / ${tests.length} 已通过，${decided} 项已执行`;
+      document.getElementById("progressPercent").textContent = `${percent}%`;
+      document.getElementById("progressBar").style.width = `${percent}%`;
+    }
+
+    function filterRows() {
+      const sectionValue = sectionFilter.value;
+      const statusValue = document.getElementById("statusFilter").value;
+      document.querySelectorAll("details[data-section]").forEach(detail => {
+        const sectionVisible = sectionValue === "all" || detail.dataset.section === sectionValue;
+        let visibleRows = 0;
+        detail.querySelectorAll("tr[data-test]").forEach(row => {
+          const status = state[row.dataset.test]?.status || "todo";
+          const visible = sectionVisible && (statusValue === "all" || status === statusValue);
+          row.classList.toggle("hidden", !visible);
+          if (visible) visibleRows++;
+        });
+        detail.classList.toggle("hidden", !sectionVisible || visibleRows === 0);
+        if (sectionValue !== "all" && sectionVisible) detail.open = true;
+      });
+    }
+
+    sectionFilter.addEventListener("change", filterRows);
+    document.getElementById("statusFilter").addEventListener("change", filterRows);
+    document.getElementById("expandAll").addEventListener("click", () => document.querySelectorAll("details").forEach(detail => detail.open = true));
+    document.getElementById("printPage").addEventListener("click", () => window.print());
+    document.getElementById("resetAll").addEventListener("click", () => {
+      if (!confirm("确认清空全部测试状态、备注和执行信息？")) return;
+      localStorage.removeItem(storeKey);
+      location.reload();
+    });
+    save();
+  </script>
+</body>
+</html>

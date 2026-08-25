@@ -32,7 +32,8 @@ public static class AgentDatabaseSynchronizer
         "AgToolApprovalRequest", "AgToolApprovalPayload", "AgToolApprovalDecision",
         "AgToolApprovalExecutionResult", "AgChatConversation", "AgChatMessage",
         "AgUnifiedEntryRun", "AgUnifiedAgentRun", "AgUnifiedOrchestrationLink",
-        "AgUnifiedToolCall", "AgUnifiedRunEvent"
+        "AgUnifiedToolCall", "AgUnifiedRunEvent", "AgAgentTask", "AgAgentTaskAttempt",
+        "AgAgentTaskEvent"
     ];
 
     /// <summary>

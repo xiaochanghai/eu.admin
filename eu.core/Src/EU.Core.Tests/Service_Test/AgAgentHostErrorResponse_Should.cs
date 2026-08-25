@@ -368,7 +368,8 @@ public sealed class AgAgentHostErrorResponse_Should
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["AgentRateLimit:WindowSeconds"] = "7"
+                ["AgentRateLimit:WindowSeconds"] = "7",
+                ["AgentAuthentication:DevelopmentBypassEnabled"] = "true"
             })
             .Build();
         Type extensions = typeof(AgentAuthorizationResultHandler).Assembly.GetType(
@@ -377,7 +378,10 @@ public sealed class AgAgentHostErrorResponse_Should
         MethodInfo addSecurity = extensions.GetMethod(
             "AddAgentApiHttpSecurity",
             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
-        addSecurity.Invoke(null, [services, configuration, new TestHostEnvironment()]);
+        addSecurity.Invoke(null, [services, configuration, new TestHostEnvironment
+        {
+            EnvironmentName = Environments.Development
+        }]);
         using ServiceProvider provider = services.BuildServiceProvider();
         RateLimiterOptions options = provider
             .GetRequiredService<IOptions<RateLimiterOptions>>()
