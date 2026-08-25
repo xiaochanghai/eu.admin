@@ -25,6 +25,7 @@
   <ItemGroup>
     <Content Update="appsettings.BusinessQuery.example.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
     <Content Update="BusinessQuery\demo\**\*" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <Content Update="BusinessQuery\catalog\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

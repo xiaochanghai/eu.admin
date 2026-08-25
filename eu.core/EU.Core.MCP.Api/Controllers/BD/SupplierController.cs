@@ -18,7 +18,7 @@ public class SupplierController : BaseController<ISupplierService>
     [AllowAnonymous, HttpGet]
     public IActionResult HealthCheck() => Ok("MCP API is running!");
 
-    [HttpPost("mcp")]
+    [AllowAnonymous, HttpPost("mcp")]
     public Task<JsonRpcResponse> HandleMcpRequest(
         [FromBody] JsonRpcRequest request,
         CancellationToken cancellationToken) =>
