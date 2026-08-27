@@ -1,19 +1,13 @@
-using EU.Core.Api.Agent.Errors;
-using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
-using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/knowledge-bases")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBasesController(
-    IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : ControllerBase
+    IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(
@@ -75,7 +69,7 @@ public sealed class KnowledgeBasesController(
             cancellationToken);
         if (!result.Success)
         {
-            return FromServiceError(result);
+            return FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
         }
 
         Response.Headers.Location = $"/api/knowledge-bases/{result.Data!.Id}";
@@ -97,7 +91,7 @@ public sealed class KnowledgeBasesController(
             cancellationToken);
         return result.Success
             ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result);
+            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpPost("{id:guid}/documents")]
@@ -114,7 +108,7 @@ public sealed class KnowledgeBasesController(
                 cancellationToken);
         return result.Success
             ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result);
+            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpPost("{id:guid}/documents/pdf")]
@@ -122,7 +116,7 @@ public sealed class KnowledgeBasesController(
     [RequestSizeLimit(AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
     [RequestFormLimits(
         MultipartBodyLengthLimit = AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
-    public async Task<IActionResult> ImportPdfDocument(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocument(
         Guid id,
         [FromForm] long expectedLogicalRevision,
         [FromForm] IFormFile? file,
@@ -131,8 +125,7 @@ public sealed class KnowledgeBasesController(
         if (file is null
             || file.Length is 0 or > AgKnowledgeBaseDefinitionServices.MaximumPdfBytes)
         {
-            return FromError(
-                KnowledgeErrorCodes.DocumentInvalid,
+            return ServiceResult<KnowledgeBaseDefinition>.OprateFailed(
                 $"A PDF file up to {AgKnowledgeBaseDefinitionServices.MaximumPdfBytes} bytes is required.");
         }
 
@@ -147,9 +140,7 @@ public sealed class KnowledgeBasesController(
                     file.ContentType,
                     buffer.ToArray()),
                 cancellationToken);
-        return result.Success
-            ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result);
+        return result;
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -166,7 +157,7 @@ public sealed class KnowledgeBasesController(
             cancellationToken);
         return result.Success
             ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result);
+            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpGet("{id:guid}/documents")]
@@ -275,41 +266,6 @@ public sealed class KnowledgeBasesController(
         return QuerySuccess(values);
     }
 
-    private IActionResult FromServiceError(
-        ServiceResult<KnowledgeBaseDefinition> result) =>
-        FromError(
-            KnowledgeServiceStatusCodes.ToErrorCode(result.Status),
-            result.Message);
-
-    private IActionResult QuerySuccess<T>(T value) =>
-        new JsonResult(
-            ServiceResult<T>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
-
-    private IActionResult OperationSuccess<T>(
-        T value,
-        int httpStatus = StatusCodes.Status200OK) =>
-        new JsonResult(
-            ServiceResult<T>.OprateSuccess(value))
-        {
-            StatusCode = httpStatus
-        };
-
-    private IActionResult FromError(string errorCode, string message)
-    {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
-        return new JsonResult(
-            ServiceResult<AgentApiErrorData>.Failure(
-                descriptor.Status,
-                message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
-        {
-            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
-        };
-    }
-
     private static KnowledgeBaseDetailResponse ToDetail(KnowledgeBaseDefinition value) =>
         new(
             value.Id,
@@ -323,22 +279,16 @@ public sealed class KnowledgeBasesController(
             value.IndexedAtUtc);
 }
 
-[ApiController]
 [Route("api/knowledge-base-references")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBaseReferencesController(
-    IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : ControllerBase
+    IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken cancellationToken)
     {
         IReadOnlyList<PublishedKnowledgeReference> values =
             await knowledgeBaseDefinitionServices.ListPublishedAsync(cancellationToken);
-        return new JsonResult(
-            ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return QuerySuccess(values);
     }
 }
 

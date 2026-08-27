@@ -47,9 +47,11 @@ import {
   type KnowledgeSearchResult,
   type KnowledgeStatus
 } from "@/api/modules/agentKnowledge";
-import useAuthButton from "@/hooks/useAuthButton";
+import { getModuleInfo } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import "./index.less";
+
+const MODULE_CODE = "AG_KNOWLEDGE_BASE_MNG";
 
 interface KnowledgeFormValues {
   code: string;
@@ -68,7 +70,7 @@ const chunkPageSize = 10;
 
 const KnowledgePage = () => {
   const [form] = Form.useForm<KnowledgeFormValues>();
-  const { BUTTONS } = useAuthButton();
+  const [moduleActions, setModuleActions] = useState<Set<string>>(() => new Set());
   const [statusFilter, setStatusFilter] = useState<KnowledgeStatus | undefined>();
   const [items, setItems] = useState<KnowledgeListItem[]>([]);
   const [current, setCurrent] = useState<KnowledgeDetail | null>(null);
@@ -90,6 +92,26 @@ const KnowledgePage = () => {
   const searchRequestSequence = useRef(0);
 
   const archived = current?.Status === "Archived";
+  const canAdd = moduleActions.has("Add");
+  const canUpdate = moduleActions.has("Update");
+
+  useEffect(() => {
+    let active = true;
+
+    const loadModuleActions = async () => {
+      try {
+        const { Data } = await getModuleInfo(MODULE_CODE);
+        if (active) setModuleActions(new Set(Data.actions || []));
+      } catch (loadError) {
+        if (active) setError(getKnowledgeErrorMessage(loadError, "知识库模块权限加载失败"));
+      }
+    };
+
+    void loadModuleActions();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const loadList = useCallback(async () => {
     const sequence = ++listRequestSequence.current;
@@ -375,7 +397,7 @@ const KnowledgePage = () => {
           <Button icon={<ReloadOutlined />} loading={listLoading} onClick={() => void loadList()}>
             刷新
           </Button>
-          {BUTTONS.add && (
+          {canAdd && (
             <Button type="primary" icon={<PlusOutlined />} onClick={startCreate}>
               新建知识库
             </Button>
@@ -424,12 +446,12 @@ const KnowledgePage = () => {
                 {current && (
                   <Space wrap>
                     <Tag color={statusMeta[current.Status].color}>{statusMeta[current.Status].text}</Tag>
-                    {BUTTONS.edit && !archived && (
+                    {canUpdate && !archived && (
                       <Button onClick={() => void toggleStatus()} disabled={saving}>
                         {current.Status === "Enabled" ? "停用" : "启用"}
                       </Button>
                     )}
-                    {BUTTONS.edit && <Popconfirm
+                    {canUpdate && <Popconfirm
                       title={archived ? "恢复此知识库？" : "归档此知识库？"}
                       description={!archived && current.Status === "Enabled" ? "已启用的知识库可能被 Agent 引用，请先确认影响。" : undefined}
                       onConfirm={() => void toggleArchived()}
@@ -455,7 +477,7 @@ const KnowledgePage = () => {
                   form={form}
                   layout="vertical"
                   requiredMark="optional"
-                  disabled={archived || saving || !(creating ? BUTTONS.add : BUTTONS.edit)}
+                  disabled={archived || saving || !(creating ? canAdd : canUpdate)}
                 >
                   <Flex gap={16} wrap>
                     <Form.Item
@@ -476,7 +498,7 @@ const KnowledgePage = () => {
                   <Form.Item name="description" label="说明">
                     <Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} maxLength={1000} showCount />
                   </Form.Item>
-                  {!archived && (creating ? BUTTONS.add : BUTTONS.edit) && (
+                  {!archived && (creating ? canAdd : canUpdate) && (
                     <Button type="primary" loading={saving} onClick={() => void save()}>
                       {creating ? "创建知识库" : "保存基础信息"}
                     </Button>
@@ -502,10 +524,10 @@ const KnowledgePage = () => {
                         maxCount={1}
                         beforeUpload={() => false}
                         fileList={fileList}
-                        disabled={archived || importing || !BUTTONS.edit}
+                        disabled={archived || importing || !canUpdate}
                         onChange={({ fileList: next }) => setFileList(next.slice(-1))}
                       >
-                        <Button icon={<FileTextOutlined />} disabled={archived || importing || !BUTTONS.edit}>
+                        <Button icon={<FileTextOutlined />} disabled={archived || importing || !canUpdate}>
                           选择文档
                         </Button>
                       </Upload>
@@ -513,7 +535,7 @@ const KnowledgePage = () => {
                         type="primary"
                         icon={<UploadOutlined />}
                         loading={importing}
-                        disabled={archived || fileList.length === 0 || !BUTTONS.edit}
+                        disabled={archived || fileList.length === 0 || !canUpdate}
                         onClick={() => void importDocument()}
                       >
                         导入并索引

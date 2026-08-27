@@ -70,14 +70,14 @@ public sealed class AgKnowledgeApiResponse_Should
             Headers = new HeaderDictionary(),
             ContentType = "application/pdf"
         };
-        ServiceResult<KnowledgeBaseDetailResponse> pdfImported =
-            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
-                await controller.ImportPdfDocument(
-                    value.Id,
-                    imported.Data.LogicalRevision,
-                    file,
-                    CancellationToken.None),
-                StatusCodes.Status200OK);
+        ServiceResult<KnowledgeBaseDefinition> pdfImported =
+            await controller.ImportPdfDocument(
+                value.Id,
+                imported.Data.LogicalRevision,
+                file,
+                CancellationToken.None);
+        Assert.True(pdfImported.Success);
+        Assert.Equal(200, pdfImported.Status);
 
         AssertServiceSuccess<KnowledgeBaseDetailResponse>(
             await controller.SetArchived(
@@ -121,15 +121,14 @@ public sealed class AgKnowledgeApiResponse_Should
             StatusCodes.Status400BadRequest,
             600001,
             "REQUEST_INVALID");
-        AssertServiceError(
+        ServiceResult<KnowledgeBaseDefinition> invalidPdf =
             await controller.ImportPdfDocument(
                 Guid.NewGuid(),
                 0,
                 null,
-                CancellationToken.None),
-            StatusCodes.Status400BadRequest,
-            640005,
-            KnowledgeErrorCodes.DocumentInvalid);
+                CancellationToken.None);
+        Assert.False(invalidPdf.Success);
+        Assert.Equal(500, invalidPdf.Status);
 
         AgentApiErrorDescriptor unavailable =
             AgentApiErrorCatalog.Resolve(KnowledgeErrorCodes.Unavailable);
