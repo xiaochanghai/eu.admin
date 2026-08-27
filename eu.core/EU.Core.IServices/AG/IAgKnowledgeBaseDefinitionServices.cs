@@ -43,6 +43,10 @@ public interface IAgKnowledgeBaseDefinitionServices : IKnowledgeRetriever
         ImportPdfKnowledgeDocumentCommand command,
         CancellationToken cancellationToken = default);
 
+    Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
+        DeleteKnowledgeDocumentCommand command,
+        CancellationToken cancellationToken = default);
+
     Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
         SetKnowledgeBaseArchiveCommand command,
         CancellationToken cancellationToken = default);

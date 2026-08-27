@@ -136,6 +136,87 @@ public sealed class AgKnowledgeBaseDefinitionServices :
             cancellationToken);
     }
 
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
+        DeleteKnowledgeDocumentCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        KnowledgeBaseDefinition? existing = await GetByIdAsync(
+            command.KnowledgeBaseId,
+            cancellationToken);
+        if (existing is null) return NotFound();
+        if (existing.LogicalRevision != command.ExpectedLogicalRevision) return Conflict();
+        if (existing.Status is KnowledgeBaseStatus.Archived)
+        {
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.LifecycleTransitionInvalid,
+                "An archived knowledge base must be restored before documents can be deleted.");
+        }
+        if (existing.Documents.All(document => document.Id != command.DocumentId))
+        {
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.DocumentNotFound,
+                "The knowledge document was not found.");
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            int updated = await Db.Updateable<AgKnowledgeBaseDefinition>()
+                .SetColumns(value => new AgKnowledgeBaseDefinition
+                {
+                    LogicalRevision = command.ExpectedLogicalRevision + 1,
+                    IndexedAtUtc = DateTime.UtcNow
+                })
+                .Where(value =>
+                    value.ID == command.KnowledgeBaseId &&
+                    value.LogicalRevision == command.ExpectedLogicalRevision &&
+                    !value.IsDeleted)
+                .ExecuteCommandAsync();
+            if (updated != 1)
+            {
+                await Db.Ado.RollbackTranAsync();
+                return Conflict();
+            }
+
+            await Db.Updateable<AgKnowledgeChunk>()
+                .SetColumns(value => new AgKnowledgeChunk { IsDeleted = true, IsActive = false })
+                .Where(value =>
+                    value.KnowledgeBaseId == command.KnowledgeBaseId &&
+                    value.DocumentId == command.DocumentId &&
+                    !value.IsDeleted)
+                .ExecuteCommandAsync();
+            int deletedDocuments = await Db.Updateable<AgKnowledgeDocument>()
+                .SetColumns(value => new AgKnowledgeDocument { IsDeleted = true, IsActive = false })
+                .Where(value =>
+                    value.ID == command.DocumentId &&
+                    value.KnowledgeBaseId == command.KnowledgeBaseId &&
+                    !value.IsDeleted)
+                .ExecuteCommandAsync();
+            if (deletedDocuments != 1)
+            {
+                await Db.Ado.RollbackTranAsync();
+                return KnowledgeFailure(
+                    KnowledgeErrorCodes.DocumentNotFound,
+                    "The knowledge document was not found.");
+            }
+
+            await Db.Ado.CommitTranAsync();
+        }
+        catch
+        {
+            await Db.Ado.RollbackTranAsync();
+            throw;
+        }
+
+        KnowledgeBaseDefinition? updatedDefinition = await GetByIdAsync(
+            command.KnowledgeBaseId,
+            cancellationToken);
+        return updatedDefinition is null
+            ? NotFound()
+            : ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(updatedDefinition);
+    }
+
     private static KnowledgePdfExtractionResult ExtractPdf(
         ReadOnlyMemory<byte> content,
         int maximumPages,

@@ -95,6 +95,7 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
             ["KnowledgeBasesController.Update"] = Response<KnowledgeBaseDetailResponse>(),
             ["KnowledgeBasesController.ImportDocument"] = Response<KnowledgeBaseDetailResponse>(),
             ["KnowledgeBasesController.ImportPdfDocument"] = Response<KnowledgeBaseDetailResponse>(),
+            ["KnowledgeBasesController.DeleteDocument"] = Response<KnowledgeBaseDetailResponse>(),
             ["KnowledgeBasesController.SetArchived"] = Response<KnowledgeBaseDetailResponse>(),
             ["KnowledgeBasesController.ListDocuments"] = Response<IReadOnlyList<KnowledgeDocumentListItemResponse>>(),
             ["KnowledgeBasesController.ListDocumentChunks"] = Response<KnowledgeChunkPageResponse>(),

@@ -119,6 +119,18 @@ export const importKnowledgePdf = async (id: string, expectedLogicalRevision: nu
     })
   ).Data;
 
+export const deleteKnowledgeDocument = async (
+  id: string,
+  documentId: string,
+  expectedLogicalRevision: number
+) =>
+  (
+    await http.delete<KnowledgeDetail>(
+      knowledgeUrl(`/${encoded(id)}/documents/${encoded(documentId)}`),
+      { expectedLogicalRevision }
+    )
+  ).Data;
+
 export const searchKnowledge = async (id: string, query: string, take = 6) =>
   (
     await http.post<KnowledgeSearchResult[]>(knowledgeUrl(`/${encoded(id)}/search`), {

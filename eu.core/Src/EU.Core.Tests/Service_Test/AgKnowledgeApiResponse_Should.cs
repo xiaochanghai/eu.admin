@@ -79,10 +79,20 @@ public sealed class AgKnowledgeApiResponse_Should
         Assert.True(pdfImported.Success);
         Assert.Equal(200, pdfImported.Status);
 
+        KnowledgeDocument pdfDocument = pdfImported.Data.Documents.Last();
+        ServiceResult<KnowledgeBaseDetailResponse> deleted =
+            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
+                await controller.DeleteDocument(
+                    value.Id,
+                    pdfDocument.Id,
+                    new DeleteKnowledgeDocumentRequest(pdfImported.Data.LogicalRevision),
+                    CancellationToken.None),
+                StatusCodes.Status200OK);
+
         AssertServiceSuccess<KnowledgeBaseDetailResponse>(
             await controller.SetArchived(
                 value.Id,
-                new SetKnowledgeBaseArchiveRequest(pdfImported.Data.LogicalRevision, true),
+                new SetKnowledgeBaseArchiveRequest(deleted.Data.LogicalRevision, true),
                 CancellationToken.None),
             StatusCodes.Status200OK);
         AssertServiceSuccess<IReadOnlyList<KnowledgeDocumentListItemResponse>>(
@@ -350,6 +360,27 @@ public sealed class AgKnowledgeApiResponse_Should
             ImportPdfKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
             ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
                 command.FileName, command.MediaType, "PDF extracted content.", cancellationToken);
+
+        public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
+            DeleteKnowledgeDocumentCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            KnowledgeBaseDefinition current = _values[command.KnowledgeBaseId];
+            KnowledgeBaseDefinition value = current with
+            {
+                LogicalRevision = current.LogicalRevision + 1,
+                Documents = current.Documents
+                    .Where(document => document.Id != command.DocumentId)
+                    .ToArray(),
+                Chunks = current.Chunks
+                    .Where(chunk => chunk.DocumentId != command.DocumentId)
+                    .ToArray(),
+                IndexedAtUtc = DateTimeOffset.UtcNow
+            };
+            _values[value.Id] = value;
+            await Task.CompletedTask;
+            return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
+        }
 
         public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
             SetKnowledgeBaseArchiveCommand command, CancellationToken cancellationToken = default)

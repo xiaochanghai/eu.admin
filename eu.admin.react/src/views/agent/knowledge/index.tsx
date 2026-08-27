@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  DeleteOutlined,
   FileTextOutlined,
   InboxOutlined,
   PlusOutlined,
@@ -30,6 +31,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createKnowledge,
+  deleteKnowledgeDocument,
   getKnowledge,
   getKnowledgeErrorMessage,
   importKnowledgePdf,
@@ -85,6 +87,7 @@ const KnowledgePage = () => {
   const [contentLoading, setContentLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string>();
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const requestSequence = useRef(0);
@@ -329,6 +332,29 @@ const KnowledgePage = () => {
     }
   };
 
+  const deleteDocument = async (document: KnowledgeDocument) => {
+    if (!current || deletingDocumentId || archived || !canUpdate) return;
+    if (hasUnsavedMetadata()) {
+      message.warning("存在未保存的基础信息修改，请先保存再删除文档");
+      return;
+    }
+    setDeletingDocumentId(document.Id);
+    setError("");
+    try {
+      const saved = await deleteKnowledgeDocument(
+        current.Id,
+        document.Id,
+        current.LogicalRevision
+      );
+      message.success(`${document.FileName} 已删除`);
+      await refreshCurrent(saved.Id);
+    } catch (deleteError) {
+      setError(getKnowledgeErrorMessage(deleteError, "知识文档删除失败"));
+    } finally {
+      setDeletingDocumentId(undefined);
+    }
+  };
+
   const runSearch = async () => {
     const value = query.trim();
     if (!current || !value || searching || archived) return;
@@ -551,6 +577,26 @@ const KnowledgePage = () => {
                         locale={{ emptyText: "尚未导入文档" }}
                         renderItem={document => (
                           <List.Item
+                            actions={canUpdate && !archived ? [
+                              <Popconfirm
+                                key="delete"
+                                title="删除此文档？"
+                                description={`将同时删除 ${document.ChunkCount} 个索引分块，此操作不可撤销。`}
+                                okText="删除"
+                                okButtonProps={{ danger: true }}
+                                onConfirm={() => void deleteDocument(document)}
+                              >
+                                <Button
+                                  type="text"
+                                  danger
+                                  icon={<DeleteOutlined />}
+                                  loading={deletingDocumentId === document.Id}
+                                  disabled={Boolean(deletingDocumentId) || importing || saving}
+                                  aria-label={`删除文档 ${document.FileName}`}
+                                  onClick={event => event.stopPropagation()}
+                                />
+                              </Popconfirm>
+                            ] : undefined}
                             className={document.Id === selectedDocumentId ? "knowledge-page__document--active" : undefined}
                             onClick={() => void loadChunks(current.Id, document.Id)}
                           >

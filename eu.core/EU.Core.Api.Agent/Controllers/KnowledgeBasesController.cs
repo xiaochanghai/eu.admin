@@ -64,7 +64,7 @@ public sealed class KnowledgeBasesController(
         [FromBody] CreateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.CreateAsync(
+        var result = await knowledgeBaseDefinitionServices.CreateAsync(
             new CreateKnowledgeBaseCommand(request.Code, request.Name, request.Description),
             cancellationToken);
         if (!result.Success)
@@ -84,7 +84,7 @@ public sealed class KnowledgeBasesController(
         [FromBody] UpdateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.UpdateAsync(
+        var result = await knowledgeBaseDefinitionServices.UpdateAsync(
             new UpdateKnowledgeBaseCommand(
                 id, request.ExpectedLogicalRevision, request.Name,
                 request.Description, request.Status),
@@ -100,7 +100,7 @@ public sealed class KnowledgeBasesController(
         [FromBody] ImportKnowledgeDocumentRequest request,
         CancellationToken cancellationToken)
     {
-        ServiceResult<KnowledgeBaseDefinition> result =
+        var result =
             await knowledgeBaseDefinitionServices.ImportDocumentAsync(
                 new ImportKnowledgeDocumentCommand(
                     id, request.ExpectedLogicalRevision, request.FileName,
@@ -131,16 +131,33 @@ public sealed class KnowledgeBasesController(
 
         using var buffer = new MemoryStream(checked((int)file.Length));
         await file.CopyToAsync(buffer, cancellationToken);
-        ServiceResult<KnowledgeBaseDefinition> result =
-            await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
-                new ImportPdfKnowledgeDocumentCommand(
-                    id,
-                    expectedLogicalRevision,
-                    file.FileName,
-                    file.ContentType,
-                    buffer.ToArray()),
-                cancellationToken);
+        var result = await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
+                 new ImportPdfKnowledgeDocumentCommand(
+                     id,
+                     expectedLogicalRevision,
+                     file.FileName,
+                     file.ContentType,
+                     buffer.ToArray()),
+                 cancellationToken);
         return result;
+    }
+
+    [HttpDelete("{id:guid}/documents/{documentId:guid}")]
+    public async Task<IActionResult> DeleteDocument(
+        Guid id,
+        Guid documentId,
+        [FromBody] DeleteKnowledgeDocumentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
+            new DeleteKnowledgeDocumentCommand(
+                id,
+                documentId,
+                request.ExpectedLogicalRevision),
+            cancellationToken);
+        return result.Success
+            ? OperationSuccess(ToDetail(result.Data!))
+            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpPut("{id:guid}/archive")]
@@ -149,7 +166,7 @@ public sealed class KnowledgeBasesController(
         [FromBody] SetKnowledgeBaseArchiveRequest request,
         CancellationToken cancellationToken)
     {
-        ServiceResult<KnowledgeBaseDefinition> result = await knowledgeBaseDefinitionServices.SetArchivedAsync(
+        var result = await knowledgeBaseDefinitionServices.SetArchivedAsync(
             new SetKnowledgeBaseArchiveCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -303,6 +320,7 @@ public sealed record ImportKnowledgeDocumentRequest(
     string FileName,
     string MediaType,
     string Content);
+public sealed record DeleteKnowledgeDocumentRequest(long ExpectedLogicalRevision);
 public sealed record SearchKnowledgeRequest(string Query, int Take = 6);
 public sealed record SetKnowledgeBaseArchiveRequest(
     long ExpectedLogicalRevision,

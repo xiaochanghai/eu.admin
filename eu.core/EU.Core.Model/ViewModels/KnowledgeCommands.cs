@@ -23,6 +23,11 @@ public sealed record ImportPdfKnowledgeDocumentCommand(
     string MediaType,
     ReadOnlyMemory<byte> Content);
 
+public sealed record DeleteKnowledgeDocumentCommand(
+    Guid KnowledgeBaseId,
+    Guid DocumentId,
+    long ExpectedLogicalRevision);
+
 public sealed record SetKnowledgeBaseArchiveCommand(
     Guid Id,
     long ExpectedLogicalRevision,
