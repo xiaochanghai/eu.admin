@@ -24,30 +24,48 @@ public interface IAgKnowledgeBaseDefinitionServices : IKnowledgeRetriever
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(
-        KnowledgeBaseQuery query,
+        KnowledgeBaseStatus? status = null,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
-        CreateKnowledgeBaseCommand command,
+        string code,
+        string name,
+        string description,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
-        UpdateKnowledgeBaseCommand command,
+        Guid id,
+        long expectedLogicalRevision,
+        string name,
+        string description,
+        KnowledgeBaseStatus status,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
-        ImportKnowledgeDocumentCommand command,
+        Guid knowledgeBaseId,
+        long expectedLogicalRevision,
+        string fileName,
+        string mediaType,
+        string content,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
-        ImportPdfKnowledgeDocumentCommand command,
+        Guid knowledgeBaseId,
+        long expectedLogicalRevision,
+        string fileName,
+        string mediaType,
+        ReadOnlyMemory<byte> content,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
-        DeleteKnowledgeDocumentCommand command,
+        Guid knowledgeBaseId,
+        Guid documentId,
+        long expectedLogicalRevision,
         CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
-        SetKnowledgeBaseArchiveCommand command,
+        Guid id,
+        long expectedLogicalRevision,
+        bool archived,
         CancellationToken cancellationToken = default);
 }

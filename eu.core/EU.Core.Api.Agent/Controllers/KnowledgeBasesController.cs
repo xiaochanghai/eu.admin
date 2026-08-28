@@ -10,7 +10,7 @@ public sealed class KnowledgeBasesController(
     IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeBaseListItem>>> List(
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
@@ -25,15 +25,15 @@ public sealed class KnowledgeBasesController(
                 parsedStatus = KnowledgeBaseStatus.Archived;
             else
             {
-                return FromError(
-                    "REQUEST_INVALID",
+                return ServiceResult<IReadOnlyList<KnowledgeBaseListItem>>.Failure(
+                    KnowledgeServiceStatusCodes.DocumentInvalid,
                     "Knowledge base status must be Enabled, Disabled, or Archived.");
             }
         }
         IReadOnlyList<KnowledgeBaseDefinition> definitions =
             await knowledgeBaseDefinitionServices.ListAsync(
-            new KnowledgeBaseQuery(parsedStatus),
-            cancellationToken);
+                parsedStatus,
+                cancellationToken);
         IReadOnlyList<KnowledgeBaseListItem> values = definitions
             .Select(value => new KnowledgeBaseListItem(
                 value.Id,
@@ -46,69 +46,63 @@ public sealed class KnowledgeBasesController(
                 value.Chunks.Count,
                 value.IndexedAtUtc))
             .ToArray();
-        return QuerySuccess(values);
+        return ServiceResult<IReadOnlyList<KnowledgeBaseListItem>>.QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> Get(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         KnowledgeBaseDefinition? value =
             await knowledgeBaseDefinitionServices.GetByIdAsync(id, cancellationToken);
         return value is null
-            ? FromError(KnowledgeErrorCodes.NotFound, "The knowledge base was not found.")
-            : QuerySuccess(ToDetail(value));
+            ? ServiceResult<KnowledgeBaseDetailResponse>.Failure(
+                KnowledgeServiceStatusCodes.NotFound,
+                "The knowledge base was not found.")
+            : ServiceResult<KnowledgeBaseDetailResponse>.QuerySuccess(ToDetail(value));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> Create(
         [FromBody] CreateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await knowledgeBaseDefinitionServices.CreateAsync(
-            new CreateKnowledgeBaseCommand(request.Code, request.Name, request.Description),
+        return await knowledgeBaseDefinitionServices.CreateAsync(
+            request.Code,
+            request.Name,
+            request.Description,
             cancellationToken);
-        if (!result.Success)
-        {
-            return FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
-        }
-
-        Response.Headers.Location = $"/api/knowledge-bases/{result.Data!.Id}";
-        return OperationSuccess(
-            ToDetail(result.Data),
-            StatusCodes.Status201Created);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> Update(
         Guid id,
         [FromBody] UpdateKnowledgeBaseRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await knowledgeBaseDefinitionServices.UpdateAsync(
-            new UpdateKnowledgeBaseCommand(
-                id, request.ExpectedLogicalRevision, request.Name,
-                request.Description, request.Status),
+        return await knowledgeBaseDefinitionServices.UpdateAsync(
+            id,
+            request.ExpectedLogicalRevision,
+            request.Name,
+            request.Description,
+            request.Status,
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpPost("{id:guid}/documents")]
-    public async Task<IActionResult> ImportDocument(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocument(
         Guid id,
         [FromBody] ImportKnowledgeDocumentRequest request,
         CancellationToken cancellationToken)
     {
-        var result =
-            await knowledgeBaseDefinitionServices.ImportDocumentAsync(
-                new ImportKnowledgeDocumentCommand(
-                    id, request.ExpectedLogicalRevision, request.FileName,
-                    request.MediaType, request.Content),
-                cancellationToken);
-        return result.Success
-            ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
+        return await knowledgeBaseDefinitionServices.ImportDocumentAsync(
+            id,
+            request.ExpectedLogicalRevision,
+            request.FileName,
+            request.MediaType,
+            request.Content,
+            cancellationToken);
     }
 
     [HttpPost("{id:guid}/documents/pdf")]
@@ -125,60 +119,51 @@ public sealed class KnowledgeBasesController(
         if (file is null
             || file.Length is 0 or > AgKnowledgeBaseDefinitionServices.MaximumPdfBytes)
         {
-            return ServiceResult<KnowledgeBaseDefinition>.OprateFailed(
+            return ServiceResult<KnowledgeBaseDefinition>.Failure(
+                KnowledgeServiceStatusCodes.DocumentInvalid,
                 $"A PDF file up to {AgKnowledgeBaseDefinitionServices.MaximumPdfBytes} bytes is required.");
         }
 
         using var buffer = new MemoryStream(checked((int)file.Length));
         await file.CopyToAsync(buffer, cancellationToken);
-        var result = await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
-                 new ImportPdfKnowledgeDocumentCommand(
-                     id,
-                     expectedLogicalRevision,
-                     file.FileName,
-                     file.ContentType,
-                     buffer.ToArray()),
-                 cancellationToken);
-        return result;
+        return await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
+            id,
+            expectedLogicalRevision,
+            file.FileName,
+            file.ContentType,
+            buffer.ToArray(),
+            cancellationToken);
     }
 
     [HttpDelete("{id:guid}/documents/{documentId:guid}")]
-    public async Task<IActionResult> DeleteDocument(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocument(
         Guid id,
         Guid documentId,
         [FromBody] DeleteKnowledgeDocumentRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
-            new DeleteKnowledgeDocumentCommand(
-                id,
-                documentId,
-                request.ExpectedLogicalRevision),
+        return await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
+            id,
+            documentId,
+            request.ExpectedLogicalRevision,
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<IActionResult> SetArchived(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchived(
         Guid id,
         [FromBody] SetKnowledgeBaseArchiveRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await knowledgeBaseDefinitionServices.SetArchivedAsync(
-            new SetKnowledgeBaseArchiveCommand(
-                id,
-                request.ExpectedLogicalRevision,
-                request.Archived),
+        return await knowledgeBaseDefinitionServices.SetArchivedAsync(
+            id,
+            request.ExpectedLogicalRevision,
+            request.Archived,
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(ToDetail(result.Data!))
-            : FromServiceError(result, KnowledgeServiceStatusCodes.ToErrorCode);
     }
 
     [HttpGet("{id:guid}/documents")]
-    public async Task<IActionResult> ListDocuments(
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>> ListDocuments(
         Guid id,
         CancellationToken cancellationToken)
     {
@@ -186,8 +171,8 @@ public sealed class KnowledgeBasesController(
             await knowledgeBaseDefinitionServices.GetByIdAsync(id, cancellationToken);
         if (value is null)
         {
-            return FromError(
-                KnowledgeErrorCodes.NotFound,
+            return ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>.Failure(
+                KnowledgeServiceStatusCodes.NotFound,
                 "The knowledge base was not found.");
         }
 
@@ -206,11 +191,11 @@ public sealed class KnowledgeBasesController(
                 chunkCounts.GetValueOrDefault(document.Id),
                 document.ImportedAtUtc))
             .ToArray();
-        return QuerySuccess(documents);
+        return ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>.QuerySuccess(documents);
     }
 
     [HttpGet("{id:guid}/documents/{documentId:guid}/chunks")]
-    public async Task<IActionResult> ListDocumentChunks(
+    public async Task<ServiceResult<KnowledgeChunkPageResponse>> ListDocumentChunks(
         Guid id,
         Guid documentId,
         [FromQuery] int skip = 0,
@@ -219,8 +204,8 @@ public sealed class KnowledgeBasesController(
     {
         if (skip < 0 || take is < 1 or > 50)
         {
-            return FromError(
-                KnowledgeErrorCodes.DocumentInvalid,
+            return ServiceResult<KnowledgeChunkPageResponse>.Failure(
+                KnowledgeServiceStatusCodes.DocumentInvalid,
                 "Chunk paging requires skip >= 0 and take between 1 and 50.");
         }
 
@@ -228,16 +213,16 @@ public sealed class KnowledgeBasesController(
             await knowledgeBaseDefinitionServices.GetByIdAsync(id, cancellationToken);
         if (value is null)
         {
-            return FromError(
-                KnowledgeErrorCodes.NotFound,
+            return ServiceResult<KnowledgeChunkPageResponse>.Failure(
+                KnowledgeServiceStatusCodes.NotFound,
                 "The knowledge base was not found.");
         }
 
         KnowledgeDocument? document = value.Documents.FirstOrDefault(item => item.Id == documentId);
         if (document is null)
         {
-            return FromError(
-                KnowledgeErrorCodes.DocumentNotFound,
+            return ServiceResult<KnowledgeChunkPageResponse>.Failure(
+                KnowledgeServiceStatusCodes.DocumentNotFound,
                 "The knowledge document was not found.");
         }
 
@@ -254,7 +239,7 @@ public sealed class KnowledgeBasesController(
                 chunk.Content,
                 chunk.Content.Length))
             .ToArray();
-        return QuerySuccess(new KnowledgeChunkPageResponse(
+        return ServiceResult<KnowledgeChunkPageResponse>.QuerySuccess(new KnowledgeChunkPageResponse(
             document.Id,
             document.FileName,
             skip,
@@ -264,15 +249,15 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpPost("{id:guid}/search")]
-    public async Task<IActionResult> Search(
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeSearchResult>>> Search(
         Guid id,
         [FromBody] SearchKnowledgeRequest request,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Query))
         {
-            return FromError(
-                KnowledgeErrorCodes.DocumentInvalid,
+            return ServiceResult<IReadOnlyList<KnowledgeSearchResult>>.Failure(
+                KnowledgeServiceStatusCodes.DocumentInvalid,
                 "Search query is required.");
         }
         IReadOnlyList<KnowledgeSearchResult> values = await knowledgeBaseDefinitionServices.SearchAsync(
@@ -280,7 +265,7 @@ public sealed class KnowledgeBasesController(
             request.Query.Trim(),
             request.Take,
             cancellationToken);
-        return QuerySuccess(values);
+        return ServiceResult<IReadOnlyList<KnowledgeSearchResult>>.QuerySuccess(values);
     }
 
     private static KnowledgeBaseDetailResponse ToDetail(KnowledgeBaseDefinition value) =>
@@ -301,11 +286,12 @@ public sealed class KnowledgeBaseReferencesController(
     IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>> List(
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<PublishedKnowledgeReference> values =
             await knowledgeBaseDefinitionServices.ListPublishedAsync(cancellationToken);
-        return QuerySuccess(values);
+        return ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values);
     }
 }
 

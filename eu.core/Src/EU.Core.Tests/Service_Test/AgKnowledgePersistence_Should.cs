@@ -21,20 +21,19 @@ public sealed class AgKnowledgePersistence_Should
             fixture.CreateRepository<AgKnowledgeBaseDefinition>());
         string code = $"knowledge-{Guid.NewGuid():N}";
         ServiceResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
-            new CreateKnowledgeBaseCommand(code, "Atlas Knowledge", "description"));
+            code, "Atlas Knowledge", "description");
         Assert.True(created.Success);
         ServiceResult<KnowledgeBaseDefinition> duplicate = await service.CreateAsync(
-            new CreateKnowledgeBaseCommand(code, "Duplicate", string.Empty));
+            code, "Duplicate", string.Empty);
         Assert.False(duplicate.Success);
         Assert.Equal(KnowledgeServiceStatusCodes.CodeConflict, duplicate.Status);
 
         ServiceResult<KnowledgeBaseDefinition> imported = await service.ImportDocumentAsync(
-            new ImportKnowledgeDocumentCommand(
-                created.Data!.Id,
-                created.Data.LogicalRevision,
-                "atlas.txt",
-                "text/plain",
-                "Atlas service escalation code is ORCHID-7319."));
+            created.Data!.Id,
+            created.Data.LogicalRevision,
+            "atlas.txt",
+            "text/plain",
+            "Atlas service escalation code is ORCHID-7319.");
         Assert.True(imported.Success);
         KnowledgeBaseDefinition definition = imported.Data!;
         KnowledgeBaseDefinition persisted = Assert.IsType<KnowledgeBaseDefinition>(
@@ -54,28 +53,25 @@ public sealed class AgKnowledgePersistence_Should
         Assert.True(first.Score > 0);
 
         ServiceResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
-            new UpdateKnowledgeBaseCommand(
-                definition.Id,
-                definition.LogicalRevision,
-                "Atlas Knowledge Updated",
-                definition.Description,
-                KnowledgeBaseStatus.Disabled));
+            definition.Id,
+            definition.LogicalRevision,
+            "Atlas Knowledge Updated",
+            definition.Description,
+            KnowledgeBaseStatus.Disabled);
         Assert.True(disabled.Success);
         ServiceResult<KnowledgeBaseDefinition> stale = await service.UpdateAsync(
-            new UpdateKnowledgeBaseCommand(
-                definition.Id,
-                definition.LogicalRevision,
-                "Stale update",
-                definition.Description,
-                KnowledgeBaseStatus.Disabled));
+            definition.Id,
+            definition.LogicalRevision,
+            "Stale update",
+            definition.Description,
+            KnowledgeBaseStatus.Disabled);
         Assert.False(stale.Success);
         Assert.Equal(KnowledgeServiceStatusCodes.RowVersionConflict, stale.Status);
         Assert.Empty(await service.SearchAsync([definition.Id], "Atlas", 10));
         Assert.DoesNotContain(
             await service.ListPublishedAsync(),
             value => value.KnowledgeBaseId == definition.Id);
-        Assert.Single(await service.ListAsync(
-            new KnowledgeBaseQuery(KnowledgeBaseStatus.Disabled)));
+        Assert.Single(await service.ListAsync(KnowledgeBaseStatus.Disabled));
 
         KnowledgeBaseDefinition unchanged = Assert.IsType<KnowledgeBaseDefinition>(
             await service.GetByIdAsync(definition.Id));
@@ -95,29 +91,26 @@ public sealed class AgKnowledgePersistence_Should
             fixture.CreateRepository<AgKnowledgeBaseDefinition>(),
             new Lazy<IAgentDefinitionCatalog>(() => agents!));
         ServiceResult<KnowledgeBaseDefinition> created = await service.CreateAsync(
-            new CreateKnowledgeBaseCommand(
-                $"knowledge-{Guid.NewGuid():N}",
-                "Referenced Knowledge",
-                string.Empty));
+            $"knowledge-{Guid.NewGuid():N}",
+            "Referenced Knowledge",
+            string.Empty);
         Assert.True(created.Success);
         Guid knowledgeBaseId = created.Data!.Id;
         ServiceResult<KnowledgeBaseDefinition> disabled = await service.UpdateAsync(
-            new UpdateKnowledgeBaseCommand(
-                knowledgeBaseId,
-                created.Data.LogicalRevision,
-                created.Data.Name,
-                created.Data.Description,
-                KnowledgeBaseStatus.Disabled));
+            knowledgeBaseId,
+            created.Data.LogicalRevision,
+            created.Data.Name,
+            created.Data.Description,
+            KnowledgeBaseStatus.Disabled);
         Assert.True(disabled.Success);
         agents = new StubAgentDefinitionCatalog(
             [CreateReferencingAgent(knowledgeBaseId)]);
 
         ServiceResult<KnowledgeBaseDefinition> blocked =
             await service.SetArchivedAsync(
-                new SetKnowledgeBaseArchiveCommand(
-                    knowledgeBaseId,
-                    disabled.Data!.LogicalRevision,
-                    true));
+                knowledgeBaseId,
+                disabled.Data!.LogicalRevision,
+                true);
 
         Assert.False(blocked.Success);
         Assert.Equal(KnowledgeServiceStatusCodes.ArchiveBlocked, blocked.Status);
@@ -126,10 +119,9 @@ public sealed class AgKnowledgePersistence_Should
         agents.Definitions = [];
         ServiceResult<KnowledgeBaseDefinition> archived =
             await service.SetArchivedAsync(
-                new SetKnowledgeBaseArchiveCommand(
-                    knowledgeBaseId,
-                    disabled.Data.LogicalRevision,
-                    true));
+                knowledgeBaseId,
+                disabled.Data.LogicalRevision,
+                true);
         Assert.True(archived.Success);
         Assert.Equal(KnowledgeBaseStatus.Archived, archived.Data?.Status);
     }

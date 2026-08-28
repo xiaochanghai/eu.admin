@@ -1,4 +1,3 @@
-using EU.Core.IServices.Knowledge;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -32,90 +31,119 @@ public sealed class AgKnowledgeBaseDefinitionServices :
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
-        CreateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
+        string code,
+        string name,
+        string description,
+        CancellationToken cancellationToken = default)
     {
-        string code = (command.Code ?? string.Empty).Trim().ToLowerInvariant();
+        code = (code ?? string.Empty).Trim().ToLowerInvariant();
         if (!Regex.IsMatch(code, "^[a-z0-9]+(?:-[a-z0-9]+)*$"))
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.CodeInvalid, "Knowledge base code must be lowercase kebab-case.");
         }
         var value = new KnowledgeBaseDefinition(
-            Guid.NewGuid(), code, command.Name?.Trim() ?? string.Empty,
-            command.Description?.Trim() ?? string.Empty, KnowledgeBaseStatus.Enabled,
+            Guid.NewGuid(), code, name?.Trim() ?? string.Empty,
+            description?.Trim() ?? string.Empty, KnowledgeBaseStatus.Enabled,
             0, [], [], null);
         return await TryCreateAsync(value, cancellationToken)
-            ? ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value)
+            ? Success(value)
             : KnowledgeFailure(
                 KnowledgeErrorCodes.CodeConflict, "A knowledge base already uses this code.");
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
-        UpdateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
+        Guid id,
+        long expectedLogicalRevision,
+        string name,
+        string description,
+        KnowledgeBaseStatus status,
+        CancellationToken cancellationToken = default)
     {
-        KnowledgeBaseDefinition? existing = await GetByIdAsync(command.Id, cancellationToken);
-        if (existing is null) return NotFound();
-        if (existing.LogicalRevision != command.ExpectedLogicalRevision) return Conflict();
-        if (existing.Status is KnowledgeBaseStatus.Archived || command.Status is KnowledgeBaseStatus.Archived)
+        KnowledgeBaseDefinition? existing = await GetByIdAsync(id, cancellationToken);
+        if (existing is null)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.NotFound, "The knowledge base was not found.");
+        if (existing.LogicalRevision != expectedLogicalRevision)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
+        if (existing.Status is KnowledgeBaseStatus.Archived || status is KnowledgeBaseStatus.Archived)
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.LifecycleTransitionInvalid,
                 "Use the archive operation to archive or restore a knowledge base.");
         }
-        if (!Enum.IsDefined(command.Status))
+        if (!Enum.IsDefined(status))
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.DocumentInvalid, "Knowledge base status is invalid.");
         }
         KnowledgeBaseDefinition updated = existing with
         {
-            Name = command.Name?.Trim() ?? string.Empty,
-            Description = command.Description?.Trim() ?? string.Empty,
-            Status = command.Status,
+            Name = name?.Trim() ?? string.Empty,
+            Description = description?.Trim() ?? string.Empty,
+            Status = status,
             LogicalRevision = existing.LogicalRevision + 1
         };
-        return await TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(updated)
-            : Conflict();
+        return await TryReplaceAsync(updated, expectedLogicalRevision, cancellationToken)
+            ? Success(updated)
+            : KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
-        ImportKnowledgeDocumentCommand command, CancellationToken cancellationToken = default)
+        Guid knowledgeBaseId,
+        long expectedLogicalRevision,
+        string fileName,
+        string mediaType,
+        string content,
+        CancellationToken cancellationToken = default)
     {
-        string mediaType = command.MediaType?.Trim().ToLowerInvariant() ?? string.Empty;
-        string content = NormalizeContent(command.Content);
+        mediaType = mediaType?.Trim().ToLowerInvariant() ?? string.Empty;
+        content = NormalizeContent(content);
         if (mediaType is not ("text/plain" or "text/markdown"))
         {
-            return InvalidDocument(
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.DocumentInvalid,
                 $"Only non-empty text/plain and text/markdown documents up to {MaximumDocumentCharacters} characters are accepted by this endpoint.");
         }
         return await PersistDocumentAsync(
-            command.KnowledgeBaseId, command.ExpectedLogicalRevision, command.FileName,
+            knowledgeBaseId, expectedLogicalRevision, fileName,
             mediaType, content, cancellationToken);
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
-        ImportPdfKnowledgeDocumentCommand command, CancellationToken cancellationToken = default)
+        Guid knowledgeBaseId,
+        long expectedLogicalRevision,
+        string fileName,
+        string mediaType,
+        ReadOnlyMemory<byte> content,
+        CancellationToken cancellationToken = default)
     {
-        string fileName = Path.GetFileName(command.FileName?.Trim() ?? string.Empty);
-        string mediaType = command.MediaType?.Trim().ToLowerInvariant() ?? string.Empty;
-        ReadOnlyMemory<byte> bytes = command.Content;
+        fileName = Path.GetFileName(fileName?.Trim() ?? string.Empty);
+        mediaType = mediaType?.Trim().ToLowerInvariant() ?? string.Empty;
+        ReadOnlyMemory<byte> bytes = content;
         if (string.IsNullOrWhiteSpace(fileName)
             || !string.Equals(Path.GetExtension(fileName), ".pdf", StringComparison.OrdinalIgnoreCase)
             || !string.Equals(mediaType, "application/pdf", StringComparison.Ordinal)
             || bytes.Length is 0 or > MaximumPdfBytes || !HasPdfSignature(bytes.Span))
         {
-            return InvalidDocument($"Only PDF files up to {MaximumPdfBytes} bytes are accepted by this endpoint.");
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.DocumentInvalid,
+                $"Only PDF files up to {MaximumPdfBytes} bytes are accepted by this endpoint.");
         }
-        KnowledgeBaseDefinition? target = await GetByIdAsync(command.KnowledgeBaseId, cancellationToken);
+        KnowledgeBaseDefinition? target = await GetByIdAsync(knowledgeBaseId, cancellationToken);
         ServiceResult<KnowledgeBaseDefinition>? targetError =
-            ValidateImportTarget(target, command.ExpectedLogicalRevision);
+            ValidateImportTarget(target, expectedLogicalRevision);
         if (targetError is not null) return targetError;
         KnowledgePdfExtractionResult extraction = await ExtractAsync(
             bytes, MaximumPdfPages, MaximumDocumentCharacters, cancellationToken);
-        if (!extraction.Succeeded) return InvalidDocument(PdfFailureMessage(extraction.Failure));
+        if (!extraction.Succeeded)
+            return KnowledgeFailure(KnowledgeErrorCodes.DocumentInvalid, PdfFailureMessage(extraction.Failure));
         return await PersistDocumentAsync(
-            command.KnowledgeBaseId, command.ExpectedLogicalRevision, fileName,
+            knowledgeBaseId, expectedLogicalRevision, fileName,
             mediaType, NormalizeContent(extraction.Content), cancellationToken);
     }
 
@@ -137,21 +165,28 @@ public sealed class AgKnowledgeBaseDefinitionServices :
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
-        DeleteKnowledgeDocumentCommand command,
+        Guid knowledgeBaseId,
+        Guid documentId,
+        long expectedLogicalRevision,
         CancellationToken cancellationToken = default)
     {
         KnowledgeBaseDefinition? existing = await GetByIdAsync(
-            command.KnowledgeBaseId,
+            knowledgeBaseId,
             cancellationToken);
-        if (existing is null) return NotFound();
-        if (existing.LogicalRevision != command.ExpectedLogicalRevision) return Conflict();
+        if (existing is null)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.NotFound, "The knowledge base was not found.");
+        if (existing.LogicalRevision != expectedLogicalRevision)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
         if (existing.Status is KnowledgeBaseStatus.Archived)
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.LifecycleTransitionInvalid,
                 "An archived knowledge base must be restored before documents can be deleted.");
         }
-        if (existing.Documents.All(document => document.Id != command.DocumentId))
+        if (existing.Documents.All(document => document.Id != documentId))
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.DocumentNotFound,
@@ -165,32 +200,34 @@ public sealed class AgKnowledgeBaseDefinitionServices :
             int updated = await Db.Updateable<AgKnowledgeBaseDefinition>()
                 .SetColumns(value => new AgKnowledgeBaseDefinition
                 {
-                    LogicalRevision = command.ExpectedLogicalRevision + 1,
+                    LogicalRevision = expectedLogicalRevision + 1,
                     IndexedAtUtc = DateTime.UtcNow
                 })
                 .Where(value =>
-                    value.ID == command.KnowledgeBaseId &&
-                    value.LogicalRevision == command.ExpectedLogicalRevision &&
+                    value.ID == knowledgeBaseId &&
+                    value.LogicalRevision == expectedLogicalRevision &&
                     !value.IsDeleted)
                 .ExecuteCommandAsync();
             if (updated != 1)
             {
                 await Db.Ado.RollbackTranAsync();
-                return Conflict();
+                return KnowledgeFailure(
+                    KnowledgeErrorCodes.RowVersionConflict,
+                    "The knowledge base changed; reload and retry.");
             }
 
             await Db.Updateable<AgKnowledgeChunk>()
                 .SetColumns(value => new AgKnowledgeChunk { IsDeleted = true, IsActive = false })
                 .Where(value =>
-                    value.KnowledgeBaseId == command.KnowledgeBaseId &&
-                    value.DocumentId == command.DocumentId &&
+                    value.KnowledgeBaseId == knowledgeBaseId &&
+                    value.DocumentId == documentId &&
                     !value.IsDeleted)
                 .ExecuteCommandAsync();
             int deletedDocuments = await Db.Updateable<AgKnowledgeDocument>()
                 .SetColumns(value => new AgKnowledgeDocument { IsDeleted = true, IsActive = false })
                 .Where(value =>
-                    value.ID == command.DocumentId &&
-                    value.KnowledgeBaseId == command.KnowledgeBaseId &&
+                    value.ID == documentId &&
+                    value.KnowledgeBaseId == knowledgeBaseId &&
                     !value.IsDeleted)
                 .ExecuteCommandAsync();
             if (deletedDocuments != 1)
@@ -210,11 +247,12 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         }
 
         KnowledgeBaseDefinition? updatedDefinition = await GetByIdAsync(
-            command.KnowledgeBaseId,
+            knowledgeBaseId,
             cancellationToken);
         return updatedDefinition is null
-            ? NotFound()
-            : ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(updatedDefinition);
+            ? KnowledgeFailure(
+                KnowledgeErrorCodes.NotFound, "The knowledge base was not found.")
+            : Success(updatedDefinition);
     }
 
     private static KnowledgePdfExtractionResult ExtractPdf(
@@ -302,7 +340,8 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         if (string.IsNullOrWhiteSpace(fileName) || content.Length is 0 or > MaximumDocumentCharacters
             || content.Contains('\0'))
         {
-            return InvalidDocument(
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.DocumentInvalid,
                 $"The extracted document must contain between 1 and {MaximumDocumentCharacters} safe text characters.");
         }
         Guid documentId = Guid.NewGuid();
@@ -314,34 +353,44 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         KnowledgeBaseDefinition updated = current with
         {
             LogicalRevision = current.LogicalRevision + 1,
-            Documents =   Common.Extensions.CollectionExtensions.ToReadOnlyList(current.Documents.Append(document)),
-            Chunks =  Common.Extensions.CollectionExtensions.ToReadOnlyList(current.Chunks.Concat(chunks)),
+            Documents = Common.Extensions.CollectionExtensions.ToReadOnlyList(current.Documents.Append(document)),
+            Chunks = Common.Extensions.CollectionExtensions.ToReadOnlyList(current.Chunks.Concat(chunks)),
             IndexedAtUtc = DateTimeOffset.UtcNow
         };
         return await TryReplaceAsync(updated, expectedLogicalRevision, cancellationToken)
-            ? ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(updated)
-            : Conflict();
+            ? Success(updated)
+            : KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
     }
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
-        SetKnowledgeBaseArchiveCommand command, CancellationToken cancellationToken = default)
+        Guid id,
+        long expectedLogicalRevision,
+        bool archived,
+        CancellationToken cancellationToken = default)
     {
-        KnowledgeBaseDefinition? existing = await GetByIdAsync(command.Id, cancellationToken);
-        if (existing is null) return NotFound();
-        if (existing.LogicalRevision != command.ExpectedLogicalRevision) return Conflict();
-        if (command.Archived && existing.Status is not KnowledgeBaseStatus.Disabled)
+        KnowledgeBaseDefinition? existing = await GetByIdAsync(id, cancellationToken);
+        if (existing is null)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.NotFound, "The knowledge base was not found.");
+        if (existing.LogicalRevision != expectedLogicalRevision)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
+        if (archived && existing.Status is not KnowledgeBaseStatus.Disabled)
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.LifecycleTransitionInvalid,
                 "A knowledge base must be disabled before it can be archived.");
         }
-        if (!command.Archived && existing.Status is not KnowledgeBaseStatus.Archived)
+        if (!archived && existing.Status is not KnowledgeBaseStatus.Archived)
         {
             return KnowledgeFailure(
                 KnowledgeErrorCodes.LifecycleTransitionInvalid,
                 "Only an archived knowledge base can be restored.");
         }
-        if (command.Archived && agents is not null)
+        if (archived && agents is not null)
         {
             IReadOnlyList<AgentDefinition> enabledAgents = await agents.Value.ListDefinitionsAsync(
                 new AgentDefinitionQuery(RuntimeStatus: AgentRuntimeStatus.Enabled), cancellationToken);
@@ -356,14 +405,16 @@ public sealed class AgKnowledgeBaseDefinitionServices :
                     $"The knowledge base is still referenced by Agent(s): {string.Join(", ", blockers)}.");
             }
         }
-        KnowledgeBaseDefinition updated = existing with
+        var updated = existing with
         {
-            Status = command.Archived ? KnowledgeBaseStatus.Archived : KnowledgeBaseStatus.Disabled,
+            Status = archived ? KnowledgeBaseStatus.Archived : KnowledgeBaseStatus.Disabled,
             LogicalRevision = existing.LogicalRevision + 1
         };
         return await TryReplaceAsync(updated, existing.LogicalRevision, cancellationToken)
-            ? ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(updated)
-            : Conflict();
+            ? Success(updated)
+            : KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
     }
 
     public async Task<KnowledgeBaseDefinition?> GetByIdAsync(
@@ -393,17 +444,16 @@ public sealed class AgKnowledgeBaseDefinitionServices :
     }
 
     public async Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(
-        KnowledgeBaseQuery query,
+        KnowledgeBaseStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(query);
         cancellationToken.ThrowIfCancellationRequested();
         var expression = Db.Queryable<AgKnowledgeBaseDefinition>()
             .Where(value => !value.IsDeleted);
-        if (query.Status.HasValue)
+        if (status.HasValue)
         {
-            string status = query.Status.Value.ToString();
-            expression = expression.Where(value => value.Status == status);
+            string statusName = status.Value.ToString();
+            expression = expression.Where(value => value.Status == statusName);
         }
         else
         {
@@ -466,12 +516,16 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         try
         {
             HashSet<Guid> existingDocumentIds = (await Db.Queryable<AgKnowledgeDocument>()
-                    .Where(candidate => candidate.KnowledgeBaseId == value.Id)
+                    .Where(candidate =>
+                        candidate.KnowledgeBaseId == value.Id &&
+                        !candidate.IsDeleted)
                     .Select(candidate => candidate.ID)
                     .ToListAsync())
                 .ToHashSet();
             HashSet<Guid> existingChunkIds = (await Db.Queryable<AgKnowledgeChunk>()
-                    .Where(candidate => candidate.KnowledgeBaseId == value.Id)
+                    .Where(candidate =>
+                        candidate.KnowledgeBaseId == value.Id &&
+                        !candidate.IsDeleted)
                     .Select(candidate => candidate.ID)
                     .ToListAsync())
                 .ToHashSet();
@@ -552,7 +606,7 @@ public sealed class AgKnowledgeBaseDefinitionServices :
             .ToListAsync();
         cancellationToken.ThrowIfCancellationRequested();
         HashSet<Guid> populated = populatedIds.ToHashSet();
-        return  Common.Extensions.CollectionExtensions.ToReadOnlyList(definitions
+        return Common.Extensions.CollectionExtensions.ToReadOnlyList(definitions
             .Where(definition => populated.Contains(definition.ID))
             .Select(definition =>
             new PublishedKnowledgeReference(
@@ -603,7 +657,7 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         cancellationToken.ThrowIfCancellationRequested();
 
         HashSet<string> terms = KnowledgeLexicalSearch.Terms(query);
-        return   Common.Extensions.CollectionExtensions.ToReadOnlyList(rows
+        return Common.Extensions.CollectionExtensions.ToReadOnlyList(rows
             .Select(row => new
             {
                 Row = row,
@@ -673,7 +727,7 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         IReadOnlyDictionary<Guid, AgKnowledgeChunk[]> chunksByDefinition = chunks
             .GroupBy(value => Required(value.KnowledgeBaseId, "Chunk.KnowledgeBaseId"))
             .ToDictionary(group => group.Key, group => group.ToArray());
-        return  Common.Extensions.CollectionExtensions.ToReadOnlyList(definitions.Select(definition => MapDefinition(
+        return Common.Extensions.CollectionExtensions.ToReadOnlyList(definitions.Select(definition => MapDefinition(
             definition,
             documentsByDefinition.GetValueOrDefault(definition.ID) ?? [],
             chunksByDefinition.GetValueOrDefault(definition.ID) ?? [])));
@@ -685,9 +739,27 @@ public sealed class AgKnowledgeBaseDefinitionServices :
         IReadOnlySet<Guid>? existingDocumentIds = null,
         IReadOnlySet<Guid>? existingChunkIds = null)
     {
+        int nextOrdinal = 0;
+        if (existingDocumentIds is not null)
+        {
+            List<AgKnowledgeDocument> historicalDocuments =
+                await Db.Queryable<AgKnowledgeDocument>()
+                    .Filter(null, true)
+                    .Where(document => document.KnowledgeBaseId == definition.Id)
+                    .ToListAsync();
+            if (historicalDocuments.Count > 0)
+            {
+                nextOrdinal = historicalDocuments.Max(document =>
+                    Required(document.Ordinal, "Document.Ordinal")) + 1;
+            }
+        }
+
         List<AgKnowledgeDocument> documents = definition.Documents
-            .Select((document, ordinal) => MapDocumentEntity(definition.Id, document, ordinal))
-            .Where(document => existingDocumentIds is null || !existingDocumentIds.Contains(document.ID))
+            .Where(document => existingDocumentIds is null || !existingDocumentIds.Contains(document.Id))
+            .Select((document, index) => MapDocumentEntity(
+                definition.Id,
+                document,
+                nextOrdinal + index))
             .ToList();
         if (documents.Count > 0)
         {
@@ -823,8 +895,13 @@ public sealed class AgKnowledgeBaseDefinitionServices :
     private static ServiceResult<KnowledgeBaseDefinition>? ValidateImportTarget(
         KnowledgeBaseDefinition? existing, long expectedLogicalRevision)
     {
-        if (existing is null) return NotFound();
-        if (existing.LogicalRevision != expectedLogicalRevision) return Conflict();
+        if (existing is null)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.NotFound, "The knowledge base was not found.");
+        if (existing.LogicalRevision != expectedLogicalRevision)
+            return KnowledgeFailure(
+                KnowledgeErrorCodes.RowVersionConflict,
+                "The knowledge base changed; reload and retry.");
         if (existing.Status is KnowledgeBaseStatus.Archived)
         {
             return KnowledgeFailure(
@@ -832,26 +909,14 @@ public sealed class AgKnowledgeBaseDefinitionServices :
                 "An archived knowledge base must be restored before documents can be imported.");
         }
         return existing.Documents.Count >= MaximumDocuments
-            ? InvalidDocument($"A knowledge base accepts at most {MaximumDocuments} documents.") : null;
+            ? KnowledgeFailure(
+                KnowledgeErrorCodes.DocumentInvalid,
+                $"A knowledge base accepts at most {MaximumDocuments} documents.")
+            : null;
     }
 
-    private static ServiceResult<KnowledgeBaseDefinition> KnowledgeFailure(
-        string errorCode,
-        string message) =>
-        ServiceResult<KnowledgeBaseDefinition>.Failure(
-            KnowledgeServiceStatusCodes.FromErrorCode(errorCode),
-            message);
-
-    private static ServiceResult<KnowledgeBaseDefinition> InvalidDocument(string message) =>
-        KnowledgeFailure(KnowledgeErrorCodes.DocumentInvalid, message);
-
-    private static ServiceResult<KnowledgeBaseDefinition> NotFound() =>
-        KnowledgeFailure(
-            KnowledgeErrorCodes.NotFound, "The knowledge base was not found.");
-
-    private static ServiceResult<KnowledgeBaseDefinition> Conflict() =>
-        KnowledgeFailure(
-            KnowledgeErrorCodes.RowVersionConflict, "The knowledge base changed; reload and retry.");
+    private static ServiceResult<KnowledgeBaseDefinition> KnowledgeFailure(string errorCode, string message) =>
+        Failure<KnowledgeBaseDefinition>(KnowledgeServiceStatusCodes.FromErrorCode(errorCode), message);
 
     private static class KnowledgeTextChunker
     {
@@ -889,7 +954,7 @@ public sealed class AgKnowledgeBaseDefinitionServices :
                 start = Math.Max(start + 1, end - OverlapCharacters);
             }
 
-            return  Common.Extensions.CollectionExtensions.ToReadOnlyList(values);
+            return Common.Extensions.CollectionExtensions.ToReadOnlyList(values);
         }
     }
 

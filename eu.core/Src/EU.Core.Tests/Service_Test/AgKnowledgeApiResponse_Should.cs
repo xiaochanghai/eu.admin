@@ -30,18 +30,15 @@ public sealed class AgKnowledgeApiResponse_Should
             await controller.Get(value.Id, CancellationToken.None),
             StatusCodes.Status200OK);
 
-        ServiceResult<KnowledgeBaseDetailResponse> created =
-            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
-                await controller.Create(
-                    new CreateKnowledgeBaseRequest("new-base", "New base", "Description"),
-                    CancellationToken.None),
-                StatusCodes.Status201Created);
-        Assert.Equal(
-            $"/api/knowledge-bases/{created.Data.Id}",
-            controller.Response.Headers.Location);
+        ServiceResult<KnowledgeBaseDefinition> created =
+            await controller.Create(
+                new CreateKnowledgeBaseRequest("new-base", "New base", "Description"),
+                CancellationToken.None);
+        Assert.True(created.Success);
+        Assert.Equal(StatusCodes.Status200OK, created.Status);
 
-        ServiceResult<KnowledgeBaseDetailResponse> updated =
-            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
+        ServiceResult<KnowledgeBaseDefinition> updated =
+            AssertServiceSuccess<KnowledgeBaseDefinition>(
                 await controller.Update(
                     value.Id,
                     new UpdateKnowledgeBaseRequest(
@@ -52,8 +49,8 @@ public sealed class AgKnowledgeApiResponse_Should
                     CancellationToken.None),
                 StatusCodes.Status200OK);
 
-        ServiceResult<KnowledgeBaseDetailResponse> imported =
-            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
+        ServiceResult<KnowledgeBaseDefinition> imported =
+            AssertServiceSuccess<KnowledgeBaseDefinition>(
                 await controller.ImportDocument(
                     value.Id,
                     new ImportKnowledgeDocumentRequest(
@@ -80,21 +77,22 @@ public sealed class AgKnowledgeApiResponse_Should
         Assert.Equal(200, pdfImported.Status);
 
         KnowledgeDocument pdfDocument = pdfImported.Data.Documents.Last();
-        ServiceResult<KnowledgeBaseDetailResponse> deleted =
-            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
-                await controller.DeleteDocument(
-                    value.Id,
-                    pdfDocument.Id,
-                    new DeleteKnowledgeDocumentRequest(pdfImported.Data.LogicalRevision),
-                    CancellationToken.None),
-                StatusCodes.Status200OK);
+        ServiceResult<KnowledgeBaseDefinition> deleted =
+            await controller.DeleteDocument(
+                value.Id,
+                pdfDocument.Id,
+                new DeleteKnowledgeDocumentRequest(pdfImported.Data.LogicalRevision),
+                CancellationToken.None);
+        Assert.True(deleted.Success);
+        Assert.Equal(StatusCodes.Status200OK, deleted.Status);
 
-        AssertServiceSuccess<KnowledgeBaseDetailResponse>(
+        ServiceResult<KnowledgeBaseDefinition> archived =
             await controller.SetArchived(
                 value.Id,
                 new SetKnowledgeBaseArchiveRequest(deleted.Data.LogicalRevision, true),
-                CancellationToken.None),
-            StatusCodes.Status200OK);
+                CancellationToken.None);
+        Assert.True(archived.Success);
+        Assert.Equal(StatusCodes.Status200OK, archived.Status);
         AssertServiceSuccess<IReadOnlyList<KnowledgeDocumentListItemResponse>>(
             await controller.ListDocuments(value.Id, CancellationToken.None),
             StatusCodes.Status200OK);
@@ -121,16 +119,14 @@ public sealed class AgKnowledgeApiResponse_Should
         var controller = WithHttpContext(new KnowledgeBasesController(
             repository));
 
-        AssertServiceError(
-            await controller.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status404NotFound,
-            640001,
-            KnowledgeErrorCodes.NotFound);
-        AssertServiceError(
-            await controller.List("invalid", CancellationToken.None),
-            StatusCodes.Status400BadRequest,
-            600001,
-            "REQUEST_INVALID");
+        ServiceResult<KnowledgeBaseDetailResponse> missing =
+            await controller.Get(Guid.NewGuid(), CancellationToken.None);
+        Assert.False(missing.Success);
+        Assert.Equal(KnowledgeServiceStatusCodes.NotFound, missing.Status);
+        ServiceResult<IReadOnlyList<KnowledgeBaseListItem>> invalidStatus =
+            await controller.List("invalid", CancellationToken.None);
+        Assert.False(invalidStatus.Success);
+        Assert.Equal(KnowledgeServiceStatusCodes.DocumentInvalid, invalidStatus.Status);
         ServiceResult<KnowledgeBaseDefinition> invalidPdf =
             await controller.ImportPdfDocument(
                 Guid.NewGuid(),
@@ -138,7 +134,7 @@ public sealed class AgKnowledgeApiResponse_Should
                 null,
                 CancellationToken.None);
         Assert.False(invalidPdf.Success);
-        Assert.Equal(500, invalidPdf.Status);
+        Assert.Equal(KnowledgeServiceStatusCodes.DocumentInvalid, invalidPdf.Status);
 
         AgentApiErrorDescriptor unavailable =
             AgentApiErrorCatalog.Resolve(KnowledgeErrorCodes.Unavailable);
@@ -205,33 +201,12 @@ public sealed class AgKnowledgeApiResponse_Should
     }
 
     private static ServiceResult<T> AssertServiceSuccess<T>(
-        IActionResult action,
-        int httpStatus)
+        ServiceResult<T> body,
+        int businessStatus)
     {
-        JsonResult json = Assert.IsType<JsonResult>(action);
-        Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Null(json.SerializerSettings);
-        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
-        Assert.Equal(200, body.Status);
+        Assert.Equal(businessStatus, body.Status);
         Assert.True(body.Success);
         return body;
-    }
-
-    private static void AssertServiceError(
-        IActionResult action,
-        int httpStatus,
-        int businessStatus,
-        string errorCode)
-    {
-        JsonResult json = Assert.IsType<JsonResult>(action);
-        Assert.Equal(httpStatus, json.StatusCode);
-        Assert.Null(json.SerializerSettings);
-        ServiceResult<AgentApiErrorData> body =
-            Assert.IsType<ServiceResult<AgentApiErrorData>>(json.Value);
-        Assert.False(body.Success);
-        Assert.Equal(businessStatus, body.Status);
-        Assert.Equal(errorCode, body.Data.ErrorCode);
-        Assert.Equal("trace-knowledge-contract", body.Data.TraceId);
     }
 
     private sealed class KnowledgeRepository(
@@ -259,10 +234,10 @@ public sealed class AgKnowledgeApiResponse_Should
             Task.FromResult(_values.Values.FirstOrDefault(value => value.Code == code));
 
         public Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(
-            KnowledgeBaseQuery query,
+            KnowledgeBaseStatus? status = null,
             CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<KnowledgeBaseDefinition>>(_values.Values
-                .Where(value => query.Status is null || value.Status == query.Status)
+                .Where(value => status is null || value.Status == status)
                 .ToArray());
 
         public Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(
@@ -329,51 +304,71 @@ public sealed class AgKnowledgeApiResponse_Should
         }
 
         public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
-            CreateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
+            string code,
+            string name,
+            string description,
+            CancellationToken cancellationToken = default)
         {
             var value = new KnowledgeBaseDefinition(
-                Guid.NewGuid(), command.Code, command.Name, command.Description,
+                Guid.NewGuid(), code, name, description,
                 KnowledgeBaseStatus.Enabled, 0, [], [], null);
             await TryCreateAsync(value, cancellationToken);
             return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
         public async Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
-            UpdateKnowledgeBaseCommand command, CancellationToken cancellationToken = default)
+            Guid id,
+            long expectedLogicalRevision,
+            string name,
+            string description,
+            KnowledgeBaseStatus status,
+            CancellationToken cancellationToken = default)
         {
-            KnowledgeBaseDefinition current = _values[command.Id];
+            KnowledgeBaseDefinition current = _values[id];
             KnowledgeBaseDefinition value = current with
             {
-                Name = command.Name, Description = command.Description, Status = command.Status,
+                Name = name, Description = description, Status = status,
                 LogicalRevision = current.LogicalRevision + 1
             };
-            await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
+            await TryReplaceAsync(value, expectedLogicalRevision, cancellationToken);
             return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
         public Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
-            ImportKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
-            ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
-                command.FileName, command.MediaType, command.Content, cancellationToken);
+            Guid knowledgeBaseId,
+            long expectedLogicalRevision,
+            string fileName,
+            string mediaType,
+            string content,
+            CancellationToken cancellationToken = default) =>
+            ImportAsync(knowledgeBaseId, expectedLogicalRevision,
+                fileName, mediaType, content, cancellationToken);
 
         public Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
-            ImportPdfKnowledgeDocumentCommand command, CancellationToken cancellationToken = default) =>
-            ImportAsync(command.KnowledgeBaseId, command.ExpectedLogicalRevision,
-                command.FileName, command.MediaType, "PDF extracted content.", cancellationToken);
+            Guid knowledgeBaseId,
+            long expectedLogicalRevision,
+            string fileName,
+            string mediaType,
+            ReadOnlyMemory<byte> content,
+            CancellationToken cancellationToken = default) =>
+            ImportAsync(knowledgeBaseId, expectedLogicalRevision,
+                fileName, mediaType, "PDF extracted content.", cancellationToken);
 
         public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
-            DeleteKnowledgeDocumentCommand command,
+            Guid knowledgeBaseId,
+            Guid documentId,
+            long expectedLogicalRevision,
             CancellationToken cancellationToken = default)
         {
-            KnowledgeBaseDefinition current = _values[command.KnowledgeBaseId];
+            KnowledgeBaseDefinition current = _values[knowledgeBaseId];
             KnowledgeBaseDefinition value = current with
             {
                 LogicalRevision = current.LogicalRevision + 1,
                 Documents = current.Documents
-                    .Where(document => document.Id != command.DocumentId)
+                    .Where(document => document.Id != documentId)
                     .ToArray(),
                 Chunks = current.Chunks
-                    .Where(chunk => chunk.DocumentId != command.DocumentId)
+                    .Where(chunk => chunk.DocumentId != documentId)
                     .ToArray(),
                 IndexedAtUtc = DateTimeOffset.UtcNow
             };
@@ -383,15 +378,18 @@ public sealed class AgKnowledgeApiResponse_Should
         }
 
         public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
-            SetKnowledgeBaseArchiveCommand command, CancellationToken cancellationToken = default)
+            Guid id,
+            long expectedLogicalRevision,
+            bool archived,
+            CancellationToken cancellationToken = default)
         {
-            KnowledgeBaseDefinition current = _values[command.Id];
+            KnowledgeBaseDefinition current = _values[id];
             KnowledgeBaseDefinition value = current with
             {
-                Status = command.Archived ? KnowledgeBaseStatus.Archived : KnowledgeBaseStatus.Disabled,
+                Status = archived ? KnowledgeBaseStatus.Archived : KnowledgeBaseStatus.Disabled,
                 LogicalRevision = current.LogicalRevision + 1
             };
-            await TryReplaceAsync(value, command.ExpectedLogicalRevision, cancellationToken);
+            await TryReplaceAsync(value, expectedLogicalRevision, cancellationToken);
             return ServiceResult<KnowledgeBaseDefinition>.OprateSuccess(value);
         }
 
