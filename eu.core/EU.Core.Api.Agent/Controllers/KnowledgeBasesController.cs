@@ -64,49 +64,33 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpPost]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> Create(
-        [FromBody] CreateKnowledgeBaseRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await knowledgeBaseDefinitionServices.CreateAsync(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> Create([FromBody] CreateKnowledgeBaseRequest request, CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.CreateAsync(
             request.Code,
             request.Name,
             request.Description,
             cancellationToken);
-    }
 
     [HttpPut("{id:guid}")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> Update(
-        Guid id,
-        [FromBody] UpdateKnowledgeBaseRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await knowledgeBaseDefinitionServices.UpdateAsync(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> Update(Guid id, [FromBody] UpdateKnowledgeBaseRequest request,
+        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.UpdateAsync(
             id,
             request.ExpectedLogicalRevision,
             request.Name,
             request.Description,
             request.Status,
             cancellationToken);
-    }
 
     [HttpPost("{id:guid}/documents")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocument(
-        Guid id,
-        [FromBody] ImportKnowledgeDocumentRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await knowledgeBaseDefinitionServices.ImportDocumentAsync(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocument(Guid id, [FromBody] ImportKnowledgeDocumentRequest request, CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.ImportDocumentAsync(
             id,
             request.ExpectedLogicalRevision,
             request.FileName,
             request.MediaType,
             request.Content,
             cancellationToken);
-    }
 
-    [HttpPost("{id:guid}/documents/pdf")]
-    [Consumes("multipart/form-data")]
+
+    [HttpPost("{id:guid}/documents/pdf"), Consumes("multipart/form-data")]
     [RequestSizeLimit(AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
     [RequestFormLimits(
         MultipartBodyLengthLimit = AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
@@ -136,36 +120,23 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpDelete("{id:guid}/documents/{documentId:guid}")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocument(
-        Guid id,
-        Guid documentId,
-        [FromBody] DeleteKnowledgeDocumentRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocument(Guid id, Guid documentId, [FromBody] DeleteKnowledgeDocumentRequest request,
+        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
             id,
             documentId,
             request.ExpectedLogicalRevision,
             cancellationToken);
-    }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchived(
-        Guid id,
-        [FromBody] SetKnowledgeBaseArchiveRequest request,
-        CancellationToken cancellationToken)
-    {
-        return await knowledgeBaseDefinitionServices.SetArchivedAsync(
+    public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchived(Guid id, [FromBody] SetKnowledgeBaseArchiveRequest request,
+        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.SetArchivedAsync(
             id,
             request.ExpectedLogicalRevision,
             request.Archived,
             cancellationToken);
-    }
 
     [HttpGet("{id:guid}/documents")]
-    public async Task<ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>> ListDocuments(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>> ListDocuments(Guid id, CancellationToken cancellationToken)
     {
         KnowledgeBaseDefinition? value =
             await knowledgeBaseDefinitionServices.GetByIdAsync(id, cancellationToken);
@@ -249,17 +220,13 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpPost("{id:guid}/search")]
-    public async Task<ServiceResult<IReadOnlyList<KnowledgeSearchResult>>> Search(
-        Guid id,
-        [FromBody] SearchKnowledgeRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeSearchResult>>> Search(Guid id, [FromBody] SearchKnowledgeRequest request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Query))
-        {
+        if (request.Query.IsNullOrEmpty())
             return ServiceResult<IReadOnlyList<KnowledgeSearchResult>>.Failure(
-                KnowledgeServiceStatusCodes.DocumentInvalid,
-                "Search query is required.");
-        }
+                     KnowledgeServiceStatusCodes.DocumentInvalid,
+                     "Search query is required.");
+
         IReadOnlyList<KnowledgeSearchResult> values = await knowledgeBaseDefinitionServices.SearchAsync(
             [id],
             request.Query.Trim(),
@@ -282,15 +249,12 @@ public sealed class KnowledgeBasesController(
 }
 
 [Route("api/knowledge-base-references")]
-public sealed class KnowledgeBaseReferencesController(
-    IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
+public sealed class KnowledgeBaseReferencesController(IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>> List(
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>> List(CancellationToken cancellationToken)
     {
-        IReadOnlyList<PublishedKnowledgeReference> values =
-            await knowledgeBaseDefinitionServices.ListPublishedAsync(cancellationToken);
+        var values = await knowledgeBaseDefinitionServices.ListPublishedAsync(cancellationToken);
         return ServiceResult<IReadOnlyList<PublishedKnowledgeReference>>.QuerySuccess(values);
     }
 }

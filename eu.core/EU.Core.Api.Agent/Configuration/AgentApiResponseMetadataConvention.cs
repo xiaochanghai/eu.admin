@@ -89,17 +89,6 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
             ["EvaluationBatchesController.RunModelJudge"] = Response<ModelJudgeReport>(),
             ["EvaluationBatchesController.ListModelJudgeReports"] = Response<IReadOnlyList<ModelJudgeReport>>(),
             ["EvaluationBatchesController.GetModelJudgeReport"] = Response<ModelJudgeReport>(),
-            ["KnowledgeBasesController.List"] = Response<IReadOnlyList<KnowledgeBaseListItem>>(),
-            ["KnowledgeBasesController.Get"] = Response<KnowledgeBaseDetailResponse>(),
-            ["KnowledgeBasesController.Create"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.Update"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.ImportDocument"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.ImportPdfDocument"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.DeleteDocument"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.SetArchived"] = Response<KnowledgeBaseDefinition>(),
-            ["KnowledgeBasesController.ListDocuments"] = Response<IReadOnlyList<KnowledgeDocumentListItemResponse>>(),
-            ["KnowledgeBasesController.ListDocumentChunks"] = Response<KnowledgeChunkPageResponse>(),
-            ["KnowledgeBasesController.Search"] = Response<IReadOnlyList<KnowledgeSearchResult>>(),
             ["KnowledgeBaseReferencesController.List"] = Response<IReadOnlyList<PublishedKnowledgeReference>>(),
             ["RunEvaluationsController.Evaluate"] = Response<RunEvaluationReport>(),
             ["ToolApprovalsController.List"] = Response<IReadOnlyList<ToolApprovalRequestRecord>>(),
@@ -161,7 +150,9 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
                     continue;
                 }
 
-                if (!ServiceResponses.TryGetValue(key, out ServiceResponse? response))
+                ServiceResponses.TryGetValue(key, out ServiceResponse? response);
+                response ??= InferServiceResponse(action.ActionMethod.ReturnType);
+                if (response is null)
                 {
                     throw new InvalidOperationException(
                         $"Agent API Action '{key}' does not declare its ServiceResult response type.");
@@ -199,6 +190,33 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
     private static void AddDefaultError(ActionModel action) =>
         action.Filters.Add(new ProducesDefaultResponseTypeAttribute(
             typeof(ServiceResult<AgentApiErrorData>)));
+
+    private static ServiceResponse? InferServiceResponse(Type returnType)
+    {
+        while (returnType.IsGenericType)
+        {
+            Type genericType = returnType.GetGenericTypeDefinition();
+            if (genericType == typeof(Task<>)
+                || genericType == typeof(ValueTask<>)
+                || genericType == typeof(ActionResult<>))
+            {
+                returnType = returnType.GetGenericArguments()[0];
+                continue;
+            }
+
+            break;
+        }
+
+        if (returnType.IsGenericType
+            && returnType.GetGenericTypeDefinition() == typeof(ServiceResult<>))
+        {
+            return new ServiceResponse(
+                returnType.GetGenericArguments()[0],
+                StatusCodes.Status200OK);
+        }
+
+        return null;
+    }
 
     private static ServiceResponse Response<T>(
         int httpStatus = StatusCodes.Status200OK) => new(typeof(T), httpStatus);
