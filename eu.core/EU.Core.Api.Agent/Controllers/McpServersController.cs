@@ -1,22 +1,17 @@
 using EU.Core.IServices.Mcp;
-using EU.Core.Api.Agent.Configuration;
-using EU.Core.Api.Agent.Errors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/mcp/servers")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycle) : ControllerBase
+public sealed class McpServersController(
+    IAgMcpServerDefinitionServices lifecycle) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ServiceResult<IReadOnlyList<McpServerDefinition>>> List(
         [FromQuery] string? search,
         [FromQuery] string? status,
         CancellationToken cancellationToken)
@@ -26,8 +21,8 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         {
             if (!Enum.TryParse(status, ignoreCase: false, out McpServerStatus value))
             {
-                return FromError(
-                    "REQUEST_INVALID",
+                return ServiceResult<IReadOnlyList<McpServerDefinition>>.Failure(
+                    McpServiceStatusCodes.ConfigurationInvalid,
                     "The MCP status filter is invalid.");
             }
 
@@ -37,24 +32,27 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
         IReadOnlyList<McpServerDefinition> values = await lifecycle.ListAsync(
             new McpServerQuery(search, parsedStatus),
             cancellationToken);
-        return QuerySuccess(values);
+        return ServiceResult<IReadOnlyList<McpServerDefinition>>.QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ServiceResult<McpServerDefinition>> Get(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         McpServerDefinition? server = await lifecycle.GetAsync(id, cancellationToken);
         return server is null
-            ? FromError(McpErrorCodes.NotFound, "The MCP Server was not found.")
-            : QuerySuccess(server);
+            ? ServiceResult<McpServerDefinition>.Failure(
+                McpServiceStatusCodes.NotFound,
+                "The MCP Server was not found.")
+            : ServiceResult<McpServerDefinition>.QuerySuccess(server);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ServiceResult<McpServerDefinition>> Create(
         [FromBody] CreateMcpServerRequest request,
-        CancellationToken cancellationToken)
-    {
-        ServiceResult<McpServerDefinition> result = await lifecycle.CreateAsync(
+        CancellationToken cancellationToken) =>
+        await lifecycle.CreateAsync(
             new CreateMcpServerCommand(
                 request.Code,
                 request.Name,
@@ -66,22 +64,13 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        if (!result.Success)
-        {
-            return FromServiceError(result);
-        }
-
-        Response.Headers.Location = $"/api/mcp/servers/{result.Data.Id}";
-        return OperationSuccess(result.Data, StatusCodes.Status201Created);
-    }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(
+    public async Task<ServiceResult<McpServerDefinition>> Update(
         Guid id,
         [FromBody] UpdateMcpServerRequest request,
-        CancellationToken cancellationToken)
-    {
-        ServiceResult<McpServerDefinition> result = await lifecycle.UpdateAsync(
+        CancellationToken cancellationToken) =>
+        await lifecycle.UpdateAsync(
             new UpdateMcpServerCommand(
                 id,
                 request.ExpectedLogicalRevision,
@@ -94,94 +83,41 @@ public sealed class McpServersController(IAgMcpServerDefinitionServices lifecycl
                 request.CredentialAlias,
                 request.Enabled),
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data)
-            : FromServiceError(result);
-    }
 
     [HttpPost("{id:guid}/sync")]
-    public async Task<IActionResult> Sync(
+    public async Task<ServiceResult<McpServerDefinition>> Sync(
         Guid id,
         [FromBody] SyncMcpServerRequest request,
-        CancellationToken cancellationToken)
-    {
-        ServiceResult<McpServerDefinition> result = await lifecycle.SyncAsync(
+        CancellationToken cancellationToken) =>
+        await lifecycle.SyncAsync(
             new SyncMcpServerCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data)
-            : FromServiceError(result);
-    }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<IActionResult> SetArchived(
+    public async Task<ServiceResult<McpServerDefinition>> SetArchived(
         Guid id,
         [FromBody] SetMcpServerArchiveRequest request,
-        CancellationToken cancellationToken)
-    {
-        ServiceResult<McpServerDefinition> result =
-            await lifecycle.SetArchivedAsync(
-                new SetMcpServerArchiveCommand(
-                    id,
-                    request.ExpectedLogicalRevision,
-                    request.Archived),
-                cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data)
-            : FromServiceError(result);
-    }
+        CancellationToken cancellationToken) =>
+        await lifecycle.SetArchivedAsync(
+            new SetMcpServerArchiveCommand(
+                id,
+                request.ExpectedLogicalRevision,
+                request.Archived),
+            cancellationToken);
 
     [HttpPut("{id:guid}/tools/{toolVersionId:guid}/risk")]
-    public async Task<IActionResult> ClassifyTool(
+    public async Task<ServiceResult<McpServerDefinition>> ClassifyTool(
         Guid id,
         Guid toolVersionId,
         [FromBody] ClassifyMcpToolRequest request,
-        CancellationToken cancellationToken)
-    {
-        ServiceResult<McpServerDefinition> result =
-            await lifecycle.ClassifyToolAsync(
-                new ClassifyMcpToolCommand(
-                    id,
-                    toolVersionId,
-                    request.ExpectedLogicalRevision,
-                    request.Risk),
-                cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data)
-            : FromServiceError(result);
-    }
-
-    private IActionResult QuerySuccess<T>(T value) =>
-        new JsonResult(
-            ServiceResult<T>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
-
-    private IActionResult OperationSuccess<T>(
-        T value,
-        int httpStatus = StatusCodes.Status200OK) =>
-        new JsonResult(
-            ServiceResult<T>.OprateSuccess(value))
-        {
-            StatusCode = httpStatus
-        };
-
-    private IActionResult FromServiceError(ServiceResult<McpServerDefinition> result) =>
-        FromError(McpServiceStatusCodes.ToErrorCode(result.Status), result.Message);
-
-    private IActionResult FromError(string errorCode, string message)
-    {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
-        return new JsonResult(
-            ServiceResult<AgentApiErrorData>.Failure(
-                descriptor.Status,
-                message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
-        {
-            StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError
-        };
-    }
+        CancellationToken cancellationToken) =>
+        await lifecycle.ClassifyToolAsync(
+            new ClassifyMcpToolCommand(
+                id,
+                toolVersionId,
+                request.ExpectedLogicalRevision,
+                request.Risk),
+            cancellationToken);
 }
 
 public sealed record CreateMcpServerRequest(

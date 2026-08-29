@@ -26,7 +26,8 @@ public sealed class AgAgentAndSkillApiResponse_Should
             new PublicModelProfileCatalog([]),
             Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
 
-        IActionResult action = await controller.List(null, "Unknown", CancellationToken.None);
+        ActionResult<ServiceResult<AgentListItem[]>> action =
+            await controller.List(null, "Unknown", CancellationToken.None);
 
         AssertServiceError(action, StatusCodes.Status200OK, 600001, "REQUEST_INVALID");
     }
@@ -48,7 +49,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var controller = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), service));
 
-        IActionResult action = await controller.Create(
+        ActionResult<ServiceResult<AgAgentDefinitionDetailDto>> action = await controller.Create(
             new CreateAgentRequest("main", "Main", string.Empty),
             CancellationToken.None);
 
@@ -73,10 +74,12 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var agentsController = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), agentService));
 
-        AssertServiceFailure<Guid>(
+        ActionResult<ServiceResult<AgAgentDefinitionDetailDto>> failedCreate =
             await agentsController.Create(
                 new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
-                CancellationToken.None),
+                CancellationToken.None);
+        AssertServiceFailure<Guid>(
+            Assert.IsType<JsonResult>(failedCreate.Result),
             "The Agent code already exists.");
         AssertServiceError(
             await agentsController.Get(Guid.NewGuid(), CancellationToken.None),
@@ -224,7 +227,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
             lifecycle,
             new StubAgentDefinitionCatalog()));
 
-        IActionResult action = await controller.Create(
+        ActionResult<ServiceResult<SkillDefinition>> action = await controller.Create(
             new CreateSkillRequest("test", "Test", string.Empty, "general"),
             CancellationToken.None);
 
@@ -241,7 +244,7 @@ public sealed class AgAgentAndSkillApiResponse_Should
             Proxy<IAgSkillDefinitionServices>((_, _) => throw new InvalidOperationException()),
             new StubAgentDefinitionCatalog()));
 
-        IActionResult action = await controller.List(
+        ActionResult<ServiceResult<IReadOnlyList<SkillListItem>>> action = await controller.List(
             null,
             null,
             "Unknown",
@@ -331,9 +334,14 @@ public sealed class AgAgentAndSkillApiResponse_Should
             new EmptyMainAgentAssignmentRepository());
         var controller = WithHttpContext(new MainAgentController(assignments));
 
-        IActionResult action = await controller.Get(CancellationToken.None);
+        ActionResult<ServiceResult<MainAgentAssignment>> action =
+            await controller.Get(CancellationToken.None);
 
-        AssertServiceError(action, StatusCodes.Status404NotFound, 610004, "MAIN_AGENT_NOT_CONFIGURED");
+        AssertServiceError(
+            Assert.IsType<JsonResult>(action.Result),
+            StatusCodes.Status404NotFound,
+            610004,
+            "MAIN_AGENT_NOT_CONFIGURED");
     }
 
     [Fact]
@@ -344,12 +352,12 @@ public sealed class AgAgentAndSkillApiResponse_Should
             new EmptyMainAgentAssignmentRepository());
         var controller = WithHttpContext(new MainAgentController(assignments));
 
-        IActionResult action = await controller.Set(
+        ActionResult<ServiceResult<MainAgentAssignment>> action = await controller.Set(
             new SetMainAgentRequest(Guid.NewGuid(), null),
             CancellationToken.None);
 
         AssertServiceError(
-            action,
+            Assert.IsType<JsonResult>(action.Result),
             StatusCodes.Status404NotFound,
             610018,
             MainAgentErrorCodes.AgentNotFound);
@@ -368,12 +376,8 @@ public sealed class AgAgentAndSkillApiResponse_Should
                 : throw new InvalidOperationException(method.Name));
         var controller = WithHttpContext(new SkillVersionsController(catalog));
 
-        IActionResult action = await controller.List(CancellationToken.None);
-
         ServiceResult<IReadOnlyList<PublishedSkillReference>> body =
-            AssertServiceSuccess<IReadOnlyList<PublishedSkillReference>>(
-                action,
-                StatusCodes.Status200OK);
+            AssertServiceSuccess(await controller.List(CancellationToken.None));
         Assert.Same(values, body.Data);
     }
 
@@ -405,6 +409,17 @@ public sealed class AgAgentAndSkillApiResponse_Should
         return body;
     }
 
+    private static ServiceResult<T> AssertServiceSuccess<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus)
+    {
+        if (action.Result is not null)
+            return AssertServiceSuccess<T>((IActionResult)action.Result, httpStatus);
+
+        Assert.Equal(StatusCodes.Status200OK, httpStatus);
+        return AssertServiceSuccess(Assert.IsType<ServiceResult<T>>(action.Value));
+    }
+
     private static ServiceResult<T> AssertServiceFailure<T>(IActionResult action, string message)
     {
         JsonResult json = Assert.IsType<JsonResult>(action);
@@ -432,6 +447,17 @@ public sealed class AgAgentAndSkillApiResponse_Should
         Assert.Equal(errorCode, body.Data.ErrorCode);
         Assert.Equal("trace-contract", body.Data.TraceId);
     }
+
+    private static void AssertServiceError<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus,
+        int businessStatus,
+        string errorCode) =>
+        AssertServiceError(
+            Assert.IsType<JsonResult>(action.Result),
+            httpStatus,
+            businessStatus,
+            errorCode);
 
     private static T Proxy<T>(Func<MethodInfo, object?[]?, object?> handler)
         where T : class

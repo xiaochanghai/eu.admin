@@ -132,11 +132,11 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpGet("conversations")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> ListConversations(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<ConversationRecord>>>> ListConversations(
         [FromQuery] int take = DefaultPageSize,
         CancellationToken cancellationToken = default) =>
-        await ExecutePersistenceOperationAsync(
-            async () => QuerySuccess(
+        await ExecutePersistenceOperationAsync<IReadOnlyList<ConversationRecord>>(
+            async () => ServiceResult<IReadOnlyList<ConversationRecord>>.QuerySuccess(
                 await _repository.ListConversationsForOwnerAsync(
                     _caller.TenantId,
                     _caller.UserId,
@@ -146,7 +146,7 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpGet("conversations/{conversationId}")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> GetConversation(
+    public async Task<ActionResult<ServiceResult<ChatConversationDetailResponse>>> GetConversation(
         string conversationId,
         [FromQuery] int take = UnifiedEntryReadLimits.DefaultMessageTake,
         CancellationToken cancellationToken = default)
@@ -163,7 +163,7 @@ public sealed class ChatRunsController : ControllerBase
                 UnifiedEntryReadLimits.MaximumMessageTake);
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<ChatConversationDetailResponse>(
             async () =>
             {
                 ConversationRecord? conversation =
@@ -181,7 +181,7 @@ public sealed class ChatRunsController : ControllerBase
                         _caller.UserId,
                         take,
                         cancellationToken);
-                return QuerySuccess(new ChatConversationDetailResponse(
+                return ServiceResult<ChatConversationDetailResponse>.QuerySuccess(new ChatConversationDetailResponse(
                     conversation,
                     BusinessQueryResultProjector.ProjectMessages(
                         messages, IncludeBusinessPresentation())));
@@ -191,7 +191,7 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpGet("conversations/{conversationId}/runs")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> ListRuns(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<UnifiedEntryRunRecord>>>> ListRuns(
         string conversationId,
         [FromQuery] int take = DefaultPageSize,
         CancellationToken cancellationToken = default)
@@ -201,7 +201,7 @@ public sealed class ChatRunsController : ControllerBase
             return InvalidId();
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<IReadOnlyList<UnifiedEntryRunRecord>>(
             async () =>
             {
                 if (await _repository.GetConversationForOwnerAsync(
@@ -213,7 +213,8 @@ public sealed class ChatRunsController : ControllerBase
                     return ConversationNotFound();
                 }
 
-                return QuerySuccess(await _repository.ListRunsForOwnerAsync(
+                return ServiceResult<IReadOnlyList<UnifiedEntryRunRecord>>.QuerySuccess(
+                    await _repository.ListRunsForOwnerAsync(
                     id,
                     _caller.TenantId,
                     _caller.UserId,
@@ -225,7 +226,7 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpGet("runs/{runId}")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> GetRun(
+    public async Task<ActionResult<ServiceResult<UnifiedEntryRunRecord>>> GetRun(
         string runId,
         CancellationToken cancellationToken)
     {
@@ -234,20 +235,22 @@ public sealed class ChatRunsController : ControllerBase
             return InvalidId();
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<UnifiedEntryRunRecord>(
             async () =>
             {
                 UnifiedEntryRunRecord? run =
                     await _repository.GetRunForOwnerAsync(
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
-                return run is null ? RunNotFound() : QuerySuccess(run);
+                return run is null
+                    ? RunNotFound()
+                    : ServiceResult<UnifiedEntryRunRecord>.QuerySuccess(run);
             },
             cancellationToken);
     }
 
     [HttpGet("runs/{runId}/details")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> GetDetails(
+    public async Task<ActionResult<ServiceResult<UnifiedRunDetails>>> GetDetails(
         string runId,
         CancellationToken cancellationToken)
     {
@@ -256,7 +259,7 @@ public sealed class ChatRunsController : ControllerBase
             return InvalidId();
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<UnifiedRunDetails>(
             async () =>
             {
                 UnifiedRunDetails? details =
@@ -264,7 +267,8 @@ public sealed class ChatRunsController : ControllerBase
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
                 return details is null
                     ? RunNotFound()
-                    : QuerySuccess(BusinessQueryResultProjector.ProjectDetails(
+                    : ServiceResult<UnifiedRunDetails>.QuerySuccess(
+                        BusinessQueryResultProjector.ProjectDetails(
                         details, IncludeBusinessPresentation()));
             },
             cancellationToken);
@@ -272,7 +276,7 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpGet("runs/{runId}/events")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> GetEvents(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<UnifiedRunEventRecord>>>> GetEvents(
         string runId,
         [FromQuery] int take = DefaultEventPageSize,
         CancellationToken cancellationToken = default)
@@ -287,7 +291,7 @@ public sealed class ChatRunsController : ControllerBase
             return InvalidTake(DefaultEventPageSize, MaximumEventPageSize);
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<IReadOnlyList<UnifiedRunEventRecord>>(
             async () =>
             {
                 if (await _repository.GetRunForOwnerAsync(
@@ -299,7 +303,8 @@ public sealed class ChatRunsController : ControllerBase
                 IReadOnlyList<UnifiedRunEventRecord> events =
                     await _repository.ListEventsForOwnerAsync(
                         id, _caller.TenantId, _caller.UserId, cancellationToken);
-                return QuerySuccess(BusinessQueryResultProjector.ProjectEvents(
+                return ServiceResult<IReadOnlyList<UnifiedRunEventRecord>>.QuerySuccess(
+                    BusinessQueryResultProjector.ProjectEvents(
                     events.TakeLast(take).ToArray(),
                     IncludeBusinessPresentation()));
             },
@@ -308,7 +313,7 @@ public sealed class ChatRunsController : ControllerBase
 
     [HttpPost("runs/{runId}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> Cancel(
+    public async Task<ActionResult<ServiceResult<ChatRunCancelResponse>>> Cancel(
         string runId,
         CancellationToken cancellationToken)
     {
@@ -317,7 +322,7 @@ public sealed class ChatRunsController : ControllerBase
             return InvalidId();
         }
 
-        return await ExecutePersistenceOperationAsync(
+        return await ExecutePersistenceOperationAsync<ChatRunCancelResponse>(
             async () =>
             {
                 bool cancelled = await _service.CancelAsync(
@@ -358,7 +363,7 @@ public sealed class ChatRunsController : ControllerBase
         return !auditReader || chatUser || businessReader;
     }
 
-    private IActionResult FromPreparationError(UnifiedEntryError error)
+    private JsonResult FromPreparationError(UnifiedEntryError error)
     {
         int status = error.Code switch
         {
@@ -387,32 +392,32 @@ public sealed class ChatRunsController : ControllerBase
             error.Message);
     }
 
-    private IActionResult InvalidId() =>
+    private JsonResult InvalidId() =>
         Error(
             StatusCodes.Status400BadRequest,
             ChatApiErrorCodes.InvalidId,
             "The requested identifier is invalid.");
 
-    private IActionResult InvalidTake(int defaultTake, int maximumTake) =>
+    private JsonResult InvalidTake(int defaultTake, int maximumTake) =>
         Error(
             StatusCodes.Status400BadRequest,
             ChatApiErrorCodes.InvalidTake,
             "The requested page size is invalid.",
             $"The take value must be from 1 through {maximumTake}; the default is {defaultTake}.");
 
-    private IActionResult ConversationNotFound() =>
+    private JsonResult ConversationNotFound() =>
         Error(
             StatusCodes.Status404NotFound,
             UnifiedEntryErrorCodes.ConversationNotFound,
             "The conversation was not found.");
 
-    private IActionResult RunNotFound() =>
+    private JsonResult RunNotFound() =>
         Error(
             StatusCodes.Status404NotFound,
             ChatApiErrorCodes.RunNotFound,
             "The chat run was not found.");
 
-    private IActionResult Error(
+    private JsonResult Error(
         int status,
         string code,
         string title,
@@ -428,16 +433,12 @@ public sealed class ChatRunsController : ControllerBase
         { StatusCode = descriptor.HttpStatus ?? status };
     }
 
-    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
-
-    private IActionResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
+    private JsonResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
         ServiceResult<T>.OprateSuccess(value))
     { StatusCode = httpStatus };
 
-    private async Task<IActionResult> ExecutePersistenceOperationAsync(
-        Func<Task<IActionResult>> operation,
+    private async Task<ActionResult<ServiceResult<T>>> ExecutePersistenceOperationAsync<T>(
+        Func<Task<ActionResult<ServiceResult<T>>>> operation,
         CancellationToken cancellationToken)
     {
         try

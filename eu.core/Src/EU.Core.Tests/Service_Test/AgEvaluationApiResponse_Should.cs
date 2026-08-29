@@ -25,19 +25,25 @@ public sealed class AgEvaluationApiResponse_Should
         var lifecycle = new EvaluationSuiteLifecycleService(repository, new TargetCatalog());
         EvaluationSuitesController controller = CreateSuiteController(lifecycle);
 
-        AssertServiceSuccess(await controller.List(null, CancellationToken.None), 200,
-            typeof(IReadOnlyList<EvaluationSuiteDefinition>));
+        ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>> suites =
+            AssertServiceSuccess(await controller.List(null, CancellationToken.None));
+        Assert.NotNull(suites.Data);
 
+        ActionResult<ServiceResult<EvaluationSuiteDefinition>> createAction =
+            await controller.Create(
+                new CreateEvaluationSuiteRequest("quality-suite", "Quality", ""),
+                CancellationToken.None);
         EvaluationSuiteDefinition created = (EvaluationSuiteDefinition)AssertServiceSuccess(
-            await controller.Create(new CreateEvaluationSuiteRequest("quality-suite", "Quality", ""), CancellationToken.None),
+            Assert.IsType<JsonResult>(createAction.Result),
             201,
             typeof(EvaluationSuiteDefinition));
         Assert.Equal($"/api/evaluation-suites/{created.Id}", controller.Response.Headers.Location);
-        AssertServiceSuccess(await controller.Get(created.Id, CancellationToken.None), 200,
-            typeof(EvaluationSuiteDefinition));
+        ServiceResult<EvaluationSuiteDefinition> returnedSuite =
+            AssertServiceSuccess(await controller.Get(created.Id, CancellationToken.None));
+        Assert.Equal(created.Id, returnedSuite.Data?.Id);
 
         var specification = new EvaluateRunRequest("Completed", ["OK"], [], [], 0, 120000);
-        EvaluationSuiteDefinition saved = (EvaluationSuiteDefinition)AssertServiceSuccess(
+        ServiceResult<EvaluationSuiteDefinition> savedResult = AssertServiceSuccess(
             await controller.SaveDraft(
                 created.Id,
                 new SaveEvaluationSuiteDraftRequest(
@@ -45,17 +51,21 @@ public sealed class AgEvaluationApiResponse_Should
                     created.Name,
                     created.Description,
                     [new EvaluationCaseApiRequest(Guid.NewGuid(), "case", "input", Guid.NewGuid(), Guid.NewGuid(), specification)]),
-                CancellationToken.None),
-            200,
-            typeof(EvaluationSuiteDefinition));
-        EvaluationSuiteDefinition published = (EvaluationSuiteDefinition)AssertServiceSuccess(
-            await controller.Publish(created.Id, new PublishEvaluationSuiteRequest(saved.LogicalRevision), CancellationToken.None),
-            200,
-            typeof(EvaluationSuiteDefinition));
-        AssertServiceSuccess(
-            await controller.SetArchived(created.Id, new SetEvaluationSuiteArchiveRequest(published.LogicalRevision, true), CancellationToken.None),
-            200,
-            typeof(EvaluationSuiteDefinition));
+                CancellationToken.None));
+        EvaluationSuiteDefinition saved = Assert.IsType<EvaluationSuiteDefinition>(savedResult.Data);
+        ServiceResult<EvaluationSuiteDefinition> publishedResult = AssertServiceSuccess(
+            await controller.Publish(
+                created.Id,
+                new PublishEvaluationSuiteRequest(saved.LogicalRevision),
+                CancellationToken.None));
+        EvaluationSuiteDefinition published =
+            Assert.IsType<EvaluationSuiteDefinition>(publishedResult.Data);
+        ServiceResult<EvaluationSuiteDefinition> archived = AssertServiceSuccess(
+            await controller.SetArchived(
+                created.Id,
+                new SetEvaluationSuiteArchiveRequest(published.LogicalRevision, true),
+                CancellationToken.None));
+        Assert.Equal(EvaluationSuiteStatus.Archived, archived.Data?.Status);
     }
 
     [Fact]
@@ -67,21 +77,24 @@ public sealed class AgEvaluationApiResponse_Should
         var reports = new ModelJudgeReportRepository([CreateReport(batch)]);
         EvaluationBatchesController controller = CreateBatchController(batches, reports);
 
-        AssertServiceSuccess(await controller.List(suiteId, 20, CancellationToken.None), 200,
-            typeof(IReadOnlyList<EvaluationBatchRecord>));
-        EvaluationBatchRecord returned = (EvaluationBatchRecord)AssertServiceSuccess(
-            await controller.Get(batch.Id, CancellationToken.None), 200, typeof(EvaluationBatchRecord));
+        ServiceResult<IReadOnlyList<EvaluationBatchRecord>> batchList =
+            AssertServiceSuccess(await controller.List(suiteId, 20, CancellationToken.None));
+        Assert.Single(batchList.Data!);
+        ServiceResult<EvaluationBatchRecord> batchResult =
+            AssertServiceSuccess(await controller.Get(batch.Id, CancellationToken.None));
+        EvaluationBatchRecord returned = Assert.IsType<EvaluationBatchRecord>(batchResult.Data);
         Assert.Equal(EvaluationCaseExecutionStatus.Failed, returned.Cases.Single().Status);
         Assert.False(returned.Cases.Single().Report!.Passed);
 
-        AssertServiceSuccess(
-            await controller.ListModelJudgeReports(batch.Id, 20, CancellationToken.None),
-            200,
-            typeof(IReadOnlyList<ModelJudgeReport>));
-        ModelJudgeReport report = (ModelJudgeReport)AssertServiceSuccess(
-            await controller.GetModelJudgeReport(batch.Id, reports.Value.Id, CancellationToken.None),
-            200,
-            typeof(ModelJudgeReport));
+        ServiceResult<IReadOnlyList<ModelJudgeReport>> reportList = AssertServiceSuccess(
+            await controller.ListModelJudgeReports(batch.Id, 20, CancellationToken.None));
+        Assert.Single(reportList.Data!);
+        ServiceResult<ModelJudgeReport> reportResult = AssertServiceSuccess(
+            await controller.GetModelJudgeReport(
+                batch.Id,
+                reports.Value.Id,
+                CancellationToken.None));
+        ModelJudgeReport report = Assert.IsType<ModelJudgeReport>(reportResult.Data);
         Assert.Equal("configuration-sha256", report.ConfigurationSha256);
         Assert.Equal("prompt-v1", report.PromptVersion);
         Assert.Single(report.Cases.Single().Metrics);
@@ -92,23 +105,60 @@ public sealed class AgEvaluationApiResponse_Should
     {
         EvaluationSuitesController suites = CreateSuiteController(
             new EvaluationSuiteLifecycleService(new SuiteRepository([]), new TargetCatalog()));
-        AssertServiceError(await suites.List("invalid", CancellationToken.None), 409, 670007,
+        ActionResult<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>> invalidSuites =
+            await suites.List("invalid", CancellationToken.None);
+        AssertServiceError(
+            Assert.IsType<JsonResult>(invalidSuites.Result),
+            409,
+            670007,
             EvaluationSuiteErrorCodes.LifecycleTransitionInvalid);
+        ActionResult<ServiceResult<EvaluationSuiteDefinition>> missingSuite =
+            await suites.Get(Guid.NewGuid(), CancellationToken.None);
+        AssertServiceError(
+            Assert.IsType<JsonResult>(missingSuite.Result),
+            404,
+            670001,
+            EvaluationSuiteErrorCodes.NotFound);
 
         EvaluationBatchesController batches = CreateBatchController(new BatchRepository([]), new ModelJudgeReportRepository([]));
+        ActionResult<ServiceResult<IReadOnlyList<EvaluationBatchRecord>>> invalidBatchList =
+            await batches.List(Guid.Empty, 20, CancellationToken.None);
         AssertServiceError(
-            await batches.Run(new StartEvaluationBatchRequest(Guid.Empty, Guid.Empty), CancellationToken.None),
+            Assert.IsType<JsonResult>(invalidBatchList.Result),
+            400,
+            670008,
+            EvaluationBatchErrorCodes.RequestInvalid);
+        ActionResult<ServiceResult<EvaluationBatchRecord>> invalidBatchRun =
+            await batches.Run(
+                new StartEvaluationBatchRequest(Guid.Empty, Guid.Empty),
+                CancellationToken.None);
+        AssertServiceError(
+            Assert.IsType<JsonResult>(invalidBatchRun.Result),
             400, 670008, EvaluationBatchErrorCodes.RequestInvalid);
+        ActionResult<ServiceResult<EvaluationBatchComparisonReport>> invalidComparison =
+            await batches.Compare(
+                new CompareEvaluationBatchesRequest { Gate = null },
+                CancellationToken.None);
         AssertServiceError(
-            await batches.Compare(new CompareEvaluationBatchesRequest { Gate = null }, CancellationToken.None),
+            Assert.IsType<JsonResult>(invalidComparison.Result),
             400, 670021, EvaluationComparisonErrorCodes.SpecificationInvalid);
+        ActionResult<ServiceResult<ModelJudgeReport>> invalidJudge =
+            await batches.RunModelJudge(
+                Guid.NewGuid(),
+                new RunModelJudgeRequest(),
+                CancellationToken.None);
         AssertServiceError(
-            await batches.RunModelJudge(Guid.NewGuid(), new RunModelJudgeRequest(), CancellationToken.None),
+            Assert.IsType<JsonResult>(invalidJudge.Result),
             400, 670023, ModelJudgeErrorCodes.RequestInvalid);
 
         var runs = new RunEvaluationsController(null!, new CallerContext()) { ControllerContext = Context() };
+        ActionResult<ServiceResult<RunEvaluationReport>> invalidRun =
+            await runs.Evaluate(
+                "invalid",
+                new EvaluateRunRequest("Completed", [], [], [], null, null),
+                CancellationToken.None);
         AssertServiceError(
-            await runs.Evaluate("invalid", new EvaluateRunRequest("Completed", [], [], [], null, null), CancellationToken.None),
+            Assert.IsType<JsonResult>(invalidRun.Result),
             400, 670031, RunEvaluationErrorCodes.SpecificationInvalid);
     }
 
@@ -150,6 +200,16 @@ public sealed class AgEvaluationApiResponse_Should
         object data = Assert.IsAssignableFrom<object>(body.GetType().GetProperty("Data")?.GetValue(body));
         Assert.True(expectedDataType.IsInstanceOfType(data), data.GetType().FullName);
         return data;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(
+        ActionResult<ServiceResult<T>> action)
+    {
+        Assert.Null(action.Result);
+        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(action.Value);
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        return body;
     }
 
     private static void AssertServiceError(IActionResult action, int httpStatus, int businessStatus, string errorCode)

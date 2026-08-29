@@ -1,5 +1,4 @@
 using EU.Core.Api.Agent.Security;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model;
@@ -17,14 +16,12 @@ public sealed class AuditController(
     ICallerContext caller) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ServiceResult<IReadOnlyList<AgentOperationAuditRecord>>> List(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default) =>
-        new JsonResult(
-            ServiceResult<IReadOnlyList<AgentOperationAuditRecord>>.QuerySuccess(
-                await repository.ListAsync(
-                    caller.TenantId,
-                    Math.Clamp(take, 1, 100),
-                    cancellationToken)))
-        { StatusCode = StatusCodes.Status200OK };
+        ServiceResult<IReadOnlyList<AgentOperationAuditRecord>>.QuerySuccess(
+            await repository.ListAsync(
+                caller.TenantId,
+                Math.Clamp(take, 1, 100),
+                cancellationToken));
 }

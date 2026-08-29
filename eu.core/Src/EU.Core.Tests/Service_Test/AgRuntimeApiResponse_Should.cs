@@ -83,10 +83,10 @@ public sealed class AgRuntimeApiResponse_Should
             new EmptyAgentCatalog(), null!, null!, audit, new JsonSchemaValidator());
         var agentRuns = new AgentRunsController(runtime, new CallerContext())
         { ControllerContext = Context() };
-        AssertServiceSuccess(
-            await agentRuns.List(Guid.NewGuid(), 20, CancellationToken.None),
-            StatusCodes.Status200OK,
-            typeof(IReadOnlyList<AgentRunAuditRecord>));
+        ServiceResult<IReadOnlyList<AgentRunAuditRecord>> agentRunAudits =
+            AssertServiceSuccess(
+                await agentRuns.List(Guid.NewGuid(), 20, CancellationToken.None));
+        Assert.NotNull(agentRunAudits.Data);
         agentRuns.Response.Body = new MemoryStream();
         await agentRuns.Run(
             Guid.NewGuid(), new StartAgentRunRequest("hello"), CancellationToken.None);
@@ -124,10 +124,9 @@ public sealed class AgRuntimeApiResponse_Should
         {
             ControllerContext = Context()
         };
-        AssertServiceSuccess(
-            await operations.List(50, CancellationToken.None),
-            StatusCodes.Status200OK,
-            typeof(IReadOnlyList<AgentOperationAuditRecord>));
+        ServiceResult<IReadOnlyList<AgentOperationAuditRecord>> operationAudits =
+            AssertServiceSuccess(await operations.List(50, CancellationToken.None));
+        Assert.NotNull(operationAudits.Data);
 
         var unified = new UnifiedRepository();
         var retention = new BusinessQueryRetentionController(
@@ -135,10 +134,9 @@ public sealed class AgRuntimeApiResponse_Should
             Options.Create(new BusinessQueryResultRetentionOptions { RetentionDays = 30 }),
             TimeProvider.System)
         { ControllerContext = Context() };
-        AssertServiceSuccess(
-            await retention.Cleanup(CancellationToken.None),
-            StatusCodes.Status200OK,
-            typeof(BusinessQueryCleanupResult));
+        ServiceResult<BusinessQueryCleanupResult> cleanup =
+            AssertServiceSuccess(await retention.Cleanup(CancellationToken.None));
+        Assert.NotNull(cleanup.Data);
 
         var mainAgent = new MainAgentAssignmentService(new EmptyAgentCatalog(), new MainAgentRepository());
         var platform = new PlatformController(
@@ -147,11 +145,12 @@ public sealed class AgRuntimeApiResponse_Should
             new PublicModelProfileCatalog(["model-profile"]),
             mainAgent)
         { ControllerContext = Context() };
-        object serviceData = AssertServiceSuccess(platform.Service(), StatusCodes.Status200OK);
-        Assert.Equal("agent-api", serviceData.GetType().GetProperty("Service")?.GetValue(serviceData));
-        object capabilityData = AssertServiceSuccess(
-            await platform.Capabilities(CancellationToken.None), StatusCodes.Status200OK);
-        Assert.Equal("sqlsugar", capabilityData.GetType().GetProperty("StorageMode")?.GetValue(capabilityData));
+        ServiceResult<PlatformServiceResponse> service =
+            AssertServiceSuccess(platform.Service());
+        Assert.Equal("agent-api", service.Data?.Service);
+        ServiceResult<PlatformCapabilitiesResponse> capabilities = AssertServiceSuccess(
+            await platform.Capabilities(CancellationToken.None));
+        Assert.Equal("sqlsugar", capabilities.Data?.StorageMode);
     }
 
     private static ControllerContext Context() => new()
@@ -184,6 +183,31 @@ public sealed class AgRuntimeApiResponse_Should
         return data;
     }
 
+    private static object AssertServiceSuccess<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus,
+        Type? expectedDataType = null)
+    {
+        if (action.Result is not null)
+            return AssertServiceSuccess(action.Result, httpStatus, expectedDataType);
+
+        Assert.Equal(StatusCodes.Status200OK, httpStatus);
+        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(action.Value);
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        object data = Assert.IsAssignableFrom<object>(body.Data);
+        if (expectedDataType is not null)
+            Assert.True(expectedDataType.IsInstanceOfType(data), data.GetType().FullName);
+        return data;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(ServiceResult<T> body)
+    {
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        return body;
+    }
+
     private static void AssertServiceError(
         IActionResult action,
         int httpStatus,
@@ -199,6 +223,17 @@ public sealed class AgRuntimeApiResponse_Should
         Assert.Equal(errorCode, body.Data.ErrorCode);
         Assert.Equal("trace-runtime-contract", body.Data.TraceId);
     }
+
+    private static void AssertServiceError<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus,
+        int businessStatus,
+        string errorCode) =>
+        AssertServiceError(
+            Assert.IsType<JsonResult>(action.Result),
+            httpStatus,
+            businessStatus,
+            errorCode);
 
     private sealed class CallerContext : ICallerContext
     {

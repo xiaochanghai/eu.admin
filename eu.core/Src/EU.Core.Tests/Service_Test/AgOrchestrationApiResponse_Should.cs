@@ -214,6 +214,24 @@ public sealed class AgOrchestrationApiResponse_Should
         return data;
     }
 
+    private static object AssertServiceSuccess<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus,
+        Type? expectedDataType = null)
+    {
+        if (action.Result is not null)
+            return AssertServiceSuccess(action.Result, httpStatus, expectedDataType);
+
+        Assert.Equal(StatusCodes.Status200OK, httpStatus);
+        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(action.Value);
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        object data = Assert.IsAssignableFrom<object>(body.Data);
+        if (expectedDataType is not null)
+            Assert.True(expectedDataType.IsInstanceOfType(data), data.GetType().FullName);
+        return data;
+    }
+
     private static void AssertServiceError(
         IActionResult action,
         int httpStatus,
@@ -230,6 +248,17 @@ public sealed class AgOrchestrationApiResponse_Should
         Assert.Equal(errorCode, body.Data.ErrorCode);
         Assert.Equal("trace-orchestration-contract", body.Data.TraceId);
     }
+
+    private static void AssertServiceError<T>(
+        ActionResult<ServiceResult<T>> action,
+        int httpStatus,
+        int businessStatus,
+        string errorCode) =>
+        AssertServiceError(
+            Assert.IsType<JsonResult>(action.Result),
+            httpStatus,
+            businessStatus,
+            errorCode);
 
     private static AgentDefinition CreateAgent()
     {

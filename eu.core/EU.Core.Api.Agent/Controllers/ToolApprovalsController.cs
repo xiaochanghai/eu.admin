@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices.Abstractions.Security;
@@ -27,7 +26,7 @@ public sealed class ToolApprovalsController(
 {
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalRead)]
-    public async Task<IActionResult> List(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<ToolApprovalRequestRecord>>>> List(
         [FromQuery] ToolApprovalStatus? status = null,
         [FromQuery] int take = 100,
         CancellationToken cancellationToken = default)
@@ -44,12 +43,12 @@ public sealed class ToolApprovalsController(
             status,
             take,
             cancellationToken);
-        return QuerySuccess(values);
+        return ServiceResult<IReadOnlyList<ToolApprovalRequestRecord>>.QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalRead)]
-    public async Task<IActionResult> Get(
+    public async Task<ActionResult<ServiceResult<ToolApprovalDetailResponse>>> Get(
         Guid id,
         CancellationToken cancellationToken)
     {
@@ -62,17 +61,18 @@ public sealed class ToolApprovalsController(
             return NotFoundProblem();
         }
 
-        return QuerySuccess(new ToolApprovalDetailResponse(
-            approval,
-            await approvals.ListDecisionsAsync(
-                id,
-                caller.TenantId,
-                cancellationToken)));
+        return ServiceResult<ToolApprovalDetailResponse>.QuerySuccess(
+            new ToolApprovalDetailResponse(
+                approval,
+                await approvals.ListDecisionsAsync(
+                    id,
+                    caller.TenantId,
+                    cancellationToken)));
     }
 
     [HttpPost("{id:guid}/approve")]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalDecide)]
-    public Task<IActionResult> Approve(
+    public Task<ActionResult<ServiceResult<ToolApprovalRequestRecord>>> Approve(
         Guid id,
         [FromBody] ToolApprovalDecisionApiRequest request,
         CancellationToken cancellationToken) =>
@@ -80,7 +80,7 @@ public sealed class ToolApprovalsController(
 
     [HttpPost("{id:guid}/reject")]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalDecide)]
-    public Task<IActionResult> Reject(
+    public Task<ActionResult<ServiceResult<ToolApprovalRequestRecord>>> Reject(
         Guid id,
         [FromBody] ToolApprovalDecisionApiRequest request,
         CancellationToken cancellationToken) =>
@@ -88,7 +88,7 @@ public sealed class ToolApprovalsController(
 
     [HttpPost("{id:guid}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public Task<IActionResult> Cancel(
+    public Task<ActionResult<ServiceResult<ToolApprovalRequestRecord>>> Cancel(
         Guid id,
         [FromBody] ToolApprovalDecisionApiRequest request,
         CancellationToken cancellationToken) =>
@@ -96,7 +96,7 @@ public sealed class ToolApprovalsController(
 
     [HttpPost("{id:guid}/resume")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> Resume(
+    public async Task<ActionResult<ServiceResult<ToolApprovalConversationResumeResult>>> Resume(
         Guid id,
         CancellationToken cancellationToken)
     {
@@ -138,7 +138,7 @@ public sealed class ToolApprovalsController(
                     value.ErrorCode,
                     timeProvider.GetUtcNow()), cancellationToken);
             }
-            return OperationSuccess(value);
+            return ServiceResult<ToolApprovalConversationResumeResult>.OprateSuccess(value);
         }
         catch (ToolApprovalException exception)
         {
@@ -148,7 +148,7 @@ public sealed class ToolApprovalsController(
         }
     }
 
-    private async Task<IActionResult> Decide(
+    private async Task<ActionResult<ServiceResult<ToolApprovalRequestRecord>>> Decide(
         Guid id,
         ToolApprovalDecisionApiRequest request,
         ToolApprovalDecisionAction action,
@@ -191,7 +191,7 @@ public sealed class ToolApprovalsController(
                     request.Reason ?? string.Empty,
                     timeProvider.GetUtcNow()),
                 cancellationToken);
-            return OperationSuccess(decided);
+            return ServiceResult<ToolApprovalRequestRecord>.OprateSuccess(decided);
         }
         catch (ToolApprovalException exception)
         {
@@ -207,26 +207,12 @@ public sealed class ToolApprovalsController(
             AgentAuthorizationPolicies.AdminPermission,
             StringComparer.Ordinal);
 
-    private IActionResult NotFoundProblem() =>
+    private JsonResult NotFoundProblem() =>
         FromError(
             "TOOL_APPROVAL_NOT_FOUND",
             "The tool approval was not found.");
 
-    private IActionResult QuerySuccess<T>(T value) =>
-        new JsonResult(
-            ServiceResult<T>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
-
-    private IActionResult OperationSuccess<T>(T value) =>
-        new JsonResult(
-            ServiceResult<T>.OprateSuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
-
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(

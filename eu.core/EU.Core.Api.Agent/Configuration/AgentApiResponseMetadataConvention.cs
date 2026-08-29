@@ -1,15 +1,7 @@
-using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Agents;
-using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Evaluation;
-using EU.Core.IServices.Knowledge;
-using EU.Core.IServices.MainAgent;
-using EU.Core.IServices.Mcp;
 using EU.Core.IServices.Orchestration;
-using EU.Core.IServices.Runtime;
 using EU.Core.IServices.Skills;
-using EU.Core.IServices.Tasks;
-using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Model;
 using EU.Core.Model.Models;
@@ -37,88 +29,14 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
     private static readonly IReadOnlyDictionary<string, ServiceResponse> ServiceResponses =
         new Dictionary<string, ServiceResponse>(StringComparer.Ordinal)
         {
-            ["AuditController.List"] = Response<IReadOnlyList<AgentOperationAuditRecord>>(),
-            ["BusinessQueryRetentionController.Cleanup"] = Response<BusinessQueryCleanupResult>(),
-            ["AgentRunsController.List"] = Response<IReadOnlyList<AgentRunAuditRecord>>(),
-            ["AgentTasksController.Create"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.List"] = Response<IReadOnlyList<AgentTaskRecord>>(),
-            ["AgentTasksController.Get"] = Response<AgentTaskDetailResponse>(),
-            ["AgentTasksController.ClaimNext"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.Checkpoint"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.RenewLease"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.Complete"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.Fail"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.Cancel"] = Response<AgentTaskRecord>(),
-            ["AgentTasksController.ResumeWithUserInput"] = Response<AgentTaskRecord>(),
-            ["AgentsController.List"] = Response<AgentListItem[]>(),
-            ["AgentsController.Get"] = Response<AgAgentDefinitionDetailDto>(),
             ["AgentsController.Create"] = Response<AgAgentDefinitionDetailDto>(StatusCodes.Status201Created),
-            ["AgentsController.SaveDraft"] = Response<AgentDefinition>(),
-            ["AgentsController.Publish"] = Response<AgentDefinition>(),
-            ["AgentsController.SetStatus"] = Response<AgentDefinition>(),
             ["AgentsController.Import"] = Response<AgentDefinition>(StatusCodes.Status201Created),
-            ["ChatRunsController.ListConversations"] = Response<IReadOnlyList<ConversationRecord>>(),
-            ["ChatRunsController.GetConversation"] = Response<ChatConversationDetailResponse>(),
-            ["ChatRunsController.ListRuns"] = Response<IReadOnlyList<UnifiedEntryRunRecord>>(),
-            ["ChatRunsController.GetRun"] = Response<UnifiedEntryRunRecord>(),
-            ["ChatRunsController.GetDetails"] = Response<UnifiedRunDetails>(),
-            ["ChatRunsController.GetEvents"] = Response<IReadOnlyList<UnifiedRunEventRecord>>(),
             ["ChatRunsController.Cancel"] = Response<ChatRunCancelResponse>(StatusCodes.Status202Accepted),
-            ["MainAgentController.Get"] = Response<MainAgentAssignment>(),
-            ["MainAgentController.Set"] = Response<MainAgentAssignment>(),
-            ["McpServersController.List"] = Response<IReadOnlyList<McpServerDefinition>>(),
-            ["McpServersController.Get"] = Response<McpServerDefinition>(),
-            ["McpServersController.Create"] = Response<McpServerDefinition>(StatusCodes.Status201Created),
-            ["McpServersController.Update"] = Response<McpServerDefinition>(),
-            ["McpServersController.Sync"] = Response<McpServerDefinition>(),
-            ["McpServersController.SetArchived"] = Response<McpServerDefinition>(),
-            ["McpServersController.ClassifyTool"] = Response<McpServerDefinition>(),
-            ["McpToolVersionsController.List"] = Response<IReadOnlyList<PublishedMcpToolReference>>(),
-            ["PlatformController.Service"] = Response<PlatformServiceResponse>(),
-            ["PlatformController.Capabilities"] = Response<PlatformCapabilitiesResponse>(),
-            ["EvaluationSuitesController.List"] = Response<IReadOnlyList<EvaluationSuiteDefinition>>(),
-            ["EvaluationSuitesController.Get"] = Response<EvaluationSuiteDefinition>(),
             ["EvaluationSuitesController.Create"] = Response<EvaluationSuiteDefinition>(StatusCodes.Status201Created),
-            ["EvaluationSuitesController.SaveDraft"] = Response<EvaluationSuiteDefinition>(),
-            ["EvaluationSuitesController.Publish"] = Response<EvaluationSuiteDefinition>(),
-            ["EvaluationSuitesController.SetArchived"] = Response<EvaluationSuiteDefinition>(),
-            ["EvaluationBatchesController.Run"] = Response<EvaluationBatchRecord>(),
-            ["EvaluationBatchesController.Compare"] = Response<EvaluationBatchComparisonReport>(),
-            ["EvaluationBatchesController.List"] = Response<IReadOnlyList<EvaluationBatchRecord>>(),
-            ["EvaluationBatchesController.Get"] = Response<EvaluationBatchRecord>(),
-            ["EvaluationBatchesController.RunModelJudge"] = Response<ModelJudgeReport>(),
-            ["EvaluationBatchesController.ListModelJudgeReports"] = Response<IReadOnlyList<ModelJudgeReport>>(),
-            ["EvaluationBatchesController.GetModelJudgeReport"] = Response<ModelJudgeReport>(),
-            ["KnowledgeBaseReferencesController.List"] = Response<IReadOnlyList<PublishedKnowledgeReference>>(),
-            ["RunEvaluationsController.Evaluate"] = Response<RunEvaluationReport>(),
-            ["ToolApprovalsController.List"] = Response<IReadOnlyList<ToolApprovalRequestRecord>>(),
-            ["ToolApprovalsController.Get"] = Response<ToolApprovalDetailResponse>(),
-            ["ToolApprovalsController.Approve"] = Response<ToolApprovalRequestRecord>(),
-            ["ToolApprovalsController.Reject"] = Response<ToolApprovalRequestRecord>(),
-            ["ToolApprovalsController.Cancel"] = Response<ToolApprovalRequestRecord>(),
-            ["ToolApprovalsController.Resume"] = Response<ToolApprovalConversationResumeResult>(),
-            ["OrchestrationsController.List"] = Response<IReadOnlyList<OrchestrationDefinition>>(),
-            ["OrchestrationsController.Get"] = Response<OrchestrationDefinition>(),
             ["OrchestrationsController.Create"] = Response<OrchestrationDefinition>(StatusCodes.Status201Created),
-            ["OrchestrationsController.SaveDraft"] = Response<OrchestrationDefinition>(),
-            ["OrchestrationsController.Publish"] = Response<OrchestrationDefinition>(),
-            ["OrchestrationsController.SetArchived"] = Response<OrchestrationDefinition>(),
             ["OrchestrationsController.Start"] = Response<OrchestrationRunRecord>(StatusCodes.Status202Accepted),
-            ["OrchestrationsController.Runs"] = Response<IReadOnlyList<OrchestrationRunRecord>>(),
-            ["OrchestrationsController.Run"] = Response<OrchestrationRunRecord>(),
             ["OrchestrationsController.Cancel"] = Response<OrchestrationRunCancelResponse>(StatusCodes.Status202Accepted),
-            ["OrchestrationsController.Details"] = Response<OrchestrationRunDetails>(),
-            ["OrchestrationsController.Output"] = Response<OrchestrationRunOutputResponse>(),
-            ["SkillsController.List"] = Response<IReadOnlyList<SkillListItem>>(),
-            ["SkillsController.Get"] = Response<SkillDefinitionDetailResponse>(),
-            ["SkillsController.Create"] = Response<SkillDefinition>(StatusCodes.Status201Created),
-            ["SkillsController.Update"] = Response<SkillDefinition>(),
-            ["SkillsController.ListFiles"] = Response<IReadOnlyList<SkillFileEntry>>(),
-            ["SkillsController.SaveFile"] = Response<SkillDefinition>(),
-            ["SkillsController.DeleteFile"] = Response<SkillDefinition>(),
-            ["SkillsController.Publish"] = Response<SkillDefinition>(),
-            ["SkillsController.SetArchived"] = Response<SkillDefinition>(),
-            ["SkillVersionsController.List"] = Response<IReadOnlyList<PublishedSkillReference>>()
+            ["SkillsController.Create"] = Response<SkillDefinition>(StatusCodes.Status201Created)
         };
 
     public void Apply(ApplicationModel application)

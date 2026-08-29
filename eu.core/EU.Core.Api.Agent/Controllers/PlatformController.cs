@@ -23,32 +23,30 @@ public sealed class PlatformController(
     MainAgentAssignmentService mainAgentAssignments) : ControllerBase
 {
     [HttpGet("service")]
-    public IActionResult Service() =>
-        QuerySuccess(new PlatformServiceResponse(
+    public ServiceResult<PlatformServiceResponse> Service() =>
+        ServiceResult<PlatformServiceResponse>.QuerySuccess(new PlatformServiceResponse(
             platform.Value.ServiceName,
             ReplicaModeHealthCheck.ReplicaMode));
 
     [HttpGet("capabilities")]
-    public async Task<IActionResult> Capabilities(CancellationToken cancellationToken)
+    public async Task<ServiceResult<PlatformCapabilitiesResponse>> Capabilities(
+        CancellationToken cancellationToken)
     {
         bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Success;
-        return QuerySuccess(new PlatformCapabilitiesResponse(
-            "sqlsugar",
-            false,
-            new PlatformDeploymentResponse(
-                AgentDefinition.ServerDeploymentTarget,
-                AgentDefinition.ApiHost),
-            modelProfiles.ProfileIds,
-            new PlatformFeatureResponse(
-                true, true, true, true, true, true,
-                evaluation.Value.EnableModelJudge,
-                mainAgent,
-                false)));
+        return ServiceResult<PlatformCapabilitiesResponse>.QuerySuccess(
+            new PlatformCapabilitiesResponse(
+                "sqlsugar",
+                false,
+                new PlatformDeploymentResponse(
+                    AgentDefinition.ServerDeploymentTarget,
+                    AgentDefinition.ApiHost),
+                modelProfiles.ProfileIds,
+                new PlatformFeatureResponse(
+                    true, true, true, true, true, true,
+                    evaluation.Value.EnableModelJudge,
+                    mainAgent,
+                    false)));
     }
-
-    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
 }
 
 public sealed record PlatformServiceResponse(string Service, string ReplicaMode);

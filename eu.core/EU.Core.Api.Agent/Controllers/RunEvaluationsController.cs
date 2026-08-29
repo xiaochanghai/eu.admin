@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Security;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
@@ -21,7 +20,7 @@ public sealed class RunEvaluationsController(
     ICallerContext caller) : ControllerBase
 {
     [HttpPost("{runId}")]
-    public async Task<IActionResult> Evaluate(
+    public async Task<ActionResult<ServiceResult<RunEvaluationReport>>> Evaluate(
         string runId,
         [FromBody] EvaluateRunRequest request,
         CancellationToken cancellationToken)
@@ -53,7 +52,7 @@ public sealed class RunEvaluationsController(
                 cancellationToken);
             return report is null
                 ? FromError(RunEvaluationErrorCodes.RunNotFound, "The run was not found.")
-                : OperationSuccess(report);
+                : ServiceResult<RunEvaluationReport>.OprateSuccess(report);
         }
         catch (RunEvaluationException exception)
         {
@@ -79,11 +78,7 @@ public sealed class RunEvaluationsController(
         return true;
     }
 
-    private IActionResult OperationSuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.OprateSuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
-
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(

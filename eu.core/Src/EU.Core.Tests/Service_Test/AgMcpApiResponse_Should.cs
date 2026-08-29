@@ -47,8 +47,7 @@ public sealed class AgMcpApiResponse_Should
             StatusCodes.Status200OK);
         AssertServiceSuccess<McpServerDefinition>(
             await controller.Create(CreateRequest(), CancellationToken.None),
-            StatusCodes.Status201Created);
-        Assert.Equal($"/api/mcp/servers/{server.Id}", controller.Response.Headers.Location);
+            StatusCodes.Status200OK);
         AssertServiceSuccess<McpServerDefinition>(
             await controller.Update(server.Id, UpdateRequest(), CancellationToken.None),
             StatusCodes.Status200OK);
@@ -92,19 +91,16 @@ public sealed class AgMcpApiResponse_Should
 
         AssertServiceError(
             await controller.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status404NotFound,
-            630001,
-            McpErrorCodes.NotFound);
+            McpServiceStatusCodes.NotFound);
         AssertServiceError(
             await controller.Sync(Guid.NewGuid(), new SyncMcpServerRequest(0), CancellationToken.None),
-            StatusCodes.Status502BadGateway,
-            630006,
-            McpErrorCodes.DiscoveryFailed);
+            McpServiceStatusCodes.DiscoveryFailed);
         AssertServiceError(
             await controller.Update(Guid.NewGuid(), UpdateRequest(enabled: false), CancellationToken.None),
-            StatusCodes.Status409Conflict,
-            630010,
-            McpErrorCodes.DisableBlocked);
+            McpServiceStatusCodes.DisableBlocked);
+        AssertServiceError(
+            await controller.List(null, "invalid", CancellationToken.None),
+            McpServiceStatusCodes.ConfigurationInvalid);
     }
 
     [Fact]
@@ -143,14 +139,12 @@ public sealed class AgMcpApiResponse_Should
 
         ServiceResult<IReadOnlyList<ToolApprovalRequestRecord>> list =
             AssertServiceSuccess<IReadOnlyList<ToolApprovalRequestRecord>>(
-                await controller.List(null, 100, CancellationToken.None),
-                StatusCodes.Status200OK);
+                await controller.List(null, 100, CancellationToken.None));
         Assert.Equal(pending.Id, Assert.Single(list.Data).Id);
 
         ServiceResult<ToolApprovalDetailResponse> detail =
             AssertServiceSuccess<ToolApprovalDetailResponse>(
-                await controller.Get(pending.Id, CancellationToken.None),
-                StatusCodes.Status200OK);
+                await controller.Get(pending.Id, CancellationToken.None));
         Assert.Equal(pending.Id, detail.Data.Approval.Id);
 
         ServiceResult<ToolApprovalRequestRecord> approved =
@@ -158,8 +152,7 @@ public sealed class AgMcpApiResponse_Should
                 await controller.Approve(
                     pending.Id,
                     new ToolApprovalDecisionApiRequest { Reason = "approved" },
-                    CancellationToken.None),
-                StatusCodes.Status200OK);
+                    CancellationToken.None));
         Assert.Equal(ToolApprovalStatus.Approved, approved.Data.Status);
         Assert.Equal(pending.EntryRunId, approved.Data.EntryRunId);
 
@@ -171,8 +164,7 @@ public sealed class AgMcpApiResponse_Should
                 await controller.Reject(
                     rejectPending.Id,
                     new ToolApprovalDecisionApiRequest { Reason = "rejected" },
-                    CancellationToken.None),
-                StatusCodes.Status200OK).Data.Status);
+                    CancellationToken.None)).Data.Status);
 
         ToolApprovalRequestRecord cancelPending = CreatePending(requester: "operator");
         controller = CreateApprovalController(new ApprovalRepository([cancelPending]));
@@ -182,8 +174,7 @@ public sealed class AgMcpApiResponse_Should
                 await controller.Cancel(
                     cancelPending.Id,
                     new ToolApprovalDecisionApiRequest { Reason = "cancelled" },
-                    CancellationToken.None),
-                StatusCodes.Status200OK).Data.Status);
+                    CancellationToken.None)).Data.Status);
     }
 
     [Fact]
@@ -198,16 +189,35 @@ public sealed class AgMcpApiResponse_Should
         ToolApprovalsController controller = CreateApprovalController(
             new ApprovalRepository([approved]));
 
+        ActionResult<ServiceResult<IReadOnlyList<ToolApprovalRequestRecord>>> invalidList =
+            await controller.List(null, 0, CancellationToken.None);
         AssertServiceError(
+            Assert.IsType<JsonResult>(invalidList.Result),
+            StatusCodes.Status400BadRequest,
+            630023,
+            ToolApprovalErrorCodes.Invalid);
+        ActionResult<ServiceResult<ToolApprovalDetailResponse>> missingApproval =
+            await controller.Get(Guid.NewGuid(), CancellationToken.None);
+        AssertServiceError(
+            Assert.IsType<JsonResult>(missingApproval.Result),
+            StatusCodes.Status404NotFound,
+            630035,
+            "TOOL_APPROVAL_NOT_FOUND");
+
+        ActionResult<ServiceResult<ToolApprovalRequestRecord>> invalidDecision =
             await controller.Approve(
                 approved.Id,
                 new ToolApprovalDecisionApiRequest(),
-                CancellationToken.None),
+                CancellationToken.None);
+        AssertServiceError(
+            Assert.IsType<JsonResult>(invalidDecision.Result),
             StatusCodes.Status409Conflict,
             630024,
             ToolApprovalErrorCodes.InvalidState);
+        ActionResult<ServiceResult<ToolApprovalConversationResumeResult>> disabledResume =
+            await controller.Resume(approved.Id, CancellationToken.None);
         AssertServiceError(
-            await controller.Resume(approved.Id, CancellationToken.None),
+            Assert.IsType<JsonResult>(disabledResume.Result),
             StatusCodes.Status503ServiceUnavailable,
             630034,
             "TOOL_APPROVAL_DISABLED");
@@ -308,6 +318,25 @@ public sealed class AgMcpApiResponse_Should
     }
 
     private static ServiceResult<T> AssertServiceSuccess<T>(
+        ServiceResult<T> body,
+        int businessStatus)
+    {
+        Assert.Equal(businessStatus, body.Status);
+        Assert.True(body.Success);
+        return body;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(
+        ActionResult<ServiceResult<T>> action)
+    {
+        Assert.Null(action.Result);
+        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(action.Value);
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        return body;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(
         IActionResult action,
         int httpStatus)
     {
@@ -324,6 +353,14 @@ public sealed class AgMcpApiResponse_Should
         Assert.Equal(httpStatus, json.StatusCode);
         Assert.Null(json.SerializerSettings);
         return json;
+    }
+
+    private static void AssertServiceError<T>(
+        ServiceResult<T> body,
+        int businessStatus)
+    {
+        Assert.False(body.Success);
+        Assert.Equal(businessStatus, body.Status);
     }
 
     private static void AssertServiceError(

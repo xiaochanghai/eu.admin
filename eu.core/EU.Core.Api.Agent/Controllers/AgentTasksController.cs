@@ -24,7 +24,7 @@ public sealed class AgentTasksController(
 {
     [HttpPost]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> Create([FromBody] CreateAgentTaskApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Create([FromBody] CreateAgentTaskApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         string sourceType = string.IsNullOrWhiteSpace(request.SourceType) ? "chat" : request.SourceType.Trim();
@@ -40,29 +40,30 @@ public sealed class AgentTasksController(
                 request.SourceId ?? string.Empty, request.IdempotencyKey ?? string.Empty,
                 request.ConversationId, request.Priority ?? 0, request.MaximumAttempts ?? 3,
                 request.AvailableAtUtc ?? timeProvider.GetUtcNow()), cancellationToken);
-            return OperationSuccess(value);
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(value);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
 
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> List([FromQuery] AgentTaskStatus? status = null, [FromQuery] int take = 40, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<AgentTaskRecord>>>> List([FromQuery] AgentTaskStatus? status = null, [FromQuery] int take = 40, CancellationToken cancellationToken = default)
     {
         try
         {
-            return QuerySuccess(await tasks.ListAsync(new AgentTaskQuery(caller.TenantId, caller.UserId, status, take), cancellationToken));
+            return ServiceResult<IReadOnlyList<AgentTaskRecord>>.QuerySuccess(
+                await tasks.ListAsync(new AgentTaskQuery(caller.TenantId, caller.UserId, status, take), cancellationToken));
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskDetailResponse>>> Get(Guid id, CancellationToken cancellationToken)
     {
         AgentTaskRecord? task = await tasks.GetAsync(id, caller.TenantId, caller.UserId, cancellationToken);
         if (task is null) return FromError(AgentTaskErrorCodes.NotFound, "The Agent task was not found.");
-        return QuerySuccess(new AgentTaskDetailResponse(
+        return ServiceResult<AgentTaskDetailResponse>.QuerySuccess(new AgentTaskDetailResponse(
             task,
             await tasks.ListAttemptsAsync(id, caller.TenantId, caller.UserId, cancellationToken),
             await tasks.ListEventsAsync(id, caller.TenantId, caller.UserId, cancellationToken: cancellationToken)));
@@ -70,7 +71,7 @@ public sealed class AgentTasksController(
 
     [HttpPost("claim-next")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> ClaimNext([FromBody] ClaimAgentTaskApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord?>>> ClaimNext([FromBody] ClaimAgentTaskApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
@@ -78,19 +79,19 @@ public sealed class AgentTasksController(
             AgentTaskRecord? task = await tasks.TryClaimNextAsync(new ClaimAgentTaskCommand(
                 caller.TenantId, request.WorkerId ?? string.Empty,
                 TimeSpan.FromSeconds(request.LeaseSeconds ?? 300), timeProvider.GetUtcNow()), cancellationToken);
-            return QuerySuccess(task);
+            return ServiceResult<AgentTaskRecord?>.QuerySuccess(task);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
 
     [HttpPost("{id:guid}/checkpoint")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Checkpoint(Guid id, [FromBody] AgentTaskCheckpointApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Checkpoint(Guid id, [FromBody] AgentTaskCheckpointApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return OperationSuccess(await tasks.SaveCheckpointAsync(new SaveAgentTaskCheckpointCommand(
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.SaveCheckpointAsync(new SaveAgentTaskCheckpointCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty, request.ExpectedLogicalRevision,
                 request.RunId, request.ConversationId, request.CheckpointKind ?? string.Empty, request.CheckpointJson ?? string.Empty,
                 timeProvider.GetUtcNow()), cancellationToken));
@@ -100,12 +101,12 @@ public sealed class AgentTasksController(
 
     [HttpPost("{id:guid}/renew-lease")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> RenewLease(Guid id, [FromBody] RenewAgentTaskLeaseApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> RenewLease(Guid id, [FromBody] RenewAgentTaskLeaseApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return OperationSuccess(await tasks.RenewLeaseAsync(new RenewAgentTaskLeaseCommand(
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.RenewLeaseAsync(new RenewAgentTaskLeaseCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty,
                 request.ExpectedLogicalRevision, TimeSpan.FromSeconds(request.LeaseSeconds ?? 300),
                 timeProvider.GetUtcNow()), cancellationToken));
@@ -115,12 +116,12 @@ public sealed class AgentTasksController(
 
     [HttpPost("{id:guid}/complete")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Complete(Guid id, [FromBody] CompleteAgentTaskApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Complete(Guid id, [FromBody] CompleteAgentTaskApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return OperationSuccess(await tasks.CompleteAsync(new CompleteAgentTaskCommand(
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.CompleteAsync(new CompleteAgentTaskCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty,
                 request.ExpectedLogicalRevision, request.RunId, timeProvider.GetUtcNow()), cancellationToken));
         }
@@ -129,12 +130,12 @@ public sealed class AgentTasksController(
 
     [HttpPost("{id:guid}/fail")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Fail(Guid id, [FromBody] FailAgentTaskApiRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Fail(Guid id, [FromBody] FailAgentTaskApiRequest request, CancellationToken cancellationToken)
     {
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return OperationSuccess(await tasks.FailAsync(new FailAgentTaskCommand(
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.FailAsync(new FailAgentTaskCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty, request.ExpectedLogicalRevision,
                 request.ErrorCode ?? string.Empty, request.ErrorMessage ?? string.Empty,
                 TimeSpan.FromSeconds(request.RetryDelaySeconds ?? 30), timeProvider.GetUtcNow()), cancellationToken));
@@ -144,7 +145,7 @@ public sealed class AgentTasksController(
 
     [HttpPost("{id:guid}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Cancel(Guid id, CancellationToken cancellationToken)
     {
         try
         {
@@ -157,14 +158,14 @@ public sealed class AgentTasksController(
                     cancellationToken);
             }
 
-            return OperationSuccess(cancelled);
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(cancelled);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
 
     [HttpPost("{id:guid}/user-input")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> ResumeWithUserInput(
+    public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> ResumeWithUserInput(
         Guid id,
         [FromBody] ResumeAgentTaskApiRequest request,
         CancellationToken cancellationToken)
@@ -172,7 +173,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return OperationSuccess(await tasks.ResumeWithUserInputAsync(
+            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.ResumeWithUserInputAsync(
                 new ResumeAgentTaskWithUserInputCommand(
                     id, caller.TenantId, caller.UserId, request.ExpectedLogicalRevision,
                     request.Input ?? string.Empty, timeProvider.GetUtcNow()), cancellationToken));
@@ -181,10 +182,8 @@ public sealed class AgentTasksController(
     }
 
     private static bool HasUnknownProperties(Dictionary<string, JsonElement>? properties) => properties is { Count: > 0 };
-    private IActionResult InvalidRequest() => FromError(AgentTaskErrorCodes.Invalid, "The Agent task request contains an unsupported property.");
-    private IActionResult QuerySuccess<T>(T value) => new JsonResult(ServiceResult<T>.QuerySuccess(value)) { StatusCode = StatusCodes.Status200OK };
-    private IActionResult OperationSuccess<T>(T value) => new JsonResult(ServiceResult<T>.OprateSuccess(value)) { StatusCode = StatusCodes.Status200OK };
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult InvalidRequest() => FromError(AgentTaskErrorCodes.Invalid, "The Agent task request contains an unsupported property.");
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(ServiceResult<AgentApiErrorData>.Failure(descriptor.Status, message,

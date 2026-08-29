@@ -1,24 +1,20 @@
 using EU.Core.IServices.Skills;
 using EU.Core.Api.Agent.Errors;
-using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/skills")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
     IAgSkillDefinitionServices lifecycle,
-    IAgentDefinitionCatalog agents) : ControllerBase
+    IAgentDefinitionCatalog agents) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<SkillListItem>>>> List(
         [FromQuery] string? search,
         [FromQuery] string? category,
         [FromQuery] string? status,
@@ -46,15 +42,11 @@ public sealed class SkillsController(
 
         IReadOnlyList<SkillListItem> values = await lifecycle.ListAsync(
             new SkillQuery(search, category, parsedStatus), cancellationToken);
-        return new JsonResult(
-            ServiceResult<IReadOnlyList<SkillListItem>>.QuerySuccess(values))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return ServiceResult<IReadOnlyList<SkillListItem>>.QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<SkillDefinitionDetailResponse>>> Get(Guid id, CancellationToken cancellationToken)
     {
         SkillDefinition? skill = await lifecycle.GetAsync(id, cancellationToken);
         if (skill is null)
@@ -90,15 +82,11 @@ public sealed class SkillsController(
                     .OrderBy(agent => agent.Code, StringComparer.Ordinal)
                     .ToArray()))
                 .ToArray());
-        return new JsonResult(
-            ServiceResult<SkillDefinitionDetailResponse>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return ServiceResult<SkillDefinitionDetailResponse>.QuerySuccess(value);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Create(
         [FromBody] CreateSkillRequest request,
         CancellationToken cancellationToken)
     {
@@ -123,7 +111,7 @@ public sealed class SkillsController(
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Update(
         Guid id,
         [FromBody] UpdateSkillRequest request,
         CancellationToken cancellationToken)
@@ -136,15 +124,15 @@ public sealed class SkillsController(
                 request.Description,
                 request.Category),
             cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpGet("{id:guid}/files")]
-    public async Task<IActionResult> ListFiles(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<SkillFileEntry>>>> ListFiles(Guid id, CancellationToken cancellationToken)
     {
         ServiceResult<IReadOnlyList<SkillFileEntry>> result =
             await lifecycle.ListFilesAsync(id, cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpGet("{id:guid}/files/content")]
@@ -163,7 +151,7 @@ public sealed class SkillsController(
     }
 
     [HttpPut("{id:guid}/files/content")]
-    public async Task<IActionResult> SaveFile(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> SaveFile(
         Guid id,
         [FromBody] SaveSkillFileRequest request,
         CancellationToken cancellationToken)
@@ -175,11 +163,11 @@ public sealed class SkillsController(
                 request.Path,
                 request.Content),
             cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpDelete("{id:guid}/files/content")]
-    public async Task<IActionResult> DeleteFile(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> DeleteFile(
         Guid id,
         [FromBody] DeleteSkillFileRequest request,
         CancellationToken cancellationToken)
@@ -190,11 +178,11 @@ public sealed class SkillsController(
                 request.ExpectedDraftRevision,
                 request.Path),
             cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/publish")]
-    public async Task<IActionResult> Publish(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Publish(
         Guid id,
         [FromBody] PublishSkillRequest request,
         CancellationToken cancellationToken)
@@ -205,11 +193,11 @@ public sealed class SkillsController(
                 request.ExpectedDraftRevision,
                 request.VersionLabel),
             cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<IActionResult> SetArchived(
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> SetArchived(
         Guid id,
         [FromBody] SetSkillArchiveRequest request,
         CancellationToken cancellationToken)
@@ -217,18 +205,13 @@ public sealed class SkillsController(
         ServiceResult<SkillDefinition> result = await lifecycle.SetArchivedAsync(
             new SetSkillArchiveCommand(id, request.ExpectedDraftRevision, request.Archived),
             cancellationToken);
-        return result.Success ? Success(result) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
-    private IActionResult Success<T>(ServiceResult<T> result) => new JsonResult(result)
-    {
-        StatusCode = StatusCodes.Status200OK
-    };
-
-    private IActionResult FromServiceError<T>(ServiceResult<T> result) =>
+    private JsonResult FromServiceError<T>(ServiceResult<T> result) =>
         FromError(SkillServiceStatusCodes.ToErrorCode(result.Status), result.Message);
 
-    private IActionResult FromError(
+    private JsonResult FromError(
         string errorCode,
         string message,
         int? httpStatus = null)

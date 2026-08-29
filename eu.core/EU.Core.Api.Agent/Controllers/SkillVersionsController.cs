@@ -1,26 +1,18 @@
 using EU.Core.IServices.Skills;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using EU.Core.Api.Agent.Security;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/skill-versions")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillVersionsController(
-    IPublishedSkillVersionCatalog catalog) : ControllerBase
+    IPublishedSkillVersionCatalog catalog) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<PublishedSkillReference>>> List(
+        CancellationToken cancellationToken)
     {
         IReadOnlyList<PublishedSkillReference> values = await catalog.ListAsync(cancellationToken);
-        return new JsonResult(
-            ServiceResult<IReadOnlyList<PublishedSkillReference>>.QuerySuccess(values))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return ServiceResult<IReadOnlyList<PublishedSkillReference>>.QuerySuccess(values);
     }
 }

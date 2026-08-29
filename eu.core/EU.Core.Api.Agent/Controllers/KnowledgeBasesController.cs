@@ -64,37 +64,44 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpPost]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> Create([FromBody] CreateKnowledgeBaseRequest request, CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.CreateAsync(
-            request.Code,
-            request.Name,
-            request.Description,
-            cancellationToken);
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> Create(
+        [FromBody] CreateKnowledgeBaseRequest request,
+        CancellationToken cancellationToken) => ToDetail(await knowledgeBaseDefinitionServices.CreateAsync(
+        request.Code,
+        request.Name,
+        request.Description,
+        cancellationToken));
 
     [HttpPut("{id:guid}")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> Update(Guid id, [FromBody] UpdateKnowledgeBaseRequest request,
-        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.UpdateAsync(
-            id,
-            request.ExpectedLogicalRevision,
-            request.Name,
-            request.Description,
-            request.Status,
-            cancellationToken);
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> Update(
+        Guid id,
+        [FromBody] UpdateKnowledgeBaseRequest request,
+        CancellationToken cancellationToken) => ToDetail(await knowledgeBaseDefinitionServices.UpdateAsync(
+        id,
+        request.ExpectedLogicalRevision,
+        request.Name,
+        request.Description,
+        request.Status,
+        cancellationToken));
 
     [HttpPost("{id:guid}/documents")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocument(Guid id, [FromBody] ImportKnowledgeDocumentRequest request, CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.ImportDocumentAsync(
-            id,
-            request.ExpectedLogicalRevision,
-            request.FileName,
-            request.MediaType,
-            request.Content,
-            cancellationToken);
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> ImportDocument(
+        Guid id,
+        [FromBody] ImportKnowledgeDocumentRequest request,
+        CancellationToken cancellationToken) => ToDetail(await knowledgeBaseDefinitionServices.ImportDocumentAsync(
+        id,
+        request.ExpectedLogicalRevision,
+        request.FileName,
+        request.MediaType,
+        request.Content,
+        cancellationToken));
 
 
     [HttpPost("{id:guid}/documents/pdf"), Consumes("multipart/form-data")]
     [RequestSizeLimit(AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
     [RequestFormLimits(
         MultipartBodyLengthLimit = AgKnowledgeBaseDefinitionServices.MaximumPdfBytes + 65_536)]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocument(
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> ImportPdfDocument(
         Guid id,
         [FromForm] long expectedLogicalRevision,
         [FromForm] IFormFile? file,
@@ -103,37 +110,42 @@ public sealed class KnowledgeBasesController(
         if (file is null
             || file.Length is 0 or > AgKnowledgeBaseDefinitionServices.MaximumPdfBytes)
         {
-            return ServiceResult<KnowledgeBaseDefinition>.Failure(
+            return ServiceResult<KnowledgeBaseDetailResponse>.Failure(
                 KnowledgeServiceStatusCodes.DocumentInvalid,
                 $"A PDF file up to {AgKnowledgeBaseDefinitionServices.MaximumPdfBytes} bytes is required.");
         }
 
         using var buffer = new MemoryStream(checked((int)file.Length));
         await file.CopyToAsync(buffer, cancellationToken);
-        return await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
+        return ToDetail(await knowledgeBaseDefinitionServices.ImportPdfDocumentAsync(
             id,
             expectedLogicalRevision,
             file.FileName,
             file.ContentType,
             buffer.ToArray(),
-            cancellationToken);
+            cancellationToken));
     }
 
     [HttpDelete("{id:guid}/documents/{documentId:guid}")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocument(Guid id, Guid documentId, [FromBody] DeleteKnowledgeDocumentRequest request,
-        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
-            id,
-            documentId,
-            request.ExpectedLogicalRevision,
-            cancellationToken);
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> DeleteDocument(
+        Guid id,
+        Guid documentId,
+        [FromBody] DeleteKnowledgeDocumentRequest request,
+        CancellationToken cancellationToken) => ToDetail(await knowledgeBaseDefinitionServices.DeleteDocumentAsync(
+        id,
+        documentId,
+        request.ExpectedLogicalRevision,
+        cancellationToken));
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchived(Guid id, [FromBody] SetKnowledgeBaseArchiveRequest request,
-        CancellationToken cancellationToken) => await knowledgeBaseDefinitionServices.SetArchivedAsync(
-            id,
-            request.ExpectedLogicalRevision,
-            request.Archived,
-            cancellationToken);
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> SetArchived(
+        Guid id,
+        [FromBody] SetKnowledgeBaseArchiveRequest request,
+        CancellationToken cancellationToken) => ToDetail(await knowledgeBaseDefinitionServices.SetArchivedAsync(
+        id,
+        request.ExpectedLogicalRevision,
+        request.Archived,
+        cancellationToken));
 
     [HttpGet("{id:guid}/documents")]
     public async Task<ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>>> ListDocuments(Guid id, CancellationToken cancellationToken)
@@ -246,6 +258,18 @@ public sealed class KnowledgeBasesController(
             value.Documents.Count,
             value.Chunks.Count,
             value.IndexedAtUtc);
+
+    private static ServiceResult<KnowledgeBaseDetailResponse> ToDetail(
+        ServiceResult<KnowledgeBaseDefinition> result) =>
+        new()
+        {
+            Status = result.Status,
+            Success = result.Success,
+            Message = result.Message,
+            MessageDev = result.MessageDev,
+            Count = result.Count,
+            Data = result.Data is null ? null! : ToDetail(result.Data)
+        };
 }
 
 [Route("api/knowledge-base-references")]

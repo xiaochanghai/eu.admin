@@ -18,7 +18,7 @@ public sealed class OrchestrationsController(
 {
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> List(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<OrchestrationListItem>>>> List(
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
@@ -38,22 +38,23 @@ public sealed class OrchestrationsController(
                     "Orchestration status must be Enabled, Disabled, or Archived.");
             }
         }
-        return QuerySuccess(await lifecycle.ListAsync(parsedStatus, cancellationToken));
+        return ServiceResult<IReadOnlyList<OrchestrationListItem>>.QuerySuccess(
+            await lifecycle.ListAsync(parsedStatus, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<OrchestrationDefinition>>> Get(Guid id, CancellationToken cancellationToken)
     {
         OrchestrationDefinition? value = await lifecycle.GetAsync(id, cancellationToken);
         return value is null
             ? FromError(OrchestrationErrorCodes.NotFound, "The orchestration was not found.")
-            : QuerySuccess(value);
+            : ServiceResult<OrchestrationDefinition>.QuerySuccess(value);
     }
 
     [HttpPost]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> Create(
+    public async Task<ActionResult<ServiceResult<OrchestrationDefinition>>> Create(
         [FromBody] CreateOrchestrationRequest request,
         CancellationToken cancellationToken)
     {
@@ -68,7 +69,7 @@ public sealed class OrchestrationsController(
 
     [HttpPut("{id:guid}/draft")]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> SaveDraft(
+    public async Task<ActionResult<ServiceResult<OrchestrationDefinition>>> SaveDraft(
         Guid id,
         [FromBody] SaveOrchestrationRequest request,
         CancellationToken cancellationToken)
@@ -77,28 +78,24 @@ public sealed class OrchestrationsController(
             new SaveOrchestrationDraftCommand(
                 id, request.ExpectedLogicalRevision, request.Name, request.Description,
                 request.Status, request.StartNodeId, request.Nodes, request.Edges), cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data!)
-            : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/publish")]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> Publish(
+    public async Task<ActionResult<ServiceResult<OrchestrationDefinition>>> Publish(
         Guid id,
         [FromBody] PublishOrchestrationRequest request,
         CancellationToken cancellationToken)
     {
         ServiceResult<OrchestrationDefinition> result = await lifecycle.PublishAsync(
             new PublishOrchestrationCommand(id, request.ExpectedLogicalRevision), cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data!)
-            : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<IActionResult> SetArchived(
+    public async Task<ActionResult<ServiceResult<OrchestrationDefinition>>> SetArchived(
         Guid id,
         [FromBody] SetOrchestrationArchiveRequest request,
         CancellationToken cancellationToken)
@@ -109,14 +106,12 @@ public sealed class OrchestrationsController(
                 request.ExpectedLogicalRevision,
                 request.Archived),
             cancellationToken);
-        return result.Success
-            ? OperationSuccess(result.Data!)
-            : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/runs")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Start(
+    public async Task<ActionResult<ServiceResult<OrchestrationRunRecord>>> Start(
         Guid id,
         [FromBody] StartOrchestrationRunRequest request,
         CancellationToken cancellationToken)
@@ -132,26 +127,26 @@ public sealed class OrchestrationsController(
 
     [HttpGet("{id:guid}/runs")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Runs(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<OrchestrationRunRecord>>>> Runs(
         Guid id, [FromQuery] int take = 20, CancellationToken cancellationToken = default) =>
-        QuerySuccess(await runtime.ListAsync(
+        ServiceResult<IReadOnlyList<OrchestrationRunRecord>>.QuerySuccess(await runtime.ListAsync(
             id,
             Math.Clamp(take, 1, 100),
             cancellationToken));
 
     [HttpGet("{id:guid}/runs/{runId:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Run(Guid id, Guid runId, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<OrchestrationRunRecord>>> Run(Guid id, Guid runId, CancellationToken cancellationToken)
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         return value is null || value.OrchestrationId != id
             ? FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run was not found.")
-            : QuerySuccess(value);
+            : ServiceResult<OrchestrationRunRecord>.QuerySuccess(value);
     }
 
     [HttpPost("{id:guid}/runs/{runId:guid}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Cancel(Guid id, Guid runId, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<OrchestrationRunCancelResponse>>> Cancel(Guid id, Guid runId, CancellationToken cancellationToken)
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
@@ -164,7 +159,7 @@ public sealed class OrchestrationsController(
 
     [HttpGet("{id:guid}/runs/{runId:guid}/details")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Details(
+    public async Task<ActionResult<ServiceResult<OrchestrationRunDetails>>> Details(
         Guid id,
         Guid runId,
         CancellationToken cancellationToken)
@@ -175,12 +170,12 @@ public sealed class OrchestrationsController(
         OrchestrationRunDetails? details = await runtime.GetDetailsAsync(runId, cancellationToken);
         return details is null
             ? FromError(OrchestrationErrorCodes.RunNotFound, "The orchestration run details were not found.")
-            : QuerySuccess(details);
+            : ServiceResult<OrchestrationRunDetails>.QuerySuccess(details);
     }
 
     [HttpGet("{id:guid}/runs/{runId:guid}/output")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<IActionResult> Output(Guid id, Guid runId, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<OrchestrationRunOutputResponse>>> Output(Guid id, Guid runId, CancellationToken cancellationToken)
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
@@ -190,31 +185,25 @@ public sealed class OrchestrationsController(
         OrchestrationRunDetails? details = await runtime.GetDetailsAsync(runId, cancellationToken);
         return details is null
             ? NoContent()
-            : QuerySuccess(new OrchestrationRunOutputResponse(details.Output, false));
+            : ServiceResult<OrchestrationRunOutputResponse>.QuerySuccess(
+                new OrchestrationRunOutputResponse(details.Output, false));
     }
 
-    private IActionResult FromServiceError<T>(ServiceResult<T> result) =>
+    private JsonResult FromServiceError<T>(ServiceResult<T> result) =>
         FromError(
             OrchestrationServiceStatusCodes.ToErrorCode(result.Status),
             result.Message);
 
-    private IActionResult QuerySuccess<T>(T value) =>
-        new JsonResult(
-            ServiceResult<T>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
-
-    private IActionResult OperationSuccess<T>(
+    private JsonResult OperationSuccess<T>(
         T value,
-        int httpStatus = StatusCodes.Status200OK) =>
+        int httpStatus) =>
         new JsonResult(
             ServiceResult<T>.OprateSuccess(value))
         {
             StatusCode = httpStatus
         };
 
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(

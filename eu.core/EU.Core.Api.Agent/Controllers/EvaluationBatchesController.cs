@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Security;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
@@ -24,7 +23,7 @@ public sealed class EvaluationBatchesController(
     ICallerContext caller) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> Run(
+    public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Run(
         [FromBody] StartEvaluationBatchRequest request,
         CancellationToken cancellationToken)
     {
@@ -45,14 +44,14 @@ public sealed class EvaluationBatchesController(
                 caller.CorrelationId),
             cancellationToken);
         return result.Success
-            ? OperationSuccess(result.Data!)
+            ? result
             : FromError(
                 EvaluationBatchServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
 
     [HttpPost("compare")]
-    public async Task<IActionResult> Compare(
+    public async Task<ActionResult<ServiceResult<EvaluationBatchComparisonReport>>> Compare(
         [FromBody] CompareEvaluationBatchesRequest request,
         CancellationToken cancellationToken)
     {
@@ -77,14 +76,14 @@ public sealed class EvaluationBatchesController(
                 request.Gate.RequireStableRoutes),
             cancellationToken);
         return result.Success
-            ? OperationSuccess(result.Data!)
+            ? result
             : FromError(
                 EvaluationComparisonServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
 
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<EvaluationBatchRecord>>>> List(
         [FromQuery] Guid suiteId,
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default)
@@ -94,22 +93,25 @@ public sealed class EvaluationBatchesController(
             return FromError(EvaluationBatchErrorCodes.RequestInvalid, "The evaluation batch request is invalid.");
         }
 
-        return QuerySuccess(await service.ListAsync(
-            suiteId, caller.TenantId, take, cancellationToken));
+        return ServiceResult<IReadOnlyList<EvaluationBatchRecord>>.QuerySuccess(
+            await service.ListAsync(
+                suiteId, caller.TenantId, take, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Get(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         EvaluationBatchRecord? value = await service.GetAsync(
             id, caller.TenantId, cancellationToken);
         return value is null
             ? FromError(EvaluationBatchErrorCodes.BatchNotFound, "The evaluation batch was not found.")
-            : QuerySuccess(value);
+            : ServiceResult<EvaluationBatchRecord>.QuerySuccess(value);
     }
 
     [HttpPost("{id:guid}/model-judge")]
-    public async Task<IActionResult> RunModelJudge(
+    public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> RunModelJudge(
         Guid id,
         [FromBody] RunModelJudgeRequest request,
         CancellationToken cancellationToken)
@@ -132,14 +134,14 @@ public sealed class EvaluationBatchesController(
                 request.MinimumScores),
             cancellationToken);
         return result.Success
-            ? OperationSuccess(result.Data!)
+            ? result
             : FromError(
                 ModelJudgeServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
 
     [HttpGet("{id:guid}/model-judge-reports")]
-    public async Task<IActionResult> ListModelJudgeReports(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<ModelJudgeReport>>>> ListModelJudgeReports(
         Guid id,
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default)
@@ -149,11 +151,12 @@ public sealed class EvaluationBatchesController(
             return FromError(ModelJudgeErrorCodes.RequestInvalid, "The model judge request is invalid.");
         }
 
-        return QuerySuccess(await modelJudge.ListAsync(id, caller.TenantId, take, cancellationToken));
+        return ServiceResult<IReadOnlyList<ModelJudgeReport>>.QuerySuccess(
+            await modelJudge.ListAsync(id, caller.TenantId, take, cancellationToken));
     }
 
     [HttpGet("{id:guid}/model-judge-reports/{reportId:guid}")]
-    public async Task<IActionResult> GetModelJudgeReport(
+    public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> GetModelJudgeReport(
         Guid id,
         Guid reportId,
         CancellationToken cancellationToken)
@@ -162,18 +165,10 @@ public sealed class EvaluationBatchesController(
             reportId, caller.TenantId, cancellationToken);
         return value is null || value.BatchId != id
             ? FromError(ModelJudgeErrorCodes.BatchNotFound, "The model judge report was not found.")
-            : QuerySuccess(value);
+            : ServiceResult<ModelJudgeReport>.QuerySuccess(value);
     }
 
-    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
-
-    private IActionResult OperationSuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.OprateSuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
-
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(

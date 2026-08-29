@@ -72,14 +72,12 @@ public sealed class AgentRunsController(
     }
 
     [HttpGet("runs")]
-    public async Task<IActionResult> List(
+    public async Task<ServiceResult<IReadOnlyList<AgentRunAuditRecord>>> List(
         Guid agentId,
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default) =>
-        new JsonResult(
-            ServiceResult<IReadOnlyList<AgentRunAuditRecord>>.QuerySuccess(
-                await runtime.ListAuditAsync(agentId, take, cancellationToken)))
-        { StatusCode = StatusCodes.Status200OK };
+        ServiceResult<IReadOnlyList<AgentRunAuditRecord>>.QuerySuccess(
+            await runtime.ListAuditAsync(agentId, take, cancellationToken));
 
     private async Task WriteFrameAsync(
         string eventName,

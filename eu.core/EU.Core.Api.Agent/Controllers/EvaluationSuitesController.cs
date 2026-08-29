@@ -1,27 +1,22 @@
 using System.Text.Json.Serialization;
-using EU.Core.Api.Agent.Security;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/evaluation-suites")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
     EvaluationSuiteLifecycleService lifecycle,
-    ICallerContext caller) : ControllerBase
+    ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>>> List(
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
@@ -37,21 +32,24 @@ public sealed class EvaluationSuitesController(
                     "Evaluation suite status must be Active or Archived.");
         }
 
-        return QuerySuccess(await lifecycle.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
+        return ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>.QuerySuccess(
+            await lifecycle.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Get(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         EvaluationSuiteDefinition? value = await lifecycle.GetAsync(
             id, caller.TenantId, cancellationToken);
         return value is null
             ? FromError(EvaluationSuiteErrorCodes.NotFound, "The evaluation suite was not found.")
-            : QuerySuccess(value);
+            : ServiceResult<EvaluationSuiteDefinition>.QuerySuccess(value);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Create(
         [FromBody] CreateEvaluationSuiteRequest request,
         CancellationToken cancellationToken)
     {
@@ -71,11 +69,13 @@ public sealed class EvaluationSuitesController(
                 cancellationToken);
         if (!result.Success) return FromServiceError(result);
         Response.Headers.Location = $"/api/evaluation-suites/{result.Data!.Id}";
-        return OperationSuccess(result.Data, StatusCodes.Status201Created);
+        return new JsonResult(
+            ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(result.Data))
+        { StatusCode = StatusCodes.Status201Created };
     }
 
     [HttpPut("{id:guid}/draft")]
-    public async Task<IActionResult> SaveDraft(
+    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> SaveDraft(
         Guid id,
         [FromBody] SaveEvaluationSuiteDraftRequest request,
         CancellationToken cancellationToken)
@@ -96,11 +96,11 @@ public sealed class EvaluationSuitesController(
                     request.Description,
                     cases),
                 cancellationToken);
-        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPost("{id:guid}/publish")]
-    public async Task<IActionResult> Publish(
+    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Publish(
         Guid id,
         [FromBody] PublishEvaluationSuiteRequest request,
         CancellationToken cancellationToken)
@@ -118,11 +118,11 @@ public sealed class EvaluationSuitesController(
                     caller.UserId,
                     request.ExpectedLogicalRevision),
                 cancellationToken);
-        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<IActionResult> SetArchived(
+    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> SetArchived(
         Guid id,
         [FromBody] SetEvaluationSuiteArchiveRequest request,
         CancellationToken cancellationToken)
@@ -139,7 +139,7 @@ public sealed class EvaluationSuitesController(
                     request.ExpectedLogicalRevision,
                     request.Archived),
                 cancellationToken);
-        return result.Success ? OperationSuccess(result.Data!) : FromServiceError(result);
+        return result.Success ? result : FromServiceError(result);
     }
 
     private static bool TryMapCases(
@@ -200,20 +200,12 @@ public sealed class EvaluationSuitesController(
         return true;
     }
 
-    private IActionResult FromServiceError<T>(ServiceResult<T> result) =>
+    private JsonResult FromServiceError<T>(ServiceResult<T> result) =>
         FromError(
             EvaluationSuiteServiceStatusCodes.ToErrorCode(result.Status),
             result.Message);
 
-    private IActionResult QuerySuccess<T>(T value) => new JsonResult(
-        ServiceResult<T>.QuerySuccess(value))
-    { StatusCode = StatusCodes.Status200OK };
-
-    private IActionResult OperationSuccess<T>(T value, int httpStatus = StatusCodes.Status200OK) =>
-        new JsonResult(ServiceResult<T>.OprateSuccess(value))
-        { StatusCode = httpStatus };
-
-    private IActionResult FromError(string errorCode, string message)
+    private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(

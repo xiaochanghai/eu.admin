@@ -1,24 +1,20 @@
 using EU.Core.IServices.Agents;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
-using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels.Extend;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/agents")]
-[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : ControllerBase
+public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentListItem[]>>> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
     {
         AgentRuntimeStatus? runtimeStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -67,15 +63,11 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             definition.DraftLabel,
             definition.DraftModelProfileId,
             definition.CurrentPublishedLabel)).ToArray();
-        return new JsonResult(
-            ServiceResult<AgentListItem[]>.QuerySuccess(values))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return ServiceResult<AgentListItem[]>.QuerySuccess(values);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgAgentDefinitionDetailDto>>> Get(Guid id, CancellationToken cancellationToken)
     {
         AgAgentDefinitionDetailDto? value = await agentDefinitionServices.QueryAgent(
             id,
@@ -93,15 +85,11 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             };
         }
 
-        return new JsonResult(
-            ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value))
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgAgentDefinitionDetailDto>>> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
     {
         var result = await agentDefinitionServices.CreateAsync(new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
         if (!result.Success)
@@ -125,7 +113,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     }
 
     [HttpPut("{id:guid}/draft")]
-    public async Task<IActionResult> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentDefinition>>> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
@@ -159,10 +147,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
                 OrchestrationIds = request.OrchestrationIds
             },
             cancellationToken);
-        return new JsonResult(result)
-        {
-            StatusCode = StatusCodes.Status200OK
-        };
+        return result;
     }
 
     [HttpPost("{id:guid}/publish")]
@@ -200,7 +185,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     }
 
     [HttpPost("import")]
-    public async Task<IActionResult> Import(CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<AgentDefinition>>> Import(CancellationToken cancellationToken)
     {
         if (!IsJsonContentType(Request.ContentType))
         {
@@ -227,10 +212,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             await agentDefinitionServices.ImportAsync(json, cancellationToken);
         if (!result.Success)
         {
-            return new JsonResult(result)
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            return result;
         }
 
         Response.Headers.Location = $"/api/agents/{result.Data.Id}";

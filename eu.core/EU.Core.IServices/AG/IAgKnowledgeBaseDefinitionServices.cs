@@ -7,7 +7,7 @@ namespace EU.Core.IServices;
 /// <summary>
 /// 知识库定义、文档导入、发布目录和检索服务契约。
 /// </summary>
-public interface IAgKnowledgeBaseDefinitionServices : IKnowledgeRetriever
+public interface IAgKnowledgeBaseDefinitionServices : IBaseServices<AgKnowledgeBaseDefinition>, IKnowledgeRetriever
 {
     Task<KnowledgePdfExtractionResult> ExtractAsync(
         ReadOnlyMemory<byte> content,

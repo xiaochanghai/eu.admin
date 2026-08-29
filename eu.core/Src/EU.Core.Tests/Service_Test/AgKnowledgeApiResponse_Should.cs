@@ -5,6 +5,7 @@ using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,15 +31,17 @@ public sealed class AgKnowledgeApiResponse_Should
             await controller.Get(value.Id, CancellationToken.None),
             StatusCodes.Status200OK);
 
-        ServiceResult<KnowledgeBaseDefinition> created =
+        ServiceResult<KnowledgeBaseDetailResponse> created =
             await controller.Create(
                 new CreateKnowledgeBaseRequest("new-base", "New base", "Description"),
                 CancellationToken.None);
         Assert.True(created.Success);
         Assert.Equal(StatusCodes.Status200OK, created.Status);
+        Assert.Equal(0, created.Data.DocumentCount);
+        Assert.Equal(0, created.Data.ChunkCount);
 
-        ServiceResult<KnowledgeBaseDefinition> updated =
-            AssertServiceSuccess<KnowledgeBaseDefinition>(
+        ServiceResult<KnowledgeBaseDetailResponse> updated =
+            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
                 await controller.Update(
                     value.Id,
                     new UpdateKnowledgeBaseRequest(
@@ -49,8 +52,8 @@ public sealed class AgKnowledgeApiResponse_Should
                     CancellationToken.None),
                 StatusCodes.Status200OK);
 
-        ServiceResult<KnowledgeBaseDefinition> imported =
-            AssertServiceSuccess<KnowledgeBaseDefinition>(
+        ServiceResult<KnowledgeBaseDetailResponse> imported =
+            AssertServiceSuccess<KnowledgeBaseDetailResponse>(
                 await controller.ImportDocument(
                     value.Id,
                     new ImportKnowledgeDocumentRequest(
@@ -60,6 +63,8 @@ public sealed class AgKnowledgeApiResponse_Should
                         "# Guide"),
                     CancellationToken.None),
                 StatusCodes.Status200OK);
+        Assert.Equal(2, imported.Data.DocumentCount);
+        Assert.Equal(2, imported.Data.ChunkCount);
 
         byte[] pdf = "%PDF-1.7"u8.ToArray();
         var file = new FormFile(new MemoryStream(pdf), 0, pdf.Length, "file", "guide.pdf")
@@ -67,7 +72,7 @@ public sealed class AgKnowledgeApiResponse_Should
             Headers = new HeaderDictionary(),
             ContentType = "application/pdf"
         };
-        ServiceResult<KnowledgeBaseDefinition> pdfImported =
+        ServiceResult<KnowledgeBaseDetailResponse> pdfImported =
             await controller.ImportPdfDocument(
                 value.Id,
                 imported.Data.LogicalRevision,
@@ -75,9 +80,14 @@ public sealed class AgKnowledgeApiResponse_Should
                 CancellationToken.None);
         Assert.True(pdfImported.Success);
         Assert.Equal(200, pdfImported.Status);
+        Assert.Equal(3, pdfImported.Data.DocumentCount);
 
-        KnowledgeDocument pdfDocument = pdfImported.Data.Documents.Last();
-        ServiceResult<KnowledgeBaseDefinition> deleted =
+        ServiceResult<IReadOnlyList<KnowledgeDocumentListItemResponse>> documents =
+            await controller.ListDocuments(value.Id, CancellationToken.None);
+        KnowledgeDocumentListItemResponse pdfDocument = Assert.Single(
+            documents.Data,
+            document => document.FileName == "guide.pdf");
+        ServiceResult<KnowledgeBaseDetailResponse> deleted =
             await controller.DeleteDocument(
                 value.Id,
                 pdfDocument.Id,
@@ -86,7 +96,7 @@ public sealed class AgKnowledgeApiResponse_Should
         Assert.True(deleted.Success);
         Assert.Equal(StatusCodes.Status200OK, deleted.Status);
 
-        ServiceResult<KnowledgeBaseDefinition> archived =
+        ServiceResult<KnowledgeBaseDetailResponse> archived =
             await controller.SetArchived(
                 value.Id,
                 new SetKnowledgeBaseArchiveRequest(deleted.Data.LogicalRevision, true),
@@ -127,7 +137,7 @@ public sealed class AgKnowledgeApiResponse_Should
             await controller.List("invalid", CancellationToken.None);
         Assert.False(invalidStatus.Success);
         Assert.Equal(KnowledgeServiceStatusCodes.DocumentInvalid, invalidStatus.Status);
-        ServiceResult<KnowledgeBaseDefinition> invalidPdf =
+        ServiceResult<KnowledgeBaseDetailResponse> invalidPdf =
             await controller.ImportPdfDocument(
                 Guid.NewGuid(),
                 0,
@@ -210,7 +220,9 @@ public sealed class AgKnowledgeApiResponse_Should
     }
 
     private sealed class KnowledgeRepository(
-        IEnumerable<KnowledgeBaseDefinition> values) : IAgKnowledgeBaseDefinitionServices
+        IEnumerable<KnowledgeBaseDefinition> values)
+        : EU.Core.Services.BASE.BaseServices<AgKnowledgeBaseDefinition>,
+          IAgKnowledgeBaseDefinitionServices
     {
         private readonly Dictionary<Guid, KnowledgeBaseDefinition> _values =
             values.ToDictionary(value => value.Id);

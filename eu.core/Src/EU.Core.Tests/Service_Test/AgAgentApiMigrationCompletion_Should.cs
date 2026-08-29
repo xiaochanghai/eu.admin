@@ -49,6 +49,23 @@ public sealed class AgAgentApiMigrationCompletion_Should
             expectedSpecial,
             AgentApiResponseMetadataConvention.SpecialActionKeys.Order().ToArray());
 
+        string[] expectedExplicitServiceResponses =
+        [
+            "AgentsController.Create",
+            "AgentsController.Import",
+            "ChatRunsController.Cancel",
+            "EvaluationSuitesController.Create",
+            "OrchestrationsController.Cancel",
+            "OrchestrationsController.Create",
+            "OrchestrationsController.Start",
+            "SkillsController.Create"
+        ];
+        Assert.Equal(
+            expectedExplicitServiceResponses,
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys
+                .Order()
+                .ToArray());
+
         foreach (ControllerModel controller in application.Controllers)
         {
             foreach (ActionModel action in controller.Actions)
@@ -68,16 +85,21 @@ public sealed class AgAgentApiMigrationCompletion_Should
                 }
                 else
                 {
-                    Assert.True(
-                        AgentApiResponseMetadataConvention.ServiceActionDataTypes.TryGetValue(
-                            key,
-                            out Type? dataType),
-                        $"Missing response type for {key}.");
-                    Type envelopeType = typeof(ServiceResult<>).MakeGenericType(dataType!);
-                    Assert.Contains(responses, response =>
-                        response.Type == envelopeType
-                        && response.StatusCode is >= 200 and < 300);
+                    ProducesResponseTypeAttribute serviceResponse = Assert.Single(
+                        responses,
+                        response =>
+                            response.Type?.IsGenericType == true
+                            && response.Type.GetGenericTypeDefinition() == typeof(ServiceResult<>)
+                            && response.StatusCode is >= 200 and < 300);
+                    Type dataType = serviceResponse.Type!.GetGenericArguments()[0];
                     Assert.NotEqual(typeof(object), dataType);
+
+                    if (AgentApiResponseMetadataConvention.ServiceActionDataTypes.TryGetValue(
+                            key,
+                            out Type? configuredDataType))
+                    {
+                        Assert.Equal(configuredDataType, dataType);
+                    }
                 }
 
                 if (!string.Equals(key, "MetricsController.Get", StringComparison.Ordinal))
@@ -89,12 +111,15 @@ public sealed class AgAgentApiMigrationCompletion_Should
             }
         }
 
-        Assert.Equal(
-            typeof(AgAgentDefinitionDetailDto),
-            AgentApiResponseMetadataConvention.ServiceActionDataTypes["AgentsController.Get"]);
-        Assert.Equal(
-            typeof(ChatConversationDetailResponse),
-            AgentApiResponseMetadataConvention.ServiceActionDataTypes["ChatRunsController.GetConversation"]);
+        Assert.DoesNotContain(
+            "AgentsController.Get",
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
+        Assert.DoesNotContain(
+            "ChatRunsController.GetConversation",
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
+        Assert.DoesNotContain(
+            "OrchestrationsController.List",
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
     }
 
     [Fact]
