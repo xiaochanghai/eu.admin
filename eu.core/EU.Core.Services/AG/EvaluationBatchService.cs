@@ -16,7 +16,7 @@ public sealed class EvaluationBatchService(
     UnifiedEntryService unifiedEntry,
     IUnifiedEntryRepository unifiedRuns,
     RunEvaluationService evaluator,
-    TimeProvider? timeProvider = null) : IAgEvaluationBatchExecutionServices
+    TimeProvider? timeProvider = null) : BaseServices, IAgEvaluationBatchExecutionServices
 {
     public const int MaximumCasesPerBatch = 20;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -131,7 +131,7 @@ public sealed class EvaluationBatchService(
                 EvaluationBatchStatus.Completed,
                 string.Empty,
                 cancellationToken);
-            return ServiceResult<EvaluationBatchRecord>.OprateSuccess(batch);
+            return Success(batch);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

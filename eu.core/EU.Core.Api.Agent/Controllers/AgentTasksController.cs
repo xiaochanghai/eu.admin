@@ -14,13 +14,12 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/agent-tasks")]
 public sealed class AgentTasksController(
     IAgAgentTaskServices tasks,
     ICallerContext caller,
     TimeProvider timeProvider,
-    UnifiedEntryService unifiedEntry) : ControllerBase
+    UnifiedEntryService unifiedEntry) : Base.ControllerBase
 {
     [HttpPost]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
@@ -40,7 +39,7 @@ public sealed class AgentTasksController(
                 request.SourceId ?? string.Empty, request.IdempotencyKey ?? string.Empty,
                 request.ConversationId, request.Priority ?? 0, request.MaximumAttempts ?? 3,
                 request.AvailableAtUtc ?? timeProvider.GetUtcNow()), cancellationToken);
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(value);
+            return Success(value);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
@@ -91,7 +90,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.SaveCheckpointAsync(new SaveAgentTaskCheckpointCommand(
+            return Success(await tasks.SaveCheckpointAsync(new SaveAgentTaskCheckpointCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty, request.ExpectedLogicalRevision,
                 request.RunId, request.ConversationId, request.CheckpointKind ?? string.Empty, request.CheckpointJson ?? string.Empty,
                 timeProvider.GetUtcNow()), cancellationToken));
@@ -106,7 +105,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.RenewLeaseAsync(new RenewAgentTaskLeaseCommand(
+            return Success(await tasks.RenewLeaseAsync(new RenewAgentTaskLeaseCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty,
                 request.ExpectedLogicalRevision, TimeSpan.FromSeconds(request.LeaseSeconds ?? 300),
                 timeProvider.GetUtcNow()), cancellationToken));
@@ -121,7 +120,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.CompleteAsync(new CompleteAgentTaskCommand(
+            return Success(await tasks.CompleteAsync(new CompleteAgentTaskCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty,
                 request.ExpectedLogicalRevision, request.RunId, timeProvider.GetUtcNow()), cancellationToken));
         }
@@ -135,7 +134,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.FailAsync(new FailAgentTaskCommand(
+            return Success(await tasks.FailAsync(new FailAgentTaskCommand(
                 id, caller.TenantId, request.WorkerId ?? string.Empty, request.ExpectedLogicalRevision,
                 request.ErrorCode ?? string.Empty, request.ErrorMessage ?? string.Empty,
                 TimeSpan.FromSeconds(request.RetryDelaySeconds ?? 30), timeProvider.GetUtcNow()), cancellationToken));
@@ -158,7 +157,7 @@ public sealed class AgentTasksController(
                     cancellationToken);
             }
 
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(cancelled);
+            return Success(cancelled);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
@@ -173,7 +172,7 @@ public sealed class AgentTasksController(
         if (HasUnknownProperties(request.AdditionalProperties)) return InvalidRequest();
         try
         {
-            return ServiceResult<AgentTaskRecord>.OprateSuccess(await tasks.ResumeWithUserInputAsync(
+            return Success(await tasks.ResumeWithUserInputAsync(
                 new ResumeAgentTaskWithUserInputCommand(
                     id, caller.TenantId, caller.UserId, request.ExpectedLogicalRevision,
                     request.Input ?? string.Empty, timeProvider.GetUtcNow()), cancellationToken));

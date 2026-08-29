@@ -15,7 +15,7 @@ public sealed class OrchestrationRuntimeService(
     IOrchestrationRunRepository runs,
     IAgentDefinitionCatalog agents,
     AgentRuntimeService agentRuntime,
-    ExecutionPayloadLimits? payloadLimits = null)
+    ExecutionPayloadLimits? payloadLimits = null) : BaseServices
 {
     public const int MaximumInputCharacters = 32_768;
     private const string TerminalPersistenceFailureDataKey =
@@ -211,7 +211,7 @@ public sealed class OrchestrationRuntimeService(
         }
 
         registered.TrySetResult(true);
-        return ServiceResult<OrchestrationRunRecord>.OprateSuccess(record);
+        return Success(record);
     }
 
     private static ServiceResult<OrchestrationRunRecord> Failure(string code, string message) =>

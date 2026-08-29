@@ -12,12 +12,11 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/evaluations/runs")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class RunEvaluationsController(
     RunEvaluationService service,
-    ICallerContext caller) : ControllerBase
+    ICallerContext caller) : Base.ControllerBase
 {
     [HttpPost("{runId}")]
     public async Task<ActionResult<ServiceResult<RunEvaluationReport>>> Evaluate(
@@ -52,7 +51,7 @@ public sealed class RunEvaluationsController(
                 cancellationToken);
             return report is null
                 ? FromError(RunEvaluationErrorCodes.RunNotFound, "The run was not found.")
-                : ServiceResult<RunEvaluationReport>.OprateSuccess(report);
+                : Success(report);
         }
         catch (RunEvaluationException exception)
         {

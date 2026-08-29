@@ -1,13 +1,16 @@
 using EU.Core.IServices.MainAgent;
 using EU.Core.Api.Agent.Errors;
+using EU.Core.Api.Agent.Security;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/platform/main-agent")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class MainAgentController(MainAgentAssignmentService assignments) : Base.ControllerBase
 {
     private readonly MainAgentAssignmentService _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));

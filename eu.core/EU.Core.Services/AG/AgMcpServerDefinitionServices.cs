@@ -61,7 +61,7 @@ public sealed class AgMcpServerDefinitionServices :
             McpContractCloner.ReadOnly(Array.Empty<Guid>()),
             McpContractCloner.ReadOnly(Array.Empty<McpToolVersion>()));
         return await TryCreateDefinitionAsync(definition, cancellationToken)
-            ? ServiceResult<McpServerDefinition>.OprateSuccess(definition)
+            ? Success(definition)
             : Failure(McpErrorCodes.CodeConflict, "An MCP Server already uses this code.");
     }
 
@@ -152,7 +152,7 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before this operation completed.");
     }
 
@@ -258,7 +258,7 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before synchronization completed.");
     }
 
@@ -322,7 +322,7 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before classification completed.");
     }
 
@@ -387,7 +387,7 @@ public sealed class AgMcpServerDefinitionServices :
             updated,
             command.ExpectedLogicalRevision,
             cancellationToken)
-            ? ServiceResult<McpServerDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Failure(
                 McpErrorCodes.RevisionConflict,
                 "The MCP Server changed before this operation completed.");

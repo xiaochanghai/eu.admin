@@ -17,9 +17,8 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/chat")]
-public sealed class ChatRunsController : ControllerBase
+public sealed class ChatRunsController : Base.ControllerBase
 {
     public const string RunIdHeaderName = "X-Agent-Run-ID";
     public const string ConversationIdHeaderName = "X-Agent-Conversation-ID";
@@ -434,7 +433,7 @@ public sealed class ChatRunsController : ControllerBase
     }
 
     private JsonResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
-        ServiceResult<T>.OprateSuccess(value))
+        Success(value))
     { StatusCode = httpStatus };
 
     private async Task<ActionResult<ServiceResult<T>>> ExecutePersistenceOperationAsync<T>(

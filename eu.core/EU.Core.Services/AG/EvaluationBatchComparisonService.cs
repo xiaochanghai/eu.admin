@@ -8,7 +8,7 @@ namespace EU.Core.Services;
 
 public sealed class EvaluationBatchComparisonService(
     IEvaluationBatchRepository batches,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null) : BaseServices
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
@@ -89,7 +89,7 @@ public sealed class EvaluationBatchComparisonService(
             checks,
             checks.All(value => value.Passed),
             _timeProvider.GetUtcNow().ToUniversalTime());
-        return ServiceResult<EvaluationBatchComparisonReport>.OprateSuccess(report);
+        return Success(report);
     }
 
     private static EvaluationCaseComparison CompareCase(

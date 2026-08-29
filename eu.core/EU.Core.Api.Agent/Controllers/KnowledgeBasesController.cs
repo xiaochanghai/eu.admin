@@ -1,11 +1,14 @@
 using EU.Core.IServices;
+using EU.Core.Api.Agent.Security;
 using EU.Core.Model;
 using EU.Core.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/knowledge-bases")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBasesController(
     IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
@@ -273,6 +276,7 @@ public sealed class KnowledgeBasesController(
 }
 
 [Route("api/knowledge-base-references")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBaseReferencesController(IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]

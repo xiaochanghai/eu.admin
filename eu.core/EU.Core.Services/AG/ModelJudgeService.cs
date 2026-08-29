@@ -21,7 +21,7 @@ public sealed class ModelJudgeService(
     IModelProfileReferenceCatalog modelProfiles,
     IModelJudgeEngine engine,
     ModelJudgePolicy policy,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null) : BaseServices
 {
     private static readonly JsonSerializerOptions HashJsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _configurationGates =
@@ -106,7 +106,7 @@ public sealed class ModelJudgeService(
                 batch.Id, tenantId, configurationHash, cancellationToken);
             if (existing is not null)
             {
-                return ServiceResult<ModelJudgeReport>.OprateSuccess(existing);
+                return Success(existing);
             }
 
             DateTimeOffset started = _timeProvider.GetUtcNow().ToUniversalTime();
@@ -209,12 +209,12 @@ public sealed class ModelJudgeService(
                 existing = await reports.GetByConfigurationAsync(
                     batch.Id, tenantId, configurationHash, cancellationToken);
                 return existing is not null
-                    ? ServiceResult<ModelJudgeReport>.OprateSuccess(existing)
+                    ? Success(existing)
                     : Failure(ModelJudgeErrorCodes.PersistenceConflict,
                         "The model judge report could not be persisted.");
             }
 
-            return ServiceResult<ModelJudgeReport>.OprateSuccess(ModelJudgeContractCloner.Clone(report));
+            return Success(ModelJudgeContractCloner.Clone(report));
         }
         finally
         {

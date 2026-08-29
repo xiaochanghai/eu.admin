@@ -9,7 +9,7 @@ namespace EU.Core.Services;
 
 public sealed class MainAgentAssignmentService(
     IAgentDefinitionCatalog agents,
-    IMainAgentAssignmentRepository assignments)
+    IMainAgentAssignmentRepository assignments) : BaseServices
 {
     private readonly IAgentDefinitionCatalog _agents = agents ?? throw new ArgumentNullException(nameof(agents));
     private readonly IMainAgentAssignmentRepository _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
@@ -48,7 +48,7 @@ public sealed class MainAgentAssignmentService(
                 "The configured Main Agent version is unavailable.");
         }
 
-        return ServiceResult<MainAgentAssignment>.OprateSuccess(assignment);
+        return Success(assignment);
     }
 
     public async Task<ServiceResult<MainAgentAssignment>> SetAsync(
@@ -99,7 +99,7 @@ public sealed class MainAgentAssignmentService(
             command.ExpectedLogicalRevision,
             cancellationToken);
         return replaced
-            ? ServiceResult<MainAgentAssignment>.OprateSuccess(assignment)
+            ? Success(assignment)
             : Failure(
                 MainAgentErrorCodes.RowVersionConflict,
                 "The Main Agent assignment was changed by another request.");

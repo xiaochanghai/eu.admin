@@ -1,12 +1,14 @@
-using EU.Core.IServices.Mcp;
-using Microsoft.AspNetCore.Mvc;
 using EU.Core.IServices;
+using EU.Core.Api.Agent.Security;
+using EU.Core.IServices.Mcp;
 using EU.Core.Model;
-using EU.Core.Model.ViewModels.Extend;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/mcp/servers")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class McpServersController(
     IAgMcpServerDefinitionServices lifecycle) : Base.ControllerBase
 {

@@ -10,11 +10,10 @@ using EU.Core.Api.Agent.Security;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/orchestrations")]
 public sealed class OrchestrationsController(
     OrchestrationLifecycleService lifecycle,
-    OrchestrationRuntimeService runtime) : ControllerBase
+    OrchestrationRuntimeService runtime) : Base.ControllerBase
 {
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
@@ -198,7 +197,7 @@ public sealed class OrchestrationsController(
         T value,
         int httpStatus) =>
         new JsonResult(
-            ServiceResult<T>.OprateSuccess(value))
+            Success(value))
         {
             StatusCode = httpStatus
         };

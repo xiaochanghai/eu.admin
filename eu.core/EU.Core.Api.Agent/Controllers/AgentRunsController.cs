@@ -13,12 +13,11 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/agents/{agentId:guid}")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class AgentRunsController(
     AgentRuntimeService runtime,
-    ICallerContext caller) : ControllerBase
+    ICallerContext caller) : Base.ControllerBase
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {

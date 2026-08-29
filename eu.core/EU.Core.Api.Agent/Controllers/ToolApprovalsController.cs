@@ -17,12 +17,11 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/tool-approvals")]
 public sealed class ToolApprovalsController(
     ToolApprovalManagementService approvals,
     ICallerContext caller,
-    TimeProvider timeProvider) : ControllerBase
+    TimeProvider timeProvider) : Base.ControllerBase
 {
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalRead)]
@@ -138,7 +137,7 @@ public sealed class ToolApprovalsController(
                     value.ErrorCode,
                     timeProvider.GetUtcNow()), cancellationToken);
             }
-            return ServiceResult<ToolApprovalConversationResumeResult>.OprateSuccess(value);
+            return Success(value);
         }
         catch (ToolApprovalException exception)
         {
@@ -191,7 +190,7 @@ public sealed class ToolApprovalsController(
                     request.Reason ?? string.Empty,
                     timeProvider.GetUtcNow()),
                 cancellationToken);
-            return ServiceResult<ToolApprovalRequestRecord>.OprateSuccess(decided);
+            return Success(decided);
         }
         catch (ToolApprovalException exception)
         {

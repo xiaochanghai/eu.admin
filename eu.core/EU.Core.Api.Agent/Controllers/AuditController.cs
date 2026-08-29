@@ -8,12 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/audit/operations")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class AuditController(
     IAgentOperationAuditRepository repository,
-    ICallerContext caller) : ControllerBase
+    ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]
     public async Task<ServiceResult<IReadOnlyList<AgentOperationAuditRecord>>> List(

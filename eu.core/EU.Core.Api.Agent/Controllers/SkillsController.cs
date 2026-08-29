@@ -1,14 +1,17 @@
 using EU.Core.IServices.Skills;
 using EU.Core.Api.Agent.Errors;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/skills")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
     IAgSkillDefinitionServices lifecycle,
     IAgentDefinitionCatalog agents) : Base.ControllerBase
@@ -104,7 +107,7 @@ public sealed class SkillsController(
 
         Response.Headers.Location = $"/api/skills/{result.Data.Id}";
         return new JsonResult(
-            ServiceResult<SkillDefinition>.OprateSuccess(result.Data, "创建成功"))
+            Success(result.Data, "创建成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };

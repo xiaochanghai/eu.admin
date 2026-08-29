@@ -4,548 +4,24 @@
         <name>EU.Core.Api</name>
     </assembly>
     <members>
-        <member name="T:EU.Core.Controllers.AuthorizeController">
+        <member name="T:EU.Core.Api.Controllers.AgAgentDefinitionController">
             <summary>
-            登录管理【无权限】
+            Agent 定义表(Controller)
             </summary>
         </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.#ctor(EU.Core.IServices.ISmUsersServices)">
+        <member name="T:EU.Core.Api.Controllers.AgAgentVersionBindingController">
             <summary>
-            构造函数注入
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定(Controller)
             </summary>
-            <param name="smUsersServices"></param>
         </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.Login(EU.Core.Model.LoginRequest)">
+        <member name="T:EU.Core.Api.Controllers.AgAgentVersionController">
             <summary>
-            用户认证-认证授权
+            Agent 版本表，保存当前草稿和历次已发布版本配置(Controller)
             </summary>
-            <param name="request"></param>
-            <returns></returns>
         </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.CurrentUser">
+        <member name="T:EU.Core.Api.Controllers.AgAgentVersionSnapshotController">
             <summary>
-            获取用户信息
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.RestPassword(EU.Core.Model.RestPassword)">
-            <summary>
-            修改密码
-            </summary>
-            <param name="password"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.LogOut">
-            <summary>
-            退出登录
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.AuthorizeController.GetAccessToken">
-            <summary>
-            获取token
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Controllers.BaseController`5">
-            <summary>
-            增删改查基础服务
-            </summary>
-            <typeparam name="IServiceBase"></typeparam>
-            <typeparam name="TEntity"></typeparam>
-            <typeparam name="TEntityDto"></typeparam>
-            <typeparam name="TInsertDto"></typeparam>
-            <typeparam name="TEditDto"></typeparam>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.#ctor(`0)">
-            <summary>
-            初始化 (注入)
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.QueryByFilter(EU.Core.Common.QueryFilter)">
-            <summary>
-            根据条件查询数据
-            </summary>
-            <param name="filter">条件</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.QueryById(System.Guid)">
-            <summary>
-             根据Id查询数据
-            </summary>
-            <param name="Id">主键ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.GetPageList(System.String,System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-            查询数据
-            </summary>
-            <param name="paramData"></param>
-            <param name="sorter"></param>
-            <param name="filter"></param>
-            <param name="parentColumn"></param>
-            <param name="parentId"></param>
-            <param name="moduleCode"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.Insert(System.Object)">
-            <summary>
-            新增数据
-            </summary>
-            <param name="insertModel"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.BulkInsert(System.Collections.Generic.List{`3})">
-            <summary>
-            批量新增数据
-            </summary>
-            <param name="insertModels"></param>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.Put(System.Guid,System.Object)">
-            <summary>
-            更新数据
-            </summary>
-            <param name="Id">主键ID</param>
-            <param name="editModel"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.UpdateReturn(System.Guid,System.Object)">
-            <summary>
-            更新数据
-            </summary>
-            <param name="Id">主键ID</param>
-            <param name="editModel"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.Delete(System.Guid)">
-            <summary>
-            删除数据
-            </summary>
-            <param name="Id">主键ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.BulkDelete(System.Guid[])">
-            <summary>
-            批量删除数据
-            </summary>
-            <param name="Ids">主键IDs</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.Audit(System.Guid)">
-             <summary>
-            审核数据
-             </summary>
-             <param name="Id">主键ID</param>
-             <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.BulkAudit(System.Guid[])">
-            <summary>
-            审核删除数据
-            </summary>
-            <param name="Ids">主键IDs</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.Revocation(System.Guid)">
-            <summary>
-            撤销数据
-            </summary>
-            <param name="Id">主键ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.BulkRevocation(System.Guid[])">
-            <summary>
-            批量撤销数据
-            </summary>
-            <param name="Ids">主键IDs</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Object[])">
-            <summary>
-            反射调用service方法
-            </summary>
-            <param name="methodName"></param>
-            <param name="parameters"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Type[],System.Object[])">
-            <summary>
-            反射调用service方法
-            </summary>
-            <param name="methodName"></param>
-            <param name="types">为要调用重载的方法参数类型：new Type[] { typeof(SaveDataModel)</param>
-            <param name="parameters"></param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Controllers.CommonController">
-            <summary>
-            公共服务
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.QueryByFilter(EU.Core.Common.QueryFilter,System.String)">
-            <summary>
-            自定义列模块数据返回
-            </summary>
-            <param name="filter">filter</param>
-            <param name="moduleCode">模块代码</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.ClearCache">
-            <summary>
-            清空缓存
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.ExportExcelAsync(EU.Core.Common.QueryFilter,System.String)">
-            <summary>
-            Excel导出
-            </summary>
-            <param name="filter">filter</param>
-            <param name="moduleCode">模块代码</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.ImportExcelAsync(EU.Core.Model.ImportExcelForm,System.String)">
-            <summary>
-            Excel导入
-            </summary>
-            <param name="import">导入数据</param>
-            <param name="moduleCode">模块代码</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.QueryImportExcelResultAsync(System.Guid,System.Guid)">
-            <summary>
-            获取Excel导入结果
-            </summary>
-            <param name="importDataId">导入数据ID</param>
-            <param name="templateId">模板ID</param>
-            <returns>ImportExcelResult</returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">
-            <summary>
-            Excel导入数据转换
-            </summary>
-            <param name="request">请求数据</param> 
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">
-            <summary>
-            获取通用下拉数据
-            </summary>
-            <param name="parentColumn"></param>
-            <param name="parentId"></param>
-            <param name="current"></param>
-            <param name="pageSize"></param>
-            <param name="code"></param>
-            <param name="items"></param>
-            <param name="key"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.Query(System.String,System.Guid)">
-            <summary>
-            查询数据
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="id">主键ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.Add(System.String,System.Object)">
-            <summary>
-            新增数据
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="entity">数据</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.Update(System.String,System.Guid,System.Object)">
-            <summary>
-            更新数据
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="id">主键ID</param>
-            <param name="entity">数据</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Guid)">
-            <summary>
-            删除数据
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="id">主键ID</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Collections.Generic.List{System.Guid})">
-            <summary>
-            批量删除数据
-            </summary>
-            <param name="moduleCode">模块代码</param>
-            <param name="ids">主键ID集</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.GenerateAllEntity">
-            <summary>
-            生成所有表实体
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.CommonController.SyncData">
-            <summary>
-            生成所有表实体
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
-            <summary>
-            构造函数
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFiles">
-            <summary>
-            获取 整体框架 文件(主库)(一般可用第一次生成)
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNames(System.String[],System.String)">
-            <summary>
-            获取仓储层和服务层(需指定表名和数据库)
-            </summary>
-            <param name="ConnID">数据库链接名称</param>
-            <param name="tableNames">需要生成的表名</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForEntity(System.String[],System.String)">
-            <summary>
-            获取实体(需指定表名和数据库)
-            </summary>
-            <param name="ConnID">数据库链接名称</param>
-            <param name="tableNames">需要生成的表名</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForController(System.String[],System.String)">
-            <summary>
-            获取控制器(需指定表名和数据库)
-            </summary>
-            <param name="ConnID">数据库链接名称</param>
-            <param name="tableNames">需要生成的表名</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetAllFrameFilesByTableNames(System.String,System.String)">
-            <summary>
-            DbFrist 根据数据库表名 生成整体框架,包含Model层(一般可用第一次生成)
-            </summary>
-            <param name="ConnID">数据库链接名称</param>
-            <param name="tableName">需要生成的表名</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetTableInfoList(System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
-            <summary>
-            获取表信息
-            </summary>
-            <param name="configId">配置Id</param>
-            <param name="readType">读取类型</param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.DbFirstController.GetColumnInfosByTableName(System.String,System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
-            <summary>
-            获取表字段
-            </summary>
-            <param name="tableName">表名</param>
-            <param name="configId">ConfigId</param>
-            <param name="readType">读取类型</param>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Controllers.LoginController">
-            <summary>
-            登录管理【无权限】
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.LoginController})">
-            <summary>
-            构造函数注入
-            </summary>  
-            <param name="smUsersServices"></param> 
-            <param name="requirement"></param> 
-            <param name="logger"></param>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.GetJwtStr(System.String,System.String)">
-            <summary>
-            获取JWT的方法1
-            </summary>
-            <param name="name"></param>
-            <param name="pass"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.GetJwtStrForNuxt(System.String,System.String)">
-            <summary>
-            获取JWT的方法2：给Nuxt提供
-            </summary>
-            <param name="name"></param>
-            <param name="pass"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.GetJwtToken3(System.String,System.String)">
-            <summary>
-            获取JWT的方法3：整个系统主要方法
-            </summary>
-            <param name="name"></param>
-            <param name="pass"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.RefreshToken(System.String)">
-            <summary>
-            请求刷新Token（以旧换新）
-            </summary>
-            <param name="token"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.Getjsonp(System.String,System.Int64,System.String,System.Int32,System.Int32)">
-            <summary>
-            获取JWT的方法4：给 JSONP 测试
-            </summary>
-            <param name="callBack"></param>
-            <param name="id"></param>
-            <param name="sub"></param>
-            <param name="expiresSliding"></param>
-            <param name="expiresAbsoulute"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.Md5Password(System.String)">
-            <summary>
-            测试 MD5 加密字符串
-            </summary>
-            <param name="password"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.SwgLogin(EU.Core.Controllers.SwaggerLoginRequest)">
-            <summary>
-            swagger登录
-            </summary>
-            <param name="loginRequest"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.LoginController.WxLogin(System.String,System.String)">
-            <summary>
-            weixin登录
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.MonitorController.Server">
-            <summary>
-            服务器配置信息
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.MonitorController.Get">
-            <summary>
-            SignalR send data
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:EU.Core.Controllers.ValuesController">
-            <summary>
-            Values控制器
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.#ctor(EU.Core.Model.Love,EU.Core.Common.HttpContextUser.IUser,EU.Core.Common.Https.HttpPolly.IHttpPollyHelper,EU.Core.EventBus.IRabbitMQPersistentConnection,Microsoft.Extensions.Options.IOptions{EU.Core.Common.Option.SeqOptions})">
-            <summary>
-            ValuesController
-            </summary>  
-            <param name="love"></param> 
-            <param name="user"></param> 
-            <param name="httpPollyHelper"></param>
-            <param name="persistentConnection"></param>
-            <param name="seqOptions"></param>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqPublish">
-            <summary>
-            测试Rabbit消息队列发送
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqSubscribe">
-            <summary>
-            测试Rabbit消息队列订阅
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.RedisMq(EU.Core.Extensions.IRedisBasketRepository)">
-            <summary>
-            测试Redis消息队列
-            </summary>
-            <param name="_redisBasketRepository"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.EventBusTry(EU.Core.EventBus.IEventBus,System.String)">
-            <summary>
-            测试RabbitMQ事件总线
-            </summary>
-            <param name="_eventBus"></param>
-            <param name="TiobonId"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.Get(System.Int32)">
-            <summary>
-            Get(int id)方法
-            </summary>
-            <param name="id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.RequiredP(System.String)">
-            <summary>
-            测试参数是必填项
-            </summary>
-            <param name="id"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.GetUserInfo(System.String)">
-            <summary>
-            通过 HttpContext 获取用户信息
-            </summary>
-            <param name="ClaimType">声明类型，默认 jti </param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.Source">
-            <summary>
-            to redirect by route template name.
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.Destination">
-            <summary>
-            route with template name.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.TestPostPara(System.String)">
-            <summary>
-            测试 post 参数
-            </summary>
-            <param name="name"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.FluentVaTest(EU.Core.Filter.UserRegisterVo)">
-            <summary>
-            测试Fulent做参数校验
-            </summary>
-            <param name="param"></param>
-            <returns></returns>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.Put(System.Int32,System.String)">
-            <summary>
-            Put方法
-            </summary>
-            <param name="id"></param>
-            <param name="value"></param>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.Delete(System.Int32)">
-            <summary>
-            Delete方法
-            </summary>
-            <param name="id"></param>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.GetAllConfigByAppllo(Microsoft.Extensions.Configuration.IConfiguration)">
-            <summary>
-            测试接入Apollo获取配置信息
-            </summary>
-        </member>
-        <member name="M:EU.Core.Controllers.ValuesController.GetConfigByAppllo(System.String)">
-            <summary>
-            通过此处的key格式为 xx:xx:x
+            Agent 发布快照表，冻结发布时的 Agent 运行配置(Controller)
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.BdColorController">
@@ -567,7 +43,7 @@
             <summary>
             客户(Controller)
             </summary>
-            
+
         </member>
         <member name="T:EU.Core.Api.Controllers.CustomerDeliveryAddressController">
             <summary>
@@ -783,7 +259,7 @@
         </member>
         <member name="T:EU.Core.Api.Controllers.NacosController">
             <summary>
-            服务管理 
+            服务管理
             </summary>
         </member>
         <member name="F:EU.Core.Api.Controllers.NacosController.NacosNamingService">
@@ -793,7 +269,7 @@
         </member>
         <member name="M:EU.Core.Api.Controllers.NacosController.#ctor(Nacos.V2.INacosNamingService)">
             <summary>
-            
+
             </summary>
             <param name="nacosNamingService"></param>
         </member>
@@ -1005,7 +481,7 @@
             <summary>
             批量导入入库单
             </summary>
-            <param name="entity">数据</param> 
+            <param name="entity">数据</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.PoArrivalOrderController.BulkOrderComplete(System.Guid[])">
@@ -1029,8 +505,8 @@
             <summary>
             批量导入明细
             </summary>
-            <param name="entity">数据</param> 
-            <param name="id">id</param> 
+            <param name="entity">数据</param>
+            <param name="id">id</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.PoInOrderController.BulkOrderComplete(System.Guid[])">
@@ -1392,7 +868,7 @@
             <summary>
             上传视频
             </summary>
-            <param name="upload"></param> 
+            <param name="upload"></param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.FileController.UploadChunkAsync(EU.Core.Model.ChunkUpload)">
@@ -1499,7 +975,7 @@
         </member>
         <member name="P:EU.Core.Api.Controllers.SmConfigController.SmConfigView.detail">
             <summary>
-            
+
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmConfigGroupController">
@@ -1581,14 +1057,14 @@
             <summary>
             根据模板ID获取明细
             </summary>
-            <param name="moduleId">模板ID</param> 
+            <param name="moduleId">模板ID</param>
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmImpTemplateController.Download(System.Guid)">
             <summary>
             根据模板ID下载
             </summary>
-            <param name="templateId">模板ID</param> 
+            <param name="templateId">模板ID</param>
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmImpTemplateDetailController">
@@ -1739,8 +1215,8 @@
             <summary>
             复制模块
             </summary>
-            <param name="moduleId">模块ID</param> 
-            <param name="module">模块</param> 
+            <param name="moduleId">模块ID</param>
+            <param name="module">模块</param>
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmModuleSqlController">
@@ -2082,32 +1558,577 @@
         </member>
         <member name="P:EU.Core.Api.Filter.GlobalActionFilter.Message">
             <summary>
-            
+
             </summary>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
             <summary>
-            
+
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
             <summary>
-            
+
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuting(Microsoft.AspNetCore.Mvc.Filters.ResultExecutingContext)">
             <summary>
-            
+
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuted(Microsoft.AspNetCore.Mvc.Filters.ResultExecutedContext)">
             <summary>
-            
+
             </summary>
             <param name="filterContext"></param>
+        </member>
+        <member name="T:EU.Core.Controllers.AuthorizeController">
+            <summary>
+            登录管理【无权限】
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.#ctor(EU.Core.IServices.ISmUsersServices)">
+            <summary>
+            构造函数注入
+            </summary>
+            <param name="smUsersServices"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.Login(EU.Core.Model.LoginRequest)">
+            <summary>
+            用户认证-认证授权
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.CurrentUser">
+            <summary>
+            获取用户信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.RestPassword(EU.Core.Model.RestPassword)">
+            <summary>
+            修改密码
+            </summary>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.LogOut">
+            <summary>
+            退出登录
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.AuthorizeController.GetAccessToken">
+            <summary>
+            获取token
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.BaseController`5">
+            <summary>
+            增删改查基础服务
+            </summary>
+            <typeparam name="IServiceBase"></typeparam>
+            <typeparam name="TEntity"></typeparam>
+            <typeparam name="TEntityDto"></typeparam>
+            <typeparam name="TInsertDto"></typeparam>
+            <typeparam name="TEditDto"></typeparam>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.#ctor(`0)">
+            <summary>
+            初始化 (注入)
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.QueryByFilter(EU.Core.Common.QueryFilter)">
+            <summary>
+            根据条件查询数据
+            </summary>
+            <param name="filter">条件</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.QueryById(System.Guid)">
+            <summary>
+             根据Id查询数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.GetPageList(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            查询数据
+            </summary>
+            <param name="paramData"></param>
+            <param name="sorter"></param>
+            <param name="filter"></param>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <param name="moduleCode"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Insert(System.Object)">
+            <summary>
+            新增数据
+            </summary>
+            <param name="insertModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkInsert(System.Collections.Generic.List{`3})">
+            <summary>
+            批量新增数据
+            </summary>
+            <param name="insertModels"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Put(System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <param name="editModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.UpdateReturn(System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <param name="editModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Delete(System.Guid)">
+            <summary>
+            删除数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkDelete(System.Guid[])">
+            <summary>
+            批量删除数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Audit(System.Guid)">
+             <summary>
+            审核数据
+             </summary>
+             <param name="Id">主键ID</param>
+             <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkAudit(System.Guid[])">
+            <summary>
+            审核删除数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.Revocation(System.Guid)">
+            <summary>
+            撤销数据
+            </summary>
+            <param name="Id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.BulkRevocation(System.Guid[])">
+            <summary>
+            批量撤销数据
+            </summary>
+            <param name="Ids">主键IDs</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Object[])">
+            <summary>
+            反射调用service方法
+            </summary>
+            <param name="methodName"></param>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.BaseController`5.InvokeService(System.String,System.Type[],System.Object[])">
+            <summary>
+            反射调用service方法
+            </summary>
+            <param name="methodName"></param>
+            <param name="types">为要调用重载的方法参数类型：new Type[] { typeof(SaveDataModel)</param>
+            <param name="parameters"></param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.CommonController">
+            <summary>
+            公共服务
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.QueryByFilter(EU.Core.Common.QueryFilter,System.String)">
+            <summary>
+            自定义列模块数据返回
+            </summary>
+            <param name="filter">filter</param>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ClearCache">
+            <summary>
+            清空缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ExportExcelAsync(EU.Core.Common.QueryFilter,System.String)">
+            <summary>
+            Excel导出
+            </summary>
+            <param name="filter">filter</param>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ImportExcelAsync(EU.Core.Model.ImportExcelForm,System.String)">
+            <summary>
+            Excel导入
+            </summary>
+            <param name="import">导入数据</param>
+            <param name="moduleCode">模块代码</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.QueryImportExcelResultAsync(System.Guid,System.Guid)">
+            <summary>
+            获取Excel导入结果
+            </summary>
+            <param name="importDataId">导入数据ID</param>
+            <param name="templateId">模板ID</param>
+            <returns>ImportExcelResult</returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.TransferExcelData(EU.Core.Model.TransferExcelRequest)">
+            <summary>
+            Excel导入数据转换
+            </summary>
+            <param name="request">请求数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">
+            <summary>
+            获取通用下拉数据
+            </summary>
+            <param name="parentColumn"></param>
+            <param name="parentId"></param>
+            <param name="current"></param>
+            <param name="pageSize"></param>
+            <param name="code"></param>
+            <param name="items"></param>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Query(System.String,System.Guid)">
+            <summary>
+            查询数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Add(System.String,System.Object)">
+            <summary>
+            新增数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="entity">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Update(System.String,System.Guid,System.Object)">
+            <summary>
+            更新数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <param name="entity">数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Guid)">
+            <summary>
+            删除数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="id">主键ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.Delete(System.String,System.Collections.Generic.List{System.Guid})">
+            <summary>
+            批量删除数据
+            </summary>
+            <param name="moduleCode">模块代码</param>
+            <param name="ids">主键ID集</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.GenerateAllEntity">
+            <summary>
+            生成所有表实体
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.CommonController.SyncAgentDatabase(EU.Core.Model.AgentDatabaseSyncRequest,System.Threading.CancellationToken)">
+            <summary>
+            同步 Agent 表结构及数据
+            </summary>
+            <param name="request">同步范围与安全确认</param>
+            <param name="cancellationToken">取消令牌</param>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.#ctor(SqlSugar.ISqlSugarClient,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            构造函数
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFiles">
+            <summary>
+            获取 整体框架 文件(主库)(一般可用第一次生成)
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNames(System.String[],System.String)">
+            <summary>
+            获取仓储层和服务层(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForEntity(System.String[],System.String)">
+            <summary>
+            获取实体(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetFrameFilesByTableNamesForController(System.String[],System.String)">
+            <summary>
+            获取控制器(需指定表名和数据库)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableNames">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetAllFrameFilesByTableNames(System.String,System.String)">
+            <summary>
+            DbFrist 根据数据库表名 生成整体框架,包含Model层(一般可用第一次生成)
+            </summary>
+            <param name="ConnID">数据库链接名称</param>
+            <param name="tableName">需要生成的表名</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetTableInfoList(System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表信息
+            </summary>
+            <param name="configId">配置Id</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.DbFirstController.GetColumnInfosByTableName(System.String,System.String,EU.Core.Model.Systems.DataBase.DataBaseReadType)">
+            <summary>
+            获取表字段
+            </summary>
+            <param name="tableName">表名</param>
+            <param name="configId">ConfigId</param>
+            <param name="readType">读取类型</param>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.LoginController">
+            <summary>
+            登录管理【无权限】
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.LoginController})">
+            <summary>
+            构造函数注入
+            </summary>
+            <param name="smUsersServices"></param>
+            <param name="requirement"></param>
+            <param name="logger"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtStr(System.String,System.String)">
+            <summary>
+            获取JWT的方法1
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtStrForNuxt(System.String,System.String)">
+            <summary>
+            获取JWT的方法2：给Nuxt提供
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.GetJwtToken3(System.String,System.String)">
+            <summary>
+            获取JWT的方法3：整个系统主要方法
+            </summary>
+            <param name="name"></param>
+            <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.RefreshToken(System.String)">
+            <summary>
+            请求刷新Token（以旧换新）
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.Getjsonp(System.String,System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            获取JWT的方法4：给 JSONP 测试
+            </summary>
+            <param name="callBack"></param>
+            <param name="id"></param>
+            <param name="sub"></param>
+            <param name="expiresSliding"></param>
+            <param name="expiresAbsoulute"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.Md5Password(System.String)">
+            <summary>
+            测试 MD5 加密字符串
+            </summary>
+            <param name="password"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.SwgLogin(EU.Core.Controllers.SwaggerLoginRequest)">
+            <summary>
+            swagger登录
+            </summary>
+            <param name="loginRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.LoginController.WxLogin(System.String,System.String)">
+            <summary>
+            weixin登录
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.MonitorController.Server">
+            <summary>
+            服务器配置信息
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.MonitorController.Get">
+            <summary>
+            SignalR send data
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:EU.Core.Controllers.ValuesController">
+            <summary>
+            Values控制器
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.#ctor(EU.Core.Model.Love,EU.Core.Common.HttpContextUser.IUser,EU.Core.Common.Https.HttpPolly.IHttpPollyHelper,EU.Core.EventBus.IRabbitMQPersistentConnection,Microsoft.Extensions.Options.IOptions{EU.Core.Common.Option.SeqOptions})">
+            <summary>
+            ValuesController
+            </summary>
+            <param name="love"></param>
+            <param name="user"></param>
+            <param name="httpPollyHelper"></param>
+            <param name="persistentConnection"></param>
+            <param name="seqOptions"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqPublish">
+            <summary>
+            测试Rabbit消息队列发送
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestRabbitMqSubscribe">
+            <summary>
+            测试Rabbit消息队列订阅
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.RedisMq(EU.Core.Extensions.IRedisBasketRepository)">
+            <summary>
+            测试Redis消息队列
+            </summary>
+            <param name="_redisBasketRepository"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.EventBusTry(EU.Core.EventBus.IEventBus,System.String)">
+            <summary>
+            测试RabbitMQ事件总线
+            </summary>
+            <param name="_eventBus"></param>
+            <param name="TiobonId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Get(System.Int32)">
+            <summary>
+            Get(int id)方法
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.RequiredP(System.String)">
+            <summary>
+            测试参数是必填项
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetUserInfo(System.String)">
+            <summary>
+            通过 HttpContext 获取用户信息
+            </summary>
+            <param name="ClaimType">声明类型，默认 jti </param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Source">
+            <summary>
+            to redirect by route template name.
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Destination">
+            <summary>
+            route with template name.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.TestPostPara(System.String)">
+            <summary>
+            测试 post 参数
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.FluentVaTest(EU.Core.Filter.UserRegisterVo)">
+            <summary>
+            测试Fulent做参数校验
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Put(System.Int32,System.String)">
+            <summary>
+            Put方法
+            </summary>
+            <param name="id"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.Delete(System.Int32)">
+            <summary>
+            Delete方法
+            </summary>
+            <param name="id"></param>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetAllConfigByAppllo(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            测试接入Apollo获取配置信息
+            </summary>
+        </member>
+        <member name="M:EU.Core.Controllers.ValuesController.GetConfigByAppllo(System.String)">
+            <summary>
+            通过此处的key格式为 xx:xx:x
+            </summary>
         </member>
         <member name="T:EU.Core.Filter.GlobalRouteAuthorizeConvention">
             <summary>
@@ -2206,7 +2227,7 @@
         <member name="M:EU.Web.Controllers.Server.ServerController.GetServerBase">
             <summary>
             获取服务器配置信息
-            </summary> 
+            </summary>
             <returns></returns>
         </member>
         <member name="M:EU.Web.Controllers.Server.ServerController.ParseToLong(System.Object)">

@@ -13,14 +13,13 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/platform")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class PlatformController(
     IOptions<AgentPlatformOptions> platform,
     IOptions<AgentEvaluationOptions> evaluation,
     IPublicModelProfileCatalog modelProfiles,
-    MainAgentAssignmentService mainAgentAssignments) : ControllerBase
+    MainAgentAssignmentService mainAgentAssignments) : Base.ControllerBase
 {
     [HttpGet("service")]
     public ServiceResult<PlatformServiceResponse> Service() =>

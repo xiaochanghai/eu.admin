@@ -10,7 +10,7 @@ namespace EU.Core.Services;
 
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
-    IAgentDefinitionCatalog agents)
+    IAgentDefinitionCatalog agents) : BaseServices
 {
     public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(
         CreateOrchestrationCommand command,
@@ -28,7 +28,7 @@ public sealed class OrchestrationLifecycleService(
             command.Description?.Trim() ?? string.Empty, OrchestrationStatus.Enabled,
             0, draft, []);
         return await repository.TryCreateAsync(value, cancellationToken)
-            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(value)
+            ? Success(value)
             : Failure(OrchestrationErrorCodes.CodeConflict, "An orchestration already uses this code.");
     }
 
@@ -63,7 +63,7 @@ public sealed class OrchestrationLifecycleService(
             }
         };
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated) : Conflict();
+            ? Success(updated) : Conflict();
     }
 
     public async Task<ServiceResult<OrchestrationDefinition>> PublishAsync(
@@ -111,7 +111,7 @@ public sealed class OrchestrationLifecycleService(
                 existing.PublishedVersions.Append(published))
         };
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated) : Conflict();
+            ? Success(updated) : Conflict();
     }
 
     public Task<OrchestrationDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
@@ -170,7 +170,7 @@ public sealed class OrchestrationLifecycleService(
             LogicalRevision = existing.LogicalRevision + 1
         };
         return await repository.TryReplaceAsync(updated, existing.LogicalRevision, cancellationToken)
-            ? ServiceResult<OrchestrationDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Conflict();
     }
 

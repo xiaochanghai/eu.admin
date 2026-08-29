@@ -1,13 +1,16 @@
 using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/business-query-results")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class BusinessQueryRetentionController(
     IUnifiedEntryRepository repository,
     IOptions<BusinessQueryResultRetentionOptions> options,
@@ -22,6 +25,6 @@ public sealed class BusinessQueryRetentionController(
         BusinessQueryCleanupResult result =
             await repository.RedactExpiredBusinessQueryResultsAsync(
                 cutoff, cancellationToken);
-        return ServiceResult<BusinessQueryCleanupResult>.OprateSuccess(result);
+        return Success(result);
     }
 }

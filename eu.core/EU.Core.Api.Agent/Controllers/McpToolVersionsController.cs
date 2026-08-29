@@ -1,10 +1,13 @@
 using EU.Core.IServices.Mcp;
+using EU.Core.Api.Agent.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EU.Core.Model;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/mcp/tool-versions")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class McpToolVersionsController(
     IPublishedMcpToolCatalog catalog) : Base.ControllerBase
 {

@@ -7,12 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("metrics")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class MetricsController(
     AgentMetrics metrics,
-    IOptions<AgentDeploymentOptions> deployment) : ControllerBase
+    IOptions<AgentDeploymentOptions> deployment) : Base.ControllerBase
 {
     [HttpGet]
     public IActionResult Get() => deployment.Value.MetricsEnabled

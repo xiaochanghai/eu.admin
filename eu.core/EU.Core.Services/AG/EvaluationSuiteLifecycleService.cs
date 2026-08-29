@@ -15,7 +15,7 @@ namespace EU.Core.Services;
 public sealed class EvaluationSuiteLifecycleService(
     IEvaluationSuiteRepository repository,
     IEvaluationTargetCatalog targets,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null) : BaseServices
 {
     private static readonly JsonSerializerOptions HashJsonOptions = new(JsonSerializerDefaults.Web);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -55,7 +55,7 @@ public sealed class EvaluationSuiteLifecycleService(
             new EvaluationSuiteDraft([]),
             []);
         return await repository.TryCreateAsync(value, cancellationToken)
-            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(value)
+            ? Success(value)
             : Failure(EvaluationSuiteErrorCodes.CodeConflict, "An evaluation suite already uses this code.");
     }
 
@@ -115,7 +115,7 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Conflict();
     }
 
@@ -179,7 +179,7 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Conflict();
     }
 
@@ -225,7 +225,7 @@ public sealed class EvaluationSuiteLifecycleService(
         };
         return await repository.TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
-            ? ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(updated)
+            ? Success(updated)
             : Conflict();
     }
 

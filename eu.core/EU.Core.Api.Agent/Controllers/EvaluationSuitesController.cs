@@ -1,16 +1,19 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Errors;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/evaluation-suites")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
     EvaluationSuiteLifecycleService lifecycle,
     ICallerContext caller) : Base.ControllerBase
@@ -70,7 +73,7 @@ public sealed class EvaluationSuitesController(
         if (!result.Success) return FromServiceError(result);
         Response.Headers.Location = $"/api/evaluation-suites/{result.Data!.Id}";
         return new JsonResult(
-            ServiceResult<EvaluationSuiteDefinition>.OprateSuccess(result.Data))
+            Success(result.Data))
         { StatusCode = StatusCodes.Status201Created };
     }
 

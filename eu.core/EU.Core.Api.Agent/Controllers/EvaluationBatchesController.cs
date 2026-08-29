@@ -13,14 +13,13 @@ using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-[ApiController]
 [Route("api/evaluation-batches")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
     IAgEvaluationBatchExecutionServices service,
     EvaluationBatchComparisonService comparisons,
     ModelJudgeService modelJudge,
-    ICallerContext caller) : ControllerBase
+    ICallerContext caller) : Base.ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Run(

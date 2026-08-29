@@ -1,16 +1,19 @@
 using EU.Core.IServices.Agents;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/agents")]
+[Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
@@ -106,7 +109,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             ?? throw new InvalidDataException("The newly created Agent could not be loaded.");
         Response.Headers.Location = $"/api/agents/{result.Data}";
         return new JsonResult(
-            ServiceResult<AgAgentDefinitionDetailDto>.OprateSuccess(value, "创建成功"))
+            Success(value, "创建成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };
@@ -217,7 +220,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
 
         Response.Headers.Location = $"/api/agents/{result.Data.Id}";
         return new JsonResult(
-            ServiceResult<AgentDefinition>.OprateSuccess(result.Data, "导入成功"))
+            Success(result.Data, "导入成功"))
         {
             StatusCode = StatusCodes.Status201Created
         };
