@@ -11,7 +11,6 @@ namespace EU.Core.Api.Agent.Security;
 public sealed class HttpIdempotencyMiddleware(
     RequestDelegate next,
     IOptions<AgentIdempotencyOptions> idempotencyOptions,
-    IOptions<AgentAuthenticationOptions> authenticationOptions,
     TimeProvider timeProvider,
     AgentMetrics metrics)
 {
@@ -58,11 +57,12 @@ public sealed class HttpIdempotencyMiddleware(
         }
 
         string requestSha256 = await HashRequestAsync(context.Request, context.RequestAborted);
-        AgentAuthenticationOptions authentication = authenticationOptions.Value;
-        string userId = context.User.FindFirst(authentication.UserIdClaimType)?.Value?.Trim()
+        string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value?.Trim()
             ?? throw new InvalidOperationException("An authorized caller identity is required.");
+        string tenantId = AgentIdentityClaims.GetTenantId(context.User)
+            ?? throw new InvalidOperationException("An authorized caller tenant is required.");
         string scopeSha256 = Hash(
-            $"{authentication.TenantId}\0{userId}\0{context.Request.Method.ToUpperInvariant()}\0" +
+            $"{tenantId}\0{userId}\0{context.Request.Method.ToUpperInvariant()}\0" +
             $"{context.Request.Path.Value?.ToLowerInvariant()}\0{key}");
         DateTimeOffset now = timeProvider.GetUtcNow().ToUniversalTime();
         var pending = new HttpIdempotencyRecord(

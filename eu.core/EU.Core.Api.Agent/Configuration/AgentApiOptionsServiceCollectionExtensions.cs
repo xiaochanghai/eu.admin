@@ -75,12 +75,6 @@ internal static class AgentApiOptionsServiceCollectionExtensions
         services.AddSingleton<
             IValidateOptions<UnifiedEntryOptions>,
             UnifiedEntryOptionsValidator>();
-        services.AddOptions<AgentAuthenticationOptions>()
-            .BindConfiguration(AgentAuthenticationOptions.SectionName)
-            .ValidateOnStart();
-        services.AddSingleton<
-            IValidateOptions<AgentAuthenticationOptions>,
-            AgentAuthenticationOptionsValidator>();
         services.AddOptions<AgentDeploymentOptions>()
             .BindConfiguration(AgentDeploymentOptions.SectionName)
             .ValidateOnStart();

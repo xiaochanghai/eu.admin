@@ -1,0 +1,103 @@
+:root {
+  color: #17203b;
+  background: #f3f5fb;
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; }
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 15%, rgb(89 112 221 / 18%), transparent 34%),
+    radial-gradient(circle at 85% 80%, rgb(83 197 176 / 16%), transparent 30%),
+    #f3f5fb;
+}
+
+.login-panel {
+  width: min(420px, 100%);
+  padding: 42px;
+  border: 1px solid rgb(67 85 185 / 15%);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 24px 70px rgb(31 42 92 / 14%);
+}
+
+.brand-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: #4355b9;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.eyebrow {
+  margin: 28px 0 8px;
+  color: #5869c8;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .16em;
+}
+
+h1 { margin: 0; font-size: 28px; }
+
+.subtitle { margin: 10px 0 28px; color: #69728b; }
+
+.login-form { display: grid; gap: 10px; }
+
+.login-form label { margin-top: 6px; font-size: 14px; font-weight: 650; }
+
+.login-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #ccd2e3;
+  border-radius: 10px;
+  color: inherit;
+  background: white;
+  font: inherit;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #5368d2;
+  box-shadow: 0 0 0 3px rgb(83 104 210 / 14%);
+}
+
+.login-form button {
+  min-height: 46px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 11px;
+  color: white;
+  background: #4355b9;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-form button:disabled { cursor: wait; opacity: .68; }
+
+.login-error {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #a42323;
+  background: #fff0f0;
+  font-size: 13px;
+}
+
+.session-note { margin: 22px 0 0; color: #8a91a5; font-size: 12px; text-align: center; }
+
+@media (max-width: 520px) {
+  .login-panel { padding: 30px 24px; border-radius: 18px; }
+}

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using EU.Core.Common;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model;
@@ -17,6 +18,7 @@ using EU.Core.Api.Agent.Health;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http;
@@ -258,7 +260,6 @@ public sealed class AgAgentHostErrorResponse_Should
                     cancellationToken: context.RequestAborted);
             },
             Options.Create(new AgentIdempotencyOptions()),
-            Options.Create(new AgentAuthenticationOptions { TenantId = "tenant" }),
             TimeProvider.System,
             metrics);
         DefaultHttpContext first = IdempotentContext();
@@ -349,7 +350,6 @@ public sealed class AgAgentHostErrorResponse_Should
         using var metrics = new AgentMetrics();
         var middleware = new AgentOperationAuditMiddleware(
             _ => Task.CompletedTask,
-            Options.Create(new AgentAuthenticationOptions { TenantId = "tenant" }),
             TimeProvider.System,
             metrics,
             NullLogger<AgentOperationAuditMiddleware>.Instance);
@@ -405,20 +405,26 @@ public sealed class AgAgentHostErrorResponse_Should
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["AgentRateLimit:WindowSeconds"] = "7",
-                ["AgentAuthentication:DevelopmentBypassEnabled"] = "true"
+                ["Audience:Secret"] = "agent-test-shared-jwt-signing-secret-32",
+                ["Audience:Issuer"] = "agent-test",
+                ["Audience:Audience"] = "agent-test-client"
             })
             .Build();
+        _ = new AppSettings(configuration);
         Type extensions = typeof(AgentAuthorizationResultHandler).Assembly.GetType(
             "EU.Core.Api.Agent.Security.AgentApiSecurityServiceCollectionExtensions",
             throwOnError: true)!;
         MethodInfo addSecurity = extensions.GetMethod(
             "AddAgentApiHttpSecurity",
             BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
-        addSecurity.Invoke(null, [services, configuration, new TestHostEnvironment
-        {
-            EnvironmentName = Environments.Development
-        }]);
+        addSecurity.Invoke(null, [services, configuration]);
         using ServiceProvider provider = services.BuildServiceProvider();
+        IAuthenticationSchemeProvider schemeProvider = provider
+            .GetRequiredService<IAuthenticationSchemeProvider>();
+        AuthenticationScheme? defaultScheme =
+            await schemeProvider.GetDefaultAuthenticateSchemeAsync();
+        Assert.Equal(JwtBearerDefaults.AuthenticationScheme, defaultScheme?.Name);
+        Assert.Null(await schemeProvider.GetSchemeAsync("AgentDevelopment"));
         RateLimiterOptions options = provider
             .GetRequiredService<IOptions<RateLimiterOptions>>()
             .Value;
@@ -482,7 +488,6 @@ public sealed class AgAgentHostErrorResponse_Should
         AgentMetrics metrics) => new(
             next,
             Options.Create(new AgentIdempotencyOptions()),
-            Options.Create(new AgentAuthenticationOptions { TenantId = "tenant" }),
             TimeProvider.System,
             metrics);
 
@@ -494,7 +499,10 @@ public sealed class AgAgentHostErrorResponse_Should
         context.Request.Headers[HttpIdempotencyMiddleware.HeaderName] = "request-1234";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
         context.User = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim("sub", "operator")],
+            [
+                new Claim(ClaimTypes.Name, "operator"),
+                new Claim("TenantId", "0")
+            ],
             "test"));
         return context;
     }

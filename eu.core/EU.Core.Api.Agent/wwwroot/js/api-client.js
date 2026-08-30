@@ -3,6 +3,7 @@ import {
   parseServiceResponse,
   requestJson as serviceRequest
 } from "./http.js";
+import { authorizedFetch } from "./auth.js";
 
 const base = "/api/agents";
 
@@ -95,7 +96,7 @@ export function createSseParser(onEvent) {
 }
 
 export async function streamChatRun({ input, conversationId, onOpen, onEvent, signal }) {
-  const response = await fetch("/api/chat/runs", {
+  const response = await authorizedFetch("/api/chat/runs", {
     method: "POST",
     headers: { Accept: "text/event-stream", "Content-Type": "application/json" },
     body: JSON.stringify({ input, ...(conversationId ? { conversationId } : {}) }),
@@ -149,7 +150,7 @@ export const agentApi = {
     method: "PUT", body: JSON.stringify({ runtimeStatus, expectedLogicalRevision })
   }),
   exportPackage: async id => {
-    const response = await fetch(`${base}/${encodeURIComponent(id)}/export`, { headers: { Accept: "application/json" } });
+    const response = await authorizedFetch(`${base}/${encodeURIComponent(id)}/export`, { headers: { Accept: "application/json" } });
     const blob = await response.blob();
     let payload = null;
     try { payload = JSON.parse(await blob.text()); } catch { /* The export may be a non-JSON transport error. */ }
@@ -309,7 +310,7 @@ export const agentApi = {
     await serviceRequest(`${base}/${encodeURIComponent(id)}/runs?take=${encodeURIComponent(take)}`)
   ).map(agentRunAuditPresentation),
   run: async (id, input, onEvent, signal) => {
-    const response = await fetch(`${base}/${encodeURIComponent(id)}/runs`, {
+    const response = await authorizedFetch(`${base}/${encodeURIComponent(id)}/runs`, {
       method: "POST",
       headers: { Accept: "text/event-stream", "Content-Type": "application/json" },
       body: JSON.stringify({ input }),

@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using EU.Core.Api.Agent.Configuration;
@@ -7,10 +6,8 @@ using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Extensions;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Security;
 
@@ -18,12 +15,8 @@ internal static class AgentApiSecurityServiceCollectionExtensions
 {
     public static IServiceCollection AddAgentApiHttpSecurity(
         this IServiceCollection services,
-        IConfiguration configuration,
-        IHostEnvironment environment)
+        IConfiguration configuration)
     {
-        AgentAuthenticationOptions authentication = configuration
-            .GetSection(AgentAuthenticationOptions.SectionName)
-            .Get<AgentAuthenticationOptions>() ?? new AgentAuthenticationOptions();
         AgentRateLimitOptions rateLimit = configuration
             .GetSection(AgentRateLimitOptions.SectionName)
             .Get<AgentRateLimitOptions>() ?? new AgentRateLimitOptions();
@@ -60,7 +53,7 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                 if (!rateLimit.Enabled || !context.Request.Path.StartsWithSegments("/api"))
                     return null;
 
-                string userId = context.User.FindFirst(authentication.UserIdClaimType)?.Value
+                string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value
                     ?.Trim() ?? "anonymous";
                 string workload = AgentWorkloadClassifier.IsExpensive(context.Request)
                     ? "expensive"
@@ -87,83 +80,31 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                     cancellationToken: cancellationToken);
             });
 
-        string authenticationScheme =
-            environment.IsDevelopment() && authentication.DevelopmentBypassEnabled
-                ? DevelopmentAuthenticationHandler.SchemeName
-                : JwtBearerDefaults.AuthenticationScheme;
-        if (string.Equals(
-                authenticationScheme,
-                DevelopmentAuthenticationHandler.SchemeName,
-                StringComparison.Ordinal))
-        {
-            services.AddAuthentication(authenticationScheme)
-                .AddScheme<AuthenticationSchemeOptions,
-                    DevelopmentAuthenticationHandler>(
-                    DevelopmentAuthenticationHandler.SchemeName,
-                    _ => { });
-        }
-        else
-        {
-            services.AddAuthenticationSetup(
-                new JwtBearerAuthenticationSchemes(authenticationScheme));
-            services.PostConfigure<JwtBearerOptions>(
-                JwtBearerDefaults.AuthenticationScheme,
-                options =>
-                {
-                    JwtBearerEvents events = options.Events ?? new JwtBearerEvents();
-                    Func<TokenValidatedContext, Task> previous = events.OnTokenValidated;
-                    events.OnTokenValidated = async context =>
-                    {
-                        await previous(context);
-                        if (context.Result?.Failure is null && context.Principal is not null)
-                        {
-                            AgentSharedTokenClaimsNormalizer.Normalize(
-                                context.Principal,
-                                authentication);
-                        }
-                    };
-                    options.Events = events;
-                });
-        }
+        services.AddAuthorizationSetup();
+        services.AddAuthenticationSetup(
+            new JwtBearerAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme));
 
         services.AddAuthorization(options =>
         {
             AuthorizationPolicy authenticated = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(authentication.UserIdClaimType)
-                .RequireAssertion(context => HasFixedTenant(context, authentication))
+                .RequireClaim(AgentIdentityClaims.UserId)
+                .RequireAssertion(HasTenant)
                 .Build();
             options.FallbackPolicy = authenticated;
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.Admin,
-                AgentAuthorizationPolicies.AdminPermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.Debug,
-                AgentAuthorizationPolicies.DebugPermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.Chat,
-                AgentAuthorizationPolicies.ChatPermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.AuditRead,
-                AgentAuthorizationPolicies.AuditReadPermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.ApprovalRead,
-                AgentAuthorizationPolicies.ApprovalReadPermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.ApprovalDecide,
-                AgentAuthorizationPolicies.ApprovalDecidePermission, authentication);
-            AddPermissionPolicy(options, AgentAuthorizationPolicies.ApprovalDecideHighRisk,
-                AgentAuthorizationPolicies.ApprovalDecideHighRiskPermission, authentication);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Admin);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Debug);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Chat);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.AuditRead);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.ApprovalRead);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.ApprovalDecide);
+            AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.ApprovalDecideHighRisk);
             options.AddPolicy(
                 AgentAuthorizationPolicies.HistoryRead,
                 policy => policy
                     .RequireAuthenticatedUser()
-                    .RequireClaim(authentication.UserIdClaimType)
-                    .RequireAssertion(context =>
-                        HasFixedTenant(context, authentication)
-                        && (!authentication.EnforcePermissionClaims
-                            || HasPermission(
-                                context.User,
-                                authentication.PermissionClaimType,
-                                AgentAuthorizationPolicies.ChatPermission)
-                            || HasPermission(
-                                context.User,
-                                authentication.PermissionClaimType,
-                                AgentAuthorizationPolicies.AuditReadPermission))));
+                    .RequireClaim(AgentIdentityClaims.UserId)
+                    .RequireAssertion(HasTenant));
         });
 
         return services;
@@ -175,49 +116,16 @@ internal static class AgentApiSecurityServiceCollectionExtensions
         return Convert.ToHexStringLower(hash.AsSpan(0, 12));
     }
 
-    private static void AddPermissionPolicy(
+    private static void AddAuthenticatedPolicy(
         AuthorizationOptions options,
-        string policyName,
-        string permission,
-        AgentAuthenticationOptions authentication)
+        string policyName)
     {
         options.AddPolicy(policyName, policy => policy
             .RequireAuthenticatedUser()
-            .RequireClaim(authentication.UserIdClaimType)
-            .RequireAssertion(context => HasFixedTenant(context, authentication))
-            .RequireAssertion(context =>
-                HasRequiredPermission(context.User, authentication, permission)));
+            .RequireClaim(AgentIdentityClaims.UserId)
+            .RequireAssertion(HasTenant));
     }
 
-    internal static bool HasRequiredPermission(
-        ClaimsPrincipal user,
-        AgentAuthenticationOptions authentication,
-        string permission) =>
-        !authentication.EnforcePermissionClaims ||
-        HasPermission(user, authentication.PermissionClaimType, permission);
-
-    private static bool HasFixedTenant(
-        AuthorizationHandlerContext context,
-        AgentAuthenticationOptions authentication)
-    {
-        string[] tenantClaims = context.User.FindAll(authentication.TenantClaimType)
-            .Select(claim => claim.Value)
-            .ToArray();
-        return tenantClaims.Length == 1 && string.Equals(
-            tenantClaims[0],
-            authentication.TenantId,
-            StringComparison.Ordinal);
-    }
-
-    private static bool HasPermission(
-        ClaimsPrincipal user,
-        string claimType,
-        string permission) =>
-        user.Claims.Any(claim =>
-            string.Equals(claim.Type, claimType, StringComparison.Ordinal)
-            && (string.Equals(claim.Value, permission, StringComparison.Ordinal)
-                || string.Equals(
-                    claim.Value,
-                    AgentAuthorizationPolicies.AdminPermission,
-                    StringComparison.Ordinal)));
+    private static bool HasTenant(AuthorizationHandlerContext context) =>
+        AgentIdentityClaims.GetTenantId(context.User) is not null;
 }

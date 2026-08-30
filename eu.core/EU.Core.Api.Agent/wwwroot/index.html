@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234355b9'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='Arial' font-size='11' font-weight='700' fill='white'%3EEU%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="/css/app.css?v=7">
 </head>
-<body>
+<body class="auth-pending">
   <a class="skip-link" href="#mainContent">跳到主要内容</a>
   <div class="shell">
     <aside class="sidebar" aria-label="产品导航">
@@ -42,6 +42,7 @@
           <span aria-hidden="true">◆</span><span>MCP 工具</span><small>P4</small>
         </button>
       </nav>
+      <button id="logoutButton" class="button secondary" type="button">退出登录</button>
       <div class="sidebar-note">
         <span class="pulse" aria-hidden="true"></span>
         <div><strong id="storageModeTitle">持久化存储</strong><span id="storageModeSummary">正在读取…</span></div>
@@ -788,6 +789,6 @@
   </aside>
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script type="module" src="/js/app.js?v=11"></script>
+  <script type="module" src="/js/main.js?v=2"></script>
 </body>
 </html>

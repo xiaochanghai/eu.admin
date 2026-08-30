@@ -1,4 +1,5 @@
 import { parseServiceResponse, requestJson as request } from "./http.js";
+import { authorizedFetch } from "./auth.js";
 
 const base = "/api/skills";
 
@@ -17,7 +18,7 @@ export const skillsApi = {
   }),
   files: id => request(`${base}/${encodeURIComponent(id)}/files`),
   readFile: async (id, path) => {
-    const response = await fetch(
+    const response = await authorizedFetch(
       `${base}/${encodeURIComponent(id)}/files/content?path=${encodeURIComponent(path)}`,
       { headers: { Accept: "text/plain" } });
     if (!response.ok) {

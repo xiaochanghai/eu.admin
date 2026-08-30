@@ -1,17 +1,14 @@
 using System.Diagnostics;
-using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.IServices.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Security;
 
 public sealed class AgentOperationAuditMiddleware(
     RequestDelegate next,
-    IOptions<AgentAuthenticationOptions> options,
     TimeProvider timeProvider,
     AgentMetrics metrics,
     ILogger<AgentOperationAuditMiddleware> logger)
@@ -29,19 +26,19 @@ public sealed class AgentOperationAuditMiddleware(
             return;
         }
 
-        AgentAuthenticationOptions authentication = options.Value;
         DateTimeOffset occurredAt = timeProvider.GetUtcNow();
         long started = Stopwatch.GetTimestamp();
         Guid id = Guid.NewGuid();
-        string userId = context.User.FindFirst(authentication.UserIdClaimType)?.Value
+        string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value
             ?.Trim() ?? "anonymous";
+        string tenantId = AgentIdentityClaims.GetTenantId(context.User) ?? "unknown";
         string policy = SelectPolicy(context);
         string method = SelectMethod(context.Request.Method);
         string route = SelectRoute(context);
         var record = new AgentOperationAuditRecord(
             id,
             occurredAt,
-            authentication.TenantId,
+            tenantId,
             userId,
             context.TraceIdentifier,
             policy,

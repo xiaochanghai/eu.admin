@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>登录 · EU.Core Agent Platform</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234355b9'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='Arial' font-size='11' font-weight='700' fill='white'%3EEU%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/css/login.css?v=2">
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-panel" aria-labelledby="loginTitle">
+      <div class="brand-mark" aria-hidden="true">EU</div>
+      <p class="eyebrow">AGENT PLATFORM</p>
+      <h1 id="loginTitle">登录 Agent 控制台</h1>
+      <p class="subtitle">使用 EU.Core 管理系统账号登录。</p>
+
+      <form id="loginForm" class="login-form">
+        <label for="userAccount">账号</label>
+        <input id="userAccount" name="userAccount" type="text" autocomplete="username" required autofocus>
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <p id="loginError" class="login-error" role="alert" hidden></p>
+        <button id="loginButton" type="submit">登录</button>
+      </form>
+      <p class="session-note">登录状态仅保留在当前浏览器标签页中。</p>
+    </section>
+  </main>
+  <script type="module" src="/js/login.js?v=2"></script>
+</body>
+</html>

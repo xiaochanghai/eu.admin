@@ -35,7 +35,8 @@ public class RequRespLogMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (StreamingRequestPolicy.IsKnownEventStreamRequest(context.Request))
+        if (StreamingRequestPolicy.IsKnownEventStreamRequest(context.Request)
+            || IsSensitiveAuthenticationRequest(context.Request.Path))
         {
             await _next(context);
             return;
@@ -66,6 +67,11 @@ public class RequRespLogMiddleware
             await _next(context);
         }
     }
+
+    private static bool IsSensitiveAuthenticationRequest(PathString path) =>
+        path.Equals("/api/Authorize/Login", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/api/Authorize/GetAccessToken", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/api/session/login", StringComparison.OrdinalIgnoreCase);
 
     private async Task RequestDataLog(HttpContext context)
     {

@@ -1,3 +1,5 @@
+import { authorizedFetch } from "./auth.js";
+
 export async function createApiError(response, fallbackMessage) {
   let payload = {};
   try { payload = await response.json(); } catch { payload = {}; }
@@ -55,7 +57,7 @@ export function parseServiceResponse(payload, httpStatus, fallbackMessage) {
 export async function requestJson(path, options = {}) {
   const { headers = {}, body, ...requestOptions } = options;
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  const response = await fetch(path, {
+  const response = await authorizedFetch(path, {
     ...requestOptions,
     body,
     headers: {

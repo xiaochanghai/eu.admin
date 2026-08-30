@@ -78,8 +78,8 @@ builder.Services
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
     options.InvalidModelStateResponseFactory = AgentApiValidationResultFilter.InvalidModelState);
 builder.Services.AddAgentApiOptions();
-builder.Services.AddAgentApiHttpSecurity(builder.Configuration, builder.Environment);
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddAgentApiHttpSecurity(builder.Configuration);
+builder.Services.AddHttpContextSetup();
 builder.Services.AddScoped<ICallerContext, HttpCallerContext>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<AgentMetrics>();
@@ -359,15 +359,6 @@ app.UseResponseBodyRead();
 app.UseRequestResponseLogMiddle();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseCors(AgentHttpSecurityOptions.CorsPolicyName);
-app.UseAuthentication();
-app.UseMiddleware<AgentOperationAuditMiddleware>();
-app.UseRateLimiter();
-app.UseMiddleware<ProblemDetailsMiddleware>();
-app.UseMiddleware<RequestBodyLimitMiddleware>();
-app.UseAuthorization();
-app.UseMiddleware<HttpIdempotencyMiddleware>();
-app.UseMiddleware<ExpensiveRequestAdmissionMiddleware>();
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/skills"))
@@ -379,7 +370,24 @@ app.Use(async (context, next) =>
     await next(context);
 });
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        context.Context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        context.Context.Response.Headers.Pragma = "no-cache";
+        context.Context.Response.Headers.Expires = "0";
+    }
+});
+app.UseCors(AgentHttpSecurityOptions.CorsPolicyName);
+app.UseAuthentication();
+app.UseMiddleware<AgentOperationAuditMiddleware>();
+app.UseRateLimiter();
+app.UseMiddleware<ProblemDetailsMiddleware>();
+app.UseMiddleware<RequestBodyLimitMiddleware>();
+app.UseAuthorization();
+app.UseMiddleware<HttpIdempotencyMiddleware>();
+app.UseMiddleware<ExpensiveRequestAdmissionMiddleware>();
 
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("AgentPlatform:ExposeOpenApi"))
 {

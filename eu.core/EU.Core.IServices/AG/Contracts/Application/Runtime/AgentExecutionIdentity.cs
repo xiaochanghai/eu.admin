@@ -22,7 +22,7 @@ public sealed partial class AgentExecutionIdentity
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToArray() ?? throw new ArgumentNullException(nameof(permissions));
-        if (frozenPermissions.Length is 0 or > 128
+        if (frozenPermissions.Length > 128
             || frozenPermissions.Any(value => !PermissionPattern().IsMatch(value)))
         {
             throw new ArgumentException("Execution permissions are invalid.", nameof(permissions));
