@@ -22,11 +22,25 @@ public sealed class AgAgentApiMigrationCompletion_Should
     [Fact]
     public void Shared_controller_success_preserves_the_service_result_default_message()
     {
-        ServiceResult<string> result = ResponseProbeController.Succeeded("value");
+        ServiceResult<string> result = new ResponseProbeController().Succeeded("value");
 
         Assert.True(result.Success);
         Assert.Equal("操作成功", result.Message);
         Assert.Equal("value", result.Data);
+    }
+
+    [Fact]
+    public void Main_api_controller_preserves_its_success_message_after_sharing_the_base()
+    {
+        var controller = new EU.Core.Controllers.BaseApiController();
+        ServiceResult<string> result = controller.Success<string>("value");
+        ServiceResult<string> failure = controller.Failed();
+
+        Assert.True(result.Success);
+        Assert.Equal("成功", result.Message);
+        Assert.Equal("value", result.Data);
+        Assert.False(failure.Success);
+        Assert.Equal("失败", failure.Message);
     }
 
     [Fact]
@@ -230,6 +244,6 @@ public sealed class AgAgentApiMigrationCompletion_Should
 
     private sealed class ResponseProbeController : EU.Core.Api.Agent.Base.ControllerBase
     {
-        public static ServiceResult<T> Succeeded<T>(T data) => Success(data);
+        public ServiceResult<T> Succeeded<T>(T data) => Success(data);
     }
 }

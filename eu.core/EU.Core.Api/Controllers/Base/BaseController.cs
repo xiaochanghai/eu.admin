@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using EU.Core.Common.Const;
+using EU.Core.Extensions.Controllers;
 
 namespace EU.Core.Controllers;
 
@@ -12,7 +13,7 @@ namespace EU.Core.Controllers;
 /// <typeparam name="TInsertDto"></typeparam>
 /// <typeparam name="TEditDto"></typeparam>
 [Route("api/[controller]")]
-public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEditDto> : Controller
+public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEditDto> : ServiceResultControllerBase
 {
     #region 初始化
     protected IServiceBase _service;
@@ -285,36 +286,12 @@ public class BaseController<IServiceBase, TEntity, TEntityDto, TInsertDto, TEdit
     }
 
     [NonAction]
-    public ServiceResult<T> Success<T>(T data, string message = "成功")
+    public new ServiceResult Failed(string message = "失败", int status = 500) => new()
     {
-        return new ServiceResult<T>() { Success = true, Message = message, Data = data, };
-    }
+        Success = false,
+        Status = status,
+        Message = message,
+        Data = null
+    };
 
-    // [NonAction]
-    //public ServiceResult<T> Success<T>(T data, string msg = "成功",bool success = true)
-    //{
-    //    return new ServiceResult<T>()
-    //    {
-    //        success = success,
-    //        msg = msg,
-    //        response = data,
-    //    };
-    //}
-    [NonAction]
-    public ServiceResult Success(string message = "成功")
-    {
-        return new ServiceResult() { Success = true, Message = message, Data = null, };
-    }
-
-    [NonAction]
-    public ServiceResult Failed(string message = "失败", int status = 500)
-    {
-        return new ServiceResult() { Success = false, Status = status, Message = message, Data = null, };
-    }
-
-    [NonAction]
-    public ServiceResult<T> Failed<T>(string message = "失败", int status = 500)
-    {
-        return new ServiceResult<T>() { Success = false, Status = status, Message = message, Data = default, };
-    }
 }

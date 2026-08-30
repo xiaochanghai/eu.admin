@@ -1,5 +1,4 @@
-using EU.Core.Model;
-using EU.Core.Model.ViewModels.Extend;
+using EU.Core.Extensions.Controllers;
 using Microsoft.AspNetCore.Mvc;
 namespace EU.Core.Api.Agent.Base;
 
@@ -7,8 +6,7 @@ namespace EU.Core.Api.Agent.Base;
 /// Agent API 控制器的统一响应边界。
 /// </summary>
 [ApiController]
-public abstract class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
+public abstract class ControllerBase : ServiceResultControllerBase
 {
-    protected static ServiceResult<T> Success<T>(T data, string message = "操作成功") =>
-        ServiceResult<T>.OprateSuccess(data, message);
+    protected override string DefaultSuccessMessage => "操作成功";
 }
