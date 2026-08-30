@@ -93,8 +93,13 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             bool isSharedAuthenticationCredential =
                 string.Equals(key, "Audience:Secret", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(key, "Audience:SecretFile", StringComparison.OrdinalIgnoreCase);
+            bool isSharedRedisConnection = string.Equals(
+                key,
+                "Redis:ConnectionString",
+                StringComparison.OrdinalIgnoreCase);
             if (!isCredentialAlias && !isRuntimeSecret && !isNonSecretLifetime &&
                 !isSqlSugarConnection && !isSharedAuthenticationCredential &&
+                !isSharedRedisConnection &&
                 (SensitiveKeyPattern().IsMatch(propertyName) ||
                 SensitiveValuePattern().IsMatch(value) ||
                 ConnectionStringValuePattern().IsMatch(value) ||

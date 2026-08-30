@@ -1,41 +1,33 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using EU.Core.Common.Core;
-using EU.Core.Common.Caches;
-using EU.Core.Extensions;
-using System.Security.Cryptography;
-using System.Text.Json.Serialization;
+using EU.Core.Agent.Infrastructure.Mcp;
+using EU.Core.Agent.Infrastructure.Skills;
+using EU.Core.Agent.Runtime;
 using EU.Core.Api.Agent.Configuration;
-using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Health;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Api.Agent.Security;
+using EU.Core.Common.Core;
+using EU.Core.Extensions;
+using EU.Core.Extensions.Filters;
+using EU.Core.Extensions.Middlewares;
+using EU.Core.IServices;
+using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Agents;
-using EU.Core.Model.ViewModels.Extend;
-using EU.Core.IServices.Skills;
+using EU.Core.IServices.Approvals;
+using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.Mcp;
 using EU.Core.IServices.Runtime;
-using EU.Core.IServices.Knowledge;
-using EU.Core.IServices.Orchestration;
-using EU.Core.IServices.MainAgent;
+using EU.Core.IServices.Skills;
 using EU.Core.IServices.UnifiedEntry;
-using EU.Core.Agent.Infrastructure.Mcp;
-using EU.Core.Agent.Infrastructure.Skills;
+using EU.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Serilog;
-using EU.Core.Agent.Runtime;
-using EU.Core.Api.Agent.Security;
-using EU.Core.IServices.Abstractions.Security;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Policy;
-using EU.Core.IServices.Abstractions.Auditing;
-using EU.Core.IServices.Approvals;
-using EU.Core.IServices.Evaluation;
-using EU.Core.Services;
-using EU.Core.Extensions.Middlewares;
-using EU.Core.Extensions.Filters;
-using EU.Core.IServices;
+using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
@@ -56,9 +48,7 @@ builder.Services.AddSingleton(new AppSettings(builder.Configuration));
 
 ServiceExtensions.Init();
 
-builder.Services.AddMemoryCache();
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSingleton<ICaching, Caching>();
+builder.Services.AddCacheSetup();
 builder.Services.AddSqlsugarSetup();
 builder.Services.AddOpenApi();
 builder.Services
@@ -319,6 +309,7 @@ builder.Services.ValidateAgentServiceLifetimes();
 
 WebApplication app = builder.Build();
 app.ConfigureApplication();
+app.UseApplicationSetup();
 HostDrainState hostDrainState = app.Services.GetRequiredService<HostDrainState>();
 app.Lifetime.ApplicationStopping.Register(hostDrainState.BeginDrain);
 

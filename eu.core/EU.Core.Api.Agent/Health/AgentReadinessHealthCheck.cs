@@ -1,5 +1,6 @@
 using System.Text.Json;
 using EU.Core.Api.Agent.Configuration;
+using EU.Core.Api.Agent.Security;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.Agent.Infrastructure.Skills;
 using EU.Core.Agent.Runtime;
@@ -13,7 +14,6 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
 {
     private readonly IAgentOperationAuditRepository _storage;
     private readonly IModelCredentialResolver _credentials;
-    private readonly AgentAuthenticationOptions _authentication;
     private readonly AgentPlatformOptions _platform;
     private readonly string _skillRoot;
     private readonly HostDrainState _drainState;
@@ -21,7 +21,6 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
     public AgentReadinessHealthCheck(
         IAgentOperationAuditRepository storage,
         IModelCredentialResolver credentials,
-        IOptions<AgentAuthenticationOptions> authentication,
         IOptions<AgentPlatformOptions> platform,
         IOptions<AgentStorageOptions> storageOptions,
         IHostEnvironment environment,
@@ -29,7 +28,6 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
     {
         _storage = storage;
         _credentials = credentials;
-        _authentication = authentication.Value;
         _platform = platform.Value;
         _skillRoot = storageOptions.Value.ResolveSkillRootPath(
             environment.ContentRootPath);
@@ -93,7 +91,7 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
         try
         {
             await _storage.ListAsync(
-                _authentication.TenantId,
+                AgentIdentityClaims.DefaultTenantId,
                 1,
                 cancellationToken);
             return "ready";
