@@ -66,7 +66,6 @@ builder.Services
     {
         options.Filters.Add<GlobalExceptionsFilter>();
         options.Filters.Add<AgentApiValidationResultFilter>();
-        options.Conventions.Add(new AgentApiResponseMetadataConvention());
     })
     .AddJsonOptions(options =>
     {
