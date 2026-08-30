@@ -9,12 +9,14 @@ namespace EU.Core.Extensions;
 /// </summary>
 public static class AuthenticationSetup
 {
-    public static void AddAuthenticationAndAuthorizationSetup(this IServiceCollection services)
+    public static void AddAuthenticationAndAuthorizationSetup(
+        this IServiceCollection services,
+        JwtBearerAuthenticationSchemes schemes = null)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
         services.AddAuthorizationSetup();
-        services.AddAuthenticationSetup();
+        services.AddAuthenticationSetup(schemes);
     }
 
     public static void AddAuthenticationSetup(

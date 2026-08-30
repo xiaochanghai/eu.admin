@@ -601,8 +601,10 @@ public sealed class ToolApprovalRuntimeService(
 
 public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionPolicy
 {
-    public const string RunPermission = "agent.chat";
-    public const string AdminPermission = "agent.admin";
+    // TODO(agent-authorization): Re-enable these permissions together with the
+    // Agent authorization policies when fine-grained authorization is introduced.
+    // public const string RunPermission = "agent.chat";
+    // public const string AdminPermission = "agent.admin";
 
     public Task<ToolApprovalPolicyResult> RevalidateAsync(
         ToolApprovalRequestRecord approval,
@@ -622,8 +624,10 @@ public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionP
                 approval.RequesterUserId,
                 requester.UserId,
                 StringComparison.Ordinal)
-            && (requester.Permissions.Contains(RunPermission, StringComparer.Ordinal)
-                || requester.Permissions.Contains(AdminPermission, StringComparer.Ordinal))
+            // Fine-grained Agent permissions are temporarily disabled. Restore this
+            // condition together with RunPermission and AdminPermission above.
+            // && (requester.Permissions.Contains(RunPermission, StringComparer.Ordinal)
+            //     || requester.Permissions.Contains(AdminPermission, StringComparer.Ordinal))
             && currentTool.Risk is McpToolRisk.Mutating or McpToolRisk.HighRisk;
         return Task.FromResult(allowed
             ? ToolApprovalPolicyResult.Allow()

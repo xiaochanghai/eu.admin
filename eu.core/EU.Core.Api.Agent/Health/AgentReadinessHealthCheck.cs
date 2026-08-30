@@ -91,7 +91,7 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
         try
         {
             await _storage.ListAsync(
-                AgentIdentityClaims.DefaultTenantId,
+                "0",
                 1,
                 cancellationToken);
             return "ready";

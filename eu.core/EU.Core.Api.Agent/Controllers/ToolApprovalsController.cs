@@ -169,15 +169,17 @@ public sealed class ToolApprovalsController(
             return NotFoundProblem();
         }
 
-        if (action == ToolApprovalDecisionAction.Approve
-            && current.Risk == McpToolRisk.HighRisk
-            && !HasPermission(
-                AgentAuthorizationPolicies.ApprovalDecideHighRiskPermission))
-        {
-            return FromError(
-                "AUTHORIZATION_DENIED",
-                "High-risk approval permission is required.");
-        }
+        // TODO(agent-authorization): Re-enable this gate together with the Agent
+        // permission policies when fine-grained authorization is introduced.
+        // if (action == ToolApprovalDecisionAction.Approve
+        //     && current.Risk == McpToolRisk.HighRisk
+        //     && !HasPermission(
+        //         AgentAuthorizationPolicies.ApprovalDecideHighRiskPermission))
+        // {
+        //     return FromError(
+        //         "AUTHORIZATION_DENIED",
+        //         "High-risk approval permission is required.");
+        // }
 
         try
         {
@@ -200,11 +202,12 @@ public sealed class ToolApprovalsController(
         }
     }
 
-    private bool HasPermission(string permission) =>
-        caller.Permissions.Contains(permission, StringComparer.Ordinal)
-        || caller.Permissions.Contains(
-            AgentAuthorizationPolicies.AdminPermission,
-            StringComparer.Ordinal);
+    // TODO(agent-authorization): Re-enable with the high-risk approval gate above.
+    // private bool HasPermission(string permission) =>
+    //     caller.Permissions.Contains(permission, StringComparer.Ordinal)
+    //     || caller.Permissions.Contains(
+    //         AgentAuthorizationPolicies.AdminPermission,
+    //         StringComparer.Ordinal);
 
     private JsonResult NotFoundProblem() =>
         FromError(

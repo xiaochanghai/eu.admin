@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Globalization;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Common.HttpContextUser;
 using EU.Core.IServices.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
@@ -9,6 +11,7 @@ namespace EU.Core.Api.Agent.Security;
 
 public sealed class AgentOperationAuditMiddleware(
     RequestDelegate next,
+    IUser user,
     TimeProvider timeProvider,
     AgentMetrics metrics,
     ILogger<AgentOperationAuditMiddleware> logger)
@@ -29,9 +32,8 @@ public sealed class AgentOperationAuditMiddleware(
         DateTimeOffset occurredAt = timeProvider.GetUtcNow();
         long started = Stopwatch.GetTimestamp();
         Guid id = Guid.NewGuid();
-        string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value
-            ?.Trim() ?? "anonymous";
-        string tenantId = AgentIdentityClaims.GetTenantId(context.User) ?? "unknown";
+        string userId = user.ID?.ToString("D") ?? "anonymous";
+        string tenantId = user.TenantId.ToString(CultureInfo.InvariantCulture);
         string policy = SelectPolicy(context);
         string method = SelectMethod(context.Request.Method);
         string route = SelectRoute(context);

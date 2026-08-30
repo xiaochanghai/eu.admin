@@ -31,10 +31,26 @@ public sealed class AgentPlatformOptionsValidator_Should
         Assert.True(result.Succeeded);
     }
 
+    [Fact]
+    public void Allow_shared_redis_connection_setting()
+    {
+        IConfiguration configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Redis:ConnectionString"] =
+                "redis.internal.test:6379,password=<credential-placeholder>"
+        });
+
+        ValidateOptionsResult result =
+            new AgentPlatformOptionsValidator(configuration).Validate(null, ValidOptions);
+
+        Assert.True(result.Succeeded);
+    }
+
     [Theory]
     [InlineData("Other:Secret")]
     [InlineData("Other:Token")]
     [InlineData("Other:Password")]
+    [InlineData("Other:ConnectionString")]
     public void Continue_rejecting_unapproved_sensitive_settings(string key)
     {
         IConfiguration configuration = BuildConfiguration(new Dictionary<string, string?>

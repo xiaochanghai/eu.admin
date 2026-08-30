@@ -5,6 +5,7 @@ using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Common.HttpContextUser;
 using EU.Core.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -53,8 +54,8 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                 if (!rateLimit.Enabled || !context.Request.Path.StartsWithSegments("/api"))
                     return null;
 
-                string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value
-                    ?.Trim() ?? "anonymous";
+                string userId = context.RequestServices.GetService<IUser>()?.ID
+                    ?.ToString("D") ?? "anonymous";
                 string workload = AgentWorkloadClassifier.IsExpensive(context.Request)
                     ? "expensive"
                     : "general";
@@ -80,16 +81,13 @@ internal static class AgentApiSecurityServiceCollectionExtensions
                     cancellationToken: cancellationToken);
             });
 
-        services.AddAuthorizationSetup();
-        services.AddAuthenticationSetup(
+        services.AddAuthenticationAndAuthorizationSetup(
             new JwtBearerAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme));
 
         services.AddAuthorization(options =>
         {
             AuthorizationPolicy authenticated = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .RequireClaim(AgentIdentityClaims.UserId)
-                .RequireAssertion(HasTenant)
                 .Build();
             options.FallbackPolicy = authenticated;
             AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Admin);
@@ -102,9 +100,7 @@ internal static class AgentApiSecurityServiceCollectionExtensions
             options.AddPolicy(
                 AgentAuthorizationPolicies.HistoryRead,
                 policy => policy
-                    .RequireAuthenticatedUser()
-                    .RequireClaim(AgentIdentityClaims.UserId)
-                    .RequireAssertion(HasTenant));
+                    .RequireAuthenticatedUser());
         });
 
         return services;
@@ -121,11 +117,6 @@ internal static class AgentApiSecurityServiceCollectionExtensions
         string policyName)
     {
         options.AddPolicy(policyName, policy => policy
-            .RequireAuthenticatedUser()
-            .RequireClaim(AgentIdentityClaims.UserId)
-            .RequireAssertion(HasTenant));
+            .RequireAuthenticatedUser());
     }
-
-    private static bool HasTenant(AuthorizationHandlerContext context) =>
-        AgentIdentityClaims.GetTenantId(context.User) is not null;
 }

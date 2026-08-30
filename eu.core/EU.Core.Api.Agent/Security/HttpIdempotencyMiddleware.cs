@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
+using EU.Core.Common.HttpContextUser;
 using EU.Core.IServices.Abstractions.Security;
 using Microsoft.Extensions.Options;
 
@@ -11,6 +13,7 @@ namespace EU.Core.Api.Agent.Security;
 public sealed class HttpIdempotencyMiddleware(
     RequestDelegate next,
     IOptions<AgentIdempotencyOptions> idempotencyOptions,
+    IUser user,
     TimeProvider timeProvider,
     AgentMetrics metrics)
 {
@@ -57,10 +60,9 @@ public sealed class HttpIdempotencyMiddleware(
         }
 
         string requestSha256 = await HashRequestAsync(context.Request, context.RequestAborted);
-        string userId = context.User.FindFirst(AgentIdentityClaims.UserId)?.Value?.Trim()
+        string userId = user.ID?.ToString("D")
             ?? throw new InvalidOperationException("An authorized caller identity is required.");
-        string tenantId = AgentIdentityClaims.GetTenantId(context.User)
-            ?? throw new InvalidOperationException("An authorized caller tenant is required.");
+        string tenantId = user.TenantId.ToString(CultureInfo.InvariantCulture);
         string scopeSha256 = Hash(
             $"{tenantId}\0{userId}\0{context.Request.Method.ToUpperInvariant()}\0" +
             $"{context.Request.Path.Value?.ToLowerInvariant()}\0{key}");

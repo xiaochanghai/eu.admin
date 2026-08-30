@@ -4,6 +4,7 @@ using System.Reflection;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.IServices;
 using EU.Core.Model;
@@ -178,6 +179,46 @@ public sealed class AgMcpApiResponse_Should
     }
 
     [Fact]
+    public async Task Allow_authenticated_approval_flows_without_agent_permissions()
+    {
+        ToolApprovalRequestRecord highRisk = CreatePending(
+            risk: McpToolRisk.HighRisk);
+        ToolApprovalsController controller = CreateApprovalController(
+            new ApprovalRepository([highRisk]));
+
+        ServiceResult<ToolApprovalRequestRecord> approved =
+            AssertServiceSuccess<ToolApprovalRequestRecord>(
+                await controller.Approve(
+                    highRisk.Id,
+                    new ToolApprovalDecisionApiRequest { Reason = "approved" },
+                    CancellationToken.None));
+        Assert.Equal(ToolApprovalStatus.Approved, approved.Data.Status);
+
+        ToolApprovalRequestRecord resumable = CreatePending(
+            requester: "operator");
+        var policy = new DefaultToolApprovalExecutionPolicy();
+        ToolApprovalPolicyResult result = await policy.RevalidateAsync(
+            resumable,
+            new PublishedMcpToolReference(
+                resumable.McpServerId,
+                "server",
+                "Server",
+                resumable.ToolVersionId,
+                resumable.ToolName,
+                "Tool",
+                "{}",
+                McpToolRisk.Mutating,
+                resumable.ToolSchemaSha256),
+            new AgentExecutionIdentity(
+                "operator",
+                "tenant",
+                [],
+                "correlation"),
+            CancellationToken.None);
+        Assert.True(result.Allowed);
+    }
+
+    [Fact]
     public async Task Return_fixed_approval_errors_for_conflict_and_disabled_resume()
     {
         ToolApprovalRequestRecord pending = CreatePending();
@@ -263,7 +304,9 @@ public sealed class AgMcpApiResponse_Should
         string.Empty,
         enabled);
 
-    private static ToolApprovalRequestRecord CreatePending(string requester = "requester")
+    private static ToolApprovalRequestRecord CreatePending(
+        string requester = "requester",
+        McpToolRisk risk = McpToolRisk.Mutating)
     {
         DateTimeOffset requestedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
         return new ToolApprovalRequestRecord(
@@ -277,7 +320,7 @@ public sealed class AgMcpApiResponse_Should
             Guid.NewGuid(),
             Guid.NewGuid(),
             "query",
-            McpToolRisk.Mutating,
+            risk,
             new string('a', 64),
             new string('b', 64),
             "{}",

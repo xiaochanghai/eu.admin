@@ -7,9 +7,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using EU.Core.Common;
+using EU.Core.Common.HttpContextUser;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
 using EU.Core.Extensions.Filters;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
@@ -260,6 +262,7 @@ public sealed class AgAgentHostErrorResponse_Should
                     cancellationToken: context.RequestAborted);
             },
             Options.Create(new AgentIdempotencyOptions()),
+            TestUser.Instance,
             TimeProvider.System,
             metrics);
         DefaultHttpContext first = IdempotentContext();
@@ -350,6 +353,7 @@ public sealed class AgAgentHostErrorResponse_Should
         using var metrics = new AgentMetrics();
         var middleware = new AgentOperationAuditMiddleware(
             _ => Task.CompletedTask,
+            TestUser.Instance,
             TimeProvider.System,
             metrics,
             NullLogger<AgentOperationAuditMiddleware>.Instance);
@@ -425,6 +429,25 @@ public sealed class AgAgentHostErrorResponse_Should
             await schemeProvider.GetDefaultAuthenticateSchemeAsync();
         Assert.Equal(JwtBearerDefaults.AuthenticationScheme, defaultScheme?.Name);
         Assert.Null(await schemeProvider.GetSchemeAsync("AgentDevelopment"));
+        AuthorizationOptions authorization = provider
+            .GetRequiredService<IOptions<AuthorizationOptions>>()
+            .Value;
+        AssertAuthenticatedOnly(authorization.FallbackPolicy);
+        string[] agentPolicies =
+        [
+            AgentAuthorizationPolicies.Admin,
+            AgentAuthorizationPolicies.Debug,
+            AgentAuthorizationPolicies.Chat,
+            AgentAuthorizationPolicies.AuditRead,
+            AgentAuthorizationPolicies.HistoryRead,
+            AgentAuthorizationPolicies.ApprovalRead,
+            AgentAuthorizationPolicies.ApprovalDecide,
+            AgentAuthorizationPolicies.ApprovalDecideHighRisk
+        ];
+        foreach (string policyName in agentPolicies)
+        {
+            AssertAuthenticatedOnly(authorization.GetPolicy(policyName));
+        }
         RateLimiterOptions options = provider
             .GetRequiredService<IOptions<RateLimiterOptions>>()
             .Value;
@@ -453,6 +476,14 @@ public sealed class AgAgentHostErrorResponse_Should
             StatusCodes.Status429TooManyRequests,
             600008,
             "AGENT_RATE_LIMIT_EXCEEDED");
+    }
+
+    private static void AssertAuthenticatedOnly(AuthorizationPolicy? policy)
+    {
+        Assert.NotNull(policy);
+        Assert.Single(policy.Requirements);
+        Assert.IsType<Microsoft.AspNetCore.Authorization.Infrastructure.DenyAnonymousAuthorizationRequirement>(
+            policy.Requirements[0]);
     }
 
     private static DefaultHttpContext Context(ILoggerProvider? loggerProvider = null)
@@ -488,6 +519,7 @@ public sealed class AgAgentHostErrorResponse_Should
         AgentMetrics metrics) => new(
             next,
             Options.Create(new AgentIdempotencyOptions()),
+            TestUser.Instance,
             TimeProvider.System,
             metrics);
 
@@ -524,6 +556,25 @@ public sealed class AgAgentHostErrorResponse_Should
         Assert.Equal(JsonValueKind.Null, root.GetProperty("MessageDev").ValueKind);
         Assert.Equal(errorCode, root.GetProperty("Data").GetProperty("ErrorCode").GetString());
         Assert.Equal("trace-host-error", root.GetProperty("Data").GetProperty("TraceId").GetString());
+    }
+
+    private sealed class TestUser : IUser
+    {
+        public static readonly TestUser Instance = new();
+        public string Name => "operator";
+        public Guid? ID { get; } = Guid.Parse("879beff4-716f-4c18-b952-92f60a9e71d9");
+        public SmUsers UserInfo => new();
+        public Guid? CompanyId => null;
+        public Guid? GroupId => null;
+        public long TenantId => 0;
+        public long? SessionId => null;
+        public ServiceResult<string> MessageModel { get; set; } = new();
+        public bool IsAuthenticated() => true;
+        public IEnumerable<Claim> GetClaimsIdentity() => [];
+        public List<string> GetClaimValueByType(string ClaimType) => [];
+        public string GetToken() => string.Empty;
+        public string GetPlatform() => string.Empty;
+        public List<string> GetUserInfoFromToken(string ClaimType) => [];
     }
 
     private sealed class MemoryIdempotencyRepository : IHttpIdempotencyRepository
