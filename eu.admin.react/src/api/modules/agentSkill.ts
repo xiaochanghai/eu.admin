@@ -8,10 +8,20 @@ type UnknownRecord = Record<string, unknown>;
 const asRecord = (value: unknown): UnknownRecord | null =>
   typeof value === "object" && value !== null ? (value as UnknownRecord) : null;
 
+const parseRecord = (value: unknown): UnknownRecord | null => {
+  const record = asRecord(value);
+  if (record || typeof value !== "string") return record;
+  try {
+    return asRecord(JSON.parse(value));
+  } catch {
+    return null;
+  }
+};
+
 export const getAgentSkillErrorMessage = (error: unknown, fallback: string) => {
   const root = asRecord(error);
   const response = asRecord(root?.response);
-  const responseData = asRecord(response?.data);
+  const responseData = parseRecord(response?.data);
   const envelope = responseData ?? root;
   const data = asRecord(envelope?.Data ?? envelope?.data);
   const serverMessage = envelope?.Message ?? envelope?.message;

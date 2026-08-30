@@ -213,9 +213,9 @@ const LayoutChat: React.FC = () => {
     provider: sdkProviderRef.current,
     conversationKey: "unified-chat",
     requestPlaceholder: () => ({ role: "assistant" as const, content: "" }),
-    requestFallback: (_, { messageInfo }) => ({
+    requestFallback: (_, { error, messageInfo }) => ({
       role: "assistant" as const,
-      content: messageInfo?.message?.content || "请求失败，请重试。"
+      content: messageInfo?.message?.content || error.message || "请求失败，请重试。"
     })
   });
   const abortChatRef = useRef(abortChat);

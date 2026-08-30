@@ -276,12 +276,39 @@ const apiBaseUrl = () => {
 
 const readErrorMessage = async (response: Response) => {
   try {
-    const body = (await response.json()) as { Message?: string; message?: string };
-    return body.Message || body.message || `请求失败（${response.status}）`;
+    const body = (await response.json()) as {
+      Message?: string;
+      message?: string;
+      Data?: { ErrorCode?: string };
+      data?: { errorCode?: string };
+    };
+    const errorCode = body.Data?.ErrorCode || body.data?.errorCode;
+    const message = body.Message || body.message || `请求失败（${response.status}）`;
+    return errorCode ? `${errorCode} · ${message}` : message;
   } catch {
     return `请求失败（${response.status}）`;
   }
 };
+
+const fetchAgentStream: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+  if (!response.ok) throw new Error(await readErrorMessage(response));
+  return response;
+};
+
+interface AgentServiceResponse<T> {
+  Status: number;
+  Success: boolean;
+  Message?: string | null;
+  Data: T;
+}
+
+const isAgentServiceResponse = <T>(value: unknown): value is AgentServiceResponse<T> =>
+  typeof value === "object" &&
+  value !== null &&
+  Number.isInteger((value as Partial<AgentServiceResponse<T>>).Status) &&
+  typeof (value as Partial<AgentServiceResponse<T>>).Success === "boolean" &&
+  Object.prototype.hasOwnProperty.call(value, "Data");
 
 const requestJson = async <T>(path: string, init?: RequestInit) => {
   const headers = new Headers(init?.headers);
@@ -292,9 +319,10 @@ const requestJson = async <T>(path: string, init?: RequestInit) => {
     headers
   });
   if (!response.ok) throw new Error(await readErrorMessage(response));
-  const body = (await response.json()) as { Success?: boolean; Message?: string; Data?: T };
-  if (!body.Success) throw new Error(body.Message || "请求失败。");
-  return body.Data as T;
+  const body: unknown = await response.json();
+  if (!isAgentServiceResponse<T>(body)) throw new Error("服务响应格式无效。");
+  if (!body.Success || body.Status !== 200) throw new Error(body.Message || "请求失败。");
+  return body.Data;
 };
 
 export const listUnifiedChatConversations = (take = 40) =>
@@ -526,7 +554,8 @@ export class UnifiedChatProvider extends AbstractChatProvider<
             Accept: "text/event-stream",
             "Content-Type": "application/json",
             Authorization: `Bearer ${store.getState().user.token}`
-          }
+          },
+          fetch: fetchAgentStream
         }
       )
     });

@@ -318,7 +318,7 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
       onReload?.();
       message.success("Skill 已发布");
     } catch (error) {
-      // message.error(getAgentSkillErrorMessage(error, "Skill 发布失败"));
+      message.error(getAgentSkillErrorMessage(error, "Skill 发布失败"));
     } finally {
       setSubmitting(false);
     }
