@@ -207,16 +207,21 @@ const LayoutChat: React.FC = () => {
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const sdkEventHandlerRef = useRef<(event: UnifiedChatRunEvent) => void>(() => undefined);
+  const sdkErrorRef = useRef("");
   const sdkProviderRef = useRef<UnifiedChatProvider>();
   if (!sdkProviderRef.current) sdkProviderRef.current = new UnifiedChatProvider(event => sdkEventHandlerRef.current(event));
-  const { onRequest: requestChat, messages: sdkMessages, isRequesting: isSdkRequesting, abort: abortChat, setMessages: setSdkMessages } = useXChat({
+  // Ant Design X owns the request lifecycle; rich messages remain the single rendered state.
+  const { onRequest: requestChat, isRequesting: isSdkRequesting, abort: abortChat, setMessages: resetSdkMessages } = useXChat({
     provider: sdkProviderRef.current,
     conversationKey: "unified-chat",
     requestPlaceholder: () => ({ role: "assistant" as const, content: "" }),
-    requestFallback: (_, { error, messageInfo }) => ({
-      role: "assistant" as const,
-      content: messageInfo?.message?.content || error.message || "请求失败，请重试。"
-    })
+    requestFallback: (_, { error, messageInfo }) => {
+      sdkErrorRef.current = error.message;
+      return {
+        role: "assistant" as const,
+        content: messageInfo?.message?.content || error.message || "请求失败，请重试。"
+      };
+    }
   });
   const abortChatRef = useRef(abortChat);
   abortChatRef.current = abortChat;
@@ -245,7 +250,7 @@ const LayoutChat: React.FC = () => {
       typingMessageIdRef.current = undefined;
     };
   }, []);
-  useEffect(() => { timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: "smooth" }); }, [messages, sdkMessages, traces]);
+  useEffect(() => { timelineRef.current?.scrollTo({ top: timelineRef.current.scrollHeight, behavior: "smooth" }); }, [messages, traces]);
 
   useEffect(() => {
     if (!inspectorOpen) return;
@@ -281,7 +286,7 @@ const LayoutChat: React.FC = () => {
 
   const queueAgentTask = useCallback(async () => {
     const normalized = input.trim();
-    if (!normalized || queueingTask || isRunning) return;
+    if (!normalized || queueingTask || isRunning || isSdkRequesting) return;
     setQueueingTask(true);
     try {
       const task = await createAgentTask({
@@ -301,7 +306,7 @@ const LayoutChat: React.FC = () => {
     } finally {
       setQueueingTask(false);
     }
-  }, [conversationId, input, isRunning, messageApi, queueingTask]);
+  }, [conversationId, input, isRunning, isSdkRequesting, messageApi, queueingTask]);
 
   const cancelTask = useCallback(async (taskId: string) => {
     if (cancellingTaskId) return;
@@ -452,7 +457,6 @@ const LayoutChat: React.FC = () => {
       flushTyping();
       active.terminal = true;
       updateAssistant(active.assistantId, { status: event.kind === "completed" ? "completed" : event.kind === "cancelled" ? "cancelled" : "failed" });
-      setIsRunning(false);
       void loadConversationsRef.current();
     }
   };
@@ -511,14 +515,11 @@ const LayoutChat: React.FC = () => {
       const reconciled = active.terminal ? true : await reconcileDisconnectedRun(active);
       if (activeSdkRunRef.current !== active) return;
       if (!reconciled) {
-        const fallback = [...sdkMessages]
-          .reverse()
-          .find(item => item.message.role === "assistant")?.message.content;
         const fallbackText =
-          typeof fallback === "string" && fallback.trim()
-            ? fallback
-            : active.cancelRequested
-              ? "运行已取消。"
+          active.cancelRequested
+            ? "运行已取消。"
+            : sdkErrorRef.current.trim()
+              ? sdkErrorRef.current
               : "请求失败，请重试。";
         setMessages(current =>
           current.map(item =>
@@ -534,9 +535,10 @@ const LayoutChat: React.FC = () => {
         void loadConversationsRef.current();
       }
       activeSdkRunRef.current = undefined;
+      sdkErrorRef.current = "";
       setIsRunning(false);
     })();
-  }, [flushTyping, isSdkRequesting, reconcileDisconnectedRun, sdkMessages]);
+  }, [flushTyping, isSdkRequesting, reconcileDisconnectedRun]);
   const loadConversations = useCallback(async () => {
     const revision = ++conversationRevisionRef.current;
     try {
@@ -550,7 +552,7 @@ const LayoutChat: React.FC = () => {
   }, [messageApi]);
   loadConversationsRef.current = loadConversations;
   const selectConversation = useCallback(async (id: string) => {
-    if (!id || isRunning) return;
+    if (!id || isRunning || isSdkRequesting) return;
     const revision = ++conversationRevisionRef.current;
     newConversationTaskIdsRef.current.clear();
     setSelectedTaskDetail(undefined);
@@ -611,12 +613,12 @@ const LayoutChat: React.FC = () => {
         messageApi.error(error instanceof Error ? error.message : "会话读取失败。");
       }
     }
-  }, [isRunning, messageApi]);
+  }, [isRunning, isSdkRequesting, messageApi]);
   useEffect(() => { void loadConversations(); }, [loadConversations]);
 
   const startRun = async (value: string) => {
     const inputValue = value.trim();
-    if (!inputValue || isRunning) return;
+    if (!inputValue || isRunning || isSdkRequesting) return;
     const requestId = ++requestIdRef.current;
     const assistantId = createId();
     activeSdkRunRef.current = {
@@ -632,7 +634,8 @@ const LayoutChat: React.FC = () => {
       { id: createId(), role: "user", content: inputValue, citations: [], modules: [] },
       { id: assistantId, role: "assistant", content: "", citations: [], modules: [], status: "streaming" }
     ]);
-    setSdkMessages([]);
+    sdkErrorRef.current = "";
+    resetSdkMessages([]);
     requestChat({ messages: [{ role: "user", content: inputValue }], conversationId });
   };
   const startNewConversation = () => {
@@ -642,7 +645,8 @@ const LayoutChat: React.FC = () => {
     activeSdkRunRef.current = undefined;
     sdkRequestStartedRef.current = false;
     flushTyping();
-    setSdkMessages([]);
+    sdkErrorRef.current = "";
+    resetSdkMessages([]);
     newConversationTaskIdsRef.current.clear();
     setSelectedTaskDetail(undefined);
     setConversationId(undefined);
@@ -700,8 +704,8 @@ const LayoutChat: React.FC = () => {
                 <Flex className="agent-chat-welcome" vertical align="center" justify="center" gap={12}><Typography.Title level={2}>Unified Chat</Typography.Title><Typography.Text type="secondary">与已发布的主 Agent 对话，回答会结合 Skills、知识库和 MCP 工具。</Typography.Text></Flex>}
             </div>
             <div className="agent-chat-composer">
-              <div className="agent-chat-task-actions"><Button disabled={!input.trim() || isRunning} loading={queueingTask} onClick={() => void queueAgentTask()}>后台执行</Button></div>
-              <Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" />
+              <div className="agent-chat-task-actions"><Button disabled={!input.trim() || isRunning || isSdkRequesting} loading={queueingTask} onClick={() => void queueAgentTask()}>后台执行</Button></div>
+              <Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning || isSdkRequesting} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" />
             </div>
           </section>
           <Sider className="agent-chat-inspector" id="agent-chat-inspector" width={340} collapsedWidth={0} collapsed={!inspectorOpen} trigger={null} theme="light">

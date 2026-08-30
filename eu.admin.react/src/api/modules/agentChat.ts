@@ -15,14 +15,6 @@ export interface UnifiedChatRunEvent {
   route: string;
 }
 
-export interface StreamChatRunOptions {
-  input: string;
-  conversationId?: string;
-  signal: AbortSignal;
-  onOpen?: (metadata: { runId?: string; conversationId?: string }) => void;
-  onEvent: (event: UnifiedChatRunEvent) => void;
-}
-
 export interface UnifiedChatSdkMessage {
   role: "user" | "assistant";
   content: string;
@@ -504,19 +496,6 @@ export const resumeAgentTaskWithUserInput = (taskId: string, expectedLogicalRevi
     body: JSON.stringify({ expectedLogicalRevision, input })
   }).then(mapAgentTask);
 
-const parseFrame = (frame: string): UnifiedChatRunEvent | null => {
-  const fields = frame.split(/\r?\n/);
-  const eventName = fields.find(line => line.startsWith("event:"))?.slice(6).trim();
-  const data = fields.filter(line => line.startsWith("data:")).map(line => line.slice(5).trimStart()).join("\n");
-  if (!eventName || !data) return null;
-  try {
-    const event = JSON.parse(data) as UnifiedChatRunEvent;
-    return { ...event, kind: event.kind || eventName };
-  } catch {
-    return null;
-  }
-};
-
 const parseUnifiedChatEvent = (frame: UnifiedChatSdkFrame): UnifiedChatRunEvent | null => {
   if (!frame.data) return null;
   try {
@@ -594,43 +573,3 @@ export class UnifiedChatProvider extends AbstractChatProvider<
     return info.originMessage || { role: "assistant", content: "" };
   }
 }
-
-export const streamUnifiedChatRun = async ({ input, conversationId, signal, onOpen, onEvent }: StreamChatRunOptions) => {
-  const response = await fetch(`${apiBaseUrl()}/Agent/api/chat/runs`, {
-    method: "POST",
-    headers: {
-      Accept: "text/event-stream",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${store.getState().user.token}`
-    },
-    body: JSON.stringify({ input, conversationId }),
-    signal
-  });
-  if (!response.ok) throw new Error(await readErrorMessage(response));
-  if (!response.body) throw new Error("服务端未返回流式响应。");
-  onOpen?.({
-    runId: response.headers.get("X-Agent-Run-ID") || undefined,
-    conversationId: response.headers.get("X-Agent-Conversation-ID") || undefined
-  });
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      buffer += decoder.decode(value, { stream: !done });
-      let boundary = buffer.search(/\r?\n\r?\n/);
-      while (boundary >= 0) {
-        const frame = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary).replace(/^\r?\n\r?\n/, "");
-        const event = parseFrame(frame);
-        if (event) onEvent(event);
-        boundary = buffer.search(/\r?\n\r?\n/);
-      }
-      if (done) break;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-};
