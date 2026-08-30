@@ -244,7 +244,10 @@ const LayoutChat: React.FC = () => {
     return () => {
       requestIdRef.current += 1;
       activeSdkRunRef.current = undefined;
-      abortChatRef.current();
+      if (sdkRequestStartedRef.current) {
+        sdkRequestStartedRef.current = false;
+        abortChatRef.current();
+      }
       if (typingFrameRef.current) cancelAnimationFrame(typingFrameRef.current);
       pendingTextRef.current = "";
       typingMessageIdRef.current = undefined;
@@ -637,6 +640,7 @@ const LayoutChat: React.FC = () => {
     sdkErrorRef.current = "";
     resetSdkMessages([]);
     requestChat({ messages: [{ role: "user", content: inputValue }], conversationId });
+    sdkRequestStartedRef.current = true;
   };
   const startNewConversation = () => {
     const shouldAbort = isRunning || isSdkRequesting;
