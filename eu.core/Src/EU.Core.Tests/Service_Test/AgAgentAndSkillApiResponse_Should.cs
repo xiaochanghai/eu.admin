@@ -6,6 +6,7 @@ using EU.Core.IServices.Agents;
 using EU.Core.IServices.MainAgent;
 using EU.Core.IServices.Skills;
 using EU.Core.Api.Agent.Controllers;
+using EU.Core.Api.Agent.Errors;
 using EU.Core.IServices;
 using EU.Core.Model;
 using EU.Core.Model.Models;
@@ -26,10 +27,28 @@ public sealed class AgAgentAndSkillApiResponse_Should
             new PublicModelProfileCatalog([]),
             Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
 
-        ActionResult<ServiceResult<AgentListItem[]>> action =
-            await controller.List(null, "Unknown", CancellationToken.None);
+        Exception exception = await Assert.ThrowsAsync<Exception>(
+            async () => await controller.List(null, "Unknown", CancellationToken.None));
 
-        AssertServiceError(action, StatusCodes.Status200OK, 600001, "REQUEST_INVALID");
+        Assert.Equal("The status filter is invalid.", exception.Message);
+    }
+
+    [Fact]
+    public async Task Reject_unavailable_agent_model_profile_through_the_standard_error_pipeline()
+    {
+        var controller = WithHttpContext(new AgentsController(
+            new PublicModelProfileCatalog([]),
+            Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
+
+        Exception exception = await Assert.ThrowsAsync<Exception>(
+            async () => await controller.SaveDraft(
+                Guid.NewGuid(),
+                new SaveAgentDraftRequest(
+                    0, "Main", string.Empty, "instructions", "missing-profile",
+                    AgentOutputMode.Text, null, [], [], []),
+                CancellationToken.None));
+
+        Assert.Equal("The selected model profile is not available.", exception.Message);
     }
 
     [Fact]
@@ -49,12 +68,12 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var controller = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), service));
 
-        ActionResult<ServiceResult<AgAgentDefinitionDetailDto>> action = await controller.Create(
+        ServiceResult<AgAgentDefinitionDetailDto> body = await controller.Create(
             new CreateAgentRequest("main", "Main", string.Empty),
             CancellationToken.None);
 
-        ServiceResult<AgAgentDefinitionDetailDto> body =
-            AssertServiceSuccess<AgAgentDefinitionDetailDto>(action, StatusCodes.Status201Created);
+        AssertServiceSuccess(body);
+        Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
         Assert.Same(detail, body.Data);
         Assert.Equal($"/api/agents/{id}", controller.Response.Headers.Location);
     }
@@ -74,18 +93,16 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var agentsController = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), agentService));
 
-        ActionResult<ServiceResult<AgAgentDefinitionDetailDto>> failedCreate =
+        ServiceResult<AgAgentDefinitionDetailDto> failedCreate =
             await agentsController.Create(
                 new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
                 CancellationToken.None);
-        AssertServiceFailure<Guid>(
-            Assert.IsType<JsonResult>(failedCreate.Result),
-            "The Agent code already exists.");
-        AssertServiceError(
-            await agentsController.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status200OK,
-            610001,
-            "AGENT_NOT_FOUND");
+        Assert.False(failedCreate.Success);
+        Assert.Equal(500, failedCreate.Status);
+        Assert.Equal("The Agent code already exists.", failedCreate.Message);
+        Exception missingAgent = await Assert.ThrowsAsync<Exception>(
+            async () => await agentsController.Get(Guid.NewGuid(), CancellationToken.None));
+        Assert.Equal("The Agent was not found.", missingAgent.Message);
 
         IAgSkillDefinitionServices skillService = Proxy<IAgSkillDefinitionServices>((method, _) =>
             method.Name == nameof(IAgSkillDefinitionServices.GetAsync)
@@ -121,6 +138,20 @@ public sealed class AgAgentAndSkillApiResponse_Should
     }
 
     [Fact]
+    public async Task Reject_agent_import_with_an_unsupported_content_type_through_the_standard_error_pipeline()
+    {
+        var controller = WithHttpContext(new AgentsController(
+            new PublicModelProfileCatalog([]),
+            Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
+        controller.Request.ContentType = "text/plain";
+
+        Exception exception = await Assert.ThrowsAsync<Exception>(
+            async () => await controller.Import(CancellationToken.None));
+
+        Assert.Equal("The Agent package must use a JSON content type.", exception.Message);
+    }
+
+    [Fact]
     public async Task Wrap_agent_queries_mutations_and_import()
     {
         AgentDefinition definition = CreateAgent();
@@ -147,20 +178,17 @@ public sealed class AgAgentAndSkillApiResponse_Should
         var controller = WithHttpContext(new AgentsController(
             new PublicModelProfileCatalog([]), service));
 
-        AssertServiceSuccess<AgentListItem[]>(
-            await controller.List(null, null, CancellationToken.None),
-            StatusCodes.Status200OK);
-        AssertServiceSuccess<AgAgentDefinitionDetailDto>(
-            await controller.Get(definition.Id, CancellationToken.None),
-            StatusCodes.Status200OK);
-        AssertServiceSuccess<AgentDefinition>(
+        AssertServiceSuccess(
+            await controller.List(null, null, CancellationToken.None));
+        AssertServiceSuccess(
+            await controller.Get(definition.Id, CancellationToken.None));
+        AssertServiceSuccess(
             await controller.SaveDraft(
                 definition.Id,
                 new SaveAgentDraftRequest(
                     0, "Main", string.Empty, "instructions", string.Empty,
                     AgentOutputMode.Text, null, [], [], []),
-                CancellationToken.None),
-            StatusCodes.Status200OK);
+                CancellationToken.None));
         AssertServiceSuccess<AgentDefinition>(
             await controller.Publish(definition.Id, new ExpectedRevisionRequest(0), CancellationToken.None));
         AssertServiceSuccess<AgentDefinition>(
@@ -171,9 +199,9 @@ public sealed class AgAgentAndSkillApiResponse_Should
 
         controller.Request.ContentType = "application/json";
         controller.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
-        AssertServiceSuccess<AgentDefinition>(
-            await controller.Import(CancellationToken.None),
-            StatusCodes.Status201Created);
+        AssertServiceSuccess(
+            await controller.Import(CancellationToken.None));
+        Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
     }
 
     [Fact]
@@ -418,17 +446,6 @@ public sealed class AgAgentAndSkillApiResponse_Should
 
         Assert.Equal(StatusCodes.Status200OK, httpStatus);
         return AssertServiceSuccess(Assert.IsType<ServiceResult<T>>(action.Value));
-    }
-
-    private static ServiceResult<T> AssertServiceFailure<T>(IActionResult action, string message)
-    {
-        JsonResult json = Assert.IsType<JsonResult>(action);
-        Assert.Equal(StatusCodes.Status200OK, json.StatusCode);
-        ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(json.Value);
-        Assert.False(body.Success);
-        Assert.Equal(500, body.Status);
-        Assert.Equal(message, body.Message);
-        return body;
     }
 
     private static void AssertServiceError(

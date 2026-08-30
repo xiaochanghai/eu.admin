@@ -1,4 +1,3 @@
-using EU.Core.IServices.Agents;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Skills;
@@ -29,8 +28,6 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
     private static readonly IReadOnlyDictionary<string, ServiceResponse> ServiceResponses =
         new Dictionary<string, ServiceResponse>(StringComparer.Ordinal)
         {
-            ["AgentsController.Create"] = Response<AgAgentDefinitionDetailDto>(StatusCodes.Status201Created),
-            ["AgentsController.Import"] = Response<AgentDefinition>(StatusCodes.Status201Created),
             ["ChatRunsController.Cancel"] = Response<ChatRunCancelResponse>(StatusCodes.Status202Accepted),
             ["EvaluationSuitesController.Create"] = Response<EvaluationSuiteDefinition>(StatusCodes.Status201Created),
             ["OrchestrationsController.Create"] = Response<OrchestrationDefinition>(StatusCodes.Status201Created),
@@ -68,7 +65,12 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
                     continue;
                 }
 
+                ProducesResponseTypeAttribute? declaredResponse =
+                    FindDeclaredServiceResponse(action);
                 ServiceResponses.TryGetValue(key, out ServiceResponse? response);
+                response ??= declaredResponse is null
+                    ? null
+                    : ToServiceResponse(declaredResponse);
                 response ??= InferServiceResponse(action.ActionMethod.ReturnType);
                 if (response is null)
                 {
@@ -76,10 +78,17 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
                         $"Agent API Action '{key}' does not declare its ServiceResult response type.");
                 }
                 action.Filters.Add(new ProducesAttribute("application/json"));
-                action.Filters.Add(new ProducesResponseTypeAttribute(
-                    typeof(ServiceResult<>).MakeGenericType(response.DataType),
-                    response.HttpStatus,
-                    "application/json"));
+                if (declaredResponse is null)
+                {
+                    action.Filters.Add(new ProducesResponseTypeAttribute(
+                        typeof(ServiceResult<>).MakeGenericType(response.DataType),
+                        response.HttpStatus,
+                        "application/json"));
+                }
+                else if (!action.Filters.Contains(declaredResponse))
+                {
+                    action.Filters.Add(declaredResponse);
+                }
                 if (string.Equals(
                         key,
                         "OrchestrationsController.Output",
@@ -135,6 +144,30 @@ public sealed class AgentApiResponseMetadataConvention : IApplicationModelConven
 
         return null;
     }
+
+    private static ProducesResponseTypeAttribute? FindDeclaredServiceResponse(
+        ActionModel action)
+    {
+        ProducesResponseTypeAttribute[] responses = action.Attributes
+            .OfType<ProducesResponseTypeAttribute>()
+            .Where(response =>
+                response.StatusCode is >= 200 and < 300
+                && response.Type?.IsGenericType == true
+                && response.Type.GetGenericTypeDefinition() == typeof(ServiceResult<>))
+            .ToArray();
+        return responses.Length switch
+        {
+            0 => null,
+            1 => responses[0],
+            _ => throw new InvalidOperationException(
+                $"Agent API Action '{action.ActionMethod.Name}' declares multiple successful ServiceResult responses.")
+        };
+    }
+
+    private static ServiceResponse ToServiceResponse(
+        ProducesResponseTypeAttribute response) => new(
+        response.Type!.GetGenericArguments()[0],
+        response.StatusCode);
 
     private static ServiceResponse Response<T>(
         int httpStatus = StatusCodes.Status200OK) => new(typeof(T), httpStatus);

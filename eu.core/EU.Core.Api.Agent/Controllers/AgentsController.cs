@@ -1,13 +1,11 @@
-using EU.Core.IServices.Agents;
-using EU.Core.Api.Agent.Configuration;
-using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
+using EU.Core.IServices.Agents;
 using EU.Core.Model;
 using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels.Extend;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
@@ -17,7 +15,7 @@ namespace EU.Core.Api.Agent.Controllers;
 public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ServiceResult<AgentListItem[]>>> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
+    public async Task<ServiceResult<AgentListItem[]>> List([FromQuery] string? search, [FromQuery] string? status, CancellationToken cancellationToken)
     {
         AgentRuntimeStatus? runtimeStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -36,15 +34,7 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             }
             else
             {
-                AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "REQUEST_INVALID");
-                return new JsonResult(
-                    ServiceResult<AgentApiErrorData>.Failure(
-                        descriptor.Status,
-                        "The status filter is invalid.",
-                        new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)))
-                {
-                    StatusCode = StatusCodes.Status200OK
-                };
+                throw new Exception("The status filter is invalid.");
             }
         }
 
@@ -70,37 +60,31 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ServiceResult<AgAgentDefinitionDetailDto>>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ServiceResult<AgAgentDefinitionDetailDto>> Get(Guid id, CancellationToken cancellationToken)
     {
         AgAgentDefinitionDetailDto? value = await agentDefinitionServices.QueryAgent(
             id,
             cancellationToken);
         if (value is null)
         {
-            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "AGENT_NOT_FOUND");
-            return new JsonResult(
-                ServiceResult<AgentApiErrorData>.Failure(
-                    descriptor.Status,
-                    "The Agent was not found.",
-                    new AgentApiErrorData("AGENT_NOT_FOUND", HttpContext.TraceIdentifier)))
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            throw new Exception("The Agent was not found.");
         }
 
         return ServiceResult<AgAgentDefinitionDetailDto>.QuerySuccess(value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ServiceResult<AgAgentDefinitionDetailDto>>> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(
+        typeof(ServiceResult<AgAgentDefinitionDetailDto>),
+        StatusCodes.Status201Created)]
+    public async Task<ServiceResult<AgAgentDefinitionDetailDto>> Create([FromBody] CreateAgentRequest request, CancellationToken cancellationToken)
     {
         var result = await agentDefinitionServices.CreateAsync(new CreateAgentCommand(request.Code, request.Name, request.Description), cancellationToken);
         if (!result.Success)
         {
-            return new JsonResult(result)
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            return ServiceResult<AgAgentDefinitionDetailDto>.Failure(
+                result.Status,
+                result.Message);
         }
 
         AgAgentDefinitionDetailDto value = await agentDefinitionServices.QueryAgent(
@@ -108,28 +92,17 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             cancellationToken)
             ?? throw new InvalidDataException("The newly created Agent could not be loaded.");
         Response.Headers.Location = $"/api/agents/{result.Data}";
-        return new JsonResult(
-            Success(value, "创建成功"))
-        {
-            StatusCode = StatusCodes.Status201Created
-        };
+        Response.StatusCode = StatusCodes.Status201Created;
+        return Success(value, "创建成功");
     }
 
     [HttpPut("{id:guid}/draft")]
-    public async Task<ActionResult<ServiceResult<AgentDefinition>>> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
+    public async Task<ServiceResult<AgentDefinition>> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
             !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
         {
-            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, "REQUEST_INVALID");
-            return new JsonResult(
-                ServiceResult<AgentApiErrorData>.Failure(
-                    descriptor.Status,
-                    "The selected model profile is not available.",
-                    new AgentApiErrorData("REQUEST_INVALID", HttpContext.TraceIdentifier)))
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            throw new Exception("The selected model profile is not available.");
         }
 
         ServiceResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
@@ -188,20 +161,14 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     }
 
     [HttpPost("import")]
-    public async Task<ActionResult<ServiceResult<AgentDefinition>>> Import(CancellationToken cancellationToken)
+    [ProducesResponseType(
+        typeof(ServiceResult<AgentDefinition>),
+        StatusCodes.Status201Created)]
+    public async Task<ServiceResult<AgentDefinition>> Import(CancellationToken cancellationToken)
     {
         if (!IsJsonContentType(Request.ContentType))
         {
-            const string errorCode = "REQUEST_UNSUPPORTED_MEDIA_TYPE";
-            AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
-            return new JsonResult(
-                ServiceResult<AgentApiErrorData>.Failure(
-                    descriptor.Status,
-                    "The Agent package must use a JSON content type.",
-                    new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            throw new Exception("The Agent package must use a JSON content type.");
         }
 
         using var reader = new StreamReader(
@@ -219,11 +186,8 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
         }
 
         Response.Headers.Location = $"/api/agents/{result.Data.Id}";
-        return new JsonResult(
-            Success(result.Data, "导入成功"))
-        {
-            StatusCode = StatusCodes.Status201Created
-        };
+        Response.StatusCode = StatusCodes.Status201Created;
+        return Success(result.Data, "导入成功");
     }
 
     private static bool IsJsonContentType(string? contentType)

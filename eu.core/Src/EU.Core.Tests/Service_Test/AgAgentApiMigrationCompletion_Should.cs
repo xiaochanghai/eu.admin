@@ -98,8 +98,6 @@ public sealed class AgAgentApiMigrationCompletion_Should
 
         string[] expectedExplicitServiceResponses =
         [
-            "AgentsController.Create",
-            "AgentsController.Import",
             "ChatRunsController.Cancel",
             "EvaluationSuitesController.Create",
             "OrchestrationsController.Cancel",
@@ -160,6 +158,12 @@ public sealed class AgAgentApiMigrationCompletion_Should
 
         Assert.DoesNotContain(
             "AgentsController.Get",
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
+        Assert.DoesNotContain(
+            "AgentsController.Create",
+            AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
+        Assert.DoesNotContain(
+            "AgentsController.Import",
             AgentApiResponseMetadataConvention.ServiceActionDataTypes.Keys);
         Assert.DoesNotContain(
             "ChatRunsController.GetConversation",

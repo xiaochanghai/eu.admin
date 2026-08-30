@@ -8,6 +8,8 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
+using EU.Core.Model;
+using EU.Core.Extensions.Filters;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
@@ -203,6 +205,40 @@ public sealed class AgAgentHostErrorResponse_Should
         await middleware.InvokeAsync(context);
 
         await AssertErrorAsync(context, httpStatus, businessStatus, errorCode);
+    }
+
+    [Fact]
+    public async Task Map_controller_exceptions_with_the_core_api_service_result_format()
+    {
+        DefaultHttpContext context = Context();
+        var actionContext = new ActionContext(
+            context,
+            new RouteData(),
+            new ActionDescriptor(),
+            new ModelStateDictionary());
+        var exceptionContext = new ExceptionContext(actionContext, [])
+        {
+            Exception = new Exception("The status filter is invalid.")
+        };
+        var filter = new GlobalExceptionsFilter(
+            new TestHostEnvironment(),
+            NullLogger<GlobalExceptionsFilter>.Instance,
+            []);
+
+        await filter.OnExceptionAsync(exceptionContext);
+
+        Assert.True(exceptionContext.ExceptionHandled);
+        ContentResult result = Assert.IsType<ContentResult>(exceptionContext.Result);
+        Assert.Null(result.StatusCode);
+        Assert.StartsWith("application/json", result.ContentType);
+        using JsonDocument document = JsonDocument.Parse(result.Content!);
+        JsonElement root = document.RootElement;
+        Assert.Equal(500, root.GetProperty("Status").GetInt32());
+        Assert.False(root.GetProperty("Success").GetBoolean());
+        Assert.Equal(
+            "The status filter is invalid.",
+            root.GetProperty("Message").GetString());
+        Assert.Equal(JsonValueKind.Null, root.GetProperty("MessageDev").ValueKind);
     }
 
     [Fact]

@@ -34,6 +34,7 @@ using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Evaluation;
 using EU.Core.Services;
 using EU.Core.Extensions.Middlewares;
+using EU.Core.Extensions.Filters;
 using EU.Core.IServices;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -63,6 +64,7 @@ builder.Services.AddOpenApi();
 builder.Services
     .AddControllers(options =>
     {
+        options.Filters.Add<GlobalExceptionsFilter>();
         options.Filters.Add<AgentApiValidationResultFilter>();
         options.Conventions.Add(new AgentApiResponseMetadataConvention());
     })

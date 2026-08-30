@@ -4,6 +4,7 @@ using EU.Core;
 using EU.Core.Common.Core;
 using EU.Core.Extensions;
 using EU.Core.Extensions.Apollo;
+using EU.Core.Extensions.Filters;
 using EU.Core.Extensions.Middlewares;
 using EU.Core.Filter;
 using EU.Core.Hubs;
@@ -98,6 +99,7 @@ builder.Services.Configure<KestrelServerOptions>(x =>
         x.MultipartBodyLengthLimit = 200 * 1024 * 1024;
     });
 builder.Services.AddSession();
+builder.Services.AddScoped<IGlobalExceptionObserver, EuCoreApiGlobalExceptionObserver>();
 builder.Services.AddControllers(o =>
 {
     o.Filters.Add(typeof(GlobalExceptionsFilter));
