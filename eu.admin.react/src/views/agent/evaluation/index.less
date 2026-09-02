@@ -31,6 +31,8 @@
   &__batch--selected > td { background: var(--ant-color-primary-bg) !important; }
   &__judge-panel { padding: 16px; margin-top: 16px; background: var(--ant-color-fill-quaternary); border: 1px solid var(--ant-color-border-secondary); border-radius: var(--ant-border-radius); }
   &__judge-form, &__judge-reports { margin-top: 16px; }
+  &__trace-events { margin-top: 18px; }
+  &__trace-events pre { max-height: 240px; padding: 10px; margin: 0; overflow: auto; background: var(--ant-color-fill-quaternary); border-radius: var(--ant-border-radius); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
   @media (max-width: 1100px) { &__layout { grid-template-columns: 1fr; } &__catalog { position: static; } }
   @media (max-width: 720px) { padding: 12px; &__workspace { padding: 16px; } &__half { min-width: 100%; } }

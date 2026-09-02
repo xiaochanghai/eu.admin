@@ -14,6 +14,7 @@ import {
   Card,
   Collapse,
   Descriptions,
+  Drawer,
   Empty,
   Flex,
   Form,
@@ -52,6 +53,13 @@ import {
 } from "@/api/modules/agentEvaluation";
 import { getAgent, getAgentCapabilities, listAgents, type AgentDefinition, type AgentListItem } from "@/api/modules/agent";
 import { getModuleInfo } from "@/api/modules/module";
+import {
+  getUnifiedChatRun,
+  getUnifiedChatRunDetailEvents,
+  listUnifiedChatRunEvents,
+  type UnifiedChatRunEvent,
+  type UnifiedChatRunState
+} from "@/api/modules/agentChat";
 import { message } from "@/hooks/useMessage";
 import "./index.less";
 
@@ -129,6 +137,10 @@ const EvaluationPage = () => {
   const [modelProfileIds, setModelProfileIds] = useState<string[]>([]);
   const [judgeReports, setJudgeReports] = useState<Awaited<ReturnType<typeof listModelJudgeReports>>>([]);
   const [judgeLoading, setJudgeLoading] = useState(false);
+  const [traceRun, setTraceRun] = useState<UnifiedChatRunState>();
+  const [traceEvents, setTraceEvents] = useState<UnifiedChatRunEvent[]>([]);
+  const [traceOpen, setTraceOpen] = useState(false);
+  const [traceLoading, setTraceLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [contentLoading, setContentLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -370,6 +382,22 @@ const EvaluationPage = () => {
     }
   };
 
+  const openTrace = async (runId: string) => {
+    setTraceOpen(true);
+    setTraceLoading(true);
+    setTraceRun(undefined);
+    setTraceEvents([]);
+    try {
+      const [run, listedEvents] = await Promise.all([getUnifiedChatRun(runId), listUnifiedChatRunEvents(runId)]);
+      setTraceRun(run);
+      setTraceEvents(listedEvents.length ? listedEvents : await getUnifiedChatRunDetailEvents(runId));
+    } catch (traceError) {
+      setError(errorMessage(traceError, "Unified Run 追踪加载失败"));
+    } finally {
+      setTraceLoading(false);
+    }
+  };
+
   const batchColumns = useMemo<TableColumnsType<EvaluationBatch>>(() => [
     { title: "批次", dataIndex: "Id", render: value => <Typography.Text code>{String(value).slice(0, 8)}</Typography.Text> },
     { title: "版本", dataIndex: "SuiteVersionId", render: value => <Typography.Text code>{String(value).slice(0, 8)}</Typography.Text> },
@@ -428,7 +456,7 @@ const EvaluationPage = () => {
             <section className="evaluation-page__section"><div className="evaluation-page__section-title"><CheckCircleOutlined /> 已发布版本与运行</div><List dataSource={current.PublishedVersions} locale={{ emptyText: "尚未发布版本" }} renderItem={version => <List.Item actions={!archived ? [<Button key="run" type="primary" icon={<PlayCircleOutlined />} loading={runningVersionId === version.Id} onClick={() => void runVersion(version.Id)}>运行</Button>] : undefined}><List.Item.Meta title={version.Label} description={`发布于 ${new Date(version.PublishedAtUtc).toLocaleString()} · ${version.Cases.length} 个 Case`} /></List.Item>} /></section>
             <section className="evaluation-page__section">
               <Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">运行批次</div><Button icon={<ReloadOutlined />} onClick={() => void loadBatches(current.Id)}>刷新结果</Button></Flex>
-              <Table rowKey="Id" size="small" columns={batchColumns} dataSource={batches} pagination={false} onRow={batch => ({ onClick: () => selectBatch(batch), className: batch.Id === selectedBatchId ? "evaluation-page__batch--selected" : "" })} expandable={{ expandedRowRender: batch => <List size="small" dataSource={batch.Cases} renderItem={item => <List.Item><Space wrap><Tag color={item.Status === "Passed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text>{item.CaseName}</Typography.Text><Typography.Text type="secondary">工具 {item.ToolCallCount} · {item.DurationMilliseconds ?? "-"} ms</Typography.Text>{item.ErrorCode && <Typography.Text type="danger">{item.ErrorCode}</Typography.Text>}</Space></List.Item>} /> }} />
+              <Table rowKey="Id" size="small" columns={batchColumns} dataSource={batches} pagination={false} onRow={batch => ({ onClick: () => selectBatch(batch), className: batch.Id === selectedBatchId ? "evaluation-page__batch--selected" : "" })} expandable={{ expandedRowRender: batch => <List size="small" dataSource={batch.Cases} renderItem={item => <List.Item actions={item.UnifiedRunId ? [<Button key="trace" type="link" onClick={event => { event.stopPropagation(); void openTrace(item.UnifiedRunId as string); }}>查看追踪</Button>] : undefined}><Space wrap><Tag color={item.Status === "Passed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text>{item.CaseName}</Typography.Text><Typography.Text type="secondary">工具 {item.ToolCallCount} · {item.DurationMilliseconds ?? "-"} ms</Typography.Text>{item.ErrorCode && <Typography.Text type="danger">{item.ErrorCode}</Typography.Text>}</Space></List.Item>} /> }} />
               {selectedBatch && <div className="evaluation-page__judge-panel">
                 <Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">模型裁判 · Batch {selectedBatch.Id.slice(0, 8)}</div>{selectedBatch.Status === "Completed" && <Button size="small" icon={<ReloadOutlined />} loading={judgeLoading} onClick={() => void loadJudgeReports(selectedBatch.Id)}>刷新报告</Button>}</Flex>
                 {selectedBatch.Status !== "Completed" ? <Alert type="info" showIcon message="只有已完成的批次可以运行模型裁判。" /> : <>
@@ -443,6 +471,11 @@ const EvaluationPage = () => {
         </Spin>}
       </main>
     </div>
+    <Drawer title="Unified Run 追踪" open={traceOpen} onClose={() => setTraceOpen(false)} width={640} destroyOnHidden>
+      <Spin spinning={traceLoading}>{traceRun && <Descriptions size="small" column={1} items={[{ key: "id", label: "Run ID", children: <Typography.Text copyable>{traceRun.id}</Typography.Text> }, { key: "status", label: "状态", children: traceRun.status }, { key: "error", label: "错误码", children: traceRun.errorCode || "-" }, { key: "output", label: "输出", children: traceRun.output || "-" }]} />}
+        <List className="evaluation-page__trace-events" dataSource={traceEvents} locale={{ emptyText: traceLoading ? "" : "暂无运行事件" }} renderItem={event => <List.Item><Flex vertical gap={4}><Space><Tag>{event.kind}</Tag><Typography.Text type="secondary">#{event.sequence} · {new Date(event.occurredAtUtc).toLocaleString()}</Typography.Text></Space><pre>{event.payloadJson}</pre></Flex></List.Item>} />
+      </Spin>
+    </Drawer>
   </div>;
 };
 
