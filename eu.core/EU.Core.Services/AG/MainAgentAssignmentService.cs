@@ -39,16 +39,18 @@ public sealed class MainAgentAssignmentService(
                 "The configured Main Agent is disabled.");
         }
 
-        AgentVersion? pinnedVersion = agent.PublishedVersions.SingleOrDefault(
-            version => version.Id == assignment.AgentVersionId);
-        if (pinnedVersion?.Snapshot is null)
+        AgentVersion? latestPublished = LatestPublishedVersion(agent);
+        if (latestPublished?.Snapshot is null)
         {
             return Failure(
                 MainAgentErrorCodes.VersionMissing,
-                "The configured Main Agent version is unavailable.");
+                "The configured Main Agent has no published snapshot.");
         }
 
-        return Success(assignment);
+        // The assignment selects an Agent, while every new Unified Chat run uses
+        // that Agent's latest published snapshot. Existing runs keep their own
+        // version ID in the persisted run record for historical replay.
+        return Success(assignment with { AgentVersionId = latestPublished.Id });
     }
 
     public async Task<ServiceResult<MainAgentAssignment>> SetAsync(
@@ -72,9 +74,7 @@ public sealed class MainAgentAssignmentService(
                 "The selected Main Agent is disabled.");
         }
 
-        AgentVersion? currentPublished = agent.PublishedVersions.Count == 0
-            ? null
-            : agent.PublishedVersions[^1];
+        AgentVersion? currentPublished = LatestPublishedVersion(agent);
         if (currentPublished?.Snapshot is null)
         {
             return Failure(
@@ -109,4 +109,9 @@ public sealed class MainAgentAssignmentService(
         ServiceResult<MainAgentAssignment>.Failure(
             MainAgentServiceStatusCodes.FromErrorCode(code),
             message);
+
+    private static AgentVersion? LatestPublishedVersion(AgentDefinition agent) =>
+        agent.PublishedVersions.Count == 0
+            ? null
+            : agent.PublishedVersions[^1];
 }

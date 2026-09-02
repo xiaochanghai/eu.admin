@@ -392,6 +392,46 @@ public sealed class AgAgentAndSkillApiResponse_Should
     }
 
     [Fact]
+    public async Task Resolve_the_latest_published_version_for_the_configured_main_agent()
+    {
+        Guid agentId = Guid.NewGuid();
+        Guid earlierVersionId = Guid.NewGuid();
+        Guid latestVersionId = Guid.NewGuid();
+        AgentVersionSnapshot snapshot = new(
+            latestVersionId,
+            "main",
+            "instructions",
+            "model",
+            AgentOutputMode.Text,
+            null,
+            [],
+            []);
+        var draft = new AgentVersion(
+            Guid.NewGuid(), "draft", true, "instructions", "model", AgentOutputMode.Text,
+            null, null, null);
+        var earlierVersion = new AgentVersion(
+            earlierVersionId, "1.0.0", false, "instructions", "model", AgentOutputMode.Text,
+            null, null, snapshot with { VersionId = earlierVersionId });
+        var latestVersion = new AgentVersion(
+            latestVersionId, "2.0.0", false, "instructions", "model", AgentOutputMode.Text,
+            null, null, snapshot);
+        var agent = new AgentDefinition(
+            agentId, "main", "Main", string.Empty, AgentRuntimeStatus.Enabled, 0, draft,
+            [earlierVersion, latestVersion]);
+        var assignment = new MainAgentAssignment(
+            agentId, earlierVersionId, 7, DateTimeOffset.UtcNow);
+        var service = new MainAgentAssignmentService(
+            new StubAgentDefinitionCatalog([agent]),
+            new FixedMainAgentAssignmentRepository(assignment));
+
+        ServiceResult<MainAgentAssignment> result = await service.GetAsync(CancellationToken.None);
+
+        Assert.True(result.Success);
+        Assert.Equal(latestVersionId, result.Data?.AgentVersionId);
+        Assert.Equal(7, result.Data?.LogicalRevision);
+    }
+
+    [Fact]
     public async Task Return_service_result_for_published_skill_versions()
     {
         IReadOnlyList<PublishedSkillReference> values =
@@ -528,6 +568,19 @@ public sealed class AgAgentAndSkillApiResponse_Should
     {
         public Task<MainAgentAssignment?> GetAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<MainAgentAssignment?>(null);
+
+        public Task<bool> TryReplaceAsync(
+            MainAgentAssignment value,
+            long? expectedLogicalRevision,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class FixedMainAgentAssignmentRepository(
+        MainAgentAssignment assignment) : IMainAgentAssignmentRepository
+    {
+        public Task<MainAgentAssignment?> GetAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<MainAgentAssignment?>(assignment);
 
         public Task<bool> TryReplaceAsync(
             MainAgentAssignment value,
