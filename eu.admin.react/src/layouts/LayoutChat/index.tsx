@@ -4,6 +4,7 @@ import type { BubbleListProps } from "@ant-design/x";
 import { useXChat } from "@ant-design/x-sdk";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { Button, Flex, Layout, Tag, Typography, message } from "antd";
+import { useNavigate } from "react-router-dom";
 import { DESIGN_GUIDE, HOT_TOPICS, SENDER_PROMPTS } from "@/components/Chat/PromptsData";
 import { Welcome as AgentWelcome } from "@/components/Chat/Welcome";
 import ToolBarRight from "@/layouts/components/Header/ToolBarRight";
@@ -192,6 +193,7 @@ interface ActiveSdkRun {
 }
 
 const LayoutChat: React.FC = () => {
+  const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -803,6 +805,7 @@ const LayoutChat: React.FC = () => {
                         {argumentsValue !== undefined ? <section className="agent-chat-trace-block"><strong>调用参数</strong><pre>{formatPayloadValue(argumentsValue)}</pre></section> : null}
                         {resultValue !== undefined ? <section className="agent-chat-trace-block"><strong>原始结果</strong><pre>{formatPayloadValue(resultValue)}</pre></section> : null}
                         {errorCode ? <section className="agent-chat-trace-failure"><strong>{errorCode}</strong>{errorDetail ? <span>{errorDetail}</span> : null}</section> : null}
+                        {trace.kind === "approval-required" ? <Button size="small" type="primary" onClick={() => navigate("/agent/approval")}>前往审批中心</Button> : null}
                         <details className="agent-chat-trace-raw"><summary>完整 payload</summary><pre>{formatPayloadValue(trace.payload)}</pre></details>
                       </div>
                     </details>;
