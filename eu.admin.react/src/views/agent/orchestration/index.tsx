@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ApartmentOutlined,
   DeleteOutlined,
+  FilterOutlined,
   InboxOutlined,
   PlayCircleOutlined,
   PlusOutlined,
@@ -53,8 +54,10 @@ import type {
 } from "@/api/modules/agentOrchestration";
 import { listAgents } from "@/api/modules/agent";
 import type { AgentListItem } from "@/api/modules/agent";
-import useAuthButton from "@/hooks/useAuthButton";
+import { getModuleInfo } from "@/api/modules/module";
 import "./index.less";
+
+const MODULE_CODE = "AG_ORCHESTRATION_MNG";
 
 interface NodeFormValue {
   id: string;
@@ -180,7 +183,7 @@ const applyDefinition = (
 
 const OrchestrationPage: React.FC = () => {
   const [form] = Form.useForm<OrchestrationFormValue>();
-  const { BUTTONS } = useAuthButton();
+  const [moduleActions, setModuleActions] = useState<Set<string>>(() => new Set());
   const [items, setItems] = useState<OrchestrationListItem[]>([]);
   const [agents, setAgents] = useState<AgentListItem[]>([]);
   const [status, setStatus] = useState<OrchestrationStatus | undefined>();
@@ -203,6 +206,20 @@ const OrchestrationPage: React.FC = () => {
   const pollRequestRef = useRef(0);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusRef = useRef<OrchestrationStatus | undefined>();
+
+  useEffect(() => {
+    let active = true;
+    void getModuleInfo(MODULE_CODE)
+      .then(({ Data }) => {
+        if (active) setModuleActions(new Set(Data.actions || []));
+      })
+      .catch(error => {
+        if (active) message.error(getOrchestrationErrorMessage(error, "编排模块权限加载失败"));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const clearPoll = useCallback(() => {
     pollRequestRef.current += 1;
@@ -504,8 +521,10 @@ const OrchestrationPage: React.FC = () => {
 
   const archived = current?.Status === "Archived";
   const workspaceVisible = creating || current;
-  const canModify = Boolean(creating ? BUTTONS.add : BUTTONS.edit);
-  const canRun = Boolean(BUTTONS.edit && current && current.Status === "Enabled" && current.PublishedVersions.length);
+  const canAdd = moduleActions.has("Add");
+  const canUpdate = moduleActions.has("Update");
+  const canModify = creating ? canAdd : canUpdate;
+  const canRun = Boolean(canUpdate && current && current.Status === "Enabled" && current.PublishedVersions.length);
   const activeRunMeta = activeRun ? runStatusMeta[activeRun.Status] : null;
 
   return (
@@ -516,7 +535,7 @@ const OrchestrationPage: React.FC = () => {
             <Typography.Title level={3}>编排控制台</Typography.Title>
             <Typography.Text type="secondary">维护有向无环流程、冻结 Agent 版本并检查节点运行状态</Typography.Text>
           </div>
-          {BUTTONS.add && <Button type="primary" icon={<PlusOutlined />} onClick={beginCreate}>创建编排</Button>}
+          {canAdd && <Button type="primary" icon={<PlusOutlined />} onClick={beginCreate}>创建编排</Button>}
         </Flex>
       </header>
 
@@ -534,21 +553,24 @@ const OrchestrationPage: React.FC = () => {
               <Typography.Text strong>编排列表</Typography.Text>
               <Typography.Text type="secondary">共 {items.length} 个</Typography.Text>
             </div>
-            <Select
-              className="orchestration-page__status-filter"
-              value={status || ""}
-              options={[
-                { label: "未归档", value: "" },
-                { label: "已启用", value: "Enabled" },
-                { label: "已停用", value: "Disabled" },
-                { label: "已归档", value: "Archived" }
-              ]}
-              onChange={value => {
-                const nextStatus = (value || undefined) as OrchestrationStatus | undefined;
-                statusRef.current = nextStatus;
-                setStatus(nextStatus);
-              }}
-            />
+            <label className="orchestration-page__status-filter">
+              <span><FilterOutlined /> 状态</span>
+              <Select
+                aria-label="编排状态筛选"
+                value={status || ""}
+                options={[
+                  { label: "未归档", value: "" },
+                  { label: "已启用", value: "Enabled" },
+                  { label: "已停用", value: "Disabled" },
+                  { label: "已归档", value: "Archived" }
+                ]}
+                onChange={value => {
+                  const nextStatus = (value || undefined) as OrchestrationStatus | undefined;
+                  statusRef.current = nextStatus;
+                  setStatus(nextStatus);
+                }}
+              />
+            </label>
           </Flex>
           <Spin spinning={listLoading}>
             <List
@@ -716,9 +738,9 @@ const OrchestrationPage: React.FC = () => {
 
               <Flex className="orchestration-page__actions" gap={10} wrap>
                 {!archived && canModify && <Button icon={<SaveOutlined />} loading={saving} disabled={publishing} onClick={() => void save()}>保存 Draft</Button>}
-                {!creating && BUTTONS.edit && !archived && <Button type="primary" icon={<RocketOutlined />} loading={publishing} disabled={saving} onClick={() => void publish()}>发布版本</Button>}
-                {BUTTONS.edit && current && !archived && <Button loading={saving} onClick={() => void toggleStatus()}>{current.Status === "Enabled" ? "停用" : "启用"}</Button>}
-                {BUTTONS.edit && current && <Button icon={<InboxOutlined />} loading={transitioning} onClick={toggleArchived}>{archived ? "恢复" : "归档"}</Button>}
+                {!creating && canUpdate && !archived && <Button type="primary" icon={<RocketOutlined />} loading={publishing} disabled={saving} onClick={() => void publish()}>发布版本</Button>}
+                {canUpdate && current && !archived && <Button loading={saving} onClick={() => void toggleStatus()}>{current.Status === "Enabled" ? "停用" : "启用"}</Button>}
+                {canUpdate && current && <Button icon={<InboxOutlined />} loading={transitioning} onClick={toggleArchived}>{archived ? "恢复" : "归档"}</Button>}
                 {dirty && <Typography.Text type="warning">存在未保存修改</Typography.Text>}
               </Flex>
 
@@ -740,8 +762,8 @@ const OrchestrationPage: React.FC = () => {
                     onChange={event => setRunInput(event.target.value)}
                   />
                   <Space>
-                    {BUTTONS.edit && pollStopped && <Button onClick={resumePoll}>重新读取状态</Button>}
-                    {BUTTONS.edit && activeRun?.Status === "Running" && <Button danger icon={<StopOutlined />} loading={cancelLoading} onClick={() => void cancelRun()}>取消运行</Button>}
+                    {canUpdate && pollStopped && <Button onClick={resumePoll}>重新读取状态</Button>}
+                    {canUpdate && activeRun?.Status === "Running" && <Button danger icon={<StopOutlined />} loading={cancelLoading} onClick={() => void cancelRun()}>取消运行</Button>}
                     <Button type="primary" icon={<PlayCircleOutlined />} loading={runLoading} disabled={!canRun || !runInput.trim() || activeRun?.Status === "Running"} onClick={() => void startRun()}>开始运行</Button>
                   </Space>
 

@@ -61,7 +61,43 @@
   }
 
   &__status-filter {
-    width: 116px;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 3px 4px 3px 10px;
+    border: 1px solid var(--ant-color-border-secondary);
+    border-radius: var(--ant-border-radius);
+    color: var(--ant-color-text-secondary);
+    background: var(--ant-color-fill-quaternary);
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+
+    &:focus-within {
+      border-color: var(--ant-color-primary);
+      box-shadow: 0 0 0 2px var(--ant-color-primary-bg);
+      background: var(--ant-color-bg-container);
+    }
+
+    > span {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .ant-select {
+      width: 92px;
+    }
+
+    .ant-select-selector {
+      padding-inline: 4px !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
   }
 
   &__item--active {
