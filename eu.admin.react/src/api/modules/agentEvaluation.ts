@@ -123,6 +123,18 @@ export interface SaveEvaluationDraftInput {
 const url = (path = "") => `/Agent/api/evaluation-suites${path}`;
 const batchUrl = (path = "") => `/Agent/api/evaluation-batches${path}`;
 
+export const getEvaluationErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null) {
+    const value = error as {
+      Message?: string;
+      message?: string;
+      response?: { data?: { Message?: string; message?: string } };
+    };
+    return value.response?.data?.Message || value.response?.data?.message || value.Message || value.message || fallback;
+  }
+  return fallback;
+};
+
 export const listEvaluationSuites = async (status?: EvaluationSuiteStatus) =>
   (await http.get<EvaluationSuite[]>(url(), status ? { status } : undefined)).Data;
 export const getEvaluationSuite = async (id: string) =>

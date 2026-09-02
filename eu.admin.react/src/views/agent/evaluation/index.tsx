@@ -35,6 +35,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   compareEvaluationBatches,
   createEvaluationSuite,
+  getEvaluationErrorMessage,
   getEvaluationSuite,
   listModelJudgeReports,
   listEvaluationBatches,
@@ -133,8 +134,6 @@ const newCase = (): EvaluationCase => ({
 
 const parseRules = (value: string) => value.split("\n").map(item => item.trim()).filter(Boolean);
 const rulesText = (value?: string[]) => (value || []).join("\n");
-const errorMessage = (error: unknown, fallback: string) => error instanceof Error && error.message ? error.message : fallback;
-
 const EvaluationPage = () => {
   const [form] = Form.useForm<SuiteFormValues>();
   const [compareForm] = Form.useForm<CompareFormValues>();
@@ -184,7 +183,7 @@ const EvaluationPage = () => {
     try {
       setItems(await listEvaluationSuites(statusFilter));
     } catch (loadError) {
-      setError(errorMessage(loadError, "评测 Suite 加载失败"));
+      setError(getEvaluationErrorMessage(loadError, "评测 Suite 加载失败"));
     } finally {
       setListLoading(false);
     }
@@ -194,7 +193,7 @@ const EvaluationPage = () => {
     try {
       setBatches(await listEvaluationBatches(suiteId));
     } catch (loadError) {
-      setError(errorMessage(loadError, "评测批次加载失败"));
+      setError(getEvaluationErrorMessage(loadError, "评测批次加载失败"));
     }
   }, []);
 
@@ -204,7 +203,7 @@ const EvaluationPage = () => {
       const agent = await getAgent(agentId);
       setAgentDetails(previous => ({ ...previous, [agentId]: agent }));
     } catch (loadError) {
-      setError(errorMessage(loadError, "Agent 发布版本加载失败"));
+      setError(getEvaluationErrorMessage(loadError, "Agent 发布版本加载失败"));
     }
   }, [agentDetails]);
 
@@ -220,7 +219,7 @@ const EvaluationPage = () => {
         setModelProfileIds(capabilities.ModelProfileIds || []);
         judgeForm.setFieldsValue({ modelProfileId: capabilities.ModelProfileIds?.[0] });
       } catch (loadError) {
-        if (active) setError(errorMessage(loadError, "评测中心初始化失败"));
+        if (active) setError(getEvaluationErrorMessage(loadError, "评测中心初始化失败"));
       }
     };
     void initialize();
@@ -243,7 +242,7 @@ const EvaluationPage = () => {
       setBatches(loadedBatches);
       await Promise.all(suite.Draft.Cases.map(item => loadAgentDetail(item.TargetAgentId)));
     } catch (loadError) {
-      if (sequence === openSequence.current) setError(errorMessage(loadError, "评测 Suite 加载失败"));
+      if (sequence === openSequence.current) setError(getEvaluationErrorMessage(loadError, "评测 Suite 加载失败"));
     } finally {
       if (sequence === openSequence.current) setContentLoading(false);
     }
@@ -272,7 +271,7 @@ const EvaluationPage = () => {
       await loadList();
       message.success(current ? "评测草稿已保存" : "评测 Suite 已创建；可继续添加 Case");
     } catch (saveError) {
-      setError(errorMessage(saveError, "评测草稿保存失败"));
+      setError(getEvaluationErrorMessage(saveError, "评测草稿保存失败"));
     } finally {
       setSaving(false);
     }
@@ -287,7 +286,7 @@ const EvaluationPage = () => {
       await loadList();
       message.success("评测 Suite 已发布不可变版本");
     } catch (publishError) {
-      setError(errorMessage(publishError, "评测 Suite 发布失败"));
+      setError(getEvaluationErrorMessage(publishError, "评测 Suite 发布失败"));
     } finally { setSaving(false); }
   };
 
@@ -300,7 +299,7 @@ const EvaluationPage = () => {
       await loadList();
       message.success(archived ? "评测 Suite 已恢复" : "评测 Suite 已归档");
     } catch (archiveError) {
-      setError(errorMessage(archiveError, "评测 Suite 状态更新失败"));
+      setError(getEvaluationErrorMessage(archiveError, "评测 Suite 状态更新失败"));
     } finally { setSaving(false); }
   };
 
@@ -312,7 +311,7 @@ const EvaluationPage = () => {
       await loadBatches(current.Id);
       message.success("评测批次已启动，刷新结果可查看进度");
     } catch (runError) {
-      setError(errorMessage(runError, "评测批次启动失败"));
+      setError(getEvaluationErrorMessage(runError, "评测批次启动失败"));
     } finally { setRunningVersionId(undefined); }
   };
 
@@ -331,7 +330,7 @@ const EvaluationPage = () => {
         requireStableRoutes: values.requireStableRoutes
       }));
     } catch (compareError) {
-      setError(errorMessage(compareError, "质量门禁比对失败"));
+      setError(getEvaluationErrorMessage(compareError, "质量门禁比对失败"));
     } finally { setSaving(false); }
   };
 
@@ -342,7 +341,7 @@ const EvaluationPage = () => {
     try {
       setJudgeReports(await listModelJudgeReports(batchId));
     } catch (loadError) {
-      setError(errorMessage(loadError, "模型裁判报告加载失败"));
+      setError(getEvaluationErrorMessage(loadError, "模型裁判报告加载失败"));
     } finally {
       setJudgeLoading(false);
     }
@@ -376,7 +375,7 @@ const EvaluationPage = () => {
       setJudgeReports(previous => [report, ...previous.filter(item => item.Id !== report.Id)]);
       message.success(report.AdvisoryPassed ? "模型裁判 advisory 通过" : "模型裁判 advisory 未通过");
     } catch (judgeError) {
-      setError(errorMessage(judgeError, "模型裁判执行失败"));
+      setError(getEvaluationErrorMessage(judgeError, "模型裁判执行失败"));
     } finally {
       setJudgeLoading(false);
     }
@@ -392,7 +391,7 @@ const EvaluationPage = () => {
       setTraceRun(run);
       setTraceEvents(listedEvents.length ? listedEvents : await getUnifiedChatRunDetailEvents(runId));
     } catch (traceError) {
-      setError(errorMessage(traceError, "Unified Run 追踪加载失败"));
+      setError(getEvaluationErrorMessage(traceError, "Unified Run 追踪加载失败"));
     } finally {
       setTraceLoading(false);
     }
