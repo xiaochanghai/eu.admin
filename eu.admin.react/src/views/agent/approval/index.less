@@ -1,0 +1,40 @@
+.approval-page {
+  display: grid;
+  gap: 16px;
+  min-height: 100%;
+  padding: 20px;
+
+  &__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+
+    .ant-typography { margin-bottom: 4px; }
+  }
+
+  &__layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); min-height: 650px; }
+  &__queue, &__detail { border-radius: 10px; }
+  &__queue { border-radius: 10px 0 0 10px; }
+  &__detail { border-radius: 0 10px 10px 0; }
+  &__queue .ant-card-body { height: calc(100% - 57px); overflow-y: auto; padding: 8px; }
+  &__queue-item { display: grid; gap: 7px; padding: 12px !important; border: 1px solid transparent; border-radius: 8px; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease; }
+  &__queue-item:hover { background: var(--ant-color-fill-quaternary); }
+  &__queue-item.is-selected { border-color: var(--ant-color-primary-border); background: var(--ant-color-primary-bg); }
+  &__queue-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+  &__warning { margin: 18px 0; padding: 11px 13px; color: var(--ant-color-warning-text); border-left: 3px solid var(--ant-color-warning); background: var(--ant-color-warning-bg); line-height: 1.65; }
+  &__warning.is-high-risk { color: var(--ant-color-error-text); border-left-color: var(--ant-color-error); background: var(--ant-color-error-bg); }
+  &__section { margin-top: 24px; }
+  &__section h5 { margin-bottom: 10px; }
+  &__section pre { max-height: 260px; overflow: auto; margin: 0; padding: 14px; color: #d7e0ee; border-radius: 8px; background: #111827; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+  &__actions { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--ant-color-border-secondary); }
+  code { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 900px) {
+  .approval-page { &__layout { grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); } }
+}
+
+@media (max-width: 680px) {
+  .approval-page { padding: 12px; &__header { align-items: start; flex-direction: column; } &__layout { grid-template-columns: 1fr; } &__queue { min-height: 280px; border-radius: 10px 10px 0 0; } &__detail { min-height: 520px; border-radius: 0 0 10px 10px; } }
+}
