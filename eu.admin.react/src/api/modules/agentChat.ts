@@ -41,6 +41,8 @@ export interface UnifiedChatMessage {
   role: string | number;
   content: string;
   createdAtUtc: string;
+  kind?: string | number;
+  businessQueryPresentationJson?: string;
 }
 
 export interface UnifiedChatConversationDetail {
@@ -123,6 +125,8 @@ interface UnifiedChatMessageDto {
   Role: string | number;
   Content: string;
   CreatedAtUtc: string;
+  Kind?: string | number;
+  BusinessQueryPresentationJson?: string | null;
 }
 
 interface UnifiedChatConversationDetailDto {
@@ -342,7 +346,9 @@ export const getUnifiedChatConversation = (conversationId: string, take = 160) =
       conversationId: message.ConversationId,
       role: message.Role,
       content: message.Content,
-      createdAtUtc: message.CreatedAtUtc
+      createdAtUtc: message.CreatedAtUtc,
+      kind: message.Kind,
+      businessQueryPresentationJson: message.BusinessQueryPresentationJson || ""
     }))
   }));
 

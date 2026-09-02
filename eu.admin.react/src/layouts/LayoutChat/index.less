@@ -63,6 +63,13 @@
   .agent-chat-welcome-shortcuts .ant-prompts-list { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start; }
   .agent-chat-welcome-shortcuts .ant-prompts-item { border: 1px solid var(--ant-color-border-secondary); border-radius: 8px; background: var(--ant-color-bg-container); }
   .agent-chat-assistant-content { display: grid; gap: 14px; min-width: 0; }
+  .agent-chat-business-query { display: grid; gap: 10px; min-width: 0; }
+  .agent-chat-business-query__table-wrap { max-width: min(76vw, 960px); overflow: auto; border: 1px solid var(--ant-color-border-secondary); border-radius: 8px; }
+  .agent-chat-business-query table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .agent-chat-business-query th, .agent-chat-business-query td { padding: 9px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--ant-color-border-secondary); }
+  .agent-chat-business-query th { color: var(--ant-color-text-secondary); background: var(--ant-color-fill-quaternary); font-weight: 600; }
+  .agent-chat-business-query tr:last-child td { border-bottom: 0; }
+  .agent-chat-business-query__markdown { margin: 0; white-space: pre-wrap; }
   .agent-chat-streaming-text { white-space: pre-wrap; }
   .agent-chat-embedded-module { width: min(76vw, 1120px); overflow: hidden; border-color: var(--ant-color-border-secondary); }
   .agent-chat-embedded-module .ant-card-head-title > span { display: flex; align-items: center; gap: 8px; }

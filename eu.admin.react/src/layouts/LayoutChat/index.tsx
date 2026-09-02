@@ -73,7 +73,12 @@ type ChatMessage = {
   status?: "streaming" | "completed" | "failed" | "cancelled";
   citations: string[];
   modules: EmbeddedModuleReference[];
+  kind?: string | number;
+  businessQueryPresentationJson?: string;
 };
+type BusinessQueryColumn = { key?: string; Key?: string; label?: string; Label?: string; unit?: string; Unit?: string; currency?: string; Currency?: string };
+type BusinessQueryCell = { displayValue?: string; DisplayValue?: string };
+type BusinessQueryPresentation = { title?: string; Title?: string; markdown?: string; Markdown?: string; columns?: BusinessQueryColumn[]; Columns?: BusinessQueryColumn[]; rows?: Record<string, BusinessQueryCell>[]; Rows?: Record<string, BusinessQueryCell>[] };
 type TraceItem = {
   id: string;
   kind: string;
@@ -130,6 +135,37 @@ const formatPayloadValue = (value: unknown) => {
     }
   }
   return JSON.stringify(value, null, 2) ?? String(value);
+};
+const isBusinessQueryResult = (kind?: string | number) =>
+  kind === 3 || String(kind || "").toLowerCase() === "businessqueryresult";
+const parseBusinessQueryPresentation = (value?: string): BusinessQueryPresentation | undefined => {
+  if (!value) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" ? parsed as BusinessQueryPresentation : undefined;
+  } catch {
+    return undefined;
+  }
+};
+const BusinessQueryResultContent: React.FC<{ content: string; presentationJson?: string }> = ({ content, presentationJson }) => {
+  const presentation = parseBusinessQueryPresentation(presentationJson);
+  const columns = presentation?.columns || presentation?.Columns || [];
+  const rows = presentation?.rows || presentation?.Rows || [];
+  const title = presentation?.title || presentation?.Title || "业务查询结果";
+  const markdown = presentation?.markdown || presentation?.Markdown || content;
+  return <section className="agent-chat-business-query">
+    <Typography.Text strong>{title}</Typography.Text>
+    {columns.length ? <div className="agent-chat-business-query__table-wrap"><table><thead><tr>{columns.map((column, index) => {
+      const label = column.label || column.Label || column.key || column.Key || `列 ${index + 1}`;
+      const unit = column.unit || column.Unit;
+      const currency = column.currency || column.Currency;
+      return <th key={`${column.key || column.Key || index}`}>{[label, unit, currency].filter(Boolean).join(" · ")}</th>;
+    })}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{columns.map((column, columnIndex) => {
+      const key = column.key || column.Key || "";
+      const cell = row[key];
+      return <td key={`${key}-${columnIndex}`}>{cell?.displayValue || cell?.DisplayValue || ""}</td>;
+    })}</tr>)}</tbody></table></div> : <Typography.Paragraph className="agent-chat-business-query__markdown">{markdown || "暂无结果"}</Typography.Paragraph>}
+  </section>;
 };
 const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
   const payload = parsePayload(event.payloadJson);
@@ -578,7 +614,9 @@ const LayoutChat: React.FC = () => {
           role: item.role === 0 || String(item.role).toLowerCase() === "user" ? "user" : "assistant",
           content: item.content,
           citations: [],
-          modules: []
+          modules: [],
+          kind: item.kind,
+          businessQueryPresentationJson: item.businessQueryPresentationJson
         }));
       const latestStatus = latestRun?.status.toLowerCase();
       if (
@@ -704,7 +742,9 @@ const LayoutChat: React.FC = () => {
                 key: item.id,
                 role: item.role,
                 content: item.role === "assistant"
-                  ? <EmbeddedModuleContent content={item.content} modules={item.modules} streaming={item.status === "streaming"} />
+                  ? isBusinessQueryResult(item.kind)
+                    ? <BusinessQueryResultContent content={item.content} presentationJson={item.businessQueryPresentationJson} />
+                    : <EmbeddedModuleContent content={item.content} modules={item.modules} streaming={item.status === "streaming"} />
                   : item.content,
                 status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success",
                 loading: item.status === "streaming" && !item.content && !item.modules.length
