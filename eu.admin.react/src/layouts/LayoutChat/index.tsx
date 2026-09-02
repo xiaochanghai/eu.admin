@@ -156,8 +156,8 @@ const parseBusinessQueryPresentation = (value?: string): BusinessQueryPresentati
 };
 const BusinessQueryResultContent: React.FC<{ content: string; presentationJson?: string }> = ({ content, presentationJson }) => {
   const presentation = parseBusinessQueryPresentation(presentationJson);
-  const columns = presentation?.columns || presentation?.Columns || [];
-  const rows = presentation?.rows || presentation?.Rows || [];
+  const columns = (presentation?.columns || presentation?.Columns || []).slice(0, 64);
+  const rows = (presentation?.rows || presentation?.Rows || []).slice(0, 1000);
   const title = presentation?.title || presentation?.Title || "业务查询结果";
   const markdown = presentation?.markdown || presentation?.Markdown || content;
   return <section className="agent-chat-business-query">
