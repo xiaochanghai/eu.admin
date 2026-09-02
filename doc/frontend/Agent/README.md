@@ -8,6 +8,7 @@ React 页面位于 `eu.admin.react/src/views/agent`，目前负责 Agent Definit
 - 列表数据由 `SmModules`、`SmModuleSql`、`SmModuleColumn` 驱动，不在 React 页面重复实现分页和筛选。
 - 编辑抽屉使用 Agent API，覆盖创建、Draft 保存、发布、启停、归档/恢复、能力绑定、Main Agent 和导出。
 - 编排及评估中的历史 Agent 版本仍是不可变引用，不会因编辑页发布新版本而被改写。
+- 操作审计模块代码为 `AG_OPERATION_AUDIT_MNG`，页面为 `/agent/audit/index`；它只读取当前租户可见的 Agent API 操作记录。
 - MCP Server 模块代码固定为 `AG_MCP_SERVER_MNG`，页面组件为 `/agent/mcpServer/index`。
 - MCP Server 列表与 Agent Definition 一样使用 `TableList`，由 `SmModules`、`SmModuleSql`、`SmModuleColumn` 驱动；自定义 `FormPage` 负责配置、同步、启停、归档和工具风险操作。
 - Skill 模块代码为 `AG_SKILL_MNG`，列表同样使用 `TableList`；自定义 `FormPage` 负责基础信息、Draft 文件、发布版本和归档/恢复。
@@ -15,7 +16,7 @@ React 页面位于 `eu.admin.react/src/views/agent`，目前负责 Agent Definit
 
 ## 部署步骤
 
-1. 按需在 SQL Server 依次执行 `065_add_agent_definition_admin_module.sql`、`066_add_mcp_server_admin_module.sql` 和 `067_add_skill_admin_module.sql`。脚本不会由前端自动执行。
+1. 按需在 SQL Server 执行对应 Agent 管理模块脚本；操作审计页需额外执行 `072_add_operation_audit_admin_module.sql`。所有脚本均须由部署人员审查、单独执行，前端不会自动执行。
 2. 清理服务端 ModuleInfo、ModuleSql、ModuleSqlColumn、用户菜单和权限缓存，或重启对应 API 实例。
 3. 在模块管理中将 `AG_AGENT_DEFINITION_MNG`、`AG_MCP_SERVER_MNG`、`AG_SKILL_MNG` 分配给目标角色。Agent API 后端接口受管理员策略保护，只应授权给对应管理员角色。
 4. 确认 Vite、网关或反向代理把同源 `/Agent/*` 请求转发到 Agent API；页面不需要单独的 `VITE_AGENT_API_URL`。

@@ -1,0 +1,13 @@
+.audit-page {
+  min-height: 100%; padding: 20px; background: var(--ant-color-bg-layout);
+  &__header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  &__header .ant-typography { margin-top: 0; margin-bottom: 4px; }
+  &__alert { margin-bottom: 16px; }
+  &__table { border-radius: var(--ant-border-radius-lg); }
+  &__table .ant-table-tbody > tr { cursor: pointer; }
+  &__path { max-width: 260px; vertical-align: middle; }
+  &__details { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px 12px; margin: 0; }
+  &__details dt { color: var(--ant-color-text-secondary); }
+  &__details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+}
+@media (max-width: 680px) { .audit-page { padding: 12px; &__header { align-items: start; flex-direction: column; } } }
