@@ -93,6 +93,26 @@ export interface EvaluationComparison {
   Candidate: { TotalCases: number; PassedCases: number; FailedCases: number; PassRate: number; AverageDurationMilliseconds?: number | null; TotalToolCalls: number };
 }
 
+export interface ModelJudgeMetric {
+  Name: string;
+  Score?: number | null;
+  MinimumScore: number;
+  Passed: boolean;
+  DiagnosticCodes: string[];
+}
+
+export interface ModelJudgeReport {
+  Id: string;
+  BatchId: string;
+  ModelProfileId: string;
+  Provider: string;
+  PackageVersion: string;
+  AdvisoryPassed: boolean;
+  StartedAtUtc: string;
+  FinishedAtUtc: string;
+  Cases: Array<{ CaseId: string; CaseName: string; Metrics: ModelJudgeMetric[] }>;
+}
+
 export interface SaveEvaluationDraftInput {
   expectedLogicalRevision: number;
   name: string;
@@ -121,3 +141,9 @@ export const listEvaluationBatches = async (suiteId: string) =>
   (await http.get<EvaluationBatch[]>(batchUrl(), { suiteId, take: 50 })).Data;
 export const compareEvaluationBatches = async (baselineBatchId: string, candidateBatchId: string, gate: EvaluationQualityGate) =>
   (await http.post<EvaluationComparison>(batchUrl("/compare"), { baselineBatchId, candidateBatchId, gate })).Data;
+export const listModelJudgeReports = async (batchId: string) =>
+  (await http.get<ModelJudgeReport[]>(batchUrl(`/${encodeURIComponent(batchId)}/model-judge-reports`), { take: 20 })).Data;
+export const runModelJudge = async (
+  batchId: string,
+  input: { explicitlyEnabled: boolean; modelProfileId: string; evaluators: string[]; minimumScores: Record<string, number> }
+) => (await http.post<ModelJudgeReport>(batchUrl(`/${encodeURIComponent(batchId)}/model-judge`), input)).Data;

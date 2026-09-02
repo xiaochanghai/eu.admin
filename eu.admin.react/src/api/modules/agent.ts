@@ -104,6 +104,9 @@ export interface MainAgentAssignment {
 
 export interface AgentCapabilities {
   ModelProfileIds: string[];
+  Features: {
+    ModelJudge: boolean;
+  };
 }
 
 export interface SaveAgentDraftInput {

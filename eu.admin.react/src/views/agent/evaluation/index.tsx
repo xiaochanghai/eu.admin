@@ -35,10 +35,12 @@ import {
   compareEvaluationBatches,
   createEvaluationSuite,
   getEvaluationSuite,
+  listModelJudgeReports,
   listEvaluationBatches,
   listEvaluationSuites,
   publishEvaluationSuite,
   runEvaluationBatch,
+  runModelJudge,
   saveEvaluationDraft,
   setEvaluationArchived,
   type EvaluationBatch,
@@ -48,7 +50,7 @@ import {
   type EvaluationSuite,
   type EvaluationSuiteStatus
 } from "@/api/modules/agentEvaluation";
-import { getAgent, listAgents, type AgentDefinition, type AgentListItem } from "@/api/modules/agent";
+import { getAgent, getAgentCapabilities, listAgents, type AgentDefinition, type AgentListItem } from "@/api/modules/agent";
 import { getModuleInfo } from "@/api/modules/module";
 import { message } from "@/hooks/useMessage";
 import "./index.less";
@@ -66,6 +68,15 @@ interface SuiteFormValues {
 interface CompareFormValues extends EvaluationQualityGate {
   baselineBatchId?: string;
   candidateBatchId?: string;
+}
+
+interface JudgeFormValues {
+  explicitlyEnabled: boolean;
+  modelProfileId?: string;
+  relevance: boolean;
+  relevanceMinimum: number;
+  coherence: boolean;
+  coherenceMinimum: number;
 }
 
 const statusMeta: Record<EvaluationSuiteStatus, { color: string; text: string }> = {
@@ -103,6 +114,7 @@ const errorMessage = (error: unknown, fallback: string) => error instanceof Erro
 const EvaluationPage = () => {
   const [form] = Form.useForm<SuiteFormValues>();
   const [compareForm] = Form.useForm<CompareFormValues>();
+  const [judgeForm] = Form.useForm<JudgeFormValues>();
   const [moduleActions, setModuleActions] = useState<Set<string>>(() => new Set());
   const [statusFilter, setStatusFilter] = useState<EvaluationSuiteStatus>();
   const [items, setItems] = useState<EvaluationSuite[]>([]);
@@ -112,6 +124,11 @@ const EvaluationPage = () => {
   const [agents, setAgents] = useState<AgentListItem[]>([]);
   const [agentDetails, setAgentDetails] = useState<Record<string, AgentDefinition>>({});
   const [comparison, setComparison] = useState<EvaluationComparison | null>(null);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>();
+  const [modelJudgeEnabled, setModelJudgeEnabled] = useState(false);
+  const [modelProfileIds, setModelProfileIds] = useState<string[]>([]);
+  const [judgeReports, setJudgeReports] = useState<Awaited<ReturnType<typeof listModelJudgeReports>>>([]);
+  const [judgeLoading, setJudgeLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [contentLoading, setContentLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -175,17 +192,20 @@ const EvaluationPage = () => {
     let active = true;
     const initialize = async () => {
       try {
-        const [module, enabledAgents] = await Promise.all([getModuleInfo(MODULE_CODE), listAgents("Enabled")]);
+        const [module, enabledAgents, capabilities] = await Promise.all([getModuleInfo(MODULE_CODE), listAgents("Enabled"), getAgentCapabilities()]);
         if (!active) return;
         setModuleActions(new Set(module.Data.actions || []));
         setAgents(enabledAgents);
+        setModelJudgeEnabled(Boolean(capabilities.Features?.ModelJudge));
+        setModelProfileIds(capabilities.ModelProfileIds || []);
+        judgeForm.setFieldsValue({ modelProfileId: capabilities.ModelProfileIds?.[0] });
       } catch (loadError) {
         if (active) setError(errorMessage(loadError, "评测中心初始化失败"));
       }
     };
     void initialize();
     return () => { active = false; };
-  }, []);
+  }, [judgeForm]);
 
   useEffect(() => { void loadList(); }, [loadList]);
 
@@ -194,6 +214,8 @@ const EvaluationPage = () => {
     setContentLoading(true);
     setError("");
     setComparison(null);
+    setSelectedBatchId(undefined);
+    setJudgeReports([]);
     try {
       const [suite, loadedBatches] = await Promise.all([getEvaluationSuite(id), listEvaluationBatches(id)]);
       if (sequence !== openSequence.current) return;
@@ -301,6 +323,53 @@ const EvaluationPage = () => {
     } finally { setSaving(false); }
   };
 
+  const selectedBatch = batches.find(item => item.Id === selectedBatchId);
+
+  const loadJudgeReports = useCallback(async (batchId: string) => {
+    setJudgeLoading(true);
+    try {
+      setJudgeReports(await listModelJudgeReports(batchId));
+    } catch (loadError) {
+      setError(errorMessage(loadError, "模型裁判报告加载失败"));
+    } finally {
+      setJudgeLoading(false);
+    }
+  }, []);
+
+  const selectBatch = (batch: EvaluationBatch) => {
+    setSelectedBatchId(batch.Id);
+    setJudgeReports([]);
+    if (batch.Status === "Completed") void loadJudgeReports(batch.Id);
+  };
+
+  const runJudge = async () => {
+    if (!selectedBatch || !current) return;
+    try {
+      const values = await judgeForm.validateFields();
+      const evaluators = [values.relevance && "Relevance", values.coherence && "Coherence"].filter(Boolean) as string[];
+      if (!values.explicitlyEnabled || evaluators.length === 0 || !values.modelProfileId) {
+        message.warning("请明确确认执行模型裁判，并至少选择一项指标和模型配置");
+        return;
+      }
+      setJudgeLoading(true);
+      const report = await runModelJudge(selectedBatch.Id, {
+        explicitlyEnabled: true,
+        modelProfileId: values.modelProfileId,
+        evaluators,
+        minimumScores: {
+          ...(values.relevance ? { Relevance: values.relevanceMinimum } : {}),
+          ...(values.coherence ? { Coherence: values.coherenceMinimum } : {})
+        }
+      });
+      setJudgeReports(previous => [report, ...previous.filter(item => item.Id !== report.Id)]);
+      message.success(report.AdvisoryPassed ? "模型裁判 advisory 通过" : "模型裁判 advisory 未通过");
+    } catch (judgeError) {
+      setError(errorMessage(judgeError, "模型裁判执行失败"));
+    } finally {
+      setJudgeLoading(false);
+    }
+  };
+
   const batchColumns = useMemo<TableColumnsType<EvaluationBatch>>(() => [
     { title: "批次", dataIndex: "Id", render: value => <Typography.Text code>{String(value).slice(0, 8)}</Typography.Text> },
     { title: "版本", dataIndex: "SuiteVersionId", render: value => <Typography.Text code>{String(value).slice(0, 8)}</Typography.Text> },
@@ -357,7 +426,18 @@ const EvaluationPage = () => {
           </section>
           {current && <>
             <section className="evaluation-page__section"><div className="evaluation-page__section-title"><CheckCircleOutlined /> 已发布版本与运行</div><List dataSource={current.PublishedVersions} locale={{ emptyText: "尚未发布版本" }} renderItem={version => <List.Item actions={!archived ? [<Button key="run" type="primary" icon={<PlayCircleOutlined />} loading={runningVersionId === version.Id} onClick={() => void runVersion(version.Id)}>运行</Button>] : undefined}><List.Item.Meta title={version.Label} description={`发布于 ${new Date(version.PublishedAtUtc).toLocaleString()} · ${version.Cases.length} 个 Case`} /></List.Item>} /></section>
-            <section className="evaluation-page__section"><Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">运行批次</div><Button icon={<ReloadOutlined />} onClick={() => void loadBatches(current.Id)}>刷新结果</Button></Flex><Table rowKey="Id" size="small" columns={batchColumns} dataSource={batches} pagination={false} expandable={{ expandedRowRender: batch => <List size="small" dataSource={batch.Cases} renderItem={item => <List.Item><Space wrap><Tag color={item.Status === "Passed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text>{item.CaseName}</Typography.Text><Typography.Text type="secondary">工具 {item.ToolCallCount} · {item.DurationMilliseconds ?? "-"} ms</Typography.Text>{item.ErrorCode && <Typography.Text type="danger">{item.ErrorCode}</Typography.Text>}</Space></List.Item>} /> }} /></section>
+            <section className="evaluation-page__section">
+              <Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">运行批次</div><Button icon={<ReloadOutlined />} onClick={() => void loadBatches(current.Id)}>刷新结果</Button></Flex>
+              <Table rowKey="Id" size="small" columns={batchColumns} dataSource={batches} pagination={false} onRow={batch => ({ onClick: () => selectBatch(batch), className: batch.Id === selectedBatchId ? "evaluation-page__batch--selected" : "" })} expandable={{ expandedRowRender: batch => <List size="small" dataSource={batch.Cases} renderItem={item => <List.Item><Space wrap><Tag color={item.Status === "Passed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text>{item.CaseName}</Typography.Text><Typography.Text type="secondary">工具 {item.ToolCallCount} · {item.DurationMilliseconds ?? "-"} ms</Typography.Text>{item.ErrorCode && <Typography.Text type="danger">{item.ErrorCode}</Typography.Text>}</Space></List.Item>} /> }} />
+              {selectedBatch && <div className="evaluation-page__judge-panel">
+                <Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">模型裁判 · Batch {selectedBatch.Id.slice(0, 8)}</div>{selectedBatch.Status === "Completed" && <Button size="small" icon={<ReloadOutlined />} loading={judgeLoading} onClick={() => void loadJudgeReports(selectedBatch.Id)}>刷新报告</Button>}</Flex>
+                {selectedBatch.Status !== "Completed" ? <Alert type="info" showIcon message="只有已完成的批次可以运行模型裁判。" /> : <>
+                  <Alert type={modelJudgeEnabled ? "info" : "warning"} showIcon message={modelJudgeEnabled ? "模型裁判为可选 advisory；执行前需要明确确认。" : "当前 Host 未启用模型裁判，仅可查看已保存报告。"} />
+                  {modelJudgeEnabled && !archived && <Form<JudgeFormValues> form={judgeForm} layout="vertical" initialValues={{ explicitlyEnabled: false, modelProfileId: modelProfileIds[0], relevance: true, relevanceMinimum: 0.7, coherence: true, coherenceMinimum: 0.7 }} className="evaluation-page__judge-form"><Flex wrap gap={16}><Form.Item name="modelProfileId" label="裁判模型" rules={[{ required: true }]}><Select options={modelProfileIds.map(value => ({ value, label: value }))} /></Form.Item><Form.Item name="explicitlyEnabled" label="执行确认" valuePropName="checked"><Switch checkedChildren="明确执行" unCheckedChildren="未确认" /></Form.Item></Flex><Flex wrap gap={16}><Form.Item name="relevance" label="相关性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="relevanceMinimum" label="相关性最低分"><InputNumber min={0} max={1} step={0.05} /></Form.Item><Form.Item name="coherence" label="连贯性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="coherenceMinimum" label="连贯性最低分"><InputNumber min={0} max={1} step={0.05} /></Form.Item></Flex><Button type="primary" loading={judgeLoading} onClick={() => void runJudge()}>运行模型裁判</Button></Form>}
+                  <List className="evaluation-page__judge-reports" loading={judgeLoading} dataSource={judgeReports} locale={{ emptyText: "尚无模型裁判报告" }} renderItem={report => <List.Item><List.Item.Meta title={<Space><Tag color={report.AdvisoryPassed ? "success" : "error"}>{report.AdvisoryPassed ? "advisory 通过" : "advisory 未通过"}</Tag><Typography.Text>{report.ModelProfileId}</Typography.Text></Space>} description={<Collapse size="small" items={[{ key: "metrics", label: `${report.Cases.length} 个 Case · ${new Date(report.FinishedAtUtc).toLocaleString()}`, children: <List size="small" dataSource={report.Cases} renderItem={item => <List.Item><Typography.Text>{item.CaseName}</Typography.Text><Space wrap>{item.Metrics.map(metric => <Tag key={metric.Name} color={metric.Passed ? "success" : "error"}>{metric.Name}: {metric.Score ?? "-"}/{metric.MinimumScore}</Tag>)}</Space></List.Item>} /> }]} />} /></List.Item>} />
+                </>}
+              </div>}
+            </section>
             <section className="evaluation-page__section"><div className="evaluation-page__section-title">质量门禁对比</div><Form<CompareFormValues> form={compareForm} layout="vertical" initialValues={{ minimumCandidatePassRate: 1, maximumPassRateRegression: 0, requireNoNewFailures: true, requireSameCaseSet: true, requireStableRoutes: false }}><Flex wrap gap={16}><Form.Item className="evaluation-page__half" name="baselineBatchId" label="基线批次" rules={[{ required: true }]}><Select options={completedBatches.map(batch => ({ value: batch.Id, label: `${batch.Id.slice(0, 8)} · ${new Date(batch.StartedAtUtc).toLocaleString()}` }))} /></Form.Item><Form.Item className="evaluation-page__half" name="candidateBatchId" label="候选批次" rules={[{ required: true }]}><Select options={completedBatches.map(batch => ({ value: batch.Id, label: `${batch.Id.slice(0, 8)} · ${new Date(batch.StartedAtUtc).toLocaleString()}` }))} /></Form.Item></Flex><Flex wrap gap={16}><Form.Item name="minimumCandidatePassRate" label="候选最低通过率"><InputNumber min={0} max={1} step={0.01} /></Form.Item><Form.Item name="maximumPassRateRegression" label="最大通过率回退"><InputNumber min={0} max={1} step={0.01} /></Form.Item><Form.Item name="maximumAverageDurationRegressionPercent" label="最大耗时回退(%)"><InputNumber min={0} max={10000} /></Form.Item><Form.Item name="maximumToolCallIncreasePerCase" label="每 Case 工具调用增量"><InputNumber min={0} max={1000} /></Form.Item></Flex><Flex wrap gap={20}><Form.Item name="requireNoNewFailures" valuePropName="checked"><Switch checkedChildren="无新增失败" unCheckedChildren="允许新增失败" /></Form.Item><Form.Item name="requireSameCaseSet" valuePropName="checked"><Switch checkedChildren="Case 集一致" unCheckedChildren="允许 Case 变化" /></Form.Item><Form.Item name="requireStableRoutes" valuePropName="checked"><Switch checkedChildren="路由稳定" unCheckedChildren="允许路由变化" /></Form.Item></Flex><Button type="primary" onClick={() => void compare()} disabled={completedBatches.length < 2} loading={saving}>执行质量门禁</Button></Form>{comparison && <Descriptions className="evaluation-page__comparison" bordered size="small" column={1} title={<Tag color={comparison.GatePassed ? "success" : "error"}>{comparison.GatePassed ? "门禁通过" : "门禁未通过"}</Tag>} items={[{ key: "baseline", label: "基线", children: `${comparison.Baseline.PassedCases}/${comparison.Baseline.TotalCases} 通过 (${(comparison.Baseline.PassRate * 100).toFixed(1)}%)` }, { key: "candidate", label: "候选", children: `${comparison.Candidate.PassedCases}/${comparison.Candidate.TotalCases} 通过 (${(comparison.Candidate.PassRate * 100).toFixed(1)}%)` }, { key: "checks", label: "检查", children: <List size="small" dataSource={comparison.GateChecks} renderItem={check => <List.Item><Tag color={check.Passed ? "success" : "error"}>{check.Passed ? "通过" : "失败"}</Tag>{check.Code}: {check.Actual}</List.Item>} /> }]} />}</section>
           </>}
         </Spin>}
