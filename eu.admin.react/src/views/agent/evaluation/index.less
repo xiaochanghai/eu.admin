@@ -1,0 +1,34 @@
+.evaluation-page {
+  min-height: 640px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--ant-color-primary) 7%, transparent), transparent 34%),
+    var(--ant-color-bg-layout);
+
+  &__header { margin-bottom: 18px; }
+  &__header .ant-typography { margin-top: 0; margin-bottom: 2px; }
+  &__status-filter { width: 132px; }
+  &__alert { margin-bottom: 16px; }
+  &__layout { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  &__catalog, &__workspace { background: var(--ant-color-bg-container); border: 1px solid var(--ant-color-border-secondary); border-radius: var(--ant-border-radius-lg); }
+  &__catalog { position: sticky; top: 12px; overflow: hidden; }
+  &__catalog > &__section-title { padding: 16px; margin: 0; border-bottom: 1px solid var(--ant-color-border-secondary); }
+  &__catalog .ant-list-item { padding: 14px 16px; cursor: pointer; }
+  &__suite--active { background: var(--ant-color-primary-bg); }
+  &__suite-summary { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+  &__suite-summary .ant-tag { align-self: flex-start; margin-inline-end: 0; }
+  &__workspace { min-height: 600px; padding: 20px; }
+  &__workspace > .ant-empty { margin-top: 170px; }
+  &__workspace-heading { padding-bottom: 18px; border-bottom: 1px solid var(--ant-color-border-secondary); }
+  &__workspace-heading .ant-typography { margin: 0; }
+  &__section { padding-top: 20px; margin-top: 20px; border-top: 1px solid var(--ant-color-border-secondary); }
+  &__section-title { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 15px; font-weight: 600; }
+  &__half { flex: 1; min-width: 240px; }
+  &__case-list { display: grid; gap: 12px; margin-bottom: 16px; }
+  &__case-card { border-color: var(--ant-color-border-secondary); }
+  &__case-card .ant-card-head { background: var(--ant-color-fill-quaternary); }
+  &__comparison { margin-top: 18px; }
+
+  @media (max-width: 1100px) { &__layout { grid-template-columns: 1fr; } &__catalog { position: static; } }
+  @media (max-width: 720px) { padding: 12px; &__workspace { padding: 16px; } &__half { min-width: 100%; } }
+}
