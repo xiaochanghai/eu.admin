@@ -1,4 +1,5 @@
 import http from "@/api";
+import { store } from "@/redux";
 
 export type AgentRuntimeStatus = "Enabled" | "Disabled" | "Archived";
 export type AgentOutputMode = "Text" | "Structured";
@@ -40,6 +41,23 @@ export interface AgentListItem {
   RuntimeStatus: AgentRuntimeStatus;
   LogicalRevision: number;
   CurrentPublishedLabel?: string | null;
+}
+
+export interface AgentRunAuditRecord {
+  Id: string;
+  Status: string;
+  StartedAtUtc: string;
+  FinishedAtUtc?: string | null;
+  ToolCallCount: number;
+  ErrorCode: string;
+}
+
+export interface AgentRunEvent {
+  runId?: string;
+  occurredAtUtc?: string;
+  text?: string;
+  toolName?: string;
+  errorCode?: string;
 }
 
 export interface PublishedSkillReference {
@@ -198,4 +216,40 @@ export const exportAgent = async (id: string) => {
   const blob = response as unknown as Blob;
   await throwAgentExportFailure(blob);
   return blob;
+};
+
+export const listAgentRuns = async (id: string, take = 10) =>
+  (await http.get<AgentRunAuditRecord[]>(agentUrl(`/api/agents/${encodeURIComponent(id)}/runs`), { take })).Data;
+
+export const runAgent = async (
+  id: string,
+  input: string,
+  onEvent: (name: string, event: AgentRunEvent) => void,
+  signal: AbortSignal
+) => {
+  const baseUrl = ((import.meta.env.VITE_API_URL as string | undefined) || "").replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}${agentUrl(`/api/agents/${encodeURIComponent(id)}/runs`)}`, {
+    method: "POST",
+    headers: { Accept: "text/event-stream", "Content-Type": "application/json", Authorization: `Bearer ${store.getState().user.token}` },
+    body: JSON.stringify({ input }),
+    signal
+  });
+  if (!response.ok) throw new Error(`运行失败（${response.status}）`);
+  if (!response.body) throw new Error("运行流不可用");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() || "";
+    for (const frame of frames) {
+      const name = frame.match(/^event:\s*(.+)$/m)?.[1] || "message";
+      const data = frame.match(/^data:\s*(.+)$/m)?.[1];
+      if (!data) continue;
+      try { onEvent(name, JSON.parse(data) as AgentRunEvent); } catch { /* Skip malformed SSE frames. */ }
+    }
+    if (done) break;
+  }
 };
