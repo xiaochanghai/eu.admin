@@ -56,8 +56,13 @@ export interface AgentRunEvent {
   runId?: string;
   occurredAtUtc?: string;
   text?: string;
+  toolVersionId?: string;
   toolName?: string;
+  toolCallId?: string;
+  argumentsJson?: string;
   errorCode?: string;
+  knowledgeBaseCount?: number;
+  knowledgeHitCount?: number;
 }
 
 export interface PublishedSkillReference {

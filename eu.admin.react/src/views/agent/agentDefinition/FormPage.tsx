@@ -80,6 +80,14 @@ interface ReferenceState {
   orchestrations: OrchestrationReference[];
 }
 
+interface AgentRunToolEvent {
+  id: string;
+  name: string;
+  toolName: string;
+  text: string;
+  errorCode: string;
+}
+
 const emptyReferences: ReferenceState = {
   modelProfiles: [],
   skills: [],
@@ -103,6 +111,8 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
   const [runInput, setRunInput] = useState("");
   const [runOutput, setRunOutput] = useState("");
   const [runStatus, setRunStatus] = useState("");
+  const [runToolEvents, setRunToolEvents] = useState<AgentRunToolEvent[]>([]);
+  const [runCitations, setRunCitations] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
   const [runHistory, setRunHistory] = useState<AgentRunAuditRecord[]>([]);
   const runController = React.useRef<AbortController>();
@@ -287,15 +297,31 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
     try { setRunHistory(await listAgentRuns(agent.Id)); } catch (error) { message.error(error instanceof Error ? error.message : "运行历史读取失败"); }
   }, [agent]);
 
-  const openRunner = () => { setRunOpen(true); setRunOutput(""); setRunStatus(""); void loadRunHistory(); };
+  const openRunner = () => { setRunOpen(true); setRunOutput(""); setRunStatus(""); setRunToolEvents([]); setRunCitations([]); void loadRunHistory(); };
   const startRun = async () => {
     if (!agent || !runInput.trim() || running) return;
     const controller = new AbortController();
     runController.current = controller;
-    setRunning(true); setRunOutput(""); setRunStatus("运行中");
+    setRunning(true); setRunOutput(""); setRunStatus("运行中"); setRunToolEvents([]); setRunCitations([]);
     try {
       await runAgent(agent.Id, runInput.trim(), (name, event) => {
         if (name === "delta" && event.text) setRunOutput(value => value + event.text);
+        if (name === "citation" && event.text) {
+          setRunCitations(value => value.includes(event.text as string) ? value : [...value, event.text as string]);
+        }
+        if (name === "knowledge-retrieved") {
+          setRunCitations(value => [...value, `知识库检索：${event.knowledgeBaseCount || 0} 个知识库，命中 ${event.knowledgeHitCount || 0} 个分块`]);
+        }
+        if (name.startsWith("tool-")) {
+          const id = event.toolCallId || event.toolVersionId || event.toolName || name;
+          setRunToolEvents(value => {
+            const next = { id, name, toolName: event.toolName || "MCP 工具", text: event.text || "", errorCode: event.errorCode || "" };
+            const index = value.findIndex(item => item.id === id);
+            return index < 0
+              ? [...value, next]
+              : value.map((item, itemIndex) => itemIndex === index ? { ...item, ...next, text: next.text || item.text } : item);
+          });
+        }
         if (["completed", "failed", "cancelled"].includes(name)) setRunStatus(name === "completed" ? "运行完成" : `运行${name === "cancelled" ? "已取消" : "失败"}${event.errorCode ? ` · ${event.errorCode}` : ""}`);
       }, controller.signal);
     } catch (error) { setRunStatus(error instanceof Error ? error.message : "运行失败"); }
@@ -476,6 +502,17 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
           <Button type="primary" loading={running} disabled={!runInput.trim()} onClick={() => void startRun()} style={{ marginTop: 12 }}>开始运行</Button>
           {runStatus && <Typography.Paragraph style={{ marginTop: 16 }}>{runStatus}</Typography.Paragraph>}
           <pre className="agent-definition-form__run-output">{runOutput || "等待输出"}</pre>
+          {runToolEvents.length ? <section className="agent-definition-form__run-events">
+            <Typography.Title level={5}>MCP 工具调用</Typography.Title>
+            <List size="small" dataSource={runToolEvents} renderItem={item => <List.Item><Flex vertical gap={6}>
+              <Space><Typography.Text strong>{item.toolName}</Typography.Text><Tag color={item.name === "tool-succeeded" ? "success" : item.name === "tool-failed" || item.name === "tool-blocked" ? "error" : "processing"}>{item.name.replace("tool-", "")}</Tag>{item.errorCode ? <Typography.Text type="danger">{item.errorCode}</Typography.Text> : null}</Space>
+              {item.text ? <pre className="agent-definition-form__run-tool-result">{item.text}</pre> : null}
+            </Flex></List.Item>} />
+          </section> : null}
+          {runCitations.length ? <section className="agent-definition-form__run-events">
+            <Typography.Title level={5}>知识库引用</Typography.Title>
+            <List size="small" dataSource={runCitations} renderItem={item => <List.Item><Typography.Text type="secondary">{item}</Typography.Text></List.Item>} />
+          </section> : null}
           <Typography.Title level={5}>近期运行</Typography.Title>
           <List size="small" dataSource={runHistory} locale={{ emptyText: "尚无运行记录" }} renderItem={item => <List.Item><Space><Tag color={item.Status === "Completed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text type="secondary">{item.StartedAtUtc} · {item.ToolCallCount} 次工具调用</Typography.Text></Space></List.Item>} />
         </Drawer>
