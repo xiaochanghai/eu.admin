@@ -19,7 +19,7 @@ public sealed class EvaluationSuitesController(
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>>> List(
+    public async Task<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>> List(
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
@@ -31,7 +31,7 @@ public sealed class EvaluationSuitesController(
             else if (string.Equals(status, nameof(EvaluationSuiteStatus.Archived), StringComparison.Ordinal))
                 parsedStatus = EvaluationSuiteStatus.Archived;
             else
-                return FromError(EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
+                return FromError<IReadOnlyList<EvaluationSuiteDefinition>>(EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
                     "Evaluation suite status must be Active or Archived.");
         }
 
@@ -40,25 +40,25 @@ public sealed class EvaluationSuitesController(
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Get(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> Get(
         Guid id,
         CancellationToken cancellationToken)
     {
         EvaluationSuiteDefinition? value = await lifecycle.GetAsync(
             id, caller.TenantId, cancellationToken);
         return value is null
-            ? FromError(EvaluationSuiteErrorCodes.NotFound, "The evaluation suite was not found.")
+            ? FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.NotFound, "The evaluation suite was not found.")
             : ServiceResult<EvaluationSuiteDefinition>.QuerySuccess(value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Create(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> Create(
         [FromBody] CreateEvaluationSuiteRequest request,
         CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
-            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
+            return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         ServiceResult<EvaluationSuiteDefinition> result =
@@ -72,20 +72,19 @@ public sealed class EvaluationSuitesController(
                 cancellationToken);
         if (!result.Success) return FromServiceError(result);
         Response.Headers.Location = $"/api/evaluation-suites/{result.Data!.Id}";
-        return new JsonResult(
-            Success(result.Data))
-        { StatusCode = StatusCodes.Status201Created };
+        Response.StatusCode = StatusCodes.Status201Created;
+        return Success(result.Data);
     }
 
     [HttpPut("{id:guid}/draft")]
-    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> SaveDraft(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> SaveDraft(
         Guid id,
         [FromBody] SaveEvaluationSuiteDraftRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryMapCases(request, out IReadOnlyList<EvaluationCaseDefinition> cases))
         {
-            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
+            return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         ServiceResult<EvaluationSuiteDefinition> result =
@@ -103,14 +102,14 @@ public sealed class EvaluationSuitesController(
     }
 
     [HttpPost("{id:guid}/publish")]
-    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> Publish(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> Publish(
         Guid id,
         [FromBody] PublishEvaluationSuiteRequest request,
         CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
-            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
+            return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
         ServiceResult<EvaluationSuiteDefinition> result =
@@ -125,13 +124,13 @@ public sealed class EvaluationSuitesController(
     }
 
     [HttpPut("{id:guid}/archive")]
-    public async Task<ActionResult<ServiceResult<EvaluationSuiteDefinition>>> SetArchived(
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> SetArchived(
         Guid id,
         [FromBody] SetEvaluationSuiteArchiveRequest request,
         CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
-            return FromError(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
+            return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
 
         ServiceResult<EvaluationSuiteDefinition> result =
             await lifecycle.SetArchivedAsync(
@@ -203,20 +202,20 @@ public sealed class EvaluationSuitesController(
         return true;
     }
 
-    private JsonResult FromServiceError<T>(ServiceResult<T> result) =>
-        FromError(
-            EvaluationSuiteServiceStatusCodes.ToErrorCode(result.Status),
-            result.Message);
+    private ServiceResult<T> FromServiceError<T>(ServiceResult<T> result)
+    {
+        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(
+            HttpContext,
+            EvaluationSuiteServiceStatusCodes.ToErrorCode(result.Status));
+        Response.StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
+        return result;
+    }
 
-    private JsonResult FromError(string errorCode, string message)
+    private ServiceResult<T> FromError<T>(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
-        return new JsonResult(
-            ServiceResult<AgentApiErrorData>.Failure(
-                descriptor.Status,
-                message,
-                new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
-        { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
+        Response.StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
+        return ServiceResult<T>.Failure(descriptor.Status, message);
     }
 }
 
