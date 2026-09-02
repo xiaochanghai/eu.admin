@@ -99,20 +99,36 @@ const batchColor: Record<EvaluationBatch["Status"], string> = {
   Failed: "error"
 };
 
+const defaultSpecification = () => ({
+  ExpectedStatus: "Completed",
+  OutputContains: [],
+  OutputExcludes: [],
+  RequiredEventKinds: [],
+  MaximumToolCalls: null,
+  MaximumDurationMilliseconds: null
+});
+
+const normalizeCase = (value: EvaluationCase): EvaluationCase => {
+  const specification = value.Specification || defaultSpecification();
+  return {
+    ...value,
+    Specification: {
+      ...defaultSpecification(),
+      ...specification,
+      OutputContains: Array.isArray(specification.OutputContains) ? specification.OutputContains : [],
+      OutputExcludes: Array.isArray(specification.OutputExcludes) ? specification.OutputExcludes : [],
+      RequiredEventKinds: Array.isArray(specification.RequiredEventKinds) ? specification.RequiredEventKinds : []
+    }
+  };
+};
+
 const newCase = (): EvaluationCase => ({
   Id: crypto.randomUUID(),
   Name: "",
   Input: "",
   TargetAgentId: "",
   TargetAgentVersionId: "",
-  Specification: {
-    ExpectedStatus: "Completed",
-    OutputContains: [],
-    OutputExcludes: [],
-    RequiredEventKinds: [],
-    MaximumToolCalls: null,
-    MaximumDurationMilliseconds: null
-  }
+  Specification: defaultSpecification()
 });
 
 const parseRules = (value: string) => value.split("\n").map(item => item.trim()).filter(Boolean);
@@ -159,15 +175,7 @@ const EvaluationPage = () => {
       code: suite.Code,
       name: suite.Name,
       description: suite.Description,
-      cases: suite.Draft.Cases.map(item => ({
-        ...item,
-        Specification: {
-          ...item.Specification,
-          OutputContains: item.Specification.OutputContains || [],
-          OutputExcludes: item.Specification.OutputExcludes || [],
-          RequiredEventKinds: item.Specification.RequiredEventKinds || []
-        }
-      }))
+      cases: suite.Draft.Cases.map(normalizeCase)
     });
   }, [form]);
 
@@ -254,15 +262,7 @@ const EvaluationPage = () => {
   const save = async () => {
     try {
       const values = await form.validateFields();
-      const cases = (values.cases || []).map(item => ({
-        ...item,
-        Specification: {
-          ...item.Specification,
-          OutputContains: item.Specification.OutputContains || [],
-          OutputExcludes: item.Specification.OutputExcludes || [],
-          RequiredEventKinds: item.Specification.RequiredEventKinds || []
-        }
-      }));
+      const cases = (values.cases || []).map(normalizeCase);
       setSaving(true);
       setError("");
       const suite = current
