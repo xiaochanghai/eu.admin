@@ -43,7 +43,7 @@
             <summary>
             客户(Controller)
             </summary>
-
+            
         </member>
         <member name="T:EU.Core.Api.Controllers.CustomerDeliveryAddressController">
             <summary>
@@ -259,7 +259,7 @@
         </member>
         <member name="T:EU.Core.Api.Controllers.NacosController">
             <summary>
-            服务管理
+            服务管理 
             </summary>
         </member>
         <member name="F:EU.Core.Api.Controllers.NacosController.NacosNamingService">
@@ -269,7 +269,7 @@
         </member>
         <member name="M:EU.Core.Api.Controllers.NacosController.#ctor(Nacos.V2.INacosNamingService)">
             <summary>
-
+            
             </summary>
             <param name="nacosNamingService"></param>
         </member>
@@ -481,7 +481,7 @@
             <summary>
             批量导入入库单
             </summary>
-            <param name="entity">数据</param>
+            <param name="entity">数据</param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.PoArrivalOrderController.BulkOrderComplete(System.Guid[])">
@@ -505,8 +505,8 @@
             <summary>
             批量导入明细
             </summary>
-            <param name="entity">数据</param>
-            <param name="id">id</param>
+            <param name="entity">数据</param> 
+            <param name="id">id</param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.PoInOrderController.BulkOrderComplete(System.Guid[])">
@@ -868,7 +868,7 @@
             <summary>
             上传视频
             </summary>
-            <param name="upload"></param>
+            <param name="upload"></param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.FileController.UploadChunkAsync(EU.Core.Model.ChunkUpload)">
@@ -975,7 +975,7 @@
         </member>
         <member name="P:EU.Core.Api.Controllers.SmConfigController.SmConfigView.detail">
             <summary>
-
+            
             </summary>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmConfigGroupController">
@@ -1057,14 +1057,14 @@
             <summary>
             根据模板ID获取明细
             </summary>
-            <param name="moduleId">模板ID</param>
+            <param name="moduleId">模板ID</param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Api.Controllers.SmImpTemplateController.Download(System.Guid)">
             <summary>
             根据模板ID下载
             </summary>
-            <param name="templateId">模板ID</param>
+            <param name="templateId">模板ID</param> 
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmImpTemplateDetailController">
@@ -1215,8 +1215,8 @@
             <summary>
             复制模块
             </summary>
-            <param name="moduleId">模块ID</param>
-            <param name="module">模块</param>
+            <param name="moduleId">模块ID</param> 
+            <param name="module">模块</param> 
             <returns></returns>
         </member>
         <member name="T:EU.Core.Api.Controllers.SmModuleSqlController">
@@ -1558,30 +1558,30 @@
         </member>
         <member name="P:EU.Core.Api.Filter.GlobalActionFilter.Message">
             <summary>
-
+            
             </summary>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
             <summary>
-
+            
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
             <summary>
-
+            
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuting(Microsoft.AspNetCore.Mvc.Filters.ResultExecutingContext)">
             <summary>
-
+            
             </summary>
             <param name="filterContext"></param>
         </member>
         <member name="M:EU.Core.Api.Filter.GlobalActionFilter.OnResultExecuted(Microsoft.AspNetCore.Mvc.Filters.ResultExecutedContext)">
             <summary>
-
+            
             </summary>
             <param name="filterContext"></param>
         </member>
@@ -1804,7 +1804,7 @@
             <summary>
             Excel导入数据转换
             </summary>
-            <param name="request">请求数据</param>
+            <param name="request">请求数据</param> 
             <returns></returns>
         </member>
         <member name="M:EU.Core.Controllers.CommonController.ComboGridData(System.String,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.String[],System.String)">
@@ -1942,9 +1942,9 @@
         <member name="M:EU.Core.Controllers.LoginController.#ctor(EU.Core.IServices.ISmUsersServices,EU.Core.AuthHelper.PermissionRequirement,Microsoft.Extensions.Logging.ILogger{EU.Core.Controllers.LoginController})">
             <summary>
             构造函数注入
-            </summary>
-            <param name="smUsersServices"></param>
-            <param name="requirement"></param>
+            </summary>  
+            <param name="smUsersServices"></param> 
+            <param name="requirement"></param> 
             <param name="logger"></param>
         </member>
         <member name="M:EU.Core.Controllers.LoginController.GetJwtStr(System.String,System.String)">
@@ -2029,9 +2029,9 @@
         <member name="M:EU.Core.Controllers.ValuesController.#ctor(EU.Core.Model.Love,EU.Core.Common.HttpContextUser.IUser,EU.Core.Common.Https.HttpPolly.IHttpPollyHelper,EU.Core.EventBus.IRabbitMQPersistentConnection,Microsoft.Extensions.Options.IOptions{EU.Core.Common.Option.SeqOptions})">
             <summary>
             ValuesController
-            </summary>
-            <param name="love"></param>
-            <param name="user"></param>
+            </summary>  
+            <param name="love"></param> 
+            <param name="user"></param> 
             <param name="httpPollyHelper"></param>
             <param name="persistentConnection"></param>
             <param name="seqOptions"></param>
@@ -2143,18 +2143,15 @@
             全局权限过滤器【无效】
             </summary>
         </member>
-        <member name="T:EU.Core.Filter.GlobalExceptionsFilter">
+        <member name="T:EU.Core.Filter.EuCoreApiGlobalExceptionObserver">
             <summary>
-            全局异常错误日志
+            EU.Core.Api 宿主专属的异常附加处理。
             </summary>
         </member>
-        <member name="M:EU.Core.Filter.GlobalExceptionsFilter.WriteLog(System.String,System.Exception)">
+        <member name="M:EU.Core.Filter.EuCoreApiGlobalExceptionObserver.#ctor(Microsoft.AspNetCore.SignalR.IHubContext{EU.Core.Hubs.ChatHub})">
             <summary>
-            自定义返回格式
+            EU.Core.Api 宿主专属的异常附加处理。
             </summary>
-            <param name="throwMsg"></param>
-            <param name="ex"></param>
-            <returns></returns>
         </member>
         <member name="P:EU.Core.Filter.JsonErrorResponse.Message">
             <summary>
@@ -2227,7 +2224,7 @@
         <member name="M:EU.Web.Controllers.Server.ServerController.GetServerBase">
             <summary>
             获取服务器配置信息
-            </summary>
+            </summary> 
             <returns></returns>
         </member>
         <member name="M:EU.Web.Controllers.Server.ServerController.ParseToLong(System.Object)">

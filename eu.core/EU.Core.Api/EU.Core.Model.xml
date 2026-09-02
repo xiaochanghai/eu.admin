@@ -14,6 +14,191 @@
             表中文名
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.AgAgentDefinitionBase">
+            <summary>
+            Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentDefinitionBase.Code">
+            <summary>
+            Agent 唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentDefinitionBase.LogicalRevision">
+            <summary>
+            逻辑修订号，用于乐观并发控制
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentDefinitionBase.Name">
+            <summary>
+            Agent 显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentDefinitionBase.Description">
+            <summary>
+            Agent 功能说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentDefinitionBase.RuntimeStatus">
+            <summary>
+            运行状态：Enabled、Disabled 或 Archived
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.AgAgentVersionBase">
+            <summary>
+            Agent 版本表，保存当前草稿和历次已发布版本配置 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.AgentId">
+            <summary>
+            所属 Agent 主键，对应 AgAgentDefinition.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.Ordinal">
+            <summary>
+            版本排列顺序；草稿固定为 0，发布版本按顺序保存
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.Label">
+            <summary>
+            版本标签，例如 1.0.0
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.IsDraft">
+            <summary>
+            是否为草稿版本；每个 Agent 只能有一个草稿
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.Instructions">
+            <summary>
+            Agent 系统指令
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.ModelProfileId">
+            <summary>
+            模型配置标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.OutputMode">
+            <summary>
+            输出模式：Text 或 Structured
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.OutputJsonSchema">
+            <summary>
+            结构化输出使用的 JSON Schema
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBase.OutputSchemaSha256">
+            <summary>
+            输出 JSON Schema 的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.AgAgentVersionBindingBase">
+            <summary>
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.VersionId">
+            <summary>
+            所属 Agent 版本主键，对应 AgAgentVersion.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.Scope">
+            <summary>
+            绑定范围：Version 表示版本配置，Snapshot 表示发布快照
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.BindingType">
+            <summary>
+            绑定类型：Skill、Tool、KnowledgeBase、ChildAgent 或 Orchestration
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.Ordinal">
+            <summary>
+            同一版本、范围及类型下的排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.ReferenceId">
+            <summary>
+            被绑定资源的主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.ReferenceVersionId">
+            <summary>
+            发布时固定的资源版本主键，适用于子 Agent 和编排等资源
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.LogicalRevision">
+            <summary>
+            发布时固定的资源逻辑修订号，主要用于知识库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.ReferenceCode">
+            <summary>
+            发布时冻结的被绑定资源编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.ReferenceName">
+            <summary>
+            发布时冻结的被绑定资源名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionBindingBase.ReferenceDescription">
+            <summary>
+            发布时冻结的被绑定资源说明
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Base.AgAgentVersionSnapshotBase">
+            <summary>
+            Agent 发布快照表，冻结发布时的 Agent 运行配置 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.VersionId">
+            <summary>
+            所属 Agent 版本主键，对应 AgAgentVersion.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.SnapshotVersionId">
+            <summary>
+            快照记录的 Agent 版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.AgentCode">
+            <summary>
+            发布时冻结的 Agent 编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.Instructions">
+            <summary>
+            发布时冻结的 Agent 系统指令
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.ModelProfileId">
+            <summary>
+            发布时冻结的模型配置标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.OutputMode">
+            <summary>
+            发布时冻结的输出模式
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.OutputJsonSchema">
+            <summary>
+            发布时冻结的结构化输出 JSON Schema
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.AgentName">
+            <summary>
+            发布时冻结的 Agent 名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgAgentVersionSnapshotBase.AgentDescription">
+            <summary>
+            发布时冻结的 Agent 说明
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.BdColorBase">
             <summary>
             颜色 (Dto.Base)
@@ -6572,6 +6757,26 @@
             草稿
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditAgAgentDefinitionInput">
+            <summary>
+            Agent 定义表 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditAgAgentVersionInput">
+            <summary>
+            Agent 版本表，保存当前草稿和历次已发布版本配置 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditAgAgentVersionBindingInput">
+            <summary>
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定 (Dto.EditInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Edit.EditAgAgentVersionSnapshotInput">
+            <summary>
+            Agent 发布快照表，冻结发布时的 Agent 运行配置 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditBdColorInput">
             <summary>
             颜色 (Dto.EditInput)
@@ -7096,6 +7301,2039 @@
             <summary>
             WxConfig (Dto.EditInput)
             </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentDefinition">
+            <summary>
+            Agent 定义主表，保存 Agent 身份、名称、说明、运行状态和逻辑版本 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentDefinition.Code">
+            <summary>
+            Agent 唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentDefinition.LogicalRevision">
+            <summary>
+            逻辑修订号，用于乐观并发控制
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentDefinition.Name">
+            <summary>
+            Agent 显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentDefinition.Description">
+            <summary>
+            Agent 功能说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentDefinition.RuntimeStatus">
+            <summary>
+            运行状态：Enabled、Disabled 或 Archived
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentOperationAudit">
+            <summary>
+            Agent API 操作审计表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.CurrentNode">
+            <summary>当前流程节点</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.TenantId">
+            <summary>租户标识</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.UserId">
+            <summary>操作用户标识</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.CorrelationId">
+            <summary>请求关联标识</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.Policy">
+            <summary>请求要求的授权策略</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.Method">
+            <summary>HTTP 请求方法</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.Path">
+            <summary>匹配的 API 路由</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.StatusCode">
+            <summary>HTTP 响应状态码</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.Outcome">
+            <summary>操作执行结果</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.ErrorCode">
+            <summary>操作错误码</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.DurationMilliseconds">
+            <summary>操作耗时（毫秒）</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentOperationAudit.OccurredAtUtc">
+            <summary>操作发生时间（UTC）</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentRunAudit">
+            <summary>
+            Agent 运行审计汇总表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.AgentId">
+            <summary>
+            执行的 Agent 标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.AgentVersionId">
+            <summary>
+            执行使用的已发布 Agent 版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.AgentCode">
+            <summary>
+            执行时记录的 Agent 编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.Status">
+            <summary>
+            Agent 运行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.StartedAtUtc">
+            <summary>
+            Agent 运行开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.FinishedAtUtc">
+            <summary>
+            Agent 运行结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.InputSha256">
+            <summary>
+            运行输入内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.OutputCharacters">
+            <summary>
+            运行输出字符数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.ToolCallCount">
+            <summary>
+            工具调用次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.ErrorCode">
+            <summary>
+            运行错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentTask">
+            <summary>Durable Agent task.</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentTaskAttempt">
+            <summary>One execution attempt for a durable Agent task.</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentTaskEvent">
+            <summary>Append-only lifecycle event for a durable Agent task.</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentToolCallAudit">
+            <summary>
+            Agent 工具调用审计明细表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.RunId">
+            <summary>
+            所属 Agent 运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.Ordinal">
+            <summary>
+            工具调用排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.ToolVersionId">
+            <summary>
+            调用的工具版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.ToolName">
+            <summary>
+            工具名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.Risk">
+            <summary>
+            工具风险等级
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.Status">
+            <summary>
+            工具调用结果状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.StartedAtUtc">
+            <summary>
+            工具调用开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.FinishedAtUtc">
+            <summary>
+            工具调用结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentToolCallAudit.ErrorCode">
+            <summary>
+            工具调用错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentVersion">
+            <summary>
+            Agent 版本表，保存当前草稿和历次已发布版本配置 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.AgentId">
+            <summary>
+            所属 Agent 主键，对应 AgAgentDefinition.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.Ordinal">
+            <summary>
+            版本排列顺序；草稿固定为 0，发布版本按顺序保存
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.Label">
+            <summary>
+            版本标签，例如 1.0.0
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.IsDraft">
+            <summary>
+            是否为草稿版本；每个 Agent 只能有一个草稿
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.Instructions">
+            <summary>
+            Agent 系统指令
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.ModelProfileId">
+            <summary>
+            模型配置标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.OutputMode">
+            <summary>
+            输出模式：Text 或 Structured
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.OutputJsonSchema">
+            <summary>
+            结构化输出使用的 JSON Schema
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersion.OutputSchemaSha256">
+            <summary>
+            输出 JSON Schema 的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentVersionBinding">
+            <summary>
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.VersionId">
+            <summary>
+            所属 Agent 版本主键，对应 AgAgentVersion.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.Scope">
+            <summary>
+            绑定范围：Version 表示版本配置，Snapshot 表示发布快照
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.BindingType">
+            <summary>
+            绑定类型：Skill、Tool、KnowledgeBase、ChildAgent 或 Orchestration
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.Ordinal">
+            <summary>
+            同一版本、范围及类型下的排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.ReferenceId">
+            <summary>
+            被绑定资源的主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.ReferenceVersionId">
+            <summary>
+            发布时固定的资源版本主键，适用于子 Agent 和编排等资源
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.LogicalRevision">
+            <summary>
+            发布时固定的资源逻辑修订号，主要用于知识库
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.ReferenceCode">
+            <summary>
+            发布时冻结的被绑定资源编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.ReferenceName">
+            <summary>
+            发布时冻结的被绑定资源名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionBinding.ReferenceDescription">
+            <summary>
+            发布时冻结的被绑定资源说明
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgAgentVersionSnapshot">
+            <summary>
+            Agent 发布快照表，冻结发布时的 Agent 运行配置 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.VersionId">
+            <summary>
+            所属 Agent 版本主键，对应 AgAgentVersion.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.SnapshotVersionId">
+            <summary>
+            快照记录的 Agent 版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.AgentCode">
+            <summary>
+            发布时冻结的 Agent 编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.Instructions">
+            <summary>
+            发布时冻结的 Agent 系统指令
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.ModelProfileId">
+            <summary>
+            发布时冻结的模型配置标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.OutputMode">
+            <summary>
+            发布时冻结的输出模式
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.OutputJsonSchema">
+            <summary>
+            发布时冻结的结构化输出 JSON Schema
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.AgentName">
+            <summary>
+            发布时冻结的 Agent 名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentVersionSnapshot.AgentDescription">
+            <summary>
+            发布时冻结的 Agent 说明
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgApiIdempotency">
+            <summary>
+            Agent API 幂等请求记录表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.CurrentNode">
+            <summary>当前流程节点</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ScopeSha256">
+            <summary>幂等请求作用域哈希</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.RequestSha256">
+            <summary>请求内容哈希</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.Status">
+            <summary>幂等请求状态</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ResponseStatusCode">
+            <summary>缓存的 HTTP 响应状态码</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ResponseContentType">
+            <summary>缓存的 HTTP 响应内容类型</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ResponseLocation">
+            <summary>缓存的 HTTP Location 响应头</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ResponseBody">
+            <summary>缓存的 HTTP 响应正文</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.CreatedAtUtc">
+            <summary>记录创建时间（UTC）</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgApiIdempotency.ExpiresAtUtc">
+            <summary>记录过期时间（UTC）</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgChatConversation">
+            <summary>Agent 对话会话表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgChatMessage">
+            <summary>Agent 对话消息表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationBatch">
+            <summary>
+            评估批次执行汇总表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.TenantId">
+            <summary>
+            租户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.RequestedByUserId">
+            <summary>
+            发起评估批次的用户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.SuiteId">
+            <summary>
+            评估套件标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.SuiteVersionId">
+            <summary>
+            已发布评估套件版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.SuiteVersionContentSha256">
+            <summary>
+            已发布评估套件版本内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.Status">
+            <summary>
+            评估批次执行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.LogicalRevision">
+            <summary>
+            用于乐观并发控制的逻辑修订号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.StartedAtUtc">
+            <summary>
+            评估批次开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.FinishedAtUtc">
+            <summary>
+            评估批次结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatch.ErrorCode">
+            <summary>
+            评估批次级错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationBatchCase">
+            <summary>
+            评估批次用例执行结果及评估报告汇总表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.BatchId">
+            <summary>
+            所属评估批次标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.Ordinal">
+            <summary>
+            用例执行顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.CaseId">
+            <summary>
+            评估套件中的用例标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.CaseName">
+            <summary>
+            执行时记录的用例显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.TargetAgentId">
+            <summary>
+            目标 Agent 标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.TargetAgentVersionId">
+            <summary>
+            目标 Agent 已发布版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.Status">
+            <summary>
+            用例执行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.UnifiedRunId">
+            <summary>
+            关联的统一运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.UnifiedRunStatus">
+            <summary>
+            统一运行的实际状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.ErrorCode">
+            <summary>
+            用例级错误码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.DurationMilliseconds">
+            <summary>
+            实际运行耗时（毫秒）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.ToolCallCount">
+            <summary>
+            实际工具调用次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.ReportEvaluatedAtUtc">
+            <summary>
+            断言报告评估时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.ReportPassed">
+            <summary>
+            断言报告是否通过
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.ReportScore">
+            <summary>
+            断言报告得分
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.OutputSha256">
+            <summary>
+            运行输出内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCase.OutputUtf8Bytes">
+            <summary>
+            运行输出内容的 UTF-8 字节数
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationBatchCheck">
+            <summary>
+            用例评估报告的有序断言检查项表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.BatchId">
+            <summary>
+            所属评估批次标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.BatchCaseId">
+            <summary>
+            所属评估批次用例记录标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.Ordinal">
+            <summary>
+            检查项在报告中的顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.Code">
+            <summary>
+            检查项类型编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.Passed">
+            <summary>
+            检查项是否通过
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.Expected">
+            <summary>
+            检查项的预期值或预期条件
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchCheck.Actual">
+            <summary>
+            检查项的实际值或实际结果
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationBatchObservation">
+            <summary>
+            用例运行期间记录的有序事件类型及路由观测表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.BatchId">
+            <summary>
+            所属评估批次标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.BatchCaseId">
+            <summary>
+            所属评估批次用例记录标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.ObservationType">
+            <summary>
+            观测类型：EventKind（事件类型）或 Route（路由）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.Ordinal">
+            <summary>
+            同类观测记录的排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationBatchObservation.Value">
+            <summary>
+            观测到的事件类型或路由值
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationCase">
+            <summary>
+            评测套件版本用例表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.SuiteId">
+            <summary>
+            所属评测套件主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.VersionId">
+            <summary>
+            所属套件版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.Ordinal">
+            <summary>
+            用例排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.CaseId">
+            <summary>
+            契约内用例标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.Name">
+            <summary>
+            用例名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.Input">
+            <summary>
+            用例输入
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.TargetAgentId">
+            <summary>
+            目标 Agent 主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.TargetAgentVersionId">
+            <summary>
+            目标 Agent 发布版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.ExpectedStatus">
+            <summary>
+            预期运行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.MaximumToolCalls">
+            <summary>
+            最大工具调用数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCase.MaximumDurationMilliseconds">
+            <summary>
+            最大运行毫秒数
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationCaseRule">
+            <summary>
+            评测用例有序规则表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.SuiteId">
+            <summary>
+            所属评测套件主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.VersionId">
+            <summary>
+            所属套件版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.EvaluationCaseId">
+            <summary>
+            所属用例行主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.RuleType">
+            <summary>
+            规则类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.Ordinal">
+            <summary>
+            同类型规则排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationCaseRule.Value">
+            <summary>
+            规则内容
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgement">
+            <summary>
+            评估批次模型评审报告主表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.TenantId">
+            <summary>
+            租户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.RequestedByUserId">
+            <summary>
+            发起模型评审的用户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.BatchId">
+            <summary>
+            所属评估批次标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.SuiteId">
+            <summary>
+            评估套件标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.SuiteVersionId">
+            <summary>
+            已发布评估套件版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.SuiteVersionContentSha256">
+            <summary>
+            已发布评估套件版本内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.Provider">
+            <summary>
+            模型评审引擎提供方
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.PackageVersion">
+            <summary>
+            模型评审组件包版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.ModelProfileId">
+            <summary>
+            执行评审使用的模型配置标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.ConfigurationSha256">
+            <summary>
+            模型评审配置的 SHA-256 摘要，用于防止相同配置重复评审
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.PromptVersion">
+            <summary>
+            模型评审提示词版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.StartedAtUtc">
+            <summary>
+            模型评审开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.FinishedAtUtc">
+            <summary>
+            模型评审结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgement.AdvisoryPassed">
+            <summary>
+            模型评审建议结果是否通过
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgementCase">
+            <summary>
+            模型评审用例结果表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.JudgementId">
+            <summary>
+            所属模型评审报告标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.Ordinal">
+            <summary>
+            用例排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.CaseId">
+            <summary>
+            评估套件中的用例标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.CaseName">
+            <summary>
+            执行时记录的用例名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.UnifiedRunId">
+            <summary>
+            关联的统一运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.InputSha256">
+            <summary>
+            用例输入内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementCase.OutputSha256">
+            <summary>
+            用例输出内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic">
+            <summary>
+            模型评审指标诊断码表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic.JudgementId">
+            <summary>
+            所属模型评审报告标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic.JudgementMetricId">
+            <summary>
+            所属模型评审指标记录标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic.Ordinal">
+            <summary>
+            诊断码排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementDiagnostic.Code">
+            <summary>
+            模型评审诊断码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgementEvaluator">
+            <summary>
+            模型评审报告使用的有序评估器表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementEvaluator.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementEvaluator.JudgementId">
+            <summary>
+            所属模型评审报告标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementEvaluator.Ordinal">
+            <summary>
+            评估器排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementEvaluator.Name">
+            <summary>
+            评估器名称
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric">
+            <summary>
+            模型评审用例指标结果表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.JudgementId">
+            <summary>
+            所属模型评审报告标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.JudgementCaseId">
+            <summary>
+            所属模型评审用例记录标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.Ordinal">
+            <summary>
+            指标排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.Name">
+            <summary>
+            评估指标名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.Score">
+            <summary>
+            模型评审实际得分
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.MinimumScore">
+            <summary>
+            指标最低通过分数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMetric.Passed">
+            <summary>
+            指标是否通过
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore">
+            <summary>
+            模型评审指标最低分配置表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore.JudgementId">
+            <summary>
+            所属模型评审报告标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore.Ordinal">
+            <summary>
+            最低分配置排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore.Name">
+            <summary>
+            评估指标名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationModelJudgementMinimumScore.Score">
+            <summary>
+            评估指标最低通过分数
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationSuite">
+            <summary>
+            评测套件定义主表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.TenantId">
+            <summary>
+            租户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Code">
+            <summary>
+            租户内唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Name">
+            <summary>
+            套件显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Description">
+            <summary>
+            套件说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Status">
+            <summary>
+            生命周期状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.LogicalRevision">
+            <summary>
+            逻辑修订号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.CreatedAtUtc">
+            <summary>
+            业务创建 UTC 时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.UpdatedAtUtc">
+            <summary>
+            业务更新 UTC 时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.CreatedByUserId">
+            <summary>
+            创建用户标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.UpdatedByUserId">
+            <summary>
+            更新用户标识
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgEvaluationSuiteVersion">
+            <summary>
+            评测套件草稿和发布版本表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.SuiteId">
+            <summary>
+            所属评测套件主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.Ordinal">
+            <summary>
+            版本排列顺序；草稿固定为 0
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.Label">
+            <summary>
+            版本标签
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.IsDraft">
+            <summary>
+            是否为草稿版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.ContentSha256">
+            <summary>
+            版本内容摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.PublishedAtUtc">
+            <summary>
+            发布 UTC 时间
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuiteVersion.PublishedByUserId">
+            <summary>
+            发布用户标识
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgKnowledgeBaseDefinition">
+            <summary>
+            知识库定义主表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.Code">
+            <summary>
+            知识库唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.Name">
+            <summary>
+            知识库显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.Description">
+            <summary>
+            知识库说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.Status">
+            <summary>
+            生命周期状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.LogicalRevision">
+            <summary>
+            逻辑修订号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeBaseDefinition.IndexedAtUtc">
+            <summary>
+            最近索引 UTC 时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgKnowledgeChunk">
+            <summary>
+            知识库检索分块表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeChunk.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeChunk.KnowledgeBaseId">
+            <summary>
+            所属知识库主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeChunk.DocumentId">
+            <summary>
+            所属文档主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeChunk.Sequence">
+            <summary>
+            文档内分块序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeChunk.Content">
+            <summary>
+            分块正文
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgKnowledgeDocument">
+            <summary>
+            知识库文档表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.KnowledgeBaseId">
+            <summary>
+            所属知识库主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.Ordinal">
+            <summary>
+            文档排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.FileName">
+            <summary>
+            文件名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.MediaType">
+            <summary>
+            媒体类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.Sha256">
+            <summary>
+            文档 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.Content">
+            <summary>
+            提取后的文档正文
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgKnowledgeDocument.ImportedAtUtc">
+            <summary>
+            导入 UTC 时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgMainAgentAssignment">
+            <summary>
+            主 Agent 指派表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.AssignmentKey">
+            <summary>
+            主 Agent 指派键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.AgentId">
+            <summary>
+            指派的 Agent 标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.AgentVersionId">
+            <summary>
+            指派的已发布 Agent 版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.LogicalRevision">
+            <summary>
+            逻辑修订号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMainAgentAssignment.UpdatedAtUtc">
+            <summary>
+            指派更新时间（UTC）
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgMcpServerArgument">
+            <summary>
+            MCP Server Stdio 参数表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerArgument.ServerId">
+            <summary>
+            所属 MCP Server 主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerArgument.Ordinal">
+            <summary>
+            参数排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerArgument.Value">
+            <summary>
+            参数值
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgMcpServerDefinition">
+            <summary>
+            MCP Server 定义主表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Code">
+            <summary>
+            MCP Server 唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Name">
+            <summary>
+            MCP Server 显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Description">
+            <summary>
+            MCP Server 说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Transport">
+            <summary>
+            传输类型
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Endpoint">
+            <summary>
+            HTTP 或 SSE 端点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Command">
+            <summary>
+            Stdio 启动命令
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.CredentialAlias">
+            <summary>
+            凭据别名
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Enabled">
+            <summary>
+            是否启用
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.LogicalRevision">
+            <summary>
+            逻辑修订号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.Status">
+            <summary>
+            生命周期状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.LastError">
+            <summary>
+            最近同步错误
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpServerDefinition.LastSyncedAtUtc">
+            <summary>
+            最近同步 UTC 时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgMcpToolVersion">
+            <summary>
+            MCP 工具不可变版本历史表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.ServerId">
+            <summary>
+            所属 MCP Server 主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.HistoryOrdinal">
+            <summary>
+            历史版本排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.CurrentOrdinal">
+            <summary>
+            当前工具排列顺序；非当前版本为空
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.Name">
+            <summary>
+            工具名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.Description">
+            <summary>
+            工具说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.InputSchemaJson">
+            <summary>
+            工具输入 JSON Schema
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.Risk">
+            <summary>
+            工具风险等级
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.Sha256">
+            <summary>
+            工具版本 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.DiscoveredAtUtc">
+            <summary>
+            发现 UTC 时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationAgentBinding">
+            <summary>
+            编排发布版本的 Agent 版本绑定表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.OrchestrationId">
+            <summary>
+            所属编排主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.VersionId">
+            <summary>
+            所属发布版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.Ordinal">
+            <summary>
+            绑定排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.AgentId">
+            <summary>
+            绑定的 Agent 主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationAgentBinding.AgentVersionId">
+            <summary>
+            绑定的 Agent 发布版本主键
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationDefinition">
+            <summary>
+            编排定义主表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.Code">
+            <summary>
+            编排唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.Name">
+            <summary>
+            编排显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.Description">
+            <summary>
+            编排说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.Status">
+            <summary>
+            生命周期状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationDefinition.LogicalRevision">
+            <summary>
+            逻辑修订号
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationEdge">
+            <summary>
+            编排版本连线表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.OrchestrationId">
+            <summary>
+            所属编排主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.VersionId">
+            <summary>
+            所属编排版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.Ordinal">
+            <summary>
+            连线存储顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.FromNodeId">
+            <summary>
+            源节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.ToNodeId">
+            <summary>
+            目标节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.Condition">
+            <summary>
+            连线条件
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.ConditionValue">
+            <summary>
+            连线条件值
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationEdge.SortOrder">
+            <summary>
+            条件匹配顺序
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationNode">
+            <summary>
+            编排版本节点表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.OrchestrationId">
+            <summary>
+            所属编排主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.VersionId">
+            <summary>
+            所属编排版本主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.Ordinal">
+            <summary>
+            节点排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.NodeId">
+            <summary>
+            版本内节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.Name">
+            <summary>
+            节点显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.AgentId">
+            <summary>
+            节点使用的 Agent 主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.InputMode">
+            <summary>
+            输入模式
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.InputTemplate">
+            <summary>
+            输入模板
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.MaximumRetries">
+            <summary>
+            最大重试次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNode.TimeoutSeconds">
+            <summary>
+            节点超时秒数
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationNodeAttempt">
+            <summary>
+            编排节点执行尝试明细表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.RunId">
+            <summary>
+            所属编排运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.NodeId">
+            <summary>
+            编排版本内节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.Attempt">
+            <summary>
+            节点重试序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.Sequence">
+            <summary>
+            运行内执行排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.AgentRunId">
+            <summary>
+            关联的 Agent 运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.InputText">
+            <summary>
+            本次尝试输入内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.InputSha256">
+            <summary>
+            本次尝试输入摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.OutputText">
+            <summary>
+            本次尝试输出内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.OutputSha256">
+            <summary>
+            本次尝试输出摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.Status">
+            <summary>
+            本次尝试状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.StartedAtUtc">
+            <summary>
+            本次尝试开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.FinishedAtUtc">
+            <summary>
+            本次尝试结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationNodeAttempt.ErrorCode">
+            <summary>
+            本次尝试错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationRun">
+            <summary>
+            编排运行汇总表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.OrchestrationId">
+            <summary>
+            所属编排标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.OrchestrationVersionId">
+            <summary>
+            执行使用的已发布编排版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.OrchestrationCode">
+            <summary>
+            执行时记录的编排编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.Status">
+            <summary>
+            编排运行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.StartedAtUtc">
+            <summary>
+            编排运行开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.FinishedAtUtc">
+            <summary>
+            编排运行结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.InputSha256">
+            <summary>
+            编排输入内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRun.ErrorCode">
+            <summary>
+            编排运行错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationRunDetail">
+            <summary>
+            编排运行输入输出明细表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunDetail.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunDetail.RunId">
+            <summary>
+            所属编排运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunDetail.OrchestrationId">
+            <summary>
+            所属编排标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunDetail.InputText">
+            <summary>
+            编排原始输入内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunDetail.OutputText">
+            <summary>
+            编排最终输出内容
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationRunNode">
+            <summary>
+            编排运行节点汇总表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.RunId">
+            <summary>
+            所属编排运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.Ordinal">
+            <summary>
+            节点排列顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.NodeId">
+            <summary>
+            编排版本内节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.NodeName">
+            <summary>
+            节点显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.AgentId">
+            <summary>
+            节点使用的 Agent 标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.AgentVersionId">
+            <summary>
+            节点使用的 Agent 版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.Status">
+            <summary>
+            节点执行状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.Attempts">
+            <summary>
+            节点执行尝试次数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.StartedAtUtc">
+            <summary>
+            节点开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.FinishedAtUtc">
+            <summary>
+            节点结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.OutputCharacters">
+            <summary>
+            节点输出字符数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.InputSha256">
+            <summary>
+            节点输入内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationRunNode.ErrorCode">
+            <summary>
+            节点执行错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationToolCall">
+            <summary>
+            编排节点工具调用明细表 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ToolCallId">
+            <summary>
+            工具调用业务标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.RunId">
+            <summary>
+            所属编排运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.NodeId">
+            <summary>
+            所属节点标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.Attempt">
+            <summary>
+            所属节点重试序号
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.Sequence">
+            <summary>
+            尝试内工具调用顺序
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.AgentRunId">
+            <summary>
+            关联的 Agent 运行标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ToolVersionId">
+            <summary>
+            调用的工具版本标识
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ToolName">
+            <summary>
+            工具名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.Status">
+            <summary>
+            工具调用状态
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ArgumentsJson">
+            <summary>
+            工具调用参数 JSON
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ResultContent">
+            <summary>
+            工具调用结果内容
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ResultSha256">
+            <summary>
+            工具调用结果摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ResultCharacters">
+            <summary>
+            工具调用结果字符数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.StartedAtUtc">
+            <summary>
+            工具调用开始时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.FinishedAtUtc">
+            <summary>
+            工具调用结束时间（UTC）
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationToolCall.ErrorCode">
+            <summary>
+            工具调用错误码
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgOrchestrationVersion">
+            <summary>
+            编排草稿和发布版本表。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.CurrentNode">
+            <summary>
+            当前流程节点
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.OrchestrationId">
+            <summary>
+            所属编排主键
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.Ordinal">
+            <summary>
+            版本排列顺序；草稿固定为 0
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.Label">
+            <summary>
+            版本标签
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.IsDraft">
+            <summary>
+            是否为草稿版本
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgOrchestrationVersion.StartNodeId">
+            <summary>
+            起始节点标识
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgSkillDefinition">
+            <summary>
+            Skill 定义主表，保存 Skill 身份、名称、分类、状态和草稿修订号 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.Code">
+            <summary>
+            Skill 唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.DraftRevision">
+            <summary>
+            草稿修订号，用于乐观并发控制
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.Name">
+            <summary>
+            Skill 显示名称
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.Description">
+            <summary>
+            Skill 功能说明
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.Category">
+            <summary>
+            Skill 分类
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillDefinition.Status">
+            <summary>
+            Skill 状态：Active 或 Archived
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgSkillVersion">
+            <summary>
+            Skill 发布版本表，保存版本标识、文件清单摘要和发布时间 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersion.SkillId">
+            <summary>
+            所属 Skill 主键，对应 AgSkillDefinition.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersion.Ordinal">
+            <summary>
+            发布版本排列顺序，从 0 开始
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersion.Label">
+            <summary>
+            严格 SemVer 版本标签，例如 1.0.0
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersion.ManifestSha256">
+            <summary>
+            发布文件清单的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersion.PublishedAtUtc">
+            <summary>
+            UTC 发布时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgSkillVersionFile">
+            <summary>
+            Skill 发布版本文件表，保存不可变文件清单 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersionFile.VersionId">
+            <summary>
+            所属 Skill 发布版本主键，对应 AgSkillVersion.ID
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersionFile.Ordinal">
+            <summary>
+            文件排列顺序，从 0 开始
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersionFile.Path">
+            <summary>
+            Skill 内相对文件路径
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersionFile.Size">
+            <summary>
+            文件字节数
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgSkillVersionFile.Sha256">
+            <summary>
+            文件内容的 SHA-256 摘要
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgToolApprovalDecision">
+            <summary>工具调用审批决策历史表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgToolApprovalExecutionResult">
+            <summary>工具调用审批执行结果表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgToolApprovalPayload">
+            <summary>工具调用审批加密载荷表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgToolApprovalRequest">
+            <summary>工具调用审批请求表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUnifiedAgentRun">
+            <summary>统一入口 Agent 运行明细表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUnifiedEntryRun">
+            <summary>统一入口运行表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUnifiedOrchestrationLink">
+            <summary>统一入口编排运行关联表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUnifiedRunEvent">
+            <summary>统一入口运行事件表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUnifiedToolCall">
+            <summary>统一入口工具调用明细表。</summary>
         </member>
         <member name="T:EU.Core.Model.Entity.BdColor">
             <summary>
@@ -13650,6 +15888,56 @@
             金额
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.AgAgentDefinitionDto">
+            <summary>
+            Agent 定义表(Dto.View)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.AgAgentDefinitionDto.DraftLabel">
+            <summary>
+            当前草稿版本标签。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.AgAgentDefinitionDto.DraftModelProfileId">
+            <summary>
+            当前草稿使用的模型配置标识。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.AgAgentDefinitionDto.CurrentPublishedLabel">
+            <summary>
+            最新发布版本标签；尚未发布时为空。
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentDefinitionDetailDto">
+            <summary>
+            Agent 明细聚合数据。
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentVersionDetailDto">
+            <summary>
+            Agent 版本明细聚合数据。
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentVersionSnapshotDetailDto">
+            <summary>
+            Agent 发布版本快照数据。
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentVersionDto">
+            <summary>
+            Agent 版本表，保存当前草稿和历次已发布版本配置(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentVersionBindingDto">
+            <summary>
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定(Dto.View)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.AgAgentVersionSnapshotDto">
+            <summary>
+            Agent 发布快照表，冻结发布时的 Agent 运行配置(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdColorDto">
             <summary>
             颜色(Dto.View)
@@ -14424,6 +16712,26 @@
             修改时间
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Insert.InsertAgAgentDefinitionInput">
+            <summary>
+            AgAgeAgent 定义表ntDefinition (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertAgAgentVersionInput">
+            <summary>
+            Agent 版本表，保存当前草稿和历次已发布版本配置 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertAgAgentVersionBindingInput">
+            <summary>
+            Agent 版本资源绑定表，统一保存 Skill、MCP 工具、知识库、子 Agent 和编排绑定 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertAgAgentVersionSnapshotInput">
+            <summary>
+            Agent 发布快照表，冻结发布时的 Agent 运行配置 (Dto.InsertInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Insert.InsertBdColorInput">
             <summary>
             颜色 (Dto.InsertInput)
@@ -15127,6 +17435,16 @@
             <param name="data">数据</param>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Model.ServiceResult`1.Failure(System.Int32,System.String,`0,System.String)">
+            <summary>
+            返回带业务状态码的失败结果
+            </summary>
+            <param name="status">业务状态码</param>
+            <param name="message">用户可理解的失败信息</param>
+            <param name="data">结构化失败数据</param>
+            <param name="messageDev">仅供开发环境使用的诊断信息</param>
+            <returns></returns>
+        </member>
         <member name="M:EU.Core.Model.ServiceResult`1.OprateSuccess(System.Boolean,System.String,`0,System.Int32)">
             <summary>
             返回消息
@@ -15264,10 +17582,76 @@
             表隔离
             </summary>
         </member>
+        <member name="T:EU.Core.Model.AgentDatabaseSyncRequest">
+            <summary>Agent 数据库同步请求。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.SourceConfigId">
+            <summary>源 SqlSugar 连接配置标识。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.TargetConfigId">
+            <summary>目标 SqlSugar 连接配置标识。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.Tables">
+            <summary>指定需要同步的 Agent 表；为空时同步全部 Agent 表。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.SyncStructure">
+            <summary>是否根据实体同步目标表结构。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.ReplaceData">
+            <summary>是否删除目标表原有数据并复制源表数据。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.ConfirmReplaceData">
+            <summary>替换数据时必须显式确认。</summary>
+        </member>
+        <member name="P:EU.Core.Model.AgentDatabaseSyncRequest.BatchSize">
+            <summary>单批写入行数。</summary>
+        </member>
+        <member name="T:EU.Core.Model.AgentDatabaseSyncResult">
+            <summary>Agent 数据库同步结果。</summary>
+        </member>
+        <member name="M:EU.Core.Model.AgentDatabaseSyncResult.#ctor(System.String,System.String,System.Boolean,System.Boolean,System.Int64,System.Collections.Generic.IReadOnlyList{EU.Core.Model.AgentDatabaseSyncTableResult})">
+            <summary>Agent 数据库同步结果。</summary>
+        </member>
+        <member name="T:EU.Core.Model.AgentDatabaseSyncTableResult">
+            <summary>单张 Agent 表同步结果。</summary>
+        </member>
+        <member name="M:EU.Core.Model.AgentDatabaseSyncTableResult.#ctor(System.String,System.Int64,System.Int64)">
+            <summary>单张 Agent 表同步结果。</summary>
+        </member>
         <member name="P:EU.Core.Model.ViewModels.EnumDemoDto.Type">
             <summary>
             Type Description balabala
             </summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.AgentApiErrorData">
+            <summary>
+            Agent API 失败响应中的稳定机器可读数据。
+            </summary>
+        </member>
+        <member name="M:EU.Core.Model.ViewModels.Extend.AgentApiErrorData.#ctor(System.String,System.String)">
+            <summary>
+            Agent API 失败响应中的稳定机器可读数据。
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.AgentApiErrorDescriptor">
+            <summary>
+            Agent API 错误码对应的业务状态和默认 HTTP 状态。
+            </summary>
+            <param name="Status">六位 Agent 业务状态码。</param>
+            <param name="HttpStatus">默认 HTTP 状态；运行记录或已开始的流式事件没有该状态。</param>
+        </member>
+        <member name="M:EU.Core.Model.ViewModels.Extend.AgentApiErrorDescriptor.#ctor(System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Agent API 错误码对应的业务状态和默认 HTTP 状态。
+            </summary>
+            <param name="Status">六位 Agent 业务状态码。</param>
+            <param name="HttpStatus">默认 HTTP 状态；运行记录或已开始的流式事件没有该状态。</param>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.AgentApiErrorDescriptor.Status">
+            <summary>六位 Agent 业务状态码。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.AgentApiErrorDescriptor.HttpStatus">
+            <summary>默认 HTTP 状态；运行记录或已开始的流式事件没有该状态。</summary>
         </member>
         <member name="T:EU.Core.Model.ViewModels.Extend.SmRoleFunctionExtend">
             <summary>

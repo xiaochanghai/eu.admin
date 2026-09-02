@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Bubble, Conversations, Sender } from "@ant-design/x";
+import { Bubble, Conversations, Prompts, Sender } from "@ant-design/x";
 import type { BubbleListProps } from "@ant-design/x";
 import { useXChat } from "@ant-design/x-sdk";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { Button, Flex, Layout, Tag, Typography, message } from "antd";
+import { DESIGN_GUIDE, HOT_TOPICS, SENDER_PROMPTS } from "@/components/Chat/PromptsData";
+import { Welcome as AgentWelcome } from "@/components/Chat/Welcome";
 import ToolBarRight from "@/layouts/components/Header/ToolBarRight";
 import logo from "@/assets/images/logo.png";
 import RouterGuard from "@/routers/helper/RouterGuard";
@@ -705,9 +707,29 @@ const LayoutChat: React.FC = () => {
                 status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success",
                 loading: item.status === "streaming" && !item.content && !item.modules.length
               }))} role={bubbleRoles} /> :
-                <Flex className="agent-chat-welcome" vertical align="center" justify="center" gap={12}><Typography.Title level={2}>Unified Chat</Typography.Title><Typography.Text type="secondary">与已发布的主 Agent 对话，回答会结合 Skills、知识库和 MCP 工具。</Typography.Text></Flex>}
+                <section className="agent-chat-welcome">
+                  <AgentWelcome />
+                  <Flex className="agent-chat-welcome-grid" gap={16}>
+                    <Prompts
+                      className="agent-chat-welcome-prompts"
+                      items={[HOT_TOPICS]}
+                      onItemClick={info => void startRun(String(info.data.description || ""))}
+                    />
+                    <Prompts
+                      className="agent-chat-welcome-prompts"
+                      items={[DESIGN_GUIDE]}
+                      onItemClick={info => void startRun(String(info.data.description || ""))}
+                    />
+                  </Flex>
+                </section>}
             </div>
             <div className="agent-chat-composer">
+              {!messages.length ? <Prompts
+                className="agent-chat-welcome-shortcuts"
+                items={SENDER_PROMPTS}
+                onItemClick={info => void startRun(String(info.data.description || ""))}
+                styles={{ list: { justifyContent: "flex-start" }, item: { padding: "6px 12px" } }}
+              /> : null}
               <div className="agent-chat-task-actions"><Button disabled={!input.trim() || isRunning || isSdkRequesting} loading={queueingTask} onClick={() => void queueAgentTask()}>后台执行</Button></div>
               <Sender value={input} onChange={setInput} onSubmit={() => void startRun(input)} onCancel={cancelRun} loading={isRunning || isSdkRequesting} placeholder="输入问题，Unified Chat 会调用已配置的 Agent 能力" />
             </div>
