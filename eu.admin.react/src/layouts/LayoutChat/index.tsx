@@ -3,7 +3,7 @@ import { Bubble, Conversations, Prompts, Sender } from "@ant-design/x";
 import type { BubbleListProps } from "@ant-design/x";
 import { useXChat } from "@ant-design/x-sdk";
 import { InfoCircleOutlined } from "@ant-design/icons";
-import { Button, Flex, Layout, Tag, Typography, message } from "antd";
+import { Button, Flex, Layout, Space, Tag, Typography, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { DESIGN_GUIDE, HOT_TOPICS, SENDER_PROMPTS } from "@/components/Chat/PromptsData";
 import { Welcome as AgentWelcome } from "@/components/Chat/Welcome";
@@ -33,6 +33,12 @@ import {
   type UnifiedChatConversation,
   type UnifiedChatRunEvent
 } from "@/api/modules/agentChat";
+import {
+  cancelToolApproval,
+  getToolApproval,
+  resumeToolApproval,
+  type ToolApproval
+} from "@/api/modules/agentApproval";
 import "./index.less";
 
 const { Header, Sider } = Layout;
@@ -75,6 +81,7 @@ type ChatMessage = {
   modules: EmbeddedModuleReference[];
   kind?: string | number;
   businessQueryPresentationJson?: string;
+  approval?: Pick<ToolApproval, "Id" | "Status" | "ToolName" | "Risk">;
 };
 type BusinessQueryColumn = { key?: string; Key?: string; label?: string; Label?: string; unit?: string; Unit?: string; currency?: string; Currency?: string };
 type BusinessQueryCell = { displayValue?: string; DisplayValue?: string };
@@ -226,6 +233,7 @@ interface ActiveSdkRun {
   runId?: string;
   terminal: boolean;
   cancelRequested: boolean;
+  waitingApproval: boolean;
 }
 
 const LayoutChat: React.FC = () => {
@@ -274,6 +282,7 @@ const LayoutChat: React.FC = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const conversationRevisionRef = useRef(0);
   const activeSdkRunRef = useRef<ActiveSdkRun>();
+  const approvalResumeInFlightRef = useRef(new Set<string>());
   const sdkRequestStartedRef = useRef(false);
   const loadConversationsRef = useRef<() => Promise<void>>(async () => undefined);
   const knownTaskConversationIdsRef = useRef<Set<string>>(new Set());
@@ -472,6 +481,11 @@ const LayoutChat: React.FC = () => {
   const updateAssistant = useCallback((id: string, update: Partial<ChatMessage>) => {
     setMessages(current => current.map(item => (item.id === id ? { ...item, ...update } : item)));
   }, []);
+  const syncApproval = useCallback(async (messageId: string, approvalId: string) => {
+    const detail = await getToolApproval(approvalId);
+    updateAssistant(messageId, { approval: detail.Approval });
+    return detail.Approval;
+  }, [updateAssistant]);
   const appendAssistantModules = useCallback((id: string, modules: EmbeddedModuleReference[]) => {
     if (!modules.length) return;
     setMessages(current => current.map(item => {
@@ -495,6 +509,23 @@ const LayoutChat: React.FC = () => {
       if (citation) setMessages(current => current.map(item => (item.id === active.assistantId && !item.citations.includes(citation) ? { ...item, citations: [...item.citations, citation] } : item)));
     }
     if (event.kind === "tool-succeeded") appendAssistantModules(active.assistantId, extractEmbeddedModules(payload));
+    if (event.kind === "approval-required") {
+      const approvalId = getPayloadValue(payload, "approvalId", "ApprovalId");
+      active.waitingApproval = true;
+      flushTyping();
+      updateAssistant(active.assistantId, {
+        status: "completed",
+        approval: approvalId
+          ? {
+              Id: approvalId,
+              Status: "Pending",
+              ToolName: getPayloadValue(payload, "toolName", "ToolName"),
+              Risk: getPayloadValue(payload, "risk", "Risk") === "HighRisk" ? "HighRisk" : "Mutating"
+            }
+          : undefined
+      });
+      if (approvalId) void syncApproval(active.assistantId, approvalId).catch(() => undefined);
+    }
     if (event.kind !== "message") setTraces(current => [...current.slice(-(MAX_TRACE_ROWS - 1)), getTrace(event)]);
     if (terminalKinds.has(event.kind)) {
       flushTyping();
@@ -555,7 +586,7 @@ const LayoutChat: React.FC = () => {
     sdkRequestStartedRef.current = false;
     flushTyping();
     void (async () => {
-      const reconciled = active.terminal ? true : await reconcileDisconnectedRun(active);
+      const reconciled = active.terminal || active.waitingApproval ? true : await reconcileDisconnectedRun(active);
       if (activeSdkRunRef.current !== active) return;
       if (!reconciled) {
         const fallbackText =
@@ -634,6 +665,19 @@ const LayoutChat: React.FC = () => {
           status: latestStatus === "cancelled" ? "cancelled" : "failed"
         });
       }
+      const approvalEvent = [...events].reverse().find(event => event.kind === "approval-required");
+      const approvalId = approvalEvent
+        ? getPayloadValue(parsePayload(approvalEvent.payloadJson), "approvalId", "ApprovalId")
+        : "";
+      if (approvalId) {
+        try {
+          const approval = await getToolApproval(approvalId);
+          const lastAssistantIndex = loadedMessages.map(item => item.role).lastIndexOf("assistant");
+          if (lastAssistantIndex >= 0) loadedMessages[lastAssistantIndex].approval = approval.Approval;
+        } catch {
+          // A chat reader without approval-detail access can still inspect the trace entry.
+        }
+      }
       setMessages(loadedMessages);
       setTraces(events.filter(event => event.kind !== "message").map(getTrace));
       const citations = events
@@ -659,6 +703,40 @@ const LayoutChat: React.FC = () => {
       }
     }
   }, [isRunning, isSdkRequesting, messageApi]);
+  useEffect(() => {
+    const pendingApprovals = messages
+      .filter((item): item is ChatMessage & { approval: NonNullable<ChatMessage["approval"]> } => Boolean(item.approval))
+      .filter(item => item.approval.Status !== "Consumed");
+    if (!pendingApprovals.length) return;
+    let disposed = false;
+    const refresh = async () => {
+      for (const item of pendingApprovals) {
+        try {
+          const approval = await syncApproval(item.id, item.approval.Id);
+          if (
+            approval.Status !== "Pending" &&
+            !approvalResumeInFlightRef.current.has(approval.Id)
+          ) {
+            approvalResumeInFlightRef.current.add(approval.Id);
+            await resumeToolApproval(approval.Id);
+            await syncApproval(item.id, approval.Id);
+            if (!disposed) {
+              messageApi.success(approval.Status === "Approved" ? "审批已通过，原会话正在恢复执行。" : "审批状态已同步，原会话正在收敛到最终状态。");
+              void loadConversationsRef.current();
+            }
+          }
+        } catch {
+          // Keep the last visible approval state; the approval center remains available.
+        }
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 2500);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [messageApi, messages, syncApproval]);
   useEffect(() => { void loadConversations(); }, [loadConversations]);
 
   const startRun = async (value: string) => {
@@ -670,7 +748,8 @@ const LayoutChat: React.FC = () => {
       requestId,
       assistantId,
       terminal: false,
-      cancelRequested: false
+      cancelRequested: false,
+      waitingApproval: false
     };
     sdkRequestStartedRef.current = false;
     setInput(""); setIsRunning(true); setTraces([]);
@@ -720,6 +799,15 @@ const LayoutChat: React.FC = () => {
       }
     }
   }, [abortChat, messageApi]);
+  const cancelApproval = useCallback(async (messageId: string, approvalId: string) => {
+    try {
+      const approval = await cancelToolApproval(approvalId, "Requester cancelled from Unified Chat.");
+      updateAssistant(messageId, { approval });
+      messageApi.success("审批申请已取消。");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "取消审批申请失败");
+    }
+  }, [messageApi, updateAssistant]);
   const bubbleRoles: BubbleListProps["role"] = {
     assistant: { placement: "start" },
     user: { placement: "end" as const }
@@ -742,9 +830,22 @@ const LayoutChat: React.FC = () => {
                 key: item.id,
                 role: item.role,
                 content: item.role === "assistant"
-                  ? isBusinessQueryResult(item.kind)
-                    ? <BusinessQueryResultContent content={item.content} presentationJson={item.businessQueryPresentationJson} />
-                    : <EmbeddedModuleContent content={item.content} modules={item.modules} streaming={item.status === "streaming"} />
+                  ? <div className="agent-chat-assistant-content">
+                      {isBusinessQueryResult(item.kind)
+                        ? <BusinessQueryResultContent content={item.content} presentationJson={item.businessQueryPresentationJson} />
+                        : <EmbeddedModuleContent content={item.content} modules={item.modules} streaming={item.status === "streaming"} />}
+                      {item.approval ? <section className={`agent-chat-approval${item.approval.Risk === "HighRisk" ? " is-high-risk" : ""}`}>
+                        <Flex justify="space-between" align="center" gap={8} wrap>
+                          <Typography.Text strong>{item.approval.Status === "Pending" ? "等待人工审批" : item.approval.Status === "Approved" ? "审批已通过，正在恢复执行" : `审批状态：${item.approval.Status}`}</Typography.Text>
+                          <Tag color={item.approval.Risk === "HighRisk" ? "error" : "warning"}>{item.approval.Risk === "HighRisk" ? "高风险" : "变更操作"}</Tag>
+                        </Flex>
+                        <Typography.Text type="secondary">{item.approval.ToolName || "MCP 工具"} 在调用前已暂停；审批仅适用于本次冻结参数。</Typography.Text>
+                        <Space wrap>
+                          <Button size="small" onClick={() => navigate("/agent/approval")}>查看审批详情</Button>
+                          {item.approval.Status === "Pending" ? <Button size="small" onClick={() => void cancelApproval(item.id, item.approval!.Id)}>取消申请</Button> : null}
+                        </Space>
+                      </section> : null}
+                    </div>
                   : item.content,
                 status: item.status === "streaming" ? "updating" : item.status === "failed" ? "error" : item.status === "cancelled" ? "abort" : "success",
                 loading: item.status === "streaming" && !item.content && !item.modules.length

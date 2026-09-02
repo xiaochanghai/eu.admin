@@ -10,6 +10,7 @@ React 页面位于 `eu.admin.react/src/views/agent`，目前负责 Agent Definit
 - 编排及评估中的历史 Agent 版本仍是不可变引用，不会因编辑页发布新版本而被改写。
 - 操作审计模块代码为 `AG_OPERATION_AUDIT_MNG`，页面为 `/agent/audit/index`；它只读取当前租户可见的 Agent API 操作记录。
 - Unified Chat 会保留 `BusinessQueryResult` 消息类型；在服务端允许返回展示数据时，历史会话中的业务查询结果按服务端返回的列和显示值渲染为只读表格，缺少列定义时回退显示服务端 Markdown 文本。
+- Unified Chat 的 MCP 审批会在对话内展示状态卡；它会轮询审批结果，并在服务端允许后恢复或收敛原会话，审批详情与人工决定仍以审批中心为准。
 - MCP Server 模块代码固定为 `AG_MCP_SERVER_MNG`，页面组件为 `/agent/mcpServer/index`。
 - MCP Server 列表与 Agent Definition 一样使用 `TableList`，由 `SmModules`、`SmModuleSql`、`SmModuleColumn` 驱动；自定义 `FormPage` 负责配置、同步、启停、归档和工具风险操作。
 - Skill 模块代码为 `AG_SKILL_MNG`，列表同样使用 `TableList`；自定义 `FormPage` 负责基础信息、Draft 文件、发布版本和归档/恢复。
