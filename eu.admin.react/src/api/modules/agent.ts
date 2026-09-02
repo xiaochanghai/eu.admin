@@ -218,6 +218,11 @@ export const exportAgent = async (id: string) => {
   return blob;
 };
 
+export const importAgent = async (content: string) =>
+  (await http.post<AgentDefinition>(agentUrl("/api/agents/import"), content, {
+    headers: { "Content-Type": "application/json" }
+  })).Data;
+
 export const listAgentRuns = async (id: string, take = 10) =>
   (await http.get<AgentRunAuditRecord[]>(agentUrl(`/api/agents/${encodeURIComponent(id)}/runs`), { take })).Data;
 
