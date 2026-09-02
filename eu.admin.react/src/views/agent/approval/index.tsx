@@ -5,7 +5,7 @@ import {
   ReloadOutlined,
   SafetyCertificateOutlined
 } from "@ant-design/icons";
-import { Button, Card, Descriptions, Empty, Flex, Input, List, Modal, Select, Space, Spin, Tag, Timeline, Typography } from "antd";
+import { Button, Card, Descriptions, Drawer, Empty, Flex, Input, List, Modal, Select, Space, Spin, Tag, Timeline, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   approveToolApproval,
@@ -20,6 +20,14 @@ import {
   type ToolApprovalStatus
 } from "@/api/modules/agentApproval";
 import { getModuleInfo } from "@/api/modules/module";
+import {
+  getUnifiedChatConversation,
+  getUnifiedChatRunDetailEvents,
+  listUnifiedChatRunEvents,
+  listUnifiedChatRuns,
+  type UnifiedChatConversationDetail,
+  type UnifiedChatRunEvent
+} from "@/api/modules/agentChat";
 import { message } from "@/hooks/useMessage";
 import "./index.less";
 
@@ -62,6 +70,10 @@ const ApprovalPage = () => {
   const [action, setAction] = useState<"approve" | "reject" | "cancel">();
   const [reason, setReason] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [conversationOpen, setConversationOpen] = useState(false);
+  const [conversationLoading, setConversationLoading] = useState(false);
+  const [conversationDetail, setConversationDetail] = useState<UnifiedChatConversationDetail>();
+  const [conversationEvents, setConversationEvents] = useState<UnifiedChatRunEvent[]>([]);
   const listRevision = useRef(0);
   const detailRevision = useRef(0);
 
@@ -164,6 +176,29 @@ const ApprovalPage = () => {
     }
   };
 
+  const openConversation = async () => {
+    if (!selected?.ConversationId) return;
+    setConversationOpen(true);
+    setConversationLoading(true);
+    setConversationDetail(undefined);
+    setConversationEvents([]);
+    try {
+      const [detail, runs] = await Promise.all([
+        getUnifiedChatConversation(selected.ConversationId),
+        listUnifiedChatRuns(selected.ConversationId, 1)
+      ]);
+      setConversationDetail(detail);
+      if (runs[0]) {
+        const listedEvents = await listUnifiedChatRunEvents(runs[0]);
+        setConversationEvents(listedEvents.length ? listedEvents : await getUnifiedChatRunDetailEvents(runs[0]));
+      }
+    } catch (conversationError) {
+      message.error(getApprovalErrorMessage(conversationError, "原会话加载失败"));
+    } finally {
+      setConversationLoading(false);
+    }
+  };
+
   const decisionTitle = useMemo(() => ({ approve: "批准此次调用？", reject: "拒绝此次调用？", cancel: "取消此次申请？" }[action || "approve"]), [action]);
 
   return <section className="approval-page">
@@ -214,6 +249,7 @@ const ApprovalPage = () => {
             <section className="approval-page__section"><Typography.Title level={5}>安全参数摘要</Typography.Title><pre>{safeJson(selected.SafeArgumentsSummaryJson)}</pre></section>
             <section className="approval-page__section"><Typography.Title level={5}>决定记录</Typography.Title>{detail.Decisions.length ? <Timeline items={detail.Decisions.map(item => ({ color: statusMeta[item.ToStatus].color, children: <><Typography.Text strong>{statusMeta[item.ToStatus].label}</Typography.Text><br /><Typography.Text type="secondary">{item.DecisionUserId} · {formatTime(item.DecidedAtUtc)}{item.DecisionReason ? ` · ${item.DecisionReason}` : ""}</Typography.Text></> }))} /> : <Typography.Text type="secondary">尚未作出决定。</Typography.Text>}</section>
             <Flex className="approval-page__actions" justify="end" gap={8} wrap>
+              <Button onClick={() => void openConversation()}>查看原会话</Button>
               {selected.Status === "Pending" && <Button onClick={() => { setAction("cancel"); setReason(""); }}>取消申请</Button>}
               {selected.Status === "Pending" && canDecide && <><Button danger icon={<CloseCircleOutlined />} onClick={() => { setAction("reject"); setReason(""); }}>拒绝</Button><Button type="primary" icon={<CheckCircleOutlined />} onClick={() => { setAction("approve"); setReason(""); }}>批准</Button></>}
               {selected.Status === "Approved" && <Button type="primary" loading={actionLoading} onClick={() => void resume()}>恢复原会话</Button>}
@@ -222,6 +258,9 @@ const ApprovalPage = () => {
         </Spin>
       </Card>
     </main>
+    <Drawer title="原会话" open={conversationOpen} onClose={() => setConversationOpen(false)} width={640} destroyOnHidden>
+      <Spin spinning={conversationLoading}>{conversationDetail && <><Typography.Paragraph type="secondary">{conversationDetail.conversation.title || "未命名会话"}</Typography.Paragraph><List dataSource={conversationDetail.messages} renderItem={item => <List.Item><Flex vertical gap={4}><Tag color={item.role === 0 || String(item.role).toLowerCase() === "user" ? "blue" : "green"}>{item.role === 0 || String(item.role).toLowerCase() === "user" ? "用户" : "助手"}</Tag><Typography.Paragraph>{item.content}</Typography.Paragraph></Flex></List.Item>} /><Typography.Title level={5}>最近运行轨迹</Typography.Title><List dataSource={conversationEvents} locale={{ emptyText: "暂无运行事件" }} renderItem={event => <List.Item><Flex vertical gap={4}><Space><Tag>{event.kind}</Tag><Typography.Text type="secondary">#{event.sequence} · {new Date(event.occurredAtUtc).toLocaleString()}</Typography.Text></Space><pre>{event.payloadJson}</pre></Flex></List.Item>} /></>}</Spin>
+    </Drawer>
     <Modal open={Boolean(action)} title={decisionTitle} okText={action === "approve" ? "确认批准" : action === "reject" ? "确认拒绝" : "确认取消"} okButtonProps={{ danger: action !== "approve", loading: actionLoading }} onOk={() => void submitDecision()} onCancel={() => !actionLoading && setAction(undefined)}>
       <Typography.Paragraph type="secondary">{action === "approve" ? "批准后仍会重新校验工具版本、Schema 和申请人权限。" : "该决定会写入服务端；外部工具不会因拒绝或取消而执行。"}</Typography.Paragraph>
       <Input.TextArea autoFocus rows={3} maxLength={512} value={reason} onChange={event => setReason(event.target.value)} placeholder={action === "approve" ? "审批说明（可选）" : "请填写原因（可选）"} />
