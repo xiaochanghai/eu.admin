@@ -280,25 +280,6 @@ public sealed class AgEvaluationApiResponse_Should
             Task.FromResult(true);
     }
 
-    private sealed class SuiteRepository(IEnumerable<EvaluationSuiteDefinition> values) : IEvaluationSuiteRepository
-    {
-        private readonly ConcurrentDictionary<Guid, EvaluationSuiteDefinition> _values =
-            new(values.ToDictionary(value => value.Id));
-
-        public Task<EvaluationSuiteDefinition?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_values.GetValueOrDefault(id));
-        public Task<IReadOnlyList<EvaluationSuiteDefinition>> ListAsync(string tenantId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<EvaluationSuiteDefinition>>(_values.Values.ToArray());
-        public Task<bool> TryCreateAsync(EvaluationSuiteDefinition value, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_values.TryAdd(value.Id, value));
-        public Task<bool> TryReplaceAsync(EvaluationSuiteDefinition value, long expectedLogicalRevision, CancellationToken cancellationToken = default)
-        {
-            if (!_values.TryGetValue(value.Id, out EvaluationSuiteDefinition? current)
-                || current.LogicalRevision != expectedLogicalRevision) return Task.FromResult(false);
-            return Task.FromResult(_values.TryUpdate(value.Id, value, current));
-        }
-    }
-
     private sealed class BatchRepository(IEnumerable<EvaluationBatchRecord> values) : IEvaluationBatchRepository
     {
         private readonly ConcurrentDictionary<Guid, EvaluationBatchRecord> _values =

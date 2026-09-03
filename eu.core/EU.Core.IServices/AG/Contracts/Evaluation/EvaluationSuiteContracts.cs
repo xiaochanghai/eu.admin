@@ -127,27 +127,6 @@ public static class EvaluationSuiteServiceStatusCodes
     };
 }
 
-public interface IEvaluationSuiteRepository
-{
-    Task<EvaluationSuiteDefinition?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<EvaluationSuiteDefinition>> ListAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> TryCreateAsync(
-        EvaluationSuiteDefinition value,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> TryReplaceAsync(
-        EvaluationSuiteDefinition value,
-        long expectedLogicalRevision,
-        CancellationToken cancellationToken = default);
-}
-
 public interface IEvaluationTargetCatalog
 {
     Task<bool> IsPublishedAsync(

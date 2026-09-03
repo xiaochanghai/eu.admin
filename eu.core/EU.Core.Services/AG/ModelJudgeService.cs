@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using EU.Core.IServices;
 using EU.Core.IServices.Agents;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
@@ -15,7 +16,7 @@ namespace EU.Core.Services;
 
 public sealed class ModelJudgeService(
     IEvaluationBatchRepository batches,
-    IEvaluationSuiteRepository suites,
+    IAgEvaluationSuiteServices suites,
     IModelJudgeReportRepository reports,
     IUnifiedEntryRepository unifiedRuns,
     IModelProfileReferenceCatalog modelProfiles,

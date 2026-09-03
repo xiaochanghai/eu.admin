@@ -10,7 +10,7 @@ using EU.Core.Model;
 namespace EU.Core.Services;
 
 public sealed class EvaluationBatchService(
-    IEvaluationSuiteRepository suites,
+    IAgEvaluationSuiteServices suites,
     IEvaluationBatchRepository batches,
     IEvaluationTargetCatalog targets,
     UnifiedEntryService unifiedEntry,

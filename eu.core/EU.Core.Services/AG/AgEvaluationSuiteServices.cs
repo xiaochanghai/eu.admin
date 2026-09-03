@@ -10,8 +10,7 @@ namespace EU.Core.Services;
 /// </summary>
 public sealed partial class AgEvaluationSuiteServices :
     BaseServices<AgEvaluationSuite>,
-    IAgEvaluationSuiteServices,
-    IEvaluationSuiteRepository
+    IAgEvaluationSuiteServices
 {
     private const string OutputContainsRule = "OutputContains";
     private const string OutputExcludesRule = "OutputExcludes";
@@ -82,10 +81,6 @@ public sealed partial class AgEvaluationSuiteServices :
             throw;
         }
     }
-
-    Task<IReadOnlyList<EvaluationSuiteDefinition>> IEvaluationSuiteRepository.ListAsync(
-        string tenantId,
-        CancellationToken cancellationToken) => ListPersistedAsync(tenantId, cancellationToken);
 
     public async Task<bool> TryCreateAsync(
         EvaluationSuiteDefinition value,
