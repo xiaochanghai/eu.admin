@@ -9,7 +9,7 @@ namespace EU.Core.Services;
 
 public sealed class RunEvaluationService(
     IUnifiedEntryRepository repository,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null) : IRunEvaluationService
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 

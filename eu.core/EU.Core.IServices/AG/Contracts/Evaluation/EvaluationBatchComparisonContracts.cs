@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.ObjectModel;
+using EU.Core.Model;
 
 namespace EU.Core.IServices.Evaluation;
 
@@ -61,6 +62,16 @@ public sealed record EvaluationBatchComparisonReport(
     IReadOnlyList<EvaluationGateCheck> GateChecks,
     bool GatePassed,
     DateTimeOffset ComparedAtUtc);
+
+public interface IEvaluationBatchComparisonService
+{
+    Task<ServiceResult<EvaluationBatchComparisonReport>> CompareAsync(
+        Guid baselineBatchId,
+        Guid candidateBatchId,
+        string tenantId,
+        EvaluationQualityGateSpecification specification,
+        CancellationToken cancellationToken = default);
+}
 
 public static class EvaluationComparisonServiceStatusCodes
 {

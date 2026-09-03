@@ -19,10 +19,10 @@ public static class AgentServiceLifetimeValidation
         typeof(ToolApprovalManagementService),
         typeof(ToolApprovalConversationResumeService),
         typeof(OrchestrationLifecycleService),
-        typeof(RunEvaluationService),
+        typeof(IRunEvaluationService),
         typeof(IAgEvaluationSuiteServices),
         typeof(IAgEvaluationBatchExecutionServices),
-        typeof(EvaluationBatchComparisonService),
+        typeof(IEvaluationBatchComparisonService),
         typeof(ModelJudgeService)
     ];
 

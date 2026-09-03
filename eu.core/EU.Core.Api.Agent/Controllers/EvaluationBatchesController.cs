@@ -17,7 +17,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
     IAgEvaluationBatchExecutionServices service,
-    EvaluationBatchComparisonService comparisons,
+    IEvaluationBatchComparisonService comparisons,
     ModelJudgeService modelJudge,
     ICallerContext caller) : Base.ControllerBase
 {

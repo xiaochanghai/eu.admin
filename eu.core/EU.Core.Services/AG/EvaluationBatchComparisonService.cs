@@ -8,7 +8,7 @@ namespace EU.Core.Services;
 
 public sealed class EvaluationBatchComparisonService(
     IEvaluationBatchRepository batches,
-    TimeProvider? timeProvider = null) : BaseServices
+    TimeProvider? timeProvider = null) : BaseServices, IEvaluationBatchComparisonService
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 

@@ -14,7 +14,7 @@ public sealed class EvaluationBatchService(
     IEvaluationBatchRepository batches,
     UnifiedEntryService unifiedEntry,
     IUnifiedEntryRepository unifiedRuns,
-    RunEvaluationService evaluator,
+    IRunEvaluationService evaluator,
     TimeProvider? timeProvider = null) : BaseServices, IAgEvaluationBatchExecutionServices
 {
     public const int MaximumCasesPerBatch = 20;

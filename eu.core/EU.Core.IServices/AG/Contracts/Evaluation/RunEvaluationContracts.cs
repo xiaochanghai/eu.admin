@@ -35,6 +35,16 @@ public sealed record RunEvaluationReport(
     int OutputUtf8Bytes,
     IReadOnlyList<RunEvaluationCheck> Checks);
 
+public interface IRunEvaluationService
+{
+    Task<RunEvaluationReport?> EvaluateAsync(
+        Guid runId,
+        string tenantId,
+        string userId,
+        RunEvaluationSpecification specification,
+        CancellationToken cancellationToken = default);
+}
+
 public sealed class RunEvaluationException(string errorCode, string message)
     : Exception(message)
 {

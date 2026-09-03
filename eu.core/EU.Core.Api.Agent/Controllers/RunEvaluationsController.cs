@@ -8,14 +8,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/evaluations/runs")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class RunEvaluationsController(
-    RunEvaluationService service,
+    IRunEvaluationService service,
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpPost("{runId}")]
