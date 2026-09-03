@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
@@ -15,7 +16,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/evaluation-suites")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
-    EvaluationSuiteLifecycleService lifecycle,
+    IAgEvaluationSuiteServices lifecycle,
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]

@@ -12,13 +12,11 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
-public sealed class EvaluationSuiteLifecycleService(
-    IEvaluationSuiteRepository repository,
-    IEvaluationTargetCatalog targets,
-    TimeProvider? timeProvider = null) : BaseServices
+public sealed partial class AgEvaluationSuiteServices
 {
     private static readonly JsonSerializerOptions HashJsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+    private readonly IEvaluationTargetCatalog? targets;
+    private readonly TimeProvider timeProvider;
 
     public async Task<ServiceResult<EvaluationSuiteDefinition>> CreateAsync(
         CreateEvaluationSuiteCommand command,
@@ -40,7 +38,7 @@ public sealed class EvaluationSuiteLifecycleService(
             return Invalid("Suite name or description exceeds its limit.");
         }
 
-        DateTimeOffset now = _timeProvider.GetUtcNow().ToUniversalTime();
+        DateTimeOffset now = timeProvider.GetUtcNow().ToUniversalTime();
         var value = new EvaluationSuiteDefinition(
             Guid.NewGuid(),
             command.TenantId,
@@ -54,22 +52,16 @@ public sealed class EvaluationSuiteLifecycleService(
             command.ActorUserId,
             new EvaluationSuiteDraft([]),
             []);
-        return await repository.TryCreateAsync(value, cancellationToken)
+        return await TryCreateAsync(value, cancellationToken)
             ? Success(value)
             : Failure(EvaluationSuiteErrorCodes.CodeConflict, "An evaluation suite already uses this code.");
     }
-
-    public Task<EvaluationSuiteDefinition?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default) =>
-        repository.GetAsync(id, tenantId, cancellationToken);
 
     public async Task<IReadOnlyList<EvaluationSuiteDefinition>> ListAsync(
         string tenantId,
         EvaluationSuiteStatus? status = null,
         CancellationToken cancellationToken = default) =>
-        EvaluationSuiteContractCloner.ReadOnly((await repository.ListAsync(tenantId, cancellationToken))
+        EvaluationSuiteContractCloner.ReadOnly((await ListPersistedAsync(tenantId, cancellationToken))
             .Where(value => status.HasValue
                 ? value.Status == status.Value
                 : value.Status is not EvaluationSuiteStatus.Archived));
@@ -109,11 +101,11 @@ public sealed class EvaluationSuiteLifecycleService(
             Name = command.Name.Trim(),
             Description = command.Description?.Trim() ?? string.Empty,
             LogicalRevision = existing.LogicalRevision + 1,
-            UpdatedAtUtc = _timeProvider.GetUtcNow().ToUniversalTime(),
+            UpdatedAtUtc = timeProvider.GetUtcNow().ToUniversalTime(),
             UpdatedBy = command.ActorUserId,
             Draft = new EvaluationSuiteDraft(CloneCases(command.Cases))
         };
-        return await repository.TryReplaceAsync(
+        return await TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
             ? Success(updated)
             : Conflict();
@@ -152,7 +144,7 @@ public sealed class EvaluationSuiteLifecycleService(
             .Select(value => (value.TargetAgentId, value.TargetAgentVersionId))
             .Distinct())
         {
-            if (!await targets.IsPublishedAsync(agentId, versionId, cancellationToken))
+            if (targets is null || !await targets.IsPublishedAsync(agentId, versionId, cancellationToken))
             {
                 return Failure(
                     EvaluationSuiteErrorCodes.TargetUnavailable,
@@ -160,7 +152,7 @@ public sealed class EvaluationSuiteLifecycleService(
             }
         }
 
-        DateTimeOffset now = _timeProvider.GetUtcNow().ToUniversalTime();
+        DateTimeOffset now = timeProvider.GetUtcNow().ToUniversalTime();
         IReadOnlyList<EvaluationCaseDefinition> cases = CloneCases(existing.Draft.Cases);
         var version = new PublishedEvaluationSuiteVersion(
             Guid.NewGuid(),
@@ -177,7 +169,7 @@ public sealed class EvaluationSuiteLifecycleService(
             PublishedVersions = new ReadOnlyCollection<PublishedEvaluationSuiteVersion>(
                 existing.PublishedVersions.Append(version).ToArray())
         };
-        return await repository.TryReplaceAsync(
+        return await TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
             ? Success(updated)
             : Conflict();
@@ -220,10 +212,10 @@ public sealed class EvaluationSuiteLifecycleService(
         {
             Status = target,
             LogicalRevision = existing.LogicalRevision + 1,
-            UpdatedAtUtc = _timeProvider.GetUtcNow().ToUniversalTime(),
+            UpdatedAtUtc = timeProvider.GetUtcNow().ToUniversalTime(),
             UpdatedBy = command.ActorUserId
         };
-        return await repository.TryReplaceAsync(
+        return await TryReplaceAsync(
             updated, command.ExpectedLogicalRevision, cancellationToken)
             ? Success(updated)
             : Conflict();

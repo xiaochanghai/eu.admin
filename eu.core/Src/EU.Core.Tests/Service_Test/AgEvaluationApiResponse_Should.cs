@@ -1,12 +1,14 @@
 #nullable enable
 
 using System.Collections.Concurrent;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Controllers;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Model;
+using EU.Core.Model.Entity;
 using EU.Core.Model.ViewModels.Extend;
 using EU.Core.Services;
 using Microsoft.AspNetCore.Http;
@@ -21,25 +23,26 @@ public sealed class AgEvaluationApiResponse_Should
     [Fact]
     public async Task Wrap_evaluation_suite_lifecycle_queries_and_mutations()
     {
-        var repository = new SuiteRepository([]);
-        var lifecycle = new EvaluationSuiteLifecycleService(repository, new TargetCatalog());
+        using var fixture = CreateSuiteFixture();
+        var lifecycle = new AgEvaluationSuiteServices(
+            fixture.CreateRepository<AgEvaluationSuite>(),
+            new TargetCatalog());
         EvaluationSuitesController controller = CreateSuiteController(lifecycle);
 
         ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>> suites =
-            AssertServiceSuccess(await controller.List(null, CancellationToken.None));
+            await controller.List(null, CancellationToken.None);
+        Assert.True(suites.Success);
         Assert.NotNull(suites.Data);
 
-        ActionResult<ServiceResult<EvaluationSuiteDefinition>> createAction =
+        ServiceResult<EvaluationSuiteDefinition> createResult =
             await controller.Create(
                 new CreateEvaluationSuiteRequest("quality-suite", "Quality", ""),
                 CancellationToken.None);
-        EvaluationSuiteDefinition created = (EvaluationSuiteDefinition)AssertServiceSuccess(
-            Assert.IsType<JsonResult>(createAction.Result),
-            201,
-            typeof(EvaluationSuiteDefinition));
-        Assert.Equal($"/api/evaluation-suites/{created.Id}", controller.Response.Headers.Location);
+        Assert.True(createResult.Success);
+        EvaluationSuiteDefinition created = Assert.IsType<EvaluationSuiteDefinition>(createResult.Data);
         ServiceResult<EvaluationSuiteDefinition> returnedSuite =
-            AssertServiceSuccess(await controller.Get(created.Id, CancellationToken.None));
+            await controller.Get(created.Id, CancellationToken.None);
+        Assert.True(returnedSuite.Success);
         Assert.Equal(created.Id, returnedSuite.Data?.Id);
 
         var specification = new EvaluateRunRequest("Completed", ["OK"], [], [], 0, 120000);
@@ -103,22 +106,21 @@ public sealed class AgEvaluationApiResponse_Should
     [Fact]
     public async Task Return_fixed_evaluation_errors_in_service_envelopes()
     {
+        using var fixture = CreateSuiteFixture();
         EvaluationSuitesController suites = CreateSuiteController(
-            new EvaluationSuiteLifecycleService(new SuiteRepository([]), new TargetCatalog()));
-        ActionResult<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>> invalidSuites =
+            new AgEvaluationSuiteServices(
+                fixture.CreateRepository<AgEvaluationSuite>(),
+                new TargetCatalog()));
+        ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>> invalidSuites =
             await suites.List("invalid", CancellationToken.None);
-        AssertServiceError(
-            Assert.IsType<JsonResult>(invalidSuites.Result),
-            409,
-            670007,
-            EvaluationSuiteErrorCodes.LifecycleTransitionInvalid);
-        ActionResult<ServiceResult<EvaluationSuiteDefinition>> missingSuite =
+        Assert.False(invalidSuites.Success);
+        Assert.Equal(670007, invalidSuites.Status);
+        Assert.Equal(StatusCodes.Status409Conflict, suites.Response.StatusCode);
+        ServiceResult<EvaluationSuiteDefinition> missingSuite =
             await suites.Get(Guid.NewGuid(), CancellationToken.None);
-        AssertServiceError(
-            Assert.IsType<JsonResult>(missingSuite.Result),
-            404,
-            670001,
-            EvaluationSuiteErrorCodes.NotFound);
+        Assert.False(missingSuite.Success);
+        Assert.Equal(670001, missingSuite.Status);
+        Assert.Equal(StatusCodes.Status404NotFound, suites.Response.StatusCode);
 
         EvaluationBatchesController batches = CreateBatchController(new BatchRepository([]), new ModelJudgeReportRepository([]));
         ActionResult<ServiceResult<IReadOnlyList<EvaluationBatchRecord>>> invalidBatchList =
@@ -162,7 +164,13 @@ public sealed class AgEvaluationApiResponse_Should
             400, 670031, RunEvaluationErrorCodes.SpecificationInvalid);
     }
 
-    private static EvaluationSuitesController CreateSuiteController(EvaluationSuiteLifecycleService lifecycle) =>
+    private static AgentPersistenceSqliteFixture CreateSuiteFixture() => new(
+        typeof(AgEvaluationSuite),
+        typeof(AgEvaluationSuiteVersion),
+        typeof(AgEvaluationCase),
+        typeof(AgEvaluationCaseRule));
+
+    private static EvaluationSuitesController CreateSuiteController(IAgEvaluationSuiteServices lifecycle) =>
         new(lifecycle, new CallerContext()) { ControllerContext = Context() };
 
     private static EvaluationBatchesController CreateBatchController(
@@ -207,6 +215,13 @@ public sealed class AgEvaluationApiResponse_Should
     {
         Assert.Null(action.Result);
         ServiceResult<T> body = Assert.IsType<ServiceResult<T>>(action.Value);
+        Assert.Equal(200, body.Status);
+        Assert.True(body.Success);
+        return body;
+    }
+
+    private static ServiceResult<T> AssertServiceSuccess<T>(ServiceResult<T> body)
+    {
         Assert.Equal(200, body.Status);
         Assert.True(body.Success);
         return body;

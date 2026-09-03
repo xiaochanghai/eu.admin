@@ -291,7 +291,6 @@ builder.Services.AddHostedService<EU.Core.Api.Agent.Background.AgentTaskWorker>(
 builder.Services.AddScoped<RunEvaluationService>();
 builder.Services.AddScoped<IEvaluationTargetCatalog,
     PublishedAgentEvaluationTargetCatalog>();
-builder.Services.AddScoped<EvaluationSuiteLifecycleService>();
 builder.Services.AddScoped<IAgEvaluationBatchExecutionServices, EvaluationBatchService>();
 builder.Services.AddScoped<EvaluationBatchComparisonService>();
 builder.Services.AddSingleton(services =>

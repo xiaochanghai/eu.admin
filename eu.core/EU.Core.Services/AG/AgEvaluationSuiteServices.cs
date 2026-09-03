@@ -8,7 +8,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// 评测套件、版本、用例和规则的规范化持久化服务。
 /// </summary>
-public sealed class AgEvaluationSuiteServices :
+public sealed partial class AgEvaluationSuiteServices :
     BaseServices<AgEvaluationSuite>,
     IAgEvaluationSuiteServices,
     IEvaluationSuiteRepository
@@ -17,9 +17,14 @@ public sealed class AgEvaluationSuiteServices :
     private const string OutputExcludesRule = "OutputExcludes";
     private const string RequiredEventKindRule = "RequiredEventKind";
 
-    public AgEvaluationSuiteServices(IBaseRepository<AgEvaluationSuite> dal)
+    public AgEvaluationSuiteServices(
+        IBaseRepository<AgEvaluationSuite> dal,
+        IEvaluationTargetCatalog? targets = null,
+        TimeProvider? timeProvider = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
+        this.targets = targets;
+        this.timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<EvaluationSuiteDefinition?> GetAsync(
@@ -51,7 +56,7 @@ public sealed class AgEvaluationSuiteServices :
         }
     }
 
-    public async Task<IReadOnlyList<EvaluationSuiteDefinition>> ListAsync(
+    private async Task<IReadOnlyList<EvaluationSuiteDefinition>> ListPersistedAsync(
         string tenantId,
         CancellationToken cancellationToken = default)
     {
@@ -77,6 +82,10 @@ public sealed class AgEvaluationSuiteServices :
             throw;
         }
     }
+
+    Task<IReadOnlyList<EvaluationSuiteDefinition>> IEvaluationSuiteRepository.ListAsync(
+        string tenantId,
+        CancellationToken cancellationToken) => ListPersistedAsync(tenantId, cancellationToken);
 
     public async Task<bool> TryCreateAsync(
         EvaluationSuiteDefinition value,
