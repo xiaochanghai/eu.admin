@@ -80,10 +80,12 @@ public sealed class SdkMcpToolDiscovery(
                 McpTransportKind.StreamableHttp => await CreateHttpTransportAsync(
                     server,
                     HttpTransportMode.StreamableHttp,
+                    null,
                     timeout.Token),
                 McpTransportKind.Sse => await CreateHttpTransportAsync(
                     server,
                     HttpTransportMode.Sse,
+                    null,
                     timeout.Token),
                 McpTransportKind.Stdio => await CreateStdioTransportAsync(
                     server,
@@ -111,6 +113,7 @@ public sealed class SdkMcpToolDiscovery(
 
     internal async Task<McpClient> ConnectAsync(
         McpServerDefinition server,
+        string? bearerToken,
         CancellationToken cancellationToken)
     {
         IClientTransport transport = server.Transport switch
@@ -118,10 +121,12 @@ public sealed class SdkMcpToolDiscovery(
             McpTransportKind.StreamableHttp => await CreateHttpTransportAsync(
                 server,
                 HttpTransportMode.StreamableHttp,
+                bearerToken,
                 cancellationToken),
             McpTransportKind.Sse => await CreateHttpTransportAsync(
                 server,
                 HttpTransportMode.Sse,
+                bearerToken,
                 cancellationToken),
             McpTransportKind.Stdio => await CreateStdioTransportAsync(
                 server,
@@ -136,10 +141,15 @@ public sealed class SdkMcpToolDiscovery(
     private async Task<IClientTransport> CreateHttpTransportAsync(
         McpServerDefinition server,
         HttpTransportMode mode,
+        string? bearerToken,
         CancellationToken cancellationToken)
     {
         var endpoint = new Uri(server.Endpoint, UriKind.Absolute);
         await ValidateEndpointAsync(endpoint, cancellationToken);
+        string? authorizationToken = await ResolveHttpBearerTokenAsync(
+            server,
+            bearerToken,
+            cancellationToken);
         var handler = new SocketsHttpHandler
         {
             AllowAutoRedirect = false,
@@ -150,23 +160,10 @@ public sealed class SdkMcpToolDiscovery(
         {
             Timeout = Timeout.InfiniteTimeSpan
         };
-        if (!string.IsNullOrWhiteSpace(server.CredentialAlias))
+        if (!string.IsNullOrWhiteSpace(authorizationToken))
         {
-            string? credential = await _credentialResolver.ResolveAsync(
-                server.CredentialAlias,
-                cancellationToken);
-            if (string.IsNullOrWhiteSpace(credential) ||
-                credential.Length > 16_384 ||
-                credential.Contains('\r') ||
-                credential.Contains('\n'))
-            {
-                httpClient.Dispose();
-                throw new InvalidOperationException(
-                    "The MCP credential alias could not be resolved safely.");
-            }
-
             httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", credential);
+                new AuthenticationHeaderValue("Bearer", authorizationToken);
         }
         return new HttpClientTransport(
             new HttpClientTransportOptions
@@ -178,6 +175,31 @@ public sealed class SdkMcpToolDiscovery(
             httpClient,
             loggerFactory: null,
             ownsHttpClient: true);
+    }
+
+    internal async ValueTask<string?> ResolveHttpBearerTokenAsync(
+        McpServerDefinition server,
+        string? callerBearerToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (!string.IsNullOrWhiteSpace(server.CredentialAlias))
+        {
+            string? credential = await _credentialResolver.ResolveAsync(
+                server.CredentialAlias,
+                cancellationToken);
+            if (string.IsNullOrWhiteSpace(credential) ||
+                credential.Length > 16_384 ||
+                credential.Contains('\r') ||
+                credential.Contains('\n'))
+            {
+                throw new InvalidOperationException(
+                    "The MCP credential alias could not be resolved safely.");
+            }
+
+            return credential;
+        }
+
+        return callerBearerToken;
     }
 
     private async Task<IClientTransport> CreateStdioTransportAsync(

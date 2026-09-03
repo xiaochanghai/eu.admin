@@ -16,7 +16,8 @@ public sealed class SdkMcpRuntimeToolInvoker(
     SdkMcpToolDiscovery connections,
     TimeSpan callTimeout,
     BusinessQueryToolPolicy? businessQueryPolicy = null,
-    IBusinessQueryContextTokenProvider? businessQueryTokens = null) :
+    IBusinessQueryContextTokenProvider? businessQueryTokens = null,
+    Func<string?>? currentBearerToken = null) :
     IMcpRuntimeToolInvoker,
     IApprovedMcpRuntimeToolInvoker
 {
@@ -233,8 +234,9 @@ public sealed class SdkMcpRuntimeToolInvoker(
         timeout.CancelAfter(callTimeout);
         try
         {
+            string? bearerToken = currentBearerToken?.Invoke();
             await using McpClient client =
-                await connections.ConnectAsync(server, timeout.Token);
+                await connections.ConnectAsync(server, bearerToken, timeout.Token);
             IList<McpClientTool> discovered =
                 await client.ListToolsAsync(cancellationToken: timeout.Token);
             McpClientTool? tool = discovered.SingleOrDefault(candidate =>

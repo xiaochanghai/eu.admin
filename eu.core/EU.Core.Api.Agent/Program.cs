@@ -9,6 +9,7 @@ using EU.Core.Api.Agent.Health;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Common.Core;
+using EU.Core.Common.HttpContextUser;
 using EU.Core.Extensions;
 using EU.Core.Extensions.Filters;
 using EU.Core.Extensions.Middlewares;
@@ -136,6 +137,8 @@ builder.Services.AddSingleton<SdkMcpRuntimeToolInvoker>(services =>
 {
     AgentExecutionOptions options =
         services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
+    IHttpContextAccessor httpContextAccessor =
+        services.GetRequiredService<IHttpContextAccessor>();
     BusinessQueryToolPolicy? policy = services
         .GetRequiredService<BusinessQueryToolPolicyAccessor>()
         .Policy;
@@ -146,7 +149,14 @@ builder.Services.AddSingleton<SdkMcpRuntimeToolInvoker>(services =>
         policy,
         policy is null
             ? null
-            : services.GetRequiredService<IBusinessQueryContextTokenProvider>());
+            : services.GetRequiredService<IBusinessQueryContextTokenProvider>(),
+        () =>
+        {
+            HttpContext? context = httpContextAccessor.HttpContext;
+            return context?.User.Identity?.IsAuthenticated == true
+                ? context.RequestServices.GetService<IUser>()?.GetToken()
+                : null;
+        });
 });
 builder.Services.AddSingleton<IMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
@@ -287,7 +297,7 @@ builder.Services.Configure<AgentTaskWorkerOptions>(
     builder.Configuration.GetSection(AgentTaskWorkerOptions.SectionName));
 builder.Services.AddScoped<EU.Core.Api.Agent.Background.IAgentTaskExecutor,
     EU.Core.Api.Agent.Background.ChatAgentTaskExecutor>();
-builder.Services.AddHostedService<EU.Core.Api.Agent.Background.AgentTaskWorker>();
+//builder.Services.AddHostedService<EU.Core.Api.Agent.Background.AgentTaskWorker>();
 builder.Services.AddScoped<RunEvaluationService>();
 builder.Services.AddScoped<IAgEvaluationBatchExecutionServices, EvaluationBatchService>();
 builder.Services.AddScoped<EvaluationBatchComparisonService>();
