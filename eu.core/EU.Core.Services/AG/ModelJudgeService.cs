@@ -22,7 +22,7 @@ public sealed class ModelJudgeService(
     IModelProfileReferenceCatalog modelProfiles,
     IModelJudgeEngine engine,
     ModelJudgePolicy policy,
-    TimeProvider? timeProvider = null) : BaseServices
+    TimeProvider? timeProvider = null) : BaseServices, IModelJudgeService
 {
     private static readonly JsonSerializerOptions HashJsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _configurationGates =

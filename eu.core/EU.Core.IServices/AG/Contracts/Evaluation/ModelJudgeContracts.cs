@@ -120,6 +120,27 @@ public interface IModelJudgeReportRepository
         CancellationToken cancellationToken = default);
 }
 
+public interface IModelJudgeService
+{
+    Task<ModelJudgeReport?> GetAsync(
+        Guid id,
+        string tenantId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ModelJudgeReport>> ListAsync(
+        Guid batchId,
+        string tenantId,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<ModelJudgeReport>> EvaluateAsync(
+        Guid batchId,
+        string tenantId,
+        string requestedBy,
+        ModelJudgeSpecification specification,
+        CancellationToken cancellationToken = default);
+}
+
 public static class ModelJudgeServiceStatusCodes
 {
     public const int Disabled = 670022;

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
-using EU.Core.Services;
 using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
@@ -18,7 +17,7 @@ namespace EU.Core.Api.Agent.Controllers;
 public sealed class EvaluationBatchesController(
     IAgEvaluationBatchExecutionServices service,
     IEvaluationBatchComparisonService comparisons,
-    ModelJudgeService modelJudge,
+    IModelJudgeService modelJudge,
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpPost]

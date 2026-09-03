@@ -308,7 +308,6 @@ builder.Services.AddSingleton(services =>
         options.ModelJudgeMaximumCases,
         TimeSpan.FromSeconds(options.ModelJudgeTimeoutSeconds));
 });
-builder.Services.AddScoped<ModelJudgeService>();
 builder.Services.ValidateAgentServiceLifetimes();
 
 WebApplication app = builder.Build();

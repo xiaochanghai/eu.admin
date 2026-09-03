@@ -23,7 +23,7 @@ public static class AgentServiceLifetimeValidation
         typeof(IAgEvaluationSuiteServices),
         typeof(IAgEvaluationBatchExecutionServices),
         typeof(IEvaluationBatchComparisonService),
-        typeof(ModelJudgeService)
+        typeof(IModelJudgeService)
     ];
 
     private static readonly HashSet<Type> SingletonRuntimeServiceTypes =
