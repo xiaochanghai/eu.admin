@@ -177,13 +177,9 @@ public sealed record AgentListItem(
 
 public interface IAgentDefinitionCatalog
 {
-    Task<AgentDefinition?> GetDefinitionAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
+    Task<AgentDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(
-        AgentDefinitionQuery query,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default);
 }
 
 public static class AgentContractCloner

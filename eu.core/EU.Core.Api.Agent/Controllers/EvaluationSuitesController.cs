@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
@@ -6,17 +5,16 @@ using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Model;
-using EU.Core.Model.ViewModels.Extend;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using EU.Core.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/evaluation-suites")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
-    IAgEvaluationSuiteServices lifecycle,
+    IAgEvaluationSuiteServices _service,
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]
@@ -36,8 +34,8 @@ public sealed class EvaluationSuitesController(
                     "Evaluation suite status must be Active or Archived.");
         }
 
-        return ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>.QuerySuccess(
-            await lifecycle.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
+        return Success(
+            await _service.ListAsync(caller.TenantId, parsedStatus, cancellationToken));
     }
 
     [HttpGet("{id:guid}")]
@@ -45,11 +43,11 @@ public sealed class EvaluationSuitesController(
         Guid id,
         CancellationToken cancellationToken)
     {
-        EvaluationSuiteDefinition? value = await lifecycle.GetAsync(
+        var value = await _service.GetAsync(
             id, caller.TenantId, cancellationToken);
         return value is null
             ? FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.NotFound, "The evaluation suite was not found.")
-            : ServiceResult<EvaluationSuiteDefinition>.QuerySuccess(value);
+            : Success(value);
     }
 
     [HttpPost]
@@ -58,12 +56,11 @@ public sealed class EvaluationSuitesController(
         CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
-        {
-            return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
-        }
+            return ServiceResult<EvaluationSuiteDefinition>.OprateFailed("The evaluation suite definition is invalid.");
+        //return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
 
-        ServiceResult<EvaluationSuiteDefinition> result =
-            await lifecycle.CreateAsync(
+        var result =
+            await _service.CreateAsync(
                 new CreateEvaluationSuiteCommand(
                     caller.TenantId,
                     caller.UserId,
@@ -71,10 +68,7 @@ public sealed class EvaluationSuitesController(
                     request.Name,
                     request.Description),
                 cancellationToken);
-        if (!result.Success) return FromServiceError(result);
-        Response.Headers.Location = $"/api/evaluation-suites/{result.Data!.Id}";
-        Response.StatusCode = StatusCodes.Status201Created;
-        return Success(result.Data);
+        return result;
     }
 
     [HttpPut("{id:guid}/draft")]
@@ -88,8 +82,8 @@ public sealed class EvaluationSuitesController(
             return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
-        ServiceResult<EvaluationSuiteDefinition> result =
-            await lifecycle.SaveDraftAsync(
+        var result =
+            await _service.SaveDraftAsync(
                 new SaveEvaluationSuiteDraftCommand(
                     id,
                     caller.TenantId,
@@ -113,8 +107,8 @@ public sealed class EvaluationSuitesController(
             return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
         }
 
-        ServiceResult<EvaluationSuiteDefinition> result =
-            await lifecycle.PublishAsync(
+        var result =
+            await _service.PublishAsync(
                 new PublishEvaluationSuiteCommand(
                     id,
                     caller.TenantId,
@@ -133,8 +127,8 @@ public sealed class EvaluationSuitesController(
         if (request.AdditionalProperties is { Count: > 0 })
             return FromError<EvaluationSuiteDefinition>(EvaluationSuiteErrorCodes.DefinitionInvalid, "The evaluation suite definition is invalid.");
 
-        ServiceResult<EvaluationSuiteDefinition> result =
-            await lifecycle.SetArchivedAsync(
+        var result =
+            await _service.SetArchivedAsync(
                 new SetEvaluationSuiteArchiveCommand(
                     id,
                     caller.TenantId,
@@ -205,7 +199,7 @@ public sealed class EvaluationSuitesController(
 
     private ServiceResult<T> FromServiceError<T>(ServiceResult<T> result)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(
+        var descriptor = AgentApiErrorResolver.Resolve(
             HttpContext,
             EvaluationSuiteServiceStatusCodes.ToErrorCode(result.Status));
         Response.StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
@@ -214,7 +208,7 @@ public sealed class EvaluationSuitesController(
 
     private ServiceResult<T> FromError<T>(string errorCode, string message)
     {
-        AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
+        var descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         Response.StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError;
         return ServiceResult<T>.Failure(descriptor.Status, message);
     }

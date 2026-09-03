@@ -1,12 +1,9 @@
+using EU.Core.IServices.Evaluation;
+using EU.Core.IServices.UnifiedEntry;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using EU.Core.IServices.Agents;
-using EU.Core.IServices.Evaluation;
-using EU.Core.Model.ViewModels.Extend;
-using EU.Core.IServices.UnifiedEntry;
 
 #nullable enable
 
@@ -35,32 +32,22 @@ public sealed partial class AgEvaluationSuiteServices :
         this.timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    public async Task<bool> IsPublishedAsync(
-        Guid agentId,
-        Guid agentVersionId,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> IsPublishedAsync(Guid agentId, Guid agentVersionId, CancellationToken cancellationToken = default)
     {
-        AgentDefinition? agent = agents is null
-            ? null
-            : await agents.GetDefinitionAsync(agentId, cancellationToken);
-        return agent?.PublishedVersions.Any(version =>
-            version.Id == agentVersionId && version.Snapshot is not null) == true;
+        AgentDefinition? agent = agents is null ? null : await agents.GetDefinitionAsync(agentId, cancellationToken);
+        return agent?.PublishedVersions.Any(version => version.Id == agentVersionId && version.Snapshot is not null) == true;
     }
 
-    public async Task<EvaluationSuiteDefinition?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<EvaluationSuiteDefinition?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
+        await Db.Ado.BeginTranAsync(IsolationLevel.RepeatableRead);
         try
         {
-            AgEvaluationSuite? suite = await Db.Queryable<AgEvaluationSuite>()
-                .Where(value =>
-                    value.ID == id &&
-                    value.TenantId == tenantId &&
-                    !value.IsDeleted)
+            var suite = await Db.Queryable<AgEvaluationSuite>()
+                .Where(x =>
+                    x.ID == id &&
+                    x.TenantId == tenantId)
                 .FirstAsync();
             EvaluationSuiteDefinition? result = suite is null
                 ? null
@@ -731,7 +718,8 @@ public sealed partial class AgEvaluationSuiteServices :
     private static IReadOnlyList<EvaluationCaseDefinition> CloneCases(IEnumerable<EvaluationCaseDefinition> cases) =>
         new ReadOnlyCollection<EvaluationCaseDefinition>(cases.Select(value => value with
         {
-            Name = value.Name.Trim(), Input = value.Input.Trim(),
+            Name = value.Name.Trim(),
+            Input = value.Input.Trim(),
             Specification = value.Specification with
             {
                 OutputContains = value.Specification.OutputContains.ToArray(),
