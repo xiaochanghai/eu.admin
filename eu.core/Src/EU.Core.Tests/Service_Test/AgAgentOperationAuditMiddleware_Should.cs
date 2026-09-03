@@ -1,4 +1,5 @@
 using EU.Core.IServices.Abstractions.Auditing;
+using EU.Core.IServices;
 using EU.Core.Api.Agent.Security;
 using Microsoft.AspNetCore.Http;
 using Xunit;
@@ -16,7 +17,7 @@ public sealed class AgAgentOperationAuditMiddleware_Should
             middlewareType.GetConstructors().SelectMany(constructor =>
                 constructor.GetParameters()),
             parameter => parameter.ParameterType ==
-                typeof(IAgentOperationAuditRepository));
+                typeof(IAgAgentOperationAuditServices));
 
         System.Reflection.MethodInfo invokeMethod = Assert.Single(
             middlewareType.GetMethods(),
@@ -27,7 +28,7 @@ public sealed class AgAgentOperationAuditMiddleware_Should
             .ToArray();
 
         Assert.Equal(
-            [typeof(HttpContext), typeof(IAgentOperationAuditRepository)],
+            [typeof(HttpContext), typeof(IAgAgentOperationAuditServices)],
             parameterTypes);
     }
 }

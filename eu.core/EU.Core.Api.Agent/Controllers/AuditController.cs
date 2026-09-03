@@ -1,4 +1,5 @@
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.Model;
@@ -11,7 +12,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/audit/operations")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class AuditController(
-    IAgentOperationAuditRepository repository,
+    IAgAgentOperationAuditServices repository,
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]

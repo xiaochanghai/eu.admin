@@ -6,8 +6,7 @@ namespace EU.Core.Services;
 
 public sealed class AgAgentOperationAuditServices :
     BaseServices<AgAgentOperationAudit>,
-    IAgAgentOperationAuditServices,
-    IAgentOperationAuditRepository
+    IAgAgentOperationAuditServices
 {
     public AgAgentOperationAuditServices(IBaseRepository<AgAgentOperationAudit> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))

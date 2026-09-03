@@ -15,15 +15,3 @@ public sealed record AgentOperationAuditRecord(
     string Outcome,
     string? ErrorCode,
     long DurationMilliseconds);
-
-public interface IAgentOperationAuditRepository
-{
-    Task SaveAsync(
-        AgentOperationAuditRecord record,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default);
-}

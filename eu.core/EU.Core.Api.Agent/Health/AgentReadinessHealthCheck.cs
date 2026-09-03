@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.Agent.Infrastructure.Skills;
 using EU.Core.Agent.Runtime;
@@ -12,14 +13,14 @@ namespace EU.Core.Api.Agent.Health;
 
 public sealed class AgentReadinessHealthCheck : IHealthCheck
 {
-    private readonly IAgentOperationAuditRepository _storage;
+    private readonly IAgAgentOperationAuditServices _storage;
     private readonly IModelCredentialResolver _credentials;
     private readonly AgentPlatformOptions _platform;
     private readonly string _skillRoot;
     private readonly HostDrainState _drainState;
 
     public AgentReadinessHealthCheck(
-        IAgentOperationAuditRepository storage,
+        IAgAgentOperationAuditServices storage,
         IModelCredentialResolver credentials,
         IOptions<AgentPlatformOptions> platform,
         IOptions<AgentStorageOptions> storageOptions,

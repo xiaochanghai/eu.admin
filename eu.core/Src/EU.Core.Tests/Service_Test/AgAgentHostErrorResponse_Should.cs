@@ -19,6 +19,7 @@ using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Health;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -659,7 +660,7 @@ public sealed class AgAgentHostErrorResponse_Should
             AuthenticationProperties? properties) => Task.CompletedTask;
     }
 
-    private sealed class FailingAuditRepository : IAgentOperationAuditRepository
+    private sealed class FailingAuditRepository : IAgAgentOperationAuditServices
     {
         public Task SaveAsync(
             AgentOperationAuditRecord record,

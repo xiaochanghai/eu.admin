@@ -11,6 +11,7 @@ using EU.Core.IServices.Runtime;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Controllers;
+using EU.Core.IServices;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Services;
@@ -276,7 +277,7 @@ public sealed class AgRuntimeApiResponse_Should
             Task.FromResult<IReadOnlyList<AgentRunAuditRecord>>([]);
     }
 
-    private sealed class OperationAuditRepository : IAgentOperationAuditRepository
+    private sealed class OperationAuditRepository : IAgAgentOperationAuditServices
     {
         public Task SaveAsync(AgentOperationAuditRecord record, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(string tenantId, int take, CancellationToken cancellationToken = default) =>

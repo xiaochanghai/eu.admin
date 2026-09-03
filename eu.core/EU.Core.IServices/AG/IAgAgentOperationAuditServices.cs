@@ -1,7 +1,19 @@
 using EU.Core.Model.Entity;
+using EU.Core.IServices.Abstractions.Auditing;
 
 namespace EU.Core.IServices;
 
-public interface IAgAgentOperationAuditServices : IBaseServices<AgAgentOperationAudit>
+/// <summary>
+/// Agent API 操作审计服务。
+/// </summary>
+public interface IAgAgentOperationAuditServices
 {
+    Task SaveAsync(
+        AgentOperationAuditRecord record,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(
+        string tenantId,
+        int take,
+        CancellationToken cancellationToken = default);
 }

@@ -3,6 +3,7 @@ using System.Globalization;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Common.HttpContextUser;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
@@ -21,7 +22,7 @@ public sealed class AgentOperationAuditMiddleware(
 
     public async Task InvokeAsync(
         HttpContext context,
-        IAgentOperationAuditRepository repository)
+        IAgAgentOperationAuditServices repository)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -130,7 +131,7 @@ public sealed class AgentOperationAuditMiddleware(
     }
 
     private async Task<AgentOperationAuditRecord> SaveTerminalAsync(
-        IAgentOperationAuditRepository repository,
+        IAgAgentOperationAuditServices repository,
         AgentOperationAuditRecord record,
         int statusCode,
         long durationMilliseconds,
