@@ -1,12 +1,9 @@
-using EU.Core.IServices.Runtime;
 using EU.Core.IServices.Knowledge;
 using EU.Core.IServices.Mcp;
+using EU.Core.IServices.Runtime;
 using EU.Core.IServices.Skills;
-using EU.Core.Model;
-using EU.Core.Model.ViewModels.Extend;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Channels;
 
 #nullable enable
@@ -21,7 +18,7 @@ public sealed class AgentRuntimeService(
     JsonSchemaValidator schemaValidator,
     IKnowledgeRetriever? knowledgeRetriever = null,
     IPublishedSkillVersionCatalog? skillCatalog = null,
-    IPublishedSkillContentStore? skillContentStore = null)
+    IPublishedSkillContentStore? skillContentStore = null) : IAgentRuntimeService
 {
     public const int MaximumInputCharacters = 32_768;
     public const int MaximumSkillInstructionCharacters = 131_072;

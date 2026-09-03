@@ -14,7 +14,7 @@ public sealed class OrchestrationRuntimeService(
     IOrchestrationRepository orchestrations,
     IOrchestrationRunRepository runs,
     IAgentDefinitionCatalog agents,
-    AgentRuntimeService agentRuntime,
+    IAgentRuntimeService agentRuntime,
     ExecutionPayloadLimits? payloadLimits = null) : BaseServices
 {
     public const int MaximumInputCharacters = 32_768;

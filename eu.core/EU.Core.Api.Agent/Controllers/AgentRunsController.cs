@@ -1,9 +1,9 @@
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Security;
 using EU.Core.IServices.Runtime;
 using EU.Core.Model;
-using EU.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -15,7 +15,7 @@ namespace EU.Core.Api.Agent.Controllers;
 [Route("api/agents/{agentId:guid}")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class AgentRunsController(
-    AgentRuntimeService runtime,
+    IAgentRuntimeService runtime,
     ICallerContext caller) : Base.ControllerBase
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()

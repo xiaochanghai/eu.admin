@@ -16,7 +16,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     private const int MaximumReasonCharacters = 1_024;
     private const int MaximumCatalogNameCharacters = 128;
     private const int MaximumCatalogDescriptionCharacters = 512;
-    private readonly AgentRuntimeService _agentRuntime;
+    private readonly IAgentRuntimeService _agentRuntime;
     private readonly AgentVersionSnapshot _authorizingSnapshot;
     private readonly UnifiedAgentExecutionLease _parentLease;
     private readonly Guid _parentRunId;
@@ -29,7 +29,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     private readonly string _inputSchemaJson;
 
     public DelegateToAgentTool(
-        AgentRuntimeService agentRuntime,
+        IAgentRuntimeService agentRuntime,
         UnifiedEntryExecutionScope scope,
         AgentVersionSnapshot authorizingSnapshot,
         UnifiedAgentExecutionLease parentLease,

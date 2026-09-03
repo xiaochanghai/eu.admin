@@ -35,7 +35,6 @@ public static class AgentServiceLifetimeValidation
         typeof(IAgentToolApprovalHandler),
         typeof(IAgentRuntimeEngine),
         typeof(MainAgentAssignmentService),
-        typeof(AgentRuntimeService),
         typeof(OrchestrationRuntimeService),
         typeof(UnifiedEntryService)
     ];

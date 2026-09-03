@@ -23,7 +23,7 @@ public sealed class UnifiedEntryService
     public const int MaximumConversationHistoryMessages = 40;
     public const int MaximumConversationHistoryUtf8Bytes = 65_536;
     private readonly MainAgentAssignmentService _mainAgents;
-    private readonly AgentRuntimeService _agentRuntime;
+    private readonly IAgentRuntimeService _agentRuntime;
     private readonly OrchestrationRuntimeService _orchestrationRuntime;
     private readonly IUnifiedEntryRepository _repository;
     private readonly UnifiedEntryLimits _limits;
@@ -37,7 +37,7 @@ public sealed class UnifiedEntryService
 
     public UnifiedEntryService(
         MainAgentAssignmentService mainAgents,
-        AgentRuntimeService agentRuntime,
+        IAgentRuntimeService agentRuntime,
         OrchestrationRuntimeService orchestrationRuntime,
         IUnifiedEntryRepository repository,
         UnifiedEntryLimits? limits = null,
