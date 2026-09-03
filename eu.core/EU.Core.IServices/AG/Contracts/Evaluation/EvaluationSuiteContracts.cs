@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using EU.Core.IServices.Agents;
 using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.IServices.Evaluation;
@@ -127,26 +126,19 @@ public static class EvaluationSuiteServiceStatusCodes
     };
 }
 
+/// <summary>
+/// 为评测业务提供 Agent 目标版本的只读发布状态查询。
+/// </summary>
 public interface IEvaluationTargetCatalog
 {
+    /// <summary>
+    /// 判断指定 Agent 版本是否可作为评测目标：Agent 存在、该版本已发布，且保留可执行快照。
+    /// 仅用于评测发布或运行前的前置校验，不负责加载或执行 Agent。
+    /// </summary>
     Task<bool> IsPublishedAsync(
         Guid agentId,
         Guid agentVersionId,
         CancellationToken cancellationToken = default);
-}
-
-public sealed class PublishedAgentEvaluationTargetCatalog(IAgentDefinitionCatalog agents)
-    : IEvaluationTargetCatalog
-{
-    public async Task<bool> IsPublishedAsync(
-        Guid agentId,
-        Guid agentVersionId,
-        CancellationToken cancellationToken = default)
-    {
-        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
-        return agent?.PublishedVersions.Any(version =>
-            version.Id == agentVersionId && version.Snapshot is not null) == true;
-    }
 }
 
 public static class EvaluationSuiteContractCloner

@@ -749,3 +749,23 @@ public sealed partial class AgEvaluationSuiteServices :
         ServiceResult<EvaluationSuiteDefinition>.Failure(
             EvaluationSuiteServiceStatusCodes.FromErrorCode(code), message);
 }
+
+/// <summary>
+/// 基于已发布 Agent 定义实现的评测目标目录。
+/// </summary>
+public sealed class PublishedAgentEvaluationTargetCatalog(IAgentDefinitionCatalog agents)
+    : IEvaluationTargetCatalog
+{
+    /// <summary>
+    /// 仅当目标 Agent 存在、目标版本已发布且存在可执行快照时返回 <see langword="true"/>。
+    /// </summary>
+    public async Task<bool> IsPublishedAsync(
+        Guid agentId,
+        Guid agentVersionId,
+        CancellationToken cancellationToken = default)
+    {
+        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
+        return agent?.PublishedVersions.Any(version =>
+            version.Id == agentVersionId && version.Snapshot is not null) == true;
+    }
+}
