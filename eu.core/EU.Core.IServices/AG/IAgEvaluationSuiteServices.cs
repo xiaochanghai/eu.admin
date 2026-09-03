@@ -8,6 +8,14 @@ namespace EU.Core.IServices;
 /// </summary>
 public interface IAgEvaluationSuiteServices : IBaseServices<AgEvaluationSuite>
 {
+    /// <summary>
+    /// 判断指定 Agent 版本是否已经发布且具备可执行快照，可否作为评测目标。
+    /// </summary>
+    Task<bool> IsPublishedAsync(
+        Guid agentId,
+        Guid agentVersionId,
+        CancellationToken cancellationToken = default);
+
     Task<ServiceResult<EvaluationSuiteDefinition>> CreateAsync(
         CreateEvaluationSuiteCommand command,
         CancellationToken cancellationToken = default);

@@ -3,6 +3,7 @@
 using System.Collections.Concurrent;
 using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Security;
+using EU.Core.IServices.Agents;
 using EU.Core.IServices.Evaluation;
 using EU.Core.IServices.UnifiedEntry;
 using EU.Core.Api.Agent.Controllers;
@@ -24,9 +25,11 @@ public sealed class AgEvaluationApiResponse_Should
     public async Task Wrap_evaluation_suite_lifecycle_queries_and_mutations()
     {
         using var fixture = CreateSuiteFixture();
+        Guid targetAgentId = Guid.NewGuid();
+        Guid targetAgentVersionId = Guid.NewGuid();
         var lifecycle = new AgEvaluationSuiteServices(
             fixture.CreateRepository<AgEvaluationSuite>(),
-            new TargetCatalog());
+            new TargetCatalog(targetAgentId, targetAgentVersionId));
         EvaluationSuitesController controller = CreateSuiteController(lifecycle);
 
         ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>> suites =
@@ -53,7 +56,7 @@ public sealed class AgEvaluationApiResponse_Should
                     created.LogicalRevision,
                     created.Name,
                     created.Description,
-                    [new EvaluationCaseApiRequest(Guid.NewGuid(), "case", "input", Guid.NewGuid(), Guid.NewGuid(), specification)]),
+                    [new EvaluationCaseApiRequest(Guid.NewGuid(), "case", "input", targetAgentId, targetAgentVersionId, specification)]),
                 CancellationToken.None));
         EvaluationSuiteDefinition saved = Assert.IsType<EvaluationSuiteDefinition>(savedResult.Data);
         ServiceResult<EvaluationSuiteDefinition> publishedResult = AssertServiceSuccess(
@@ -274,10 +277,35 @@ public sealed class AgEvaluationApiResponse_Should
         public string CorrelationId => "correlation";
     }
 
-    private sealed class TargetCatalog : IEvaluationTargetCatalog
+    private sealed class TargetCatalog(Guid? publishedAgentId = null, Guid? publishedVersionId = null)
+        : IAgentDefinitionCatalog
     {
-        public Task<bool> IsPublishedAsync(Guid agentId, Guid agentVersionId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(true);
+        public Task<AgentDefinition?> GetDefinitionAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            if (id != publishedAgentId || !publishedVersionId.HasValue)
+            {
+                return Task.FromResult<AgentDefinition?>(null);
+            }
+
+            var snapshot = new AgentVersionSnapshot(
+                publishedVersionId.Value, "agent", "instructions", "model", AgentOutputMode.Text, null, [], []);
+            var draft = new AgentVersion(
+                Guid.NewGuid(), "0.1.0", true, "instructions", "model",
+                AgentOutputMode.Text, null, null, null);
+            var published = new AgentVersion(
+                publishedVersionId.Value, "1.0.0", false, "instructions", "model",
+                AgentOutputMode.Text, null, null, snapshot);
+            return Task.FromResult<AgentDefinition?>(new AgentDefinition(
+                id, "agent", "Agent", string.Empty, AgentRuntimeStatus.Enabled, 1,
+                draft, [published]));
+        }
+
+        public Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(
+            AgentDefinitionQuery query,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<AgentDefinition>>([]);
     }
 
     private sealed class BatchRepository(IEnumerable<EvaluationBatchRecord> values) : IEvaluationBatchRepository

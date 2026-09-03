@@ -22,17 +22,29 @@ public sealed partial class AgEvaluationSuiteServices :
     private const string OutputContainsRule = "OutputContains";
     private const string OutputExcludesRule = "OutputExcludes";
     private const string RequiredEventKindRule = "RequiredEventKind";
-    private readonly IEvaluationTargetCatalog? targets;
+    private readonly IAgentDefinitionCatalog? agents;
     private readonly TimeProvider timeProvider;
 
     public AgEvaluationSuiteServices(
         IBaseRepository<AgEvaluationSuite> dal,
-        IEvaluationTargetCatalog? targets = null,
+        IAgentDefinitionCatalog? agents = null,
         TimeProvider? timeProvider = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
-        this.targets = targets;
+        this.agents = agents;
         this.timeProvider = timeProvider ?? TimeProvider.System;
+    }
+
+    public async Task<bool> IsPublishedAsync(
+        Guid agentId,
+        Guid agentVersionId,
+        CancellationToken cancellationToken = default)
+    {
+        AgentDefinition? agent = agents is null
+            ? null
+            : await agents.GetDefinitionAsync(agentId, cancellationToken);
+        return agent?.PublishedVersions.Any(version =>
+            version.Id == agentVersionId && version.Snapshot is not null) == true;
     }
 
     public async Task<EvaluationSuiteDefinition?> GetAsync(
@@ -648,7 +660,7 @@ public sealed partial class AgEvaluationSuiteServices :
         foreach ((Guid agentId, Guid versionId) in existing.Draft.Cases
             .Select(value => (value.TargetAgentId, value.TargetAgentVersionId)).Distinct())
         {
-            if (targets is null || !await targets.IsPublishedAsync(agentId, versionId, cancellationToken))
+            if (!await IsPublishedAsync(agentId, versionId, cancellationToken))
             {
                 return Failure(EvaluationSuiteErrorCodes.TargetUnavailable,
                     "Every evaluation target must reference an existing published Agent version.");
@@ -748,24 +760,4 @@ public sealed partial class AgEvaluationSuiteServices :
     private static ServiceResult<EvaluationSuiteDefinition> Failure(string code, string message) =>
         ServiceResult<EvaluationSuiteDefinition>.Failure(
             EvaluationSuiteServiceStatusCodes.FromErrorCode(code), message);
-}
-
-/// <summary>
-/// 基于已发布 Agent 定义实现的评测目标目录。
-/// </summary>
-public sealed class PublishedAgentEvaluationTargetCatalog(IAgentDefinitionCatalog agents)
-    : IEvaluationTargetCatalog
-{
-    /// <summary>
-    /// 仅当目标 Agent 存在、目标版本已发布且存在可执行快照时返回 <see langword="true"/>。
-    /// </summary>
-    public async Task<bool> IsPublishedAsync(
-        Guid agentId,
-        Guid agentVersionId,
-        CancellationToken cancellationToken = default)
-    {
-        AgentDefinition? agent = await agents.GetDefinitionAsync(agentId, cancellationToken);
-        return agent?.PublishedVersions.Any(version =>
-            version.Id == agentVersionId && version.Snapshot is not null) == true;
-    }
 }

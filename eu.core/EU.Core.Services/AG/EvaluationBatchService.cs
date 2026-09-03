@@ -12,7 +12,6 @@ namespace EU.Core.Services;
 public sealed class EvaluationBatchService(
     IAgEvaluationSuiteServices suites,
     IEvaluationBatchRepository batches,
-    IEvaluationTargetCatalog targets,
     UnifiedEntryService unifiedEntry,
     IUnifiedEntryRepository unifiedRuns,
     RunEvaluationService evaluator,
@@ -73,7 +72,7 @@ public sealed class EvaluationBatchService(
             .Select(value => (value.TargetAgentId, value.TargetAgentVersionId))
             .Distinct())
         {
-            if (!await targets.IsPublishedAsync(agentId, versionId, cancellationToken))
+            if (!await suites.IsPublishedAsync(agentId, versionId, cancellationToken))
             {
                 return Failure(
                     EvaluationBatchErrorCodes.TargetUnavailable,

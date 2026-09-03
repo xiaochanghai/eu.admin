@@ -20,7 +20,6 @@ public static class AgentServiceLifetimeValidation
         typeof(ToolApprovalConversationResumeService),
         typeof(OrchestrationLifecycleService),
         typeof(RunEvaluationService),
-        typeof(IEvaluationTargetCatalog),
         typeof(IAgEvaluationSuiteServices),
         typeof(IAgEvaluationBatchExecutionServices),
         typeof(EvaluationBatchComparisonService),
