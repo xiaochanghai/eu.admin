@@ -1,12 +1,11 @@
-using System.Diagnostics;
-using System.Globalization;
 using EU.Core.Api.Agent.Errors;
 using EU.Core.Api.Agent.Observability;
 using EU.Core.Common.HttpContextUser;
 using EU.Core.IServices;
 using EU.Core.IServices.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Routing;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace EU.Core.Api.Agent.Security;
 

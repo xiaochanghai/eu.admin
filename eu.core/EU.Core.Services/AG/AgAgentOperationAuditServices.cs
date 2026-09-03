@@ -19,7 +19,7 @@ public sealed class AgAgentOperationAuditServices :
     {
         ArgumentNullException.ThrowIfNull(record);
         cancellationToken.ThrowIfCancellationRequested();
-        AgAgentOperationAudit? existing = await Db.Queryable<AgAgentOperationAudit>()
+        var existing = await Db.Queryable<AgAgentOperationAudit>()
             .Where(value => value.ID == record.Id)
             .FirstAsync();
         if (existing is null)
@@ -30,7 +30,7 @@ public sealed class AgAgentOperationAuditServices :
                  string.Equals(existing.Outcome, "Started", StringComparison.Ordinal) &&
                  SameIdentity(existing, record))
         {
-            AgAgentOperationAudit entity = MapEntity(record);
+            var entity = MapEntity(record);
             await Db.Updateable(entity)
                 .UpdateColumns(value => new
                 {
@@ -53,7 +53,7 @@ public sealed class AgAgentOperationAuditServices :
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         cancellationToken.ThrowIfCancellationRequested();
-        List<AgAgentOperationAudit> records = await Db.Queryable<AgAgentOperationAudit>()
+        var records = await Db.Queryable<AgAgentOperationAudit>()
             .Where(value => value.TenantId == tenantId && !value.IsDeleted)
             .OrderBy(value => value.OccurredAtUtc, OrderByType.Desc)
             .OrderBy(value => value.ID, OrderByType.Desc)
