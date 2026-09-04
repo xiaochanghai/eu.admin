@@ -4,6 +4,8 @@ using EU.Core.IServices.MainAgent;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgMainAgentAssignmentServices 职责实现
+
 public sealed class AgMainAgentAssignmentServices :
     BaseServices<AgMainAgentAssignment>,
     IAgMainAgentAssignmentServices,
@@ -16,8 +18,7 @@ public sealed class AgMainAgentAssignmentServices :
     {
     }
 
-    public async Task<MainAgentAssignment?> GetAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<MainAgentAssignment?> GetAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgMainAgentAssignment? entity = await Db.Queryable<AgMainAgentAssignment>()
@@ -26,10 +27,7 @@ public sealed class AgMainAgentAssignmentServices :
         return entity is null ? null : MapAssignment(entity);
     }
 
-    public async Task<bool> TryReplaceAsync(
-        MainAgentAssignment value,
-        long? expectedLogicalRevision,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryReplaceAsync(MainAgentAssignment value, long? expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         if (expectedLogicalRevision == long.MaxValue ||
@@ -105,3 +103,5 @@ public sealed class AgMainAgentAssignmentServices :
         value ?? throw new InvalidDataException(
             $"Main Agent assignment field '{field}' is missing.");
 }
+
+#endregion

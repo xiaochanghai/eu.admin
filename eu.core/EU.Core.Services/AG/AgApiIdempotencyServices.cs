@@ -4,6 +4,8 @@ using EU.Core.IServices.Abstractions.Security;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgApiIdempotencyServices 职责实现
+
 public sealed class AgApiIdempotencyServices :
     BaseServices<AgApiIdempotency>,
     IAgApiIdempotencyServices,
@@ -90,10 +92,7 @@ public sealed class AgApiIdempotencyServices :
         return updated == 1;
     }
 
-    public async Task MarkIndeterminateAsync(
-        string scopeSha256,
-        string requestSha256,
-        CancellationToken cancellationToken = default)
+    public async Task MarkIndeterminateAsync(string scopeSha256, string requestSha256, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(scopeSha256);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestSha256);
@@ -109,10 +108,7 @@ public sealed class AgApiIdempotencyServices :
             .ExecuteCommandAsync();
     }
 
-    public async Task AbandonAsync(
-        string scopeSha256,
-        string requestSha256,
-        CancellationToken cancellationToken = default)
+    public async Task AbandonAsync(string scopeSha256, string requestSha256, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(scopeSha256);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestSha256);
@@ -176,3 +172,5 @@ public sealed class AgApiIdempotencyServices :
         value ?? throw new InvalidDataException(
             $"Agent API idempotency field '{field}' is missing.");
 }
+
+#endregion

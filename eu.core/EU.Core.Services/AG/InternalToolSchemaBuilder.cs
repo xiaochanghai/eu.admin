@@ -4,8 +4,12 @@ using System.Text.Json;
 
 namespace EU.Core.Services;
 
+#region 文件职责：InternalToolSchemaBuilder 职责实现
+
 internal static class InternalToolSchemaBuilder
 {
+    #region 内部工具参数架构
+
     public static string Build(
         string versionPropertyName,
         IReadOnlyList<Guid> allowedVersionIds,
@@ -53,4 +57,8 @@ internal static class InternalToolSchemaBuilder
         };
         return JsonSerializer.Serialize(schema);
     }
+
+    #endregion
 }
+
+#endregion

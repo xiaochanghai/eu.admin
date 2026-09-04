@@ -9,6 +9,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：ToolApprovalConversationResumeService 职责实现
+
 public sealed class ToolApprovalConversationResumeService(
     IToolApprovalRepository approvals,
     ToolApprovalRuntimeService runtime,
@@ -166,10 +168,7 @@ public sealed class ToolApprovalConversationResumeService(
             "The approval decision could not be projected into its conversation.");
     }
 
-    private UnifiedEntryAggregate Project(
-        UnifiedEntryAggregate aggregate,
-        ToolApprovalRequestRecord approval,
-        McpRuntimeToolResult? toolResult)
+    private UnifiedEntryAggregate Project(UnifiedEntryAggregate aggregate, ToolApprovalRequestRecord approval, McpRuntimeToolResult? toolResult)
     {
         DateTimeOffset finishedAt = approval.FinishedAtUtc
             ?? timeProvider.GetUtcNow();
@@ -346,9 +345,7 @@ public sealed class ToolApprovalConversationResumeService(
             protectedPayload.OriginalSha256));
     }
 
-    private static ToolApprovalConversationResumeResult ResultFromAggregate(
-        ToolApprovalRequestRecord approval,
-        UnifiedEntryAggregate aggregate) =>
+    private static ToolApprovalConversationResumeResult ResultFromAggregate(ToolApprovalRequestRecord approval, UnifiedEntryAggregate aggregate) =>
         new(
             approval.Id,
             aggregate.Details.EntryRun.Id,
@@ -365,3 +362,5 @@ public sealed class ToolApprovalConversationResumeService(
             ToolApprovalErrorCodes.InvalidState,
             "The tool approval conversation cannot be resumed from its current state.");
 }
+
+#endregion

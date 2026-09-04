@@ -7,6 +7,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgAgentTaskServices 职责实现
+
 public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTaskServices
 {
     private const int MaximumTake = 200;
@@ -17,9 +19,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
     {
     }
 
-    public async Task<AgentTaskRecord> CreateAsync(
-        CreateAgentTaskCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> CreateAsync(CreateAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         ValidateCreate(command);
         cancellationToken.ThrowIfCancellationRequested();
@@ -114,9 +114,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<IReadOnlyList<AgentTaskRecord>> ListAsync(
-        AgentTaskQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AgentTaskRecord>> ListAsync(AgentTaskQuery query, CancellationToken cancellationToken = default)
     {
         Required(query.TenantId, nameof(query.TenantId));
         Required(query.UserId, nameof(query.UserId));
@@ -136,11 +134,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         return values.Select(Map).ToArray();
     }
 
-    public async Task<AgentTaskRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        string? userId,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord?> GetAsync(Guid id, string tenantId, string? userId, CancellationToken cancellationToken = default)
     {
         Required(tenantId, nameof(tenantId));
         cancellationToken.ThrowIfCancellationRequested();
@@ -194,9 +188,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .ToArray();
     }
 
-    public async Task<AgentTaskRecord?> TryClaimNextAsync(
-        ClaimAgentTaskCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord?> TryClaimNextAsync(ClaimAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         if (!command.AcrossTenants)
         {
@@ -343,9 +335,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         return null;
     }
 
-    public async Task<AgentTaskRecord> RenewLeaseAsync(
-        RenewAgentTaskLeaseCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> RenewLeaseAsync(RenewAgentTaskLeaseCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
         Required(command.WorkerId, nameof(command.WorkerId));
@@ -366,9 +356,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         return await RequireUpdatedAsync(command.TaskId, command.TenantId, updated, cancellationToken);
     }
 
-    public async Task<AgentTaskRecord> SaveCheckpointAsync(
-        SaveAgentTaskCheckpointCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> SaveCheckpointAsync(SaveAgentTaskCheckpointCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.CheckpointKind, nameof(command.CheckpointKind));
         ValidateCheckpoint(command.CheckpointJson);
@@ -416,9 +404,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<AgentTaskRecord> WaitAsync(
-        WaitAgentTaskCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> WaitAsync(WaitAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         if (command.Status is not AgentTaskStatus.WaitingForApproval and not AgentTaskStatus.WaitingForUser)
         {
@@ -473,9 +459,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<AgentTaskRecord> CompleteAsync(
-        CompleteAgentTaskCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> CompleteAsync(CompleteAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         DateTime now = command.FinishedAtUtc.UtcDateTime;
@@ -518,9 +502,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<AgentTaskRecord> FailAsync(
-        FailAgentTaskCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> FailAsync(FailAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.ErrorCode, nameof(command.ErrorCode));
         if (command.RetryDelay < TimeSpan.Zero || command.RetryDelay > TimeSpan.FromDays(1))
@@ -630,9 +612,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<AgentTaskRecord> ResumeWithUserInputAsync(
-        ResumeAgentTaskWithUserInputCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord> ResumeWithUserInputAsync(ResumeAgentTaskWithUserInputCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
         Required(command.UserId, nameof(command.UserId));
@@ -697,9 +677,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    public async Task<AgentTaskRecord?> SynchronizeRunAsync(
-        SynchronizeAgentTaskRunCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentTaskRecord?> SynchronizeRunAsync(SynchronizeAgentTaskRunCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
         Required(command.UserId, nameof(command.UserId));
@@ -846,11 +824,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
     }
 
-    private static void EnsureIdempotencyMatch(
-        AgAgentTask existing,
-        CreateAgentTaskCommand command,
-        string sourceType,
-        string inputSha256)
+    private static void EnsureIdempotencyMatch(AgAgentTask existing, CreateAgentTaskCommand command, string sourceType, string inputSha256)
     {
         if (!string.Equals(existing.UserId, command.UserId.Trim(), StringComparison.Ordinal) ||
             !string.Equals(existing.Title, command.Title.Trim(), StringComparison.Ordinal) ||
@@ -970,3 +944,5 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         ToOffset(value.OccurredAtUtc ?? DateTime.UtcNow),
         value.PayloadJson ?? string.Empty);
 }
+
+#endregion

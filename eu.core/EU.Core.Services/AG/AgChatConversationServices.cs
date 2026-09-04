@@ -6,6 +6,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgChatConversationServices 职责实现
+
 public sealed class AgChatConversationServices :
     BaseServices<AgChatConversation>,
     IAgChatConversationServices,
@@ -17,9 +19,7 @@ public sealed class AgChatConversationServices :
     {
     }
 
-    public async Task<ConversationRecord?> GetConversationAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<ConversationRecord?> GetConversationAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgChatConversation? value = await Db.Queryable<AgChatConversation>()
@@ -28,9 +28,7 @@ public sealed class AgChatConversationServices :
         return value is null ? null : MapConversation(value);
     }
 
-    public async Task<IReadOnlyList<ConversationRecord>> ListConversationsAsync(
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ConversationRecord>> ListConversationsAsync(int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgChatConversation> values = await Db.Queryable<AgChatConversation>()
@@ -51,9 +49,7 @@ public sealed class AgChatConversationServices :
         return await ReadMessagesAsync(conversationId, take);
     }
 
-    public async Task<UnifiedEntryRunRecord?> GetRunAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<UnifiedEntryRunRecord?> GetRunAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgUnifiedEntryRun? value = await Db.Queryable<AgUnifiedEntryRun>()
@@ -62,10 +58,7 @@ public sealed class AgChatConversationServices :
         return value is null ? null : MapEntryRun(value);
     }
 
-    public async Task<IReadOnlyList<UnifiedEntryRunRecord>> ListRunsAsync(
-        Guid conversationId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<UnifiedEntryRunRecord>> ListRunsAsync(Guid conversationId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgUnifiedEntryRun> values = await Db.Queryable<AgUnifiedEntryRun>()
@@ -77,9 +70,7 @@ public sealed class AgChatConversationServices :
         return values.Select(MapEntryRun).ToArray();
     }
 
-    public async Task<UnifiedRunDetails?> GetDetailsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<UnifiedRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync();
@@ -105,19 +96,13 @@ public sealed class AgChatConversationServices :
         }
     }
 
-    public async Task<IReadOnlyList<UnifiedRunEventRecord>> ListEventsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<UnifiedRunEventRecord>> ListEventsAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return await ReadEventsAsync(runId);
     }
 
-    public async Task<ConversationRecord?> GetConversationForOwnerAsync(
-        Guid id,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default)
+    public async Task<ConversationRecord?> GetConversationForOwnerAsync(Guid id, string tenantId, string userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgChatConversation? value = await Db.Queryable<AgChatConversation>()
@@ -163,11 +148,7 @@ public sealed class AgChatConversationServices :
         return await ReadMessagesAsync(conversationId, take);
     }
 
-    public async Task<UnifiedEntryRunRecord?> GetRunForOwnerAsync(
-        Guid runId,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default)
+    public async Task<UnifiedEntryRunRecord?> GetRunForOwnerAsync(Guid runId, string tenantId, string userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgUnifiedEntryRun? value = await Db.Queryable<AgUnifiedEntryRun>()
@@ -196,11 +177,7 @@ public sealed class AgChatConversationServices :
         return values.Select(MapEntryRun).ToArray();
     }
 
-    public async Task<UnifiedRunDetails?> GetDetailsForOwnerAsync(
-        Guid runId,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default)
+    public async Task<UnifiedRunDetails?> GetDetailsForOwnerAsync(Guid runId, string tenantId, string userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync();
@@ -348,9 +325,7 @@ public sealed class AgChatConversationServices :
         }
     }
 
-    public async Task<int> RecoverInterruptedAsync(
-        DateTimeOffset recoveredAtUtc,
-        CancellationToken cancellationToken = default)
+    public async Task<int> RecoverInterruptedAsync(DateTimeOffset recoveredAtUtc, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         DateTime recovered = recoveredAtUtc.UtcDateTime;
@@ -434,9 +409,7 @@ public sealed class AgChatConversationServices :
         }
     }
 
-    public async Task<UnifiedEntryAggregate> SaveAsync(
-        UnifiedEntryAggregate value,
-        CancellationToken cancellationToken = default)
+    public async Task<UnifiedEntryAggregate> SaveAsync(UnifiedEntryAggregate value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         UnifiedEntryAggregate snapshot = UnifiedEntryContractCloner.Clone(value);
@@ -532,9 +505,7 @@ public sealed class AgChatConversationServices :
         }
     }
 
-    private async Task<IReadOnlyList<ConversationMessageRecord>> ReadMessagesAsync(
-        Guid conversationId,
-        int take)
+    private async Task<IReadOnlyList<ConversationMessageRecord>> ReadMessagesAsync(Guid conversationId, int take)
     {
         List<AgChatMessage> values = await Db.Queryable<AgChatMessage>()
             .Where(value => value.ConversationId == conversationId && !value.IsDeleted)
@@ -664,9 +635,7 @@ public sealed class AgChatConversationServices :
         }
     }
 
-    private async Task PersistMessagesAsync(
-        Guid conversationId,
-        IReadOnlyList<ConversationMessageRecord> values)
+    private async Task PersistMessagesAsync(Guid conversationId, IReadOnlyList<ConversationMessageRecord> values)
     {
         List<AgChatMessage> rows = await Db.Queryable<AgChatMessage>()
             .Where(item => item.ConversationId == conversationId && !item.IsDeleted)
@@ -723,9 +692,7 @@ public sealed class AgChatConversationServices :
         return fields.Count == 0 ? "unknown" : string.Join(", ", fields);
     }
 
-    private static bool SamePersistedMessage(
-        ConversationMessageRecord persisted,
-        ConversationMessageRecord supplied) =>
+    private static bool SamePersistedMessage(ConversationMessageRecord persisted, ConversationMessageRecord supplied) =>
         persisted.Id == supplied.Id &&
         persisted.ConversationId == supplied.ConversationId &&
         persisted.Role == supplied.Role &&
@@ -744,12 +711,7 @@ public sealed class AgChatConversationServices :
         // up to one legacy DATETIME increment even when the column is DATETIME2(7).
         Math.Abs((left - right).Ticks) <= 4 * TimeSpan.TicksPerMillisecond;
 
-    private async Task UpsertEntryRunAsync(
-        UnifiedEntryRunRecord value,
-        bool rowExists,
-        long expectedRevision,
-        long nextRevision,
-        string fingerprint)
+    private async Task UpsertEntryRunAsync(UnifiedEntryRunRecord value, bool rowExists, long expectedRevision, long nextRevision, string fingerprint)
     {
         if (!rowExists)
         {
@@ -1008,3 +970,5 @@ public sealed class AgChatConversationServices :
         Enum.TryParse(value, false, out T parsed) ? parsed :
             throw new InvalidDataException($"The database value '{value}' is not a valid {typeof(T).Name}.");
 }
+
+#endregion

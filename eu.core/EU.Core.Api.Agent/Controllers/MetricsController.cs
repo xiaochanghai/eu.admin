@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：MetricsController 接口处理
+
 [Route("metrics")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class MetricsController(
@@ -23,3 +25,5 @@ public sealed class MetricsController(
         }
         : NotFound();
 }
+
+#endregion

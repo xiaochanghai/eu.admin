@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using EU.Core.Services;
+using EU.Core.IServices;
 
 namespace EU.Core.Tests.Service_Test;
 

@@ -3,6 +3,8 @@ using EU.Core.IServices.Approvals;
 
 namespace EU.Core.Services;
 
+#region 文件职责：ToolApprovalManagementService 职责实现
+
 public sealed class ToolApprovalManagementService(
     IToolApprovalRepository approvals,
     TimeProvider? timeProvider = null) : IToolApprovalManagementService
@@ -35,10 +37,7 @@ public sealed class ToolApprovalManagementService(
         return refreshed;
     }
 
-    public async Task<ToolApprovalRequestRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<ToolApprovalRequestRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         ToolApprovalRequestRecord? value = await approvals.GetAsync(
             id,
@@ -52,15 +51,10 @@ public sealed class ToolApprovalManagementService(
                 cancellationToken);
     }
 
-    public Task<IReadOnlyList<ToolApprovalDecisionRecord>> ListDecisionsAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<ToolApprovalDecisionRecord>> ListDecisionsAsync(Guid id, string tenantId, CancellationToken cancellationToken = default) =>
         approvals.ListDecisionsAsync(id, tenantId, cancellationToken);
 
-    public async Task<ToolApprovalRequestRecord> DecideAsync(
-        ToolApprovalDecisionCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ToolApprovalRequestRecord> DecideAsync(ToolApprovalDecisionCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.ApprovalId == Guid.Empty
@@ -134,10 +128,7 @@ public sealed class ToolApprovalManagementService(
         return replacement;
     }
 
-    private async Task<ToolApprovalRequestRecord> ExpireIfNeededAsync(
-        ToolApprovalRequestRecord value,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
+    private async Task<ToolApprovalRequestRecord> ExpireIfNeededAsync(ToolApprovalRequestRecord value, DateTimeOffset now, CancellationToken cancellationToken)
     {
         ToolApprovalRequestRecord current = value;
         for (int attempt = 0; attempt < 2; attempt++)
@@ -166,3 +157,5 @@ public sealed class ToolApprovalManagementService(
         return current;
     }
 }
+
+#endregion

@@ -7,15 +7,15 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：KnowledgeBasesController 接口处理
+
 [Route("api/knowledge-bases")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBasesController(
     IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ServiceResult<IReadOnlyList<KnowledgeBaseListItem>>> List(
-        [FromQuery] string? status,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<KnowledgeBaseListItem>>> List([FromQuery] string? status, CancellationToken cancellationToken)
     {
         KnowledgeBaseStatus? parsedStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -53,9 +53,7 @@ public sealed class KnowledgeBasesController(
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> Get(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<KnowledgeBaseDetailResponse>> Get(Guid id, CancellationToken cancellationToken)
     {
         KnowledgeBaseDefinition? value =
             await knowledgeBaseDefinitionServices.GetByIdAsync(id, cancellationToken);
@@ -262,8 +260,7 @@ public sealed class KnowledgeBasesController(
             value.Chunks.Count,
             value.IndexedAtUtc);
 
-    private static ServiceResult<KnowledgeBaseDetailResponse> ToDetail(
-        ServiceResult<KnowledgeBaseDefinition> result) =>
+    private static ServiceResult<KnowledgeBaseDetailResponse> ToDetail(ServiceResult<KnowledgeBaseDefinition> result) =>
         new()
         {
             Status = result.Status,
@@ -334,3 +331,4 @@ public sealed record KnowledgeChunkPageResponse(
     int TotalCount,
     IReadOnlyList<KnowledgeChunkResponse> Items);
 
+#endregion

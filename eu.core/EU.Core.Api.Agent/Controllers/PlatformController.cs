@@ -13,6 +13,8 @@ using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：PlatformController 接口处理
+
 [Route("api/platform")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class PlatformController(
@@ -28,8 +30,7 @@ public sealed class PlatformController(
             ReplicaModeHealthCheck.ReplicaMode));
 
     [HttpGet("capabilities")]
-    public async Task<ServiceResult<PlatformCapabilitiesResponse>> Capabilities(
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<PlatformCapabilitiesResponse>> Capabilities(CancellationToken cancellationToken)
     {
         bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Success;
         return ServiceResult<PlatformCapabilitiesResponse>.QuerySuccess(
@@ -69,3 +70,5 @@ public sealed record PlatformFeatureResponse(
     bool ModelJudge,
     bool MainAgent,
     bool Schedules);
+
+#endregion

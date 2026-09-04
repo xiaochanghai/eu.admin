@@ -6,6 +6,8 @@ using System.Text.Json;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgMcpServerDefinitionServices 职责实现
+
 public sealed class AgMcpServerDefinitionServices :
     BaseServices<AgMcpServerDefinition>,
     IAgMcpServerDefinitionServices,
@@ -15,17 +17,13 @@ public sealed class AgMcpServerDefinitionServices :
     private const int MaximumTools = 256;
     private readonly IMcpToolDiscovery _discovery;
 
-    public AgMcpServerDefinitionServices(
-        IBaseRepository<AgMcpServerDefinition> dal,
-        IMcpToolDiscovery discovery)
+    public AgMcpServerDefinitionServices(IBaseRepository<AgMcpServerDefinition> dal, IMcpToolDiscovery discovery)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         _discovery = discovery ?? throw new ArgumentNullException(nameof(discovery));
     }
 
-    public async Task<ServiceResult<McpServerDefinition>> CreateAsync(
-        CreateMcpServerCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<McpServerDefinition>> CreateAsync(CreateMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         if (!TryNormalizeCode(command.Code, out string? code))
         {
@@ -65,19 +63,13 @@ public sealed class AgMcpServerDefinitionServices :
             : Failure(McpErrorCodes.CodeConflict, "An MCP Server already uses this code.");
     }
 
-    public Task<McpServerDefinition?> GetAsync(
-        Guid id,
-        CancellationToken cancellationToken = default) =>
+    public Task<McpServerDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         GetDefinitionAsync(id, cancellationToken);
 
-    public Task<IReadOnlyList<McpServerDefinition>> ListAsync(
-        McpServerQuery query,
-        CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<McpServerDefinition>> ListAsync(McpServerQuery query, CancellationToken cancellationToken = default) =>
         QueryDefinitionsAsync(query, cancellationToken);
 
-    public async Task<ServiceResult<McpServerDefinition>> UpdateAsync(
-        UpdateMcpServerCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<McpServerDefinition>> UpdateAsync(UpdateMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
             await GetDefinitionAsync(command.ServerId, cancellationToken);
@@ -156,9 +148,7 @@ public sealed class AgMcpServerDefinitionServices :
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before this operation completed.");
     }
 
-    public async Task<ServiceResult<McpServerDefinition>> SyncAsync(
-        SyncMcpServerCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<McpServerDefinition>> SyncAsync(SyncMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
             await GetDefinitionAsync(command.ServerId, cancellationToken);
@@ -262,9 +252,7 @@ public sealed class AgMcpServerDefinitionServices :
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before synchronization completed.");
     }
 
-    public async Task<ServiceResult<McpServerDefinition>> ClassifyToolAsync(
-        ClassifyMcpToolCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<McpServerDefinition>> ClassifyToolAsync(ClassifyMcpToolCommand command, CancellationToken cancellationToken = default)
     {
         if (!Enum.IsDefined(command.Risk) || command.Risk == McpToolRisk.Unknown)
         {
@@ -326,9 +314,7 @@ public sealed class AgMcpServerDefinitionServices :
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before classification completed.");
     }
 
-    public async Task<ServiceResult<McpServerDefinition>> SetArchivedAsync(
-        SetMcpServerArchiveCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<McpServerDefinition>> SetArchivedAsync(SetMcpServerArchiveCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
             await GetDefinitionAsync(command.ServerId, cancellationToken);
@@ -393,9 +379,7 @@ public sealed class AgMcpServerDefinitionServices :
                 "The MCP Server changed before this operation completed.");
     }
 
-    private async Task<string[]> FindAgentReferenceBlockersAsync(
-        IReadOnlySet<Guid> serverToolIds,
-        CancellationToken cancellationToken)
+    private async Task<string[]> FindAgentReferenceBlockersAsync(IReadOnlySet<Guid> serverToolIds, CancellationToken cancellationToken)
     {
         if (serverToolIds.Count == 0)
         {
@@ -475,9 +459,7 @@ public sealed class AgMcpServerDefinitionServices :
             .ToArray();
     }
 
-    public async Task<bool> ExistsAsync(
-        Guid toolVersionId,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Guid toolVersionId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return await Db.Queryable<AgMcpToolVersion, AgMcpServerDefinition>(
@@ -545,9 +527,7 @@ public sealed class AgMcpServerDefinitionServices :
                     Required(tool.Sha256, "ToolVersion.Sha256")))));
     }
 
-    private async Task<McpServerDefinition?> GetDefinitionAsync(
-        Guid id,
-        CancellationToken cancellationToken)
+    private async Task<McpServerDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgMcpServerDefinition? server = await Db.Queryable<AgMcpServerDefinition>()
@@ -561,9 +541,7 @@ public sealed class AgMcpServerDefinitionServices :
         return await LoadDefinitionAsync(server, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<McpServerDefinition>> QueryDefinitionsAsync(
-        McpServerQuery query,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<McpServerDefinition>> QueryDefinitionsAsync(McpServerQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         cancellationToken.ThrowIfCancellationRequested();
@@ -631,9 +609,7 @@ public sealed class AgMcpServerDefinitionServices :
             toolsByServer.GetValueOrDefault(server.ID) ?? [])));
     }
 
-    private async Task<McpServerDefinition> LoadDefinitionAsync(
-        AgMcpServerDefinition server,
-        CancellationToken cancellationToken)
+    private async Task<McpServerDefinition> LoadDefinitionAsync(AgMcpServerDefinition server, CancellationToken cancellationToken)
     {
         List<AgMcpServerArgument> arguments = await Db.Queryable<AgMcpServerArgument>()
             .Where(value => value.ServerId == server.ID && !value.IsDeleted)
@@ -649,9 +625,7 @@ public sealed class AgMcpServerDefinitionServices :
         return MapDefinition(server, arguments, tools);
     }
 
-    private async Task<bool> TryCreateDefinitionAsync(
-        McpServerDefinition definition,
-        CancellationToken cancellationToken)
+    private async Task<bool> TryCreateDefinitionAsync(McpServerDefinition definition, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
@@ -686,10 +660,7 @@ public sealed class AgMcpServerDefinitionServices :
         }
     }
 
-    private async Task<bool> TryReplaceDefinitionAsync(
-        McpServerDefinition definition,
-        long expectedLogicalRevision,
-        CancellationToken cancellationToken)
+    private async Task<bool> TryReplaceDefinitionAsync(McpServerDefinition definition, long expectedLogicalRevision, CancellationToken cancellationToken)
     {
         if (expectedLogicalRevision == long.MaxValue ||
             definition.LogicalRevision != expectedLogicalRevision + 1)
@@ -819,10 +790,7 @@ public sealed class AgMcpServerDefinitionServices :
             Value = value
         }).ToList();
 
-    private static AgMcpToolVersion MapToolEntity(
-        McpToolVersion tool,
-        int historyOrdinal,
-        int? currentOrdinal) =>
+    private static AgMcpToolVersion MapToolEntity(McpToolVersion tool, int historyOrdinal, int? currentOrdinal) =>
         new()
         {
             ID = tool.Id,
@@ -1086,3 +1054,5 @@ public sealed class AgMcpServerDefinitionServices :
         return true;
     }
 }
+
+#endregion

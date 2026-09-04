@@ -11,6 +11,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：ToolApprovalRuntimeService 职责实现
+
 public sealed class ToolApprovalRuntimeService(
     IToolApprovalRepository approvals,
     IToolApprovalPayloadProtector payloadProtector,
@@ -61,9 +63,7 @@ public sealed class ToolApprovalRuntimeService(
             now.Add(_approvalLifetime)), cancellationToken);
     }
 
-    public async Task<ToolApprovalRequestRecord> RequestAsync(
-        ToolApprovalRuntimeRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<ToolApprovalRequestRecord> RequestAsync(ToolApprovalRuntimeRequest request, CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
         string argumentsJson = NormalizeArguments(request.ArgumentsJson);
@@ -111,9 +111,7 @@ public sealed class ToolApprovalRuntimeService(
         return record;
     }
 
-    public async Task<McpRuntimeToolResult> ResumeApprovedAsync(
-        ToolApprovalResumeRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<McpRuntimeToolResult> ResumeApprovedAsync(ToolApprovalResumeRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ToolApprovalRequestRecord approval = await approvals.GetAsync(
@@ -323,9 +321,7 @@ public sealed class ToolApprovalRuntimeService(
         return result with { Content = builder.ToString() };
     }
 
-    private async Task<McpRuntimeToolResult> ReadCompletedResultAsync(
-        ToolApprovalRequestRecord approval,
-        CancellationToken cancellationToken)
+    private async Task<McpRuntimeToolResult> ReadCompletedResultAsync(ToolApprovalRequestRecord approval, CancellationToken cancellationToken)
     {
         ToolApprovalExecutionResultRecord result =
             await approvals.GetExecutionResultAsync(
@@ -463,9 +459,7 @@ public sealed class ToolApprovalRuntimeService(
         }
     }
 
-    private static bool FrozenToolMatches(
-        ToolApprovalRequestRecord approval,
-        PublishedMcpToolReference tool) =>
+    private static bool FrozenToolMatches(ToolApprovalRequestRecord approval, PublishedMcpToolReference tool) =>
         approval.McpServerId == tool.ServerId
             && approval.ToolVersionId == tool.ToolVersionId
             && approval.Risk == tool.Risk
@@ -520,10 +514,7 @@ public sealed class ToolApprovalRuntimeService(
             : throw Invalid();
     }
 
-    private static void CollectSummaryFields(
-        JsonElement value,
-        string path,
-        ICollection<object> fields)
+    private static void CollectSummaryFields(JsonElement value, string path, ICollection<object> fields)
     {
         if (fields.Count >= 128)
         {
@@ -572,8 +563,7 @@ public sealed class ToolApprovalRuntimeService(
         });
     }
 
-    private static IReadOnlyDictionary<string, object?> DeserializeArguments(
-        string argumentsJson)
+    private static IReadOnlyDictionary<string, object?> DeserializeArguments(string argumentsJson)
     {
         Dictionary<string, JsonElement>? values = JsonSerializer.Deserialize<
             Dictionary<string, JsonElement>>(argumentsJson);
@@ -635,3 +625,5 @@ public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionP
                 ToolApprovalErrorCodes.RevalidationFailed));
     }
 }
+
+#endregion

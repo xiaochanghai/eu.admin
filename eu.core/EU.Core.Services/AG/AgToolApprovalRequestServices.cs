@@ -8,6 +8,8 @@ using EU.Core.IServices.Mcp;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgToolApprovalRequestServices 职责实现
+
 public sealed class AgToolApprovalRequestServices :
     BaseServices<AgToolApprovalRequest>,
     IAgToolApprovalRequestServices,
@@ -18,10 +20,7 @@ public sealed class AgToolApprovalRequestServices :
     {
     }
 
-    public async Task<bool> TryCreateAsync(
-        ToolApprovalRequestRecord request,
-        string protectedResumePayload,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryCreateAsync(ToolApprovalRequestRecord request, string protectedResumePayload, CancellationToken cancellationToken = default)
     {
         ToolApprovalStateMachine.ValidateNew(request, protectedResumePayload);
         cancellationToken.ThrowIfCancellationRequested();
@@ -56,10 +55,7 @@ public sealed class AgToolApprovalRequestServices :
         }
     }
 
-    public async Task<ToolApprovalRequestRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<ToolApprovalRequestRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         RequiredTenant(tenantId);
         cancellationToken.ThrowIfCancellationRequested();
@@ -69,9 +65,7 @@ public sealed class AgToolApprovalRequestServices :
         return value is null ? null : MapRequest(value);
     }
 
-    public async Task<IReadOnlyList<ToolApprovalRequestRecord>> ListAsync(
-        ToolApprovalQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ToolApprovalRequestRecord>> ListAsync(ToolApprovalQuery query, CancellationToken cancellationToken = default)
     {
         ToolApprovalStateMachine.ValidateQuery(query);
         cancellationToken.ThrowIfCancellationRequested();
@@ -101,10 +95,7 @@ public sealed class AgToolApprovalRequestServices :
         return values.Select(MapDecision).ToArray();
     }
 
-    public async Task<bool> TryReplaceAsync(
-        ToolApprovalRequestRecord replacement,
-        long expectedLogicalRevision,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryReplaceAsync(ToolApprovalRequestRecord replacement, long expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ToolApprovalRequestRecord? existing = await GetAsync(
             replacement.Id, replacement.TenantId, cancellationToken);
@@ -285,10 +276,7 @@ public sealed class AgToolApprovalRequestServices :
         }
     }
 
-    public async Task<ToolApprovalExecutionResultRecord?> GetExecutionResultAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<ToolApprovalExecutionResultRecord?> GetExecutionResultAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         RequiredTenant(tenantId);
         cancellationToken.ThrowIfCancellationRequested();
@@ -314,9 +302,7 @@ public sealed class AgToolApprovalRequestServices :
         return result;
     }
 
-    public async Task<int> RecoverInterruptedExecutionsAsync(
-        DateTimeOffset recoveredAtUtc,
-        CancellationToken cancellationToken = default)
+    public async Task<int> RecoverInterruptedExecutionsAsync(DateTimeOffset recoveredAtUtc, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         DateTime recovered = recoveredAtUtc.UtcDateTime;
@@ -336,10 +322,7 @@ public sealed class AgToolApprovalRequestServices :
             .ExecuteCommandAsync();
     }
 
-    private async Task<int> UpdateStateAsync(
-        ToolApprovalRequestRecord replacement,
-        long expectedLogicalRevision,
-        ToolApprovalStatus expectedStatus)
+    private async Task<int> UpdateStateAsync(ToolApprovalRequestRecord replacement, long expectedLogicalRevision, ToolApprovalStatus expectedStatus)
     {
         DateTime? decidedAtUtc = replacement.DecidedAtUtc?.UtcDateTime;
         DateTime? claimedAtUtc = replacement.ClaimedAtUtc?.UtcDateTime;
@@ -442,9 +425,7 @@ public sealed class AgToolApprovalRequestServices :
         Required(value.ErrorCode, "ExecutionResult.ErrorCode"),
         ToOffset(Required(value.FinishedAtUtc, "ExecutionResult.FinishedAtUtc")));
 
-    private static bool ValidResult(
-        ToolApprovalRequestRecord replacement,
-        ToolApprovalExecutionResultRecord result) =>
+    private static bool ValidResult(ToolApprovalRequestRecord replacement, ToolApprovalExecutionResultRecord result) =>
         result.ApprovalId == replacement.Id &&
         string.Equals(result.TenantId, replacement.TenantId, StringComparison.Ordinal) &&
         result.FinishedAtUtc == replacement.FinishedAtUtc &&
@@ -477,3 +458,5 @@ public sealed class AgToolApprovalRequestServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Tool approval field '{field}' is missing.");
 }
+
+#endregion

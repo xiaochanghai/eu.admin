@@ -1,4 +1,4 @@
-using EU.Core.IServices.Agents;
+using EU.Core.IServices;
 using EU.Core.Model.ViewModels.Extend;
 
 #nullable enable

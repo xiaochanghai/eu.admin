@@ -9,6 +9,8 @@ using UglyToad.PdfPig.Exceptions;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgKnowledgeBaseDefinitionServices 职责实现
+
 /// <summary>
 /// 知识库定义、文档和检索分块的规范化持久化服务。
 /// </summary>
@@ -21,13 +23,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
     private readonly Lazy<IAgentDefinitionCatalog>? agents;
 
-    public AgKnowledgeBaseDefinitionServices(
-        IBaseRepository<AgKnowledgeBaseDefinition> dal,
-        Lazy<IAgentDefinitionCatalog>? agents = null)
+    #region 构造
+
+    public AgKnowledgeBaseDefinitionServices(IBaseRepository<AgKnowledgeBaseDefinition> dal, Lazy<IAgentDefinitionCatalog>? agents = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         this.agents = agents;
     }
+
+    #endregion
+
+    #region 知识库管理
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
         string code,
@@ -100,6 +106,10 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             ? Success(updated)
             : Failure(KnowledgeErrorCodes.RowVersionConflict, "The knowledge base changed; reload and retry.");
     }
+
+    #endregion
+
+    #region 文档导入与解析
 
     public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
         Guid knowledgeBaseId,
@@ -372,6 +382,10 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 "The knowledge base changed; reload and retry.");
     }
 
+    #endregion
+
+    #region 知识库状态与查询
+
     public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
         Guid id,
         long expectedLogicalRevision,
@@ -425,9 +439,7 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 "The knowledge base changed; reload and retry.");
     }
 
-    public async Task<KnowledgeBaseDefinition?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<KnowledgeBaseDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgKnowledgeBaseDefinition? definition = await Db.Queryable<AgKnowledgeBaseDefinition>()
@@ -438,9 +450,7 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
 
-    public async Task<KnowledgeBaseDefinition?> GetByCodeAsync(
-        string code,
-        CancellationToken cancellationToken = default)
+    public async Task<KnowledgeBaseDefinition?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgKnowledgeBaseDefinition? definition = await Db.Queryable<AgKnowledgeBaseDefinition>()
@@ -451,9 +461,7 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(
-        KnowledgeBaseStatus? status = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(KnowledgeBaseStatus? status = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var expression = Db.Queryable<AgKnowledgeBaseDefinition>()
@@ -551,6 +559,10 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             throw;
         }
     }
+
+    #endregion
+
+    #region 已发布引用与检索
 
     public async Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(CancellationToken cancellationToken = default)
     {
@@ -652,9 +664,11 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             .Take(Math.Clamp(take, 1, 20)));
     }
 
-    private async Task<KnowledgeBaseDefinition> LoadDefinitionAsync(
-        AgKnowledgeBaseDefinition definition,
-        CancellationToken cancellationToken)
+    #endregion
+
+    #region 持久化加载与映射
+
+    private async Task<KnowledgeBaseDefinition> LoadDefinitionAsync(AgKnowledgeBaseDefinition definition, CancellationToken cancellationToken)
     {
         IReadOnlyList<KnowledgeBaseDefinition> values = await LoadDefinitionsAsync(
             [definition],
@@ -801,10 +815,7 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             Required(value.Content, "Document.Content"),
             RequiredDateTimeOffset(value.ImportedAtUtc, "Document.ImportedAtUtc"));
 
-    private static AgKnowledgeDocument MapDocumentEntity(
-        Guid knowledgeBaseId,
-        KnowledgeDocument value,
-        int ordinal) =>
+    private static AgKnowledgeDocument MapDocumentEntity(Guid knowledgeBaseId, KnowledgeDocument value, int ordinal) =>
         new()
         {
             ID = value.Id,
@@ -864,8 +875,7 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
         _ => "The PDF is malformed or could not be read safely."
     };
 
-    private static ServiceResult<KnowledgeBaseDefinition>? ValidateImportTarget(
-        KnowledgeBaseDefinition? existing, long expectedLogicalRevision)
+    private static ServiceResult<KnowledgeBaseDefinition>? ValidateImportTarget(KnowledgeBaseDefinition? existing, long expectedLogicalRevision)
     {
         if (existing is null)
             return Failure(
@@ -889,6 +899,10 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
     private static ServiceResult<KnowledgeBaseDefinition> Failure(string errorCode, string message) =>
         Failure<KnowledgeBaseDefinition>(KnowledgeServiceStatusCodes.FromErrorCode(errorCode), message);
+
+    #endregion
+
+    #region 文本分块与搜索算法
 
     private static class KnowledgeTextChunker
     {
@@ -989,6 +1003,10 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
         }
     }
 
+    #endregion
+
+    #region 值转换与校验
+
     private static DateTimeOffset? ToDateTimeOffset(DateTime? value) =>
         value.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc))
@@ -1005,14 +1023,48 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Knowledge base field '{field}' is missing.");
 
+    /// <summary>
+    /// 知识库检索联表查询的内部投影行。
+    /// </summary>
     private sealed class KnowledgeSearchRow
     {
+        /// <summary>
+        /// 知识库定义标识。
+        /// </summary>
         public Guid KnowledgeBaseId { get; set; }
+
+        /// <summary>
+        /// 知识库业务编码。
+        /// </summary>
         public string? KnowledgeBaseCode { get; set; }
+
+        /// <summary>
+        /// 来源文档标识。
+        /// </summary>
         public Guid DocumentId { get; set; }
+
+        /// <summary>
+        /// 来源文档文件名。
+        /// </summary>
         public string? FileName { get; set; }
+
+        /// <summary>
+        /// 文档分块标识。
+        /// </summary>
         public Guid ChunkId { get; set; }
+
+        /// <summary>
+        /// 分块在来源文档中的顺序号。
+        /// </summary>
         public int? ChunkSequence { get; set; }
+
+        /// <summary>
+        /// 用于词法匹配和结果返回的分块正文。
+        /// </summary>
         public string? Content { get; set; }
     }
+
+    #endregion
 }
+
+#endregion

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：McpServersController 接口处理
+
 [Route("api/mcp/servers")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class McpServersController(
@@ -38,9 +40,7 @@ public sealed class McpServersController(
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ServiceResult<McpServerDefinition>> Get(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<McpServerDefinition>> Get(Guid id, CancellationToken cancellationToken)
     {
         McpServerDefinition? server = await lifecycle.GetAsync(id, cancellationToken);
         return server is null
@@ -51,9 +51,7 @@ public sealed class McpServersController(
     }
 
     [HttpPost]
-    public async Task<ServiceResult<McpServerDefinition>> Create(
-        [FromBody] CreateMcpServerRequest request,
-        CancellationToken cancellationToken) =>
+    public async Task<ServiceResult<McpServerDefinition>> Create([FromBody] CreateMcpServerRequest request, CancellationToken cancellationToken) =>
         await lifecycle.CreateAsync(
             new CreateMcpServerCommand(
                 request.Code,
@@ -68,10 +66,7 @@ public sealed class McpServersController(
             cancellationToken);
 
     [HttpPut("{id:guid}")]
-    public async Task<ServiceResult<McpServerDefinition>> Update(
-        Guid id,
-        [FromBody] UpdateMcpServerRequest request,
-        CancellationToken cancellationToken) =>
+    public async Task<ServiceResult<McpServerDefinition>> Update(Guid id, [FromBody] UpdateMcpServerRequest request, CancellationToken cancellationToken) =>
         await lifecycle.UpdateAsync(
             new UpdateMcpServerCommand(
                 id,
@@ -87,10 +82,7 @@ public sealed class McpServersController(
             cancellationToken);
 
     [HttpPost("{id:guid}/sync")]
-    public async Task<ServiceResult<McpServerDefinition>> Sync(
-        Guid id,
-        [FromBody] SyncMcpServerRequest request,
-        CancellationToken cancellationToken) =>
+    public async Task<ServiceResult<McpServerDefinition>> Sync(Guid id, [FromBody] SyncMcpServerRequest request, CancellationToken cancellationToken) =>
         await lifecycle.SyncAsync(
             new SyncMcpServerCommand(id, request.ExpectedLogicalRevision),
             cancellationToken);
@@ -153,3 +145,5 @@ public sealed record SetMcpServerArchiveRequest(
 public sealed record ClassifyMcpToolRequest(
     long ExpectedLogicalRevision,
     McpToolRisk Risk);
+
+#endregion

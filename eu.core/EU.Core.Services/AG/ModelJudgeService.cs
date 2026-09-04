@@ -14,6 +14,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：ModelJudgeService 职责实现
+
 public sealed class ModelJudgeService(
     IEvaluationBatchRepository batches,
     IAgEvaluationSuiteServices suites,
@@ -29,17 +31,10 @@ public sealed class ModelJudgeService(
         new(StringComparer.Ordinal);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
-    public Task<ModelJudgeReport?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default) =>
+    public Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default) =>
         reports.GetAsync(id, tenantId, cancellationToken);
 
-    public Task<IReadOnlyList<ModelJudgeReport>> ListAsync(
-        Guid batchId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default) =>
         reports.ListAsync(batchId, tenantId, Math.Clamp(take, 1, 50), cancellationToken);
 
     public async Task<ServiceResult<ModelJudgeReport>> EvaluateAsync(
@@ -223,11 +218,7 @@ public sealed class ModelJudgeService(
         }
     }
 
-    private static bool ValidRequest(
-        Guid batchId,
-        string tenantId,
-        string requestedBy,
-        ModelJudgeSpecification? value)
+    private static bool ValidRequest(Guid batchId, string tenantId, string requestedBy, ModelJudgeSpecification? value)
     {
         if (batchId == Guid.Empty
             || string.IsNullOrWhiteSpace(tenantId)
@@ -273,3 +264,5 @@ public sealed class ModelJudgeService(
             ModelJudgeServiceStatusCodes.FromErrorCode(code),
             message);
 }
+
+#endregion

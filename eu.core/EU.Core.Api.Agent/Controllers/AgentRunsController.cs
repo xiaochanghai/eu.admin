@@ -12,6 +12,8 @@ using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：AgentRunsController 接口处理
+
 [Route("api/agents/{agentId:guid}")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class AgentRunsController(
@@ -25,10 +27,7 @@ public sealed class AgentRunsController(
     };
 
     [HttpPost("runs")]
-    public async Task Run(
-        Guid agentId,
-        [FromBody] StartAgentRunRequest request,
-        CancellationToken cancellationToken)
+    public async Task Run(Guid agentId, [FromBody] StartAgentRunRequest request, CancellationToken cancellationToken)
     {
         AgentRunPreparationResult preparation = await runtime.PrepareAsync(
             agentId,
@@ -77,10 +76,7 @@ public sealed class AgentRunsController(
         ServiceResult<IReadOnlyList<AgentRunAuditRecord>>.QuerySuccess(
             await runtime.ListAuditAsync(agentId, take, cancellationToken));
 
-    private async Task WriteFrameAsync(
-        string eventName,
-        string json,
-        CancellationToken cancellationToken)
+    private async Task WriteFrameAsync(string eventName, string json, CancellationToken cancellationToken)
     {
         string frame = $"event: {eventName}\ndata: {json}\n\n";
         await Response.Body.WriteAsync(
@@ -104,3 +100,5 @@ public sealed class AgentRunsController(
 }
 
 public sealed record StartAgentRunRequest(string Input);
+
+#endregion

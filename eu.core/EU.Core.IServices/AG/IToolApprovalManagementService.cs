@@ -4,6 +4,8 @@ using EU.Core.IServices.Approvals;
 
 namespace EU.Core.IServices;
 
+#region 文件职责：IToolApprovalManagementService 服务契约
+
 public interface IToolApprovalManagementService
 {
     Task<IReadOnlyList<ToolApprovalRequestRecord>> ListAsync(
@@ -12,17 +14,11 @@ public interface IToolApprovalManagementService
         int take,
         CancellationToken cancellationToken = default);
 
-    Task<ToolApprovalRequestRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default);
+    Task<ToolApprovalRequestRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ToolApprovalDecisionRecord>> ListDecisionsAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ToolApprovalDecisionRecord>> ListDecisionsAsync(Guid id, string tenantId, CancellationToken cancellationToken = default);
 
-    Task<ToolApprovalRequestRecord> DecideAsync(
-        ToolApprovalDecisionCommand command,
-        CancellationToken cancellationToken = default);
+    Task<ToolApprovalRequestRecord> DecideAsync(ToolApprovalDecisionCommand command, CancellationToken cancellationToken = default);
 }
+
+#endregion

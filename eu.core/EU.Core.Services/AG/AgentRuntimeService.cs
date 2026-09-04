@@ -10,6 +10,8 @@ using System.Threading.Channels;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgentRuntimeService 职责实现
+
 public sealed class AgentRuntimeService(
     IAgentDefinitionCatalog agents,
     IPublishedMcpToolCatalog toolCatalog,
@@ -23,10 +25,7 @@ public sealed class AgentRuntimeService(
     public const int MaximumInputCharacters = 32_768;
     public const int MaximumSkillInstructionCharacters = 131_072;
 
-    public async Task<AgentRunPreparationResult> PrepareAsync(
-        Guid agentId,
-        string? input,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentRunPreparationResult> PrepareAsync(Guid agentId, string? input, CancellationToken cancellationToken = default)
     {
         string normalizedInput = input?.Trim() ?? string.Empty;
         if (normalizedInput.Length is 0 or > MaximumInputCharacters)
@@ -203,9 +202,7 @@ public sealed class AgentRuntimeService(
         return AgentRunPreparationResult.Success(context);
     }
 
-    private async Task<SkillMaterializationResult> MaterializeSkillsAsync(
-        AgentVersionSnapshot snapshot,
-        CancellationToken cancellationToken)
+    private async Task<SkillMaterializationResult> MaterializeSkillsAsync(AgentVersionSnapshot snapshot, CancellationToken cancellationToken)
     {
         if (snapshot.Skills.Count == 0)
         {
@@ -321,8 +318,7 @@ public sealed class AgentRuntimeService(
     {
         public bool Succeeded => string.IsNullOrEmpty(ErrorMessage);
 
-        public static SkillMaterializationResult Success(
-            IEnumerable<PublishedSkillContent> skills) =>
+        public static SkillMaterializationResult Success(IEnumerable<PublishedSkillContent> skills) =>
             new(SkillContractCloner.ReadOnly(skills), string.Empty);
 
         public static SkillMaterializationResult Failure(string errorMessage) =>
@@ -332,9 +328,7 @@ public sealed class AgentRuntimeService(
                 errorMessage);
     }
 
-    public async IAsyncEnumerable<AgentRunEvent> StreamAsync(
-        AgentRunContext context,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<AgentRunEvent> StreamAsync(AgentRunContext context, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var channel = Channel.CreateUnbounded<AgentRunEvent>(
             new UnboundedChannelOptions
@@ -358,10 +352,7 @@ public sealed class AgentRuntimeService(
         cancellationToken.ThrowIfCancellationRequested();
     }
 
-    private async Task ProduceAsync(
-        AgentRunContext context,
-        ChannelWriter<AgentRunEvent> writer,
-        CancellationToken cancellationToken)
+    private async Task ProduceAsync(AgentRunContext context, ChannelWriter<AgentRunEvent> writer, CancellationToken cancellationToken)
     {
         long sequence = 0;
         int outputCharacters = 0;
@@ -522,17 +513,10 @@ public sealed class AgentRuntimeService(
         }
     }
 
-    public Task<IReadOnlyList<AgentRunAuditRecord>> ListAuditAsync(
-        Guid agentId,
-        int take,
-        CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<AgentRunAuditRecord>> ListAuditAsync(Guid agentId, int take, CancellationToken cancellationToken = default) =>
         auditRepository.ListAsync(agentId, Math.Clamp(take, 1, 100), cancellationToken);
 
-    public Task TerminatePreparedRunAsync(
-        AgentRunContext context,
-        AgentRunStatus status,
-        string errorCode,
-        CancellationToken cancellationToken = default)
+    public Task TerminatePreparedRunAsync(AgentRunContext context, AgentRunStatus status, string errorCode, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (status is AgentRunStatus.Running)
@@ -572,10 +556,7 @@ public sealed class AgentRuntimeService(
             errorCode,
             calls.OrderBy(call => call.StartedAtUtc).ToArray());
 
-    private static void TrackToolCall(
-        AgentRunEvent value,
-        AgentRunContext context,
-        IDictionary<Guid, AgentToolCallAuditRecord> calls)
+    private static void TrackToolCall(AgentRunEvent value, AgentRunContext context, IDictionary<Guid, AgentToolCallAuditRecord> calls)
     {
         if (value.ToolVersionId is not Guid toolVersionId)
         {
@@ -619,3 +600,5 @@ public sealed class AgentRuntimeService(
         }
     }
 }
+
+#endregion

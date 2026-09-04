@@ -7,6 +7,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：RunEvaluationService 职责实现
+
 public sealed class RunEvaluationService(
     IUnifiedEntryRepository repository,
     TimeProvider? timeProvider = null) : IRunEvaluationService
@@ -112,11 +114,7 @@ public sealed class RunEvaluationService(
             new ReadOnlyCollection<RunEvaluationCheck>(checks));
     }
 
-    private static void Validate(
-        Guid runId,
-        string tenantId,
-        string userId,
-        RunEvaluationSpecification specification)
+    private static void Validate(Guid runId, string tenantId, string userId, RunEvaluationSpecification specification)
     {
         ArgumentNullException.ThrowIfNull(specification);
         if (runId == Guid.Empty || string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(userId))
@@ -131,11 +129,8 @@ public sealed class RunEvaluationService(
         RunEvaluationErrorCodes.SpecificationInvalid,
         "The run evaluation specification is invalid.");
 
-    private static void Add(
-        ICollection<RunEvaluationCheck> checks,
-        string code,
-        bool passed,
-        string expected,
-        string actual) =>
+    private static void Add(ICollection<RunEvaluationCheck> checks, string code, bool passed, string expected, string actual) =>
         checks.Add(new RunEvaluationCheck(code, passed, expected, actual));
 }
+
+#endregion

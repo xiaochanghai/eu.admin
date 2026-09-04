@@ -7,11 +7,13 @@ using System.Text.Json.Nodes;
 
 namespace EU.Core.Services;
 
+#region 文件职责：BusinessQueryResultProjector 职责实现
+
 public static class BusinessQueryResultProjector
 {
-    public static IReadOnlyList<ConversationMessageRecord> ProjectMessages(
-        IReadOnlyList<ConversationMessageRecord> values,
-        bool includePresentation) =>
+    #region 结果投影与脱敏
+
+    public static IReadOnlyList<ConversationMessageRecord> ProjectMessages(IReadOnlyList<ConversationMessageRecord> values, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.ReadOnly(values.Select(value => value with { }))
             : UnifiedEntryContractCloner.ReadOnly(values.Select(value =>
@@ -19,9 +21,7 @@ public static class BusinessQueryResultProjector
                     ? BusinessQueryResultRedaction.Redact(value)
                     : value with { }));
 
-    public static UnifiedRunDetails ProjectDetails(
-        UnifiedRunDetails value,
-        bool includePresentation) =>
+    public static UnifiedRunDetails ProjectDetails(UnifiedRunDetails value, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.Clone(value)
             : new UnifiedRunDetails(
@@ -33,9 +33,7 @@ public static class BusinessQueryResultProjector
                     ResultContent = ProjectPayload(call.ResultContent)
                 }).ToArray());
 
-    public static IReadOnlyList<UnifiedRunEventRecord> ProjectEvents(
-        IReadOnlyList<UnifiedRunEventRecord> values,
-        bool includePresentation) =>
+    public static IReadOnlyList<UnifiedRunEventRecord> ProjectEvents(IReadOnlyList<UnifiedRunEventRecord> values, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.ReadOnly(values.Select(value => value with { }))
             : UnifiedEntryContractCloner.ReadOnly(values.Select(value => value with
@@ -124,4 +122,8 @@ public static class BusinessQueryResultProjector
 
         return changed;
     }
+
+    #endregion
 }
+
+#endregion

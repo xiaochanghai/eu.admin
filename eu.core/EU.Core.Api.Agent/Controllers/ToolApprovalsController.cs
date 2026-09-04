@@ -17,6 +17,8 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：ToolApprovalsController 接口处理
+
 [Route("api/tool-approvals")]
 public sealed class ToolApprovalsController(
     IToolApprovalManagementService approvals,
@@ -47,9 +49,7 @@ public sealed class ToolApprovalsController(
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.ApprovalRead)]
-    public async Task<ActionResult<ServiceResult<ToolApprovalDetailResponse>>> Get(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<ToolApprovalDetailResponse>>> Get(Guid id, CancellationToken cancellationToken)
     {
         ToolApprovalRequestRecord? approval = await approvals.GetAsync(
             id,
@@ -95,9 +95,7 @@ public sealed class ToolApprovalsController(
 
     [HttpPost("{id:guid}/resume")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<ActionResult<ServiceResult<ToolApprovalConversationResumeResult>>> Resume(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<ToolApprovalConversationResumeResult>>> Resume(Guid id, CancellationToken cancellationToken)
     {
         ToolApprovalConversationResumeService? resumeService =
             HttpContext.RequestServices.GetService<
@@ -239,3 +237,5 @@ public sealed class ToolApprovalDecisionApiRequest
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalProperties { get; init; }
 }
+
+#endregion

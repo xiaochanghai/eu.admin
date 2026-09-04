@@ -43,6 +43,9 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private readonly IOrchestrationRepository? _orchestrations;
     private readonly IMainAgentAssignmentRepository? _mainAgentAssignments;
     private readonly IModelProfileReferenceCatalog? _modelProfiles;
+
+    #region 构造
+
     public AgAgentDefinitionServices(
         IBaseRepository<AgAgentDefinition> dal,
         JsonSchemaValidator? jsonSchemaValidator = null,
@@ -64,6 +67,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         _mainAgentAssignments = mainAgentAssignments;
         _modelProfiles = modelProfiles;
     }
+
+    #endregion
 
     #region 查询 Agent 管理列表
     /// <summary>
@@ -261,6 +266,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     }
     #endregion
 
+    #region 持久化 DTO 映射
+
     private static AgAgentVersionDetailDto MapVersionDto(AgAgentVersion version, AgAgentVersionSnapshot? snapshot, IReadOnlyList<AgAgentVersionBinding> bindings)
     {
         _ = version.Ordinal ?? throw new InvalidDataException("Agent Version.Ordinal is required.");
@@ -411,6 +418,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             : throw new InvalidDataException(
                 $"Agent {name} contains unsupported value '{value}'.");
 
+    #endregion
+
+    #region Agent 持久化
+
     private async Task<bool> CreateAgentAsync(
         AgentDefinition definition,
         CancellationToken cancellationToken)
@@ -553,6 +564,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             ReferenceName = referenceName,
             ReferenceDescription = referenceDescription
         };
+
+    #endregion
+
+    #region Agent 运行时目录
 
     public async Task<AgentDefinition?> GetDefinitionAsync(
         Guid id,
@@ -743,6 +758,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             Orchestrations = AgentContractCloner.ReadOnly(
                 value.Orchestrations.Select(item => item with { }))
         };
+
+    #endregion
+
+    #region Agent 版本持久化
 
     private async Task<bool> TryReplaceAgentAsync(
         AgentDefinition definition,
@@ -955,6 +974,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 versionId, bindingType, ordinal++, referenceId, scope: "Snapshot"));
         }
     }
+
+    #endregion
+
+    #region Agent 管理
 
     private IModelProfileReferenceCatalog ModelProfiles =>
         _modelProfiles ?? throw AgentManagementUnavailable();
@@ -1666,6 +1689,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return normalizedCode.Length > 0;
     }
 
+    #endregion
+
     public const string AgentPackageFormatIdentifier = "eu.core.agent-package";
     public const string AgentPackageCurrentVersion = "1.0.0";
 
@@ -1694,6 +1719,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         "token",
         "accesstoken"
     };
+
+    #region Agent 包导入导出
 
     public async Task<ServiceResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default)
     {
@@ -2513,4 +2540,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         value.Contains("data source=", StringComparison.OrdinalIgnoreCase);
 
     private static string PackageInvalid(string message) => message;
+
+    #endregion
 }

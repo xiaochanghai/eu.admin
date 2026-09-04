@@ -11,6 +11,8 @@ using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：RunEvaluationsController 接口处理
+
 [Route("api/evaluations/runs")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class RunEvaluationsController(
@@ -99,3 +101,5 @@ public sealed record EvaluateRunRequest(
     [JsonExtensionData]
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
+
+#endregion

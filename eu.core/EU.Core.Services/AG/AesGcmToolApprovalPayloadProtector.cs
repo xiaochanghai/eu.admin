@@ -7,10 +7,14 @@ using EU.Core.IServices.Approvals;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AesGcmToolApprovalPayloadProtector 职责实现
+
 public sealed partial class AesGcmToolApprovalPayloadProtector :
     IToolApprovalPayloadProtector,
     IDisposable
 {
+    #region 审批载荷保护
+
     public const int KeySizeBytes = 32;
     public const int MaximumPlaintextUtf8Bytes =
         ToolApprovalStateMachine.MaximumResultPlaintextUtf8Bytes;
@@ -64,9 +68,7 @@ public sealed partial class AesGcmToolApprovalPayloadProtector :
         }
     }
 
-    public string Unprotect(
-        ToolApprovalPayloadContext context,
-        string protectedPayload)
+    public string Unprotect(ToolApprovalPayloadContext context, string protectedPayload)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         byte[] additionalData = ValidateAndBuildAdditionalData(context);
@@ -132,8 +134,7 @@ public sealed partial class AesGcmToolApprovalPayloadProtector :
         _disposed = true;
     }
 
-    private static byte[] ValidateAndBuildAdditionalData(
-        ToolApprovalPayloadContext context)
+    private static byte[] ValidateAndBuildAdditionalData(ToolApprovalPayloadContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (context.ApprovalId == Guid.Empty
@@ -164,4 +165,8 @@ public sealed partial class AesGcmToolApprovalPayloadProtector :
 
     [GeneratedRegex("^[a-f0-9]{64}$", RegexOptions.CultureInvariant)]
     private static partial Regex Sha256Pattern();
+
+    #endregion
 }
+
+#endregion

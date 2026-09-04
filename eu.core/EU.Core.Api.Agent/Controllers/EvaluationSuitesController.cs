@@ -11,6 +11,8 @@ using System.Text.Json.Serialization;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：EvaluationSuitesController 接口处理
+
 [Route("api/evaluation-suites")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
@@ -18,9 +20,7 @@ public sealed class EvaluationSuitesController(
     ICallerContext caller) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>> List(
-        [FromQuery] string? status,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<EvaluationSuiteDefinition>>> List([FromQuery] string? status, CancellationToken cancellationToken)
     {
         EvaluationSuiteStatus? parsedStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -39,9 +39,7 @@ public sealed class EvaluationSuitesController(
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ServiceResult<EvaluationSuiteDefinition>> Get(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> Get(Guid id, CancellationToken cancellationToken)
     {
         var value = await _service.GetAsync(
             id, caller.TenantId, cancellationToken);
@@ -51,9 +49,7 @@ public sealed class EvaluationSuitesController(
     }
 
     [HttpPost]
-    public async Task<ServiceResult<EvaluationSuiteDefinition>> Create(
-        [FromBody] CreateEvaluationSuiteRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<EvaluationSuiteDefinition>> Create([FromBody] CreateEvaluationSuiteRequest request, CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
             return ServiceResult<EvaluationSuiteDefinition>.OprateFailed("The evaluation suite definition is invalid.");
@@ -139,9 +135,7 @@ public sealed class EvaluationSuitesController(
         return result.Success ? result : FromServiceError(result);
     }
 
-    private static bool TryMapCases(
-        SaveEvaluationSuiteDraftRequest request,
-        out IReadOnlyList<EvaluationCaseDefinition> cases)
+    private static bool TryMapCases(SaveEvaluationSuiteDraftRequest request, out IReadOnlyList<EvaluationCaseDefinition> cases)
     {
         cases = [];
         if (request.AdditionalProperties is { Count: > 0 } || request.Cases is null)
@@ -258,3 +252,5 @@ public sealed record SetEvaluationSuiteArchiveRequest(
     [JsonExtensionData]
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
+
+#endregion

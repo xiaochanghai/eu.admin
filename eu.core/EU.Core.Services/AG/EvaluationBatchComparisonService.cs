@@ -6,6 +6,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：EvaluationBatchComparisonService 职责实现
+
 public sealed class EvaluationBatchComparisonService(
     IEvaluationBatchRepository batches,
     TimeProvider? timeProvider = null) : BaseServices, IEvaluationBatchComparisonService
@@ -92,9 +94,7 @@ public sealed class EvaluationBatchComparisonService(
         return Success(report);
     }
 
-    private static EvaluationCaseComparison CompareCase(
-        EvaluationCaseExecutionRecord baseline,
-        EvaluationCaseExecutionRecord candidate) =>
+    private static EvaluationCaseComparison CompareCase(EvaluationCaseExecutionRecord baseline, EvaluationCaseExecutionRecord candidate) =>
         new(
             baseline.CaseId,
             candidate.CaseName,
@@ -108,8 +108,7 @@ public sealed class EvaluationBatchComparisonService(
             baseline.Status == EvaluationCaseExecutionStatus.Passed
                 && candidate.Status != EvaluationCaseExecutionStatus.Passed);
 
-    private static EvaluationBatchMetrics Metrics(
-        IReadOnlyList<EvaluationCaseExecutionRecord> cases)
+    private static EvaluationBatchMetrics Metrics(IReadOnlyList<EvaluationCaseExecutionRecord> cases)
     {
         int passed = cases.Count(value => value.Status == EvaluationCaseExecutionStatus.Passed);
         long[] durations = cases
@@ -214,9 +213,7 @@ public sealed class EvaluationBatchComparisonService(
             MidpointRounding.AwayFromZero);
     }
 
-    private static bool SequenceEqual(
-        IReadOnlyList<string>? left,
-        IReadOnlyList<string>? right) =>
+    private static bool SequenceEqual(IReadOnlyList<string>? left, IReadOnlyList<string>? right) =>
         (left ?? []).SequenceEqual(right ?? [], StringComparer.Ordinal);
 
     private static bool Valid(EvaluationQualityGateSpecification? value) =>
@@ -227,12 +224,7 @@ public sealed class EvaluationBatchComparisonService(
             or >= 0m and <= 10_000m
         && value.MaximumToolCallIncreasePerCase is null or >= 0 and <= 1000;
 
-    private static void Add(
-        ICollection<EvaluationGateCheck> checks,
-        string code,
-        bool passed,
-        string expected,
-        string actual) =>
+    private static void Add(ICollection<EvaluationGateCheck> checks, string code, bool passed, string expected, string actual) =>
         checks.Add(new EvaluationGateCheck(code, passed, expected, actual));
 
     private static ServiceResult<EvaluationBatchComparisonReport> Failure(
@@ -241,3 +233,5 @@ public sealed class EvaluationBatchComparisonService(
             EvaluationComparisonServiceStatusCodes.FromErrorCode(code),
             message);
 }
+
+#endregion

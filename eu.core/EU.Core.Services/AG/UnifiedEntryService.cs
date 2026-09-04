@@ -13,6 +13,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：UnifiedEntryService 职责实现
+
 public sealed class UnifiedEntryService
 {
     private const int MaximumPendingDeltaEvents = 4;
@@ -62,10 +64,7 @@ public sealed class UnifiedEntryService
         _toolApprovalHandler = toolApprovalHandler;
     }
 
-    public async Task<UnifiedEntryPreparationResult> PrepareAsync(
-        string? input,
-        Guid? conversationId,
-        CancellationToken cancellationToken = default) =>
+    public async Task<UnifiedEntryPreparationResult> PrepareAsync(string? input, Guid? conversationId, CancellationToken cancellationToken = default) =>
         await PrepareCoreAsync(
             input, conversationId, null, null, null, cancellationToken);
 
@@ -387,9 +386,7 @@ public sealed class UnifiedEntryService
         }
     }
 
-    public IAsyncEnumerable<UnifiedRunEvent> StreamAsync(
-        UnifiedEntryContext context,
-        CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<UnifiedRunEvent> StreamAsync(UnifiedEntryContext context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         return new UnifiedEntryEventEnumerable(this, context, cancellationToken);
@@ -432,8 +429,7 @@ public sealed class UnifiedEntryService
         UnifiedEntryContext context,
         CancellationToken invocationCancellation) : IAsyncEnumerable<UnifiedRunEvent>
     {
-        public IAsyncEnumerator<UnifiedRunEvent> GetAsyncEnumerator(
-            CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<UnifiedRunEvent> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             ActiveUnifiedEntryExecution active = context.Execution;
             if (!owner._active.TryGetValue(
@@ -828,24 +824,16 @@ public sealed class UnifiedEntryService
         }
     }
 
-    public async Task<bool> CancelAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default) =>
+    public async Task<bool> CancelAsync(Guid runId, CancellationToken cancellationToken = default) =>
         await CancelCoreAsync(runId, null, cancellationToken);
 
-    public async Task<bool> CancelAsync(
-        Guid runId,
-        AgentExecutionIdentity executionIdentity,
-        CancellationToken cancellationToken = default) =>
+    public async Task<bool> CancelAsync(Guid runId, AgentExecutionIdentity executionIdentity, CancellationToken cancellationToken = default) =>
         await CancelCoreAsync(
             runId,
             executionIdentity ?? throw new ArgumentNullException(nameof(executionIdentity)),
             cancellationToken);
 
-    private async Task<bool> CancelCoreAsync(
-        Guid runId,
-        AgentExecutionIdentity? executionIdentity,
-        CancellationToken cancellationToken)
+    private async Task<bool> CancelCoreAsync(Guid runId, AgentExecutionIdentity? executionIdentity, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_active.TryGetValue(runId, out ActiveUnifiedEntryExecution? active))
@@ -890,18 +878,12 @@ public sealed class UnifiedEntryService
             or UnifiedRunStatus.Cancelled;
     }
 
-    private static bool SameOwner(
-        AgentExecutionIdentity? stored,
-        AgentExecutionIdentity requested) =>
+    private static bool SameOwner(AgentExecutionIdentity? stored, AgentExecutionIdentity requested) =>
         stored is not null
         && string.Equals(stored.TenantId, requested.TenantId, StringComparison.Ordinal)
         && string.Equals(stored.UserId, requested.UserId, StringComparison.Ordinal);
 
-    private async Task PersistMainEventAsync(
-        ActiveUnifiedEntryExecution active,
-        AgentRunEvent source,
-        string output,
-        CancellationToken cancellationToken)
+    private async Task PersistMainEventAsync(ActiveUnifiedEntryExecution active, AgentRunEvent source, string output, CancellationToken cancellationToken)
     {
         string rawPayloadJson = JsonSerializer.Serialize(new
         {
@@ -953,10 +935,7 @@ public sealed class UnifiedEntryService
             cancellationToken).ConfigureAwait(false);
     }
 
-    private UnifiedEntryAggregate ApplyMainEvent(
-        UnifiedEntryAggregate aggregate,
-        AgentRunEvent source,
-        string output)
+    private UnifiedEntryAggregate ApplyMainEvent(UnifiedEntryAggregate aggregate, AgentRunEvent source, string output)
     {
         UnifiedAgentRunRecord main = aggregate.Details.AgentRuns.Single(
             value => value.Kind == UnifiedAgentRunKind.Main);
@@ -988,9 +967,7 @@ public sealed class UnifiedEntryService
             toolCalls));
     }
 
-    private IReadOnlyList<UnifiedToolCallRecord> ApplyToolEvent(
-        UnifiedEntryAggregate aggregate,
-        AgentRunEvent source)
+    private IReadOnlyList<UnifiedToolCallRecord> ApplyToolEvent(UnifiedEntryAggregate aggregate, AgentRunEvent source)
     {
         if (source.ToolVersionId is not Guid toolVersionId)
         {
@@ -1059,9 +1036,7 @@ public sealed class UnifiedEntryService
             .ToArray();
     }
 
-    private async Task AppendRouteEventAsync(
-        ActiveUnifiedEntryExecution active,
-        string route)
+    private async Task AppendRouteEventAsync(ActiveUnifiedEntryExecution active, string route)
     {
         ProtectedUnifiedPayload payload = Protect(JsonSerializer.Serialize(new
         {
@@ -1377,9 +1352,7 @@ public sealed class UnifiedEntryService
             afterSequence).ConfigureAwait(false);
     }
 
-    private async Task<bool> JoinRuntimeOwnershipLossAsync(
-        ActiveUnifiedEntryExecution active,
-        CancellationToken cancellationToken)
+    private async Task<bool> JoinRuntimeOwnershipLossAsync(ActiveUnifiedEntryExecution active, CancellationToken cancellationToken)
     {
         try
         {
@@ -1476,23 +1449,19 @@ public sealed class UnifiedEntryService
     private static bool IsLive(UnifiedRunStatus status) =>
         status is UnifiedRunStatus.Pending or UnifiedRunStatus.Running;
 
-    private static UnifiedRunStatus DescendantTerminalStatus(
-        UnifiedRunStatus rootStatus) =>
+    private static UnifiedRunStatus DescendantTerminalStatus(UnifiedRunStatus rootStatus) =>
         rootStatus == UnifiedRunStatus.Cancelled
             ? UnifiedRunStatus.Cancelled
             : UnifiedRunStatus.Failed;
 
-    private static string DescendantErrorCode(
-        UnifiedRunStatus rootStatus,
-        string rootErrorCode) =>
+    private static string DescendantErrorCode(UnifiedRunStatus rootStatus, string rootErrorCode) =>
         rootStatus == UnifiedRunStatus.Cancelled
             ? UnifiedEntryErrorCodes.Cancelled
             : string.IsNullOrWhiteSpace(rootErrorCode)
                 ? UnifiedEntryErrorCodes.InvalidState
                 : rootErrorCode;
 
-    private async Task ObserveUnstartedTimeoutAsync(
-        ActiveUnifiedEntryExecution active)
+    private async Task ObserveUnstartedTimeoutAsync(ActiveUnifiedEntryExecution active)
     {
         try
         {
@@ -1555,8 +1524,7 @@ public sealed class UnifiedEntryService
         _ = RecoverTerminalPersistenceAsync(active);
     }
 
-    private async Task RecoverTerminalPersistenceAsync(
-        ActiveUnifiedEntryExecution active)
+    private async Task RecoverTerminalPersistenceAsync(ActiveUnifiedEntryExecution active)
     {
         TimeSpan[] delays =
         [
@@ -1631,9 +1599,7 @@ public sealed class UnifiedEntryService
         }
     }
 
-    private async Task<IReadOnlyList<UnifiedRunEvent>> PersistAndCollectAsync(
-        ActiveUnifiedEntryExecution active,
-        long afterSequence)
+    private async Task<IReadOnlyList<UnifiedRunEvent>> PersistAndCollectAsync(ActiveUnifiedEntryExecution active, long afterSequence)
     {
         UnifiedEntryAggregate snapshot = await active.Scope.PersistAsync(
                 _repository,
@@ -1642,9 +1608,7 @@ public sealed class UnifiedEntryService
         return MapEvents(snapshot, afterSequence);
     }
 
-    private static IReadOnlyList<UnifiedRunEvent> MapEvents(
-        UnifiedEntryAggregate aggregate,
-        long afterSequence) =>
+    private static IReadOnlyList<UnifiedRunEvent> MapEvents(UnifiedEntryAggregate aggregate, long afterSequence) =>
         aggregate.Events
             .Where(value => value.Sequence > afterSequence)
             .OrderBy(value => value.Sequence)
@@ -1732,8 +1696,7 @@ public sealed class UnifiedEntryService
         return protectedInput[..length];
     }
 
-    private static IReadOnlyList<AgentConversationMessage> BuildConversationHistory(
-        IReadOnlyList<ConversationMessageRecord> messages)
+    private static IReadOnlyList<AgentConversationMessage> BuildConversationHistory(IReadOnlyList<ConversationMessageRecord> messages)
     {
         var selected = new List<AgentConversationMessage>();
         int usedBytes = 0;
@@ -1775,10 +1738,7 @@ public sealed class UnifiedEntryService
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
 
-    private async Task TerminatePreparedAuditAsync(
-        AgentRunContext context,
-        AgentRunStatus status,
-        string errorCode)
+    private async Task TerminatePreparedAuditAsync(AgentRunContext context, AgentRunStatus status, string errorCode)
     {
         try
         {
@@ -1810,3 +1770,5 @@ public sealed class UnifiedEntryService
         }
     }
 }
+
+#endregion

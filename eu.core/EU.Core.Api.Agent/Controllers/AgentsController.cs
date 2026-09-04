@@ -10,6 +10,8 @@ using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：AgentsController 接口处理
+
 [Route("api/agents")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
@@ -220,3 +222,5 @@ public sealed record SaveAgentDraftRequest(long ExpectedLogicalRevision, string 
 public sealed record ExpectedRevisionRequest(long ExpectedLogicalRevision);
 
 public sealed record SetAgentStatusRequest(long ExpectedLogicalRevision, AgentRuntimeStatus RuntimeStatus);
+
+#endregion

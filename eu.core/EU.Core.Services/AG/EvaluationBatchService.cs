@@ -9,6 +9,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：EvaluationBatchService 职责实现
+
 public sealed class EvaluationBatchService(
     IAgEvaluationSuiteServices suites,
     IEvaluationBatchRepository batches,
@@ -20,17 +22,10 @@ public sealed class EvaluationBatchService(
     public const int MaximumCasesPerBatch = 20;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
-    public Task<EvaluationBatchRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default) =>
+    public Task<EvaluationBatchRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default) =>
         batches.GetAsync(id, tenantId, cancellationToken);
 
-    public Task<IReadOnlyList<EvaluationBatchRecord>> ListAsync(
-        Guid suiteId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<EvaluationBatchRecord>> ListAsync(Guid suiteId, string tenantId, int take, CancellationToken cancellationToken = default) =>
         batches.ListAsync(suiteId, tenantId, Math.Clamp(take, 1, 100), cancellationToken);
 
     public async Task<ServiceResult<EvaluationBatchRecord>> RunAsync(
@@ -306,10 +301,7 @@ public sealed class EvaluationBatchService(
         return updated;
     }
 
-    private async Task TryFinishAsync(
-        EvaluationBatchRecord batch,
-        EvaluationBatchStatus status,
-        string errorCode)
+    private async Task TryFinishAsync(EvaluationBatchRecord batch, EvaluationBatchStatus status, string errorCode)
     {
         try
         {
@@ -327,15 +319,10 @@ public sealed class EvaluationBatchService(
             EvaluationCaseExecutionStatus.Cancelled,
             EvaluationBatchErrorCodes.Cancelled);
 
-    private static EvaluationBatchRecord MarkCurrentFailed(
-        EvaluationBatchRecord batch,
-        string errorCode) =>
+    private static EvaluationBatchRecord MarkCurrentFailed(EvaluationBatchRecord batch, string errorCode) =>
         MarkCurrent(batch, EvaluationCaseExecutionStatus.Failed, errorCode);
 
-    private static EvaluationBatchRecord MarkCurrent(
-        EvaluationBatchRecord batch,
-        EvaluationCaseExecutionStatus status,
-        string errorCode)
+    private static EvaluationBatchRecord MarkCurrent(EvaluationBatchRecord batch, EvaluationCaseExecutionStatus status, string errorCode)
     {
         EvaluationCaseExecutionRecord[] cases = batch.Cases.ToArray();
         int current = Array.FindIndex(
@@ -353,11 +340,7 @@ public sealed class EvaluationBatchService(
         return batch with { Cases = EvaluationBatchContractCloner.CloneCases(cases) };
     }
 
-    private static EvaluationCaseExecutionRecord Failed(
-        EvaluationCaseDefinition value,
-        Guid? runId,
-        UnifiedRunStatus? runStatus,
-        string errorCode) =>
+    private static EvaluationCaseExecutionRecord Failed(EvaluationCaseDefinition value, Guid? runId, UnifiedRunStatus? runStatus, string errorCode) =>
         new(
             value.Id,
             value.Name,
@@ -389,8 +372,7 @@ public sealed class EvaluationBatchService(
         }
     }
 
-    private static IReadOnlyList<EvaluationCaseExecutionRecord> ReadOnlyCases(
-        IEnumerable<EvaluationCaseExecutionRecord> values) =>
+    private static IReadOnlyList<EvaluationCaseExecutionRecord> ReadOnlyCases(IEnumerable<EvaluationCaseExecutionRecord> values) =>
         EvaluationBatchContractCloner.CloneCases(values);
 
     private static ServiceResult<EvaluationBatchRecord> Failure(string code, string message) =>
@@ -400,3 +382,5 @@ public sealed class EvaluationBatchService(
 
     private sealed class EvaluationBatchPersistenceException : Exception;
 }
+
+#endregion

@@ -5,6 +5,8 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgEvaluationBatchServices 职责实现
+
 public sealed class AgEvaluationBatchServices :
     BaseServices<AgEvaluationBatch>,
     IAgEvaluationBatchServices,
@@ -19,10 +21,7 @@ public sealed class AgEvaluationBatchServices :
     {
     }
 
-    public async Task<EvaluationBatchRecord?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<EvaluationBatchRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -44,11 +43,7 @@ public sealed class AgEvaluationBatchServices :
         }
     }
 
-    public async Task<IReadOnlyList<EvaluationBatchRecord>> ListAsync(
-        Guid suiteId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<EvaluationBatchRecord>> ListAsync(Guid suiteId, string tenantId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -76,9 +71,7 @@ public sealed class AgEvaluationBatchServices :
         }
     }
 
-    public async Task<bool> TryCreateAsync(
-        EvaluationBatchRecord value,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryCreateAsync(EvaluationBatchRecord value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -105,10 +98,7 @@ public sealed class AgEvaluationBatchServices :
         }
     }
 
-    public async Task<bool> TryReplaceAsync(
-        EvaluationBatchRecord value,
-        long expectedLogicalRevision,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryReplaceAsync(EvaluationBatchRecord value, long expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         if (expectedLogicalRevision == long.MaxValue ||
@@ -157,9 +147,7 @@ public sealed class AgEvaluationBatchServices :
         }
     }
 
-    public async Task<int> RecoverInterruptedAsync(
-        DateTimeOffset recoveredAtUtc,
-        CancellationToken cancellationToken = default)
+    public async Task<int> RecoverInterruptedAsync(DateTimeOffset recoveredAtUtc, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgEvaluationBatch> runningEntities = await Db.Queryable<AgEvaluationBatch>()
@@ -201,9 +189,7 @@ public sealed class AgEvaluationBatchServices :
         return recovered;
     }
 
-    private async Task<IReadOnlyList<EvaluationBatchRecord>> LoadBatchesAsync(
-        IReadOnlyList<AgEvaluationBatch> batches,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<EvaluationBatchRecord>> LoadBatchesAsync(IReadOnlyList<AgEvaluationBatch> batches, CancellationToken cancellationToken)
     {
         if (batches.Count == 0)
         {
@@ -337,9 +323,7 @@ public sealed class AgEvaluationBatchServices :
         };
     }
 
-    private async Task InsertCasesAsync(
-        EvaluationBatchRecord batch,
-        CancellationToken cancellationToken)
+    private async Task InsertCasesAsync(EvaluationBatchRecord batch, CancellationToken cancellationToken)
     {
         for (int ordinal = 0; ordinal < batch.Cases.Count; ordinal++)
         {
@@ -386,10 +370,7 @@ public sealed class AgEvaluationBatchServices :
         }
     }
 
-    private async Task InsertChecksAsync(
-        Guid batchId,
-        Guid caseRowId,
-        IReadOnlyList<RunEvaluationCheck> checks)
+    private async Task InsertChecksAsync(Guid batchId, Guid caseRowId, IReadOnlyList<RunEvaluationCheck> checks)
     {
         if (checks.Count == 0)
         {
@@ -411,11 +392,7 @@ public sealed class AgEvaluationBatchServices :
         }).ToList()).ExecuteCommandAsync();
     }
 
-    private async Task InsertObservationsAsync(
-        Guid batchId,
-        Guid caseRowId,
-        string type,
-        IReadOnlyList<string> values)
+    private async Task InsertObservationsAsync(Guid batchId, Guid caseRowId, string type, IReadOnlyList<string> values)
     {
         if (values.Count == 0)
         {
@@ -496,3 +473,5 @@ public sealed class AgEvaluationBatchServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Evaluation batch field '{field}' is missing.");
 }
+
+#endregion

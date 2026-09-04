@@ -7,6 +7,8 @@ using System.Text.Json;
 
 namespace EU.Core.Services;
 
+#region 文件职责：JsonSchemaValidator 职责实现
+
 public sealed record JsonSchemaValidationResult(bool IsValid, string? CanonicalJson, string? Sha256, string? Error)
 {
     public static JsonSchemaValidationResult Invalid(string error) => new(false, null, null, error);
@@ -94,11 +96,7 @@ public sealed class JsonSchemaValidator
         }
     }
 
-    private static bool ValidateInstanceCore(
-        JsonElement schema,
-        JsonElement value,
-        int depth,
-        out string? error)
+    private static bool ValidateInstanceCore(JsonElement schema, JsonElement value, int depth, out string? error)
     {
         if (depth > MaximumSchemaDepth)
         {
@@ -294,3 +292,5 @@ public sealed class JsonSchemaValidator
         }
     }
 }
+
+#endregion

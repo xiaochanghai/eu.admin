@@ -10,6 +10,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：RunOrchestrationTool 职责实现
+
 public sealed class RunOrchestrationTool : IAgentInternalTool
 {
     private const int MaximumInputCharacters = 32_768;
@@ -83,9 +85,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
 
     public string InputSchemaJson => _inputSchemaJson;
 
-    public async Task<AgentInternalToolResult> InvokeAsync(
-        string argumentsJson,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         if (!InternalToolArgumentParser.TryParse(
                 argumentsJson,
@@ -284,10 +284,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
         }
     }
 
-    private async Task RegisterLinkAsync(
-        OrchestrationRunRecord run,
-        string input,
-        string reason)
+    private async Task RegisterLinkAsync(OrchestrationRunRecord run, string input, string reason)
     {
         ProtectedUnifiedPayload protectedInput = Protect(input);
         Guid linkId = Guid.NewGuid();
@@ -354,12 +351,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             CancellationToken.None).ConfigureAwait(false);
     }
 
-    private async Task TransitionLinkAsync(
-        Guid orchestrationRunId,
-        UnifiedRunStatus status,
-        string output,
-        string errorCode,
-        DateTimeOffset finishedAt)
+    private async Task TransitionLinkAsync(Guid orchestrationRunId, UnifiedRunStatus status, string output, string errorCode, DateTimeOffset finishedAt)
     {
         ProtectedUnifiedPayload protectedOutput = Protect(output);
         await _scope.MutateAggregateAsync(aggregate =>
@@ -399,10 +391,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
         }, CancellationToken.None).ConfigureAwait(false);
     }
 
-    private async Task CancelAndPersistLinkAsync(
-        OrchestrationRunRecord started,
-        bool linkRegistered,
-        string errorCode)
+    private async Task CancelAndPersistLinkAsync(OrchestrationRunRecord started, bool linkRegistered, string errorCode)
     {
         OrchestrationRunRecord? terminal = null;
         OrchestrationRunDetails? details = null;
@@ -507,12 +496,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
         }
     }
 
-    private async Task TryTransitionLinkAsync(
-        Guid orchestrationRunId,
-        UnifiedRunStatus status,
-        string output,
-        string errorCode,
-        DateTimeOffset finishedAt)
+    private async Task TryTransitionLinkAsync(Guid orchestrationRunId, UnifiedRunStatus status, string output, string errorCode, DateTimeOffset finishedAt)
     {
         try
         {
@@ -529,8 +513,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
         }
     }
 
-    private AgentInternalToolResult CancellationFailure(
-        CancellationToken cancellationToken)
+    private AgentInternalToolResult CancellationFailure(CancellationToken cancellationToken)
     {
         string errorCode = _scope.ClassifyCancellation(
             lease: null,
@@ -560,8 +543,8 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
 
-    private static AgentInternalToolResult Failure(
-        string errorCode,
-        string content) =>
+    private static AgentInternalToolResult Failure(string errorCode, string content) =>
         new(false, content, errorCode);
 }
+
+#endregion

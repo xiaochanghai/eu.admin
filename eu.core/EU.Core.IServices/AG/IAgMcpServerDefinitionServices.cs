@@ -5,6 +5,8 @@ using EU.Core.IServices.BASE;
 
 namespace EU.Core.IServices;
 
+#region 文件职责：IAgMcpServerDefinitionServices 服务契约
+
 public interface IAgMcpServerDefinitionServices : IBaseServices<AgMcpServerDefinition>
 {
     Task<ServiceResult<McpServerDefinition>> CreateAsync(CreateMcpServerCommand command, CancellationToken cancellationToken = default);
@@ -21,3 +23,5 @@ public interface IAgMcpServerDefinitionServices : IBaseServices<AgMcpServerDefin
 
     Task<ServiceResult<McpServerDefinition>> SetArchivedAsync(SetMcpServerArchiveCommand command, CancellationToken cancellationToken = default);
 }
+
+#endregion

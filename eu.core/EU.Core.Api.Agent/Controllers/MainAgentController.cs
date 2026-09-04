@@ -9,6 +9,8 @@ using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：MainAgentController 接口处理
+
 [Route("api/platform/main-agent")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class MainAgentController(IMainAgentAssignmentService assignments) : Base.ControllerBase
@@ -16,17 +18,14 @@ public sealed class MainAgentController(IMainAgentAssignmentService assignments)
     private readonly IMainAgentAssignmentService _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
 
     [HttpGet]
-    public async Task<ActionResult<ServiceResult<MainAgentAssignment>>> Get(
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<MainAgentAssignment>>> Get(CancellationToken cancellationToken)
     {
         ServiceResult<MainAgentAssignment> result = await _assignments.GetAsync(cancellationToken);
         return result.Success ? result : FromServiceError(result);
     }
 
     [HttpPut]
-    public async Task<ActionResult<ServiceResult<MainAgentAssignment>>> Set(
-        [FromBody] SetMainAgentRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<MainAgentAssignment>>> Set([FromBody] SetMainAgentRequest request, CancellationToken cancellationToken)
     {
         ServiceResult<MainAgentAssignment> result = await _assignments.SetAsync(
             new SetMainAgentCommand(request.AgentId, request.ExpectedLogicalRevision),
@@ -50,3 +49,5 @@ public sealed class MainAgentController(IMainAgentAssignmentService assignments)
 }
 
 public sealed record SetMainAgentRequest(Guid AgentId, long? ExpectedLogicalRevision);
+
+#endregion

@@ -4,6 +4,8 @@ using EU.Core.IServices.Tasks;
 
 namespace EU.Core.IServices;
 
+#region 文件职责：IAgAgentTaskServices 服务契约
+
 public interface IAgAgentTaskServices : IBaseServices<AgAgentTask>
 {
     Task<AgentTaskRecord> CreateAsync(CreateAgentTaskCommand command, CancellationToken cancellationToken = default);
@@ -21,3 +23,5 @@ public interface IAgAgentTaskServices : IBaseServices<AgAgentTask>
     Task<AgentTaskRecord?> SynchronizeRunAsync(SynchronizeAgentTaskRunCommand command, CancellationToken cancellationToken = default);
     Task<AgentTaskRecord> CancelAsync(Guid id, string tenantId, string userId, DateTimeOffset cancelledAtUtc, CancellationToken cancellationToken = default);
 }
+
+#endregion

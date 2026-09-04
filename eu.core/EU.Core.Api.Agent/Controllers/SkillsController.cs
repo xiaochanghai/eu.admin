@@ -10,6 +10,8 @@ using System.Text;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：SkillsController 接口处理
+
 [Route("api/skills")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
@@ -89,9 +91,7 @@ public sealed class SkillsController(
     }
 
     [HttpPost]
-    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Create(
-        [FromBody] CreateSkillRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Create([FromBody] CreateSkillRequest request, CancellationToken cancellationToken)
     {
         ServiceResult<SkillDefinition> result = await lifecycle.CreateAsync(
             new CreateSkillCommand(
@@ -114,10 +114,7 @@ public sealed class SkillsController(
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Update(
-        Guid id,
-        [FromBody] UpdateSkillRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<SkillDefinition>>> Update(Guid id, [FromBody] UpdateSkillRequest request, CancellationToken cancellationToken)
     {
         ServiceResult<SkillDefinition> result = await lifecycle.UpdateAsync(
             new UpdateSkillCommand(
@@ -139,10 +136,7 @@ public sealed class SkillsController(
     }
 
     [HttpGet("{id:guid}/files/content")]
-    public async Task<IActionResult> ReadFile(
-        Guid id,
-        [FromQuery] string? path,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> ReadFile(Guid id, [FromQuery] string? path, CancellationToken cancellationToken)
     {
         ServiceResult<string> result = await lifecycle.ReadFileAsync(
             id,
@@ -214,10 +208,7 @@ public sealed class SkillsController(
     private JsonResult FromServiceError<T>(ServiceResult<T> result) =>
         FromError(SkillServiceStatusCodes.ToErrorCode(result.Status), result.Message);
 
-    private JsonResult FromError(
-        string errorCode,
-        string message,
-        int? httpStatus = null)
+    private JsonResult FromError(string errorCode, string message, int? httpStatus = null)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
         return new JsonResult(
@@ -279,3 +270,5 @@ public sealed record SkillPublishedVersionResponse(
     IReadOnlyList<SkillBoundAgentResponse> BoundAgents);
 
 public sealed record SkillBoundAgentResponse(Guid Id, string Code, string Name);
+
+#endregion

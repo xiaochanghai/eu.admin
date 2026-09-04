@@ -11,6 +11,8 @@ using EU.Core.Api.Agent.Security;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：OrchestrationsController 接口处理
+
 [Route("api/orchestrations")]
 public sealed class OrchestrationsController(
     IOrchestrationLifecycleService lifecycle,
@@ -18,9 +20,7 @@ public sealed class OrchestrationsController(
 {
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-    public async Task<ActionResult<ServiceResult<IReadOnlyList<OrchestrationListItem>>>> List(
-        [FromQuery] string? status,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<IReadOnlyList<OrchestrationListItem>>>> List([FromQuery] string? status, CancellationToken cancellationToken)
     {
         OrchestrationStatus? parsedStatus = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -159,10 +159,7 @@ public sealed class OrchestrationsController(
 
     [HttpGet("{id:guid}/runs/{runId:guid}/details")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
-    public async Task<ActionResult<ServiceResult<OrchestrationRunDetails>>> Details(
-        Guid id,
-        Guid runId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<OrchestrationRunDetails>>> Details(Guid id, Guid runId, CancellationToken cancellationToken)
     {
         OrchestrationRunRecord? value = await runtime.GetAsync(runId, cancellationToken);
         if (value is null || value.OrchestrationId != id)
@@ -194,9 +191,7 @@ public sealed class OrchestrationsController(
             OrchestrationServiceStatusCodes.ToErrorCode(result.Status),
             result.Message);
 
-    private JsonResult OperationSuccess<T>(
-        T value,
-        int httpStatus) =>
+    private JsonResult OperationSuccess<T>( T value, int httpStatus) =>
         new JsonResult(
             Success(value))
         {
@@ -233,3 +228,5 @@ public sealed record SetOrchestrationArchiveRequest(
 public sealed record StartOrchestrationRunRequest(string Input);
 public sealed record OrchestrationRunCancelResponse(Guid RunId);
 public sealed record OrchestrationRunOutputResponse(string Output, bool Ephemeral);
+
+#endregion

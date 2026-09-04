@@ -5,6 +5,8 @@ using EU.Core.IServices.Evaluation;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgEvaluationModelJudgementServices 职责实现
+
 public sealed class AgEvaluationModelJudgementServices :
     BaseServices<AgEvaluationModelJudgement>,
     IAgEvaluationModelJudgementServices,
@@ -15,10 +17,7 @@ public sealed class AgEvaluationModelJudgementServices :
     {
     }
 
-    public async Task<ModelJudgeReport?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    public async Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -70,11 +69,7 @@ public sealed class AgEvaluationModelJudgementServices :
         }
     }
 
-    public async Task<IReadOnlyList<ModelJudgeReport>> ListAsync(
-        Guid batchId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -102,9 +97,7 @@ public sealed class AgEvaluationModelJudgementServices :
         }
     }
 
-    public async Task<bool> TryCreateAsync(
-        ModelJudgeReport value,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryCreateAsync(ModelJudgeReport value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -296,9 +289,7 @@ public sealed class AgEvaluationModelJudgementServices :
                         .ToArray())))
                 .ToArray()));
 
-    private async Task InsertChildrenAsync(
-        ModelJudgeReport report,
-        CancellationToken cancellationToken)
+    private async Task InsertChildrenAsync(ModelJudgeReport report, CancellationToken cancellationToken)
     {
         await InsertEvaluatorsAsync(report);
         await InsertMinimumScoresAsync(report);
@@ -363,10 +354,7 @@ public sealed class AgEvaluationModelJudgementServices :
             }).ToList()).ExecuteCommandAsync();
     }
 
-    private async Task InsertMetricsAsync(
-        Guid judgementId,
-        Guid caseRowId,
-        IReadOnlyList<ModelJudgeMetric> metrics)
+    private async Task InsertMetricsAsync(Guid judgementId, Guid caseRowId, IReadOnlyList<ModelJudgeMetric> metrics)
     {
         for (int metricOrdinal = 0; metricOrdinal < metrics.Count; metricOrdinal++)
         {
@@ -434,3 +422,5 @@ public sealed class AgEvaluationModelJudgementServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Evaluation model judgement field '{field}' is missing.");
 }
+
+#endregion

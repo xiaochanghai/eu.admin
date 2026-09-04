@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：SessionController 接口处理
+
 [Route("api/session")]
 public sealed class SessionController(ISmUsersServices usersServices) : Base.ControllerBase
 {
@@ -16,3 +18,5 @@ public sealed class SessionController(ISmUsersServices usersServices) : Base.Con
     [HttpPost("logout")]
     public ServiceResult Logout() => usersServices.LogOutAsync();
 }
+
+#endregion

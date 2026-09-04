@@ -4,6 +4,8 @@ using EU.Core.IServices.Abstractions.Auditing;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgAgentOperationAuditServices 职责实现
+
 public sealed class AgAgentOperationAuditServices :
     BaseServices<AgAgentOperationAudit>,
     IAgAgentOperationAuditServices
@@ -13,9 +15,7 @@ public sealed class AgAgentOperationAuditServices :
     {
     }
 
-    public async Task SaveAsync(
-        AgentOperationAuditRecord record,
-        CancellationToken cancellationToken = default)
+    public async Task SaveAsync(AgentOperationAuditRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
         cancellationToken.ThrowIfCancellationRequested();
@@ -46,10 +46,7 @@ public sealed class AgAgentOperationAuditServices :
         }
     }
 
-    public async Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(string tenantId, int take, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         cancellationToken.ThrowIfCancellationRequested();
@@ -63,9 +60,7 @@ public sealed class AgAgentOperationAuditServices :
         return records.Select(MapRecord).ToArray();
     }
 
-    private static bool SameIdentity(
-        AgAgentOperationAudit current,
-        AgentOperationAuditRecord replacement) =>
+    private static bool SameIdentity(AgAgentOperationAudit current, AgentOperationAuditRecord replacement) =>
         StoredDateTimeEquals(Required(current.OccurredAtUtc, "OccurredAtUtc"), replacement.OccurredAtUtc) &&
         string.Equals(current.TenantId, replacement.TenantId, StringComparison.Ordinal) &&
         string.Equals(current.UserId, replacement.UserId, StringComparison.Ordinal) &&
@@ -118,3 +113,5 @@ public sealed class AgAgentOperationAuditServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Agent operation audit field '{field}' is missing.");
 }
+
+#endregion

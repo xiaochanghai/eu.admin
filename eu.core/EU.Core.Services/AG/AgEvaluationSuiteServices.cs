@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgEvaluationSuiteServices 职责实现
+
 /// <summary>
 /// 评测套件、版本、用例和规则的规范化持久化服务。
 /// </summary>
@@ -22,10 +24,7 @@ public sealed partial class AgEvaluationSuiteServices :
     private readonly IAgentDefinitionCatalog? agents;
     private readonly TimeProvider timeProvider;
 
-    public AgEvaluationSuiteServices(
-        IBaseRepository<AgEvaluationSuite> dal,
-        IAgentDefinitionCatalog? agents = null,
-        TimeProvider? timeProvider = null)
+    public AgEvaluationSuiteServices(IBaseRepository<AgEvaluationSuite> dal, IAgentDefinitionCatalog? agents = null, TimeProvider? timeProvider = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         this.agents = agents;
@@ -63,9 +62,7 @@ public sealed partial class AgEvaluationSuiteServices :
         }
     }
 
-    private async Task<IReadOnlyList<EvaluationSuiteDefinition>> ListPersistedAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default)
+    private async Task<IReadOnlyList<EvaluationSuiteDefinition>> ListPersistedAsync(string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -90,9 +87,7 @@ public sealed partial class AgEvaluationSuiteServices :
         }
     }
 
-    public async Task<bool> TryCreateAsync(
-        EvaluationSuiteDefinition value,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryCreateAsync(EvaluationSuiteDefinition value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -139,10 +134,7 @@ public sealed partial class AgEvaluationSuiteServices :
         }
     }
 
-    public async Task<bool> TryReplaceAsync(
-        EvaluationSuiteDefinition value,
-        long expectedLogicalRevision,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryReplaceAsync(EvaluationSuiteDefinition value, long expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         if (expectedLogicalRevision == long.MaxValue ||
@@ -232,9 +224,7 @@ public sealed partial class AgEvaluationSuiteServices :
         }
     }
 
-    private async Task<EvaluationSuiteDefinition> LoadSuiteAsync(
-        AgEvaluationSuite suite,
-        CancellationToken cancellationToken)
+    private async Task<EvaluationSuiteDefinition> LoadSuiteAsync(AgEvaluationSuite suite, CancellationToken cancellationToken)
     {
         IReadOnlyList<EvaluationSuiteDefinition> values = await LoadSuitesAsync(
             [suite],
@@ -242,9 +232,7 @@ public sealed partial class AgEvaluationSuiteServices :
         return values[0];
     }
 
-    private async Task<IReadOnlyList<EvaluationSuiteDefinition>> LoadSuitesAsync(
-        IReadOnlyList<AgEvaluationSuite> suites,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<EvaluationSuiteDefinition>> LoadSuitesAsync(IReadOnlyList<AgEvaluationSuite> suites, CancellationToken cancellationToken)
     {
         if (suites.Count == 0)
         {
@@ -350,9 +338,7 @@ public sealed partial class AgEvaluationSuiteServices :
         };
     }
 
-    private static EvaluationCaseDefinition MapCase(
-        AgEvaluationCase value,
-        IReadOnlyList<AgEvaluationCaseRule> rules)
+    private static EvaluationCaseDefinition MapCase(AgEvaluationCase value, IReadOnlyList<AgEvaluationCaseRule> rules)
     {
         string[] RuleValues(string type) => rules
             .Where(rule => string.Equals(rule.RuleType, type, StringComparison.Ordinal))
@@ -375,11 +361,7 @@ public sealed partial class AgEvaluationSuiteServices :
                 value.MaximumDurationMilliseconds));
     }
 
-    private async Task InsertPublishedVersionAsync(
-        Guid suiteId,
-        PublishedEvaluationSuiteVersion version,
-        int ordinal,
-        CancellationToken cancellationToken)
+    private async Task InsertPublishedVersionAsync(Guid suiteId, PublishedEvaluationSuiteVersion version, int ordinal, CancellationToken cancellationToken)
     {
         await Db.Insertable(new AgEvaluationSuiteVersion
         {
@@ -397,11 +379,7 @@ public sealed partial class AgEvaluationSuiteServices :
         await InsertCasesAsync(suiteId, version.Id, version.Cases, cancellationToken);
     }
 
-    private async Task InsertCasesAsync(
-        Guid suiteId,
-        Guid versionId,
-        IReadOnlyList<EvaluationCaseDefinition> cases,
-        CancellationToken cancellationToken)
+    private async Task InsertCasesAsync(Guid suiteId, Guid versionId, IReadOnlyList<EvaluationCaseDefinition> cases, CancellationToken cancellationToken)
     {
         for (int ordinal = 0; ordinal < cases.Count; ordinal++)
         {
@@ -446,12 +424,7 @@ public sealed partial class AgEvaluationSuiteServices :
         }
     }
 
-    private async Task InsertRulesAsync(
-        Guid suiteId,
-        Guid versionId,
-        Guid caseRowId,
-        string ruleType,
-        IReadOnlyList<string> values)
+    private async Task InsertRulesAsync(Guid suiteId, Guid versionId, Guid caseRowId, string ruleType, IReadOnlyList<string> values)
     {
         if (values.Count == 0)
         {
@@ -511,9 +484,7 @@ public sealed partial class AgEvaluationSuiteServices :
             IsActive = true
         };
 
-    private static AgEvaluationSuiteVersion MapDraftVersionEntity(
-        Guid suiteId,
-        Guid draftVersionId) =>
+    private static AgEvaluationSuiteVersion MapDraftVersionEntity(Guid suiteId, Guid draftVersionId) =>
         new()
         {
             ID = draftVersionId,
@@ -749,3 +720,5 @@ public sealed partial class AgEvaluationSuiteServices :
         ServiceResult<EvaluationSuiteDefinition>.Failure(
             EvaluationSuiteServiceStatusCodes.FromErrorCode(code), message);
 }
+
+#endregion

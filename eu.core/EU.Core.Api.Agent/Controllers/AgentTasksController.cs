@@ -14,6 +14,8 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：AgentTasksController 接口处理
+
 [Route("api/agent-tasks")]
 public sealed class AgentTasksController(
     IAgAgentTaskServices tasks,
@@ -259,3 +261,5 @@ public sealed class ResumeAgentTaskApiRequest : AgentTaskApiRequest
     public long ExpectedLogicalRevision { get; init; }
     public string? Input { get; init; }
 }
+
+#endregion

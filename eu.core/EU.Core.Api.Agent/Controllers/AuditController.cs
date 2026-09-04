@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：AuditController 接口处理
+
 [Route("api/audit/operations")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class AuditController(
@@ -25,3 +27,5 @@ public sealed class AuditController(
                 Math.Clamp(take, 1, 100),
                 cancellationToken));
 }
+
+#endregion

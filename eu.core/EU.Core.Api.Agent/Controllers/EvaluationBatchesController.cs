@@ -12,6 +12,8 @@ using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：EvaluationBatchesController 接口处理
+
 [Route("api/evaluation-batches")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
@@ -97,9 +99,7 @@ public sealed class EvaluationBatchesController(
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Get(
-        Guid id,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Get(Guid id, CancellationToken cancellationToken)
     {
         EvaluationBatchRecord? value = await service.GetAsync(
             id, caller.TenantId, cancellationToken);
@@ -154,10 +154,7 @@ public sealed class EvaluationBatchesController(
     }
 
     [HttpGet("{id:guid}/model-judge-reports/{reportId:guid}")]
-    public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> GetModelJudgeReport(
-        Guid id,
-        Guid reportId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> GetModelJudgeReport(Guid id, Guid reportId, CancellationToken cancellationToken)
     {
         ModelJudgeReport? value = await modelJudge.GetAsync(
             reportId, caller.TenantId, cancellationToken);
@@ -229,3 +226,5 @@ public sealed class RunModelJudgeRequest
     [JsonExtensionData]
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
+
+#endregion

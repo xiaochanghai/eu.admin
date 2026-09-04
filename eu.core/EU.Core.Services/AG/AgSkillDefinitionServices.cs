@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgSkillDefinitionServices 职责实现
+
 /// <summary>
 /// Skill 定义、发布版本和文件清单服务。
 /// </summary>
@@ -39,9 +41,7 @@ public sealed class AgSkillDefinitionServices :
         "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    public async Task<ServiceResult<SkillDefinition>> CreateAsync(
-        CreateSkillCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> CreateAsync(CreateSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         string code = command.Code?.Trim().ToLowerInvariant() ?? string.Empty;
@@ -110,9 +110,7 @@ public sealed class AgSkillDefinitionServices :
         return Success(definition);
     }
 
-    public async Task<SkillDefinition?> GetAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<SkillDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -135,9 +133,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    public async Task<IReadOnlyList<SkillListItem>> ListAsync(
-        SkillQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SkillListItem>> ListAsync(SkillQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
         cancellationToken.ThrowIfCancellationRequested();
@@ -202,9 +198,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    public async Task<ServiceResult<SkillDefinition>> UpdateAsync(
-        UpdateSkillCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> UpdateAsync(UpdateSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         return await WithLockAsync(command.SkillId, async () =>
@@ -240,9 +234,7 @@ public sealed class AgSkillDefinitionServices :
         }, cancellationToken);
     }
 
-    public async Task<ServiceResult<SkillDefinition>> SaveFileAsync(
-        SaveSkillFileCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> SaveFileAsync(SaveSkillFileCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         return await WithLockAsync(command.SkillId, async () =>
@@ -280,9 +272,7 @@ public sealed class AgSkillDefinitionServices :
         }, cancellationToken);
     }
 
-    public async Task<ServiceResult<SkillDefinition>> DeleteFileAsync(
-        DeleteSkillFileCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> DeleteFileAsync(DeleteSkillFileCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         return await WithLockAsync(command.SkillId, async () =>
@@ -319,9 +309,7 @@ public sealed class AgSkillDefinitionServices :
         }, cancellationToken);
     }
 
-    public async Task<ServiceResult<SkillDefinition>> PublishAsync(
-        PublishSkillCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> PublishAsync(PublishSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         string versionLabel = command.VersionLabel ?? string.Empty;
@@ -419,9 +407,7 @@ public sealed class AgSkillDefinitionServices :
         }, cancellationToken);
     }
 
-    public async Task<ServiceResult<IReadOnlyList<SkillFileEntry>>> ListFilesAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<IReadOnlyList<SkillFileEntry>>> ListFilesAsync(Guid id, CancellationToken cancellationToken = default)
     {
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
         if (definition is null)
@@ -442,9 +428,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    public async Task<ServiceResult<SkillDefinition>> SetArchivedAsync(
-        SetSkillArchiveCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<SkillDefinition>> SetArchivedAsync(SetSkillArchiveCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
         return await WithLockAsync(command.SkillId, async () =>
@@ -491,10 +475,7 @@ public sealed class AgSkillDefinitionServices :
         }, cancellationToken);
     }
 
-    public async Task<ServiceResult<string>> ReadFileAsync(
-        Guid id,
-        string relativePath,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> ReadFileAsync(Guid id, string relativePath, CancellationToken cancellationToken = default)
     {
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
         if (definition is null)
@@ -513,8 +494,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    public async Task ReconcileFileAttachmentsAsync(
-        CancellationToken cancellationToken = default)
+    public async Task ReconcileFileAttachmentsAsync(CancellationToken cancellationToken = default)
     {
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
         try
@@ -605,9 +585,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    private async Task<string[]> FindArchiveBlockersAsync(
-        IReadOnlySet<Guid> skillVersionIds,
-        CancellationToken cancellationToken)
+    private async Task<string[]> FindArchiveBlockersAsync(IReadOnlySet<Guid> skillVersionIds, CancellationToken cancellationToken)
     {
         if (skillVersionIds.Count == 0)
         {
@@ -681,9 +659,7 @@ public sealed class AgSkillDefinitionServices :
             .ToArray();
     }
 
-    public async Task<bool> ExistsAsync(
-        Guid versionId,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Guid versionId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return await Db.Queryable<AgSkillVersion, AgSkillDefinition>(
@@ -754,9 +730,7 @@ public sealed class AgSkillDefinitionServices :
         return SkillContractCloner.ReadOnly(available);
     }
 
-    private async Task<SkillDefinition> LoadDefinitionAsync(
-        AgSkillDefinition definition,
-        CancellationToken cancellationToken)
+    private async Task<SkillDefinition> LoadDefinitionAsync(AgSkillDefinition definition, CancellationToken cancellationToken)
     {
         List<AgSkillVersion> versions = await Db.Queryable<AgSkillVersion>()
             .Where(value => value.SkillId == definition.ID && !value.IsDeleted)
@@ -780,9 +754,7 @@ public sealed class AgSkillDefinitionServices :
         return MapDefinition(definition, versions, files);
     }
 
-    private async Task<IReadOnlyDictionary<Guid, AgSkillVersion[]>> LoadVersionsBySkillAsync(
-        IEnumerable<Guid> skillIds,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyDictionary<Guid, AgSkillVersion[]>> LoadVersionsBySkillAsync(IEnumerable<Guid> skillIds, CancellationToken cancellationToken)
     {
         Guid[] ids = skillIds.Distinct().ToArray();
         if (ids.Length == 0)
@@ -886,11 +858,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    private async Task CompensateDraftMutationAsync(
-        string skillCode,
-        string relativePath,
-        string? previousContent,
-        Exception originalException)
+    private async Task CompensateDraftMutationAsync(string skillCode, string relativePath, string? previousContent, Exception originalException)
     {
         try
         {
@@ -948,10 +916,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    private async Task ReconcileAttachmentGroupAsync(
-        Guid masterId,
-        string attachmentType,
-        IReadOnlyList<FileAttachment> desired)
+    private async Task ReconcileAttachmentGroupAsync(Guid masterId, string attachmentType, IReadOnlyList<FileAttachment> desired)
     {
         List<FileAttachment> existing = await Db.Queryable<FileAttachment>()
             .Filter(null, true)
@@ -1006,9 +971,7 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 
-    private static bool AttachmentMatches(
-        FileAttachment current,
-        FileAttachment desired) =>
+    private static bool AttachmentMatches(FileAttachment current, FileAttachment desired) =>
         current.MasterId == desired.MasterId &&
         string.Equals(current.OriginalFileName, desired.OriginalFileName, StringComparison.Ordinal) &&
         string.Equals(current.FileName, desired.FileName, StringComparison.Ordinal) &&
@@ -1044,13 +1007,7 @@ public sealed class AgSkillDefinitionServices :
             file.Size))
         .ToArray();
 
-    private static FileAttachment MapAttachment(
-        Guid masterId,
-        string attachmentType,
-        string skillCode,
-        string scopePath,
-        string relativePath,
-        long size)
+    private static FileAttachment MapAttachment(Guid masterId, string attachmentType, string skillCode, string scopePath, string relativePath, long size)
     {
         string normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
         string fileName = normalizedPath.Split('/').Last();
@@ -1082,20 +1039,14 @@ public sealed class AgSkillDefinitionServices :
         };
     }
 
-    private static Guid DeterministicAttachmentId(
-        Guid masterId,
-        string attachmentType,
-        string relativePath)
+    private static Guid DeterministicAttachmentId(Guid masterId, string attachmentType, string relativePath)
     {
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{attachmentType}\n{masterId:N}\n{relativePath}"));
         return new Guid(hash.AsSpan(0, 16));
     }
 
-    private async Task<bool> TryUpdateDefinitionAsync(
-        SkillDefinition definition,
-        long expectedDraftRevision,
-        CancellationToken cancellationToken)
+    private async Task<bool> TryUpdateDefinitionAsync(SkillDefinition definition, long expectedDraftRevision, CancellationToken cancellationToken)
     {
         if (expectedDraftRevision == long.MaxValue ||
             definition.DraftRevision != expectedDraftRevision + 1)
@@ -1107,9 +1058,7 @@ public sealed class AgSkillDefinitionServices :
         return await UpdateDefinitionEntityAsync(definition, expectedDraftRevision) == 1;
     }
 
-    private async Task<int> UpdateDefinitionEntityAsync(
-        SkillDefinition definition,
-        long expectedDraftRevision)
+    private async Task<int> UpdateDefinitionEntityAsync(SkillDefinition definition, long expectedDraftRevision)
     {
         AgSkillDefinition entity = MapDefinitionEntity(definition);
         return await Db.Updateable(entity)
@@ -1141,10 +1090,7 @@ public sealed class AgSkillDefinitionServices :
             Status = definition.Status.ToString()
         };
 
-    private static AgSkillVersion MapVersionEntity(
-        Guid skillId,
-        int ordinal,
-        SkillVersion version) =>
+    private static AgSkillVersion MapVersionEntity(Guid skillId, int ordinal, SkillVersion version) =>
         new()
         {
             ID = version.Id,
@@ -1166,10 +1112,7 @@ public sealed class AgSkillDefinitionServices :
             Sha256 = file.Sha256
         }).ToList();
 
-    private static SkillDefinition MapDefinition(
-        AgSkillDefinition definition,
-        IReadOnlyList<AgSkillVersion> versions,
-        IReadOnlyList<AgSkillVersionFile> files)
+    private static SkillDefinition MapDefinition(AgSkillDefinition definition, IReadOnlyList<AgSkillVersion> versions, IReadOnlyList<AgSkillVersionFile> files)
     {
         IReadOnlyDictionary<Guid, AgSkillVersionFile[]> filesByVersion = files
             .GroupBy(value => Required(value.VersionId, "VersionFile.VersionId"))
@@ -1191,9 +1134,7 @@ public sealed class AgSkillDefinitionServices :
         };
     }
 
-    private static SkillVersion MapVersion(
-        AgSkillVersion version,
-        IReadOnlyList<AgSkillVersionFile> files)
+    private static SkillVersion MapVersion(AgSkillVersion version, IReadOnlyList<AgSkillVersionFile> files)
     {
         DateTime publishedAtUtc = Required(version.PublishedAtUtc, "Version.PublishedAtUtc");
         return new SkillVersion(
@@ -1234,10 +1175,7 @@ public sealed class AgSkillDefinitionServices :
     private static ServiceResult<T> Failure<T>(string code, string message) =>
         ServiceResult<T>.Failure(SkillServiceStatusCodes.FromErrorCode(code), message);
 
-    private static async Task<T> WithLockAsync<T>(
-        Guid id,
-        Func<Task<T>> action,
-        CancellationToken cancellationToken)
+    private static async Task<T> WithLockAsync<T>( Guid id, Func<Task<T>> action, CancellationToken cancellationToken)
     {
         SemaphoreSlim gate = Locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync(cancellationToken);
@@ -1251,3 +1189,5 @@ public sealed class AgSkillDefinitionServices :
         }
     }
 }
+
+#endregion

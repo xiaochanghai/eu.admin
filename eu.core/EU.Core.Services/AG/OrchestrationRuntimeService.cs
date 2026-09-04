@@ -10,6 +10,8 @@ using System.Text;
 
 namespace EU.Core.Services;
 
+#region 文件职责：OrchestrationRuntimeService 职责实现
+
 public sealed class OrchestrationRuntimeService(
     IOrchestrationRepository orchestrations,
     IOrchestrationRunRepository runs,
@@ -28,10 +30,7 @@ public sealed class OrchestrationRuntimeService(
     private readonly ConcurrentDictionary<Guid, string> _outputs = [];
     private readonly ConcurrentQueue<Guid> _outputOrder = [];
 
-    public async Task<ServiceResult<OrchestrationRunRecord>> StartAsync(
-        Guid orchestrationId,
-        string? input,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrchestrationRunRecord>> StartAsync(Guid orchestrationId, string? input, CancellationToken cancellationToken = default)
     {
         string normalized = input?.Trim() ?? "";
         if (normalized.Length is 0 or > MaximumInputCharacters)
@@ -274,13 +273,10 @@ public sealed class OrchestrationRuntimeService(
     public async Task<OrchestrationRunRecord?> GetAsync(Guid runId, CancellationToken cancellationToken = default) =>
         await RecoverIfInterruptedAsync(await runs.GetAsync(runId, cancellationToken), cancellationToken);
 
-    public Task<OrchestrationRunDetails?> GetDetailsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default) =>
+    public Task<OrchestrationRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default) =>
         runs.GetDetailsAsync(runId, cancellationToken);
 
-    public async Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(
-        Guid orchestrationId, int take, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(Guid orchestrationId, int take, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<OrchestrationRunRecord> values =
             await runs.ListAsync(orchestrationId, take, cancellationToken);
@@ -305,9 +301,7 @@ public sealed class OrchestrationRuntimeService(
         return true;
     }
 
-    public async Task<OrchestrationRunRecord?> ForceCancelAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<OrchestrationRunRecord?> ForceCancelAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         SemaphoreSlim gate = GetRunGate(runId);
         ActiveExecution? retiredExecution = null;
@@ -359,9 +353,7 @@ public sealed class OrchestrationRuntimeService(
         }
     }
 
-    public async Task<OrchestrationRunRecord?> WaitForTerminalAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<OrchestrationRunRecord?> WaitForTerminalAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         if (_active.TryGetValue(runId, out ActiveExecution? active))
             await active.Execution.WaitAsync(cancellationToken);
@@ -764,10 +756,7 @@ public sealed class OrchestrationRuntimeService(
         return (false, "", lastError);
     }
 
-    private async Task<bool> UpdateNodeAsync(
-        Guid runId,
-        string nodeId,
-        Func<OrchestrationNodeRunRecord, OrchestrationNodeRunRecord> update)
+    private async Task<bool> UpdateNodeAsync(Guid runId, string nodeId, Func<OrchestrationNodeRunRecord, OrchestrationNodeRunRecord> update)
     {
         SemaphoreSlim gate = GetRunGate(runId);
         await gate.WaitAsync().ConfigureAwait(false);
@@ -796,10 +785,7 @@ public sealed class OrchestrationRuntimeService(
         }
     }
 
-    private async Task<bool> UpsertAttemptAsync(
-        Guid runId,
-        OrchestrationNodeAttemptRecord attempt,
-        CancellationToken cancellationToken)
+    private async Task<bool> UpsertAttemptAsync(Guid runId, OrchestrationNodeAttemptRecord attempt, CancellationToken cancellationToken)
     {
         SemaphoreSlim gate = GetRunGate(runId);
         await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -867,10 +853,7 @@ public sealed class OrchestrationRuntimeService(
         }
     }
 
-    private async Task<bool> FinishAsync(
-        Guid runId,
-        OrchestrationRunStatus status,
-        string errorCode)
+    private async Task<bool> FinishAsync(Guid runId, OrchestrationRunStatus status, string errorCode)
     {
         SemaphoreSlim gate = GetRunGate(runId);
         await gate.WaitAsync().ConfigureAwait(false);
@@ -914,9 +897,7 @@ public sealed class OrchestrationRuntimeService(
         }
     }
 
-    private async Task<OrchestrationRunRecord?> RecoverIfInterruptedAsync(
-        OrchestrationRunRecord? value,
-        CancellationToken cancellationToken)
+    private async Task<OrchestrationRunRecord?> RecoverIfInterruptedAsync(OrchestrationRunRecord? value, CancellationToken cancellationToken)
     {
         if (value is null || value.Status != OrchestrationRunStatus.Running)
         {
@@ -1025,8 +1006,7 @@ public sealed class OrchestrationRuntimeService(
     private SemaphoreSlim GetRunGate(Guid runId) =>
         _runGates.GetOrAdd(runId, static _ => new SemaphoreSlim(1, 1));
 
-    private static void CancelRetiredExecutionBestEffort(
-        ActiveExecution retiredExecution)
+    private static void CancelRetiredExecutionBestEffort(ActiveExecution retiredExecution)
     {
         try
         {
@@ -1069,3 +1049,5 @@ public sealed class OrchestrationRuntimeService(
     private sealed class OrchestrationOwnershipLostException(Guid runId) :
         Exception($"Orchestration run '{runId}' is no longer owned by this runtime.");
 }
+
+#endregion

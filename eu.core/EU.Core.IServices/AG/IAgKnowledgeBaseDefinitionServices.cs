@@ -4,6 +4,8 @@ using EU.Core.IServices.Knowledge;
 
 namespace EU.Core.IServices;
 
+#region 文件职责：IAgKnowledgeBaseDefinitionServices 服务契约
+
 /// <summary>
 /// 知识库定义、文档导入、发布目录和检索服务契约。
 /// </summary>
@@ -15,23 +17,13 @@ public interface IAgKnowledgeBaseDefinitionServices : IBaseServices<AgKnowledgeB
         int maximumCharacters,
         CancellationToken cancellationToken = default);
 
-    Task<KnowledgeBaseDefinition?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
+    Task<KnowledgeBaseDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<KnowledgeBaseDefinition?> GetByCodeAsync(
-        string code,
-        CancellationToken cancellationToken = default);
+    Task<KnowledgeBaseDefinition?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(
-        KnowledgeBaseStatus? status = null,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(KnowledgeBaseStatus? status = null, CancellationToken cancellationToken = default);
 
-    Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
-        string code,
-        string name,
-        string description,
-        CancellationToken cancellationToken = default);
+    Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(string code, string name, string description, CancellationToken cancellationToken = default);
 
     Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
         Guid id,
@@ -69,3 +61,5 @@ public interface IAgKnowledgeBaseDefinitionServices : IBaseServices<AgKnowledgeB
         bool archived,
         CancellationToken cancellationToken = default);
 }
+
+#endregion

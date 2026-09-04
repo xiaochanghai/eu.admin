@@ -7,6 +7,8 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：MainAgentAssignmentService 职责实现
+
 public sealed class MainAgentAssignmentService(
     IAgentDefinitionCatalog agents,
     IMainAgentAssignmentRepository assignments) : BaseServices, IMainAgentAssignmentService
@@ -53,9 +55,7 @@ public sealed class MainAgentAssignmentService(
         return Success(assignment with { AgentVersionId = latestPublished.Id });
     }
 
-    public async Task<ServiceResult<MainAgentAssignment>> SetAsync(
-        SetMainAgentCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<MainAgentAssignment>> SetAsync(SetMainAgentCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
@@ -115,3 +115,5 @@ public sealed class MainAgentAssignmentService(
             ? null
             : agent.PublishedVersions[^1];
 }
+
+#endregion

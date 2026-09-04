@@ -10,6 +10,8 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.Services;
 
+#region 文件职责：DelegateToAgentTool 职责实现
+
 public sealed class DelegateToAgentTool : IAgentInternalTool
 {
     private const int MaximumTaskCharacters = 32_768;
@@ -138,9 +140,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
         return compact[..length];
     }
 
-    public async Task<AgentInternalToolResult> InvokeAsync(
-        string argumentsJson,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         if (!InternalToolArgumentParser.TryParse(
                 argumentsJson,
@@ -468,11 +468,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
         }
     }
 
-    private async Task RegisterChildRunAsync(
-        AgentRunContext context,
-        UnifiedAgentExecutionLease lease,
-        string input,
-        CancellationToken cancellationToken)
+    private async Task RegisterChildRunAsync(AgentRunContext context, UnifiedAgentExecutionLease lease, string input, CancellationToken cancellationToken)
     {
         ProtectedUnifiedPayload protectedInput = Protect(input);
         await _scope.MutateAggregateAsync(aggregate =>
@@ -641,11 +637,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task PersistChildFailureAsync(
-        Guid childRunId,
-        int depth,
-        UnifiedRunStatus status,
-        string errorCode)
+    private async Task PersistChildFailureAsync(Guid childRunId, int depth, UnifiedRunStatus status, string errorCode)
     {
         DateTimeOffset finishedAt = _scope.GetUtcNow();
         bool updated = false;
@@ -703,11 +695,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             CancellationToken.None).ConfigureAwait(false);
     }
 
-    private async Task TryPersistChildFailureAsync(
-        Guid childRunId,
-        int depth,
-        UnifiedRunStatus status,
-        string errorCode)
+    private async Task TryPersistChildFailureAsync(Guid childRunId, int depth, UnifiedRunStatus status, string errorCode)
     {
         try
         {
@@ -723,11 +711,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
         }
     }
 
-    private async Task TryTerminateUnstartedAuditAsync(
-        AgentRunContext? context,
-        bool runtimeStreamingStarted,
-        AgentRunStatus status,
-        string errorCode)
+    private async Task TryTerminateUnstartedAuditAsync(AgentRunContext? context, bool runtimeStreamingStarted, AgentRunStatus status, string errorCode)
     {
         if (context is null || runtimeStreamingStarted)
         {
@@ -754,9 +738,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             _scope.Limits.InternalPayloadUtf8Bytes,
             _scope.Limits.InternalPayloadUtf8Bytes);
 
-    private AgentInternalToolResult CancellationFailure(
-        CancellationToken cancellationToken,
-        UnifiedAgentExecutionLease? lease)
+    private AgentInternalToolResult CancellationFailure(CancellationToken cancellationToken, UnifiedAgentExecutionLease? lease)
     {
         string errorCode = _scope.ClassifyCancellation(lease, cancellationToken);
         return Failure(errorCode, CancellationMessage(errorCode));
@@ -797,9 +779,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
 
-    private static AgentInternalToolResult Failure(
-        string errorCode,
-        string content) =>
+    private static AgentInternalToolResult Failure(string errorCode, string content) =>
         new(false, content, errorCode);
 }
 
@@ -903,3 +883,5 @@ internal static class InternalToolArgumentParser
         }
     }
 }
+
+#endregion

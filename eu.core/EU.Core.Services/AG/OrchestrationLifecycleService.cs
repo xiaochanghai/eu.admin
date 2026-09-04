@@ -8,13 +8,13 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
+#region 文件职责：OrchestrationLifecycleService 职责实现
+
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
     IAgentDefinitionCatalog agents) : BaseServices, IOrchestrationLifecycleService
 {
-    public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(
-        CreateOrchestrationCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(CreateOrchestrationCommand command, CancellationToken cancellationToken = default)
     {
         string code = (command.Code ?? string.Empty).Trim().ToLowerInvariant();
         if (!Regex.IsMatch(code, "^[a-z0-9]+(?:-[a-z0-9]+)*$"))
@@ -66,9 +66,7 @@ public sealed class OrchestrationLifecycleService(
             ? Success(updated) : Conflict();
     }
 
-    public async Task<ServiceResult<OrchestrationDefinition>> PublishAsync(
-        PublishOrchestrationCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrchestrationDefinition>> PublishAsync(PublishOrchestrationCommand command, CancellationToken cancellationToken = default)
     {
         OrchestrationDefinition? existing = await repository.GetByIdAsync(command.Id, cancellationToken);
         if (existing is null) return Failure(OrchestrationErrorCodes.NotFound, "The orchestration was not found.");
@@ -117,9 +115,7 @@ public sealed class OrchestrationLifecycleService(
     public Task<OrchestrationDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         repository.GetByIdAsync(id, cancellationToken);
 
-    public async Task<IReadOnlyList<OrchestrationListItem>> ListAsync(
-        OrchestrationStatus? status = null,
-        CancellationToken cancellationToken = default) =>
+    public async Task<IReadOnlyList<OrchestrationListItem>> ListAsync(OrchestrationStatus? status = null, CancellationToken cancellationToken = default) =>
         OrchestrationContractCloner.ReadOnly((await repository.ListAsync(cancellationToken))
             .Where(value => status.HasValue
                 ? value.Status == status.Value
@@ -247,3 +243,5 @@ public sealed class OrchestrationLifecycleService(
     private static ServiceResult<OrchestrationDefinition> Conflict() =>
         Failure(OrchestrationErrorCodes.RowVersionConflict, "The orchestration changed; reload and retry.");
 }
+
+#endregion

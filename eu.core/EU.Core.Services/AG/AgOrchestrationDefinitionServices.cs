@@ -4,6 +4,8 @@ using EU.Core.IServices.Orchestration;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgOrchestrationDefinitionServices 职责实现
+
 /// <summary>
 /// 编排定义、版本、节点、连线和发布绑定的规范化持久化服务。
 /// </summary>
@@ -18,9 +20,7 @@ public sealed class AgOrchestrationDefinitionServices :
     {
     }
 
-    public async Task<OrchestrationDefinition?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<OrchestrationDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         AgOrchestrationDefinition? definition = await Db.Queryable<AgOrchestrationDefinition>()
@@ -31,8 +31,7 @@ public sealed class AgOrchestrationDefinitionServices :
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<OrchestrationDefinition>> ListAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<OrchestrationDefinition>> ListAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgOrchestrationDefinition> definitions = await Db.Queryable<AgOrchestrationDefinition>()
@@ -43,8 +42,7 @@ public sealed class AgOrchestrationDefinitionServices :
         return await LoadDefinitionsAsync(definitions, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var rows = await Db
@@ -74,9 +72,7 @@ public sealed class AgOrchestrationDefinitionServices :
                 ParseStatus(value.Status) is OrchestrationStatus.Enabled)));
     }
 
-    public async Task<bool> TryCreateAsync(
-        OrchestrationDefinition value,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryCreateAsync(OrchestrationDefinition value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -116,10 +112,7 @@ public sealed class AgOrchestrationDefinitionServices :
         }
     }
 
-    public async Task<bool> TryReplaceAsync(
-        OrchestrationDefinition value,
-        long expectedRevision,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TryReplaceAsync(OrchestrationDefinition value, long expectedRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         if (expectedRevision == long.MaxValue || value.LogicalRevision != expectedRevision + 1)
@@ -225,9 +218,7 @@ public sealed class AgOrchestrationDefinitionServices :
         }
     }
 
-    private async Task<OrchestrationDefinition> LoadDefinitionAsync(
-        AgOrchestrationDefinition definition,
-        CancellationToken cancellationToken)
+    private async Task<OrchestrationDefinition> LoadDefinitionAsync(AgOrchestrationDefinition definition, CancellationToken cancellationToken)
     {
         IReadOnlyList<OrchestrationDefinition> values = await LoadDefinitionsAsync(
             [definition],
@@ -458,10 +449,7 @@ public sealed class AgOrchestrationDefinitionServices :
             IsActive = true
         };
 
-    private static AgOrchestrationVersion MapVersionEntity(
-        Guid orchestrationId,
-        OrchestrationVersion value,
-        int ordinal) =>
+    private static AgOrchestrationVersion MapVersionEntity(Guid orchestrationId, OrchestrationVersion value, int ordinal) =>
         new()
         {
             ID = value.Id,
@@ -484,11 +472,7 @@ public sealed class AgOrchestrationDefinitionServices :
             Required(value.MaximumRetries, "Node.MaximumRetries"),
             Required(value.TimeoutSeconds, "Node.TimeoutSeconds"));
 
-    private static AgOrchestrationNode MapNodeEntity(
-        Guid orchestrationId,
-        Guid versionId,
-        OrchestrationNode value,
-        int ordinal) =>
+    private static AgOrchestrationNode MapNodeEntity(Guid orchestrationId, Guid versionId, OrchestrationNode value, int ordinal) =>
         new()
         {
             ID = Guid.NewGuid(),
@@ -514,11 +498,7 @@ public sealed class AgOrchestrationDefinitionServices :
             Required(value.ConditionValue, "Edge.ConditionValue"),
             Required(value.SortOrder, "Edge.SortOrder"));
 
-    private static AgOrchestrationEdge MapEdgeEntity(
-        Guid orchestrationId,
-        Guid versionId,
-        OrchestrationEdge value,
-        int ordinal) =>
+    private static AgOrchestrationEdge MapEdgeEntity(Guid orchestrationId, Guid versionId, OrchestrationEdge value, int ordinal) =>
         new()
         {
             ID = Guid.NewGuid(),
@@ -539,11 +519,7 @@ public sealed class AgOrchestrationDefinitionServices :
             Required(value.AgentId, "AgentBinding.AgentId"),
             Required(value.AgentVersionId, "AgentBinding.AgentVersionId"));
 
-    private static AgOrchestrationAgentBinding MapBindingEntity(
-        Guid orchestrationId,
-        Guid versionId,
-        OrchestrationAgentBinding value,
-        int ordinal) =>
+    private static AgOrchestrationAgentBinding MapBindingEntity(Guid orchestrationId, Guid versionId, OrchestrationAgentBinding value, int ordinal) =>
         new()
         {
             ID = Guid.NewGuid(),
@@ -577,10 +553,26 @@ public sealed class AgOrchestrationDefinitionServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Orchestration field '{field}' is missing.");
 
+    /// <summary>
+    /// 已发布编排版本联表查询的内部投影行。
+    /// </summary>
     private sealed class PublishedReferenceRow
     {
+        /// <summary>
+        /// 编排定义标识。
+        /// </summary>
         public Guid OrchestrationId { get; set; }
+
+        /// <summary>
+        /// 已发布编排版本标识。
+        /// </summary>
         public Guid OrchestrationVersionId { get; set; }
+
+        /// <summary>
+        /// 编排定义的当前运行状态。
+        /// </summary>
         public string? Status { get; set; }
     }
 }
+
+#endregion

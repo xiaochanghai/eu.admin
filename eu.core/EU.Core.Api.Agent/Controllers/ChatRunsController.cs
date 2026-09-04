@@ -17,6 +17,8 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：ChatRunsController 接口处理
+
 [Route("api/chat")]
 public sealed class ChatRunsController : Base.ControllerBase
 {
@@ -35,11 +37,7 @@ public sealed class ChatRunsController : Base.ControllerBase
     private readonly ICallerContext _caller;
     private readonly AgentMetrics? _metrics;
 
-    public ChatRunsController(
-        UnifiedEntryService service,
-        IUnifiedEntryRepository repository,
-        ICallerContext caller,
-        AgentMetrics? metrics = null)
+    public ChatRunsController(UnifiedEntryService service, IUnifiedEntryRepository repository, ICallerContext caller, AgentMetrics? metrics = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -49,9 +47,7 @@ public sealed class ChatRunsController : Base.ControllerBase
 
     [HttpPost("runs")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<IActionResult> Start(
-        [FromBody] StartChatRunRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Start([FromBody] StartChatRunRequest request, CancellationToken cancellationToken)
     {
         if (request.AdditionalProperties is { Count: > 0 })
         {
@@ -225,9 +221,7 @@ public sealed class ChatRunsController : Base.ControllerBase
 
     [HttpGet("runs/{runId}")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<ActionResult<ServiceResult<UnifiedEntryRunRecord>>> GetRun(
-        string runId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<UnifiedEntryRunRecord>>> GetRun(string runId, CancellationToken cancellationToken)
     {
         if (!TryParseId(runId, out Guid id))
         {
@@ -249,9 +243,7 @@ public sealed class ChatRunsController : Base.ControllerBase
 
     [HttpGet("runs/{runId}/details")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
-    public async Task<ActionResult<ServiceResult<UnifiedRunDetails>>> GetDetails(
-        string runId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<UnifiedRunDetails>>> GetDetails(string runId, CancellationToken cancellationToken)
     {
         if (!TryParseId(runId, out Guid id))
         {
@@ -312,9 +304,7 @@ public sealed class ChatRunsController : Base.ControllerBase
 
     [HttpPost("runs/{runId}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
-    public async Task<ActionResult<ServiceResult<ChatRunCancelResponse>>> Cancel(
-        string runId,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ServiceResult<ChatRunCancelResponse>>> Cancel(string runId, CancellationToken cancellationToken)
     {
         if (!TryParseId(runId, out Guid id))
         {
@@ -335,11 +325,7 @@ public sealed class ChatRunsController : Base.ControllerBase
             cancellationToken);
     }
 
-    private async Task WriteFrameAsync(
-        string eventName,
-        long sequence,
-        string json,
-        CancellationToken cancellationToken)
+    private async Task WriteFrameAsync(string eventName, long sequence, string json, CancellationToken cancellationToken)
     {
         string frame = $"id: {sequence}\nevent: {eventName}\ndata: {json}\n\n";
         await Response.Body.WriteAsync(
@@ -416,11 +402,7 @@ public sealed class ChatRunsController : Base.ControllerBase
             ChatApiErrorCodes.RunNotFound,
             "The chat run was not found.");
 
-    private JsonResult Error(
-        int status,
-        string code,
-        string title,
-        string? detail = null)
+    private JsonResult Error(int status, string code, string title, string? detail = null)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, code);
         string message = string.IsNullOrWhiteSpace(detail) ? title : detail;
@@ -432,8 +414,7 @@ public sealed class ChatRunsController : Base.ControllerBase
         { StatusCode = descriptor.HttpStatus ?? status };
     }
 
-    private JsonResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult(
-        Success(value))
+    private JsonResult OperationSuccess<T>(T value, int httpStatus) => new JsonResult( Success(value))
     { StatusCode = httpStatus };
 
     private async Task<ActionResult<ServiceResult<T>>> ExecutePersistenceOperationAsync<T>(
@@ -507,3 +488,5 @@ public sealed record StartChatRunRequest(
     [JsonExtensionData]
     public IDictionary<string, JsonElement>? AdditionalProperties { get; init; }
 }
+
+#endregion

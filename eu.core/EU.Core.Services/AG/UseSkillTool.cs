@@ -6,8 +6,12 @@ using EU.Core.IServices.Skills;
 
 namespace EU.Core.Services;
 
+#region 文件职责：UseSkillTool 职责实现
+
 public sealed class UseSkillTool : IAgentInternalTool
 {
+    #region 技能工具执行
+
     private const int MaximumTaskCharacters = 32_768;
     private const int MaximumReasonCharacters = 1_024;
     private readonly IReadOnlyDictionary<Guid, PublishedSkillContent> _skills;
@@ -43,9 +47,7 @@ public sealed class UseSkillTool : IAgentInternalTool
 
     public string InputSchemaJson { get; }
 
-    public Task<AgentInternalToolResult> InvokeAsync(
-        string argumentsJson,
-        CancellationToken cancellationToken = default)
+    public Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (!InternalToolArgumentParser.TryParse(
@@ -79,4 +81,8 @@ public sealed class UseSkillTool : IAgentInternalTool
 
     private static AgentInternalToolResult Failure(string code, string content) =>
         new(false, content, code);
+
+    #endregion
 }
+
+#endregion

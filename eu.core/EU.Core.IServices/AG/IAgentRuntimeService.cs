@@ -4,31 +4,19 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.IServices;
 
+#region 文件职责：IAgentRuntimeService 服务契约
+
 public interface IAgentRuntimeService
 {
-    Task<AgentRunPreparationResult> PrepareAsync(
-        Guid agentId,
-        string? input,
-        CancellationToken cancellationToken = default);
+    Task<AgentRunPreparationResult> PrepareAsync(Guid agentId, string? input, CancellationToken cancellationToken = default);
 
-    Task<AgentRunPreparationResult> PrepareVersionAsync(
-        Guid agentId,
-        Guid agentVersionId,
-        string? input,
-        CancellationToken cancellationToken = default);
+    Task<AgentRunPreparationResult> PrepareVersionAsync(Guid agentId, Guid agentVersionId, string? input, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<AgentRunEvent> StreamAsync(
-        AgentRunContext context,
-        CancellationToken cancellationToken = default);
+    IAsyncEnumerable<AgentRunEvent> StreamAsync(AgentRunContext context, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<AgentRunAuditRecord>> ListAuditAsync(
-        Guid agentId,
-        int take,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AgentRunAuditRecord>> ListAuditAsync(Guid agentId, int take, CancellationToken cancellationToken = default);
 
-    Task TerminatePreparedRunAsync(
-        AgentRunContext context,
-        AgentRunStatus status,
-        string errorCode,
-        CancellationToken cancellationToken = default);
+    Task TerminatePreparedRunAsync(AgentRunContext context, AgentRunStatus status, string errorCode, CancellationToken cancellationToken = default);
 }
+
+#endregion

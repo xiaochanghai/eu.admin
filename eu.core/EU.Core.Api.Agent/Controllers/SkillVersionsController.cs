@@ -6,16 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：SkillVersionsController 接口处理
+
 [Route("api/skill-versions")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillVersionsController(
     IPublishedSkillVersionCatalog catalog) : Base.ControllerBase
 {
     [HttpGet]
-    public async Task<ServiceResult<IReadOnlyList<PublishedSkillReference>>> List(
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<IReadOnlyList<PublishedSkillReference>>> List(CancellationToken cancellationToken)
     {
         IReadOnlyList<PublishedSkillReference> values = await catalog.ListAsync(cancellationToken);
         return ServiceResult<IReadOnlyList<PublishedSkillReference>>.QuerySuccess(values);
     }
 }
+
+#endregion

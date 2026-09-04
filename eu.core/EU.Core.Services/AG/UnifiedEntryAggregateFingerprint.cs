@@ -8,8 +8,12 @@ using System.Text.Json.Serialization;
 
 namespace EU.Core.Services;
 
+#region 文件职责：UnifiedEntryAggregateFingerprint 职责实现
+
 public static class UnifiedEntryAggregateFingerprint
 {
+    #region 聚合指纹
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -35,4 +39,8 @@ public static class UnifiedEntryAggregateFingerprint
         IReadOnlyList<ConversationMessageRecord> Messages,
         UnifiedRunDetails Details,
         IReadOnlyList<UnifiedRunEventRecord> Events);
+
+    #endregion
 }
+
+#endregion

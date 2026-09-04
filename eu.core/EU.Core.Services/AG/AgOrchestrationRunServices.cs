@@ -5,6 +5,8 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgOrchestrationRunServices 职责实现
+
 public sealed class AgOrchestrationRunServices :
     BaseServices<AgOrchestrationRun>,
     IAgOrchestrationRunServices,
@@ -15,9 +17,7 @@ public sealed class AgOrchestrationRunServices :
     {
     }
 
-    public async Task SaveAsync(
-        OrchestrationRunRecord value,
-        CancellationToken cancellationToken = default)
+    public async Task SaveAsync(OrchestrationRunRecord value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -61,9 +61,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    public async Task<OrchestrationRunRecord?> GetAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
+    public async Task<OrchestrationRunRecord?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -85,10 +83,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    public async Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(
-        Guid orchestrationId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(Guid orchestrationId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -112,9 +107,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    public async Task SaveDetailsAsync(
-        OrchestrationRunDetails value,
-        CancellationToken cancellationToken = default)
+    public async Task SaveDetailsAsync(OrchestrationRunDetails value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -131,9 +124,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    public async Task<OrchestrationRunDetails?> GetDetailsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default)
+    public async Task<OrchestrationRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -155,9 +146,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    public async Task<bool> TrySaveRunningDetailsAsync(
-        OrchestrationRunDetails value,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> TrySaveRunningDetailsAsync(OrchestrationRunDetails value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
         cancellationToken.ThrowIfCancellationRequested();
@@ -343,9 +332,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    private async Task<IReadOnlyList<OrchestrationRunRecord>> LoadRunsAsync(
-        IReadOnlyList<AgOrchestrationRun> runs,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<OrchestrationRunRecord>> LoadRunsAsync(IReadOnlyList<AgOrchestrationRun> runs, CancellationToken cancellationToken)
     {
         if (runs.Count == 0)
         {
@@ -371,9 +358,7 @@ public sealed class AgOrchestrationRunServices :
             nodesByRun.GetValueOrDefault(run.ID) ?? [])));
     }
 
-    private async Task<OrchestrationRunDetails> LoadDetailsAsync(
-        AgOrchestrationRunDetail detail,
-        CancellationToken cancellationToken)
+    private async Task<OrchestrationRunDetails> LoadDetailsAsync(AgOrchestrationRunDetail detail, CancellationToken cancellationToken)
     {
         Guid runId = Required(detail.RunId, "Detail.RunId");
         List<AgOrchestrationNodeAttempt> attempts = await Db
@@ -412,9 +397,7 @@ public sealed class AgOrchestrationRunServices :
         return OrchestrationContractCloner.Clone(result);
     }
 
-    private async Task WriteDetailsAsync(
-        OrchestrationRunDetails value,
-        CancellationToken cancellationToken)
+    private async Task WriteDetailsAsync(OrchestrationRunDetails value, CancellationToken cancellationToken)
     {
         AgOrchestrationRunDetail? existing = await Db.Queryable<AgOrchestrationRunDetail>()
             .Where(candidate => candidate.RunId == value.RunId && !candidate.IsDeleted)
@@ -467,9 +450,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    private async Task ReplaceNodesAsync(
-        OrchestrationRunRecord value,
-        CancellationToken cancellationToken)
+    private async Task ReplaceNodesAsync(OrchestrationRunRecord value, CancellationToken cancellationToken)
     {
         await Db.Deleteable<AgOrchestrationRunNode>()
             .Where(candidate => candidate.RunId == value.Id)
@@ -477,9 +458,7 @@ public sealed class AgOrchestrationRunServices :
         await InsertNodesAsync(value, cancellationToken);
     }
 
-    private async Task InsertNodesAsync(
-        OrchestrationRunRecord value,
-        CancellationToken cancellationToken)
+    private async Task InsertNodesAsync(OrchestrationRunRecord value, CancellationToken cancellationToken)
     {
         if (value.Nodes.Count == 0)
         {
@@ -491,9 +470,7 @@ public sealed class AgOrchestrationRunServices :
             MapNodeEntity(value.Id, ordinal, node)).ToList()).ExecuteCommandAsync();
     }
 
-    private static OrchestrationRunRecord MapRun(
-        AgOrchestrationRun value,
-        IReadOnlyList<AgOrchestrationRunNode> nodes) =>
+    private static OrchestrationRunRecord MapRun(AgOrchestrationRun value, IReadOnlyList<AgOrchestrationRunNode> nodes) =>
         new(
             value.ID,
             Required(value.OrchestrationId, "OrchestrationId"),
@@ -523,9 +500,7 @@ public sealed class AgOrchestrationRunServices :
             Required(value.InputSha256, "Node.InputSha256"),
             Required(value.ErrorCode, "Node.ErrorCode"));
 
-    private static OrchestrationNodeAttemptRecord MapAttempt(
-        AgOrchestrationNodeAttempt value,
-        IReadOnlyList<AgOrchestrationToolCall> tools) =>
+    private static OrchestrationNodeAttemptRecord MapAttempt(AgOrchestrationNodeAttempt value, IReadOnlyList<AgOrchestrationToolCall> tools) =>
         new(
             Required(value.NodeId, "Attempt.NodeId"),
             Required(value.Attempt, "Attempt.Attempt"),
@@ -573,10 +548,7 @@ public sealed class AgOrchestrationRunServices :
         IsActive = true
     };
 
-    private static AgOrchestrationRunNode MapNodeEntity(
-        Guid runId,
-        int ordinal,
-        OrchestrationNodeRunRecord value) => new()
+    private static AgOrchestrationRunNode MapNodeEntity(Guid runId, int ordinal, OrchestrationNodeRunRecord value) => new()
     {
         ID = Guid.NewGuid(),
         RunId = runId,
@@ -596,10 +568,7 @@ public sealed class AgOrchestrationRunServices :
         IsActive = true
     };
 
-    private static AgOrchestrationNodeAttempt MapAttemptEntity(
-        Guid runId,
-        int sequence,
-        OrchestrationNodeAttemptRecord value) => new()
+    private static AgOrchestrationNodeAttempt MapAttemptEntity(Guid runId, int sequence, OrchestrationNodeAttemptRecord value) => new()
     {
         ID = Guid.NewGuid(),
         RunId = runId,
@@ -619,12 +588,7 @@ public sealed class AgOrchestrationRunServices :
         IsActive = true
     };
 
-    private static AgOrchestrationToolCall MapToolEntity(
-        Guid runId,
-        string nodeId,
-        int attempt,
-        int sequence,
-        OrchestrationToolCallRecord value) => new()
+    private static AgOrchestrationToolCall MapToolEntity(Guid runId, string nodeId, int attempt, int sequence, OrchestrationToolCallRecord value) => new()
     {
         ID = Guid.NewGuid(),
         ToolCallId = value.ToolCallId,
@@ -670,9 +634,7 @@ public sealed class AgOrchestrationRunServices :
                     : node))
         };
 
-    private static void ValidateTerminalStatuses(
-        OrchestrationRunStatus runStatus,
-        OrchestrationNodeRunStatus nodeStatus)
+    private static void ValidateTerminalStatuses(OrchestrationRunStatus runStatus, OrchestrationNodeRunStatus nodeStatus)
     {
         if (runStatus == OrchestrationRunStatus.Running)
         {
@@ -688,9 +650,7 @@ public sealed class AgOrchestrationRunServices :
         }
     }
 
-    private static bool ShouldTerminalize(
-        OrchestrationNodeRunStatus status,
-        OrchestrationTerminalTransitionPolicy transitionPolicy) =>
+    private static bool ShouldTerminalize(OrchestrationNodeRunStatus status, OrchestrationTerminalTransitionPolicy transitionPolicy) =>
         status == OrchestrationNodeRunStatus.Running ||
         (status == OrchestrationNodeRunStatus.Pending &&
          transitionPolicy == OrchestrationTerminalTransitionPolicy.TerminalizePending);
@@ -710,3 +670,5 @@ public sealed class AgOrchestrationRunServices :
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Orchestration run field '{field}' is missing.");
 }
+
+#endregion

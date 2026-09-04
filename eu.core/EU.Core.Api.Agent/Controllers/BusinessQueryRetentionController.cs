@@ -9,6 +9,8 @@ using Microsoft.Extensions.Options;
 
 namespace EU.Core.Api.Agent.Controllers;
 
+#region 文件职责：BusinessQueryRetentionController 接口处理
+
 [Route("api/business-query-results")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class BusinessQueryRetentionController(
@@ -17,8 +19,7 @@ public sealed class BusinessQueryRetentionController(
     TimeProvider timeProvider) : Base.ControllerBase
 {
     [HttpPost("cleanup")]
-    public async Task<ServiceResult<BusinessQueryCleanupResult>> Cleanup(
-        CancellationToken cancellationToken)
+    public async Task<ServiceResult<BusinessQueryCleanupResult>> Cleanup(CancellationToken cancellationToken)
     {
         DateTimeOffset cutoff = timeProvider.GetUtcNow().AddDays(
             -options.Value.RetentionDays);
@@ -28,3 +29,5 @@ public sealed class BusinessQueryRetentionController(
         return Success(result);
     }
 }
+
+#endregion

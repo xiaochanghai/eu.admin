@@ -5,6 +5,8 @@ using EU.Core.IServices.Mcp;
 
 namespace EU.Core.Services;
 
+#region 文件职责：AgAgentRunAuditServices 职责实现
+
 public sealed class AgAgentRunAuditServices :
     BaseServices<AgAgentRunAudit>,
     IAgAgentRunAuditServices,
@@ -15,9 +17,7 @@ public sealed class AgAgentRunAuditServices :
     {
     }
 
-    public async Task SaveAsync(
-        AgentRunAuditRecord record,
-        CancellationToken cancellationToken = default)
+    public async Task SaveAsync(AgentRunAuditRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
         cancellationToken.ThrowIfCancellationRequested();
@@ -68,10 +68,7 @@ public sealed class AgAgentRunAuditServices :
         }
     }
 
-    public async Task<IReadOnlyList<AgentRunAuditRecord>> ListAsync(
-        Guid agentId,
-        int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AgentRunAuditRecord>> ListAsync(Guid agentId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
@@ -96,9 +93,7 @@ public sealed class AgAgentRunAuditServices :
         }
     }
 
-    private async Task<IReadOnlyList<AgentRunAuditRecord>> LoadAuditsAsync(
-        IReadOnlyList<AgAgentRunAudit> audits,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<AgentRunAuditRecord>> LoadAuditsAsync(IReadOnlyList<AgAgentRunAudit> audits, CancellationToken cancellationToken)
     {
         if (audits.Count == 0)
         {
@@ -123,9 +118,7 @@ public sealed class AgAgentRunAuditServices :
             .ToArray();
     }
 
-    private async Task InsertToolCallsAsync(
-        AgentRunAuditRecord record,
-        CancellationToken cancellationToken)
+    private async Task InsertToolCallsAsync(AgentRunAuditRecord record, CancellationToken cancellationToken)
     {
         if (record.ToolCalls.Count == 0)
         {
@@ -137,9 +130,7 @@ public sealed class AgAgentRunAuditServices :
             MapToolCallEntity(record.RunId, ordinal, value)).ToList()).ExecuteCommandAsync();
     }
 
-    private static AgentRunAuditRecord MapAudit(
-        AgAgentRunAudit value,
-        IReadOnlyList<AgAgentToolCallAudit> toolCalls) =>
+    private static AgentRunAuditRecord MapAudit(AgAgentRunAudit value, IReadOnlyList<AgAgentToolCallAudit> toolCalls) =>
         new(
             value.ID,
             Required(value.AgentId, "AgentId"),
@@ -184,10 +175,7 @@ public sealed class AgAgentRunAuditServices :
         IsActive = true
     };
 
-    private static AgAgentToolCallAudit MapToolCallEntity(
-        Guid runId,
-        int ordinal,
-        AgentToolCallAuditRecord value) => new()
+    private static AgAgentToolCallAudit MapToolCallEntity(Guid runId, int ordinal, AgentToolCallAuditRecord value) => new()
     {
         ID = Guid.NewGuid(),
         RunId = runId,
@@ -208,9 +196,7 @@ public sealed class AgAgentRunAuditServices :
 
     // The current SQL Server provider binds DateTime parameters as legacy datetime,
     // whose 1/300-second precision can shift the stored value by up to 1.67 ms.
-    private static bool StoredDateTimeEquals(
-        DateTime stored,
-        DateTimeOffset value) =>
+    private static bool StoredDateTimeEquals(DateTime stored, DateTimeOffset value) =>
         Math.Abs((stored - value.UtcDateTime).Ticks) <=
         TimeSpan.TicksPerMillisecond * 2;
 
@@ -222,3 +208,5 @@ public sealed class AgAgentRunAuditServices :
         value ?? throw new InvalidDataException(
             $"Agent run audit field '{field}' is missing.");
 }
+
+#endregion
