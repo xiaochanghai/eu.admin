@@ -49,3 +49,10 @@ public interface IAgAgentDefinitionServices : IBaseServices<AgAgentDefinition, A
 
     Task<ServiceResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default);
 }
+
+public interface IAgentDefinitionCatalog
+{
+    Task<AgentDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default);
+}

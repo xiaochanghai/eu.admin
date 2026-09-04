@@ -77,7 +77,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         try
         {
             var definitions = await Db.Queryable<AgAgentDefinition>()
-                .Where(definition => !definition.IsDeleted)
                 .WhereIF(
                     runtimeStatus.IsNullOrEmpty(),
                     definition => definition.RuntimeStatus != "Archived")
@@ -104,7 +103,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             Guid[] agentIds = definitions.Select(definition => definition.ID).ToArray();
             var versions = await Db.Queryable<AgAgentVersion>()
                 .Where(version =>
-                    !version.IsDeleted &&
                     version.AgentId.HasValue &&
                     agentIds.Contains(version.AgentId.Value))
                 .OrderBy(version => version.AgentId)
@@ -575,7 +573,6 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         try
         {
             List<AgAgentDefinition> definitions = await Db.Queryable<AgAgentDefinition>()
-                .Where(value => !value.IsDeleted)
                 .WhereIF(
                     runtimeStatus.IsNullOrEmpty(),
                     value => value.RuntimeStatus != "Archived")
@@ -838,8 +835,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 AgMainAgentAssignment? assignment = await Db.Queryable<AgMainAgentAssignment>()
                     .Where(value =>
                         value.AssignmentKey == MainAgentAssignmentKey &&
-                        value.AgentId == definition.Id &&
-                        !value.IsDeleted)
+                        value.AgentId == definition.Id)
                     .FirstAsync();
                 if (assignment is not null)
                 {
@@ -855,8 +851,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                         })
                         .Where(value =>
                             value.ID == assignment.ID &&
-                            value.LogicalRevision == assignmentRevision &&
-                            !value.IsDeleted)
+                            value.LogicalRevision == assignmentRevision)
                         .ExecuteCommandAsync();
                     if (assignmentAffected != 1)
                     {
@@ -1001,9 +996,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return Success(id);
     }
 
-    public async Task<ServiceResult<AgentDefinition>> CreateImportedAsync(
-        ImportAgentCommand command,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<AgentDefinition>> CreateImportedAsync(ImportAgentCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         ArgumentNullException.ThrowIfNull(command);
@@ -1702,9 +1695,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         "accesstoken"
     };
 
-    public async Task<ServiceResult<string>> ExportAsync(
-        Guid agentId,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         AgentDefinition? definition = await GetDefinitionAsync(agentId, cancellationToken);
@@ -1780,9 +1771,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             : Failed<string>(referenceError);
     }
 
-    public async Task<ServiceResult<AgentDefinition>> ImportAsync(
-        string json,
-        CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
         if (!TryReadPackage(json, out AgentPackageV1? package, out string? error))
@@ -1841,9 +1830,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return result;
     }
 
-    private async Task<string?> ValidatePackageReferencesAsync(
-        AgentPackageV1 package,
-        CancellationToken cancellationToken)
+    private async Task<string?> ValidatePackageReferencesAsync(AgentPackageV1 package, CancellationToken cancellationToken)
     {
         string? error = await ValidateModelReferenceAsync(
             package.Agent.Draft.ModelProfileId, cancellationToken);
@@ -1877,9 +1864,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             package.Agent.Orchestrations ?? [], cancellationToken);
     }
 
-    private async Task<string?> ValidateModelReferenceAsync(
-        string modelProfileId,
-        CancellationToken cancellationToken)
+    private async Task<string?> ValidateModelReferenceAsync(string modelProfileId, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(modelProfileId) &&
             !await ModelProfiles.ExistsAsync(modelProfileId, cancellationToken))
@@ -1890,9 +1875,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return null;
     }
 
-    private async Task<string?> ValidateToolReferencesAsync(
-        IReadOnlyList<string> references,
-        CancellationToken cancellationToken)
+    private async Task<string?> ValidateToolReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         if (references.Count == 0)
         {
@@ -1914,9 +1897,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return null;
     }
 
-    private async Task<string?> ValidateSkillReferencesAsync(
-        IReadOnlyList<string> references,
-        CancellationToken cancellationToken)
+    private async Task<string?> ValidateSkillReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         if (references.Count == 0)
         {
@@ -1938,9 +1919,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return null;
     }
 
-    private async Task<string?> ValidateKnowledgeReferencesAsync(
-        IReadOnlyList<string> references,
-        CancellationToken cancellationToken)
+    private async Task<string?> ValidateKnowledgeReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         IReadOnlySet<Guid> available = _knowledgeBases is null
             ? new HashSet<Guid>()
@@ -2130,10 +2109,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return null;
     }
 
-    private static bool TryReadPackage(
-        string? json,
-        out AgentPackageV1? package,
-        out string? error)
+    private static bool TryReadPackage(string? json, out AgentPackageV1? package, out string? error)
     {
         package = null;
         error = null;

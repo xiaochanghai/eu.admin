@@ -175,13 +175,6 @@ public sealed record AgentListItem(
     string DraftModelProfileId,
     string? CurrentPublishedLabel);
 
-public interface IAgentDefinitionCatalog
-{
-    Task<AgentDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default);
-}
-
 public static class AgentContractCloner
 {
     public static AgentDefinition Clone(AgentDefinition definition)
