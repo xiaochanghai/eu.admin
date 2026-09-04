@@ -22,7 +22,7 @@ public sealed class UnifiedEntryService
         AgentRuntimeService.MaximumInputCharacters * 4;
     public const int MaximumConversationHistoryMessages = 40;
     public const int MaximumConversationHistoryUtf8Bytes = 65_536;
-    private readonly MainAgentAssignmentService _mainAgents;
+    private readonly IMainAgentAssignmentService _mainAgents;
     private readonly IAgentRuntimeService _agentRuntime;
     private readonly OrchestrationRuntimeService _orchestrationRuntime;
     private readonly IUnifiedEntryRepository _repository;
@@ -36,7 +36,7 @@ public sealed class UnifiedEntryService
     internal Action? BeforeRuntimeOwnershipClaim { get; set; }
 
     public UnifiedEntryService(
-        MainAgentAssignmentService mainAgents,
+        IMainAgentAssignmentService mainAgents,
         IAgentRuntimeService agentRuntime,
         OrchestrationRuntimeService orchestrationRuntime,
         IUnifiedEntryRepository repository,

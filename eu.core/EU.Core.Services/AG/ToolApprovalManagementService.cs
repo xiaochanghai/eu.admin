@@ -5,7 +5,7 @@ namespace EU.Core.Services;
 
 public sealed class ToolApprovalManagementService(
     IToolApprovalRepository approvals,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null) : IToolApprovalManagementService
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 

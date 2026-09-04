@@ -9,7 +9,7 @@ namespace EU.Core.Services;
 
 public sealed class MainAgentAssignmentService(
     IAgentDefinitionCatalog agents,
-    IMainAgentAssignmentRepository assignments) : BaseServices
+    IMainAgentAssignmentRepository assignments) : BaseServices, IMainAgentAssignmentService
 {
     private readonly IAgentDefinitionCatalog _agents = agents ?? throw new ArgumentNullException(nameof(agents));
     private readonly IMainAgentAssignmentRepository _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));

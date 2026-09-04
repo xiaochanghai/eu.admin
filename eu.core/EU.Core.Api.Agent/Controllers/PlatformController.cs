@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using EU.Core.Api.Agent.Security;
 using EU.Core.Model;
-using EU.Core.Services;
+using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -19,7 +19,7 @@ public sealed class PlatformController(
     IOptions<AgentPlatformOptions> platform,
     IOptions<AgentEvaluationOptions> evaluation,
     IPublicModelProfileCatalog modelProfiles,
-    MainAgentAssignmentService mainAgentAssignments) : Base.ControllerBase
+    IMainAgentAssignmentService mainAgentAssignments) : Base.ControllerBase
 {
     [HttpGet("service")]
     public ServiceResult<PlatformServiceResponse> Service() =>

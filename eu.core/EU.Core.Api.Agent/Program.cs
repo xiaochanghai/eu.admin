@@ -162,7 +162,6 @@ builder.Services.AddSingleton<IMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
 builder.Services.AddSingleton<IApprovedMcpRuntimeToolInvoker>(services =>
     services.GetRequiredService<SdkMcpRuntimeToolInvoker>());
-builder.Services.AddScoped<ToolApprovalManagementService>();
 ToolApprovalOptions toolApproval = builder.Configuration
     .GetSection(ToolApprovalOptions.SectionName)
     .Get<ToolApprovalOptions>() ?? new ToolApprovalOptions();
@@ -277,8 +276,6 @@ builder.Services.AddSingleton<ISkillFileStore>(services =>
 builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
-builder.Services.AddSingleton<MainAgentAssignmentService>();
-builder.Services.AddScoped<OrchestrationLifecycleService>();
 builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
     new PublicModelProfileCatalog(
         services.GetRequiredService<IOptions<AgentControlOptions>>().Value.ModelProfileIds));

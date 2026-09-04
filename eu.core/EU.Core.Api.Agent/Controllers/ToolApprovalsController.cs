@@ -19,7 +19,7 @@ namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/tool-approvals")]
 public sealed class ToolApprovalsController(
-    ToolApprovalManagementService approvals,
+    IToolApprovalManagementService approvals,
     ICallerContext caller,
     TimeProvider timeProvider) : Base.ControllerBase
 {

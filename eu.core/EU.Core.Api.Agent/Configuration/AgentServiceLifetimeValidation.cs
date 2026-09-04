@@ -1,14 +1,9 @@
+using EU.Core.Agent.Infrastructure.Mcp;
+using EU.Core.IServices;
 using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Evaluation;
-using EU.Core.IServices.Knowledge;
-using EU.Core.IServices.MainAgent;
-using EU.Core.IServices.Mcp;
-using EU.Core.IServices.Orchestration;
 using EU.Core.IServices.Runtime;
-using EU.Core.IServices.UnifiedEntry;
-using EU.Core.Agent.Infrastructure.Mcp;
 using EU.Core.Services;
-using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Configuration;
 
@@ -16,9 +11,9 @@ public static class AgentServiceLifetimeValidation
 {
     private static readonly HashSet<Type> ScopedServiceTypes =
     [
-        typeof(ToolApprovalManagementService),
+        typeof(IToolApprovalManagementService),
         typeof(ToolApprovalConversationResumeService),
-        typeof(OrchestrationLifecycleService),
+        typeof(IOrchestrationLifecycleService),
         typeof(IRunEvaluationService),
         typeof(IAgEvaluationSuiteServices),
         typeof(IAgEvaluationBatchExecutionServices),
@@ -34,7 +29,6 @@ public static class AgentServiceLifetimeValidation
         typeof(ToolApprovalRuntimeService),
         typeof(IAgentToolApprovalHandler),
         typeof(IAgentRuntimeEngine),
-        typeof(MainAgentAssignmentService),
         typeof(OrchestrationRuntimeService),
         typeof(UnifiedEntryService)
     ];

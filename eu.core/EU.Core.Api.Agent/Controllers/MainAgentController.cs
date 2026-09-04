@@ -5,15 +5,15 @@ using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using EU.Core.Services;
+using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
 [Route("api/platform/main-agent")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class MainAgentController(MainAgentAssignmentService assignments) : Base.ControllerBase
+public sealed class MainAgentController(IMainAgentAssignmentService assignments) : Base.ControllerBase
 {
-    private readonly MainAgentAssignmentService _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
+    private readonly IMainAgentAssignmentService _assignments = assignments ?? throw new ArgumentNullException(nameof(assignments));
 
     [HttpGet]
     public async Task<ActionResult<ServiceResult<MainAgentAssignment>>> Get(

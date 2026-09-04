@@ -10,7 +10,7 @@ namespace EU.Core.Services;
 
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
-    IAgentDefinitionCatalog agents) : BaseServices
+    IAgentDefinitionCatalog agents) : BaseServices, IOrchestrationLifecycleService
 {
     public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(
         CreateOrchestrationCommand command,
