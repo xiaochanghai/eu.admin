@@ -11,6 +11,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：AuditController 接口处理
 
+/// <summary>
+/// 提供 Agent 操作审计查询的 HTTP 接口。
+/// </summary>
 [Route("api/audit/operations")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class AuditController(

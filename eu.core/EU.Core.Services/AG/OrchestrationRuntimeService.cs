@@ -12,6 +12,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：OrchestrationRuntimeService 职责实现
 
+/// <summary>
+/// 负责执行已发布的 Agent 编排。
+/// </summary>
 public sealed class OrchestrationRuntimeService(
     IOrchestrationRepository orchestrations,
     IOrchestrationRunRepository runs,
@@ -19,6 +22,7 @@ public sealed class OrchestrationRuntimeService(
     IAgentRuntimeService agentRuntime,
     ExecutionPayloadLimits? payloadLimits = null) : BaseServices
 {
+    /// <summary>单次运行输入允许的最大字符数。</summary>
     public const int MaximumInputCharacters = 32_768;
     private const string TerminalPersistenceFailureDataKey =
         "OrchestrationTerminalPersistenceFailure";

@@ -7,6 +7,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgEvaluationModelJudgementServices 职责实现
 
+/// <summary>
+/// 提供模型裁判结果的持久化服务。
+/// </summary>
 public sealed class AgEvaluationModelJudgementServices :
     BaseServices<AgEvaluationModelJudgement>,
     IAgEvaluationModelJudgementServices,

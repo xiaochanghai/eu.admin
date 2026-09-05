@@ -9,6 +9,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：McpServersController 接口处理
 
+/// <summary>
+/// 提供 MCP 服务定义管理的 HTTP 接口。
+/// </summary>
 [Route("api/mcp/servers")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class McpServersController(
@@ -114,6 +117,30 @@ public sealed class McpServersController(
             cancellationToken);
 }
 
+/// <summary>
+/// 创建 MCP 服务定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Transport">MCP 服务使用的传输方式。</param>
+/// <param name="Endpoint">MCP 服务端点地址。</param>
+/// <param name="Command">启动标准输入输出服务的命令。</param>
+/// <param name="Arguments">启动命令的参数集合。</param>
+/// <param name="CredentialAlias">访问 MCP 服务使用的凭据别名。</param>
+/// <param name="Enabled">是否启用。</param>
+/// <summary>
+/// 创建 MCP 服务定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Transport">MCP 服务使用的传输方式。</param>
+/// <param name="Endpoint">MCP 服务端点地址。</param>
+/// <param name="Command">启动标准输入输出服务的命令。</param>
+/// <param name="Arguments">启动命令的参数集合。</param>
+/// <param name="CredentialAlias">访问 MCP 服务使用的凭据别名。</param>
+/// <param name="Enabled">是否启用。</param>
 public sealed record CreateMcpServerRequest(
     string Code,
     string Name,
@@ -125,6 +152,30 @@ public sealed record CreateMcpServerRequest(
     string CredentialAlias,
     bool Enabled);
 
+/// <summary>
+/// 更新 MCP 服务定义的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Transport">MCP 服务使用的传输方式。</param>
+/// <param name="Endpoint">MCP 服务端点地址。</param>
+/// <param name="Command">启动标准输入输出服务的命令。</param>
+/// <param name="Arguments">启动命令的参数集合。</param>
+/// <param name="CredentialAlias">访问 MCP 服务使用的凭据别名。</param>
+/// <param name="Enabled">是否启用。</param>
+/// <summary>
+/// 更新 MCP 服务定义的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Transport">MCP 服务使用的传输方式。</param>
+/// <param name="Endpoint">MCP 服务端点地址。</param>
+/// <param name="Command">启动标准输入输出服务的命令。</param>
+/// <param name="Arguments">启动命令的参数集合。</param>
+/// <param name="CredentialAlias">访问 MCP 服务使用的凭据别名。</param>
+/// <param name="Enabled">是否启用。</param>
 public sealed record UpdateMcpServerRequest(
     long ExpectedLogicalRevision,
     string Name,
@@ -136,12 +187,40 @@ public sealed record UpdateMcpServerRequest(
     string CredentialAlias,
     bool Enabled);
 
+/// <summary>
+/// 同步 MCP 服务工具的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 同步 MCP 服务工具的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record SyncMcpServerRequest(long ExpectedLogicalRevision);
 
+/// <summary>
+/// 设置 MCP 服务归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
+/// <summary>
+/// 设置 MCP 服务归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
 public sealed record SetMcpServerArchiveRequest(
     long ExpectedLogicalRevision,
     bool Archived);
 
+/// <summary>
+/// 设置 MCP 工具风险等级的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Risk">工具风险等级。</param>
+/// <summary>
+/// 设置 MCP 工具风险等级的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Risk">工具风险等级。</param>
 public sealed record ClassifyMcpToolRequest(
     long ExpectedLogicalRevision,
     McpToolRisk Risk);

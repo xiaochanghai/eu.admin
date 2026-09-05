@@ -1691,7 +1691,9 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     #endregion
 
+    /// <summary>Agent 导入导出包的格式标识。</summary>
     public const string AgentPackageFormatIdentifier = "eu.core.agent-package";
+    /// <summary>当前支持的 Agent 包格式版本。</summary>
     public const string AgentPackageCurrentVersion = "1.0.0";
 
     private const int MaximumPackageUtf8Bytes = 131_072;

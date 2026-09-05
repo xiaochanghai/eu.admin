@@ -4,6 +4,9 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.IServices.UnifiedEntry;
 
+/// <summary>
+/// 跟踪统一入口执行树、调用限额和取消状态。
+/// </summary>
 public sealed class UnifiedEntryExecutionScope :
     IAgentMcpCallGuard,
     IAgentMcpResultGuard,
@@ -84,10 +87,19 @@ public sealed class UnifiedEntryExecutionScope :
         }
     }
 
+    /// <summary>
+    /// 获取统一入口执行限制。
+    /// </summary>
     public UnifiedEntryLimits Limits { get; }
 
+    /// <summary>
+    /// 获取关联标识。
+    /// </summary>
     public Guid CorrelationId { get; }
 
+    /// <summary>
+    /// 获取统一入口级取消令牌。
+    /// </summary>
     public CancellationToken EntryCancellationToken => _entryCancellation.Token;
 
     public int ChildCallCount { get { lock (_stateGate) return _childCallCount; } }
@@ -896,6 +908,9 @@ public sealed class UnifiedEntryExecutionScope :
         ObjectDisposedException.ThrowIf(_disposed, this);
 }
 
+/// <summary>
+/// 表示统一入口中一次 Agent 执行占用的可释放租约。
+/// </summary>
 public sealed class UnifiedAgentExecutionLease : IDisposable
 {
     private readonly CancellationTokenSource? _linkedCancellation;
@@ -928,10 +943,19 @@ public sealed class UnifiedAgentExecutionLease : IDisposable
 
     internal bool TimedOut => _timeoutCancellation?.IsCancellationRequested == true;
 
+    /// <summary>
+    /// 获取 Agent 版本标识。
+    /// </summary>
     public Guid AgentVersionId { get; }
 
+    /// <summary>
+    /// 获取当前 Agent 在执行树中的深度。
+    /// </summary>
     public int Depth { get; }
 
+    /// <summary>
+    /// 获取当前 Agent 执行的取消令牌。
+    /// </summary>
     public CancellationToken CancellationToken { get; }
 
     public void Dispose() => Owner.Release(this);

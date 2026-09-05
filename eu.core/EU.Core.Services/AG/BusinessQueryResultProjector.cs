@@ -9,6 +9,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：BusinessQueryResultProjector 职责实现
 
+/// <summary>
+/// 将业务查询结果投影为统一入口可持久化的结构。
+/// </summary>
 public static class BusinessQueryResultProjector
 {
     #region 结果投影与脱敏

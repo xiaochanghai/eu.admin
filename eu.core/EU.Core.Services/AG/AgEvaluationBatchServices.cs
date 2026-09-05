@@ -7,6 +7,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgEvaluationBatchServices 职责实现
 
+/// <summary>
+/// 提供评测批次记录的持久化服务。
+/// </summary>
 public sealed class AgEvaluationBatchServices :
     BaseServices<AgEvaluationBatch>,
     IAgEvaluationBatchServices,

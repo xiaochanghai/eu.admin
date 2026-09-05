@@ -11,6 +11,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：EvaluationBatchService 职责实现
 
+/// <summary>
+/// 负责创建、执行和恢复评测批次。
+/// </summary>
 public sealed class EvaluationBatchService(
     IAgEvaluationSuiteServices suites,
     IEvaluationBatchRepository batches,
@@ -19,6 +22,7 @@ public sealed class EvaluationBatchService(
     IRunEvaluationService evaluator,
     TimeProvider? timeProvider = null) : BaseServices, IAgEvaluationBatchExecutionServices
 {
+    /// <summary>单个评测批次允许的最大用例数量。</summary>
     public const int MaximumCasesPerBatch = 20;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 

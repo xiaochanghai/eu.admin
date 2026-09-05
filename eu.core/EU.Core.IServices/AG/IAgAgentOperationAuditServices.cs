@@ -10,8 +10,10 @@ namespace EU.Core.IServices;
 /// </summary>
 public interface IAgAgentOperationAuditServices
 {
+    /// <summary>保存Agent 操作审计记录。</summary>
     Task SaveAsync(AgentOperationAuditRecord record, CancellationToken cancellationToken = default);
 
+    /// <summary>查询Agent 操作审计记录列表。</summary>
     Task<IReadOnlyList<AgentOperationAuditRecord>> ListAsync(string tenantId, int take, CancellationToken cancellationToken = default);
 }
 

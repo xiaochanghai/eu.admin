@@ -9,13 +9,18 @@ namespace EU.Core.Services;
 
 #region 文件职责：AesGcmToolApprovalPayloadProtector 职责实现
 
+/// <summary>
+/// 使用 AES-GCM 保护工具审批载荷。
+/// </summary>
 public sealed partial class AesGcmToolApprovalPayloadProtector :
     IToolApprovalPayloadProtector,
     IDisposable
 {
     #region 审批载荷保护
 
+    /// <summary>AES-GCM 密钥要求的字节数。</summary>
     public const int KeySizeBytes = 32;
+    /// <summary>允许加密的明文最大 UTF-8 字节数。</summary>
     public const int MaximumPlaintextUtf8Bytes =
         ToolApprovalStateMachine.MaximumResultPlaintextUtf8Bytes;
     private const int NonceSizeBytes = 12;

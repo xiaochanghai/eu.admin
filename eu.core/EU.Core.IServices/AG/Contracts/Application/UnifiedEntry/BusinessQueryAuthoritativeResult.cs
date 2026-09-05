@@ -9,14 +9,38 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.IServices.UnifiedEntry;
 
+/// <summary>
+/// 业务查询结果的载荷限制。
+/// </summary>
+/// <param name="MaximumResultBytes">单次业务查询结果允许的最大字节数。</param>
+/// <param name="MaximumConversationBytes">会话可保留的业务查询结果最大总字节数。</param>
 public sealed record BusinessQueryResultLimits(
     int MaximumResultBytes,
     int MaximumConversationBytes)
 {
+    /// <summary>
+    /// 获取默认的业务查询结果载荷限制。
+    /// </summary>
     public static BusinessQueryResultLimits Default { get; } =
         new(1_048_576, 10_485_760);
 }
 
+/// <summary>
+/// 表示经过校验、可审计和可持久化的业务查询权威结果。
+/// </summary>
+/// <param name="QueryId">业务查询标识。</param>
+/// <param name="CatalogRevision">执行查询时使用的工具目录修订号。</param>
+/// <param name="CatalogHash">执行查询时使用的工具目录摘要。</param>
+/// <param name="ToolSchemaHash">执行查询时使用的工具输入架构摘要。</param>
+/// <param name="QueryPlanHash">查询计划摘要。</param>
+/// <param name="PolicyDecisionId">授权策略决策标识。</param>
+/// <param name="RowCount">结果行数。</param>
+/// <param name="Truncated">结果是否被截断。</param>
+/// <param name="TerminalStatus">查询终态。</param>
+/// <param name="FormatterVersion">结果格式化器版本。</param>
+/// <param name="ReceiptJson">可审计的查询回执 JSON。</param>
+/// <param name="PresentationJson">供展示使用的查询结果 JSON。</param>
+/// <param name="IntegritySha256">回执和展示结果的完整性摘要。</param>
 public sealed partial record BusinessQueryAuthoritativeResult(
     Guid QueryId,
     long CatalogRevision,
@@ -223,6 +247,9 @@ public sealed partial record BusinessQueryAuthoritativeResult(
     private static partial Regex BusinessErrorPattern();
 }
 
+/// <summary>
+/// 限制并校验业务查询场景中的 MCP 工具调用。
+/// </summary>
 public sealed class BusinessQueryMcpCallGuard(
     IAgentMcpCallGuard inner) : IAgentMcpCallGuard
 {
@@ -242,6 +269,9 @@ public sealed class BusinessQueryMcpCallGuard(
     }
 }
 
+/// <summary>
+/// 集中定义业务查询 MCP 工具的调用限制。
+/// </summary>
 public static class BusinessQueryMcpToolCallLimits
 {
     public static IReadOnlyList<AgentMcpToolCallLimit> Create(
@@ -259,6 +289,9 @@ public static class BusinessQueryMcpToolCallLimits
                 .ToArray();
 }
 
+/// <summary>
+/// 清理业务查询结果中不应持久化的敏感内容。
+/// </summary>
 public static class BusinessQueryResultRedaction
 {
     public static string CreateContent(

@@ -8,6 +8,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：McpToolVersionsController 接口处理
 
+/// <summary>
+/// 提供 MCP 工具版本查询的 HTTP 接口。
+/// </summary>
 [Route("api/mcp/tool-versions")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class McpToolVersionsController(

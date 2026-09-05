@@ -12,6 +12,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：AgentsController 接口处理
 
+/// <summary>
+/// 提供 Agent 定义及版本管理的 HTTP 接口。
+/// </summary>
 [Route("api/agents")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
@@ -210,17 +213,79 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
             : throw new InvalidDataException($"Unsupported Agent runtime status '{value}'.");
 }
 
+/// <summary>
+/// 创建 Agent 定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <summary>
+/// 创建 Agent 定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
 public sealed record CreateAgentRequest(string Code, string Name, string Description);
 
+/// <summary>
+/// 保存 Agent 草稿的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Instructions">Agent 的系统指令。</param>
+/// <param name="ModelProfileId">模型配置标识。</param>
+/// <param name="OutputMode">输出内容模式。</param>
+/// <param name="OutputJsonSchema">约束结构化输出的 JSON Schema。</param>
+/// <param name="SkillVersionIds">绑定的技能版本标识集合。</param>
+/// <param name="ToolVersionIds">绑定的工具版本标识集合。</param>
+/// <param name="KnowledgeBaseIds">绑定的知识库标识集合。</param>
+/// <summary>
+/// 保存 Agent 草稿的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Instructions">Agent 的系统指令。</param>
+/// <param name="ModelProfileId">模型配置标识。</param>
+/// <param name="OutputMode">输出内容模式。</param>
+/// <param name="OutputJsonSchema">约束结构化输出的 JSON Schema。</param>
+/// <param name="SkillVersionIds">绑定的技能版本标识集合。</param>
+/// <param name="ToolVersionIds">绑定的工具版本标识集合。</param>
+/// <param name="KnowledgeBaseIds">绑定的知识库标识集合。</param>
 public sealed record SaveAgentDraftRequest(long ExpectedLogicalRevision, string Name, string Description, string Instructions, string ModelProfileId,
     AgentOutputMode OutputMode, string? OutputJsonSchema, IReadOnlyList<Guid>? SkillVersionIds, IReadOnlyList<Guid>? ToolVersionIds, IReadOnlyList<Guid>? KnowledgeBaseIds)
 {
+    /// <summary>
+    /// 绑定的子 Agent 标识集合。
+    /// </summary>
     public IReadOnlyList<Guid>? ChildAgentIds { get; init; }
+    /// <summary>
+    /// 绑定的编排标识集合。
+    /// </summary>
     public IReadOnlyList<Guid>? OrchestrationIds { get; init; }
 }
 
+/// <summary>
+/// 携带预期逻辑版本的并发控制请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 携带预期逻辑版本的并发控制请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record ExpectedRevisionRequest(long ExpectedLogicalRevision);
 
+/// <summary>
+/// 设置 Agent 运行状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="RuntimeStatus">Agent 的目标运行状态。</param>
+/// <summary>
+/// 设置 Agent 运行状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="RuntimeStatus">Agent 的目标运行状态。</param>
 public sealed record SetAgentStatusRequest(long ExpectedLogicalRevision, AgentRuntimeStatus RuntimeStatus);
 
 #endregion

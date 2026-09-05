@@ -16,9 +16,13 @@ namespace EU.Core.Services;
 /// </summary>
 public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledgeBaseDefinition>, IAgKnowledgeBaseDefinitionServices
 {
+    /// <summary>单个知识库文档允许的最大字符数。</summary>
     public const int MaximumDocumentCharacters = 1_000_000;
+    /// <summary>单个知识库允许导入的最大文档数量。</summary>
     public const int MaximumDocuments = 100;
+    /// <summary>单个 PDF 文档允许的最大字节数。</summary>
     public const int MaximumPdfBytes = 10_485_760;
+    /// <summary>单个 PDF 文档允许的最大页数。</summary>
     public const int MaximumPdfPages = 200;
 
     private readonly Lazy<IAgentDefinitionCatalog>? agents;

@@ -8,6 +8,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgMcpServerDefinitionServices 职责实现
 
+/// <summary>
+/// 提供 MCP 服务定义及工具版本的持久化服务。
+/// </summary>
 public sealed class AgMcpServerDefinitionServices :
     BaseServices<AgMcpServerDefinition>,
     IAgMcpServerDefinitionServices,

@@ -9,6 +9,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgAgentTaskServices 职责实现
 
+/// <summary>
+/// 提供可恢复 Agent 任务的持久化与状态转换服务。
+/// </summary>
 public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTaskServices
 {
     private const int MaximumTake = 200;

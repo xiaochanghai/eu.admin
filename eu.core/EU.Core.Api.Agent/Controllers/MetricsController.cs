@@ -9,6 +9,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：MetricsController 接口处理
 
+/// <summary>
+/// 提供 Agent 服务运行指标的 HTTP 接口。
+/// </summary>
 [Route("metrics")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class MetricsController(

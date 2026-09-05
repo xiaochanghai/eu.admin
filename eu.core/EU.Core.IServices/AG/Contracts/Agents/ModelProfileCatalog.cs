@@ -4,18 +4,29 @@ using EU.Core.Model.ViewModels.Extend;
 
 namespace EU.Core.IServices.Agents;
 
+/// <summary>
+/// 定义模型配置标识的查询目录。
+/// </summary>
 public interface IModelProfileReferenceCatalog
 {
+    /// <summary>检查模型配置引用是否存在。</summary>
     Task<bool> ExistsAsync(
         string modelProfileId,
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// 定义可公开展示的模型配置目录。
+/// </summary>
 public interface IPublicModelProfileCatalog : IModelProfileReferenceCatalog
 {
+    /// <summary>获取可公开使用的模型配置标识集合。</summary>
     IReadOnlyList<string> ProfileIds { get; }
 }
 
+/// <summary>
+/// 基于配置提供可公开展示的模型配置目录。
+/// </summary>
 public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
 {
     private static readonly string[] SensitiveTerms =
@@ -69,6 +80,9 @@ public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
         return true;
     }
 
+    /// <summary>
+    /// 获取可公开使用的模型配置标识集合。
+    /// </summary>
     public IReadOnlyList<string> ProfileIds { get; }
 
     public Task<bool> ExistsAsync(

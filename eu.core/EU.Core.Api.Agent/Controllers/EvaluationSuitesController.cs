@@ -13,6 +13,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：EvaluationSuitesController 接口处理
 
+/// <summary>
+/// 提供评测套件生命周期管理的 HTTP 接口。
+/// </summary>
 [Route("api/evaluation-suites")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class EvaluationSuitesController(
@@ -208,15 +211,44 @@ public sealed class EvaluationSuitesController(
     }
 }
 
+/// <summary>
+/// 创建评测套件的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <summary>
+/// 创建评测套件的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
 public sealed record CreateEvaluationSuiteRequest(
     string Code,
     string Name,
     string Description)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 保存评测套件草稿的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Cases">评测用例集合。</param>
+/// <summary>
+/// 保存评测套件草稿的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Cases">评测用例集合。</param>
 public sealed record SaveEvaluationSuiteDraftRequest(
     long ExpectedLogicalRevision,
     string Name,
@@ -224,9 +256,30 @@ public sealed record SaveEvaluationSuiteDraftRequest(
     IReadOnlyList<EvaluationCaseApiRequest>? Cases)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 评测用例的接口输入。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <param name="TargetAgentId">被评测的目标 Agent 标识。</param>
+/// <param name="TargetAgentVersionId">被评测的目标 Agent 版本标识。</param>
+/// <param name="Specification">评测规则；为空时使用默认规则。</param>
+/// <summary>
+/// 评测用例的接口输入。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <param name="TargetAgentId">被评测的目标 Agent 标识。</param>
+/// <param name="TargetAgentVersionId">被评测的目标 Agent 版本标识。</param>
+/// <param name="Specification">评测规则；为空时使用默认规则。</param>
 public sealed record EvaluationCaseApiRequest(
     Guid Id,
     string Name,
@@ -236,20 +289,47 @@ public sealed record EvaluationCaseApiRequest(
     EvaluateRunRequest? Specification)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 发布评测套件的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 发布评测套件的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record PublishEvaluationSuiteRequest(long ExpectedLogicalRevision)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 设置评测套件归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
+/// <summary>
+/// 设置评测套件归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
 public sealed record SetEvaluationSuiteArchiveRequest(
     long ExpectedLogicalRevision,
     bool Archived)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 

@@ -13,6 +13,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：ToolApprovalRuntimeService 职责实现
 
+/// <summary>
+/// 处理运行时工具审批的创建、恢复和执行。
+/// </summary>
 public sealed class ToolApprovalRuntimeService(
     IToolApprovalRepository approvals,
     IToolApprovalPayloadProtector payloadProtector,
@@ -23,7 +26,10 @@ public sealed class ToolApprovalRuntimeService(
     TimeSpan? executionTimeout = null,
     int maximumPersistedResultUtf8Bytes = 30_000) : IAgentToolApprovalHandler
 {
+    /// <summary>工具调用审批请求的默认有效时长。</summary>
     public static readonly TimeSpan DefaultApprovalLifetime = TimeSpan.FromMinutes(15);
+
+    /// <summary>获批工具调用的默认执行超时时长。</summary>
     public static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(65);
     private const int MaximumArgumentsUtf8Bytes = 32_768;
     private readonly int _maximumPersistedResultUtf8Bytes =
@@ -589,6 +595,9 @@ public sealed class ToolApprovalRuntimeService(
         new(ToolApprovalErrorCodes.InvalidState, "The tool approval is no longer executable.");
 }
 
+/// <summary>
+/// 提供工具审批恢复执行的默认安全策略。
+/// </summary>
 public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionPolicy
 {
     // TODO(agent-authorization): Re-enable these permissions together with the

@@ -14,6 +14,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：EvaluationBatchesController 接口处理
 
+/// <summary>
+/// 提供评测批次执行与对比的 HTTP 接口。
+/// </summary>
 [Route("api/evaluation-batches")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
@@ -175,55 +178,128 @@ public sealed class EvaluationBatchesController(
     }
 }
 
+/// <summary>
+/// 启动评测批次的请求。
+/// </summary>
+/// <param name="SuiteId">评测套件标识。</param>
+/// <param name="SuiteVersionId">评测套件版本标识。</param>
+/// <summary>
+/// 启动评测批次的请求。
+/// </summary>
+/// <param name="SuiteId">评测套件标识。</param>
+/// <param name="SuiteVersionId">评测套件版本标识。</param>
 public sealed record StartEvaluationBatchRequest(Guid SuiteId, Guid SuiteVersionId)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 比较两个评测批次的接口输入。
+/// </summary>
 public sealed class CompareEvaluationBatchesRequest
 {
+    /// <summary>
+    /// 基线评测批次标识。
+    /// </summary>
     public Guid BaselineBatchId { get; init; }
 
+    /// <summary>
+    /// 候选评测批次标识。
+    /// </summary>
     public Guid CandidateBatchId { get; init; }
 
+    /// <summary>
+    /// 评测质量门禁配置。
+    /// </summary>
     public EvaluationQualityGateApiRequest? Gate { get; init; } = new();
 
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 评测质量门禁规则的接口输入。
+/// </summary>
 public sealed class EvaluationQualityGateApiRequest
 {
+    /// <summary>
+    /// 候选批次要求的最低通过率。
+    /// </summary>
     public decimal MinimumCandidatePassRate { get; init; } = 1m;
 
+    /// <summary>
+    /// 候选批次通过率允许的最大回退值。
+    /// </summary>
     public decimal MaximumPassRateRegression { get; init; }
 
+    /// <summary>
+    /// 候选批次平均耗时允许的最大回退百分比。
+    /// </summary>
     public decimal? MaximumAverageDurationRegressionPercent { get; init; }
 
+    /// <summary>
+    /// 单个用例允许增加的最大工具调用次数。
+    /// </summary>
     public int? MaximumToolCallIncreasePerCase { get; init; }
 
+    /// <summary>
+    /// 是否要求候选批次不产生新增失败。
+    /// </summary>
     public bool RequireNoNewFailures { get; init; } = true;
 
+    /// <summary>
+    /// 是否要求两个批次使用相同用例集合。
+    /// </summary>
     public bool RequireSameCaseSet { get; init; } = true;
 
+    /// <summary>
+    /// 是否要求候选批次执行路由保持稳定。
+    /// </summary>
     public bool RequireStableRoutes { get; init; }
 
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 
+/// <summary>
+/// 启动模型裁判评测的接口输入。
+/// </summary>
 public sealed class RunModelJudgeRequest
 {
+    /// <summary>
+    /// 是否显式启用模型评审。
+    /// </summary>
     public bool ExplicitlyEnabled { get; init; }
 
+    /// <summary>
+    /// 模型配置标识。
+    /// </summary>
     public string ModelProfileId { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 启用的模型评审器集合。
+    /// </summary>
     public IReadOnlyList<string>? Evaluators { get; init; }
 
+    /// <summary>
+    /// 各评审维度要求的最低分数。
+    /// </summary>
     public IReadOnlyDictionary<string, decimal>? MinimumScores { get; init; }
 
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 

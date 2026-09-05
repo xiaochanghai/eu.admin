@@ -6,6 +6,9 @@ using System.Text.Json;
 
 namespace EU.Core.IServices.Orchestration;
 
+/// <summary>
+/// 对编排执行载荷执行截断和脱敏处理。
+/// </summary>
 public static class ExecutionPayloadRedactor
 {
     private static readonly string[] SensitiveTerms =

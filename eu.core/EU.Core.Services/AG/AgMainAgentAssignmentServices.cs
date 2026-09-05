@@ -6,6 +6,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgMainAgentAssignmentServices 职责实现
 
+/// <summary>
+/// 提供主 Agent 分配记录的持久化服务。
+/// </summary>
 public sealed class AgMainAgentAssignmentServices :
     BaseServices<AgMainAgentAssignment>,
     IAgMainAgentAssignmentServices,

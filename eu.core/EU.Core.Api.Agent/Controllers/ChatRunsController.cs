@@ -19,14 +19,23 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：ChatRunsController 接口处理
 
+/// <summary>
+/// 提供统一会话及聊天运行的 HTTP 接口。
+/// </summary>
 [Route("api/chat")]
 public sealed class ChatRunsController : Base.ControllerBase
 {
+    /// <summary>返回运行标识使用的 HTTP 响应头名称。</summary>
     public const string RunIdHeaderName = "X-Agent-Run-ID";
+    /// <summary>返回会话标识使用的 HTTP 响应头名称。</summary>
     public const string ConversationIdHeaderName = "X-Agent-Conversation-ID";
+    /// <summary>运行事件查询的默认分页大小。</summary>
     public const int DefaultPageSize = 20;
+    /// <summary>运行事件查询允许的最大分页大小。</summary>
     public const int MaximumPageSize = 100;
+    /// <summary>流式事件重放的默认分页大小。</summary>
     public const int DefaultEventPageSize = 160;
+    /// <summary>流式事件重放允许的最大分页大小。</summary>
     public const int MaximumEventPageSize = 500;
 
     private static readonly JsonSerializerOptions EventSerializerOptions =
@@ -467,25 +476,63 @@ public sealed class ChatRunsController : Base.ControllerBase
         _caller.CorrelationId);
 }
 
+/// <summary>
+/// 定义聊天接口边界使用的错误码。
+/// </summary>
 public static class ChatApiErrorCodes
 {
+    /// <summary>表示 <c>UnknownProperty</c> 场景的错误码。</summary>
     public const string UnknownProperty = "REQUEST_UNKNOWN_PROPERTY";
+    /// <summary>表示 <c>InvalidId</c> 场景的错误码。</summary>
     public const string InvalidId = "REQUEST_INVALID_ID";
+    /// <summary>表示 <c>InvalidTake</c> 场景的错误码。</summary>
     public const string InvalidTake = "REQUEST_INVALID_TAKE";
+    /// <summary>表示 <c>RunNotFound</c> 场景的错误码。</summary>
     public const string RunNotFound = "UNIFIED_ENTRY_RUN_NOT_FOUND";
 }
 
+/// <summary>
+/// 取消聊天运行的响应。
+/// </summary>
+/// <param name="RunId">运行标识。</param>
+/// <summary>
+/// 取消聊天运行的响应。
+/// </summary>
+/// <param name="RunId">运行标识。</param>
 public sealed record ChatRunCancelResponse(Guid RunId);
 
+/// <summary>
+/// 聊天会话详情响应。
+/// </summary>
+/// <param name="Conversation">会话主体记录。</param>
+/// <param name="Messages">会话消息集合。</param>
+/// <summary>
+/// 聊天会话详情响应。
+/// </summary>
+/// <param name="Conversation">会话主体记录。</param>
+/// <param name="Messages">会话消息集合。</param>
 public sealed record ChatConversationDetailResponse(
     ConversationRecord Conversation,
     IReadOnlyList<ConversationMessageRecord> Messages);
 
+/// <summary>
+/// 启动聊天运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <param name="ConversationId">需要继续的会话标识；为空时创建新会话。</param>
+/// <summary>
+/// 启动聊天运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <param name="ConversationId">需要继续的会话标识；为空时创建新会话。</param>
 public sealed record StartChatRunRequest(
     string? Input,
     Guid? ConversationId)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public IDictionary<string, JsonElement>? AdditionalProperties { get; init; }
 }
 

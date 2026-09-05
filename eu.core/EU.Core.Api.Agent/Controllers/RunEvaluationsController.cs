@@ -13,6 +13,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：RunEvaluationsController 接口处理
 
+/// <summary>
+/// 提供运行结果评测的 HTTP 接口。
+/// </summary>
 [Route("api/evaluations/runs")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class RunEvaluationsController(
@@ -90,6 +93,24 @@ public sealed class RunEvaluationsController(
     }
 }
 
+/// <summary>
+/// 运行评测规则的请求。
+/// </summary>
+/// <param name="ExpectedStatus">期望的运行终态。</param>
+/// <param name="OutputContains">输出必须包含的文本集合。</param>
+/// <param name="OutputExcludes">输出不得包含的文本集合。</param>
+/// <param name="RequiredEventKinds">运行必须产生的事件类型集合。</param>
+/// <param name="MaximumToolCalls">允许的最大工具调用次数。</param>
+/// <param name="MaximumDurationMilliseconds">允许的最大运行时长，单位为毫秒。</param>
+/// <summary>
+/// 运行评测规则的请求。
+/// </summary>
+/// <param name="ExpectedStatus">期望的运行终态。</param>
+/// <param name="OutputContains">输出必须包含的文本集合。</param>
+/// <param name="OutputExcludes">输出不得包含的文本集合。</param>
+/// <param name="RequiredEventKinds">运行必须产生的事件类型集合。</param>
+/// <param name="MaximumToolCalls">允许的最大工具调用次数。</param>
+/// <param name="MaximumDurationMilliseconds">允许的最大运行时长，单位为毫秒。</param>
 public sealed record EvaluateRunRequest(
     string? ExpectedStatus,
     IReadOnlyList<string>? OutputContains,
@@ -99,6 +120,9 @@ public sealed record EvaluateRunRequest(
     long? MaximumDurationMilliseconds)
 {
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
 

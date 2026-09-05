@@ -11,6 +11,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：ToolApprovalConversationResumeService 职责实现
 
+/// <summary>
+/// 在工具审批完成后恢复对应会话运行。
+/// </summary>
 public sealed class ToolApprovalConversationResumeService(
     IToolApprovalRepository approvals,
     ToolApprovalRuntimeService runtime,

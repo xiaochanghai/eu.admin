@@ -6,6 +6,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgAgentOperationAuditServices 职责实现
 
+/// <summary>
+/// 提供 Agent 接口操作审计记录的持久化服务。
+/// </summary>
 public sealed class AgAgentOperationAuditServices :
     BaseServices<AgAgentOperationAudit>,
     IAgAgentOperationAuditServices

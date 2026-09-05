@@ -13,6 +13,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：OrchestrationsController 接口处理
 
+/// <summary>
+/// 提供编排定义及运行管理的 HTTP 接口。
+/// </summary>
 [Route("api/orchestrations")]
 public sealed class OrchestrationsController(
     IOrchestrationLifecycleService lifecycle,
@@ -212,7 +215,40 @@ public sealed class OrchestrationsController(
     }
 }
 
+/// <summary>
+/// 创建编排定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <summary>
+/// 创建编排定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
 public sealed record CreateOrchestrationRequest(string Code, string Name, string Description);
+
+/// <summary>
+/// 保存编排定义的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="StartNodeId">编排入口节点标识。</param>
+/// <param name="Nodes">编排节点集合。</param>
+/// <param name="Edges">编排节点之间的连接集合。</param>
+/// <summary>
+/// 保存编排定义的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="StartNodeId">编排入口节点标识。</param>
+/// <param name="Nodes">编排节点集合。</param>
+/// <param name="Edges">编排节点之间的连接集合。</param>
 public sealed record SaveOrchestrationRequest(
     long ExpectedLogicalRevision,
     string Name,
@@ -221,12 +257,61 @@ public sealed record SaveOrchestrationRequest(
     string StartNodeId,
     IReadOnlyList<OrchestrationNode> Nodes,
     IReadOnlyList<OrchestrationEdge> Edges);
+
+/// <summary>
+/// 发布编排版本的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 发布编排版本的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record PublishOrchestrationRequest(long ExpectedLogicalRevision);
+
+/// <summary>
+/// 设置编排归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
+/// <summary>
+/// 设置编排归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
 public sealed record SetOrchestrationArchiveRequest(
     long ExpectedLogicalRevision,
     bool Archived);
+
+/// <summary>
+/// 启动编排运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <summary>
+/// 启动编排运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
 public sealed record StartOrchestrationRunRequest(string Input);
+
+/// <summary>
+/// 取消编排运行的响应。
+/// </summary>
+/// <param name="RunId">运行标识。</param>
+/// <summary>
+/// 取消编排运行的响应。
+/// </summary>
+/// <param name="RunId">运行标识。</param>
 public sealed record OrchestrationRunCancelResponse(Guid RunId);
+
+/// <summary>
+/// 编排运行输出响应。
+/// </summary>
+/// <param name="Output">运行产生的输出内容。</param>
+/// <param name="Ephemeral">输出是否只在当前响应中临时存在。</param>
+/// <summary>
+/// 编排运行输出响应。
+/// </summary>
+/// <param name="Output">运行产生的输出内容。</param>
+/// <param name="Ephemeral">输出是否只在当前响应中临时存在。</param>
 public sealed record OrchestrationRunOutputResponse(string Output, bool Ephemeral);
 
 #endregion

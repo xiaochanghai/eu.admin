@@ -7,6 +7,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgAgentRunAuditServices 职责实现
 
+/// <summary>
+/// 提供 Agent 运行审计记录的持久化服务。
+/// </summary>
 public sealed class AgAgentRunAuditServices :
     BaseServices<AgAgentRunAudit>,
     IAgAgentRunAuditServices,

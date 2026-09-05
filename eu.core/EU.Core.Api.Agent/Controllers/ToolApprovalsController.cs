@@ -19,6 +19,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：ToolApprovalsController 接口处理
 
+/// <summary>
+/// 提供工具调用审批管理的 HTTP 接口。
+/// </summary>
 [Route("api/tool-approvals")]
 public sealed class ToolApprovalsController(
     IToolApprovalManagementService approvals,
@@ -226,15 +229,34 @@ public sealed class ToolApprovalsController(
     }
 }
 
+/// <summary>
+/// 工具调用审批详情响应。
+/// </summary>
+/// <param name="Approval">工具调用审批主体记录。</param>
+/// <param name="Decisions">审批决策历史集合。</param>
+/// <summary>
+/// 工具调用审批详情响应。
+/// </summary>
+/// <param name="Approval">工具调用审批主体记录。</param>
+/// <param name="Decisions">审批决策历史集合。</param>
 public sealed record ToolApprovalDetailResponse(
     ToolApprovalRequestRecord Approval,
     IReadOnlyList<ToolApprovalDecisionRecord> Decisions);
 
+/// <summary>
+/// 提交工具调用审批决策的接口输入。
+/// </summary>
 public sealed class ToolApprovalDecisionApiRequest
 {
+    /// <summary>
+    /// 操作原因。
+    /// </summary>
     public string? Reason { get; init; }
 
     [JsonExtensionData]
+    /// <summary>
+    /// 未识别的附加字段，用于严格输入校验。
+    /// </summary>
     public Dictionary<string, JsonElement>? AdditionalProperties { get; init; }
 }
 

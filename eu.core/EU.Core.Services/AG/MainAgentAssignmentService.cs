@@ -9,6 +9,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：MainAgentAssignmentService 职责实现
 
+/// <summary>
+/// 管理租户范围内的主 Agent 分配。
+/// </summary>
 public sealed class MainAgentAssignmentService(
     IAgentDefinitionCatalog agents,
     IMainAgentAssignmentRepository assignments) : BaseServices, IMainAgentAssignmentService

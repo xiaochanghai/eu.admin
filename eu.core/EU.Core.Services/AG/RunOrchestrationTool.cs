@@ -12,6 +12,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：RunOrchestrationTool 职责实现
 
+/// <summary>
+/// 实现启动编排运行的内部工具。
+/// </summary>
 public sealed class RunOrchestrationTool : IAgentInternalTool
 {
     private const int MaximumInputCharacters = 32_768;
@@ -79,10 +82,19 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             MaximumReasonCharacters);
     }
 
+    /// <summary>
+    /// 获取内部工具名称。
+    /// </summary>
     public string Name => "run_orchestration";
 
+    /// <summary>
+    /// 获取内部工具说明。
+    /// </summary>
     public string Description => _description;
 
+    /// <summary>
+    /// 获取内部工具输入参数的 JSON Schema。
+    /// </summary>
     public string InputSchemaJson => _inputSchemaJson;
 
     public async Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)

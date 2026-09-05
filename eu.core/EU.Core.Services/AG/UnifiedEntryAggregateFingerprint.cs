@@ -10,6 +10,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：UnifiedEntryAggregateFingerprint 职责实现
 
+/// <summary>
+/// 计算统一入口聚合状态的稳定指纹。
+/// </summary>
 public static class UnifiedEntryAggregateFingerprint
 {
     #region 聚合指纹

@@ -10,6 +10,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgToolApprovalRequestServices 职责实现
 
+/// <summary>
+/// 提供工具调用审批请求的持久化服务。
+/// </summary>
 public sealed class AgToolApprovalRequestServices :
     BaseServices<AgToolApprovalRequest>,
     IAgToolApprovalRequestServices,

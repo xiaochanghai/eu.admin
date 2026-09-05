@@ -12,6 +12,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgentRuntimeService 职责实现
 
+/// <summary>
+/// 负责准备并启动 Agent 运行。
+/// </summary>
 public sealed class AgentRuntimeService(
     IAgentDefinitionCatalog agents,
     IPublishedMcpToolCatalog toolCatalog,
@@ -22,7 +25,9 @@ public sealed class AgentRuntimeService(
     IPublishedSkillVersionCatalog? skillCatalog = null,
     IPublishedSkillContentStore? skillContentStore = null) : IAgentRuntimeService
 {
+    /// <summary>单次运行输入允许的最大字符数。</summary>
     public const int MaximumInputCharacters = 32_768;
+    /// <summary>技能指令允许的最大字符数。</summary>
     public const int MaximumSkillInstructionCharacters = 131_072;
 
     public async Task<AgentRunPreparationResult> PrepareAsync(Guid agentId, string? input, CancellationToken cancellationToken = default)

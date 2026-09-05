@@ -10,6 +10,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：OrchestrationLifecycleService 职责实现
 
+/// <summary>
+/// 管理编排定义的创建、保存、发布和归档。
+/// </summary>
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
     IAgentDefinitionCatalog agents) : BaseServices, IOrchestrationLifecycleService

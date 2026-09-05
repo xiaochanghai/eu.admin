@@ -8,6 +8,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：EvaluationBatchComparisonService 职责实现
 
+/// <summary>
+/// 比较基线与候选评测批次并执行质量门禁。
+/// </summary>
 public sealed class EvaluationBatchComparisonService(
     IEvaluationBatchRepository batches,
     TimeProvider? timeProvider = null) : BaseServices, IEvaluationBatchComparisonService

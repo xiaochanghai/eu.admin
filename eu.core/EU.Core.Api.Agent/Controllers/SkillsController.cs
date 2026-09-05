@@ -12,6 +12,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：SkillsController 接口处理
 
+/// <summary>
+/// 提供技能定义及版本管理的 HTTP 接口。
+/// </summary>
 [Route("api/skills")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillsController(
@@ -222,35 +225,127 @@ public sealed class SkillsController(
     }
 }
 
+/// <summary>
+/// 创建技能定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
+/// <summary>
+/// 创建技能定义的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
 public sealed record CreateSkillRequest(
     string Code,
     string Name,
     string Description,
     string Category);
 
+/// <summary>
+/// 更新技能定义的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
+/// <summary>
+/// 更新技能定义的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
 public sealed record UpdateSkillRequest(
     long ExpectedDraftRevision,
     string Name,
     string Description,
     string Category);
 
+/// <summary>
+/// 保存技能文件的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Path">技能包内的相对文件路径。</param>
+/// <param name="Content">文本内容。</param>
+/// <summary>
+/// 保存技能文件的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Path">技能包内的相对文件路径。</param>
+/// <param name="Content">文本内容。</param>
 public sealed record SaveSkillFileRequest(
     long ExpectedDraftRevision,
     string Path,
     string Content);
 
+/// <summary>
+/// 删除技能文件的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Path">技能包内的相对文件路径。</param>
+/// <summary>
+/// 删除技能文件的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Path">技能包内的相对文件路径。</param>
 public sealed record DeleteSkillFileRequest(
     long ExpectedDraftRevision,
     string Path);
 
+/// <summary>
+/// 发布技能版本的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="VersionLabel">发布版本标签。</param>
+/// <summary>
+/// 发布技能版本的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="VersionLabel">发布版本标签。</param>
 public sealed record PublishSkillRequest(
     long ExpectedDraftRevision,
     string VersionLabel);
 
+/// <summary>
+/// 设置技能归档状态的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
+/// <summary>
+/// 设置技能归档状态的请求。
+/// </summary>
+/// <param name="ExpectedDraftRevision">用于乐观并发控制的预期草稿版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
 public sealed record SetSkillArchiveRequest(
     long ExpectedDraftRevision,
     bool Archived);
 
+/// <summary>
+/// 技能定义详情响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="DraftRevision">当前草稿版本。</param>
+/// <param name="PublishedVersions">已发布版本集合。</param>
+/// <summary>
+/// 技能定义详情响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Category">技能分类。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="DraftRevision">当前草稿版本。</param>
+/// <param name="PublishedVersions">已发布版本集合。</param>
 public sealed record SkillDefinitionDetailResponse(
     Guid Id,
     string Code,
@@ -261,6 +356,24 @@ public sealed record SkillDefinitionDetailResponse(
     long DraftRevision,
     IReadOnlyList<SkillPublishedVersionResponse> PublishedVersions);
 
+/// <summary>
+/// 已发布技能版本响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Label">版本标签。</param>
+/// <param name="ManifestSha256">技能清单的 SHA-256 摘要。</param>
+/// <param name="PublishedAtUtc">版本发布的 UTC 时间。</param>
+/// <param name="Files">版本包含的文件集合。</param>
+/// <param name="BoundAgents">绑定当前技能版本的 Agent 集合。</param>
+/// <summary>
+/// 已发布技能版本响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Label">版本标签。</param>
+/// <param name="ManifestSha256">技能清单的 SHA-256 摘要。</param>
+/// <param name="PublishedAtUtc">版本发布的 UTC 时间。</param>
+/// <param name="Files">版本包含的文件集合。</param>
+/// <param name="BoundAgents">绑定当前技能版本的 Agent 集合。</param>
 public sealed record SkillPublishedVersionResponse(
     Guid Id,
     string Label,
@@ -269,6 +382,18 @@ public sealed record SkillPublishedVersionResponse(
     IReadOnlyList<SkillFileHash> Files,
     IReadOnlyList<SkillBoundAgentResponse> BoundAgents);
 
+/// <summary>
+/// 绑定技能的 Agent 响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <summary>
+/// 绑定技能的 Agent 响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
 public sealed record SkillBoundAgentResponse(Guid Id, string Code, string Name);
 
 #endregion

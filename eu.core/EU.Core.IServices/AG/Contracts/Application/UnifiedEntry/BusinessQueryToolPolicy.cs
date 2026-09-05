@@ -5,6 +5,9 @@ using EU.Core.IServices.Mcp;
 
 namespace EU.Core.IServices.UnifiedEntry;
 
+/// <summary>
+/// 描述业务查询工具允许访问的服务、工具和结果限制。
+/// </summary>
 public sealed partial class BusinessQueryToolPolicy
 {
     public BusinessQueryToolPolicy(
@@ -55,16 +58,49 @@ public sealed partial class BusinessQueryToolPolicy
         AllowDevelopmentHttp = allowDevelopmentHttp;
     }
 
+    /// <summary>
+    /// 获取 MCP 服务器编码。
+    /// </summary>
     public string ServerCode { get; }
+    /// <summary>
+    /// 获取 MCP 工具名称。
+    /// </summary>
     public string ToolName { get; }
+    /// <summary>
+    /// 获取允许的请求来源。
+    /// </summary>
     public Uri Origin { get; }
+    /// <summary>
+    /// 获取上下文令牌签发方。
+    /// </summary>
     public string Issuer { get; }
+    /// <summary>
+    /// 获取上下文令牌接收方。
+    /// </summary>
     public string Audience { get; }
+    /// <summary>
+    /// 获取上下文令牌签名密钥别名。
+    /// </summary>
     public string SigningKeyAlias { get; }
+    /// <summary>
+    /// 获取工具目录修订号。
+    /// </summary>
     public long CatalogRevision { get; }
+    /// <summary>
+    /// 获取工具目录摘要。
+    /// </summary>
     public string CatalogHash { get; }
+    /// <summary>
+    /// 获取工具输入架构摘要。
+    /// </summary>
     public string ToolSchemaHash { get; }
+    /// <summary>
+    /// 获取上下文令牌有效期。
+    /// </summary>
     public TimeSpan TokenLifetime { get; }
+    /// <summary>
+    /// 获取是否允许开发环境使用 HTTP。
+    /// </summary>
     public bool AllowDevelopmentHttp { get; }
 
     public bool Matches(string serverCode, string toolName, string endpoint) =>
@@ -90,5 +126,9 @@ public sealed partial class BusinessQueryToolPolicy
     private static partial Regex HashPattern();
 }
 
+/// <summary>
+/// 当前执行范围内的业务查询策略访问器。
+/// </summary>
+/// <param name="Policy">当前业务查询工具策略。</param>
 public sealed record BusinessQueryToolPolicyAccessor(
     BusinessQueryToolPolicy? Policy);

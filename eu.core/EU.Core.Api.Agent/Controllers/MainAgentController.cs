@@ -11,6 +11,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：MainAgentController 接口处理
 
+/// <summary>
+/// 提供主 Agent 分配管理的 HTTP 接口。
+/// </summary>
 [Route("api/platform/main-agent")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class MainAgentController(IMainAgentAssignmentService assignments) : Base.ControllerBase
@@ -48,6 +51,16 @@ public sealed class MainAgentController(IMainAgentAssignmentService assignments)
     }
 }
 
+/// <summary>
+/// 设置主 Agent 的请求。
+/// </summary>
+/// <param name="AgentId">Agent 标识。</param>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 设置主 Agent 的请求。
+/// </summary>
+/// <param name="AgentId">Agent 标识。</param>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record SetMainAgentRequest(Guid AgentId, long? ExpectedLogicalRevision);
 
 #endregion

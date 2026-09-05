@@ -9,11 +9,23 @@ namespace EU.Core.Services;
 
 #region 文件职责：JsonSchemaValidator 职责实现
 
+/// <summary>
+/// JSON Schema 规范化及有效性校验结果。
+/// </summary>
+/// <param name="IsValid">JSON Schema 是否有效。</param>
+/// <param name="CanonicalJson">规范化后的 JSON Schema；校验失败时为空。</param>
+/// <param name="Sha256">规范化内容的 SHA-256 摘要；校验失败时为空。</param>
+/// <param name="Error">校验失败原因；校验成功时为空。</param>
 public sealed record JsonSchemaValidationResult(bool IsValid, string? CanonicalJson, string? Sha256, string? Error)
 {
     public static JsonSchemaValidationResult Invalid(string error) => new(false, null, null, error);
 }
 
+/// <summary>
+/// JSON 实例针对指定 Schema 的校验结果。
+/// </summary>
+/// <param name="Succeeded">JSON 实例是否通过校验。</param>
+/// <param name="Error">校验失败原因；校验成功时为空。</param>
 public sealed record JsonInstanceValidationResult(bool Succeeded, string? Error)
 {
     public static JsonInstanceValidationResult Success() => new(true, null);
@@ -21,6 +33,9 @@ public sealed record JsonInstanceValidationResult(bool Succeeded, string? Error)
     public static JsonInstanceValidationResult Invalid(string error) => new(false, error);
 }
 
+/// <summary>
+/// 提供 JSON Schema 规范化和实例校验能力。
+/// </summary>
 public sealed class JsonSchemaValidator
 {
     private const int MaximumSchemaCharacters = 65_536;

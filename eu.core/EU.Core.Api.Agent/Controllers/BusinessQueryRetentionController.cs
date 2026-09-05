@@ -11,6 +11,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：BusinessQueryRetentionController 接口处理
 
+/// <summary>
+/// 提供业务查询敏感载荷清理的 HTTP 接口。
+/// </summary>
 [Route("api/business-query-results")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class BusinessQueryRetentionController(

@@ -15,6 +15,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：UnifiedEntryService 职责实现
 
+/// <summary>
+/// 提供 Agent 平台的统一会话和执行入口。
+/// </summary>
 public sealed class UnifiedEntryService
 {
     private const int MaximumPendingDeltaEvents = 4;
@@ -22,7 +25,9 @@ public sealed class UnifiedEntryService
         TimeSpan.FromMilliseconds(75);
     private const int MaximumStoredPayloadBytes =
         AgentRuntimeService.MaximumInputCharacters * 4;
+    /// <summary>运行时读取的最大历史消息数量。</summary>
     public const int MaximumConversationHistoryMessages = 40;
+    /// <summary>运行时读取的历史消息最大 UTF-8 字节数。</summary>
     public const int MaximumConversationHistoryUtf8Bytes = 65_536;
     private readonly IMainAgentAssignmentService _mainAgents;
     private readonly IAgentRuntimeService _agentRuntime;
@@ -479,6 +484,9 @@ public sealed class UnifiedEntryService
                 .GetAsyncEnumerator();
         }
 
+        /// <summary>
+        /// 获取当前异步执行范围中的统一入口服务。
+        /// </summary>
         public UnifiedRunEvent Current => _inner.Current;
 
         public ValueTask<bool> MoveNextAsync()

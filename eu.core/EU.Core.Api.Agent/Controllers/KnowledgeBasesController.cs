@@ -9,6 +9,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：KnowledgeBasesController 接口处理
 
+/// <summary>
+/// 提供知识库和文档管理的 HTTP 接口。
+/// </summary>
 [Route("api/knowledge-bases")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBasesController(
@@ -272,6 +275,9 @@ public sealed class KnowledgeBasesController(
         };
 }
 
+/// <summary>
+/// 提供已发布知识库引用查询的 HTTP 接口。
+/// </summary>
 [Route("api/knowledge-base-references")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class KnowledgeBaseReferencesController(IAgKnowledgeBaseDefinitionServices knowledgeBaseDefinitionServices) : Base.ControllerBase
@@ -284,22 +290,120 @@ public sealed class KnowledgeBaseReferencesController(IAgKnowledgeBaseDefinition
     }
 }
 
+/// <summary>
+/// 创建知识库的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <summary>
+/// 创建知识库的请求。
+/// </summary>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
 public sealed record CreateKnowledgeBaseRequest(string Code, string Name, string Description);
+
+/// <summary>
+/// 更新知识库的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
+/// <summary>
+/// 更新知识库的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
 public sealed record UpdateKnowledgeBaseRequest(
     long ExpectedLogicalRevision,
     string Name,
     string Description,
     KnowledgeBaseStatus Status);
+
+/// <summary>
+/// 导入知识库文档的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="MediaType">文件媒体类型。</param>
+/// <param name="Content">文本内容。</param>
+/// <summary>
+/// 导入知识库文档的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="MediaType">文件媒体类型。</param>
+/// <param name="Content">文本内容。</param>
 public sealed record ImportKnowledgeDocumentRequest(
     long ExpectedLogicalRevision,
     string FileName,
     string MediaType,
     string Content);
+
+/// <summary>
+/// 删除知识库文档的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <summary>
+/// 删除知识库文档的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
 public sealed record DeleteKnowledgeDocumentRequest(long ExpectedLogicalRevision);
+
+/// <summary>
+/// 检索知识库的请求。
+/// </summary>
+/// <param name="Query">知识检索查询文本。</param>
+/// <param name="Take">本次请求返回的最大数量。</param>
+/// <summary>
+/// 检索知识库的请求。
+/// </summary>
+/// <param name="Query">知识检索查询文本。</param>
+/// <param name="Take">本次请求返回的最大数量。</param>
 public sealed record SearchKnowledgeRequest(string Query, int Take = 6);
+
+/// <summary>
+/// 设置知识库归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
+/// <summary>
+/// 设置知识库归档状态的请求。
+/// </summary>
+/// <param name="ExpectedLogicalRevision">用于乐观并发控制的预期逻辑版本。</param>
+/// <param name="Archived">是否设置为归档状态。</param>
 public sealed record SetKnowledgeBaseArchiveRequest(
     long ExpectedLogicalRevision,
     bool Archived);
+
+/// <summary>
+/// 知识库详情响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="LogicalRevision">当前逻辑版本。</param>
+/// <param name="DocumentCount">知识库中的文档数量。</param>
+/// <param name="ChunkCount">知识分块数量。</param>
+/// <param name="IndexedAtUtc">最近完成索引的 UTC 时间。</param>
+/// <summary>
+/// 知识库详情响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Code">业务唯一编码。</param>
+/// <param name="Name">显示名称。</param>
+/// <param name="Description">说明文本。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="LogicalRevision">当前逻辑版本。</param>
+/// <param name="DocumentCount">知识库中的文档数量。</param>
+/// <param name="ChunkCount">知识分块数量。</param>
+/// <param name="IndexedAtUtc">最近完成索引的 UTC 时间。</param>
 public sealed record KnowledgeBaseDetailResponse(
     Guid Id,
     string Code,
@@ -310,6 +414,27 @@ public sealed record KnowledgeBaseDetailResponse(
     int DocumentCount,
     int ChunkCount,
     DateTimeOffset? IndexedAtUtc);
+
+/// <summary>
+/// 知识库文档列表项响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="MediaType">文件媒体类型。</param>
+/// <param name="Sha256">内容的 SHA-256 摘要。</param>
+/// <param name="CharacterCount">文本字符数量。</param>
+/// <param name="ChunkCount">知识分块数量。</param>
+/// <param name="ImportedAtUtc">文档导入的 UTC 时间。</param>
+/// <summary>
+/// 知识库文档列表项响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="MediaType">文件媒体类型。</param>
+/// <param name="Sha256">内容的 SHA-256 摘要。</param>
+/// <param name="CharacterCount">文本字符数量。</param>
+/// <param name="ChunkCount">知识分块数量。</param>
+/// <param name="ImportedAtUtc">文档导入的 UTC 时间。</param>
 public sealed record KnowledgeDocumentListItemResponse(
     Guid Id,
     string FileName,
@@ -318,11 +443,45 @@ public sealed record KnowledgeDocumentListItemResponse(
     int CharacterCount,
     int ChunkCount,
     DateTimeOffset ImportedAtUtc);
+
+/// <summary>
+/// 知识分块响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Sequence">分块或事件的顺序号。</param>
+/// <param name="Content">文本内容。</param>
+/// <param name="CharacterCount">文本字符数量。</param>
+/// <summary>
+/// 知识分块响应。
+/// </summary>
+/// <param name="Id">对象标识。</param>
+/// <param name="Sequence">分块或事件的顺序号。</param>
+/// <param name="Content">文本内容。</param>
+/// <param name="CharacterCount">文本字符数量。</param>
 public sealed record KnowledgeChunkResponse(
     Guid Id,
     int Sequence,
     string Content,
     int CharacterCount);
+
+/// <summary>
+/// 知识分块分页响应。
+/// </summary>
+/// <param name="DocumentId">知识库文档标识。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="Skip">跳过的记录数量。</param>
+/// <param name="Take">本次请求返回的最大数量。</param>
+/// <param name="TotalCount">符合条件的记录总数。</param>
+/// <param name="Items">当前页的数据项集合。</param>
+/// <summary>
+/// 知识分块分页响应。
+/// </summary>
+/// <param name="DocumentId">知识库文档标识。</param>
+/// <param name="FileName">文件名称。</param>
+/// <param name="Skip">跳过的记录数量。</param>
+/// <param name="Take">本次请求返回的最大数量。</param>
+/// <param name="TotalCount">符合条件的记录总数。</param>
+/// <param name="Items">当前页的数据项集合。</param>
 public sealed record KnowledgeChunkPageResponse(
     Guid DocumentId,
     string FileName,

@@ -14,6 +14,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：AgentRunsController 接口处理
 
+/// <summary>
+/// 提供 Agent 运行相关的 HTTP 接口。
+/// </summary>
 [Route("api/agents/{agentId:guid}")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class AgentRunsController(
@@ -99,6 +102,14 @@ public sealed class AgentRunsController(
         };
 }
 
+/// <summary>
+/// 启动 Agent 运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
+/// <summary>
+/// 启动 Agent 运行的请求。
+/// </summary>
+/// <param name="Input">运行或评测使用的输入内容。</param>
 public sealed record StartAgentRunRequest(string Input);
 
 #endregion

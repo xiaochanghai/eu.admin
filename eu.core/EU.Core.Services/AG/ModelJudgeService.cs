@@ -16,6 +16,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：ModelJudgeService 职责实现
 
+/// <summary>
+/// 组织模型裁判评测并持久化报告。
+/// </summary>
 public sealed class ModelJudgeService(
     IEvaluationBatchRepository batches,
     IAgEvaluationSuiteServices suites,

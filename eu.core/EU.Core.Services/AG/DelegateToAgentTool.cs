@@ -12,6 +12,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：DelegateToAgentTool 职责实现
 
+/// <summary>
+/// 实现向子 Agent 委派任务的内部工具。
+/// </summary>
 public sealed class DelegateToAgentTool : IAgentInternalTool
 {
     private const int MaximumTaskCharacters = 32_768;
@@ -89,10 +92,19 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             MaximumReasonCharacters);
     }
 
+    /// <summary>
+    /// 获取内部工具名称。
+    /// </summary>
     public string Name => "delegate_to_agent";
 
+    /// <summary>
+    /// 获取内部工具说明。
+    /// </summary>
     public string Description => _description;
 
+    /// <summary>
+    /// 获取内部工具输入参数的 JSON Schema。
+    /// </summary>
     public string InputSchemaJson => _inputSchemaJson;
 
     private static string DescribeBinding(AgentChildBindingSnapshot binding)

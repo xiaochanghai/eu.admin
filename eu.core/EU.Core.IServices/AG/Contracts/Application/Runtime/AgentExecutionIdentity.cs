@@ -5,6 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace EU.Core.IServices.Runtime;
 
+/// <summary>
+/// 表示 Agent 执行链路中的租户、用户和调用关系身份。
+/// </summary>
 public sealed partial class AgentExecutionIdentity
 {
     public AgentExecutionIdentity(
@@ -31,12 +34,24 @@ public sealed partial class AgentExecutionIdentity
         Permissions = new ReadOnlyCollection<string>(frozenPermissions);
     }
 
+    /// <summary>
+    /// 获取用户标识。
+    /// </summary>
     public string UserId { get; }
 
+    /// <summary>
+    /// 获取租户标识。
+    /// </summary>
     public string TenantId { get; }
 
+    /// <summary>
+    /// 获取执行身份拥有的权限集合。
+    /// </summary>
     public IReadOnlyList<string> Permissions { get; }
 
+    /// <summary>
+    /// 获取关联标识。
+    /// </summary>
     public string CorrelationId { get; }
 
     private static string Required(string? value, string parameterName)

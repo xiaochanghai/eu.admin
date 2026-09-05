@@ -9,44 +9,103 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.IServices.Approvals;
 
+/// <summary>
+/// 工具调用审批请求的生命周期状态。
+/// </summary>
 public enum ToolApprovalStatus
 {
+    /// <summary>等待审批。</summary>
     Pending,
+    /// <summary>审批已通过。</summary>
     Approved,
+    /// <summary>审批已拒绝。</summary>
     Rejected,
+    /// <summary>审批请求已取消。</summary>
     Cancelled,
+    /// <summary>审批请求已过期。</summary>
     Expired,
+    /// <summary>审批结果正在被执行流程占用。</summary>
     Consuming,
+    /// <summary>审批结果已被执行流程消费。</summary>
     Consumed,
+    /// <summary>获批后的工具执行失败。</summary>
     Failed,
+    /// <summary>审批结果因上下文变化而失效。</summary>
     Invalidated
 }
 
+/// <summary>
+/// 定义工具调用审批领域错误码。
+/// </summary>
 public static class ToolApprovalErrorCodes
 {
+    /// <summary>表示 <c>Invalid</c> 场景的错误码。</summary>
     public const string Invalid = "TOOL_APPROVAL_INVALID";
+    /// <summary>表示 <c>InvalidState</c> 场景的错误码。</summary>
     public const string InvalidState = "TOOL_APPROVAL_INVALID_STATE";
+    /// <summary>表示 <c>Expired</c> 场景的错误码。</summary>
     public const string Expired = "TOOL_APPROVAL_EXPIRED";
+    /// <summary>表示 <c>SelfApprovalForbidden</c> 场景的错误码。</summary>
     public const string SelfApprovalForbidden =
         "TOOL_APPROVAL_SELF_APPROVAL_FORBIDDEN";
+    /// <summary>表示 <c>CancellationForbidden</c> 场景的错误码。</summary>
     public const string CancellationForbidden =
         "TOOL_APPROVAL_CANCELLATION_FORBIDDEN";
+    /// <summary>表示 <c>ExecutionFailed</c> 场景的错误码。</summary>
     public const string ExecutionFailed = "TOOL_APPROVAL_EXECUTION_FAILED";
+    /// <summary>表示 <c>ExecutionOutcomeUnknown</c> 场景的错误码。</summary>
     public const string ExecutionOutcomeUnknown =
         "TOOL_APPROVAL_EXECUTION_OUTCOME_UNKNOWN";
+    /// <summary>表示 <c>Rejected</c> 场景的错误码。</summary>
     public const string Rejected = "TOOL_APPROVAL_REJECTED";
+    /// <summary>表示 <c>Cancelled</c> 场景的错误码。</summary>
     public const string Cancelled = "TOOL_APPROVAL_CANCELLED";
+    /// <summary>表示 <c>PayloadInvalid</c> 场景的错误码。</summary>
     public const string PayloadInvalid = "TOOL_APPROVAL_PAYLOAD_INVALID";
+    /// <summary>表示 <c>RevalidationFailed</c> 场景的错误码。</summary>
     public const string RevalidationFailed =
         "TOOL_APPROVAL_REVALIDATION_FAILED";
 }
 
+/// <summary>
+/// 表示工具调用审批流程中的领域异常。
+/// </summary>
 public sealed class ToolApprovalException(string errorCode, string message)
     : Exception(message)
 {
+    /// <summary>
+    /// 获取领域异常对应的错误码。
+    /// </summary>
     public string ErrorCode { get; } = errorCode;
 }
 
+/// <summary>
+/// 工具调用审批请求记录。
+/// </summary>
+/// <param name="Id">记录标识。</param>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="RequesterUserId">发起审批的用户标识。</param>
+/// <param name="ConversationId">关联会话标识。</param>
+/// <param name="EntryRunId">统一入口运行标识。</param>
+/// <param name="AgentRunId">Agent 运行标识。</param>
+/// <param name="AgentVersionId">Agent 版本标识。</param>
+/// <param name="McpServerId">MCP 服务标识。</param>
+/// <param name="ToolVersionId">工具版本标识。</param>
+/// <param name="ToolName">工具名称。</param>
+/// <param name="Risk">工具风险等级。</param>
+/// <param name="ToolSchemaSha256">工具输入架构的 SHA-256 摘要。</param>
+/// <param name="ArgumentsSha256">工具参数的 SHA-256 摘要。</param>
+/// <param name="SafeArgumentsSummaryJson">已脱敏的工具参数摘要 JSON。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="LogicalRevision">当前逻辑版本。</param>
+/// <param name="RequestedAtUtc">审批发起的 UTC 时间。</param>
+/// <param name="ExpiresAtUtc">记录或审批过期的 UTC 时间。</param>
+/// <param name="DecisionUserId">作出审批决策的用户标识。</param>
+/// <param name="DecisionReason">审批决策原因。</param>
+/// <param name="DecidedAtUtc">作出审批决策的 UTC 时间。</param>
+/// <param name="ClaimedAtUtc">执行流程取得审批请求的 UTC 时间。</param>
+/// <param name="FinishedAtUtc">执行结束的 UTC 时间。</param>
+/// <param name="ErrorCode">失败错误码；成功时为空。</param>
 public sealed record ToolApprovalRequestRecord(
     Guid Id,
     string TenantId,
@@ -73,11 +132,29 @@ public sealed record ToolApprovalRequestRecord(
     DateTimeOffset? FinishedAtUtc,
     string ErrorCode);
 
+/// <summary>
+/// 审批执行流程取得的执行声明。
+/// </summary>
+/// <param name="Request">审批请求记录。</param>
+/// <param name="ProtectedResumePayload">受保护的恢复执行载荷。</param>
+/// <param name="ProtectedResumePayloadSha256">受保护恢复载荷的 SHA-256 摘要。</param>
 public sealed record ToolApprovalExecutionClaim(
     ToolApprovalRequestRecord Request,
     string ProtectedResumePayload,
     string ProtectedResumePayloadSha256);
 
+/// <summary>
+/// 获批工具调用的执行结果记录。
+/// </summary>
+/// <param name="ApprovalId">工具调用审批标识。</param>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="Succeeded">执行是否成功。</param>
+/// <param name="Blocked">执行是否被策略阻止。</param>
+/// <param name="ProtectedContent">受保护的工具执行结果。</param>
+/// <param name="ProtectedContentSha256">受保护结果的 SHA-256 摘要。</param>
+/// <param name="ContentSha256">结果明文的 SHA-256 摘要。</param>
+/// <param name="ErrorCode">失败错误码；成功时为空。</param>
+/// <param name="FinishedAtUtc">执行结束的 UTC 时间。</param>
 public sealed record ToolApprovalExecutionResultRecord(
     Guid ApprovalId,
     string TenantId,
@@ -89,6 +166,18 @@ public sealed record ToolApprovalExecutionResultRecord(
     string ErrorCode,
     DateTimeOffset FinishedAtUtc);
 
+/// <summary>
+/// 工具调用审批的决策记录。
+/// </summary>
+/// <param name="Id">记录标识。</param>
+/// <param name="ApprovalId">工具调用审批标识。</param>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="FromStatus">决策前的审批状态。</param>
+/// <param name="ToStatus">决策后的审批状态。</param>
+/// <param name="DecisionUserId">作出审批决策的用户标识。</param>
+/// <param name="DecisionReason">审批决策原因。</param>
+/// <param name="DecidedAtUtc">作出审批决策的 UTC 时间。</param>
+/// <param name="ResultingLogicalRevision">决策完成后的逻辑版本。</param>
 public sealed record ToolApprovalDecisionRecord(
     Guid Id,
     Guid ApprovalId,
@@ -100,30 +189,62 @@ public sealed record ToolApprovalDecisionRecord(
     DateTimeOffset DecidedAtUtc,
     long ResultingLogicalRevision);
 
+/// <summary>
+/// 审批载荷加解密使用的上下文。
+/// </summary>
+/// <param name="ApprovalId">工具调用审批标识。</param>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="ArgumentsSha256">工具参数的 SHA-256 摘要。</param>
 public sealed record ToolApprovalPayloadContext(
     Guid ApprovalId,
     string TenantId,
     string ArgumentsSha256);
 
+/// <summary>
+/// 定义工具审批恢复载荷的保护与解保护能力。
+/// </summary>
 public interface IToolApprovalPayloadProtector
 {
+    /// <summary>保护工具审批恢复载荷。</summary>
     string Protect(ToolApprovalPayloadContext context, string plaintext);
 
+    /// <summary>解保护并校验工具审批恢复载荷。</summary>
     string Unprotect(ToolApprovalPayloadContext context, string protectedPayload);
 }
 
+/// <summary>
+/// 工具调用审批的查询条件。
+/// </summary>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="Status">当前状态。</param>
+/// <param name="Take">最多返回的记录数量。</param>
 public sealed record ToolApprovalQuery(
     string TenantId,
     ToolApprovalStatus? Status = null,
     int Take = 100);
 
+/// <summary>
+/// 对工具调用审批请求执行的决策动作。
+/// </summary>
 public enum ToolApprovalDecisionAction
 {
+    /// <summary>批准工具调用。</summary>
     Approve,
+    /// <summary>拒绝工具调用。</summary>
     Reject,
+    /// <summary>取消审批请求。</summary>
     Cancel
 }
 
+/// <summary>
+/// 提交工具调用审批决策的命令。
+/// </summary>
+/// <param name="ApprovalId">工具调用审批标识。</param>
+/// <param name="TenantId">租户标识。</param>
+/// <param name="ActorUserId">执行审批动作的用户标识。</param>
+/// <param name="Action">审批动作。</param>
+/// <param name="Reason">执行该动作的原因。</param>
+/// <param name="DecidedAtUtc">作出审批决策的 UTC 时间。</param>
 public sealed record ToolApprovalDecisionCommand(
     Guid ApprovalId,
     string TenantId,
@@ -132,32 +253,41 @@ public sealed record ToolApprovalDecisionCommand(
     string Reason,
     DateTimeOffset DecidedAtUtc);
 
+/// <summary>
+/// 定义工具调用审批记录的存储和原子状态转换边界。
+/// </summary>
 public interface IToolApprovalRepository
 {
+    /// <summary>尝试创建工具调用审批记录。</summary>
     Task<bool> TryCreateAsync(
         ToolApprovalRequestRecord request,
         string protectedResumePayload,
         CancellationToken cancellationToken = default);
 
+    /// <summary>获取工具调用审批记录。</summary>
     Task<ToolApprovalRequestRecord?> GetAsync(
         Guid id,
         string tenantId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>查询工具调用审批记录列表。</summary>
     Task<IReadOnlyList<ToolApprovalRequestRecord>> ListAsync(
         ToolApprovalQuery query,
         CancellationToken cancellationToken = default);
 
+    /// <summary>查询工具审批的决策历史。</summary>
     Task<IReadOnlyList<ToolApprovalDecisionRecord>> ListDecisionsAsync(
         Guid approvalId,
         string tenantId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>按并发条件尝试替换工具调用审批记录。</summary>
     Task<bool> TryReplaceAsync(
         ToolApprovalRequestRecord replacement,
         long expectedLogicalRevision,
         CancellationToken cancellationToken = default);
 
+    /// <summary>尝试取得工具审批的执行权。</summary>
     Task<ToolApprovalExecutionClaim?> TryClaimExecutionAsync(
         Guid id,
         string tenantId,
@@ -165,30 +295,42 @@ public interface IToolApprovalRepository
         DateTimeOffset claimedAtUtc,
         CancellationToken cancellationToken = default);
 
+    /// <summary>尝试提交获批工具调用的执行结果。</summary>
     Task<bool> TryCompleteExecutionAsync(
         ToolApprovalRequestRecord replacement,
         long expectedLogicalRevision,
         ToolApprovalExecutionResultRecord result,
         CancellationToken cancellationToken = default);
 
+    /// <summary>获取获批工具调用的执行结果。</summary>
     Task<ToolApprovalExecutionResultRecord?> GetExecutionResultAsync(
         Guid id,
         string tenantId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>恢复或终结中断的审批执行。</summary>
     Task<int> RecoverInterruptedExecutionsAsync(
         DateTimeOffset recoveredAtUtc,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(0);
 }
 
+/// <summary>
+/// 集中实现工具调用审批的状态转换规则。
+/// </summary>
 public static partial class ToolApprovalStateMachine
 {
+    /// <summary>审批参数安全摘要允许的最大 UTF-8 字节数。</summary>
     public const int MaximumSafeSummaryUtf8Bytes = 8_192;
+    /// <summary>受保护审批载荷允许的最大 UTF-8 字节数。</summary>
     public const int MaximumProtectedPayloadUtf8Bytes = 65_536;
+    /// <summary>工具结果明文允许的最大 UTF-8 字节数。</summary>
     public const int MaximumResultPlaintextUtf8Bytes = 1_048_576;
+    /// <summary>受保护工具结果允许的最大 UTF-8 字节数。</summary>
     public const int MaximumProtectedResultUtf8Bytes = 1_500_000;
+    /// <summary>审批决策原因允许的最大字符数。</summary>
     public const int MaximumDecisionReasonCharacters = 512;
+    /// <summary>单次查询允许返回的最大记录数量。</summary>
     public const int MaximumTake = 200;
 
     [GeneratedRegex("^[a-f0-9]{64}$", RegexOptions.CultureInvariant)]

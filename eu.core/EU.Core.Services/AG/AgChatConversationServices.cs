@@ -8,6 +8,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgChatConversationServices 职责实现
 
+/// <summary>
+/// 提供 Agent 聊天会话的持久化服务。
+/// </summary>
 public sealed class AgChatConversationServices :
     BaseServices<AgChatConversation>,
     IAgChatConversationServices,

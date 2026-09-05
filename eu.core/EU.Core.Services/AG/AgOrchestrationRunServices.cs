@@ -7,6 +7,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：AgOrchestrationRunServices 职责实现
 
+/// <summary>
+/// 提供编排运行记录的持久化服务。
+/// </summary>
 public sealed class AgOrchestrationRunServices :
     BaseServices<AgOrchestrationRun>,
     IAgOrchestrationRunServices,

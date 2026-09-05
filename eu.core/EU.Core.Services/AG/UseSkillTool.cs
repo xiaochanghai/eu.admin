@@ -8,6 +8,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：UseSkillTool 职责实现
 
+/// <summary>
+/// 实现加载并使用已发布技能的内部工具。
+/// </summary>
 public sealed class UseSkillTool : IAgentInternalTool
 {
     #region 技能工具执行
@@ -41,10 +44,19 @@ public sealed class UseSkillTool : IAgentInternalTool
             MaximumReasonCharacters);
     }
 
+    /// <summary>
+    /// 获取内部工具名称。
+    /// </summary>
     public string Name => "use_skill";
 
+    /// <summary>
+    /// 获取内部工具说明。
+    /// </summary>
     public string Description { get; }
 
+    /// <summary>
+    /// 获取内部工具输入参数的 JSON Schema。
+    /// </summary>
     public string InputSchemaJson { get; }
 
     public Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)

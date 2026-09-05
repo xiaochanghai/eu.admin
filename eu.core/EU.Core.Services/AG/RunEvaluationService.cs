@@ -9,6 +9,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：RunEvaluationService 职责实现
 
+/// <summary>
+/// 根据确定性规则评测统一入口运行结果。
+/// </summary>
 public sealed class RunEvaluationService(
     IUnifiedEntryRepository repository,
     TimeProvider? timeProvider = null) : IRunEvaluationService

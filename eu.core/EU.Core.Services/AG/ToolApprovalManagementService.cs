@@ -5,6 +5,9 @@ namespace EU.Core.Services;
 
 #region 文件职责：ToolApprovalManagementService 职责实现
 
+/// <summary>
+/// 管理工具调用审批的查询与决策。
+/// </summary>
 public sealed class ToolApprovalManagementService(
     IToolApprovalRepository approvals,
     TimeProvider? timeProvider = null) : IToolApprovalManagementService

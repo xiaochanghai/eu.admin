@@ -8,6 +8,9 @@ namespace EU.Core.Api.Agent.Controllers;
 
 #region 文件职责：SkillVersionsController 接口处理
 
+/// <summary>
+/// 提供已发布技能版本查询的 HTTP 接口。
+/// </summary>
 [Route("api/skill-versions")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
 public sealed class SkillVersionsController(
