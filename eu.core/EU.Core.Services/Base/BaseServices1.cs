@@ -349,6 +349,21 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
     /// </example>
     public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression) => await BaseDal.AnyAsync(whereExpression);
 
+
+    /// <summary>
+    /// 根据条件查询单条数据
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>实体对象，不存在返回null</returns>
+    /// <example>
+    /// var user = await QuerySingle(x => x.Code == "ADMIN");
+    /// </example>
+    public async Task<TEntity> QuerySingle(Expression<Func<TEntity, bool>> whereExpression)
+    {
+        var list = await BaseDal.Query(whereExpression);
+        return list.Any() ? list.FirstOrDefault() : default;
+    }
+
     #endregion
 
 

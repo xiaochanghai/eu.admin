@@ -82,6 +82,16 @@ public interface IBaseServices<TEntity> where TEntity : class
     /// bool exists = await AnyAsync(x => x.Code == "USER001" && x.IsDeleted == false);
     /// </example>
     Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression);
+
+    /// <summary>
+    /// 根据条件查询单条数据
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>实体对象，不存在返回null</returns>
+    /// <example>
+    /// var user = await QuerySingle(x => x.Code == "ADMIN");
+    /// </example>
+    Task<TEntity> QuerySingle(Expression<Func<TEntity, bool>> whereExpression);
     #endregion
 }
 
