@@ -7,7 +7,7 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgAgentTaskServices 职责实现
+// 文件职责：AgAgentTaskServices 职责实现
 
 /// <summary>
 /// 提供可恢复 Agent 任务的持久化与状态转换服务。
@@ -17,11 +17,24 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
     private const int MaximumTake = 200;
     private const int MaximumCheckpointLength = 262_144;
 
+    #region 构造（AgAgentTaskServices）
+    /// <summary>
+    /// 构造（AgAgentTaskServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgAgentTaskServices(IBaseRepository<AgAgentTask> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
     }
+    #endregion
 
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>新建的待执行任务；幂等键已存在且请求内容一致时返回原任务。</returns>
     public async Task<AgentTaskRecord> CreateAsync(CreateAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         ValidateCreate(command);
@@ -116,7 +129,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和用户下匹配状态的任务列表，按创建时间倒序、标识升序排列。</returns>
     public async Task<IReadOnlyList<AgentTaskRecord>> ListAsync(AgentTaskQuery query, CancellationToken cancellationToken = default)
     {
         Required(query.TenantId, nameof(query.TenantId));
@@ -136,7 +157,17 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .ToListAsync();
         return values.Select(Map).ToArray();
     }
+    #endregion
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配租户及可选用户条件的未删除任务；不存在时为 null。</returns>
     public async Task<AgentTaskRecord?> GetAsync(Guid id, string tenantId, string? userId, CancellationToken cancellationToken = default)
     {
         Required(tenantId, nameof(tenantId));
@@ -147,7 +178,17 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .FirstAsync();
         return value is null ? null : Map(value);
     }
+    #endregion
 
+    #region 查询列表（ListAttemptsAsync）
+    /// <summary>
+    /// 查询列表（ListAttemptsAsync）
+    /// </summary>
+    /// <param name="taskId">任务标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按尝试次数升序排列的任务执行记录；任务不可访问时抛出 NotFound 异常。</returns>
     public async Task<IReadOnlyList<AgentTaskAttemptRecord>> ListAttemptsAsync(
         Guid taskId,
         string tenantId,
@@ -166,7 +207,18 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .ToListAsync();
         return values.Select(MapAttempt).ToArray();
     }
+    #endregion
 
+    #region 查询列表（ListEventsAsync）
+    /// <summary>
+    /// 查询列表（ListEventsAsync）
+    /// </summary>
+    /// <param name="taskId">任务标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>最近指定条数的任务事件，按发生时间及创建时间升序返回；任务不可访问时抛出 NotFound 异常。</returns>
     public async Task<IReadOnlyList<AgentTaskEventRecord>> ListEventsAsync(
         Guid taskId, string tenantId, string? userId, int take = 200,
         CancellationToken cancellationToken = default)
@@ -190,7 +242,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .Select(MapEvent)
             .ToArray();
     }
+    #endregion
 
+    #region 尝试执行（TryClaimNextAsync）
+    /// <summary>
+    /// 尝试执行（TryClaimNextAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>成功认领并更新租约的任务；本轮候选中没有可认领任务时为 null。</returns>
     public async Task<AgentTaskRecord?> TryClaimNextAsync(ClaimAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         if (!command.AcrossTenants)
@@ -337,7 +397,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
 
         return null;
     }
+    #endregion
 
+    #region 处理（RenewLeaseAsync）
+    /// <summary>
+    /// 处理（RenewLeaseAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>续租并递增逻辑版本后的任务；租约、状态或版本不匹配时抛出冲突异常。</returns>
     public async Task<AgentTaskRecord> RenewLeaseAsync(RenewAgentTaskLeaseCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
@@ -358,7 +426,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .ExecuteCommandAsync();
         return await RequireUpdatedAsync(command.TaskId, command.TenantId, updated, cancellationToken);
     }
+    #endregion
 
+    #region 保存（SaveCheckpointAsync）
+    /// <summary>
+    /// 保存（SaveCheckpointAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保存检查点后的任务；租约、状态或版本不匹配时抛出冲突异常。</returns>
     public async Task<AgentTaskRecord> SaveCheckpointAsync(SaveAgentTaskCheckpointCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.CheckpointKind, nameof(command.CheckpointKind));
@@ -406,7 +482,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 处理（WaitAsync）
+    /// <summary>
+    /// 处理（WaitAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>已释放租约并进入等待审批或等待用户状态的任务。</returns>
     public async Task<AgentTaskRecord> WaitAsync(WaitAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         if (command.Status is not AgentTaskStatus.WaitingForApproval and not AgentTaskStatus.WaitingForUser)
@@ -461,7 +545,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 完成（CompleteAsync）
+    /// <summary>
+    /// 完成（CompleteAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>已记录完成时间并释放租约的已完成任务。</returns>
     public async Task<AgentTaskRecord> CompleteAsync(CompleteAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -504,7 +596,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 处理（FailAsync）
+    /// <summary>
+    /// 处理（FailAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>尝试次数耗尽时返回失败任务，否则返回已安排延迟重试的待执行任务。</returns>
     public async Task<AgentTaskRecord> FailAsync(FailAgentTaskCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.ErrorCode, nameof(command.ErrorCode));
@@ -559,7 +659,18 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 取消（CancelAsync）
+    /// <summary>
+    /// 取消（CancelAsync）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancelledAtUtc">取消时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>取消后的任务；原任务已取消时原样返回，其他终态或并发状态变化会导致冲突异常。</returns>
     public async Task<AgentTaskRecord> CancelAsync(
         Guid id,
         string tenantId,
@@ -614,7 +725,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 处理（ResumeWithUserInputAsync）
+    /// <summary>
+    /// 处理（ResumeWithUserInputAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保存用户输入并重新置为待执行的任务；仅允许恢复指定版本的等待用户任务。</returns>
     public async Task<AgentTaskRecord> ResumeWithUserInputAsync(ResumeAgentTaskWithUserInputCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
@@ -679,7 +798,15 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 处理（SynchronizeRunAsync）
+    /// <summary>
+    /// 处理（SynchronizeRunAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>同步终态后的任务，或原有终态任务；没有匹配运行和所属用户的任务时为 null。</returns>
     public async Task<AgentTaskRecord?> SynchronizeRunAsync(SynchronizeAgentTaskRunCommand command, CancellationToken cancellationToken = default)
     {
         Required(command.TenantId, nameof(command.TenantId));
@@ -750,7 +877,21 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw;
         }
     }
+    #endregion
 
+    #region 处理（AppendEventAsync）
+    /// <summary>
+    /// 处理（AppendEventAsync）
+    /// </summary>
+    /// <param name="taskId">任务标识。</param>
+    /// <param name="attemptNumber">任务执行尝试序号。</param>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="kind">记录或事件类型。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="workerId">任务执行器标识。</param>
+    /// <param name="occurredAtUtc">事件发生时间（UTC）。</param>
+    /// <param name="payloadJson">载荷的 JSON 文本。</param>
+    /// <returns>任务事件插入操作影响的行数。</returns>
     private Task<int> AppendEventAsync(
         Guid taskId, int? attemptNumber, Guid? runId, string kind,
         AgentTaskStatus status, string workerId, DateTime occurredAtUtc, string payloadJson) =>
@@ -768,7 +909,17 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             IsDeleted = false,
             IsActive = true
         }).ExecuteCommandAsync();
+    #endregion
 
+    #region 处理（RequireUpdatedAsync）
+    /// <summary>
+    /// 处理（RequireUpdatedAsync）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="updated">更新后的数据。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>更新后的任务记录；影响行数不为一时抛出冲突异常。</returns>
     private async Task<AgentTaskRecord> RequireUpdatedAsync(Guid id, string tenantId, int updated, CancellationToken cancellationToken)
     {
         if (updated != 1)
@@ -778,7 +929,20 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
 
         return (await GetAsync(id, tenantId, null, cancellationToken))!;
     }
+    #endregion
 
+    #region 处理（FinishAttemptAsync）
+    /// <summary>
+    /// 处理（FinishAttemptAsync）
+    /// </summary>
+    /// <param name="taskId">任务标识。</param>
+    /// <param name="attemptNumber">任务执行尝试序号。</param>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="finishedAtUtc">完成时间（UTC）。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="errorMessage">失败对应的错误说明。</param>
+    /// <returns>将指定运行中尝试标记为结束状态所影响的行数。</returns>
     private Task<int> FinishAttemptAsync(
         Guid taskId,
         int attemptNumber,
@@ -799,7 +963,13 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             .Where(value => value.TaskId == taskId && value.AttemptNumber == attemptNumber &&
                             value.Status == (int)AgentTaskAttemptStatus.Running && !value.IsDeleted)
             .ExecuteCommandAsync();
+    #endregion
 
+    #region 校验（ValidateCreate）
+    /// <summary>
+    /// 校验（ValidateCreate）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
     private static void ValidateCreate(CreateAgentTaskCommand command)
     {
         Required(command.TenantId, nameof(command.TenantId));
@@ -826,7 +996,16 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw Invalid("The task retry or priority setting is invalid.");
         }
     }
+    #endregion
 
+    #region 检查前置条件（EnsureIdempotencyMatch）
+    /// <summary>
+    /// 检查前置条件（EnsureIdempotencyMatch）
+    /// </summary>
+    /// <param name="existing">已有数据。</param>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="sourceType">数据或任务的来源类型。</param>
+    /// <param name="inputSha256">输入内容的 SHA-256 摘要。</param>
     private static void EnsureIdempotencyMatch(AgAgentTask existing, CreateAgentTaskCommand command, string sourceType, string inputSha256)
     {
         if (!string.Equals(existing.UserId, command.UserId.Trim(), StringComparison.Ordinal) ||
@@ -844,7 +1023,13 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
                 "The Agent task idempotency key was reused with different task content.");
         }
     }
+    #endregion
 
+    #region 校验（ValidateCheckpoint）
+    /// <summary>
+    /// 校验（ValidateCheckpoint）
+    /// </summary>
+    /// <param name="checkpointJson">任务检查点的 JSON 内容。</param>
     private static void ValidateCheckpoint(string checkpointJson)
     {
         if (string.IsNullOrWhiteSpace(checkpointJson) || checkpointJson.Length > MaximumCheckpointLength)
@@ -861,7 +1046,14 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw Invalid("The task checkpoint must be valid JSON.");
         }
     }
+    #endregion
 
+    #region 加密保护（ProtectErrorMessage）
+    /// <summary>
+    /// 加密保护（ProtectErrorMessage）
+    /// </summary>
+    /// <param name="value">待截断及脱敏的错误消息；允许为 null。</param>
+    /// <returns>去除首尾空白、限制长度并脱敏后的错误消息；输入为 null 时按空字符串处理。</returns>
     private static string ProtectErrorMessage(string? value)
     {
         string bounded = (value ?? string.Empty).Trim();
@@ -875,7 +1067,13 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             16_384,
             16_384).Content;
     }
+    #endregion
 
+    #region 校验（ValidateLeaseDuration）
+    /// <summary>
+    /// 校验（ValidateLeaseDuration）
+    /// </summary>
+    /// <param name="leaseDuration">执行租约的有效时长。</param>
     private static void ValidateLeaseDuration(TimeSpan leaseDuration)
     {
         if (leaseDuration < TimeSpan.FromSeconds(10) || leaseDuration > TimeSpan.FromHours(1))
@@ -883,7 +1081,14 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw Invalid("The task lease duration must be between 10 seconds and 1 hour.");
         }
     }
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 处理（Required）
+    /// </summary>
+    /// <param name="value">待校验的必填身份或文本字段。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
     private static void Required(string value, string field)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -891,11 +1096,38 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             throw Invalid($"The task field '{field}' is required.");
         }
     }
+    #endregion
 
+    #region 处理（Invalid）
+    /// <summary>
+    /// 处理（Invalid）
+    /// </summary>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>带有 Invalid 错误码和指定消息的任务异常。</returns>
     private static AgentTaskException Invalid(string message) => new(AgentTaskErrorCodes.Invalid, message);
+    #endregion
+    #region 处理（Conflict）
+    /// <summary>
+    /// 处理（Conflict）
+    /// </summary>
+    /// <returns>表示任务状态或租约已变化的 Conflict 异常。</returns>
     private static AgentTaskException Conflict() => new(AgentTaskErrorCodes.Conflict, "The Agent task state or lease has changed.");
+    #endregion
+    #region 转换（ToOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。</returns>
     private static DateTimeOffset ToOffset(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    #endregion
 
+    #region 映射（Map）
+    /// <summary>
+    /// 映射（Map）
+    /// </summary>
+    /// <param name="value">本次操作使用的任务实体。</param>
+    /// <returns>从任务实体还原的任务记录，包含租约、检查点及错误信息。</returns>
     private static AgentTaskRecord Map(AgAgentTask value) => new(
         value.ID,
         value.TenantId ?? string.Empty,
@@ -923,7 +1155,14 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         value.CheckpointJson ?? string.Empty,
         value.LastErrorCode ?? string.Empty,
         value.LastErrorMessage ?? string.Empty);
+    #endregion
 
+    #region 映射（MapAttempt）
+    /// <summary>
+    /// 映射（MapAttempt）
+    /// </summary>
+    /// <param name="value">本次操作使用的任务尝试实体。</param>
+    /// <returns>从执行尝试实体还原的尝试记录。</returns>
     private static AgentTaskAttemptRecord MapAttempt(AgAgentTaskAttempt value) => new(
         value.ID,
         value.TaskId ?? Guid.Empty,
@@ -935,7 +1174,14 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         value.FinishedAtUtc.HasValue ? ToOffset(value.FinishedAtUtc.Value) : null,
         value.ErrorCode ?? string.Empty,
         value.ErrorMessage ?? string.Empty);
+    #endregion
 
+    #region 映射（MapEvent）
+    /// <summary>
+    /// 映射（MapEvent）
+    /// </summary>
+    /// <param name="value">本次操作使用的任务事件实体。</param>
+    /// <returns>从任务事件实体还原的事件记录。</returns>
     private static AgentTaskEventRecord MapEvent(AgAgentTaskEvent value) => new(
         value.ID,
         value.TaskId ?? Guid.Empty,
@@ -946,6 +1192,5 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         value.WorkerId ?? string.Empty,
         ToOffset(value.OccurredAtUtc ?? DateTime.UtcNow),
         value.PayloadJson ?? string.Empty);
+    #endregion
 }
-
-#endregion

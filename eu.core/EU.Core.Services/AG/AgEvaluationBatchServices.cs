@@ -5,7 +5,7 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgEvaluationBatchServices 职责实现
+// 文件职责：AgEvaluationBatchServices 职责实现
 
 /// <summary>
 /// 提供评测批次记录的持久化服务。
@@ -19,11 +19,25 @@ public sealed class AgEvaluationBatchServices :
     private const string EventKindObservation = "EventKind";
     private const string RouteObservation = "Route";
 
+    #region 构造（AgEvaluationBatchServices）
+    /// <summary>
+    /// 构造（AgEvaluationBatchServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgEvaluationBatchServices(IBaseRepository<AgEvaluationBatch> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
     }
+    #endregion
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">评测批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户下包含用例明细的评测批次；不存在时为 null。</returns>
     public async Task<EvaluationBatchRecord?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -45,7 +59,17 @@ public sealed class AgEvaluationBatchServices :
             throw;
         }
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="suiteId">评估套件标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和套件下的评测批次，按开始时间及标识倒序排列，最多 100 条。</returns>
     public async Task<IReadOnlyList<EvaluationBatchRecord>> ListAsync(Guid suiteId, string tenantId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -73,7 +97,15 @@ public sealed class AgEvaluationBatchServices :
             throw;
         }
     }
+    #endregion
 
+    #region 创建评测批次及用例（TryCreateAsync）
+    /// <summary>
+    /// 创建评测批次及用例（TryCreateAsync）。
+    /// </summary>
+    /// <param name="value">待创建的评测批次，包含初始运行状态及用例记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>批次及用例持久化成功时返回 true；同一批次标识已存在时返回 false。</returns>
     public async Task<bool> TryCreateAsync(EvaluationBatchRecord value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -100,7 +132,16 @@ public sealed class AgEvaluationBatchServices :
             throw;
         }
     }
+    #endregion
 
+    #region 按修订号替换运行中的评测批次及用例（TryReplaceAsync）
+    /// <summary>
+    /// 按修订号替换运行中的评测批次及用例（TryReplaceAsync）。
+    /// </summary>
+    /// <param name="value">替换后的批次及完整用例集合，LogicalRevision 必须为预期修订号加一。</param>
+    /// <param name="expectedLogicalRevision">数据库当前应具有的逻辑修订号，不允许为 long.MaxValue。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>批次及用例更新成功时返回 true；修订号递增不合法，或匹配标识、租户、套件及版本的未删除运行中记录未能按预期修订号更新时返回 false。</returns>
     public async Task<bool> TryReplaceAsync(EvaluationBatchRecord value, long expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -149,7 +190,15 @@ public sealed class AgEvaluationBatchServices :
             throw;
         }
     }
+    #endregion
 
+    #region 恢复（RecoverInterruptedAsync）
+    /// <summary>
+    /// 恢复（RecoverInterruptedAsync）
+    /// </summary>
+    /// <param name="recoveredAtUtc">恢复时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>通过乐观并发更新成功标记为宿主中断失败的批次数量。</returns>
     public async Task<int> RecoverInterruptedAsync(DateTimeOffset recoveredAtUtc, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -191,7 +240,15 @@ public sealed class AgEvaluationBatchServices :
 
         return recovered;
     }
+    #endregion
 
+    #region 加载（LoadBatchesAsync）
+    /// <summary>
+    /// 加载（LoadBatchesAsync）
+    /// </summary>
+    /// <param name="batches">评估批次集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保持输入顺序并补齐用例、检查项和观测值的评测批次集合。</returns>
     private async Task<IReadOnlyList<EvaluationBatchRecord>> LoadBatchesAsync(IReadOnlyList<AgEvaluationBatch> batches, CancellationToken cancellationToken)
     {
         if (batches.Count == 0)
@@ -251,7 +308,17 @@ public sealed class AgEvaluationBatchServices :
             checksByCase,
             observationsByCase)));
     }
+    #endregion
 
+    #region 映射（MapBatch）
+    /// <summary>
+    /// 映射（MapBatch）
+    /// </summary>
+    /// <param name="value">本次操作使用的评测批次实体。</param>
+    /// <param name="cases">评估用例集合。</param>
+    /// <param name="checksByCase">按用例分组的评估检查项。</param>
+    /// <param name="observationsByCase">按用例分组的评估观测。</param>
+    /// <returns>包含按序排列的用例执行结果的评测批次记录。</returns>
     private static EvaluationBatchRecord MapBatch(
         AgEvaluationBatch value,
         IReadOnlyList<AgEvaluationBatchCase> cases,
@@ -277,7 +344,16 @@ public sealed class AgEvaluationBatchServices :
                     observationsByCase.GetValueOrDefault(item.ID) ?? []))
                 .ToArray()),
             Required(value.ErrorCode, "ErrorCode"));
+    #endregion
 
+    #region 映射（MapCase）
+    /// <summary>
+    /// 映射（MapCase）
+    /// </summary>
+    /// <param name="value">本次操作使用的评测批次用例实体。</param>
+    /// <param name="checks">评估检查项集合。</param>
+    /// <param name="observations">评估观测集合。</param>
+    /// <returns>包含可选规则评测报告、耗时及工具调用观测值的用例执行记录。</returns>
     private static EvaluationCaseExecutionRecord MapCase(
         AgEvaluationBatchCase value,
         IReadOnlyList<AgEvaluationBatchCheck> checks,
@@ -301,12 +377,14 @@ public sealed class AgEvaluationBatchServices :
                         Required(item.Actual, "Check.Actual")))
                     .ToArray()))
             : null;
+        #region 处理（ObservationValues）
         string[] ObservationValues(string type) => observations
             .Where(item => string.Equals(item.ObservationType, type, StringComparison.Ordinal))
             .OrderBy(item => Required(item.Ordinal, "Observation.Ordinal"))
             .ThenBy(item => item.ID)
             .Select(item => Required(item.Value, "Observation.Value"))
             .ToArray();
+        #endregion
 
         return new EvaluationCaseExecutionRecord(
             Required(value.CaseId, "Case.CaseId"),
@@ -325,7 +403,15 @@ public sealed class AgEvaluationBatchServices :
             ObservedRoutes = ObservationValues(RouteObservation)
         };
     }
+    #endregion
 
+    #region 新增（InsertCasesAsync）
+    /// <summary>
+    /// 新增（InsertCasesAsync）
+    /// </summary>
+    /// <param name="batch">评估批次。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertCasesAsync(EvaluationBatchRecord batch, CancellationToken cancellationToken)
     {
         for (int ordinal = 0; ordinal < batch.Cases.Count; ordinal++)
@@ -372,7 +458,16 @@ public sealed class AgEvaluationBatchServices :
                 value.ObservedRoutes ?? []);
         }
     }
+    #endregion
 
+    #region 新增（InsertChecksAsync）
+    /// <summary>
+    /// 新增（InsertChecksAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="caseRowId">评估用例行标识。</param>
+    /// <param name="checks">评估检查项集合。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertChecksAsync(Guid batchId, Guid caseRowId, IReadOnlyList<RunEvaluationCheck> checks)
     {
         if (checks.Count == 0)
@@ -394,7 +489,17 @@ public sealed class AgEvaluationBatchServices :
             IsActive = true
         }).ToList()).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 新增（InsertObservationsAsync）
+    /// <summary>
+    /// 新增（InsertObservationsAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="caseRowId">评估用例行标识。</param>
+    /// <param name="type">目标类型。</param>
+    /// <param name="values">指定观测类型下需要按序持久化的观测值。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertObservationsAsync(Guid batchId, Guid caseRowId, string type, IReadOnlyList<string> values)
     {
         if (values.Count == 0)
@@ -414,7 +519,14 @@ public sealed class AgEvaluationBatchServices :
             IsActive = true
         }).ToList()).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 删除（DeleteCasesAsync）
+    /// <summary>
+    /// 删除（DeleteCasesAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task DeleteCasesAsync(Guid batchId)
     {
         Guid[] caseIds = await Db.Queryable<AgEvaluationBatchCase>()
@@ -438,7 +550,14 @@ public sealed class AgEvaluationBatchServices :
             .Where(value => value.BatchId == batchId)
             .ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 映射（MapBatchEntity）
+    /// <summary>
+    /// 映射（MapBatchEntity）
+    /// </summary>
+    /// <param name="value">本次操作使用的评测批次记录。</param>
+    /// <returns>由评测批次记录构造的持久化实体。</returns>
     private static AgEvaluationBatch MapBatchEntity(EvaluationBatchRecord value) => new()
     {
         ID = value.Id,
@@ -455,26 +574,67 @@ public sealed class AgEvaluationBatchServices :
         IsDeleted = false,
         IsActive = true
     };
+    #endregion
 
+    #region 解析（ParseEnum）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseEnum）。
+    /// </summary>
+    /// <typeparam name="TEnum">目标枚举类型。</typeparam>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static TEnum ParseEnum<TEnum>(string? value, string field)
         where TEnum : struct, Enum =>
         Enum.TryParse(value, ignoreCase: false, out TEnum result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException(
                 $"Evaluation batch field '{field}' contains unsupported value '{value}'.");
+    #endregion
 
+    #region 解析（ParseNullableEnum）
+    /// <summary>
+    /// 解析（ParseNullableEnum）
+    /// </summary>
+    /// <typeparam name="TEnum">待处理数据的泛型类型。</typeparam>
+    /// <param name="value">数据库中存储的可空枚举文本。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>解析后的已定义枚举值；输入为 null 或空字符串时返回 null，无效值抛出 InvalidDataException。</returns>
     private static TEnum? ParseNullableEnum<TEnum>(string? value, string field)
         where TEnum : struct, Enum =>
         string.IsNullOrEmpty(value) ? null : ParseEnum<TEnum>(value, field);
+    #endregion
 
+    #region 转换（ToOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。</returns>
     private static DateTimeOffset ToOffset(DateTime value) =>
         new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <typeparam name="T">必填字段的值类型。</typeparam>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static T Required<T>(T? value, string field) where T : struct =>
         value ?? throw new InvalidDataException($"Evaluation batch field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Evaluation batch field '{field}' is missing.");
+    #endregion
 }
-
-#endregion

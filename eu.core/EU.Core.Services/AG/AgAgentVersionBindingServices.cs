@@ -22,8 +22,14 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentVersionBindingServices : BaseServices<AgAgentVersionBinding, AgAgentVersionBindingDto, InsertAgAgentVersionBindingInput, EditAgAgentVersionBindingInput>, IAgAgentVersionBindingServices
 {
+    #region 构造（AgAgentVersionBindingServices）
+    /// <summary>
+    /// 构造（AgAgentVersionBindingServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgAgentVersionBindingServices(IBaseRepository<AgAgentVersionBinding> dal)
     {
         BaseDal = dal;
     }
+    #endregion
 }

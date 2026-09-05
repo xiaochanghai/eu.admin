@@ -285,6 +285,12 @@ public static class SkillServiceStatusCodes
     /// <summary>表示 <c>ArchiveBlocked</c> 场景映射的服务状态码。</summary>
     public const int ArchiveBlocked = 620013;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <returns>技能错误码对应的服务状态值；未知错误码抛出 ArgumentOutOfRangeException。</returns>
     public static int FromErrorCode(string errorCode) => errorCode switch
     {
         SkillErrorCodes.NotFound => NotFound,
@@ -302,7 +308,14 @@ public static class SkillServiceStatusCodes
         SkillErrorCodes.ArchiveBlocked => ArchiveBlocked,
         _ => throw new ArgumentOutOfRangeException(nameof(errorCode), errorCode, null)
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的技能错误码；未知状态抛出 ArgumentOutOfRangeException。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         NotFound => SkillErrorCodes.NotFound,
@@ -320,6 +333,7 @@ public static class SkillServiceStatusCodes
         ArchiveBlocked => SkillErrorCodes.ArchiveBlocked,
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
     };
+    #endregion
 }
 
 /// <summary>
@@ -327,12 +341,22 @@ public static class SkillServiceStatusCodes
 /// </summary>
 public interface IPublishedSkillVersionCatalog
 {
-    /// <summary>检查已发布技能版本是否存在。</summary>
+    #region 查询活动技能的版本是否存在（ExistsAsync）
+    /// <summary>
+    /// 查询活动技能的版本是否存在（ExistsAsync）。
+    /// </summary>
+    /// <param name="versionId">待查询的技能版本标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定技能版本及所属定义均未删除且技能状态为 Active 时返回 true，否则返回 false。</returns>
     Task<bool> ExistsAsync(Guid versionId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询已发布技能版本列表。
     /// <summary>查询已发布技能版本列表。</summary>
-    Task<IReadOnlyList<PublishedSkillReference>> ListAsync(
-        CancellationToken cancellationToken = default);
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>可供 Agent 绑定的活动技能已发布版本引用集合。</returns>
+    Task<IReadOnlyList<PublishedSkillReference>> ListAsync(CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -340,10 +364,13 @@ public interface IPublishedSkillVersionCatalog
 /// </summary>
 public interface IPublishedSkillContentStore
 {
+    #region 读取已发布技能内容。
     /// <summary>读取已发布技能内容。</summary>
-    Task<PublishedSkillContent?> ReadAsync(
-        PublishedSkillReference reference,
-        CancellationToken cancellationToken = default);
+    /// <param name="reference">需要读取内容的已发布技能引用。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定已发布技能的指令内容及完整性信息；没有可用内容时为 null。</returns>
+    Task<PublishedSkillContent?> ReadAsync(PublishedSkillReference reference, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -351,29 +378,79 @@ public interface IPublishedSkillContentStore
 /// </summary>
 public interface ISkillFileStore
 {
-    /// <summary>确保技能草稿存储目录存在。</summary>
+    #region 确保技能草稿及初始说明文件存在（EnsureDraftAsync）
+    /// <summary>
+    /// 确保技能草稿及初始说明文件存在（EnsureDraftAsync）。
+    /// </summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="name">生成初始说明标题的技能名称，空白时使用技能编码。</param>
+    /// <param name="description">生成初始说明的描述，空白时使用默认描述。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>新建草稿 SKILL.md 时返回 true；该文件已存在且未覆盖时返回 false；路径校验或写入失败通过异常报告。</returns>
     Task<bool> EnsureDraftAsync(string skillCode, string name, string description, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 回滚新建的技能草稿目录。
     /// <summary>回滚新建的技能草稿目录。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
     Task RollbackDraftCreationAsync(string skillCode, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询技能草稿文件列表。
     /// <summary>查询技能草稿文件列表。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定技能草稿目录中的文件及其路径和大小清单。</returns>
     Task<IReadOnlyList<SkillFileEntry>> ListDraftAsync(string skillCode, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 读取技能草稿文本文件。
     /// <summary>读取技能草稿文本文件。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定技能草稿相对路径下的文本文件内容。</returns>
     Task<string> ReadDraftTextAsync(string skillCode, string relativePath, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 写入技能草稿文本文件。
     /// <summary>写入技能草稿文本文件。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="content">写入技能草稿文件的完整文本内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
     Task WriteDraftTextAsync(string skillCode, string relativePath, string content, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 删除技能草稿文件。
     /// <summary>删除技能草稿文件。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
     Task DeleteDraftAsync(string skillCode, string relativePath, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 发布技能文件。
     /// <summary>发布技能文件。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="versionLabel">技能发布版本标签。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>发布后的技能文件清单及清单摘要等制品信息。</returns>
     Task<SkillPublishArtifact> PublishAsync(string skillCode, string versionLabel, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 删除指定的已发布技能产物。
     /// <summary>删除指定的已发布技能产物。</summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="versionLabel">技能发布版本标签。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
     Task DeletePublishedAsync(string skillCode, string versionLabel, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -390,6 +467,8 @@ public sealed record SkillPublishArtifact(
 /// <summary>
 /// 表示技能文件存储过程中的领域异常。
 /// </summary>
+/// <param name="code">用于标识技能文件存储失败原因的错误码。</param>
+/// <param name="message">描述异常原因的错误消息。</param>
 public sealed class SkillFileStoreException(string code, string message) : Exception(message)
 {
     /// <summary>
@@ -403,9 +482,24 @@ public sealed class SkillFileStoreException(string code, string message) : Excep
 /// </summary>
 public static class SkillContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="content">需要复制的已发布技能内容记录。</param>
+    /// <returns>已发布技能内容记录的副本。</returns>
     public static PublishedSkillContent Clone(PublishedSkillContent content) =>
         content with { };
+    #endregion
 
+    #region 读取（ReadOnly）
+    /// <summary>
+    /// 读取（ReadOnly）
+    /// </summary>
+    /// <param name="values">按原顺序枚举并复制为只读集合的源数据。</param>
+    /// <typeparam name="T">待处理数据的泛型类型。</typeparam>
+    /// <returns>按枚举顺序复制到新数组并包装为只读的集合；元素本身不作深复制。</returns>
     public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> values) =>
         new ReadOnlyCollection<T>(values.ToArray());
+    #endregion
 }

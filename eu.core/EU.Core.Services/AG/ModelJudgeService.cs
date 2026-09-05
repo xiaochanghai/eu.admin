@@ -14,11 +14,19 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
-#region 文件职责：ModelJudgeService 职责实现
+// 文件职责：ModelJudgeService 职责实现
 
 /// <summary>
 /// 组织模型裁判评测并持久化报告。
 /// </summary>
+/// <param name="batches">用于读取和持久化评测批次的仓储。</param>
+/// <param name="suites">用于管理评测套件及用例的服务。</param>
+/// <param name="reports">用于读取和持久化模型裁判报告的仓储。</param>
+/// <param name="unifiedRuns">用于读取和持久化统一入口会话、运行及事件的仓储。</param>
+/// <param name="modelProfiles">用于查询模型配置引用的目录。</param>
+/// <param name="engine">用于执行模型裁判评测的引擎。</param>
+/// <param name="policy">模型裁判评测使用的执行策略。</param>
+/// <param name="timeProvider">用于获取当前时间的时间提供器；为 null 时使用系统时间提供器。</param>
 public sealed class ModelJudgeService(
     IEvaluationBatchRepository batches,
     IAgEvaluationSuiteServices suites,
@@ -34,12 +42,41 @@ public sealed class ModelJudgeService(
         new(StringComparer.Ordinal);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">模型裁判报告标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户下的模型裁判报告；不存在时为 null。</returns>
     public Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default) =>
         reports.GetAsync(id, tenantId, cancellationToken);
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和批次下的最近模型裁判报告，最多 50 条。</returns>
     public Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default) =>
         reports.ListAsync(batchId, tenantId, Math.Clamp(take, 1, 50), cancellationToken);
+    #endregion
 
+    #region 处理（EvaluateAsync）
+    /// <summary>
+    /// 处理（EvaluateAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="requestedBy">请求发起方标识。</param>
+    /// <param name="specification">评估规范。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含模型裁判报告，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<ModelJudgeReport>> EvaluateAsync(
         Guid batchId,
         string tenantId,
@@ -220,7 +257,17 @@ public sealed class ModelJudgeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 校验模型裁判请求及评分配置（ValidRequest）
+    /// <summary>
+    /// 校验模型裁判请求及评分配置（ValidRequest）。
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="requestedBy">请求发起方标识。</param>
+    /// <param name="value">待校验的模型裁判规范，包含模型标识、评估器和最低分映射。</param>
+    /// <returns>批次和身份有效、显式启用裁判、模型标识合法、评估器为 1 至 2 个不重复的受支持项，且对应最低分均在 1 至 5 时返回 true，否则返回 false。</returns>
     private static bool ValidRequest(Guid batchId, string tenantId, string requestedBy, ModelJudgeSpecification? value)
     {
         if (batchId == Guid.Empty
@@ -244,7 +291,14 @@ public sealed class ModelJudgeService(
             value.Evaluators.Contains(item.Key, StringComparer.Ordinal)
             && item.Value is >= 1m and <= 5m);
     }
+    #endregion
 
+    #region 处理（ConfigurationHash）
+    /// <summary>
+    /// 处理（ConfigurationHash）
+    /// </summary>
+    /// <param name="value">本次操作使用的模型裁判配置。</param>
+    /// <returns>包含提供方、包版本、模型配置、有序评估器和阈值及提示版本的规范化配置 SHA-256 摘要。</returns>
     private static string ConfigurationHash(ModelJudgeSpecification value)
     {
         var canonical = new
@@ -261,11 +315,18 @@ public sealed class ModelJudgeService(
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(canonical, HashJsonOptions);
         return Convert.ToHexStringLower(SHA256.HashData(bytes));
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<ModelJudgeReport> Failure(string code, string message) =>
         ServiceResult<ModelJudgeReport>.Failure(
             ModelJudgeServiceStatusCodes.FromErrorCode(code),
             message);
+    #endregion
 }
-
-#endregion

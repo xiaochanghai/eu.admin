@@ -14,11 +14,15 @@ using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-#region 文件职责：AgentTasksController 接口处理
+// 文件职责：AgentTasksController 接口处理
 
 /// <summary>
 /// 提供可恢复 Agent 任务管理的 HTTP 接口。
 /// </summary>
+/// <param name="tasks">用于创建和管理可恢复 Agent 任务的服务。</param>
+/// <param name="caller">提供当前调用方身份、租户及权限的上下文。</param>
+/// <param name="timeProvider">用于获取当前时间的时间提供器。</param>
+/// <param name="unifiedEntry">用于准备和执行统一入口运行的服务。</param>
 [Route("api/agent-tasks")]
 public sealed class AgentTasksController(
     IAgAgentTaskServices tasks,
@@ -26,6 +30,13 @@ public sealed class AgentTasksController(
     TimeProvider timeProvider,
     UnifiedEntryService unifiedEntry) : Base.ControllerBase
 {
+    #region 创建（Create）
+    /// <summary>
+    /// 创建（Create）
+    /// </summary>
+    /// <param name="request">创建Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Create([FromBody] CreateAgentTaskApiRequest request, CancellationToken cancellationToken)
@@ -48,7 +59,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 查询列表（List）
+    /// <summary>
+    /// 查询列表（List）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录集合，失败时包含错误状态和提示。</returns>
     [HttpGet]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
     public async Task<ActionResult<ServiceResult<IReadOnlyList<AgentTaskRecord>>>> List([FromQuery] AgentTaskStatus? status = null, [FromQuery] int take = 40, CancellationToken cancellationToken = default)
@@ -60,7 +80,15 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 获取（Get）
+    /// <summary>
+    /// 获取（Get）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含任务及执行尝试、事件详情，失败时包含错误状态和提示。</returns>
     [HttpGet("{id:guid}")]
     [Authorize(Policy = AgentAuthorizationPolicies.HistoryRead)]
     public async Task<ActionResult<ServiceResult<AgentTaskDetailResponse>>> Get(Guid id, CancellationToken cancellationToken)
@@ -72,7 +100,15 @@ public sealed class AgentTasksController(
             await tasks.ListAttemptsAsync(id, caller.TenantId, caller.UserId, cancellationToken),
             await tasks.ListEventsAsync(id, caller.TenantId, caller.UserId, cancellationToken: cancellationToken)));
     }
+    #endregion
 
+    #region 处理（ClaimNext）
+    /// <summary>
+    /// 处理（ClaimNext）
+    /// </summary>
+    /// <param name="request">认领Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含认领的任务；没有可认领任务时数据为 null，校验失败时返回任务错误响应。</returns>
     [HttpPost("claim-next")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord?>>> ClaimNext([FromBody] ClaimAgentTaskApiRequest request, CancellationToken cancellationToken)
@@ -87,7 +123,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 处理（Checkpoint）
+    /// <summary>
+    /// 处理（Checkpoint）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="request">保存检查点Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/checkpoint")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Checkpoint(Guid id, [FromBody] AgentTaskCheckpointApiRequest request, CancellationToken cancellationToken)
@@ -102,7 +147,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 处理（RenewLease）
+    /// <summary>
+    /// 处理（RenewLease）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="request">续租Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/renew-lease")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> RenewLease(Guid id, [FromBody] RenewAgentTaskLeaseApiRequest request, CancellationToken cancellationToken)
@@ -117,7 +171,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 处理（Complete）
+    /// <summary>
+    /// 处理（Complete）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="request">完成Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/complete")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Complete(Guid id, [FromBody] CompleteAgentTaskApiRequest request, CancellationToken cancellationToken)
@@ -131,7 +194,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 处理（Fail）
+    /// <summary>
+    /// 处理（Fail）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="request">记录失败Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/fail")]
     [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Fail(Guid id, [FromBody] FailAgentTaskApiRequest request, CancellationToken cancellationToken)
@@ -146,7 +218,15 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 取消（Cancel）
+    /// <summary>
+    /// 取消（Cancel）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/cancel")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> Cancel(Guid id, CancellationToken cancellationToken)
@@ -166,7 +246,16 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 处理（ResumeWithUserInput）
+    /// <summary>
+    /// 处理（ResumeWithUserInput）
+    /// </summary>
+    /// <param name="id">Agent 任务标识。</param>
+    /// <param name="request">补充用户输入并恢复Agent 任务所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 任务记录，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/user-input")]
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
     public async Task<ActionResult<ServiceResult<AgentTaskRecord>>> ResumeWithUserInput(
@@ -184,9 +273,30 @@ public sealed class AgentTasksController(
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
     }
+    #endregion
 
+    #region 检查未知请求属性（HasUnknownProperties）
+    /// <summary>
+    /// 检查请求是否包含契约之外的 JSON 属性（HasUnknownProperties）。
+    /// </summary>
+    /// <param name="properties">请求中捕获的扩展 JSON 属性。</param>
+    /// <returns>存在扩展属性时返回 true；集合为 null 或为空时返回 false。</returns>
     private static bool HasUnknownProperties(Dictionary<string, JsonElement>? properties) => properties is { Count: > 0 };
+    #endregion
+    #region 处理（InvalidRequest）
+    /// <summary>
+    /// 处理（InvalidRequest）
+    /// </summary>
+    /// <returns>表示请求包含不支持属性的任务错误 JSON 响应。</returns>
     private JsonResult InvalidRequest() => FromError(AgentTaskErrorCodes.Invalid, "The Agent task request contains an unsupported property.");
+    #endregion
+    #region 转换（FromError）
+    /// <summary>
+    /// 转换（FromError）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含任务错误码和请求跟踪标识的失败响应，HTTP 状态由错误解析器确定，未指定时为 500。</returns>
     private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
@@ -194,14 +304,9 @@ public sealed class AgentTasksController(
             new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
     }
+    #endregion
 }
 
-/// <summary>
-/// Agent 任务详情响应。
-/// </summary>
-/// <param name="Task">任务主体记录。</param>
-/// <param name="Attempts">任务执行尝试记录集合。</param>
-/// <param name="Events">任务或运行事件集合。</param>
 /// <summary>
 /// Agent 任务详情响应。
 /// </summary>
@@ -393,5 +498,3 @@ public sealed class ResumeAgentTaskApiRequest : AgentTaskApiRequest
     /// </summary>
     public string? Input { get; init; }
 }
-
-#endregion

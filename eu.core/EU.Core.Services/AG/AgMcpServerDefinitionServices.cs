@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgMcpServerDefinitionServices 职责实现
+// 文件职责：AgMcpServerDefinitionServices 职责实现
 
 /// <summary>
 /// 提供 MCP 服务定义及工具版本的持久化服务。
@@ -20,12 +20,26 @@ public sealed class AgMcpServerDefinitionServices :
     private const int MaximumTools = 256;
     private readonly IMcpToolDiscovery _discovery;
 
+    #region 构造（AgMcpServerDefinitionServices）
+    /// <summary>
+    /// 构造（AgMcpServerDefinitionServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
+    /// <param name="discovery">MCP 工具发现服务。</param>
     public AgMcpServerDefinitionServices(IBaseRepository<AgMcpServerDefinition> dal, IMcpToolDiscovery discovery)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
         _discovery = discovery ?? throw new ArgumentNullException(nameof(discovery));
     }
+    #endregion
 
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<McpServerDefinition>> CreateAsync(CreateMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         if (!TryNormalizeCode(command.Code, out string? code))
@@ -65,13 +79,37 @@ public sealed class AgMcpServerDefinitionServices :
             ? Success(definition)
             : Failure(McpErrorCodes.CodeConflict, "An MCP Server already uses this code.");
     }
+    #endregion
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">MCP 服务标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含参数及工具版本历史的 MCP 服务定义；不存在时为 null。</returns>
     public Task<McpServerDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         GetDefinitionAsync(id, cancellationToken);
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配搜索和状态条件的完整 MCP 服务定义，按编码及标识排序；未指定状态时排除已归档服务。</returns>
     public Task<IReadOnlyList<McpServerDefinition>> ListAsync(McpServerQuery query, CancellationToken cancellationToken = default) =>
         QueryDefinitionsAsync(query, cancellationToken);
+    #endregion
 
+    #region 更新（UpdateAsync）
+    /// <summary>
+    /// 更新（UpdateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<McpServerDefinition>> UpdateAsync(UpdateMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
@@ -150,7 +188,15 @@ public sealed class AgMcpServerDefinitionServices :
             ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before this operation completed.");
     }
+    #endregion
 
+    #region 处理（SyncAsync）
+    /// <summary>
+    /// 处理（SyncAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<McpServerDefinition>> SyncAsync(SyncMcpServerCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
@@ -254,7 +300,15 @@ public sealed class AgMcpServerDefinitionServices :
             ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before synchronization completed.");
     }
+    #endregion
 
+    #region 处理（ClassifyToolAsync）
+    /// <summary>
+    /// 处理（ClassifyToolAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<McpServerDefinition>> ClassifyToolAsync(ClassifyMcpToolCommand command, CancellationToken cancellationToken = default)
     {
         if (!Enum.IsDefined(command.Risk) || command.Risk == McpToolRisk.Unknown)
@@ -316,7 +370,15 @@ public sealed class AgMcpServerDefinitionServices :
             ? Success(updated)
             : Failure(McpErrorCodes.RevisionConflict, "The MCP Server changed before classification completed.");
     }
+    #endregion
 
+    #region 设置（SetArchivedAsync）
+    /// <summary>
+    /// 设置（SetArchivedAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<McpServerDefinition>> SetArchivedAsync(SetMcpServerArchiveCommand command, CancellationToken cancellationToken = default)
     {
         McpServerDefinition? existing =
@@ -381,7 +443,15 @@ public sealed class AgMcpServerDefinitionServices :
                 McpErrorCodes.RevisionConflict,
                 "The MCP Server changed before this operation completed.");
     }
+    #endregion
 
+    #region 查找（FindAgentReferenceBlockersAsync）
+    /// <summary>
+    /// 查找（FindAgentReferenceBlockersAsync）
+    /// </summary>
+    /// <param name="serverToolIds">服务器所属工具标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>最多八个启用 Agent 的编码，其最新发布快照引用了指定服务的工具版本。</returns>
     private async Task<string[]> FindAgentReferenceBlockersAsync(IReadOnlySet<Guid> serverToolIds, CancellationToken cancellationToken)
     {
         if (serverToolIds.Count == 0)
@@ -461,7 +531,15 @@ public sealed class AgMcpServerDefinitionServices :
             .Take(8)
             .ToArray();
     }
+    #endregion
 
+    #region 查询可用的 MCP 工具版本是否存在（ExistsAsync）
+    /// <summary>
+    /// 查询可用的 MCP 工具版本是否存在（ExistsAsync）。
+    /// </summary>
+    /// <param name="toolVersionId">工具版本标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定工具版本及所属服务均未删除、服务未归档且工具风险不是 Unknown 时返回 true，否则返回 false。</returns>
     public async Task<bool> ExistsAsync(Guid toolVersionId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -477,9 +555,15 @@ public sealed class AgMcpServerDefinitionServices :
                 tool.Risk != nameof(McpToolRisk.Unknown))
             .AnyAsync();
     }
+    #endregion
 
-    async Task<IReadOnlyList<PublishedMcpToolReference>> IPublishedMcpToolCatalog.ListAsync(
-        CancellationToken cancellationToken)
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>启用且未归档 MCP 服务的当前工具版本引用，排除已删除及风险级别为 Unknown 的工具。</returns>
+    async Task<IReadOnlyList<PublishedMcpToolReference>> IPublishedMcpToolCatalog.ListAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgMcpServerDefinition> servers = await Db.Queryable<AgMcpServerDefinition>()
@@ -529,7 +613,15 @@ public sealed class AgMcpServerDefinitionServices :
                     ParseRisk(tool.Risk),
                     Required(tool.Sha256, "ToolVersion.Sha256")))));
     }
+    #endregion
 
+    #region 获取（GetDefinitionAsync）
+    /// <summary>
+    /// 获取（GetDefinitionAsync）
+    /// </summary>
+    /// <param name="id">MCP 服务标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含参数及工具版本历史的 MCP 服务定义；不存在时为 null。</returns>
     private async Task<McpServerDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -543,7 +635,15 @@ public sealed class AgMcpServerDefinitionServices :
 
         return await LoadDefinitionAsync(server, cancellationToken);
     }
+    #endregion
 
+    #region 查询（QueryDefinitionsAsync）
+    /// <summary>
+    /// 查询（QueryDefinitionsAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配搜索和状态条件的完整 MCP 服务定义，按编码及标识排序；未指定状态时排除已归档服务。</returns>
     private async Task<IReadOnlyList<McpServerDefinition>> QueryDefinitionsAsync(McpServerQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -611,7 +711,15 @@ public sealed class AgMcpServerDefinitionServices :
             argumentsByServer.GetValueOrDefault(server.ID) ?? [],
             toolsByServer.GetValueOrDefault(server.ID) ?? [])));
     }
+    #endregion
 
+    #region 加载（LoadDefinitionAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionAsync）
+    /// </summary>
+    /// <param name="server">MCP 服务器定义。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>补齐启动参数、当前工具标识及工具历史的 MCP 服务定义。</returns>
     private async Task<McpServerDefinition> LoadDefinitionAsync(AgMcpServerDefinition server, CancellationToken cancellationToken)
     {
         List<AgMcpServerArgument> arguments = await Db.Queryable<AgMcpServerArgument>()
@@ -627,7 +735,15 @@ public sealed class AgMcpServerDefinitionServices :
         cancellationToken.ThrowIfCancellationRequested();
         return MapDefinition(server, arguments, tools);
     }
+    #endregion
 
+    #region 尝试执行（TryCreateDefinitionAsync）
+    /// <summary>
+    /// 尝试执行（TryCreateDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步任务，其结果为：操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private async Task<bool> TryCreateDefinitionAsync(McpServerDefinition definition, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -662,7 +778,16 @@ public sealed class AgMcpServerDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 尝试执行（TryReplaceDefinitionAsync）
+    /// <summary>
+    /// 尝试执行（TryReplaceDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步任务，其结果为：操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private async Task<bool> TryReplaceDefinitionAsync(McpServerDefinition definition, long expectedLogicalRevision, CancellationToken cancellationToken)
     {
         if (expectedLogicalRevision == long.MaxValue ||
@@ -765,7 +890,14 @@ public sealed class AgMcpServerDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 映射（MapDefinitionEntity）
+    /// <summary>
+    /// 映射（MapDefinitionEntity）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <returns>由 MCP 服务定义构造的主表持久化实体。</returns>
     private static AgMcpServerDefinition MapDefinitionEntity(McpServerDefinition definition) =>
         new()
         {
@@ -783,7 +915,14 @@ public sealed class AgMcpServerDefinitionServices :
             LastError = definition.LastError,
             LastSyncedAtUtc = definition.LastSyncedAtUtc?.UtcDateTime
         };
+    #endregion
 
+    #region 映射（MapArgumentEntities）
+    /// <summary>
+    /// 映射（MapArgumentEntities）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <returns>保持启动参数顺序、具有新标识的服务参数实体集合。</returns>
     private static List<AgMcpServerArgument> MapArgumentEntities(McpServerDefinition definition) =>
         definition.Arguments.Select((value, ordinal) => new AgMcpServerArgument
         {
@@ -792,7 +931,16 @@ public sealed class AgMcpServerDefinitionServices :
             Ordinal = ordinal,
             Value = value
         }).ToList();
+    #endregion
 
+    #region 映射（MapToolEntity）
+    /// <summary>
+    /// 映射（MapToolEntity）
+    /// </summary>
+    /// <param name="tool">工具定义。</param>
+    /// <param name="historyOrdinal">工具版本在历史版本集合中的排序序号。</param>
+    /// <param name="currentOrdinal">工具版本在当前工具集合中的序号；null 表示不是当前版本。</param>
+    /// <returns>带有历史序号和可选当前序号的 MCP 工具版本实体。</returns>
     private static AgMcpToolVersion MapToolEntity(McpToolVersion tool, int historyOrdinal, int? currentOrdinal) =>
         new()
         {
@@ -807,7 +955,16 @@ public sealed class AgMcpServerDefinitionServices :
             Sha256 = tool.Sha256,
             DiscoveredAtUtc = tool.DiscoveredAtUtc.UtcDateTime
         };
+    #endregion
 
+    #region 映射（MapDefinition）
+    /// <summary>
+    /// 映射（MapDefinition）
+    /// </summary>
+    /// <param name="server">MCP 服务器定义。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <param name="tools">工具集合。</param>
+    /// <returns>包含有序启动参数、当前工具标识及工具版本历史的 MCP 服务定义。</returns>
     private static McpServerDefinition MapDefinition(
         AgMcpServerDefinition server,
         IReadOnlyList<AgMcpServerArgument> arguments,
@@ -851,43 +1008,130 @@ public sealed class AgMcpServerDefinitionServices :
             McpContractCloner.ReadOnly(currentToolIds),
             McpContractCloner.ReadOnly(mappedTools));
     }
+    #endregion
 
+    #region 解析（ParseTransport）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseTransport）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static McpTransportKind ParseTransport(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out McpTransportKind result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"MCP Transport contains unsupported value '{value}'.");
+    #endregion
 
+    #region 解析（ParseStatus）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseStatus）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static McpServerStatus ParseStatus(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out McpServerStatus result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"MCP Status contains unsupported value '{value}'.");
+    #endregion
 
+    #region 解析（ParseRisk）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseRisk）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static McpToolRisk ParseRisk(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out McpToolRisk result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"MCP Tool Risk contains unsupported value '{value}'.");
+    #endregion
 
+    #region 转换（ToDateTimeOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToDateTimeOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。</returns>
     private static DateTimeOffset ToDateTimeOffset(DateTime value) =>
         new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static Guid Required(Guid? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static int Required(int? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static long Required(long? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 读取必填的 MCP 布尔字段（Required）
+    /// <summary>
+    /// 读取必填的 MCP 布尔字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化数据中读取的可空布尔字段。</param>
+    /// <param name="name">用于构造缺失字段错误信息的字段名称。</param>
+    /// <returns>返回字段原有布尔值，包括 false；为 null 时抛出 InvalidDataException。</returns>
     private static bool Required(bool? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static DateTime Required(DateTime? value, string name) =>
         value ?? throw new InvalidDataException($"MCP {name} is required.");
+    #endregion
 
+    #region 校验（ValidateConfiguration）
+    /// <summary>
+    /// 校验（ValidateConfiguration）
+    /// </summary>
+    /// <param name="transport">MCP 传输方式。</param>
+    /// <param name="endpoint">远程服务端点地址。</param>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <param name="credentialAlias">模型凭据别名。</param>
+    /// <returns>传输方式、端点、启动参数或凭据别名配置无效时的失败服务结果；全部通过时为 null。</returns>
     private static ServiceResult<McpServerDefinition>? ValidateConfiguration(
         McpTransportKind transport,
         string? endpoint,
@@ -938,7 +1182,14 @@ public sealed class AgMcpServerDefinitionServices :
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateDiscoveredTools）
+    /// <summary>
+    /// 校验（ValidateDiscoveredTools）
+    /// </summary>
+    /// <param name="tools">工具集合。</param>
+    /// <returns>发现工具数量、名称或输入 Schema 无效时的失败服务结果；全部通过时为 null。</returns>
     private static ServiceResult<McpServerDefinition>? ValidateDiscoveredTools(IReadOnlyList<DiscoveredMcpTool>? tools)
     {
         if (tools is null || tools.Count > MaximumTools)
@@ -974,20 +1225,44 @@ public sealed class AgMcpServerDefinitionServices :
 
         return null;
     }
+    #endregion
 
+    #region 判断是否允许（CanonicalizeJson）
+    /// <summary>
+    /// 判断是否允许（CanonicalizeJson）
+    /// </summary>
+    /// <param name="json">需要解析并重新序列化的 JSON 文本。</param>
+    /// <returns>解析后重新序列化的紧凑 JSON 文本；无效 JSON 抛出解析异常。</returns>
     private static string CanonicalizeJson(string json)
     {
         using JsonDocument document = JsonDocument.Parse(json);
         return JsonSerializer.Serialize(document.RootElement);
     }
+    #endregion
 
+    #region 检查是否存在（Hash）
+    /// <summary>
+    /// 检查是否存在（Hash）
+    /// </summary>
+    /// <param name="name">对象或字段名称。</param>
+    /// <param name="description">对象说明文本。</param>
+    /// <param name="schema">用于校验的 JSON 架构。</param>
+    /// <param name="risk">工具风险等级。</param>
+    /// <returns>工具名称、描述、Schema 和风险级别以换行分隔后计算的 SHA-256 小写十六进制摘要。</returns>
     private static string Hash(string name, string description, string schema, McpToolRisk risk)
     {
         string source = $"{name}\n{description}\n{schema}\n{risk}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)))
             .ToLowerInvariant();
     }
+    #endregion
 
+    #region 处理（SanitizeFailure）
+    /// <summary>
+    /// 处理（SanitizeFailure）
+    /// </summary>
+    /// <param name="exception">当前捕获的异常。</param>
+    /// <returns>最多 500 字符的安全发现失败提示，仅保留允许的异常消息前缀。</returns>
     private static string SanitizeFailure(Exception exception)
     {
         string value;
@@ -1014,12 +1289,28 @@ public sealed class AgMcpServerDefinitionServices :
 
         return value.Length <= 500 ? value : value[..500];
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<McpServerDefinition> Failure(string code, string message) =>
         ServiceResult<McpServerDefinition>.Failure(
             McpServiceStatusCodes.FromErrorCode(code),
             message);
+    #endregion
 
+    #region 尝试执行（TryNormalizeCode）
+    /// <summary>
+    /// 尝试执行（TryNormalizeCode）
+    /// </summary>
+    /// <param name="value">待规范化并校验格式的业务编码。</param>
+    /// <param name="normalized">规范化后的值。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private static bool TryNormalizeCode(string? value, out string? normalized)
     {
         normalized = null;
@@ -1056,6 +1347,5 @@ public sealed class AgMcpServerDefinitionServices :
         normalized = builder.ToString();
         return true;
     }
+    #endregion
 }
-
-#endregion

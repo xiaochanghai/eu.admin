@@ -8,15 +8,24 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
-#region 文件职责：OrchestrationLifecycleService 职责实现
+// 文件职责：OrchestrationLifecycleService 职责实现
 
 /// <summary>
 /// 管理编排定义的创建、保存、发布和归档。
 /// </summary>
+/// <param name="repository">用于读取和持久化编排定义的仓储。</param>
+/// <param name="agents">用于查询 Agent 定义及已发布版本的目录。</param>
 public sealed class OrchestrationLifecycleService(
     IOrchestrationRepository repository,
     IAgentDefinitionCatalog agents) : BaseServices, IOrchestrationLifecycleService
 {
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationDefinition>> CreateAsync(CreateOrchestrationCommand command, CancellationToken cancellationToken = default)
     {
         string code = (command.Code ?? string.Empty).Trim().ToLowerInvariant();
@@ -34,7 +43,15 @@ public sealed class OrchestrationLifecycleService(
             ? Success(value)
             : Failure(OrchestrationErrorCodes.CodeConflict, "An orchestration already uses this code.");
     }
+    #endregion
 
+    #region 保存（SaveDraftAsync）
+    /// <summary>
+    /// 保存（SaveDraftAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationDefinition>> SaveDraftAsync(
         SaveOrchestrationDraftCommand command,
         CancellationToken cancellationToken = default)
@@ -68,7 +85,15 @@ public sealed class OrchestrationLifecycleService(
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
             ? Success(updated) : Conflict();
     }
+    #endregion
 
+    #region 发布（PublishAsync）
+    /// <summary>
+    /// 发布（PublishAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationDefinition>> PublishAsync(PublishOrchestrationCommand command, CancellationToken cancellationToken = default)
     {
         OrchestrationDefinition? existing = await repository.GetByIdAsync(command.Id, cancellationToken);
@@ -114,10 +139,26 @@ public sealed class OrchestrationLifecycleService(
         return await repository.TryReplaceAsync(updated, command.ExpectedLogicalRevision, cancellationToken)
             ? Success(updated) : Conflict();
     }
+    #endregion
 
+    #region 读取编排定义及版本（GetAsync）
+    /// <summary>
+    /// 读取编排定义及版本（GetAsync）。
+    /// </summary>
+    /// <param name="id">编排定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回仓储中的编排定义及版本；不存在时返回 null。</returns>
     public Task<OrchestrationDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         repository.GetByIdAsync(id, cancellationToken);
+    #endregion
 
+    #region 按状态列出编排定义摘要（ListAsync）
+    /// <summary>
+    /// 按状态列出编排定义摘要（ListAsync）。
+    /// </summary>
+    /// <param name="status">可选状态筛选条件，null 表示查询非归档编排。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回匹配状态的编排摘要集合；未指定状态时排除 Archived，显式指定 Archived 时可查询归档项；无匹配项时为空集合。</returns>
     public async Task<IReadOnlyList<OrchestrationListItem>> ListAsync(OrchestrationStatus? status = null, CancellationToken cancellationToken = default) =>
         OrchestrationContractCloner.ReadOnly((await repository.ListAsync(cancellationToken))
             .Where(value => status.HasValue
@@ -128,7 +169,15 @@ public sealed class OrchestrationLifecycleService(
                 value.Id, value.Code, value.Name, value.Description, value.Status,
                 value.LogicalRevision, value.Draft.Nodes.Count,
                 value.PublishedVersions.LastOrDefault()?.Label)));
+    #endregion
 
+    #region 设置（SetArchivedAsync）
+    /// <summary>
+    /// 设置（SetArchivedAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationDefinition>> SetArchivedAsync(
         SetOrchestrationArchiveCommand command,
         CancellationToken cancellationToken = default)
@@ -172,7 +221,17 @@ public sealed class OrchestrationLifecycleService(
             ? Success(updated)
             : Conflict();
     }
+    #endregion
 
+    #region 校验（ValidateAsync）
+    /// <summary>
+    /// 校验（ValidateAsync）
+    /// </summary>
+    /// <param name="startNodeId">编排起始节点标识。</param>
+    /// <param name="nodes">编排节点集合。</param>
+    /// <param name="edges">编排连线集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>节点、边、Agent 引用及图结构的首个校验错误；全部通过时为 null。</returns>
     private async Task<string?> ValidateAsync(
         string startNodeId,
         IReadOnlyList<OrchestrationNode> nodes,
@@ -211,7 +270,15 @@ public sealed class OrchestrationLifecycleService(
         if (nodes.Any(node => !reachable.Contains(node.Id))) return "Every node must be reachable from StartNodeId.";
         return null;
     }
+    #endregion
 
+    #region 收集起始节点沿出边可达的节点（Reachable）
+    /// <summary>
+    /// 收集起始节点沿出边可达的节点（Reachable）。
+    /// </summary>
+    /// <param name="start">开始遍历的编排节点标识。</param>
+    /// <param name="edges">编排连线集合。</param>
+    /// <returns>返回包含起始节点本身及所有沿出边可达节点的标识集合，标识比较区分大小写。</returns>
     private static HashSet<string> Reachable(string start, IReadOnlyList<OrchestrationEdge> edges)
     {
         var values = new HashSet<string>(StringComparer.Ordinal) { start };
@@ -222,11 +289,20 @@ public sealed class OrchestrationLifecycleService(
                 if (values.Add(next)) pending.Enqueue(next);
         return values;
     }
+    #endregion
 
+    #region 检查起始节点可达路径中的有向环（HasCycle）
+    /// <summary>
+    /// 检查起始节点可达路径中的有向环（HasCycle）。
+    /// </summary>
+    /// <param name="start">开始遍历的编排节点标识。</param>
+    /// <param name="edges">定义有向连接关系的编排连线集合。</param>
+    /// <returns>从起始节点沿出边遍历时发现环则返回 true，否则返回 false；不检查从起始节点不可达的子图。</returns>
     private static bool HasCycle(string start, IReadOnlyList<OrchestrationEdge> edges)
     {
         var visiting = new HashSet<string>(StringComparer.Ordinal);
         var visited = new HashSet<string>(StringComparer.Ordinal);
+        #region 处理（Visit）
         bool Visit(string id)
         {
             if (!visiting.Add(id)) return true;
@@ -236,15 +312,29 @@ public sealed class OrchestrationLifecycleService(
             visiting.Remove(id);
             return false;
         }
+        #endregion
         return Visit(start);
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<OrchestrationDefinition> Failure(string code, string message) =>
         ServiceResult<OrchestrationDefinition>.Failure(
             OrchestrationServiceStatusCodes.FromErrorCode(code),
             message);
+    #endregion
+    #region 处理（Conflict）
+    /// <summary>
+    /// 处理（Conflict）
+    /// </summary>
+    /// <returns>表示记录版本已变化、需要重新加载后重试的失败服务结果。</returns>
     private static ServiceResult<OrchestrationDefinition> Conflict() =>
         Failure(OrchestrationErrorCodes.RowVersionConflict, "The orchestration changed; reload and retry.");
+    #endregion
 }
-
-#endregion

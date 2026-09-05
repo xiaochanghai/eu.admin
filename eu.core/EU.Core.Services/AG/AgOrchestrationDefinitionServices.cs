@@ -4,7 +4,7 @@ using EU.Core.IServices.Orchestration;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgOrchestrationDefinitionServices 职责实现
+// 文件职责：AgOrchestrationDefinitionServices 职责实现
 
 /// <summary>
 /// 编排定义、版本、节点、连线和发布绑定的规范化持久化服务。
@@ -15,11 +15,24 @@ public sealed class AgOrchestrationDefinitionServices :
     IOrchestrationRepository,
     IPublishedOrchestrationCatalog
 {
+    #region 构造（AgOrchestrationDefinitionServices）
+    /// <summary>
+    /// 构造（AgOrchestrationDefinitionServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgOrchestrationDefinitionServices(IBaseRepository<AgOrchestrationDefinition> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
     }
+    #endregion
 
+    #region 读取编排定义及版本（GetByIdAsync）
+    /// <summary>
+    /// 读取编排定义及版本（GetByIdAsync）。
+    /// </summary>
+    /// <param name="id">编排定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的编排定义及其草稿、发布版本；记录不存在时为 null。</returns>
     public async Task<OrchestrationDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -30,7 +43,14 @@ public sealed class AgOrchestrationDefinitionServices :
             ? null
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
+    #endregion
 
+    #region 列出编排定义及版本（ListAsync）
+    /// <summary>
+    /// 列出编排定义及版本（ListAsync）。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的编排定义及版本集合，包含归档定义；无记录时为空集合。</returns>
     public async Task<IReadOnlyList<OrchestrationDefinition>> ListAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -41,7 +61,14 @@ public sealed class AgOrchestrationDefinitionServices :
             .ToListAsync();
         return await LoadDefinitionsAsync(definitions, cancellationToken);
     }
+    #endregion
 
+    #region 列出未归档编排的已发布版本引用（ListPublishedAsync）
+    /// <summary>
+    /// 列出未归档编排的已发布版本引用（ListPublishedAsync）。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除、未归档定义下的非草稿版本引用；引用中同时标记编排是否启用，禁用版本不会仅因此被排除；无记录时为空集合。</returns>
     public async Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -71,7 +98,15 @@ public sealed class AgOrchestrationDefinitionServices :
                 value.OrchestrationVersionId,
                 ParseStatus(value.Status) is OrchestrationStatus.Enabled)));
     }
+    #endregion
 
+    #region 创建编排定义及草稿和发布版本（TryCreateAsync）
+    /// <summary>
+    /// 创建编排定义及草稿和发布版本（TryCreateAsync）。
+    /// </summary>
+    /// <param name="value">待创建的编排定义，包含草稿及已发布版本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>编排定义及版本持久化成功时返回 true；存在相同标识或编码的未删除定义时返回 false。</returns>
     public async Task<bool> TryCreateAsync(OrchestrationDefinition value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -111,7 +146,16 @@ public sealed class AgOrchestrationDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 按修订号更新编排定义并保留发布历史（TryReplaceAsync）
+    /// <summary>
+    /// 按修订号更新编排定义并保留发布历史（TryReplaceAsync）。
+    /// </summary>
+    /// <param name="value">替换后的定义；修订号须递增一，保留原草稿标识及已有发布版本标识，已有发布版本内容不会被覆盖。</param>
+    /// <param name="expectedRevision">数据库当前应具有的逻辑修订号，不允许为 long.MaxValue。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>定义、草稿及新增发布版本保存成功时返回 true；修订号、编码或草稿标识不匹配，发布版本被移除或重复，或条件更新未生效时返回 false。</returns>
     public async Task<bool> TryReplaceAsync(OrchestrationDefinition value, long expectedRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -217,7 +261,15 @@ public sealed class AgOrchestrationDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 加载（LoadDefinitionAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>补齐草稿、发布版本、节点、边及 Agent 绑定的编排定义。</returns>
     private async Task<OrchestrationDefinition> LoadDefinitionAsync(AgOrchestrationDefinition definition, CancellationToken cancellationToken)
     {
         IReadOnlyList<OrchestrationDefinition> values = await LoadDefinitionsAsync(
@@ -225,7 +277,15 @@ public sealed class AgOrchestrationDefinitionServices :
             cancellationToken);
         return values[0];
     }
+    #endregion
 
+    #region 加载（LoadDefinitionsAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionsAsync）
+    /// </summary>
+    /// <param name="definitions">定义记录集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保持输入顺序并补齐各版本节点、边及 Agent 绑定的编排定义集合。</returns>
     private async Task<IReadOnlyList<OrchestrationDefinition>> LoadDefinitionsAsync(
         IReadOnlyList<AgOrchestrationDefinition> definitions,
         CancellationToken cancellationToken)
@@ -301,7 +361,18 @@ public sealed class AgOrchestrationDefinitionServices :
             edgesByVersion,
             bindingsByVersion)));
     }
+    #endregion
 
+    #region 映射（MapDefinition）
+    /// <summary>
+    /// 映射（MapDefinition）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="versions">版本记录集合。</param>
+    /// <param name="nodesByVersion">按版本分组的编排节点。</param>
+    /// <param name="edgesByVersion">按版本分组的编排连线。</param>
+    /// <param name="bindingsByVersion">按版本分组的资源绑定。</param>
+    /// <returns>包含唯一草稿、有序发布版本及发布快照的完整编排定义。</returns>
     private static OrchestrationDefinition MapDefinition(
         AgOrchestrationDefinition definition,
         IReadOnlyList<AgOrchestrationVersion> versions,
@@ -312,6 +383,7 @@ public sealed class AgOrchestrationDefinitionServices :
         AgOrchestrationVersion draftEntity = versions.SingleOrDefault(value => value.IsDraft == true)
             ?? throw new InvalidDataException(
                 $"Orchestration '{definition.Code}' does not have exactly one draft version.");
+        #region 映射（Map）
         OrchestrationVersion Map(AgOrchestrationVersion version)
         {
             OrchestrationNode[] mappedNodes = (nodesByVersion.GetValueOrDefault(version.ID) ?? [])
@@ -348,6 +420,7 @@ public sealed class AgOrchestrationDefinitionServices :
                 OrchestrationContractCloner.ReadOnly(mappedEdges),
                 snapshot);
         }
+        #endregion
 
         return new OrchestrationDefinition(
             definition.ID,
@@ -363,7 +436,18 @@ public sealed class AgOrchestrationDefinitionServices :
                 .ThenBy(value => value.ID)
                 .Select(Map)));
     }
+    #endregion
 
+    #region 新增（InsertVersionAsync）
+    /// <summary>
+    /// 新增（InsertVersionAsync）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="orchestrationCode">编排编码。</param>
+    /// <param name="version">版本记录。</param>
+    /// <param name="ordinal">版本在所属定义中的排序序号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertVersionAsync(
         Guid orchestrationId,
         string orchestrationCode,
@@ -379,7 +463,17 @@ public sealed class AgOrchestrationDefinitionServices :
             version,
             cancellationToken);
     }
+    #endregion
 
+    #region 新增（InsertVersionChildrenAsync）
+    /// <summary>
+    /// 新增（InsertVersionChildrenAsync）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="orchestrationCode">编排编码。</param>
+    /// <param name="version">版本记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertVersionChildrenAsync(
         Guid orchestrationId,
         string orchestrationCode,
@@ -422,7 +516,14 @@ public sealed class AgOrchestrationDefinitionServices :
         }
         cancellationToken.ThrowIfCancellationRequested();
     }
+    #endregion
 
+    #region 删除（DeleteVersionChildrenAsync）
+    /// <summary>
+    /// 删除（DeleteVersionChildrenAsync）
+    /// </summary>
+    /// <param name="versionId">版本标识。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task DeleteVersionChildrenAsync(Guid versionId)
     {
         await Db.Deleteable<AgOrchestrationAgentBinding>()
@@ -435,7 +536,14 @@ public sealed class AgOrchestrationDefinitionServices :
             .Where(value => value.VersionId == versionId)
             .ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 映射（MapDefinitionEntity）
+    /// <summary>
+    /// 映射（MapDefinitionEntity）
+    /// </summary>
+    /// <param name="value">本次操作使用的编排定义。</param>
+    /// <returns>由编排定义构造的主表持久化实体。</returns>
     private static AgOrchestrationDefinition MapDefinitionEntity(OrchestrationDefinition value) =>
         new()
         {
@@ -448,7 +556,16 @@ public sealed class AgOrchestrationDefinitionServices :
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapVersionEntity）
+    /// <summary>
+    /// 映射（MapVersionEntity）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="value">本次操作使用的编排版本。</param>
+    /// <param name="ordinal">版本在所属定义中的排序序号。</param>
+    /// <returns>带有所属编排、版本序号及起始节点的版本实体。</returns>
     private static AgOrchestrationVersion MapVersionEntity(Guid orchestrationId, OrchestrationVersion value, int ordinal) =>
         new()
         {
@@ -461,7 +578,14 @@ public sealed class AgOrchestrationDefinitionServices :
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapNode）
+    /// <summary>
+    /// 映射（MapNode）
+    /// </summary>
+    /// <param name="value">本次操作使用的编排节点实体。</param>
+    /// <returns>包含 Agent、输入方式、重试上限及超时设置的编排节点。</returns>
     private static OrchestrationNode MapNode(AgOrchestrationNode value) =>
         new(
             Required(value.NodeId, "Node.NodeId"),
@@ -471,7 +595,17 @@ public sealed class AgOrchestrationDefinitionServices :
             Required(value.InputTemplate, "Node.InputTemplate"),
             Required(value.MaximumRetries, "Node.MaximumRetries"),
             Required(value.TimeoutSeconds, "Node.TimeoutSeconds"));
+    #endregion
 
+    #region 映射（MapNodeEntity）
+    /// <summary>
+    /// 映射（MapNodeEntity）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="value">本次操作使用的编排节点。</param>
+    /// <param name="ordinal">节点在所属版本或运行中的排序序号。</param>
+    /// <returns>带有所属编排、版本及节点序号的节点持久化实体。</returns>
     private static AgOrchestrationNode MapNodeEntity(Guid orchestrationId, Guid versionId, OrchestrationNode value, int ordinal) =>
         new()
         {
@@ -489,7 +623,14 @@ public sealed class AgOrchestrationDefinitionServices :
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapEdge）
+    /// <summary>
+    /// 映射（MapEdge）
+    /// </summary>
+    /// <param name="value">本次操作使用的编排边实体。</param>
+    /// <returns>包含起止节点、路由条件和顺序的编排边。</returns>
     private static OrchestrationEdge MapEdge(AgOrchestrationEdge value) =>
         new(
             Required(value.FromNodeId, "Edge.FromNodeId"),
@@ -497,7 +638,17 @@ public sealed class AgOrchestrationDefinitionServices :
             ParseEdgeCondition(value.Condition),
             Required(value.ConditionValue, "Edge.ConditionValue"),
             Required(value.SortOrder, "Edge.SortOrder"));
+    #endregion
 
+    #region 映射（MapEdgeEntity）
+    /// <summary>
+    /// 映射（MapEdgeEntity）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="value">本次操作使用的编排边。</param>
+    /// <param name="ordinal">边在所属版本中的排序序号。</param>
+    /// <returns>带有所属编排、版本及边序号的边持久化实体。</returns>
     private static AgOrchestrationEdge MapEdgeEntity(Guid orchestrationId, Guid versionId, OrchestrationEdge value, int ordinal) =>
         new()
         {
@@ -513,12 +664,29 @@ public sealed class AgOrchestrationDefinitionServices :
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapBinding）
+    /// <summary>
+    /// 映射（MapBinding）
+    /// </summary>
+    /// <param name="value">本次操作使用的编排 Agent 绑定实体。</param>
+    /// <returns>包含 Agent 标识及固定发布版本的编排绑定。</returns>
     private static OrchestrationAgentBinding MapBinding(AgOrchestrationAgentBinding value) =>
         new(
             Required(value.AgentId, "AgentBinding.AgentId"),
             Required(value.AgentVersionId, "AgentBinding.AgentVersionId"));
+    #endregion
 
+    #region 映射（MapBindingEntity）
+    /// <summary>
+    /// 映射（MapBindingEntity）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="value">本次操作使用的编排 Agent 绑定。</param>
+    /// <param name="ordinal">资源绑定在同类绑定集合中的排序序号。</param>
+    /// <returns>带有所属编排、版本及绑定序号的 Agent 绑定实体。</returns>
     private static AgOrchestrationAgentBinding MapBindingEntity(Guid orchestrationId, Guid versionId, OrchestrationAgentBinding value, int ordinal) =>
         new()
         {
@@ -531,27 +699,66 @@ public sealed class AgOrchestrationDefinitionServices :
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 解析（ParseStatus）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseStatus）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static OrchestrationStatus ParseStatus(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out OrchestrationStatus result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"Orchestration Status contains unsupported value '{value}'.");
+    #endregion
 
+    #region 解析（ParseInputMode）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseInputMode）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static OrchestrationNodeInputMode ParseInputMode(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out OrchestrationNodeInputMode result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"Orchestration InputMode contains unsupported value '{value}'.");
+    #endregion
 
+    #region 解析（ParseEdgeCondition）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseEdgeCondition）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static OrchestrationEdgeCondition ParseEdgeCondition(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out OrchestrationEdgeCondition result) && Enum.IsDefined(result)
             ? result
             : throw new InvalidDataException($"Orchestration Condition contains unsupported value '{value}'.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <typeparam name="T">必填字段的值类型。</typeparam>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static T Required<T>(T? value, string field) where T : struct =>
         value ?? throw new InvalidDataException($"Orchestration field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Orchestration field '{field}' is missing.");
+    #endregion
 
     /// <summary>
     /// 已发布编排版本联表查询的内部投影行。
@@ -574,5 +781,3 @@ public sealed class AgOrchestrationDefinitionServices :
         public string? Status { get; set; }
     }
 }
-
-#endregion

@@ -22,8 +22,14 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentVersionServices : BaseServices<AgAgentVersion, AgAgentVersionDto, InsertAgAgentVersionInput, EditAgAgentVersionInput>, IAgAgentVersionServices
 {
+    #region 构造（AgAgentVersionServices）
+    /// <summary>
+    /// 构造（AgAgentVersionServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgAgentVersionServices(IBaseRepository<AgAgentVersion> dal)
     {
         BaseDal = dal;
     }
+    #endregion
 }

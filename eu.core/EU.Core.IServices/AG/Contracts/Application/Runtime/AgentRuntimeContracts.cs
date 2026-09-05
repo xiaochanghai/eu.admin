@@ -132,6 +132,8 @@ public sealed record AgentRunEvent(
 /// <summary>
 /// 表示 Agent 运行过程中的领域异常。
 /// </summary>
+/// <param name="errorCode">用于标识失败原因的领域错误码。</param>
+/// <param name="message">描述异常原因的错误消息。</param>
 public sealed class AgentRuntimeException(string errorCode, string message)
     : Exception(message)
 {
@@ -309,10 +311,13 @@ public sealed record AgentToolApprovalRequest(
 /// </summary>
 public interface IAgentToolApprovalHandler
 {
+    #region 创建或处理 Agent 工具审批请求。
     /// <summary>创建或处理 Agent 工具审批请求。</summary>
-    Task<ToolApprovalRequestRecord> RequestAsync(
-        AgentToolApprovalRequest request,
-        CancellationToken cancellationToken = default);
+    /// <param name="request">工具审批申请，包含会话绑定、执行身份、工具版本和调用参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>为当前工具调用创建的待审批请求记录。</returns>
+    Task<ToolApprovalRequestRecord> RequestAsync(AgentToolApprovalRequest request, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -336,11 +341,26 @@ public sealed record AgentRunPreparationResult(
     /// </summary>
     public bool Succeeded => Error is null;
 
+    #region 处理（Success）
+    /// <summary>
+    /// 处理（Success）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <returns>包含运行上下文且无错误信息的 Agent 准备成功结果。</returns>
     public static AgentRunPreparationResult Success(AgentRunContext context) =>
         new(context, null);
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含指定错误码和消息、不含运行上下文的 Agent 准备失败结果。</returns>
     public static AgentRunPreparationResult Failure(string code, string message) =>
         new(null, new AgentRunError(code, message));
+    #endregion
 }
 
 /// <summary>
@@ -441,10 +461,13 @@ public static class AgentRunErrorCodes
 /// </summary>
 public interface IAgentRuntimeEngine
 {
+    #region 启动Agent 运行并流式返回事件。
     /// <summary>启动Agent 运行并流式返回事件。</summary>
-    IAsyncEnumerable<AgentRunEvent> StreamAsync(
-        AgentRunContext context,
-        CancellationToken cancellationToken = default);
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按执行顺序产生的异步事件流。</returns>
+    IAsyncEnumerable<AgentRunEvent> StreamAsync(AgentRunContext context, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -452,16 +475,22 @@ public interface IAgentRuntimeEngine
 /// </summary>
 public interface IAgentRunAuditRepository
 {
+    #region 保存Agent 运行审计记录。
     /// <summary>保存Agent 运行审计记录。</summary>
-    Task SaveAsync(
-        AgentRunAuditRecord record,
-        CancellationToken cancellationToken = default);
+    /// <param name="record">业务记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
+    Task SaveAsync(AgentRunAuditRecord record, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询Agent 运行审计记录列表。
     /// <summary>查询Agent 运行审计记录列表。</summary>
-    Task<IReadOnlyList<AgentRunAuditRecord>> ListAsync(
-        Guid agentId,
-        int take,
-        CancellationToken cancellationToken = default);
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定 Agent 的运行审计及工具调用明细集合，受读取数量限制。</returns>
+    Task<IReadOnlyList<AgentRunAuditRecord>> ListAsync(Guid agentId, int take, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -489,10 +518,13 @@ public interface IAgentInternalTool
     /// <summary>获取内部工具输入参数的 JSON Schema。</summary>
     string InputSchemaJson { get; }
 
+    #region 调用Agent 内部工具。
     /// <summary>调用Agent 内部工具。</summary>
-    Task<AgentInternalToolResult> InvokeAsync(
-        string argumentsJson,
-        CancellationToken cancellationToken = default);
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>内部工具执行结果，包含成功标志、结果内容及错误码。</returns>
+    Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -516,13 +548,25 @@ public sealed record AgentMcpCallGuardResult(
     /// </summary>
     public bool Allowed => Denial is null;
 
+    #region 处理（Allow）
+    /// <summary>
+    /// 处理（Allow）
+    /// </summary>
+    /// <returns>没有拒绝信息的 MCP 调用预算允许结果。</returns>
     public static AgentMcpCallGuardResult Allow() =>
         new((AgentMcpCallDenial?)null);
+    #endregion
 
-    public static AgentMcpCallGuardResult Deny(
-        string errorCode,
-        string message) =>
+    #region 处理（Deny）
+    /// <summary>
+    /// 处理（Deny）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含指定错误码和提示的 MCP 调用预算拒绝结果。</returns>
+    public static AgentMcpCallGuardResult Deny(string errorCode, string message) =>
         new(new AgentMcpCallDenial(errorCode, message));
+    #endregion
 }
 
 /// <summary>
@@ -530,9 +574,12 @@ public sealed record AgentMcpCallGuardResult(
 /// </summary>
 public interface IAgentMcpCallGuard
 {
+    #region 校验并预留MCP 工具调用配额。
     /// <summary>校验并预留MCP 工具调用配额。</summary>
-    ValueTask<AgentMcpCallGuardResult> ReserveAsync(
-        CancellationToken cancellationToken = default);
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>本次调用是否成功预留预算，以及预算不足或策略拒绝时的说明。</returns>
+    ValueTask<AgentMcpCallGuardResult> ReserveAsync(CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -553,14 +600,28 @@ public sealed record McpRuntimeToolResult(
 /// </summary>
 public interface IMcpRuntimeToolInvoker
 {
+    #region 调用MCP 工具。
     /// <summary>调用MCP 工具。</summary>
+    /// <param name="toolVersionId">工具版本标识。</param>
+    /// <param name="expectedRisk">调用时要求工具匹配的风险等级。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定工具版本调用后的成功、阻止状态、结果内容及错误码。</returns>
     Task<McpRuntimeToolResult> InvokeAsync(
         Guid toolVersionId,
         McpToolRisk expectedRisk,
         IReadOnlyDictionary<string, object?> arguments,
         CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 调用MCP 工具。
     /// <summary>调用MCP 工具。</summary>
+    /// <param name="toolVersionId">工具版本标识。</param>
+    /// <param name="expectedRisk">调用时要求工具匹配的风险等级。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <param name="invocationContext">MCP 调用所用的执行身份和运行上下文。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>工具调用结果；接口默认实现转发到不带调用上下文的重载。</returns>
     Task<McpRuntimeToolResult> InvokeAsync(
         Guid toolVersionId,
         McpToolRisk expectedRisk,
@@ -568,6 +629,7 @@ public interface IMcpRuntimeToolInvoker
         McpInvocationContext? invocationContext,
         CancellationToken cancellationToken = default) =>
         InvokeAsync(toolVersionId, expectedRisk, arguments, cancellationToken);
+    #endregion
 }
 
 /// <summary>
@@ -591,13 +653,25 @@ public sealed record AgentMcpResultGuardResult(
     /// </summary>
     public bool Allowed => Denial is null;
 
+    #region 处理（Allow）
+    /// <summary>
+    /// 处理（Allow）
+    /// </summary>
+    /// <returns>没有拒绝信息的 MCP 结果预算允许结果。</returns>
     public static AgentMcpResultGuardResult Allow() =>
         new((AgentMcpResultDenial?)null);
+    #endregion
 
-    public static AgentMcpResultGuardResult Deny(
-        string errorCode,
-        string message) =>
+    #region 处理（Deny）
+    /// <summary>
+    /// 处理（Deny）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含指定错误码和提示的 MCP 结果预算拒绝结果。</returns>
+    public static AgentMcpResultGuardResult Deny(string errorCode, string message) =>
         new(new AgentMcpResultDenial(errorCode, message));
+    #endregion
 }
 
 /// <summary>
@@ -605,10 +679,13 @@ public sealed record AgentMcpResultGuardResult(
 /// </summary>
 public interface IAgentMcpResultGuard
 {
+    #region 校验并预留MCP 工具结果配额。
     /// <summary>校验并预留MCP 工具结果配额。</summary>
-    ValueTask<AgentMcpResultGuardResult> ReserveAsync(
-        int resultUtf8Bytes,
-        CancellationToken cancellationToken = default);
+    /// <param name="resultUtf8Bytes">工具结果按 UTF-8 编码后的字节数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定 UTF-8 字节数的工具结果是否成功预留容量，以及拒绝时的说明。</returns>
+    ValueTask<AgentMcpResultGuardResult> ReserveAsync(int resultUtf8Bytes, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -616,10 +693,17 @@ public interface IAgentMcpResultGuard
 /// </summary>
 public static class AgentRunContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="record">业务记录。</param>
+    /// <returns>复制工具调用记录并包装为只读集合的运行审计副本。</returns>
     public static AgentRunAuditRecord Clone(AgentRunAuditRecord record) =>
         record with
         {
             ToolCalls = new ReadOnlyCollection<AgentToolCallAuditRecord>(
                 record.ToolCalls.Select(call => call with { }).ToArray())
         };
+    #endregion
 }

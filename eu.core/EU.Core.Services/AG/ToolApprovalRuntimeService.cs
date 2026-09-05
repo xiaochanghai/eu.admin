@@ -11,11 +11,19 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
-#region 文件职责：ToolApprovalRuntimeService 职责实现
+// 文件职责：ToolApprovalRuntimeService 职责实现
 
 /// <summary>
 /// 处理运行时工具审批的创建、恢复和执行。
 /// </summary>
+/// <param name="approvals">用于读取和持久化工具审批请求的仓储。</param>
+/// <param name="payloadProtector">用于加密和解密审批载荷的保护器。</param>
+/// <param name="tools">用于查询已发布 MCP 工具版本的目录。</param>
+/// <param name="policy">用于在审批执行前重新校验调用权限和约束的策略。</param>
+/// <param name="invoker">用于执行获批 MCP 工具调用的调用器。</param>
+/// <param name="approvalLifetime">审批请求有效时长；为 null 时使用 15 分钟，指定值须大于零且不超过 1 小时。</param>
+/// <param name="executionTimeout">获批工具执行超时时长；为 null 时使用 65 秒，指定值须大于零且不超过 10 分钟。</param>
+/// <param name="maximumPersistedResultUtf8Bytes">审批执行结果允许持久化的 UTF-8 字节上限，默认 30,000 字节。</param>
 public sealed class ToolApprovalRuntimeService(
     IToolApprovalRepository approvals,
     IToolApprovalPayloadProtector payloadProtector,
@@ -51,9 +59,14 @@ public sealed class ToolApprovalRuntimeService(
             ? executionTimeout.Value
             : throw new ArgumentOutOfRangeException(nameof(executionTimeout));
 
-    async Task<ToolApprovalRequestRecord> IAgentToolApprovalHandler.RequestAsync(
-        AgentToolApprovalRequest request,
-        CancellationToken cancellationToken)
+    #region 处理（RequestAsync）
+    /// <summary>
+    /// 处理（RequestAsync）
+    /// </summary>
+    /// <param name="request">工具审批申请，包含会话绑定、执行身份、工具版本和调用参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>使用当前时间及配置有效期创建并持久化的待审批请求。</returns>
+    async Task<ToolApprovalRequestRecord> IAgentToolApprovalHandler.RequestAsync(AgentToolApprovalRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -68,7 +81,15 @@ public sealed class ToolApprovalRuntimeService(
             now,
             now.Add(_approvalLifetime)), cancellationToken);
     }
+    #endregion
 
+    #region 处理（RequestAsync）
+    /// <summary>
+    /// 处理（RequestAsync）
+    /// </summary>
+    /// <param name="request">审批创建参数，包含绑定身份、工具参数以及申请和过期时间。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含参数和 Schema 摘要的已持久化待审批请求；受保护载荷保存失败时抛出异常。</returns>
     public async Task<ToolApprovalRequestRecord> RequestAsync(ToolApprovalRuntimeRequest request, CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
@@ -116,7 +137,15 @@ public sealed class ToolApprovalRuntimeService(
 
         return record;
     }
+    #endregion
 
+    #region 处理（ResumeApprovedAsync）
+    /// <summary>
+    /// 处理（ResumeApprovedAsync）
+    /// </summary>
+    /// <param name="request">已批准工具调用的恢复请求，包含审批标识和当前执行身份。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>重新校验并执行后的工具结果，或已完成审批的持久化结果重放；无效状态及安全校验失败会抛出异常。</returns>
     public async Task<McpRuntimeToolResult> ResumeApprovedAsync(ToolApprovalResumeRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -285,7 +314,13 @@ public sealed class ToolApprovalRuntimeService(
             CancellationToken.None);
         return result;
     }
+    #endregion
 
+    #region 处理（ObserveLateInvocation）
+    /// <summary>
+    /// 处理（ObserveLateInvocation）
+    /// </summary>
+    /// <param name="invocation">调用上下文。</param>
     private static void ObserveLateInvocation(Task<McpRuntimeToolResult>? invocation)
     {
         if (invocation is null)
@@ -299,7 +334,14 @@ public sealed class ToolApprovalRuntimeService(
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
     }
+    #endregion
 
+    #region 规范化（NormalizeResult）
+    /// <summary>
+    /// 规范化（NormalizeResult）
+    /// </summary>
+    /// <param name="result">操作结果。</param>
+    /// <returns>内容规范化且符合持久化 UTF-8 字节上限的工具结果副本；超限时按 Unicode 字符截断并追加提示。</returns>
     private McpRuntimeToolResult NormalizeResult(McpRuntimeToolResult result)
     {
         string content = result.Content ?? string.Empty;
@@ -326,7 +368,15 @@ public sealed class ToolApprovalRuntimeService(
         builder.Append(suffix);
         return result with { Content = builder.ToString() };
     }
+    #endregion
 
+    #region 读取（ReadCompletedResultAsync）
+    /// <summary>
+    /// 读取（ReadCompletedResultAsync）
+    /// </summary>
+    /// <param name="approval">审批记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>校验审批绑定、解密内容及摘要后重建的已完成工具结果；数据无效时抛出 InvalidState 异常。</returns>
     private async Task<McpRuntimeToolResult> ReadCompletedResultAsync(ToolApprovalRequestRecord approval, CancellationToken cancellationToken)
     {
         ToolApprovalExecutionResultRecord result =
@@ -386,7 +436,17 @@ public sealed class ToolApprovalRuntimeService(
             content,
             result.ErrorCode);
     }
+    #endregion
 
+    #region 处理（InvalidateAsync）
+    /// <summary>
+    /// 处理（InvalidateAsync）
+    /// </summary>
+    /// <param name="approval">审批记录。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="invalidatedAtUtc">失效时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InvalidateAsync(
         ToolApprovalRequestRecord approval,
         string errorCode,
@@ -405,7 +465,17 @@ public sealed class ToolApprovalRuntimeService(
             throw InvalidState();
         }
     }
+    #endregion
 
+    #region 处理（MarkCompletedAsync）
+    /// <summary>
+    /// 处理（MarkCompletedAsync）
+    /// </summary>
+    /// <param name="consuming">正在消费的执行状态。</param>
+    /// <param name="result">操作结果。</param>
+    /// <param name="finishedAtUtc">完成时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task MarkCompletedAsync(
         ToolApprovalRequestRecord consuming,
         McpRuntimeToolResult result,
@@ -446,7 +516,13 @@ public sealed class ToolApprovalRuntimeService(
                 "The tool ran, but its terminal approval state could not be persisted.");
         }
     }
+    #endregion
 
+    #region 校验（ValidateRequest）
+    /// <summary>
+    /// 校验（ValidateRequest）
+    /// </summary>
+    /// <param name="request">审批创建参数，包含绑定身份、工具参数以及申请和过期时间。</param>
     private static void ValidateRequest(ToolApprovalRuntimeRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -464,7 +540,15 @@ public sealed class ToolApprovalRuntimeService(
             throw Invalid();
         }
     }
+    #endregion
 
+    #region 核对审批时冻结的工具信息（FrozenToolMatches）
+    /// <summary>
+    /// 核对审批时冻结的工具信息（FrozenToolMatches）。
+    /// </summary>
+    /// <param name="approval">保存审批时工具版本、风险和输入结构摘要的审批记录。</param>
+    /// <param name="tool">执行前重新加载的已发布工具引用。</param>
+    /// <returns>服务器标识、工具版本、风险级别、工具名及规范化输入结构摘要均一致时返回 true，否则返回 false。</returns>
     private static bool FrozenToolMatches(ToolApprovalRequestRecord approval, PublishedMcpToolReference tool) =>
         approval.McpServerId == tool.ServerId
             && approval.ToolVersionId == tool.ToolVersionId
@@ -474,7 +558,14 @@ public sealed class ToolApprovalRuntimeService(
                 approval.ToolSchemaSha256,
                 Sha256(NormalizeSchema(tool.InputSchemaJson)),
                 StringComparison.Ordinal);
+    #endregion
 
+    #region 规范化（NormalizeArguments）
+    /// <summary>
+    /// 规范化（NormalizeArguments）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <returns>满足深度、对象类型和字节上限的紧凑参数 JSON；不满足条件时抛出 Invalid 审批异常。</returns>
     private static string NormalizeArguments(string argumentsJson)
     {
         try
@@ -500,10 +591,24 @@ public sealed class ToolApprovalRuntimeService(
             throw Invalid();
         }
     }
+    #endregion
 
+    #region 规范化（NormalizeSchema）
+    /// <summary>
+    /// 规范化（NormalizeSchema）
+    /// </summary>
+    /// <param name="schemaJson">JSON 架构文本。</param>
+    /// <returns>满足对象类型、深度和字节上限的紧凑 Schema JSON；不满足条件时抛出审批异常。</returns>
     private static string NormalizeSchema(string schemaJson) =>
         NormalizeArguments(schemaJson);
+    #endregion
 
+    #region 处理（SafeSummary）
+    /// <summary>
+    /// 处理（SafeSummary）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <returns>包含字段数量及安全字段描述的摘要 JSON；超过摘要字节上限时抛出审批异常。</returns>
     private static string SafeSummary(string argumentsJson)
     {
         using JsonDocument document = JsonDocument.Parse(argumentsJson);
@@ -519,7 +624,15 @@ public sealed class ToolApprovalRuntimeService(
             ? summary
             : throw Invalid();
     }
+    #endregion
 
+    #region 处理（CollectSummaryFields）
+    /// <summary>
+    /// 处理（CollectSummaryFields）
+    /// </summary>
+    /// <param name="value">当前遍历的参数 JSON 节点。</param>
+    /// <param name="path">当前参数 JSON 节点的字段路径，用于生成安全摘要。</param>
+    /// <param name="fields">收集字段路径、类型等安全描述的输出集合。</param>
     private static void CollectSummaryFields(JsonElement value, string path, ICollection<object> fields)
     {
         if (fields.Count >= 128)
@@ -568,7 +681,14 @@ public sealed class ToolApprovalRuntimeService(
             sha256 = Sha256(value.GetRawText())
         });
     }
+    #endregion
 
+    #region 处理（DeserializeArguments）
+    /// <summary>
+    /// 处理（DeserializeArguments）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <returns>按属性名索引、各值为独立 JsonElement 副本的只读参数字典。</returns>
     private static IReadOnlyDictionary<string, object?> DeserializeArguments(string argumentsJson)
     {
         Dictionary<string, JsonElement>? values = JsonSerializer.Deserialize<
@@ -584,15 +704,35 @@ public sealed class ToolApprovalRuntimeService(
                 pair => (object?)pair.Value.Clone(),
                 StringComparer.Ordinal));
     }
+    #endregion
 
+    #region 处理（Sha256）
+    /// <summary>
+    /// 处理（Sha256）
+    /// </summary>
+    /// <param name="value">用于计算 SHA-256 摘要的原始文本。</param>
+    /// <returns>输入文本 UTF-8 字节的 SHA-256 小写十六进制摘要。</returns>
     private static string Sha256(string value) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+    #endregion
 
+    #region 处理（Invalid）
+    /// <summary>
+    /// 处理（Invalid）
+    /// </summary>
+    /// <returns>表示审批请求无效的 Invalid 异常。</returns>
     private static ToolApprovalException Invalid() =>
         new(ToolApprovalErrorCodes.Invalid, "The tool approval request is invalid.");
+    #endregion
 
+    #region 处理（InvalidState）
+    /// <summary>
+    /// 处理（InvalidState）
+    /// </summary>
+    /// <returns>表示审批已不可执行的 InvalidState 异常。</returns>
     private static ToolApprovalException InvalidState() =>
         new(ToolApprovalErrorCodes.InvalidState, "The tool approval is no longer executable.");
+    #endregion
 }
 
 /// <summary>
@@ -605,6 +745,15 @@ public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionP
     // public const string RunPermission = "agent.chat";
     // public const string AdminPermission = "agent.admin";
 
+    #region 处理（RevalidateAsync）
+    /// <summary>
+    /// 处理（RevalidateAsync）
+    /// </summary>
+    /// <param name="approval">审批记录。</param>
+    /// <param name="currentTool">当前工具版本。</param>
+    /// <param name="requester">请求发起方。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>租户和请求用户匹配且工具风险为 Mutating 或 HighRisk 时允许，否则返回 RevalidationFailed 拒绝结果。</returns>
     public Task<ToolApprovalPolicyResult> RevalidateAsync(
         ToolApprovalRequestRecord approval,
         PublishedMcpToolReference currentTool,
@@ -633,6 +782,5 @@ public sealed class DefaultToolApprovalExecutionPolicy : IToolApprovalExecutionP
             : ToolApprovalPolicyResult.Deny(
                 ToolApprovalErrorCodes.RevalidationFailed));
     }
+    #endregion
 }
-
-#endregion

@@ -143,9 +143,14 @@ public sealed record PublishedOrchestrationReference(
 /// </summary>
 public interface IPublishedOrchestrationCatalog
 {
-    /// <summary>查询已发布编排列表。</summary>
-    Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(
-        CancellationToken cancellationToken = default);
+    #region 列出未归档编排的已发布版本引用（ListPublishedAsync）
+    /// <summary>
+    /// 列出未归档编排的已发布版本引用（ListPublishedAsync）。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除、未归档定义下的非草稿版本引用；引用中同时标记编排是否启用，禁用版本不会仅因此被排除；无记录时为空集合。</returns>
+    Task<IReadOnlyList<PublishedOrchestrationReference>> ListPublishedAsync(CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -384,6 +389,12 @@ public static class OrchestrationServiceStatusCodes
     /// <summary>表示 <c>ArchiveBlocked</c> 场景映射的服务状态码。</summary>
     public const int ArchiveBlocked = 650013;
 
+    #region 将编排错误码转换为服务状态码（FromErrorCode）
+    /// <summary>
+    /// 将编排错误码转换为服务状态码（FromErrorCode）。
+    /// </summary>
+    /// <param name="code">编排领域错误码。</param>
+    /// <returns>返回已知编排错误对应的整数服务状态码；未知错误返回 500。</returns>
     public static int FromErrorCode(string code) => code switch
     {
         OrchestrationErrorCodes.NotFound => NotFound,
@@ -401,7 +412,14 @@ public static class OrchestrationServiceStatusCodes
         OrchestrationErrorCodes.ArchiveBlocked => ArchiveBlocked,
         _ => 500
     };
+    #endregion
 
+    #region 将服务状态码转换为编排错误码（ToErrorCode）
+    /// <summary>
+    /// 将服务状态码转换为编排错误码（ToErrorCode）。
+    /// </summary>
+    /// <param name="status">服务结果中的整数状态码，不是 HTTP 状态枚举。</param>
+    /// <returns>返回已知服务状态码对应的编排领域错误码；未映射的状态返回 INTERNAL_ERROR。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         NotFound => OrchestrationErrorCodes.NotFound,
@@ -419,6 +437,7 @@ public static class OrchestrationServiceStatusCodes
         ArchiveBlocked => OrchestrationErrorCodes.ArchiveBlocked,
         _ => "INTERNAL_ERROR"
     };
+    #endregion
 }
 
 /// <summary>
@@ -426,14 +445,42 @@ public static class OrchestrationServiceStatusCodes
 /// </summary>
 public interface IOrchestrationRepository
 {
-    /// <summary>按标识获取编排定义。</summary>
+    #region 读取编排定义及版本（GetByIdAsync）
+    /// <summary>
+    /// 读取编排定义及版本（GetByIdAsync）。
+    /// </summary>
+    /// <param name="id">编排定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的编排定义及其草稿、发布版本；记录不存在时为 null。</returns>
     Task<OrchestrationDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    /// <summary>查询编排定义列表。</summary>
+    #endregion
+    #region 列出编排定义及版本（ListAsync）
+    /// <summary>
+    /// 列出编排定义及版本（ListAsync）。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的编排定义及版本集合，包含归档定义；无记录时为空集合。</returns>
     Task<IReadOnlyList<OrchestrationDefinition>> ListAsync(CancellationToken cancellationToken = default);
-    /// <summary>尝试创建编排定义。</summary>
+    #endregion
+    #region 创建编排定义及草稿和发布版本（TryCreateAsync）
+    /// <summary>
+    /// 创建编排定义及草稿和发布版本（TryCreateAsync）。
+    /// </summary>
+    /// <param name="value">待创建的编排定义，包含草稿及已发布版本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>编排定义及版本持久化成功时返回 true；存在相同标识或编码的未删除定义时返回 false。</returns>
     Task<bool> TryCreateAsync(OrchestrationDefinition value, CancellationToken cancellationToken = default);
-    /// <summary>按并发条件尝试替换编排定义。</summary>
+    #endregion
+    #region 按修订号更新编排定义并保留发布历史（TryReplaceAsync）
+    /// <summary>
+    /// 按修订号更新编排定义并保留发布历史（TryReplaceAsync）。
+    /// </summary>
+    /// <param name="value">替换后的定义；修订号须递增一，保留原草稿标识及已有发布版本标识，已有发布版本内容不会被覆盖。</param>
+    /// <param name="expectedRevision">数据库当前应具有的逻辑修订号，不允许为 long.MaxValue。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>定义、草稿及新增发布版本保存成功时返回 true；修订号、编码或草稿标识不匹配，发布版本被移除或重复，或条件更新未生效时返回 false。</returns>
     Task<bool> TryReplaceAsync(OrchestrationDefinition value, long expectedRevision, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -441,26 +488,70 @@ public interface IOrchestrationRepository
 /// </summary>
 public interface IOrchestrationRunRepository
 {
+    #region 保存编排运行记录。
     /// <summary>保存编排运行记录。</summary>
+    /// <param name="value">本次操作使用的编排运行记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
     Task SaveAsync(OrchestrationRunRecord value, CancellationToken cancellationToken = default);
-    /// <summary>获取编排运行记录。</summary>
+    #endregion
+    #region 读取编排运行及节点记录（GetAsync）
+    /// <summary>
+    /// 读取编排运行及节点记录（GetAsync）。
+    /// </summary>
+    /// <param name="id">编排运行标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的编排运行及其节点记录；不存在时为 null。</returns>
     Task<OrchestrationRunRecord?> GetAsync(Guid id, CancellationToken cancellationToken = default);
-    /// <summary>查询编排运行记录列表。</summary>
-    Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(
-        Guid orchestrationId, int take, CancellationToken cancellationToken = default);
+    #endregion
+    #region 按时间倒序列出编排运行（ListAsync）
+    /// <summary>
+    /// 按时间倒序列出编排运行（ListAsync）。
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="take">期望返回的记录数，持久化实现将其限制在 1 至 100 之间。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回指定编排下未删除的运行记录，按开始时间倒序排列；无记录时为空集合。</returns>
+    Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(Guid orchestrationId, int take, CancellationToken cancellationToken = default);
+    #endregion
+    #region 保存编排运行执行详情。
     /// <summary>保存编排运行执行详情。</summary>
-    Task SaveDetailsAsync(
-        OrchestrationRunDetails value,
-        CancellationToken cancellationToken = default);
-    /// <summary>获取编排运行记录详情。</summary>
-    Task<OrchestrationRunDetails?> GetDetailsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default);
-    /// <summary>尝试保存仍在运行的编排详情。</summary>
-    Task<bool> TrySaveRunningDetailsAsync(
-        OrchestrationRunDetails value,
-        CancellationToken cancellationToken = default);
-    /// <summary>尝试终结仍处于运行状态的编排。</summary>
+    /// <param name="value">本次操作使用的编排运行及节点尝试详情。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
+    Task SaveDetailsAsync(OrchestrationRunDetails value, CancellationToken cancellationToken = default);
+    #endregion
+    #region 读取编排运行详情（GetDetailsAsync）
+    /// <summary>
+    /// 读取编排运行详情（GetDetailsAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的运行详情及尝试、工具调用记录；详情不存在时为 null。</returns>
+    Task<OrchestrationRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default);
+    #endregion
+    #region 仅为运行中的编排保存详情（TrySaveRunningDetailsAsync）
+    /// <summary>
+    /// 仅为运行中的编排保存详情（TrySaveRunningDetailsAsync）。
+    /// </summary>
+    /// <param name="value">待保存的编排运行详情，RunId 用于定位运行记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>存在未删除且状态为 Running 的运行记录并成功写入详情时返回 true；记录不存在或不再运行时返回 false。</returns>
+    Task<bool> TrySaveRunningDetailsAsync(OrchestrationRunDetails value, CancellationToken cancellationToken = default);
+    #endregion
+    #region 原子地终结编排运行及相关执行记录（TryFinalizeRunningAsync）
+    /// <summary>
+    /// 原子地终结编排运行及相关执行记录（TryFinalizeRunningAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="runStatus">拟保存的编排终态，只允许受支持的结束状态。</param>
+    /// <param name="nodeStatus">需要终结的节点及尝试记录使用的终态。</param>
+    /// <param name="transitionPolicy">决定是否同时终结 Pending 节点和尝试。</param>
+    /// <param name="finishedAtUtc">完成时间（UTC）。</param>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="detailsIfMissing">运行详情缺失时补写的详情，非 null 时 RunId 必须与目标运行一致。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回转换后的运行记录和 Transitioned 标记；实际完成转换时标记为 true，原记录已非 Running 时返回原记录及 false，记录不存在时 Run 为 null 且标记为 false。</returns>
     Task<OrchestrationRunTransitionResult> TryFinalizeRunningAsync(
         Guid runId,
         OrchestrationRunStatus runStatus,
@@ -470,12 +561,22 @@ public interface IOrchestrationRunRepository
         string errorCode,
         OrchestrationRunDetails? detailsIfMissing,
         CancellationToken cancellationToken = default);
-    /// <summary>恢复或终结中断的编排运行记录。</summary>
+    #endregion
+    #region 将中断的编排运行终结为失败（RecoverInterruptedAsync）
+    /// <summary>
+    /// 将中断的编排运行终结为失败（RecoverInterruptedAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="recoveredAtUtc">恢复时间（UTC）。</param>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回失败转换后的运行记录及 Transitioned 标记；原记录已非 Running 时不转换，记录不存在时 Run 为 null；不重新执行编排。</returns>
     Task<OrchestrationRunTransitionResult> RecoverInterruptedAsync(
         Guid runId,
         DateTimeOffset recoveredAtUtc,
         string errorCode,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -492,13 +593,26 @@ public sealed record OrchestrationRunTransitionResult(
 /// </summary>
 public static class OrchestrationContractCloner
 {
+    #region 复制编排定义及嵌套集合（Clone）
+    /// <summary>
+    /// 复制编排定义及嵌套集合（Clone）。
+    /// </summary>
+    /// <param name="value">需要防御性复制的编排定义。</param>
+    /// <returns>草稿和发布版本均经复制、发布版本列表重新物化为只读集合的定义副本。</returns>
     public static OrchestrationDefinition Clone(OrchestrationDefinition value) =>
         value with
         {
             Draft = Clone(value.Draft),
             PublishedVersions = ReadOnly(value.PublishedVersions.Select(Clone))
         };
+    #endregion
 
+    #region 复制编排版本及嵌套集合（Clone）
+    /// <summary>
+    /// 复制编排版本及嵌套集合（Clone）。
+    /// </summary>
+    /// <param name="value">需要防御性复制的编排版本。</param>
+    /// <returns>节点、连线及其只读集合均经复制的版本副本；存在快照时复制快照，原快照为 null 时仍为 null。</returns>
     public static OrchestrationVersion Clone(OrchestrationVersion value) =>
         value with
         {
@@ -506,7 +620,14 @@ public static class OrchestrationContractCloner
             Edges = ReadOnly(value.Edges.Select(edge => edge with { })),
             Snapshot = value.Snapshot is null ? null : Clone(value.Snapshot)
         };
+    #endregion
 
+    #region 复制编排版本快照及嵌套集合（Clone）
+    /// <summary>
+    /// 复制编排版本快照及嵌套集合（Clone）。
+    /// </summary>
+    /// <param name="value">需要防御性复制的编排版本快照。</param>
+    /// <returns>节点、连线、Agent 绑定均创建记录副本并装入新只读集合的快照副本。</returns>
     public static OrchestrationVersionSnapshot Clone(OrchestrationVersionSnapshot value) =>
         value with
         {
@@ -514,10 +635,24 @@ public static class OrchestrationContractCloner
             Edges = ReadOnly(value.Edges.Select(edge => edge with { })),
             Agents = ReadOnly(value.Agents.Select(agent => agent with { }))
         };
+    #endregion
 
+    #region 复制编排运行记录及嵌套集合（Clone）
+    /// <summary>
+    /// 复制编排运行记录及嵌套集合（Clone）。
+    /// </summary>
+    /// <param name="value">需要防御性复制的编排运行记录。</param>
+    /// <returns>各节点创建记录副本并装入新只读集合的运行记录副本。</returns>
     public static OrchestrationRunRecord Clone(OrchestrationRunRecord value) =>
         value with { Nodes = ReadOnly(value.Nodes.Select(node => node with { })) };
+    #endregion
 
+    #region 复制编排运行详情及嵌套集合（Clone）
+    /// <summary>
+    /// 复制编排运行详情及嵌套集合（Clone）。
+    /// </summary>
+    /// <param name="value">需要防御性复制的编排运行详情。</param>
+    /// <returns>尝试记录及各尝试下的工具调用均创建记录副本，并使用新只读集合的详情副本。</returns>
     public static OrchestrationRunDetails Clone(OrchestrationRunDetails value) =>
         value with
         {
@@ -526,7 +661,16 @@ public static class OrchestrationContractCloner
                 ToolCalls = ReadOnly(attempt.ToolCalls.Select(tool => tool with { }))
             }))
         };
+    #endregion
 
+    #region 将序列物化为只读列表（ReadOnly）
+    /// <summary>
+    /// 将序列物化为只读列表（ReadOnly）。
+    /// </summary>
+    /// <param name="values">需要立即枚举并物化的源序列。</param>
+    /// <typeparam name="T">源序列的元素类型；引用类型元素仍与源序列共享对象。</typeparam>
+    /// <returns>返回由新数组承载的只读列表，保留枚举顺序；只复制集合，不复制其中的元素对象。</returns>
     public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> values) =>
         new ReadOnlyCollection<T>(values.ToArray());
+    #endregion
 }

@@ -95,13 +95,21 @@ public sealed record ModelJudgeEngineMetric(
 /// </summary>
 public interface IModelJudgeEngine
 {
+    #region 执行模型裁判评测。
     /// <summary>执行模型裁判评测。</summary>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="modelProfileId">模型配置标识。</param>
+    /// <param name="evaluators">评估器集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定模型和评估器对输入输出给出的裁判指标集合。</returns>
     Task<IReadOnlyList<ModelJudgeEngineMetric>> EvaluateAsync(
         string input,
         string output,
         string modelProfileId,
         IReadOnlyList<string> evaluators,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -182,30 +190,44 @@ public sealed record ModelJudgeReport(
 /// </summary>
 public interface IModelJudgeReportRepository
 {
+    #region 获取模型裁判报告。
     /// <summary>获取模型裁判报告。</summary>
-    Task<ModelJudgeReport?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default);
+    /// <param name="id">模型裁判报告标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户下的模型裁判报告；不存在时为 null。</returns>
+    Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 按模型裁判配置摘要获取报告。
     /// <summary>按模型裁判配置摘要获取报告。</summary>
-    Task<ModelJudgeReport?> GetByConfigurationAsync(
-        Guid batchId,
-        string tenantId,
-        string configurationSha256,
-        CancellationToken cancellationToken = default);
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="configurationSha256">配置内容的 SHA-256 摘要。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户、批次和配置摘要对应的模型裁判报告；不存在时为 null。</returns>
+    Task<ModelJudgeReport?> GetByConfigurationAsync(Guid batchId, string tenantId, string configurationSha256, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询模型裁判报告列表。
     /// <summary>查询模型裁判报告列表。</summary>
-    Task<IReadOnlyList<ModelJudgeReport>> ListAsync(
-        Guid batchId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default);
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和批次下受数量限制的模型裁判报告集合。</returns>
+    Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default);
+    #endregion
 
-    /// <summary>尝试创建模型裁判报告。</summary>
-    Task<bool> TryCreateAsync(
-        ModelJudgeReport value,
-        CancellationToken cancellationToken = default);
+    #region 创建模型裁判报告及明细（TryCreateAsync）
+    /// <summary>
+    /// 创建模型裁判报告及明细（TryCreateAsync）。
+    /// </summary>
+    /// <param name="value">待创建的模型裁判报告及关联明细。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>报告及明细持久化成功时返回 true；报告标识重复，或相同租户、批次和配置摘要的报告已存在时返回 false。</returns>
+    Task<bool> TryCreateAsync(ModelJudgeReport value, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -213,26 +235,40 @@ public interface IModelJudgeReportRepository
 /// </summary>
 public interface IModelJudgeService
 {
+    #region 获取模型裁判评测。
     /// <summary>获取模型裁判评测。</summary>
-    Task<ModelJudgeReport?> GetAsync(
-        Guid id,
-        string tenantId,
-        CancellationToken cancellationToken = default);
+    /// <param name="id">模型裁判报告标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户下的模型裁判报告；不存在时为 null。</returns>
+    Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询模型裁判评测列表。
     /// <summary>查询模型裁判评测列表。</summary>
-    Task<IReadOnlyList<ModelJudgeReport>> ListAsync(
-        Guid batchId,
-        string tenantId,
-        int take,
-        CancellationToken cancellationToken = default);
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和批次下受数量限制的模型裁判报告集合。</returns>
+    Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 执行模型裁判评测。
     /// <summary>执行模型裁判评测。</summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="requestedBy">请求发起方标识。</param>
+    /// <param name="specification">评估规范。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含模型裁判报告，失败时包含错误状态和提示。</returns>
     Task<ServiceResult<ModelJudgeReport>> EvaluateAsync(
         Guid batchId,
         string tenantId,
         string requestedBy,
         ModelJudgeSpecification specification,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -259,6 +295,12 @@ public static class ModelJudgeServiceStatusCodes
     /// <summary>表示 <c>PersistenceConflict</c> 场景映射的服务状态码。</summary>
     public const int PersistenceConflict = 670030;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <returns>模型裁判错误码对应的服务状态值；未知错误码使用 500。</returns>
     public static int FromErrorCode(string code) => code switch
     {
         ModelJudgeErrorCodes.Disabled => Disabled,
@@ -272,7 +314,14 @@ public static class ModelJudgeServiceStatusCodes
         ModelJudgeErrorCodes.PersistenceConflict => PersistenceConflict,
         _ => 500
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的模型裁判错误码；未知状态使用 INTERNAL_ERROR。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         Disabled => ModelJudgeErrorCodes.Disabled,
@@ -286,6 +335,7 @@ public static class ModelJudgeServiceStatusCodes
         PersistenceConflict => ModelJudgeErrorCodes.PersistenceConflict,
         _ => "INTERNAL_ERROR"
     };
+    #endregion
 }
 
 /// <summary>
@@ -293,6 +343,12 @@ public static class ModelJudgeServiceStatusCodes
 /// </summary>
 public static class ModelJudgeContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="value">本次操作使用的模型裁判报告。</param>
+    /// <returns>复制评估器、评分阈值、用例指标及诊断代码后的模型裁判报告副本。</returns>
     public static ModelJudgeReport Clone(ModelJudgeReport value) => value with
     {
         Evaluators = value.Evaluators.ToArray(),
@@ -306,7 +362,15 @@ public static class ModelJudgeContractCloner
             }).ToArray())
         }).ToArray())
     };
+    #endregion
 
+    #region 读取（ReadOnly）
+    /// <summary>
+    /// 读取（ReadOnly）
+    /// </summary>
+    /// <param name="values">按原顺序枚举并复制为只读集合的源数据。</param>
+    /// <returns>逐个复制报告及其嵌套指标后生成的只读报告集合。</returns>
     public static IReadOnlyList<ModelJudgeReport> ReadOnly(IEnumerable<ModelJudgeReport> values) =>
         new ReadOnlyCollection<ModelJudgeReport>(values.Select(Clone).ToArray());
+    #endregion
 }

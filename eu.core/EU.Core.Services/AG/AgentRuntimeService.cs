@@ -10,11 +10,19 @@ using System.Threading.Channels;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgentRuntimeService 职责实现
+// 文件职责：AgentRuntimeService 职责实现
 
 /// <summary>
 /// 负责准备并启动 Agent 运行。
 /// </summary>
+/// <param name="agents">用于查询 Agent 定义及已发布版本的目录。</param>
+/// <param name="toolCatalog">用于查询已发布 MCP 工具版本的目录。</param>
+/// <param name="engine">执行 Agent 模型推理与工具调用的运行引擎。</param>
+/// <param name="auditRepository">用于持久化 Agent 运行审计记录的仓储。</param>
+/// <param name="schemaValidator">用于校验 Agent 输入及输出 JSON 结构的校验器。</param>
+/// <param name="knowledgeRetriever">可选的知识库检索器。</param>
+/// <param name="skillCatalog">用于查询已发布技能版本的目录。</param>
+/// <param name="skillContentStore">用于读取已发布技能文件内容的存储。</param>
 public sealed class AgentRuntimeService(
     IAgentDefinitionCatalog agents,
     IPublishedMcpToolCatalog toolCatalog,
@@ -30,6 +38,14 @@ public sealed class AgentRuntimeService(
     /// <summary>技能指令允许的最大字符数。</summary>
     public const int MaximumSkillInstructionCharacters = 131_072;
 
+    #region 准备（PrepareAsync）
+    /// <summary>
+    /// 准备（PrepareAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>最新发布快照的运行准备结果，成功时包含运行上下文，校验失败时包含错误信息。</returns>
     public async Task<AgentRunPreparationResult> PrepareAsync(Guid agentId, string? input, CancellationToken cancellationToken = default)
     {
         string normalizedInput = input?.Trim() ?? string.Empty;
@@ -66,7 +82,17 @@ public sealed class AgentRuntimeService(
 
         return await PrepareSnapshotAsync(agent, snapshot, normalizedInput, cancellationToken);
     }
+    #endregion
 
+    #region 准备（PrepareVersionAsync）
+    /// <summary>
+    /// 准备（PrepareVersionAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="agentVersionId">Agent 版本标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定已发布版本的运行准备结果，成功时包含运行上下文，校验失败时包含错误信息。</returns>
     public async Task<AgentRunPreparationResult> PrepareVersionAsync(
         Guid agentId,
         Guid agentVersionId,
@@ -108,7 +134,17 @@ public sealed class AgentRuntimeService(
 
         return await PrepareSnapshotAsync(agent, snapshot, normalizedInput, cancellationToken);
     }
+    #endregion
 
+    #region 准备（PrepareSnapshotAsync）
+    /// <summary>
+    /// 准备（PrepareSnapshotAsync）
+    /// </summary>
+    /// <param name="agent">Agent 定义。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="normalizedInput">规范化后的执行输入。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>完成技能、工具及知识库资源校验并记录启动审计后的运行上下文，或对应的准备失败信息。</returns>
     private async Task<AgentRunPreparationResult> PrepareSnapshotAsync(
         AgentDefinition agent,
         AgentVersionSnapshot snapshot,
@@ -206,7 +242,15 @@ public sealed class AgentRuntimeService(
             []), cancellationToken);
         return AgentRunPreparationResult.Success(context);
     }
+    #endregion
 
+    #region 处理（MaterializeSkillsAsync）
+    /// <summary>
+    /// 处理（MaterializeSkillsAsync）
+    /// </summary>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>快照中已发布技能的实际内容集合，或加载、完整性校验失败的错误说明。</returns>
     private async Task<SkillMaterializationResult> MaterializeSkillsAsync(AgentVersionSnapshot snapshot, CancellationToken cancellationToken)
     {
         if (snapshot.Skills.Count == 0)
@@ -316,6 +360,7 @@ public sealed class AgentRuntimeService(
 
         return SkillMaterializationResult.Success(materialized);
     }
+    #endregion
 
     private sealed record SkillMaterializationResult(
         IReadOnlyList<PublishedSkillContent> Skills,
@@ -323,16 +368,37 @@ public sealed class AgentRuntimeService(
     {
         public bool Succeeded => string.IsNullOrEmpty(ErrorMessage);
 
+        #region 处理（Success）
+        /// <summary>
+        /// 处理（Success）
+        /// </summary>
+        /// <param name="skills">技能服务。</param>
+        /// <returns>包含只读技能内容集合且无错误消息的技能加载成功结果。</returns>
         public static SkillMaterializationResult Success(IEnumerable<PublishedSkillContent> skills) =>
             new(SkillContractCloner.ReadOnly(skills), string.Empty);
+        #endregion
 
+        #region 处理（Failure）
+        /// <summary>
+        /// 处理（Failure）
+        /// </summary>
+        /// <param name="errorMessage">失败对应的错误说明。</param>
+        /// <returns>包含空技能集合和指定错误消息的技能加载失败结果。</returns>
         public static SkillMaterializationResult Failure(string errorMessage) =>
             new(
                 SkillContractCloner.ReadOnly(
                     Array.Empty<PublishedSkillContent>()),
                 errorMessage);
+        #endregion
     }
 
+    #region 流式输出（StreamAsync）
+    /// <summary>
+    /// 流式输出（StreamAsync）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按执行顺序产生的异步事件流。</returns>
     public async IAsyncEnumerable<AgentRunEvent> StreamAsync(AgentRunContext context, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var channel = Channel.CreateUnbounded<AgentRunEvent>(
@@ -356,7 +422,16 @@ public sealed class AgentRuntimeService(
 
         cancellationToken.ThrowIfCancellationRequested();
     }
+    #endregion
 
+    #region 处理（ProduceAsync）
+    /// <summary>
+    /// 处理（ProduceAsync）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="writer">用于输出 JSON 内容的写入器。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ProduceAsync(AgentRunContext context, ChannelWriter<AgentRunEvent> writer, CancellationToken cancellationToken)
     {
         long sequence = 0;
@@ -517,10 +592,29 @@ public sealed class AgentRuntimeService(
             writer.TryComplete();
         }
     }
+    #endregion
 
+    #region 查询列表（ListAuditAsync）
+    /// <summary>
+    /// 查询列表（ListAuditAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定 Agent 最近的运行审计记录，最多 100 条。</returns>
     public Task<IReadOnlyList<AgentRunAuditRecord>> ListAuditAsync(Guid agentId, int take, CancellationToken cancellationToken = default) =>
         auditRepository.ListAsync(agentId, Math.Clamp(take, 1, 100), cancellationToken);
+    #endregion
 
+    #region 处理（TerminatePreparedRunAsync）
+    /// <summary>
+    /// 处理（TerminatePreparedRunAsync）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     public Task TerminatePreparedRunAsync(AgentRunContext context, AgentRunStatus status, string errorCode, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -539,7 +633,19 @@ public sealed class AgentRuntimeService(
             errorCode ?? string.Empty,
             []), cancellationToken);
     }
+    #endregion
 
+    #region 创建（CreateAudit）
+    /// <summary>
+    /// 创建（CreateAudit）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <param name="outputCharacters">输出字符数。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="calls">调用记录集合。</param>
+    /// <returns>包含输入摘要、输出长度和按开始时间排序的工具调用明细的运行审计记录。</returns>
     private static AgentRunAuditRecord CreateAudit(
         AgentRunContext context,
         AgentRunStatus status,
@@ -560,7 +666,15 @@ public sealed class AgentRuntimeService(
             calls.Count(),
             errorCode,
             calls.OrderBy(call => call.StartedAtUtc).ToArray());
+    #endregion
 
+    #region 处理（TrackToolCall）
+    /// <summary>
+    /// 处理（TrackToolCall）
+    /// </summary>
+    /// <param name="value">本次操作使用的Agent 运行事件。</param>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="calls">调用记录集合。</param>
     private static void TrackToolCall(AgentRunEvent value, AgentRunContext context, IDictionary<Guid, AgentToolCallAuditRecord> calls)
     {
         if (value.ToolVersionId is not Guid toolVersionId)
@@ -604,6 +718,5 @@ public sealed class AgentRuntimeService(
                 value.ErrorCode);
         }
     }
+    #endregion
 }
-
-#endregion

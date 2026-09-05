@@ -71,18 +71,28 @@ public sealed record RunEvaluationReport(
 /// </summary>
 public interface IRunEvaluationService
 {
+    #region 执行运行结果评测。
     /// <summary>执行运行结果评测。</summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="specification">评估规范。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定用户运行的规则评测报告；运行不存在或所属身份不匹配时为 null。</returns>
     Task<RunEvaluationReport?> EvaluateAsync(
         Guid runId,
         string tenantId,
         string userId,
         RunEvaluationSpecification specification,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
 /// 表示运行评测过程中的领域异常。
 /// </summary>
+/// <param name="errorCode">用于标识失败原因的领域错误码。</param>
+/// <param name="message">描述异常原因的错误消息。</param>
 public sealed class RunEvaluationException(string errorCode, string message)
     : Exception(message)
 {
@@ -101,6 +111,11 @@ public static class RunEvaluationSpecificationValidator
     private const int MaximumRuleUtf8Bytes = 200;
     private const int MaximumTotalRuleUtf8Bytes = 4096;
 
+    #region 校验（Validate）
+    /// <summary>
+    /// 校验（Validate）
+    /// </summary>
+    /// <param name="specification">评估规范。</param>
     public static void Validate(RunEvaluationSpecification specification)
     {
         ArgumentNullException.ThrowIfNull(specification);
@@ -129,7 +144,13 @@ public static class RunEvaluationSpecificationValidator
             throw Invalid();
         }
     }
+    #endregion
 
+    #region 校验（ValidateRules）
+    /// <summary>
+    /// 校验（ValidateRules）
+    /// </summary>
+    /// <param name="values">需要检查数量、长度及空值的评测文本规则集合。</param>
     private static void ValidateRules(IReadOnlyList<string>? values)
     {
         if (values is null || values.Count > MaximumRulesPerGroup)
@@ -146,8 +167,15 @@ public static class RunEvaluationSpecificationValidator
             }
         }
     }
+    #endregion
 
+    #region 处理（Invalid）
+    /// <summary>
+    /// 处理（Invalid）
+    /// </summary>
+    /// <returns>错误码为 SpecificationInvalid 的运行评测异常。</returns>
     private static RunEvaluationException Invalid() => new(
         RunEvaluationErrorCodes.SpecificationInvalid,
         "The run evaluation specification is invalid.");
+    #endregion
 }

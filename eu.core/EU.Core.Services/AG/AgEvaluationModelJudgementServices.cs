@@ -5,7 +5,7 @@ using EU.Core.IServices.Evaluation;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgEvaluationModelJudgementServices 职责实现
+// 文件职责：AgEvaluationModelJudgementServices 职责实现
 
 /// <summary>
 /// 提供模型裁判结果的持久化服务。
@@ -15,11 +15,25 @@ public sealed class AgEvaluationModelJudgementServices :
     IAgEvaluationModelJudgementServices,
     IModelJudgeReportRepository
 {
+    #region 构造（AgEvaluationModelJudgementServices）
+    /// <summary>
+    /// 构造（AgEvaluationModelJudgementServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgEvaluationModelJudgementServices(IBaseRepository<AgEvaluationModelJudgement> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
     }
+    #endregion
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">模型裁判报告标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户下的模型裁判报告及用例结果；不存在时为 null。</returns>
     public async Task<ModelJudgeReport?> GetAsync(Guid id, string tenantId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -41,7 +55,17 @@ public sealed class AgEvaluationModelJudgementServices :
             throw;
         }
     }
+    #endregion
 
+    #region 获取（GetByConfigurationAsync）
+    /// <summary>
+    /// 获取（GetByConfigurationAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="configurationSha256">配置内容的 SHA-256 摘要。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户、批次及配置摘要对应的模型裁判报告；不存在时为 null。</returns>
     public async Task<ModelJudgeReport?> GetByConfigurationAsync(
         Guid batchId,
         string tenantId,
@@ -71,7 +95,17 @@ public sealed class AgEvaluationModelJudgementServices :
             throw;
         }
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="batchId">评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定租户和批次下的模型裁判报告，按开始时间及标识倒序排列，最多 50 条。</returns>
     public async Task<IReadOnlyList<ModelJudgeReport>> ListAsync(Guid batchId, string tenantId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -99,7 +133,15 @@ public sealed class AgEvaluationModelJudgementServices :
             throw;
         }
     }
+    #endregion
 
+    #region 创建模型裁判报告及明细（TryCreateAsync）
+    /// <summary>
+    /// 创建模型裁判报告及明细（TryCreateAsync）。
+    /// </summary>
+    /// <param name="value">待创建的模型裁判报告及关联明细。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>报告及明细持久化成功时返回 true；报告标识重复，或相同租户、批次和配置摘要的报告已存在时返回 false。</returns>
     public async Task<bool> TryCreateAsync(ModelJudgeReport value, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -131,7 +173,15 @@ public sealed class AgEvaluationModelJudgementServices :
             throw;
         }
     }
+    #endregion
 
+    #region 加载（LoadReportsAsync）
+    /// <summary>
+    /// 加载（LoadReportsAsync）
+    /// </summary>
+    /// <param name="judgements">模型评判记录集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保持输入顺序并补齐评估器、阈值、用例指标及诊断代码的模型裁判报告集合。</returns>
     private async Task<IReadOnlyList<ModelJudgeReport>> LoadReportsAsync(
         IReadOnlyList<AgEvaluationModelJudgement> judgements,
         CancellationToken cancellationToken)
@@ -222,7 +272,19 @@ public sealed class AgEvaluationModelJudgementServices :
             metricsByCase,
             diagnosticsByMetric)));
     }
+    #endregion
 
+    #region 映射（MapReport）
+    /// <summary>
+    /// 映射（MapReport）
+    /// </summary>
+    /// <param name="value">本次操作使用的模型裁判报告实体。</param>
+    /// <param name="evaluators">评估器集合。</param>
+    /// <param name="minimumScores">各评估指标要求的最低分数。</param>
+    /// <param name="cases">评估用例集合。</param>
+    /// <param name="metricsByCase">按用例分组的评估指标。</param>
+    /// <param name="diagnosticsByMetric">按指标分组的诊断数据。</param>
+    /// <returns>包含评估器、评分阈值及用例指标的模型裁判报告。</returns>
     private static ModelJudgeReport MapReport(
         AgEvaluationModelJudgement value,
         IReadOnlyList<AgEvaluationModelJudgementEvaluator> evaluators,
@@ -266,7 +328,16 @@ public sealed class AgEvaluationModelJudgementServices :
                     metricsByCase.GetValueOrDefault(item.ID) ?? [],
                     diagnosticsByMetric))
                 .ToArray()));
+    #endregion
 
+    #region 映射（MapCase）
+    /// <summary>
+    /// 映射（MapCase）
+    /// </summary>
+    /// <param name="value">本次操作使用的模型裁判用例实体。</param>
+    /// <param name="metrics">评估指标集合。</param>
+    /// <param name="diagnosticsByMetric">按指标分组的诊断数据。</param>
+    /// <returns>包含各指标分数、通过状态及诊断代码的模型裁判用例结果。</returns>
     private static ModelJudgeCaseResult MapCase(
         AgEvaluationModelJudgementCase value,
         IReadOnlyList<AgEvaluationModelJudgementMetric> metrics,
@@ -291,7 +362,15 @@ public sealed class AgEvaluationModelJudgementServices :
                         .Select(code => Required(code.Code, "Diagnostic.Code"))
                         .ToArray())))
                 .ToArray()));
+    #endregion
 
+    #region 新增（InsertChildrenAsync）
+    /// <summary>
+    /// 新增（InsertChildrenAsync）
+    /// </summary>
+    /// <param name="report">评估报告。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertChildrenAsync(ModelJudgeReport report, CancellationToken cancellationToken)
     {
         await InsertEvaluatorsAsync(report);
@@ -317,7 +396,14 @@ public sealed class AgEvaluationModelJudgementServices :
             await InsertMetricsAsync(report.Id, caseRowId, value.Metrics);
         }
     }
+    #endregion
 
+    #region 新增（InsertEvaluatorsAsync）
+    /// <summary>
+    /// 新增（InsertEvaluatorsAsync）
+    /// </summary>
+    /// <param name="report">评估报告。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertEvaluatorsAsync(ModelJudgeReport report)
     {
         if (report.Evaluators.Count == 0)
@@ -336,7 +422,14 @@ public sealed class AgEvaluationModelJudgementServices :
                 IsActive = true
             }).ToList()).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 新增（InsertMinimumScoresAsync）
+    /// <summary>
+    /// 新增（InsertMinimumScoresAsync）
+    /// </summary>
+    /// <param name="report">评估报告。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertMinimumScoresAsync(ModelJudgeReport report)
     {
         if (report.MinimumScores.Count == 0)
@@ -356,7 +449,16 @@ public sealed class AgEvaluationModelJudgementServices :
                 IsActive = true
             }).ToList()).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 新增（InsertMetricsAsync）
+    /// <summary>
+    /// 新增（InsertMetricsAsync）
+    /// </summary>
+    /// <param name="judgementId">模型评判记录标识。</param>
+    /// <param name="caseRowId">评估用例行标识。</param>
+    /// <param name="metrics">评估指标集合。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertMetricsAsync(Guid judgementId, Guid caseRowId, IReadOnlyList<ModelJudgeMetric> metrics)
     {
         for (int metricOrdinal = 0; metricOrdinal < metrics.Count; metricOrdinal++)
@@ -394,7 +496,14 @@ public sealed class AgEvaluationModelJudgementServices :
                 }).ToList()).ExecuteCommandAsync();
         }
     }
+    #endregion
 
+    #region 映射（MapEntity）
+    /// <summary>
+    /// 映射（MapEntity）
+    /// </summary>
+    /// <param name="value">本次操作使用的模型裁判报告。</param>
+    /// <returns>由模型裁判报告构造的报告主表实体。</returns>
     private static AgEvaluationModelJudgement MapEntity(ModelJudgeReport value) => new()
     {
         ID = value.Id,
@@ -415,15 +524,38 @@ public sealed class AgEvaluationModelJudgementServices :
         IsDeleted = false,
         IsActive = true
     };
+    #endregion
 
+    #region 转换（ToOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。</returns>
     private static DateTimeOffset ToOffset(DateTime value) =>
         new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <typeparam name="T">必填字段的值类型。</typeparam>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static T Required<T>(T? value, string field) where T : struct =>
         value ?? throw new InvalidDataException($"Evaluation model judgement field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Evaluation model judgement field '{field}' is missing.");
+    #endregion
 }
-
-#endregion

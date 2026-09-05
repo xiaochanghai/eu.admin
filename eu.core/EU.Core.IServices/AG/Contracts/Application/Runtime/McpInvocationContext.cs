@@ -7,6 +7,12 @@ namespace EU.Core.IServices.Runtime;
 /// </summary>
 public sealed record McpInvocationContext
 {
+    #region 构造（McpInvocationContext）
+    /// <summary>
+    /// 构造（McpInvocationContext）
+    /// </summary>
+    /// <param name="identity">当前操作使用的执行身份。</param>
+    /// <param name="agentRunId">关联的 Agent 运行标识。</param>
     public McpInvocationContext(AgentExecutionIdentity identity, Guid agentRunId)
     {
         ArgumentNullException.ThrowIfNull(identity);
@@ -18,6 +24,7 @@ public sealed record McpInvocationContext
         Identity = identity;
         AgentRunId = agentRunId;
     }
+    #endregion
 
     /// <summary>
     /// 获取发起 MCP 调用的执行身份。

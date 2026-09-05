@@ -6,7 +6,7 @@ using EU.Core.IServices.Skills;
 
 namespace EU.Core.Services;
 
-#region 文件职责：UseSkillTool 职责实现
+// 文件职责：UseSkillTool 职责实现
 
 /// <summary>
 /// 实现加载并使用已发布技能的内部工具。
@@ -19,6 +19,11 @@ public sealed class UseSkillTool : IAgentInternalTool
     private const int MaximumReasonCharacters = 1_024;
     private readonly IReadOnlyDictionary<Guid, PublishedSkillContent> _skills;
 
+    #region 构造（UseSkillTool）
+    /// <summary>
+    /// 构造（UseSkillTool）
+    /// </summary>
+    /// <param name="skills">技能服务。</param>
     public UseSkillTool(IReadOnlyList<PublishedSkillContent> skills)
     {
         ArgumentNullException.ThrowIfNull(skills);
@@ -43,6 +48,7 @@ public sealed class UseSkillTool : IAgentInternalTool
             MaximumTaskCharacters,
             MaximumReasonCharacters);
     }
+    #endregion
 
     /// <summary>
     /// 获取内部工具名称。
@@ -59,6 +65,13 @@ public sealed class UseSkillTool : IAgentInternalTool
     /// </summary>
     public string InputSchemaJson { get; }
 
+    #region 调用（InvokeAsync）
+    /// <summary>
+    /// 调用（InvokeAsync）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>授权技能版本的指令文本；参数无效或版本未授权时返回带错误码的失败结果。</returns>
     public Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -90,11 +103,18 @@ public sealed class UseSkillTool : IAgentInternalTool
             selected.Instructions,
             string.Empty));
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="content">内部工具失败时对调用方展示的安全提示。</param>
+    /// <returns>包含指定内容和错误码、成功标志为 false 的内部工具结果。</returns>
     private static AgentInternalToolResult Failure(string code, string content) =>
         new(false, content, code);
+    #endregion
 
     #endregion
 }
-
-#endregion

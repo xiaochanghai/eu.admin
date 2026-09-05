@@ -46,6 +46,18 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     #region 构造
 
+    /// <summary>
+    /// 构造
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
+    /// <param name="jsonSchemaValidator">JSON 架构和实例校验器。</param>
+    /// <param name="skillVersions">已发布技能版本目录。</param>
+    /// <param name="toolVersions">已发布工具版本目录。</param>
+    /// <param name="knowledgeBases">知识库服务。</param>
+    /// <param name="orchestrationCatalog">已发布编排目录。</param>
+    /// <param name="orchestrations">编排仓储。</param>
+    /// <param name="mainAgentAssignments">主 Agent 分配记录仓储。</param>
+    /// <param name="modelProfiles">模型配置目录。</param>
     public AgAgentDefinitionServices(
         IBaseRepository<AgAgentDefinition> dal,
         JsonSchemaValidator? jsonSchemaValidator = null,
@@ -74,6 +86,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     /// <summary>
     /// 查询 Agent 管理列表，并批量加载草稿及最新发布版本摘要。
     /// </summary>
+    /// <param name="search">用于筛选记录的搜索文本。</param>
+    /// <param name="runtimeStatus">Agent 运行时启用状态。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按编码及标识排序的 Agent 列表摘要，包含草稿和最新发布版本标签；跳过没有唯一草稿的定义。</returns>
     public async Task<List<AgAgentDefinitionDto>> QueryAgentList(string? search = null, string? runtimeStatus = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -171,6 +187,9 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     /// <summary>
     /// 查询 Agent 明细及其版本、快照和资源绑定。
     /// </summary>
+    /// <param name="id">Agent 定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含草稿、发布版本、快照及绑定的 Agent 明细；定义不存在或没有版本时为 null。</returns>
     public async Task<AgAgentDefinitionDetailDto?> QueryAgent(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -268,6 +287,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     #region 持久化 DTO 映射
 
+    #region 映射（MapVersionDto）
+    /// <summary>
+    /// 映射（MapVersionDto）
+    /// </summary>
+    /// <param name="version">版本记录。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="bindings">资源绑定集合。</param>
+    /// <returns>附带版本绑定和可选快照的 Agent 版本明细。</returns>
     private static AgAgentVersionDetailDto MapVersionDto(AgAgentVersion version, AgAgentVersionSnapshot? snapshot, IReadOnlyList<AgAgentVersionBinding> bindings)
     {
         _ = version.Ordinal ?? throw new InvalidDataException("Agent Version.Ordinal is required.");
@@ -307,7 +334,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             : MapSnapshotDto(snapshot, bindings.Where(value => value.Scope == "Snapshot"));
         return result;
     }
+    #endregion
 
+    #region 添加（AddVersionBinding）
+    /// <summary>
+    /// 添加（AddVersionBinding）
+    /// </summary>
+    /// <param name="target">目标数据。</param>
+    /// <param name="binding">资源绑定。</param>
+    /// <param name="referenceId">关联资源标识。</param>
     private static void AddVersionBinding(AgAgentVersionDetailDto target, AgAgentVersionBinding binding, Guid referenceId)
     {
         switch (binding.BindingType)
@@ -346,7 +381,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     $"Unknown Agent binding type '{binding.BindingType}'.");
         }
     }
+    #endregion
 
+    #region 映射（MapSnapshotDto）
+    /// <summary>
+    /// 映射（MapSnapshotDto）
+    /// </summary>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="bindings">资源绑定集合。</param>
+    /// <returns>包含各类资源绑定的 Agent 发布快照明细。</returns>
     private static AgAgentVersionSnapshotDetailDto MapSnapshotDto(AgAgentVersionSnapshot snapshot, IEnumerable<AgAgentVersionBinding> bindings)
     {
         var result = new AgAgentVersionSnapshotDetailDto
@@ -405,26 +448,57 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return result;
     }
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static Guid Required(Guid? value, string name) =>
         value ?? throw new InvalidDataException($"Agent {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string name) =>
         value ?? throw new InvalidDataException($"Agent {name} is required.");
+    #endregion
 
+    #region 解析（ParseEnum）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseEnum）。
+    /// </summary>
+    /// <typeparam name="T">目标枚举类型。</typeparam>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>按区分大小写方式解析的枚举值；无效输入抛出异常。</returns>
     private static T ParseEnum<T>(string value, string name) where T : struct, Enum =>
         Enum.TryParse(value, ignoreCase: false, out T parsed)
             ? parsed
             : throw new InvalidDataException(
                 $"Agent {name} contains unsupported value '{value}'.");
+    #endregion
 
     #endregion
 
     #region Agent 持久化
 
-    private async Task<bool> CreateAgentAsync(
-        AgentDefinition definition,
-        CancellationToken cancellationToken)
+    #region 创建 Agent 定义及草稿绑定（CreateAgentAsync）
+    /// <summary>
+    /// 创建 Agent 定义及草稿绑定（CreateAgentAsync）。
+    /// </summary>
+    /// <param name="definition">待创建的 Agent 定义，包含初始草稿及其绑定。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>定义、草稿及绑定提交成功时返回 true；存在相同标识或编码时返回 false。</returns>
+    private async Task<bool> CreateAgentAsync(AgentDefinition definition, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         await Db.Ado.BeginTranAsync(IsolationLevel.Serializable);
@@ -463,11 +537,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             throw;
         }
     }
+    #endregion
 
-    private static AgAgentVersion MapVersionEntity(
-        Guid agentId,
-        int ordinal,
-        AgentVersion version) =>
+    #region 映射（MapVersionEntity）
+    /// <summary>
+    /// 映射（MapVersionEntity）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="ordinal">版本在所属定义中的排序序号。</param>
+    /// <param name="version">版本记录。</param>
+    /// <returns>包含所属 Agent 标识和版本序号的版本持久化实体。</returns>
+    private static AgAgentVersion MapVersionEntity(Guid agentId, int ordinal, AgentVersion version) =>
         new()
         {
             ID = version.Id,
@@ -481,7 +561,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             OutputJsonSchema = version.OutputJsonSchema,
             OutputSchemaSha256 = version.OutputSchemaSha256
         };
+    #endregion
 
+    #region 映射（MapVersionBindingEntities）
+    /// <summary>
+    /// 映射（MapVersionBindingEntities）
+    /// </summary>
+    /// <param name="version">版本记录。</param>
+    /// <returns>从版本资源引用及固定版本信息生成的绑定实体集合。</returns>
     private static List<AgAgentVersionBinding> MapVersionBindingEntities(AgentVersion version)
     {
         var result = new List<AgAgentVersionBinding>();
@@ -522,7 +609,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return result;
     }
+    #endregion
 
+    #region 添加（AddSimpleBindingEntities）
+    /// <summary>
+    /// 添加（AddSimpleBindingEntities）
+    /// </summary>
+    /// <param name="target">目标数据。</param>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="bindingType">资源绑定类型。</param>
+    /// <param name="referenceIds">关联资源标识集合。</param>
     private static void AddSimpleBindingEntities(
         ICollection<AgAgentVersionBinding> target,
         Guid versionId,
@@ -538,7 +634,23 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 referenceIds[index]));
         }
     }
+    #endregion
 
+    #region 处理（NewBindingEntity）
+    /// <summary>
+    /// 处理（NewBindingEntity）
+    /// </summary>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="bindingType">资源绑定类型。</param>
+    /// <param name="ordinal">资源绑定在同类绑定集合中的排序序号。</param>
+    /// <param name="referenceId">关联资源标识。</param>
+    /// <param name="referenceVersionId">关联资源版本标识。</param>
+    /// <param name="referenceCode">关联资源编码。</param>
+    /// <param name="referenceName">关联资源名称。</param>
+    /// <param name="referenceDescription">关联资源说明。</param>
+    /// <param name="scope">执行范围。</param>
+    /// <param name="logicalRevision">逻辑修订号。</param>
+    /// <returns>具有新标识、指定作用域和引用信息的资源绑定实体。</returns>
     private static AgAgentVersionBinding NewBindingEntity(
         Guid versionId,
         string bindingType,
@@ -564,22 +676,34 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             ReferenceName = referenceName,
             ReferenceDescription = referenceDescription
         };
+    #endregion
 
     #endregion
 
     #region Agent 运行时目录
 
-    public async Task<AgentDefinition?> GetDefinitionAsync(
-        Guid id,
-        CancellationToken cancellationToken)
+    #region 获取（GetDefinitionAsync）
+    /// <summary>
+    /// 获取（GetDefinitionAsync）
+    /// </summary>
+    /// <param name="id">Agent 定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含版本及快照的 Agent 定义；定义不存在或没有版本时为 null。</returns>
+    public async Task<AgentDefinition?> GetDefinitionAsync(Guid id, CancellationToken cancellationToken)
     {
         AgAgentDefinitionDetailDto? value = await QueryAgent(id, cancellationToken);
         return value is null ? null : MapAgentDefinition(value);
     }
+    #endregion
 
-    public async Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(
-        AgentDefinitionQuery query,
-        CancellationToken cancellationToken)
+    #region 查询列表（ListDefinitionsAsync）
+    /// <summary>
+    /// 查询列表（ListDefinitionsAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按编码及标识排序、包含草稿及发布快照的完整 Agent 定义集合；跳过没有唯一草稿的定义。</returns>
+    public async Task<IReadOnlyList<AgentDefinition>> ListDefinitionsAsync(AgentDefinitionQuery query, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         string? normalizedSearch = query.Search?.Trim().ToLowerInvariant();
@@ -702,7 +826,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             throw;
         }
     }
+    #endregion
 
+    #region 映射（MapAgentDefinition）
+    /// <summary>
+    /// 映射（MapAgentDefinition）
+    /// </summary>
+    /// <param name="value">本次操作使用的Agent 定义明细。</param>
+    /// <returns>由明细 DTO 转换的 Agent 定义及其版本集合。</returns>
     private static AgentDefinition MapAgentDefinition(AgAgentDefinitionDetailDto value) =>
         new(
             value.Id,
@@ -713,7 +844,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             value.LogicalRevision,
             MapAgentVersion(value.Draft),
             AgentContractCloner.ReadOnly(value.PublishedVersions.Select(MapAgentVersion)));
+    #endregion
 
+    #region 映射（MapAgentVersion）
+    /// <summary>
+    /// 映射（MapAgentVersion）
+    /// </summary>
+    /// <param name="value">本次操作使用的Agent 版本明细。</param>
+    /// <returns>由版本明细转换的 Agent 版本，包含资源标识及固定版本绑定。</returns>
     private static AgentVersion MapAgentVersion(AgAgentVersionDetailDto value) =>
         new(
             value.Id,
@@ -736,9 +874,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             OrchestrationPins = AgentContractCloner.ReadOnly(
                 value.OrchestrationPins.Select(pin => pin with { }))
         };
+    #endregion
 
-    private static AgentVersionSnapshot MapAgentSnapshot(
-        AgAgentVersionSnapshotDetailDto value) =>
+    #region 映射（MapAgentSnapshot）
+    /// <summary>
+    /// 映射（MapAgentSnapshot）
+    /// </summary>
+    /// <param name="value">本次操作使用的Agent 快照明细。</param>
+    /// <returns>从快照明细复制的发布快照及只读资源绑定集合。</returns>
+    private static AgentVersionSnapshot MapAgentSnapshot(AgAgentVersionSnapshotDetailDto value) =>
         new(
             value.VersionId,
             value.AgentCode,
@@ -758,11 +902,21 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             Orchestrations = AgentContractCloner.ReadOnly(
                 value.Orchestrations.Select(item => item with { }))
         };
+    #endregion
 
     #endregion
 
     #region Agent 版本持久化
 
+    #region 尝试执行（TryReplaceAgentAsync）
+    /// <summary>
+    /// 尝试执行（TryReplaceAgentAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <param name="advanceMainAgentToVersionId">需要同步推进的主 Agent 版本标识。</param>
+    /// <returns>异步任务，其结果为：操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private async Task<bool> TryReplaceAgentAsync(
         AgentDefinition definition,
         long expectedLogicalRevision,
@@ -890,11 +1044,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             throw;
         }
     }
+    #endregion
 
-    private async Task WriteAgentVersionAsync(
-        Guid agentId,
-        int ordinal,
-        AgentVersion version)
+    #region 写入（WriteAgentVersionAsync）
+    /// <summary>
+    /// 写入（WriteAgentVersionAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="ordinal">版本在所属定义中的排序序号。</param>
+    /// <param name="version">版本记录。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
+    private async Task WriteAgentVersionAsync(Guid agentId, int ordinal, AgentVersion version)
     {
         await Db.Insertable(MapVersionEntity(agentId, ordinal, version)).ExecuteCommandAsync();
         List<AgAgentVersionBinding> bindings = MapVersionBindingEntities(version);
@@ -909,10 +1069,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             await Db.Insertable(bindings).ExecuteCommandAsync();
         }
     }
+    #endregion
 
-    private static AgAgentVersionSnapshot MapSnapshotEntity(
-        Guid versionId,
-        AgentVersionSnapshot snapshot) =>
+    #region 映射（MapSnapshotEntity）
+    /// <summary>
+    /// 映射（MapSnapshotEntity）
+    /// </summary>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <returns>与指定版本关联的 Agent 快照持久化实体。</returns>
+    private static AgAgentVersionSnapshot MapSnapshotEntity(Guid versionId, AgentVersionSnapshot snapshot) =>
         new()
         {
             ID = versionId,
@@ -926,10 +1092,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             OutputMode = snapshot.OutputMode.ToString(),
             OutputJsonSchema = snapshot.OutputJsonSchema
         };
+    #endregion
 
-    private static List<AgAgentVersionBinding> MapSnapshotBindingEntities(
-        Guid versionId,
-        AgentVersionSnapshot snapshot)
+    #region 映射（MapSnapshotBindingEntities）
+    /// <summary>
+    /// 映射（MapSnapshotBindingEntities）
+    /// </summary>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <returns>以 Snapshot 为作用域生成的资源绑定实体集合。</returns>
+    private static List<AgAgentVersionBinding> MapSnapshotBindingEntities(Guid versionId, AgentVersionSnapshot snapshot)
     {
         var result = new List<AgAgentVersionBinding>();
         AddSnapshotSimpleBindings(result, versionId, "Skill",
@@ -960,12 +1132,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return result;
     }
+    #endregion
 
-    private static void AddSnapshotSimpleBindings(
-        ICollection<AgAgentVersionBinding> target,
-        Guid versionId,
-        string bindingType,
-        IEnumerable<Guid> referenceIds)
+    #region 添加（AddSnapshotSimpleBindings）
+    /// <summary>
+    /// 添加（AddSnapshotSimpleBindings）
+    /// </summary>
+    /// <param name="target">目标数据。</param>
+    /// <param name="versionId">版本标识。</param>
+    /// <param name="bindingType">资源绑定类型。</param>
+    /// <param name="referenceIds">关联资源标识集合。</param>
+    private static void AddSnapshotSimpleBindings(ICollection<AgAgentVersionBinding> target, Guid versionId, string bindingType, IEnumerable<Guid> referenceIds)
     {
         int ordinal = 0;
         foreach (Guid referenceId in referenceIds)
@@ -974,6 +1151,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 versionId, bindingType, ordinal++, referenceId, scope: "Snapshot"));
         }
     }
+    #endregion
 
     #endregion
 
@@ -982,6 +1160,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private IModelProfileReferenceCatalog ModelProfiles =>
         _modelProfiles ?? throw AgentManagementUnavailable();
 
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含新建 Agent 标识，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<Guid>> CreateAsync(CreateAgentCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1018,7 +1203,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return Success(id);
     }
+    #endregion
 
+    #region 创建（CreateImportedAsync）
+    /// <summary>
+    /// 创建（CreateImportedAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<AgentDefinition>> CreateImportedAsync(ImportAgentCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1121,7 +1314,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return Success(definition);
     }
+    #endregion
 
+    #region 保存（SaveDraftAsync）
+    /// <summary>
+    /// 保存（SaveDraftAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<AgentDefinition>> SaveDraftAsync(SaveAgentDraftCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1201,7 +1402,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return Success(updated);
     }
+    #endregion
 
+    #region 设置（SetRuntimeStatusAsync）
+    /// <summary>
+    /// 设置（SetRuntimeStatusAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<AgentDefinition>> SetRuntimeStatusAsync(SetAgentRuntimeStatusCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1256,7 +1465,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return Success(updated);
     }
+    #endregion
 
+    #region 发布（PublishAsync）
+    /// <summary>
+    /// 发布（PublishAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<AgentDefinition>> PublishAsync(PublishAgentCommand command, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1361,7 +1578,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return Success(updated);
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配筛选条件的 Agent 管理摘要集合，包含草稿和最新发布版本标签。</returns>
     public async Task<IReadOnlyList<AgentListItem>> ListAsync(AgentDefinitionQuery query, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1378,6 +1603,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             definition.Draft.ModelProfileId,
             definition.PublishedVersions.LastOrDefault()?.Label)));
     }
+    #endregion
     #region 检查当前 Host 是否启用了 Agent 管理能力
     /// <summary>
     /// 检查当前 Host 是否启用了 Agent 管理能力。
@@ -1396,12 +1622,37 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     }
     #endregion
 
+    #region 处理（AgentManagementUnavailable）
+    /// <summary>
+    /// 处理（AgentManagementUnavailable）
+    /// </summary>
+    /// <returns>说明当前宿主未注册 Agent 管理依赖的异常。</returns>
     private static InvalidOperationException AgentManagementUnavailable() => new("Agent management dependencies are not registered in this Host.");
+    #endregion
 
+    #region 处理（NotFound）
+    /// <summary>
+    /// 处理（NotFound）
+    /// </summary>
+    /// <returns>表示 Agent 定义不存在的失败服务结果。</returns>
     private ServiceResult<AgentDefinition> NotFound() => Failed<AgentDefinition>("The Agent was not found.");
+    #endregion
 
+    #region 处理（RowVersionConflict）
+    /// <summary>
+    /// 处理（RowVersionConflict）
+    /// </summary>
+    /// <returns>表示记录版本已变化、需要重新加载后重试的失败服务结果。</returns>
     private ServiceResult<AgentDefinition> RowVersionConflict() => Failed<AgentDefinition>("The Agent changed before this operation completed.");
+    #endregion
 
+    #region 查找（FindArchiveBlockersAsync）
+    /// <summary>
+    /// 查找（FindArchiveBlockersAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>最多八条阻止归档的引用说明，涵盖启用的 Agent、编排及主 Agent 分配。</returns>
     private async Task<IReadOnlyList<string>> FindArchiveBlockersAsync(Guid agentId, CancellationToken cancellationToken)
     {
         var blockers = new List<string>();
@@ -1433,10 +1684,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return AgentContractCloner.ReadOnly(blockers.Take(8));
     }
+    #endregion
 
-    private async Task<ServiceResult<AgentDefinition>?> ValidateSkillVersionsAsync(
-        IReadOnlyList<Guid> versionIds,
-        CancellationToken cancellationToken)
+    #region 校验（ValidateSkillVersionsAsync）
+    /// <summary>
+    /// 校验（ValidateSkillVersionsAsync）
+    /// </summary>
+    /// <param name="versionIds">版本标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>技能版本重复、标识无效或不可用时的失败服务结果；全部通过时为 null。</returns>
+    private async Task<ServiceResult<AgentDefinition>?> ValidateSkillVersionsAsync(IReadOnlyList<Guid> versionIds, CancellationToken cancellationToken)
     {
         if (versionIds.Count != versionIds.Distinct().Count())
         {
@@ -1463,10 +1720,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
-    private async Task<ServiceResult<AgentDefinition>?> ValidateToolVersionsAsync(
-        IReadOnlyList<Guid> versionIds,
-        CancellationToken cancellationToken)
+    #region 校验（ValidateToolVersionsAsync）
+    /// <summary>
+    /// 校验（ValidateToolVersionsAsync）
+    /// </summary>
+    /// <param name="versionIds">版本标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>工具绑定超过 128 个、重复或版本不可用时的失败服务结果；全部通过时为 null。</returns>
+    private async Task<ServiceResult<AgentDefinition>?> ValidateToolVersionsAsync(IReadOnlyList<Guid> versionIds, CancellationToken cancellationToken)
     {
         if (versionIds.Count > 128 ||
             versionIds.Count != versionIds.Distinct().Count())
@@ -1494,10 +1757,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
-    private async Task<ServiceResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(
-        IReadOnlyList<Guid> ids,
-        CancellationToken cancellationToken)
+    #region 校验（ValidateKnowledgeBasesAsync）
+    /// <summary>
+    /// 校验（ValidateKnowledgeBasesAsync）
+    /// </summary>
+    /// <param name="ids">知识库标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>知识库绑定超过 32 个、重复，或不满足已启用且具有分块的条件时的失败服务结果；全部通过时为 null。</returns>
+    private async Task<ServiceResult<AgentDefinition>?> ValidateKnowledgeBasesAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken)
     {
         if (ids.Count > 32 || ids.Count != ids.Distinct().Count())
         {
@@ -1516,10 +1785,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
-    private async Task<IReadOnlyList<PublishedKnowledgeReference>> GetKnowledgeReferencesAsync(
-        IReadOnlyList<Guid> ids,
-        CancellationToken cancellationToken)
+    #region 获取（GetKnowledgeReferencesAsync）
+    /// <summary>
+    /// 获取（GetKnowledgeReferencesAsync）
+    /// </summary>
+    /// <param name="ids">知识库标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定标识对应的已发布知识库引用；未提供标识或检索服务不可用时为空集合。</returns>
+    private async Task<IReadOnlyList<PublishedKnowledgeReference>> GetKnowledgeReferencesAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken)
     {
         if (ids.Count == 0)
         {
@@ -1536,7 +1811,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             (await _knowledgeBases.ListPublishedAsync(cancellationToken))
             .Where(value => selected.Contains(value.KnowledgeBaseId)));
     }
+    #endregion
 
+    #region 解析（ResolveChildAgentBindingsAsync）
+    /// <summary>
+    /// 解析（ResolveChildAgentBindingsAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="draft">草稿。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含子 Agent 固定版本绑定集合，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<IReadOnlyList<AgentChildBindingSnapshot>>> ResolveChildAgentBindingsAsync(
         Guid agentId,
         AgentVersion draft,
@@ -1606,7 +1890,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return Success<IReadOnlyList<AgentChildBindingSnapshot>>(
             AgentContractCloner.ReadOnly(resolved));
     }
+    #endregion
 
+    #region 解析（ResolveOrchestrationBindingsAsync）
+    /// <summary>
+    /// 解析（ResolveOrchestrationBindingsAsync）
+    /// </summary>
+    /// <param name="draft">草稿。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排固定版本绑定集合，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<IReadOnlyList<AgentOrchestrationBindingSnapshot>>> ResolveOrchestrationBindingsAsync(
         AgentVersion draft,
         CancellationToken cancellationToken)
@@ -1652,7 +1944,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return Success<IReadOnlyList<AgentOrchestrationBindingSnapshot>>(
             AgentContractCloner.ReadOnly(resolved));
     }
+    #endregion
 
+    #region 尝试执行（TryNormalizeCode）
+    /// <summary>
+    /// 尝试执行（TryNormalizeCode）
+    /// </summary>
+    /// <param name="value">待规范化并校验格式的业务编码。</param>
+    /// <param name="normalizedCode">规范化后的编码。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private static bool TryNormalizeCode(string? value, out string? normalizedCode)
     {
         normalizedCode = null;
@@ -1688,6 +1988,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         normalizedCode = builder.ToString();
         return normalizedCode.Length > 0;
     }
+    #endregion
 
     #endregion
 
@@ -1724,6 +2025,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     #region Agent 包导入导出
 
+    #region 导出（ExportAsync）
+    /// <summary>
+    /// 导出（ExportAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 包 JSON 文本，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<string>> ExportAsync(Guid agentId, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1799,7 +2107,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             ? Success(data: json)
             : Failed<string>(referenceError);
     }
+    #endregion
 
+    #region 导入（ImportAsync）
+    /// <summary>
+    /// 导入（ImportAsync）
+    /// </summary>
+    /// <param name="json">待反序列化及校验的 Agent 包 JSON 文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含Agent 定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<AgentDefinition>> ImportAsync(string json, CancellationToken cancellationToken = default)
     {
         EnsureAgentManagementAvailable();
@@ -1858,7 +2174,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return result;
     }
+    #endregion
 
+    #region 校验（ValidatePackageReferencesAsync）
+    /// <summary>
+    /// 校验（ValidatePackageReferencesAsync）
+    /// </summary>
+    /// <param name="package">Agent 导入导出包。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>首个资源引用校验错误；所有引用通过校验时为 null。</returns>
     private async Task<string?> ValidatePackageReferencesAsync(AgentPackageV1 package, CancellationToken cancellationToken)
     {
         string? error = await ValidateModelReferenceAsync(
@@ -1892,7 +2216,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         return error ?? await ValidateOrchestrationBindingReferencesAsync(
             package.Agent.Orchestrations ?? [], cancellationToken);
     }
+    #endregion
 
+    #region 校验（ValidateModelReferenceAsync）
+    /// <summary>
+    /// 校验（ValidateModelReferenceAsync）
+    /// </summary>
+    /// <param name="modelProfileId">模型配置标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>模型配置不可用时的错误说明；配置为空或存在时为 null。</returns>
     private async Task<string?> ValidateModelReferenceAsync(string modelProfileId, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(modelProfileId) &&
@@ -1903,7 +2235,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateToolReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateToolReferencesAsync）
+    /// </summary>
+    /// <param name="references">资源引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>工具版本标识无效或不可用时的错误说明；全部通过时为 null。</returns>
     private async Task<string?> ValidateToolReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         if (references.Count == 0)
@@ -1925,7 +2265,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateSkillReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateSkillReferencesAsync）
+    /// </summary>
+    /// <param name="references">资源引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>技能版本标识无效或未发布时的错误说明；全部通过时为 null。</returns>
     private async Task<string?> ValidateSkillReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         if (references.Count == 0)
@@ -1947,7 +2295,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateKnowledgeReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateKnowledgeReferencesAsync）
+    /// </summary>
+    /// <param name="references">资源引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>知识库标识无效或不满足已启用且具有分块的条件时的错误说明；全部通过时为 null。</returns>
     private async Task<string?> ValidateKnowledgeReferencesAsync(IReadOnlyList<string> references, CancellationToken cancellationToken)
     {
         IReadOnlySet<Guid> available = _knowledgeBases is null
@@ -1965,7 +2321,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateDraftChildReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateDraftChildReferencesAsync）
+    /// </summary>
+    /// <param name="ids">子 Agent 定义标识集合。</param>
+    /// <param name="pins">固定版本引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>子 Agent 标识、固定版本或启用状态的首个校验错误；全部通过时为 null。</returns>
     private async Task<string?> ValidateDraftChildReferencesAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentChildBindingSnapshot> pins,
@@ -2000,7 +2365,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateDraftOrchestrationReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateDraftOrchestrationReferencesAsync）
+    /// </summary>
+    /// <param name="ids">编排定义标识集合。</param>
+    /// <param name="pins">固定版本引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>编排标识、固定版本或启用状态的校验错误；全部通过时为 null。</returns>
     private async Task<string?> ValidateDraftOrchestrationReferencesAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentOrchestrationBindingSnapshot> pins,
@@ -2032,7 +2406,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             ? "The package references an enabled published orchestration that is not available."
             : null;
     }
+    #endregion
 
+    #region 导出（ExportChildBindingsAsync）
+    /// <summary>
+    /// 导出（ExportChildBindingsAsync）
+    /// </summary>
+    /// <param name="ids">子 Agent 定义标识集合。</param>
+    /// <param name="pins">固定版本引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>优先使用固定版本、否则选用最新发布版本的子 Agent 包绑定；没有引用时为 null。</returns>
     private async Task<IReadOnlyList<AgentPackageChildBindingV1>?> ExportChildBindingsAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentChildBindingSnapshot> pins,
@@ -2062,7 +2445,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return AgentContractCloner.ReadOnly(result);
     }
+    #endregion
 
+    #region 导出（ExportOrchestrationBindingsAsync）
+    /// <summary>
+    /// 导出（ExportOrchestrationBindingsAsync）
+    /// </summary>
+    /// <param name="ids">编排定义标识集合。</param>
+    /// <param name="pins">固定版本引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>优先使用固定版本、否则选用最新发布版本的编排包绑定；没有引用时为 null。</returns>
     private async Task<IReadOnlyList<AgentPackageOrchestrationBindingV1>?> ExportOrchestrationBindingsAsync(
         IReadOnlyList<Guid> ids,
         IReadOnlyList<AgentOrchestrationBindingSnapshot> pins,
@@ -2090,10 +2482,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 id.ToString("D"),
                 values[id].OrchestrationVersionId.ToString("D"))));
     }
+    #endregion
 
-    private async Task<string?> ValidateChildBindingReferencesAsync(
-        IReadOnlyList<AgentPackageChildBindingV1> references,
-        CancellationToken cancellationToken)
+    #region 校验（ValidateChildBindingReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateChildBindingReferencesAsync）
+    /// </summary>
+    /// <param name="references">资源引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>子 Agent 标识、版本或可用性校验的首个错误；全部通过时为 null。</returns>
+    private async Task<string?> ValidateChildBindingReferencesAsync(IReadOnlyList<AgentPackageChildBindingV1> references, CancellationToken cancellationToken)
     {
         foreach (AgentPackageChildBindingV1 reference in references)
         {
@@ -2114,7 +2512,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 校验（ValidateOrchestrationBindingReferencesAsync）
+    /// <summary>
+    /// 校验（ValidateOrchestrationBindingReferencesAsync）
+    /// </summary>
+    /// <param name="references">资源引用集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>编排标识、版本或启用状态校验的首个错误；全部通过时为 null。</returns>
     private async Task<string?> ValidateOrchestrationBindingReferencesAsync(
         IReadOnlyList<AgentPackageOrchestrationBindingV1> references,
         CancellationToken cancellationToken)
@@ -2137,7 +2543,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return null;
     }
+    #endregion
 
+    #region 尝试执行（TryReadPackage）
+    /// <summary>
+    /// 尝试执行（TryReadPackage）
+    /// </summary>
+    /// <param name="json">待反序列化及校验的 Agent 包 JSON 文本。</param>
+    /// <param name="package">Agent 导入导出包。</param>
+    /// <param name="error">错误信息。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private static bool TryReadPackage(string? json, out AgentPackageV1? package, out string? error)
     {
         package = null;
@@ -2194,12 +2609,18 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             return false;
         }
     }
+    #endregion
 
-    private bool TryValidatePackage(
-        AgentPackageV1 package,
-        out AgentRuntimeStatus runtimeStatus,
-        out AgentOutputMode outputMode,
-        out string? error)
+    #region 尝试执行（TryValidatePackage）
+    /// <summary>
+    /// 尝试执行（TryValidatePackage）
+    /// </summary>
+    /// <param name="package">Agent 导入导出包。</param>
+    /// <param name="runtimeStatus">Agent 运行时启用状态。</param>
+    /// <param name="outputMode">Agent 输出模式。</param>
+    /// <param name="error">错误信息。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
+    private bool TryValidatePackage(AgentPackageV1 package, out AgentRuntimeStatus runtimeStatus, out AgentOutputMode outputMode, out string? error)
     {
         runtimeStatus = default;
         outputMode = default;
@@ -2393,11 +2814,17 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return true;
     }
+    #endregion
 
-    private static bool ValidateJsonSafety(
-        JsonElement element,
-        ref int nodeCount,
-        out string? error)
+    #region 递归检查 Agent 包的 JSON 安全约束（ValidateJsonSafety）
+    /// <summary>
+    /// 递归检查 Agent 包的 JSON 安全约束（ValidateJsonSafety）。
+    /// </summary>
+    /// <param name="element">当前待检查的 Agent 包 JSON 元素。</param>
+    /// <param name="nodeCount">遍历过程中累计访问的节点数，通过引用递增；校验失败时不回退。</param>
+    /// <param name="error">失败时输出首个检查错误；成功时为 null。</param>
+    /// <returns>节点数量、重复属性、禁用属性及字符串形态检查全部通过时返回 true；任一检查失败时返回 false。</returns>
+    private static bool ValidateJsonSafety(JsonElement element, ref int nodeCount, out string? error)
     {
         if (++nodeCount > MaximumPackageNodes)
         {
@@ -2457,7 +2884,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         error = null;
         return true;
     }
+    #endregion
 
+    #region 检查 Agent 编码是否已规范化（IsNormalizedCode）
+    /// <summary>
+    /// 检查 Agent 编码是否已规范化（IsNormalizedCode）。
+    /// </summary>
+    /// <param name="value">待检查的原始编码，本方法不修剪空白或转换大小写。</param>
+    /// <returns>编码非空、仅含小写 ASCII 字母、数字和连字符，且无首尾或连续连字符时返回 true，否则返回 false。</returns>
     private static bool IsNormalizedCode(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value[0] == '-' || value[^1] == '-')
@@ -2484,7 +2918,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return true;
     }
+    #endregion
 
+    #region 尝试执行（TryParseSemanticVersion）
+    /// <summary>
+    /// 尝试执行（TryParseSemanticVersion）
+    /// </summary>
+    /// <param name="value">待解析的语义版本文本。</param>
+    /// <param name="major">主版本号。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private static bool TryParseSemanticVersion(string? value, out int major)
     {
         major = 0;
@@ -2499,7 +2941,15 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                TryParseCanonicalNumericIdentifier(parts[1], out _) &&
                TryParseCanonicalNumericIdentifier(parts[2], out _);
     }
+    #endregion
 
+    #region 尝试执行（TryParseCanonicalNumericIdentifier）
+    /// <summary>
+    /// 尝试执行（TryParseCanonicalNumericIdentifier）
+    /// </summary>
+    /// <param name="value">语义版本中待解析的规范数字段。</param>
+    /// <param name="number">解析成功时输出的非负规范数字值；失败时输出解析过程中的默认值。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private static bool TryParseCanonicalNumericIdentifier(string value, out int number)
     {
         number = 0;
@@ -2508,7 +2958,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                value.All(char.IsAsciiDigit) &&
                int.TryParse(value, out number);
     }
+    #endregion
 
+    #region 识别字符串中的绝对路径形态（LooksLikeAbsolutePath）
+    /// <summary>
+    /// 识别字符串中的绝对路径形态（LooksLikeAbsolutePath）。
+    /// </summary>
+    /// <param name="value">待检查的包内字符串。</param>
+    /// <returns>命中斜杠路径、UNC、file: 或盘符路径形态时返回 true，否则返回 false；仅作文本检查，不访问文件系统。</returns>
     private static bool LooksLikeAbsolutePath(string value)
     {
         if (value.StartsWith("/", StringComparison.Ordinal) ||
@@ -2531,7 +2988,14 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
         return false;
     }
+    #endregion
 
+    #region 识别字符串中的凭据或连接引用形态（LooksLikeSecretReference）
+    /// <summary>
+    /// 识别字符串中的凭据或连接引用形态（LooksLikeSecretReference）。
+    /// </summary>
+    /// <param name="value">待检查的包内字符串。</param>
+    /// <returns>忽略大小写匹配到本方法列出的凭据、密钥或连接字符串标记时返回 true，否则返回 false；不是完整的秘密信息检测器。</returns>
     private static bool LooksLikeSecretReference(string value) =>
         value.Contains("alias:", StringComparison.OrdinalIgnoreCase) ||
         value.Contains("sk-", StringComparison.OrdinalIgnoreCase) ||
@@ -2540,8 +3004,16 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         value.Contains("apikey=", StringComparison.OrdinalIgnoreCase) ||
         value.Contains("connection string=", StringComparison.OrdinalIgnoreCase) ||
         value.Contains("data source=", StringComparison.OrdinalIgnoreCase);
+    #endregion
 
+    #region 处理（PackageInvalid）
+    /// <summary>
+    /// 处理（PackageInvalid）
+    /// </summary>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>原样返回传入的包校验错误消息。</returns>
     private static string PackageInvalid(string message) => message;
+    #endregion
 
     #endregion
 }

@@ -9,7 +9,7 @@ using UglyToad.PdfPig.Exceptions;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgKnowledgeBaseDefinitionServices 职责实现
+// 文件职责：AgKnowledgeBaseDefinitionServices 职责实现
 
 /// <summary>
 /// 知识库定义、文档和检索分块的规范化持久化服务。
@@ -29,6 +29,11 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
     #region 构造
 
+    /// <summary>
+    /// 构造
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
+    /// <param name="agents">Agent 定义集合。</param>
     public AgKnowledgeBaseDefinitionServices(IBaseRepository<AgKnowledgeBaseDefinition> dal, Lazy<IAgentDefinitionCatalog>? agents = null)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
@@ -39,6 +44,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
     #region 知识库管理
 
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <param name="description">对象说明文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> CreateAsync(
         string code,
         string name,
@@ -77,7 +91,19 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             throw;
         }
     }
+    #endregion
 
+    #region 更新（UpdateAsync）
+    /// <summary>
+    /// 更新（UpdateAsync）
+    /// </summary>
+    /// <param name="id">知识库标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <param name="description">对象说明文本。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> UpdateAsync(
         Guid id,
         long expectedLogicalRevision,
@@ -110,11 +136,23 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             ? Success(updated)
             : Failure(KnowledgeErrorCodes.RowVersionConflict, "The knowledge base changed; reload and retry.");
     }
+    #endregion
 
     #endregion
 
     #region 文档导入与解析
 
+    #region 导入（ImportDocumentAsync）
+    /// <summary>
+    /// 导入（ImportDocumentAsync）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="fileName">文件名称。</param>
+    /// <param name="mediaType">内容的媒体类型。</param>
+    /// <param name="content">需要规范化、导入或切分的文档文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportDocumentAsync(
         Guid knowledgeBaseId,
         long expectedLogicalRevision,
@@ -135,7 +173,19 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             knowledgeBaseId, expectedLogicalRevision, fileName,
             mediaType, content, cancellationToken);
     }
+    #endregion
 
+    #region 导入（ImportPdfDocumentAsync）
+    /// <summary>
+    /// 导入（ImportPdfDocumentAsync）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="fileName">文件名称。</param>
+    /// <param name="mediaType">内容的媒体类型。</param>
+    /// <param name="content">待提取文本的原始 PDF 文件字节。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> ImportPdfDocumentAsync(
         Guid knowledgeBaseId,
         long expectedLogicalRevision,
@@ -168,7 +218,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             knowledgeBaseId, expectedLogicalRevision, fileName,
             mediaType, NormalizeContent(extraction.Content), cancellationToken);
     }
+    #endregion
 
+    #region 处理（ExtractAsync）
+    /// <summary>
+    /// 处理（ExtractAsync）
+    /// </summary>
+    /// <param name="content">待提取文本的原始 PDF 文件字节。</param>
+    /// <param name="maximumPages">允许处理的最大页数。</param>
+    /// <param name="maximumCharacters">允许的最大字符数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>PDF 文本提取结果；无效输入、加密文件、页数或文本超限及无可提取文本均以失败原因返回，取消操作会抛出异常。</returns>
     public Task<KnowledgePdfExtractionResult> ExtractAsync(
         ReadOnlyMemory<byte> content,
         int maximumPages,
@@ -185,7 +245,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             () => ExtractPdf(content, maximumPages, maximumCharacters, cancellationToken),
             cancellationToken);
     }
+    #endregion
 
+    #region 删除（DeleteDocumentAsync）
+    /// <summary>
+    /// 删除（DeleteDocumentAsync）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="documentId">知识库文档标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> DeleteDocumentAsync(
         Guid knowledgeBaseId,
         Guid documentId,
@@ -276,7 +346,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 KnowledgeErrorCodes.NotFound, "The knowledge base was not found.")
             : Success(updatedDefinition);
     }
+    #endregion
 
+    #region 处理（ExtractPdf）
+    /// <summary>
+    /// 处理（ExtractPdf）
+    /// </summary>
+    /// <param name="content">待提取文本的原始 PDF 文件字节。</param>
+    /// <param name="maximumPages">允许处理的最大页数。</param>
+    /// <param name="maximumCharacters">允许的最大字符数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>带页码标记的 PDF 文本和总页数，或对应的安全校验、读取失败原因；取消异常向上传播。</returns>
     private static KnowledgePdfExtractionResult ExtractPdf(
         ReadOnlyMemory<byte> content,
         int maximumPages,
@@ -348,7 +428,19 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 KnowledgePdfExtractionFailure.Invalid);
         }
     }
+    #endregion
 
+    #region 处理（PersistDocumentAsync）
+    /// <summary>
+    /// 处理（PersistDocumentAsync）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="requestedFileName">请求指定的文件名称。</param>
+    /// <param name="mediaType">内容的媒体类型。</param>
+    /// <param name="content">需要规范化、导入或切分的文档文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<KnowledgeBaseDefinition>> PersistDocumentAsync(
         Guid knowledgeBaseId, long expectedLogicalRevision, string requestedFileName,
         string mediaType, string content, CancellationToken cancellationToken)
@@ -385,11 +477,21 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 KnowledgeErrorCodes.RowVersionConflict,
                 "The knowledge base changed; reload and retry.");
     }
+    #endregion
 
     #endregion
 
     #region 知识库状态与查询
 
+    #region 设置（SetArchivedAsync）
+    /// <summary>
+    /// 设置（SetArchivedAsync）
+    /// </summary>
+    /// <param name="id">知识库标识。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="archived">是否设置为归档状态。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含知识库定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<KnowledgeBaseDefinition>> SetArchivedAsync(
         Guid id,
         long expectedLogicalRevision,
@@ -442,7 +544,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 KnowledgeErrorCodes.RowVersionConflict,
                 "The knowledge base changed; reload and retry.");
     }
+    #endregion
 
+    #region 获取（GetByIdAsync）
+    /// <summary>
+    /// 获取（GetByIdAsync）
+    /// </summary>
+    /// <param name="id">知识库标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定标识的完整知识库定义；不存在时为 null。</returns>
     public async Task<KnowledgeBaseDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -453,7 +563,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             ? null
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
+    #endregion
 
+    #region 获取（GetByCodeAsync）
+    /// <summary>
+    /// 获取（GetByCodeAsync）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定编码的完整知识库定义；不存在时为 null。</returns>
     public async Task<KnowledgeBaseDefinition?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -464,7 +582,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             ? null
             : await LoadDefinitionAsync(definition, cancellationToken);
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按编码及标识排列的知识库定义；未指定状态时排除已归档知识库。</returns>
     public async Task<IReadOnlyList<KnowledgeBaseDefinition>> ListAsync(KnowledgeBaseStatus? status = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -486,7 +612,16 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             .ToListAsync();
         return await LoadDefinitionsAsync(definitions, cancellationToken);
     }
+    #endregion
 
+    #region 尝试执行（TryReplaceAsync）
+    /// <summary>
+    /// 尝试执行（TryReplaceAsync）
+    /// </summary>
+    /// <param name="value">本次操作使用的知识库定义。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步任务，其结果为：操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private async Task<bool> TryReplaceAsync(KnowledgeBaseDefinition value, long expectedLogicalRevision, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -563,11 +698,18 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             throw;
         }
     }
+    #endregion
 
     #endregion
 
     #region 已发布引用与检索
 
+    #region 查询列表（ListPublishedAsync）
+    /// <summary>
+    /// 查询列表（ListPublishedAsync）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>已启用且存在未删除分块的知识库引用，包含当前逻辑版本。</returns>
     public async Task<IReadOnlyList<PublishedKnowledgeReference>> ListPublishedAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -603,7 +745,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 Required(definition.Name, "Name"),
                 Required(definition.LogicalRevision, "LogicalRevision"))));
     }
+    #endregion
 
+    #region 处理（SearchAsync）
+    /// <summary>
+    /// 处理（SearchAsync）
+    /// </summary>
+    /// <param name="knowledgeBaseIds">知识库标识集合。</param>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定已启用知识库中得分大于零的词法检索结果，按相关度优先排序，最多 20 条。</returns>
     public async Task<IReadOnlyList<KnowledgeSearchResult>> SearchAsync(
         IReadOnlyList<Guid> knowledgeBaseIds,
         string query,
@@ -667,11 +819,19 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             .ThenBy(value => value.ChunkSequence)
             .Take(Math.Clamp(take, 1, 20)));
     }
+    #endregion
 
     #endregion
 
     #region 持久化加载与映射
 
+    #region 加载（LoadDefinitionAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>补齐文档、分块及索引时间的知识库定义。</returns>
     private async Task<KnowledgeBaseDefinition> LoadDefinitionAsync(AgKnowledgeBaseDefinition definition, CancellationToken cancellationToken)
     {
         IReadOnlyList<KnowledgeBaseDefinition> values = await LoadDefinitionsAsync(
@@ -679,7 +839,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             cancellationToken);
         return values[0];
     }
+    #endregion
 
+    #region 加载（LoadDefinitionsAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionsAsync）
+    /// </summary>
+    /// <param name="definitions">定义记录集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保持输入顺序并补齐文档及分块的知识库定义集合。</returns>
     private async Task<IReadOnlyList<KnowledgeBaseDefinition>> LoadDefinitionsAsync(
         IReadOnlyList<AgKnowledgeBaseDefinition> definitions,
         CancellationToken cancellationToken)
@@ -722,7 +890,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             documentsByDefinition.GetValueOrDefault(definition.ID) ?? [],
             chunksByDefinition.GetValueOrDefault(definition.ID) ?? [])));
     }
+    #endregion
 
+    #region 新增（InsertDocumentsAndChunksAsync）
+    /// <summary>
+    /// 新增（InsertDocumentsAndChunksAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <param name="existingDocumentIds">已存在的文档标识集合。</param>
+    /// <param name="existingChunkIds">已存在的知识分块标识集合。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertDocumentsAndChunksAsync(
         KnowledgeBaseDefinition definition,
         CancellationToken cancellationToken,
@@ -766,7 +944,16 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
         }
         cancellationToken.ThrowIfCancellationRequested();
     }
+    #endregion
 
+    #region 映射（MapDefinition）
+    /// <summary>
+    /// 映射（MapDefinition）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="documents">知识库文档集合。</param>
+    /// <param name="chunks">知识分块集合。</param>
+    /// <returns>文档按导入序号、分块按文档顺序及分块序号排列的知识库定义。</returns>
     private static KnowledgeBaseDefinition MapDefinition(
         AgKnowledgeBaseDefinition definition,
         IReadOnlyList<AgKnowledgeDocument> documents,
@@ -795,7 +982,14 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 .Select(MapChunk)),
             ToDateTimeOffset(definition.IndexedAtUtc));
     }
+    #endregion
 
+    #region 映射（MapDefinitionEntity）
+    /// <summary>
+    /// 映射（MapDefinitionEntity）
+    /// </summary>
+    /// <param name="value">本次操作使用的知识库定义。</param>
+    /// <returns>由知识库定义构造的主表持久化实体。</returns>
     private static AgKnowledgeBaseDefinition MapDefinitionEntity(KnowledgeBaseDefinition value) =>
         new()
         {
@@ -809,7 +1003,14 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapDocument）
+    /// <summary>
+    /// 映射（MapDocument）
+    /// </summary>
+    /// <param name="value">本次操作使用的知识文档实体。</param>
+    /// <returns>包含文件名、媒体类型、摘要及导入时间的知识文档。</returns>
     private static KnowledgeDocument MapDocument(AgKnowledgeDocument value) =>
         new(
             value.ID,
@@ -818,7 +1019,16 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             Required(value.Sha256, "Document.Sha256"),
             Required(value.Content, "Document.Content"),
             RequiredDateTimeOffset(value.ImportedAtUtc, "Document.ImportedAtUtc"));
+    #endregion
 
+    #region 映射（MapDocumentEntity）
+    /// <summary>
+    /// 映射（MapDocumentEntity）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="value">本次操作使用的知识文档。</param>
+    /// <param name="ordinal">文档在知识库中的排序序号。</param>
+    /// <returns>带有所属知识库及文档排序序号的文档持久化实体。</returns>
     private static AgKnowledgeDocument MapDocumentEntity(Guid knowledgeBaseId, KnowledgeDocument value, int ordinal) =>
         new()
         {
@@ -833,14 +1043,29 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 映射（MapChunk）
+    /// <summary>
+    /// 映射（MapChunk）
+    /// </summary>
+    /// <param name="value">本次操作使用的知识分块实体。</param>
+    /// <returns>包含文档标识、分块序号及文本的知识分块。</returns>
     private static KnowledgeChunk MapChunk(AgKnowledgeChunk value) =>
         new(
             value.ID,
             Required(value.DocumentId, "Chunk.DocumentId"),
             Required(value.Sequence, "Chunk.Sequence"),
             Required(value.Content, "Chunk.Content"));
+    #endregion
 
+    #region 映射（MapChunkEntity）
+    /// <summary>
+    /// 映射（MapChunkEntity）
+    /// </summary>
+    /// <param name="knowledgeBaseId">知识库标识。</param>
+    /// <param name="value">本次操作使用的知识分块。</param>
+    /// <returns>带有所属知识库和文档信息的分块持久化实体。</returns>
     private static AgKnowledgeChunk MapChunkEntity(Guid knowledgeBaseId, KnowledgeChunk value) =>
         new()
         {
@@ -852,20 +1077,48 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             IsDeleted = false,
             IsActive = true
         };
+    #endregion
 
+    #region 解析（ParseStatus）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseStatus）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static KnowledgeBaseStatus ParseStatus(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out KnowledgeBaseStatus status) && Enum.IsDefined(status)
             ? status
             : throw new InvalidDataException($"Knowledge base status '{value}' is invalid.");
+    #endregion
 
+    #region 规范化（NormalizeContent）
+    /// <summary>
+    /// 规范化（NormalizeContent）
+    /// </summary>
+    /// <param name="content">需要规范化、导入或切分的文档文本。</param>
+    /// <returns>统一为换行符 LF 并去除首尾空白的文本；输入为 null 时返回空字符串。</returns>
     private static string NormalizeContent(string? content) =>
         (content ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n').Trim();
+    #endregion
 
+    #region 检查 PDF 文件头标记（HasPdfSignature）
+    /// <summary>
+    /// 检查 PDF 文件头标记（HasPdfSignature）。
+    /// </summary>
+    /// <param name="content">待检查的文件原始字节。</param>
+    /// <returns>内容至少有 5 字节且以 %PDF- 开头时返回 true，否则返回 false；不表示整个文件已通过 PDF 格式校验。</returns>
     private static bool HasPdfSignature(ReadOnlySpan<byte> content) =>
         content.Length >= 5 && content[0] == (byte)'%' && content[1] == (byte)'P'
         && content[2] == (byte)'D' && content[3] == (byte)'F' && content[4] == (byte)'-';
+    #endregion
 
+    #region 处理（PdfFailureMessage）
+    /// <summary>
+    /// 处理（PdfFailureMessage）
+    /// </summary>
+    /// <param name="failure">失败结果。</param>
+    /// <returns>与 PDF 提取失败原因对应的安全提示，不包含原始解析异常详情。</returns>
     private static string PdfFailureMessage(KnowledgePdfExtractionFailure failure) => failure switch
     {
         KnowledgePdfExtractionFailure.Encrypted =>
@@ -878,7 +1131,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             "The PDF contains no extractable text; scanned-image OCR is not enabled.",
         _ => "The PDF is malformed or could not be read safely."
     };
+    #endregion
 
+    #region 校验（ValidateImportTarget）
+    /// <summary>
+    /// 校验（ValidateImportTarget）
+    /// </summary>
+    /// <param name="existing">已有数据。</param>
+    /// <param name="expectedLogicalRevision">并发更新要求匹配的逻辑修订号。</param>
+    /// <returns>知识库不存在、版本冲突、已归档或文档数已达上限时的失败服务结果；允许导入时为 null。</returns>
     private static ServiceResult<KnowledgeBaseDefinition>? ValidateImportTarget(KnowledgeBaseDefinition? existing, long expectedLogicalRevision)
     {
         if (existing is null)
@@ -900,9 +1161,18 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 $"A knowledge base accepts at most {MaximumDocuments} documents.")
             : null;
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<KnowledgeBaseDefinition> Failure(string errorCode, string message) =>
         Failure<KnowledgeBaseDefinition>(KnowledgeServiceStatusCodes.FromErrorCode(errorCode), message);
+    #endregion
 
     #endregion
 
@@ -913,6 +1183,13 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
         private const int TargetCharacters = 1200;
         private const int OverlapCharacters = 160;
 
+        #region 处理（Chunk）
+        /// <summary>
+        /// 处理（Chunk）
+        /// </summary>
+        /// <param name="documentId">知识库文档标识。</param>
+        /// <param name="content">需要规范化、导入或切分的文档文本。</param>
+        /// <returns>按文本顺序生成的非空知识分块，使用目标长度、换行边界及重叠区域切分。</returns>
         public static IReadOnlyList<KnowledgeChunk> Chunk(Guid documentId, string content)
         {
             var values = new List<KnowledgeChunk>();
@@ -946,10 +1223,17 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
             return Common.Extensions.CollectionExtensions.ToReadOnlyList(values);
         }
+        #endregion
     }
 
     private static class KnowledgeLexicalSearch
     {
+        #region 处理（Terms）
+        /// <summary>
+        /// 处理（Terms）
+        /// </summary>
+        /// <param name="value">用于提取词项的查询或分块文本。</param>
+        /// <returns>经 Unicode 兼容规范化及小写转换后的去重词项，包含多字符单词、连续中文双字词及孤立单字。</returns>
         public static HashSet<string> Terms(string value)
         {
             string normalized = value.Normalize(NormalizationForm.FormKC).ToLowerInvariant();
@@ -957,18 +1241,22 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             var word = new StringBuilder();
             var cjk = new StringBuilder();
 
+            #region 处理（FlushWord）
             void FlushWord()
             {
                 if (word.Length > 1) terms.Add(word.ToString());
                 word.Clear();
             }
+            #endregion
 
+            #region 处理（FlushCjk）
             void FlushCjk()
             {
                 if (cjk.Length == 1) terms.Add(cjk.ToString());
                 for (int i = 0; i + 1 < cjk.Length; i++) terms.Add(cjk.ToString(i, 2));
                 cjk.Clear();
             }
+            #endregion
 
             foreach (char character in normalized)
             {
@@ -995,7 +1283,15 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
             FlushCjk();
             return terms;
         }
+        #endregion
 
+        #region 处理（Score）
+        /// <summary>
+        /// 处理（Score）
+        /// </summary>
+        /// <param name="content">用于与查询词项计算相关度的分块文本。</param>
+        /// <param name="queryTerms">用于检索匹配的查询词集合。</param>
+        /// <returns>查询与内容词项交集数除以两者词项数乘积平方根的得分；查询为空或无匹配时为零。</returns>
         public static double Score(string content, HashSet<string> queryTerms)
         {
             if (queryTerms.Count == 0) return 0;
@@ -1005,27 +1301,60 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
                 ? 0
                 : matches / Math.Sqrt(queryTerms.Count * (double)Math.Max(1, contentTerms.Count));
         }
+        #endregion
     }
 
     #endregion
 
     #region 值转换与校验
 
+    #region 转换（ToDateTimeOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToDateTimeOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。输入为 null 时返回 null。</returns>
     private static DateTimeOffset? ToDateTimeOffset(DateTime? value) =>
         value.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc))
             : null;
+    #endregion
 
+    #region 处理（RequiredDateTimeOffset）
+    /// <summary>
+    /// 处理（RequiredDateTimeOffset）
+    /// </summary>
+    /// <param name="value">数据库中按 UTC 存储的必填时间。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>将必填时间视为 UTC 后构造的零偏移时间；字段缺失时抛出 InvalidDataException。</returns>
     private static DateTimeOffset RequiredDateTimeOffset(DateTime? value, string field) =>
         value.HasValue
             ? new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc))
             : throw new InvalidDataException($"Knowledge base field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <typeparam name="T">必填字段的值类型。</typeparam>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static T Required<T>(T? value, string field) where T : struct =>
         value ?? throw new InvalidDataException($"Knowledge base field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException($"Knowledge base field '{field}' is missing.");
+    #endregion
 
     /// <summary>
     /// 知识库检索联表查询的内部投影行。
@@ -1070,5 +1399,3 @@ public sealed class AgKnowledgeBaseDefinitionServices : BaseServices<AgKnowledge
 
     #endregion
 }
-
-#endregion

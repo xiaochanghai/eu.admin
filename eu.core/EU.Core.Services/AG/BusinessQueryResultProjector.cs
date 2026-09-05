@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace EU.Core.Services;
 
-#region 文件职责：BusinessQueryResultProjector 职责实现
+// 文件职责：BusinessQueryResultProjector 职责实现
 
 /// <summary>
 /// 将业务查询结果投影为统一入口可持久化的结构。
@@ -16,6 +16,13 @@ public static class BusinessQueryResultProjector
 {
     #region 结果投影与脱敏
 
+    #region 处理（ProjectMessages）
+    /// <summary>
+    /// 处理（ProjectMessages）
+    /// </summary>
+    /// <param name="values">需要按展示权限投影的会话消息集合。</param>
+    /// <param name="includePresentation">是否包含用于展示的结果内容。</param>
+    /// <returns>消息记录副本集合；未获准展示时移除业务查询展示内容。</returns>
     public static IReadOnlyList<ConversationMessageRecord> ProjectMessages(IReadOnlyList<ConversationMessageRecord> values, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.ReadOnly(values.Select(value => value with { }))
@@ -23,7 +30,15 @@ public static class BusinessQueryResultProjector
                 value.Kind == ConversationMessageKind.BusinessQueryResult
                     ? BusinessQueryResultRedaction.Redact(value)
                     : value with { }));
+    #endregion
 
+    #region 处理（ProjectDetails）
+    /// <summary>
+    /// 处理（ProjectDetails）
+    /// </summary>
+    /// <param name="value">本次操作使用的统一入口运行详情。</param>
+    /// <param name="includePresentation">是否包含用于展示的结果内容。</param>
+    /// <returns>运行详情副本；未获准展示时脱敏工具结果中的业务查询展示内容。</returns>
     public static UnifiedRunDetails ProjectDetails(UnifiedRunDetails value, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.Clone(value)
@@ -35,7 +50,15 @@ public static class BusinessQueryResultProjector
                 {
                     ResultContent = ProjectPayload(call.ResultContent)
                 }).ToArray());
+    #endregion
 
+    #region 处理（ProjectEvents）
+    /// <summary>
+    /// 处理（ProjectEvents）
+    /// </summary>
+    /// <param name="values">需要按展示权限投影的运行事件集合。</param>
+    /// <param name="includePresentation">是否包含用于展示的结果内容。</param>
+    /// <returns>事件记录副本集合；未获准展示时脱敏事件载荷中的业务查询展示内容。</returns>
     public static IReadOnlyList<UnifiedRunEventRecord> ProjectEvents(IReadOnlyList<UnifiedRunEventRecord> values, bool includePresentation) =>
         includePresentation
             ? UnifiedEntryContractCloner.ReadOnly(values.Select(value => value with { }))
@@ -43,7 +66,14 @@ public static class BusinessQueryResultProjector
             {
                 PayloadJson = ProjectPayload(value.PayloadJson)
             }));
+    #endregion
 
+    #region 处理（ProjectPayload）
+    /// <summary>
+    /// 处理（ProjectPayload）
+    /// </summary>
+    /// <param name="payload">待按展示权限检查和脱敏的事件或工具结果载荷。</param>
+    /// <returns>移除业务查询展示内容后的载荷；无需处理时原样返回，疑似展示载荷解析失败时返回脱敏占位文本。</returns>
     public static string ProjectPayload(string payload)
     {
         if (string.IsNullOrEmpty(payload)
@@ -68,7 +98,14 @@ public static class BusinessQueryResultProjector
             return "[BUSINESS_QUERY_PRESENTATION_REDACTED]";
         }
     }
+    #endregion
 
+    #region 递归移除业务查询展示载荷（RedactNode）
+    /// <summary>
+    /// 递归移除业务查询展示载荷（RedactNode）。
+    /// </summary>
+    /// <param name="node">待原地脱敏的 JSON 节点；为 null 时不作修改。</param>
+    /// <returns>当前 JSON 节点或其后代内容发生脱敏修改时返回 true；未修改时返回 false。</returns>
     private static bool RedactNode(JsonNode? node)
     {
         bool changed = false;
@@ -125,8 +162,7 @@ public static class BusinessQueryResultProjector
 
         return changed;
     }
+    #endregion
 
     #endregion
 }
-
-#endregion

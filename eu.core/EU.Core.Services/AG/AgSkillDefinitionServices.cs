@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgSkillDefinitionServices 职责实现
+// 文件职责：AgSkillDefinitionServices 职责实现
 
 /// <summary>
 /// Skill 定义、发布版本和文件清单服务。
@@ -23,6 +23,13 @@ public sealed class AgSkillDefinitionServices :
     private readonly ISkillFileStore _fileStore;
     private readonly IPublishedSkillContentStore? _publishedContentStore;
 
+    #region 构造（AgSkillDefinitionServices）
+    /// <summary>
+    /// 构造（AgSkillDefinitionServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
+    /// <param name="fileStore">技能文件存储服务。</param>
+    /// <param name="publishedContentStore">已发布技能内容存储服务。</param>
     public AgSkillDefinitionServices(
         IBaseRepository<AgSkillDefinition> dal,
         ISkillFileStore fileStore,
@@ -32,6 +39,7 @@ public sealed class AgSkillDefinitionServices :
         _fileStore = fileStore ?? throw new ArgumentNullException(nameof(fileStore));
         _publishedContentStore = publishedContentStore;
     }
+    #endregion
 
     private static readonly Regex CodePattern = new(
         "^[a-z0-9][a-z0-9-]{0,62}$",
@@ -41,6 +49,13 @@ public sealed class AgSkillDefinitionServices :
         "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    #region 创建（CreateAsync）
+    /// <summary>
+    /// 创建（CreateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> CreateAsync(CreateSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -109,7 +124,15 @@ public sealed class AgSkillDefinitionServices :
         }
         return Success(definition);
     }
+    #endregion
 
+    #region 获取（GetAsync）
+    /// <summary>
+    /// 获取（GetAsync）
+    /// </summary>
+    /// <param name="id">技能标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>包含已发布版本及文件清单的技能定义；不存在时为 null。</returns>
     public async Task<SkillDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -132,7 +155,15 @@ public sealed class AgSkillDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配搜索、分类和状态条件的技能摘要集合；未指定状态时排除已归档技能。</returns>
     public async Task<IReadOnlyList<SkillListItem>> ListAsync(SkillQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -197,7 +228,15 @@ public sealed class AgSkillDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 更新（UpdateAsync）
+    /// <summary>
+    /// 更新（UpdateAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> UpdateAsync(UpdateSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -233,7 +272,15 @@ public sealed class AgSkillDefinitionServices :
                 : RevisionConflict();
         }, cancellationToken);
     }
+    #endregion
 
+    #region 保存（SaveFileAsync）
+    /// <summary>
+    /// 保存（SaveFileAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> SaveFileAsync(SaveSkillFileCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -271,7 +318,15 @@ public sealed class AgSkillDefinitionServices :
                 cancellationToken);
         }, cancellationToken);
     }
+    #endregion
 
+    #region 删除（DeleteFileAsync）
+    /// <summary>
+    /// 删除（DeleteFileAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> DeleteFileAsync(DeleteSkillFileCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -308,7 +363,15 @@ public sealed class AgSkillDefinitionServices :
                 cancellationToken);
         }, cancellationToken);
     }
+    #endregion
 
+    #region 发布（PublishAsync）
+    /// <summary>
+    /// 发布（PublishAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> PublishAsync(PublishSkillCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -406,7 +469,15 @@ public sealed class AgSkillDefinitionServices :
             }
         }, cancellationToken);
     }
+    #endregion
 
+    #region 查询列表（ListFilesAsync）
+    /// <summary>
+    /// 查询列表（ListFilesAsync）
+    /// </summary>
+    /// <param name="id">技能标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能文件条目集合，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<IReadOnlyList<SkillFileEntry>>> ListFilesAsync(Guid id, CancellationToken cancellationToken = default)
     {
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
@@ -427,7 +498,15 @@ public sealed class AgSkillDefinitionServices :
             return Failure<IReadOnlyList<SkillFileEntry>>(exception.Code, exception.Message);
         }
     }
+    #endregion
 
+    #region 设置（SetArchivedAsync）
+    /// <summary>
+    /// 设置（SetArchivedAsync）
+    /// </summary>
+    /// <param name="command">当前业务操作的命令参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<SkillDefinition>> SetArchivedAsync(SetSkillArchiveCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -474,7 +553,16 @@ public sealed class AgSkillDefinitionServices :
                 : RevisionConflict();
         }, cancellationToken);
     }
+    #endregion
 
+    #region 读取（ReadFileAsync）
+    /// <summary>
+    /// 读取（ReadFileAsync）
+    /// </summary>
+    /// <param name="id">技能标识。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能文件文本内容，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<string>> ReadFileAsync(Guid id, string relativePath, CancellationToken cancellationToken = default)
     {
         SkillDefinition? definition = await GetAsync(id, cancellationToken);
@@ -493,7 +581,14 @@ public sealed class AgSkillDefinitionServices :
             return Failure<string>(exception.Code, exception.Message);
         }
     }
+    #endregion
 
+    #region 核对并同步（ReconcileFileAttachmentsAsync）
+    /// <summary>
+    /// 核对并同步（ReconcileFileAttachmentsAsync）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     public async Task ReconcileFileAttachmentsAsync(CancellationToken cancellationToken = default)
     {
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
@@ -584,7 +679,15 @@ public sealed class AgSkillDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 查找（FindArchiveBlockersAsync）
+    /// <summary>
+    /// 查找（FindArchiveBlockersAsync）
+    /// </summary>
+    /// <param name="skillVersionIds">技能版本标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>最多八个引用该技能版本的启用 Agent 编码，检查草稿及最新发布版本。</returns>
     private async Task<string[]> FindArchiveBlockersAsync(IReadOnlySet<Guid> skillVersionIds, CancellationToken cancellationToken)
     {
         if (skillVersionIds.Count == 0)
@@ -658,7 +761,15 @@ public sealed class AgSkillDefinitionServices :
             .Take(8)
             .ToArray();
     }
+    #endregion
 
+    #region 查询活动技能的版本是否存在（ExistsAsync）
+    /// <summary>
+    /// 查询活动技能的版本是否存在（ExistsAsync）。
+    /// </summary>
+    /// <param name="versionId">待查询的技能版本标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定技能版本及所属定义均未删除且技能状态为 Active 时返回 true，否则返回 false。</returns>
     public async Task<bool> ExistsAsync(Guid versionId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -673,9 +784,15 @@ public sealed class AgSkillDefinitionServices :
                 definition.Status == nameof(SkillStatus.Active))
             .AnyAsync();
     }
+    #endregion
 
-    async Task<IReadOnlyList<PublishedSkillReference>> IPublishedSkillVersionCatalog.ListAsync(
-        CancellationToken cancellationToken)
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>活动技能的已发布版本引用；配置内容存储时进一步筛除内容不可用的版本。</returns>
+    async Task<IReadOnlyList<PublishedSkillReference>> IPublishedSkillVersionCatalog.ListAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<AgSkillDefinition> definitions = await Db.Queryable<AgSkillDefinition>()
@@ -729,7 +846,15 @@ public sealed class AgSkillDefinitionServices :
 
         return SkillContractCloner.ReadOnly(available);
     }
+    #endregion
 
+    #region 加载（LoadDefinitionAsync）
+    /// <summary>
+    /// 加载（LoadDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>补齐有序发布版本和各版本文件清单的技能定义。</returns>
     private async Task<SkillDefinition> LoadDefinitionAsync(AgSkillDefinition definition, CancellationToken cancellationToken)
     {
         List<AgSkillVersion> versions = await Db.Queryable<AgSkillVersion>()
@@ -753,7 +878,15 @@ public sealed class AgSkillDefinitionServices :
         cancellationToken.ThrowIfCancellationRequested();
         return MapDefinition(definition, versions, files);
     }
+    #endregion
 
+    #region 加载（LoadVersionsBySkillAsync）
+    /// <summary>
+    /// 加载（LoadVersionsBySkillAsync）
+    /// </summary>
+    /// <param name="skillIds">技能标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按技能标识分组、组内按版本序号及标识排序的未删除版本字典。</returns>
     private async Task<IReadOnlyDictionary<Guid, AgSkillVersion[]>> LoadVersionsBySkillAsync(IEnumerable<Guid> skillIds, CancellationToken cancellationToken)
     {
         Guid[] ids = skillIds.Distinct().ToArray();
@@ -776,7 +909,19 @@ public sealed class AgSkillDefinitionServices :
             .GroupBy(value => Required(value.SkillId, "Version.SkillId"))
             .ToDictionary(group => group.Key, group => group.ToArray());
     }
+    #endregion
 
+    #region 执行（ExecuteDraftMutationAsync）
+    /// <summary>
+    /// 执行（ExecuteDraftMutationAsync）
+    /// </summary>
+    /// <param name="existing">已有数据。</param>
+    /// <param name="updated">更新后的数据。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="mutation">用于修改聚合状态的委托。</param>
+    /// <param name="requireExistingFile">是否要求目标文件已存在。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含技能定义，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<SkillDefinition>> ExecuteDraftMutationAsync(
         SkillDefinition existing,
         SkillDefinition updated,
@@ -857,7 +1002,17 @@ public sealed class AgSkillDefinitionServices :
             throw;
         }
     }
+    #endregion
 
+    #region 处理（CompensateDraftMutationAsync）
+    /// <summary>
+    /// 处理（CompensateDraftMutationAsync）
+    /// </summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="previousContent">先前保存的内容。</param>
+    /// <param name="originalException">最初导致失败的异常。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task CompensateDraftMutationAsync(string skillCode, string relativePath, string? previousContent, Exception originalException)
     {
         try
@@ -890,11 +1045,17 @@ public sealed class AgSkillDefinitionServices :
                 new AggregateException(originalException, compensationException));
         }
     }
+    #endregion
 
-    private async Task DeleteStaleAttachmentGroupsAsync(
-        string attachmentType,
-        IReadOnlyCollection<Guid> retainedMasterIds,
-        CancellationToken cancellationToken)
+    #region 删除（DeleteStaleAttachmentGroupsAsync）
+    /// <summary>
+    /// 删除（DeleteStaleAttachmentGroupsAsync）
+    /// </summary>
+    /// <param name="attachmentType">文件附件类型。</param>
+    /// <param name="retainedMasterIds">需要保留的主记录标识集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
+    private async Task DeleteStaleAttachmentGroupsAsync(string attachmentType, IReadOnlyCollection<Guid> retainedMasterIds, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         List<FileAttachment> existing = await Db.Queryable<FileAttachment>()
@@ -915,7 +1076,16 @@ public sealed class AgSkillDefinitionServices :
                 .ExecuteCommandAsync();
         }
     }
+    #endregion
 
+    #region 核对并同步（ReconcileAttachmentGroupAsync）
+    /// <summary>
+    /// 核对并同步（ReconcileAttachmentGroupAsync）
+    /// </summary>
+    /// <param name="masterId">主记录标识。</param>
+    /// <param name="attachmentType">文件附件类型。</param>
+    /// <param name="desired">期望状态。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ReconcileAttachmentGroupAsync(Guid masterId, string attachmentType, IReadOnlyList<FileAttachment> desired)
     {
         List<FileAttachment> existing = await Db.Queryable<FileAttachment>()
@@ -970,7 +1140,15 @@ public sealed class AgSkillDefinitionServices :
                 .ExecuteCommandAsync();
         }
     }
+    #endregion
 
+    #region 核对技能附件元数据（AttachmentMatches）
+    /// <summary>
+    /// 核对技能附件元数据（AttachmentMatches）。
+    /// </summary>
+    /// <param name="current">现有附件记录。</param>
+    /// <param name="desired">期望保存的附件元数据；本方法不读取文件内容。</param>
+    /// <returns>附件关联标识、文件名、扩展名、路径、长度及图片类型一致，且现有附件未删除并已启用时返回 true，否则返回 false。</returns>
     private static bool AttachmentMatches(FileAttachment current, FileAttachment desired) =>
         current.MasterId == desired.MasterId &&
         string.Equals(current.OriginalFileName, desired.OriginalFileName, StringComparison.Ordinal) &&
@@ -981,11 +1159,17 @@ public sealed class AgSkillDefinitionServices :
         string.Equals(current.ImageType, desired.ImageType, StringComparison.Ordinal) &&
         !current.IsDeleted &&
         current.IsActive == true;
+    #endregion
 
-    private static IReadOnlyList<FileAttachment> MapDraftAttachments(
-        Guid skillId,
-        string skillCode,
-        IReadOnlyList<SkillFileEntry> files) => files
+    #region 映射（MapDraftAttachments）
+    /// <summary>
+    /// 映射（MapDraftAttachments）
+    /// </summary>
+    /// <param name="skillId">技能标识。</param>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="files">文件集合。</param>
+    /// <returns>由草稿文件清单映射的附件记录集合。</returns>
+    private static IReadOnlyList<FileAttachment> MapDraftAttachments(Guid skillId, string skillCode, IReadOnlyList<SkillFileEntry> files) => files
         .Select(file => MapAttachment(
             skillId,
             DraftAttachmentType,
@@ -994,10 +1178,16 @@ public sealed class AgSkillDefinitionServices :
             file.Path,
             file.Size))
         .ToArray();
+    #endregion
 
-    private static IReadOnlyList<FileAttachment> MapPublishedAttachments(
-        string skillCode,
-        SkillVersion version) => version.Files
+    #region 映射（MapPublishedAttachments）
+    /// <summary>
+    /// 映射（MapPublishedAttachments）
+    /// </summary>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="version">版本记录。</param>
+    /// <returns>由发布版本文件清单映射的附件记录集合。</returns>
+    private static IReadOnlyList<FileAttachment> MapPublishedAttachments(string skillCode, SkillVersion version) => version.Files
         .Select(file => MapAttachment(
             version.Id,
             PublishedAttachmentType,
@@ -1006,7 +1196,19 @@ public sealed class AgSkillDefinitionServices :
             file.Path,
             file.Size))
         .ToArray();
+    #endregion
 
+    #region 映射（MapAttachment）
+    /// <summary>
+    /// 映射（MapAttachment）
+    /// </summary>
+    /// <param name="masterId">主记录标识。</param>
+    /// <param name="attachmentType">文件附件类型。</param>
+    /// <param name="skillCode">技能编码。</param>
+    /// <param name="scopePath">操作范围路径。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <param name="size">大小限制或数据大小。</param>
+    /// <returns>包含确定性标识、规范化目录及文件元数据的附件记录；文件名或扩展名超限时抛出异常。</returns>
     private static FileAttachment MapAttachment(Guid masterId, string attachmentType, string skillCode, string scopePath, string relativePath, long size)
     {
         string normalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
@@ -1038,14 +1240,32 @@ public sealed class AgSkillDefinitionServices :
             IsActive = true
         };
     }
+    #endregion
 
+    #region 处理（DeterministicAttachmentId）
+    /// <summary>
+    /// 处理（DeterministicAttachmentId）
+    /// </summary>
+    /// <param name="masterId">主记录标识。</param>
+    /// <param name="attachmentType">文件附件类型。</param>
+    /// <param name="relativePath">相对于存储根目录的文件路径。</param>
+    /// <returns>根据附件类型、所属记录和相对路径的 SHA-256 前 16 字节构造的稳定标识。</returns>
     private static Guid DeterministicAttachmentId(Guid masterId, string attachmentType, string relativePath)
     {
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{attachmentType}\n{masterId:N}\n{relativePath}"));
         return new Guid(hash.AsSpan(0, 16));
     }
+    #endregion
 
+    #region 尝试执行（TryUpdateDefinitionAsync）
+    /// <summary>
+    /// 尝试执行（TryUpdateDefinitionAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="expectedDraftRevision">预期的草稿修订号。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步任务，其结果为：操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     private async Task<bool> TryUpdateDefinitionAsync(SkillDefinition definition, long expectedDraftRevision, CancellationToken cancellationToken)
     {
         if (expectedDraftRevision == long.MaxValue ||
@@ -1057,7 +1277,15 @@ public sealed class AgSkillDefinitionServices :
         cancellationToken.ThrowIfCancellationRequested();
         return await UpdateDefinitionEntityAsync(definition, expectedDraftRevision) == 1;
     }
+    #endregion
 
+    #region 更新（UpdateDefinitionEntityAsync）
+    /// <summary>
+    /// 更新（UpdateDefinitionEntityAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="expectedDraftRevision">预期的草稿修订号。</param>
+    /// <returns>按预期草稿版本更新技能定义所影响的行数。</returns>
     private async Task<int> UpdateDefinitionEntityAsync(SkillDefinition definition, long expectedDraftRevision)
     {
         AgSkillDefinition entity = MapDefinitionEntity(definition);
@@ -1077,7 +1305,14 @@ public sealed class AgSkillDefinitionServices :
                 !value.IsDeleted)
             .ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 映射（MapDefinitionEntity）
+    /// <summary>
+    /// 映射（MapDefinitionEntity）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <returns>由技能定义构造的主表持久化实体。</returns>
     private static AgSkillDefinition MapDefinitionEntity(SkillDefinition definition) =>
         new()
         {
@@ -1089,7 +1324,16 @@ public sealed class AgSkillDefinitionServices :
             Category = definition.Category,
             Status = definition.Status.ToString()
         };
+    #endregion
 
+    #region 映射（MapVersionEntity）
+    /// <summary>
+    /// 映射（MapVersionEntity）
+    /// </summary>
+    /// <param name="skillId">技能标识。</param>
+    /// <param name="ordinal">版本在所属定义中的排序序号。</param>
+    /// <param name="version">版本记录。</param>
+    /// <returns>带有所属技能和版本序号的发布版本实体。</returns>
     private static AgSkillVersion MapVersionEntity(Guid skillId, int ordinal, SkillVersion version) =>
         new()
         {
@@ -1100,7 +1344,14 @@ public sealed class AgSkillDefinitionServices :
             ManifestSha256 = version.ManifestSha256,
             PublishedAtUtc = version.PublishedAtUtc.UtcDateTime
         };
+    #endregion
 
+    #region 映射（MapFileEntities）
+    /// <summary>
+    /// 映射（MapFileEntities）
+    /// </summary>
+    /// <param name="version">版本记录。</param>
+    /// <returns>保持清单顺序并包含路径、大小和摘要的技能版本文件实体集合。</returns>
     private static List<AgSkillVersionFile> MapFileEntities(SkillVersion version) =>
         version.Files.Select((file, ordinal) => new AgSkillVersionFile
         {
@@ -1111,7 +1362,16 @@ public sealed class AgSkillDefinitionServices :
             Size = file.Size,
             Sha256 = file.Sha256
         }).ToList();
+    #endregion
 
+    #region 映射（MapDefinition）
+    /// <summary>
+    /// 映射（MapDefinition）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="versions">版本记录集合。</param>
+    /// <param name="files">文件集合。</param>
+    /// <returns>包含状态、有序发布版本及文件清单的技能定义。</returns>
     private static SkillDefinition MapDefinition(AgSkillDefinition definition, IReadOnlyList<AgSkillVersion> versions, IReadOnlyList<AgSkillVersionFile> files)
     {
         IReadOnlyDictionary<Guid, AgSkillVersionFile[]> filesByVersion = files
@@ -1133,7 +1393,15 @@ public sealed class AgSkillDefinitionServices :
             Status = ParseStatus(definition.Status)
         };
     }
+    #endregion
 
+    #region 映射（MapVersion）
+    /// <summary>
+    /// 映射（MapVersion）
+    /// </summary>
+    /// <param name="version">版本记录。</param>
+    /// <param name="files">文件集合。</param>
+    /// <returns>包含发布时间、清单摘要及有序文件哈希的技能版本。</returns>
     private static SkillVersion MapVersion(AgSkillVersion version, IReadOnlyList<AgSkillVersionFile> files)
     {
         DateTime publishedAtUtc = Required(version.PublishedAtUtc, "Version.PublishedAtUtc");
@@ -1149,32 +1417,112 @@ public sealed class AgSkillDefinitionServices :
                     Required(value.Size, "VersionFile.Size"),
                     Required(value.Sha256, "VersionFile.Sha256")))));
     }
+    #endregion
 
+    #region 解析（ParseStatus）
+    /// <summary>
+    /// 解析并校验持久化枚举值（ParseStatus）。
+    /// </summary>
+    /// <param name="value">数据库中存储的枚举文本。</param>
+    /// <returns>按区分大小写方式解析且已定义的枚举值；无效输入抛出异常。</returns>
     private static SkillStatus ParseStatus(string? value) =>
         Enum.TryParse(value, ignoreCase: false, out SkillStatus status) && Enum.IsDefined(status)
             ? status
             : throw new InvalidDataException($"Skill Status contains unsupported value '{value}'.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static Guid Required(Guid? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static long Required(long? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static int Required(int? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="name">对象或字段名称。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static DateTime Required(DateTime? value, string name) => value ?? throw new InvalidDataException($"Skill {name} is required.");
+    #endregion
 
+    #region 处理（RevisionConflict）
+    /// <summary>
+    /// 处理（RevisionConflict）
+    /// </summary>
+    /// <returns>表示记录版本已变化、需要重新加载后重试的失败服务结果。</returns>
     private ServiceResult<SkillDefinition> RevisionConflict() => Failure(
         SkillErrorCodes.RevisionConflict,
         "The Skill Draft changed before this operation completed.");
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<SkillDefinition> Failure(string code, string message) =>
         Failure<SkillDefinition>(code, message);
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <typeparam name="T">待处理数据的泛型类型。</typeparam>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<T> Failure<T>(string code, string message) =>
         ServiceResult<T>.Failure(SkillServiceStatusCodes.FromErrorCode(code), message);
+    #endregion
 
+    #region 处理（WithLockAsync）
+    /// <summary>
+    /// 处理（WithLockAsync）
+    /// </summary>
+    /// <typeparam name="T">待处理数据的泛型类型。</typeparam>
+    /// <param name="id">技能标识。</param>
+    /// <param name="action">需要执行的操作委托。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>在指定技能标识的进程内锁保护下执行委托得到的结果；结束时释放锁。</returns>
     private static async Task<T> WithLockAsync<T>( Guid id, Func<Task<T>> action, CancellationToken cancellationToken)
     {
         SemaphoreSlim gate = Locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
@@ -1188,6 +1536,5 @@ public sealed class AgSkillDefinitionServices :
             gate.Release();
         }
     }
+    #endregion
 }
-
-#endregion

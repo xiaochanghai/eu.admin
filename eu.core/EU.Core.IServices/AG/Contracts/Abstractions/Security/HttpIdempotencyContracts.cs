@@ -52,13 +52,27 @@ public sealed record HttpIdempotencyBeginResult(
 /// </summary>
 public interface IHttpIdempotencyRepository
 {
+    #region 开始处理幂等请求或复用已有响应。
     /// <summary>开始处理幂等请求或复用已有响应。</summary>
-    Task<HttpIdempotencyBeginResult> BeginAsync(
-        HttpIdempotencyRecord pending,
-        DateTimeOffset nowUtc,
-        CancellationToken cancellationToken = default);
+    /// <param name="pending">本次请求拟占用作用域的待执行幂等记录，包含请求摘要及有效期。</param>
+    /// <param name="nowUtc">当前时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>幂等作用域是否成功占用及对应记录；重复请求携带已有记录。</returns>
+    Task<HttpIdempotencyBeginResult> BeginAsync(HttpIdempotencyRecord pending, DateTimeOffset nowUtc, CancellationToken cancellationToken = default);
+    #endregion
 
-    /// <summary>完成HTTP 幂等记录。</summary>
+    #region 保存 HTTP 响应并完成幂等记录（CompleteAsync）
+    /// <summary>
+    /// 保存 HTTP 响应并完成幂等记录（CompleteAsync）。
+    /// </summary>
+    /// <param name="scopeSha256">操作范围的 SHA-256 摘要。</param>
+    /// <param name="requestSha256">请求内容的 SHA-256 摘要。</param>
+    /// <param name="responseStatusCode">HTTP 响应状态码。</param>
+    /// <param name="responseContentType">HTTP 响应的内容类型。</param>
+    /// <param name="responseLocation">HTTP 响应的 Location 地址。</param>
+    /// <param name="responseBody">HTTP 响应正文。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步更新结果：成功将匹配范围和请求摘要的进行中记录更新为已完成时返回 true，否则返回 false。</returns>
     Task<bool> CompleteAsync(
         string scopeSha256,
         string requestSha256,
@@ -67,16 +81,23 @@ public interface IHttpIdempotencyRepository
         string responseLocation,
         byte[] responseBody,
         CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 将幂等请求标记为结果不确定。
     /// <summary>将幂等请求标记为结果不确定。</summary>
-    Task MarkIndeterminateAsync(
-        string scopeSha256,
-        string requestSha256,
-        CancellationToken cancellationToken = default);
+    /// <param name="scopeSha256">操作范围的 SHA-256 摘要。</param>
+    /// <param name="requestSha256">请求内容的 SHA-256 摘要。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
+    Task MarkIndeterminateAsync(string scopeSha256, string requestSha256, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 放弃尚未完成的幂等请求占用。
     /// <summary>放弃尚未完成的幂等请求占用。</summary>
-    Task AbandonAsync(
-        string scopeSha256,
-        string requestSha256,
-        CancellationToken cancellationToken = default);
+    /// <param name="scopeSha256">操作范围的 SHA-256 摘要。</param>
+    /// <param name="requestSha256">请求内容的 SHA-256 摘要。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示操作完成的异步任务。</returns>
+    Task AbandonAsync(string scopeSha256, string requestSha256, CancellationToken cancellationToken = default);
+    #endregion
 }

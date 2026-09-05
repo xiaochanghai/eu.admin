@@ -13,7 +13,7 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
-#region 文件职责：UnifiedEntryService 职责实现
+// 文件职责：UnifiedEntryService 职责实现
 
 /// <summary>
 /// 提供 Agent 平台的统一会话和执行入口。
@@ -42,6 +42,19 @@ public sealed class UnifiedEntryService
 
     internal Action? BeforeRuntimeOwnershipClaim { get; set; }
 
+    #region 构造（UnifiedEntryService）
+    /// <summary>
+    /// 构造（UnifiedEntryService）
+    /// </summary>
+    /// <param name="mainAgents">主 Agent 服务。</param>
+    /// <param name="agentRuntime">Agent 运行时服务。</param>
+    /// <param name="orchestrationRuntime">编排运行时服务。</param>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="limits">执行次数、时间或载荷的限制配置。</param>
+    /// <param name="timeProvider">用于读取当前时间的时间提供器。</param>
+    /// <param name="businessQueryPolicy">受控业务查询的工具调用策略。</param>
+    /// <param name="businessQueryResultLimits">业务查询结果的载荷限制。</param>
+    /// <param name="toolApprovalHandler">工具调用审批处理器。</param>
     public UnifiedEntryService(
         IMainAgentAssignmentService mainAgents,
         IAgentRuntimeService agentRuntime,
@@ -68,11 +81,30 @@ public sealed class UnifiedEntryService
             ?? BusinessQueryResultLimits.Default;
         _toolApprovalHandler = toolApprovalHandler;
     }
+    #endregion
 
+    #region 准备（PrepareAsync）
+    /// <summary>
+    /// 准备（PrepareAsync）
+    /// </summary>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>统一入口运行准备结果，成功时包含执行上下文，失败时包含错误信息。</returns>
     public async Task<UnifiedEntryPreparationResult> PrepareAsync(string? input, Guid? conversationId, CancellationToken cancellationToken = default) =>
         await PrepareCoreAsync(
             input, conversationId, null, null, null, cancellationToken);
+    #endregion
 
+    #region 准备（PrepareAsync）
+    /// <summary>
+    /// 准备（PrepareAsync）
+    /// </summary>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="executionIdentity">当前执行使用的用户、租户及权限身份。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>绑定指定执行身份的统一入口运行准备结果，成功时包含执行上下文，失败时包含错误信息。</returns>
     public async Task<UnifiedEntryPreparationResult> PrepareAsync(
         string? input,
         Guid? conversationId,
@@ -85,7 +117,18 @@ public sealed class UnifiedEntryService
             null,
             null,
             cancellationToken);
+    #endregion
 
+    #region 准备（PrepareEvaluationAsync）
+    /// <summary>
+    /// 准备（PrepareEvaluationAsync）
+    /// </summary>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="agentVersionId">Agent 版本标识。</param>
+    /// <param name="executionIdentity">当前执行使用的用户、租户及权限身份。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>为评测固定 Agent 及版本创建的新会话运行准备结果，或对应的准备失败信息。</returns>
     internal async Task<UnifiedEntryPreparationResult> PrepareEvaluationAsync(
         string? input,
         Guid agentId,
@@ -99,7 +142,19 @@ public sealed class UnifiedEntryService
             agentId,
             agentVersionId,
             cancellationToken);
+    #endregion
 
+    #region 准备（PrepareCoreAsync）
+    /// <summary>
+    /// 准备（PrepareCoreAsync）
+    /// </summary>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="executionIdentity">当前执行使用的用户、租户及权限身份。</param>
+    /// <param name="evaluationAgentId">参与评估的 Agent 标识。</param>
+    /// <param name="evaluationAgentVersionId">参与评估的 Agent 版本标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>完成输入、会话、Agent 准备及聚合持久化后的执行上下文，或对应失败信息；调用方取消异常向上传播。</returns>
     private async Task<UnifiedEntryPreparationResult> PrepareCoreAsync(
         string? input,
         Guid? conversationId,
@@ -390,13 +445,29 @@ public sealed class UnifiedEntryService
             }
         }
     }
+    #endregion
 
+    #region 流式输出（StreamAsync）
+    /// <summary>
+    /// 流式输出（StreamAsync）
+    /// </summary>
+    /// <param name="context">统一入口执行上下文，包含执行范围和主 Agent 运行信息。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按执行顺序产生的异步事件流。</returns>
     public IAsyncEnumerable<UnifiedRunEvent> StreamAsync(UnifiedEntryContext context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         return new UnifiedEntryEventEnumerable(this, context, cancellationToken);
     }
+    #endregion
 
+    #region 流式输出（StreamStartedAsync）
+    /// <summary>
+    /// 流式输出（StreamStartedAsync）
+    /// </summary>
+    /// <param name="context">统一入口执行上下文，包含执行范围和主 Agent 运行信息。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按执行顺序产生的异步事件流。</returns>
     private async IAsyncEnumerable<UnifiedRunEvent> StreamStartedAsync(
         UnifiedEntryContext context,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -428,12 +499,25 @@ public sealed class UnifiedEntryService
             await producer.ConfigureAwait(false);
         }
     }
+    #endregion
 
+    /// <summary>
+    /// 封装统一入口运行事件的异步枚举序列。
+    /// </summary>
+    /// <param name="owner">拥有本次运行并提供事件流的统一入口服务。</param>
+    /// <param name="context">本次统一入口运行的执行上下文。</param>
+    /// <param name="invocationCancellation">用于取消统一入口调用的令牌。</param>
     private sealed class UnifiedEntryEventEnumerable(
         UnifiedEntryService owner,
         UnifiedEntryContext context,
         CancellationToken invocationCancellation) : IAsyncEnumerable<UnifiedRunEvent>
     {
+        #region 获取（GetAsyncEnumerator）
+        /// <summary>
+        /// 获取（GetAsyncEnumerator）
+        /// </summary>
+        /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+        /// <returns>持有当前执行流所有权的异步事件枚举器；运行不再活动或已被枚举时抛出 InvalidState 异常。</returns>
         public IAsyncEnumerator<UnifiedRunEvent> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             ActiveUnifiedEntryExecution active = context.Execution;
@@ -454,6 +538,7 @@ public sealed class UnifiedEntryService
                 invocationCancellation,
                 cancellationToken);
         }
+        #endregion
     }
 
     private sealed class UnifiedEntryEventEnumerator
@@ -468,6 +553,14 @@ public sealed class UnifiedEntryService
         private int _ownershipAttempted;
         private volatile bool _runtimeOwned;
 
+        #region 构造（UnifiedEntryEventEnumerator）
+        /// <summary>
+        /// 构造（UnifiedEntryEventEnumerator）
+        /// </summary>
+        /// <param name="owner">所属执行对象。</param>
+        /// <param name="context">枚举器所属的统一入口上下文，提供活动执行和主 Agent 运行信息。</param>
+        /// <param name="invocationCancellation">调用过程使用的取消控制对象。</param>
+        /// <param name="enumerationCancellation">枚举过程使用的取消控制对象。</param>
         public UnifiedEntryEventEnumerator(
             UnifiedEntryService owner,
             UnifiedEntryContext context,
@@ -483,12 +576,18 @@ public sealed class UnifiedEntryService
             _inner = owner.StreamStartedAsync(context, _cancellation.Token)
                 .GetAsyncEnumerator();
         }
+        #endregion
 
         /// <summary>
-        /// 获取当前异步执行范围中的统一入口服务。
+        /// 获取枚举器当前指向的统一入口运行事件。
         /// </summary>
         public UnifiedRunEvent Current => _inner.Current;
 
+        #region 移动到下一个运行事件（MoveNextAsync）
+        /// <summary>
+        /// 首次枚举时尝试取得运行所有权，并移动到下一个运行事件（MoveNextAsync）。
+        /// </summary>
+        /// <returns>异步操作结果：存在下一个事件时返回 true；事件流结束或未取得运行所有权时返回 false。</returns>
         public ValueTask<bool> MoveNextAsync()
         {
             if (Interlocked.Exchange(ref _ownershipAttempted, 1) == 0)
@@ -507,7 +606,13 @@ public sealed class UnifiedEntryService
 
             return _inner.MoveNextAsync();
         }
+        #endregion
 
+        #region 释放资源（DisposeAsync）
+        /// <summary>
+        /// 释放资源（DisposeAsync）
+        /// </summary>
+        /// <returns>表示该异步操作完成的任务。</returns>
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -545,8 +650,18 @@ public sealed class UnifiedEntryService
                 _cancellation.Dispose();
             }
         }
+        #endregion
     }
 
+    #region 处理（ProduceStreamAsync）
+    /// <summary>
+    /// 处理（ProduceStreamAsync）
+    /// </summary>
+    /// <param name="context">统一入口执行上下文，包含执行范围和主 Agent 运行信息。</param>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="writer">用于输出 JSON 内容的写入器。</param>
+    /// <param name="consumerCancellationToken">消费方取消流式读取的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ProduceStreamAsync(
         UnifiedEntryContext context,
         ActiveUnifiedEntryExecution active,
@@ -831,16 +946,42 @@ public sealed class UnifiedEntryService
             writer.TryComplete();
         }
     }
+    #endregion
 
+    #region 请求取消统一入口运行并等待收尾（CancelAsync）
+    /// <summary>
+    /// 请求取消统一入口运行并等待收尾（CancelAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步操作结果：活动运行已处理取消并完成收尾，或存储记录已处于 Completed、Failed、Cancelled 状态时返回 true；未找到匹配运行或运行尚未终结时返回 false。</returns>
     public async Task<bool> CancelAsync(Guid runId, CancellationToken cancellationToken = default) =>
         await CancelCoreAsync(runId, null, cancellationToken);
+    #endregion
 
+    #region 校验调用方归属后取消统一入口运行（CancelAsync）
+    /// <summary>
+    /// 校验调用方归属后取消统一入口运行（CancelAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="executionIdentity">用于校验运行租户和用户归属的非空执行身份。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步操作结果：归属匹配且活动运行完成取消收尾，或归属匹配的存储记录已处于终态时返回 true；归属不匹配、记录不存在或存储记录尚未终结时返回 false。</returns>
     public async Task<bool> CancelAsync(Guid runId, AgentExecutionIdentity executionIdentity, CancellationToken cancellationToken = default) =>
         await CancelCoreAsync(
             runId,
             executionIdentity ?? throw new ArgumentNullException(nameof(executionIdentity)),
             cancellationToken);
+    #endregion
 
+    #region 按可选执行身份取消运行并等待收尾（CancelCoreAsync）
+    /// <summary>
+    /// 按可选执行身份取消运行并等待收尾（CancelCoreAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="executionIdentity">用于校验运行归属的执行身份；为 null 时不按调用方身份筛选。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>异步操作结果：活动运行已处理取消并完成收尾，或匹配的存储记录已处于终态时返回 true；归属不匹配、记录不存在或存储记录尚未终结时返回 false。</returns>
     private async Task<bool> CancelCoreAsync(Guid runId, AgentExecutionIdentity? executionIdentity, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -885,12 +1026,30 @@ public sealed class UnifiedEntryService
             or UnifiedRunStatus.Failed
             or UnifiedRunStatus.Cancelled;
     }
+    #endregion
 
+    #region 比较执行身份的租户和用户（SameOwner）
+    /// <summary>
+    /// 比较执行身份的租户和用户（SameOwner）。
+    /// </summary>
+    /// <param name="stored">运行中保存的执行身份。</param>
+    /// <param name="requested">请求操作该运行的执行身份。</param>
+    /// <returns>已存储身份非 null，且租户和用户标识均按区分大小写的方式匹配时返回 true，否则返回 false。</returns>
     private static bool SameOwner(AgentExecutionIdentity? stored, AgentExecutionIdentity requested) =>
         stored is not null
         && string.Equals(stored.TenantId, requested.TenantId, StringComparison.Ordinal)
         && string.Equals(stored.UserId, requested.UserId, StringComparison.Ordinal);
+    #endregion
 
+    #region 处理（PersistMainEventAsync）
+    /// <summary>
+    /// 处理（PersistMainEventAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="source">源数据。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task PersistMainEventAsync(ActiveUnifiedEntryExecution active, AgentRunEvent source, string output, CancellationToken cancellationToken)
     {
         string rawPayloadJson = JsonSerializer.Serialize(new
@@ -942,7 +1101,16 @@ public sealed class UnifiedEntryService
                 rawPayload.OriginalSha256),
             cancellationToken).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（ApplyMainEvent）
+    /// <summary>
+    /// 处理（ApplyMainEvent）
+    /// </summary>
+    /// <param name="aggregate">聚合状态。</param>
+    /// <param name="source">源数据。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <returns>根据主 Agent 事件更新输出、审批等待状态和工具调用后的聚合副本。</returns>
     private UnifiedEntryAggregate ApplyMainEvent(UnifiedEntryAggregate aggregate, AgentRunEvent source, string output)
     {
         UnifiedAgentRunRecord main = aggregate.Details.AgentRuns.Single(
@@ -974,7 +1142,15 @@ public sealed class UnifiedEntryService
             aggregate.Details.Orchestrations,
             toolCalls));
     }
+    #endregion
 
+    #region 处理（ApplyToolEvent）
+    /// <summary>
+    /// 处理（ApplyToolEvent）
+    /// </summary>
+    /// <param name="aggregate">聚合状态。</param>
+    /// <param name="source">源数据。</param>
+    /// <returns>应用工具开始、审批等待或终态事件后的工具调用集合；不相关事件保留原集合。</returns>
     private IReadOnlyList<UnifiedToolCallRecord> ApplyToolEvent(UnifiedEntryAggregate aggregate, AgentRunEvent source)
     {
         if (source.ToolVersionId is not Guid toolVersionId)
@@ -1043,7 +1219,15 @@ public sealed class UnifiedEntryService
             .Select(value => value.Id == current.Id ? terminal : value)
             .ToArray();
     }
+    #endregion
 
+    #region 处理（AppendRouteEventAsync）
+    /// <summary>
+    /// 处理（AppendRouteEventAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="route">请求路由。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task AppendRouteEventAsync(ActiveUnifiedEntryExecution active, string route)
     {
         ProtectedUnifiedPayload payload = Protect(JsonSerializer.Serialize(new
@@ -1063,7 +1247,19 @@ public sealed class UnifiedEntryService
             payload.OriginalSha256),
             CancellationToken.None).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（AppendEventAsync）
+    /// <summary>
+    /// 处理（AppendEventAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="kind">记录或事件类型。</param>
+    /// <param name="aggregateTask">聚合操作的异步任务。</param>
+    /// <param name="parentRunId">父运行标识。</param>
+    /// <param name="depth">当前递归或执行树深度。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task AppendEventAsync(
         ActiveUnifiedEntryExecution active,
         string kind,
@@ -1090,7 +1286,19 @@ public sealed class UnifiedEntryService
             payload.OriginalSha256),
             cancellationToken).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（FinalizeOwnedAsync）
+    /// <summary>
+    /// 处理（FinalizeOwnedAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="afterSequence">查询事件的起始序号，不包含该序号。</param>
+    /// <param name="terminatePreparedAudit">是否终结已准备的审计记录。</param>
+    /// <returns>主终结过程完成后指定序号之后的持久化运行事件；无论成功或异常都会通知终结等待方。</returns>
     private async Task<IReadOnlyList<UnifiedRunEvent>> FinalizeOwnedAsync(
         ActiveUnifiedEntryExecution active,
         UnifiedRunStatus status,
@@ -1116,7 +1324,19 @@ public sealed class UnifiedEntryService
             active.PrimaryFinalizationCompleted.TrySetResult();
         }
     }
+    #endregion
 
+    #region 处理（FinalizeCoreAsync）
+    /// <summary>
+    /// 处理（FinalizeCoreAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="afterSequence">查询事件的起始序号，不包含该序号。</param>
+    /// <param name="terminatePreparedAudit">是否终结已准备的审计记录。</param>
+    /// <returns>终态持久化后指定序号之后的运行事件；已持久化的终态复用现有事件，持久化失败时抛出异常。</returns>
     private async Task<IReadOnlyList<UnifiedRunEvent>> FinalizeCoreAsync(
         ActiveUnifiedEntryExecution active,
         UnifiedRunStatus status,
@@ -1344,7 +1564,16 @@ public sealed class UnifiedEntryService
             active.TerminalGate.Release();
         }
     }
+    #endregion
 
+    #region 处理（JoinOrRetryFinalizationAsync）
+    /// <summary>
+    /// 处理（JoinOrRetryFinalizationAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="afterSequence">查询事件的起始序号，不包含该序号。</param>
+    /// <param name="joinCancellationToken">等待执行结束时使用的取消令牌。</param>
+    /// <returns>等待主终结后读取或重试终结得到的运行事件；等待过程支持调用方取消。</returns>
     private async Task<IReadOnlyList<UnifiedRunEvent>> JoinOrRetryFinalizationAsync(
         ActiveUnifiedEntryExecution active,
         long afterSequence,
@@ -1359,7 +1588,15 @@ public sealed class UnifiedEntryService
             active.TerminalErrorCode,
             afterSequence).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 失去运行所有权后等待或重试收尾（JoinRuntimeOwnershipLossAsync）
+    /// <summary>
+    /// 失去运行所有权后等待或重试收尾（JoinRuntimeOwnershipLossAsync）。
+    /// </summary>
+    /// <param name="active">已失去运行所有权、需要等待收尾的活动执行对象。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>正常完成时固定返回 false，表示当前枚举器不再产出事件；取消或收尾失败通过异常报告。</returns>
     private async Task<bool> JoinRuntimeOwnershipLossAsync(ActiveUnifiedEntryExecution active, CancellationToken cancellationToken)
     {
         try
@@ -1386,7 +1623,19 @@ public sealed class UnifiedEntryService
                 "The terminal unified entry aggregate could not be persisted.");
         }
     }
+    #endregion
 
+    #region 处理（SweepAgentRuns）
+    /// <summary>
+    /// 处理（SweepAgentRuns）
+    /// </summary>
+    /// <param name="values">需要保留已有终态并清理活动记录的子运行或工具调用集合。</param>
+    /// <param name="rootStatus">根运行状态。</param>
+    /// <param name="protectedOutput">已加密保护的输出内容。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="rootErrorCode">根运行错误码。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <returns>设置主 Agent 终态并清理仍活动的子 Agent 后的运行记录集合。</returns>
     private static IReadOnlyList<UnifiedAgentRunRecord> SweepAgentRuns(
         IReadOnlyList<UnifiedAgentRunRecord> values,
         UnifiedRunStatus rootStatus,
@@ -1423,7 +1672,17 @@ public sealed class UnifiedEntryService
                 : value;
         }).ToArray();
     }
+    #endregion
 
+    #region 处理（SweepOrchestrations）
+    /// <summary>
+    /// 处理（SweepOrchestrations）
+    /// </summary>
+    /// <param name="values">需要保留已有终态并清理活动记录的子运行或工具调用集合。</param>
+    /// <param name="rootStatus">根运行状态。</param>
+    /// <param name="rootErrorCode">根运行错误码。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <returns>将仍活动的编排关联置为取消或失败并补齐结束时间的集合，已有终态保持不变。</returns>
     private static IReadOnlyList<UnifiedOrchestrationRunLink> SweepOrchestrations(
         IReadOnlyList<UnifiedOrchestrationRunLink> values,
         UnifiedRunStatus rootStatus,
@@ -1438,7 +1697,17 @@ public sealed class UnifiedEntryService
                 ErrorCode = DescendantErrorCode(rootStatus, rootErrorCode)
             }
             : value).ToArray();
+    #endregion
 
+    #region 处理（SweepToolCalls）
+    /// <summary>
+    /// 处理（SweepToolCalls）
+    /// </summary>
+    /// <param name="values">需要保留已有终态并清理活动记录的子运行或工具调用集合。</param>
+    /// <param name="rootStatus">根运行状态。</param>
+    /// <param name="rootErrorCode">根运行错误码。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <returns>将仍活动的工具调用置为取消或失败并补齐结束时间的集合，已有终态保持不变。</returns>
     private static IReadOnlyList<UnifiedToolCallRecord> SweepToolCalls(
         IReadOnlyList<UnifiedToolCallRecord> values,
         UnifiedRunStatus rootStatus,
@@ -1453,22 +1722,51 @@ public sealed class UnifiedEntryService
                 ErrorCode = DescendantErrorCode(rootStatus, rootErrorCode)
             }
             : value).ToArray();
+    #endregion
 
+    #region 判断运行是否尚未终结（IsLive）
+    /// <summary>
+    /// 判断运行是否尚未终结（IsLive）。
+    /// </summary>
+    /// <param name="status">待检查的统一入口运行状态。</param>
+    /// <returns>状态为 Pending 或 Running 时返回 true，否则返回 false。</returns>
     private static bool IsLive(UnifiedRunStatus status) =>
         status is UnifiedRunStatus.Pending or UnifiedRunStatus.Running;
+    #endregion
 
+    #region 处理（DescendantTerminalStatus）
+    /// <summary>
+    /// 处理（DescendantTerminalStatus）
+    /// </summary>
+    /// <param name="rootStatus">根运行状态。</param>
+    /// <returns>根运行取消时返回 Cancelled，否则未完成后代统一返回 Failed。</returns>
     private static UnifiedRunStatus DescendantTerminalStatus(UnifiedRunStatus rootStatus) =>
         rootStatus == UnifiedRunStatus.Cancelled
             ? UnifiedRunStatus.Cancelled
             : UnifiedRunStatus.Failed;
+    #endregion
 
+    #region 处理（DescendantErrorCode）
+    /// <summary>
+    /// 处理（DescendantErrorCode）
+    /// </summary>
+    /// <param name="rootStatus">根运行状态。</param>
+    /// <param name="rootErrorCode">根运行错误码。</param>
+    /// <returns>根运行取消时的取消错误码，或根错误码；根错误码为空时返回 InvalidState。</returns>
     private static string DescendantErrorCode(UnifiedRunStatus rootStatus, string rootErrorCode) =>
         rootStatus == UnifiedRunStatus.Cancelled
             ? UnifiedEntryErrorCodes.Cancelled
             : string.IsNullOrWhiteSpace(rootErrorCode)
                 ? UnifiedEntryErrorCodes.InvalidState
                 : rootErrorCode;
+    #endregion
 
+    #region 处理（ObserveUnstartedTimeoutAsync）
+    /// <summary>
+    /// 处理（ObserveUnstartedTimeoutAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ObserveUnstartedTimeoutAsync(ActiveUnifiedEntryExecution active)
     {
         try
@@ -1521,7 +1819,13 @@ public sealed class UnifiedEntryService
             // FinalizeCoreAsync schedules bounded persistence recovery.
         }
     }
+    #endregion
 
+    #region 处理（ScheduleTerminalRecovery）
+    /// <summary>
+    /// 处理（ScheduleTerminalRecovery）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
     private void ScheduleTerminalRecovery(ActiveUnifiedEntryExecution active)
     {
         if (!active.TryScheduleRecovery())
@@ -1531,7 +1835,14 @@ public sealed class UnifiedEntryService
 
         _ = RecoverTerminalPersistenceAsync(active);
     }
+    #endregion
 
+    #region 恢复（RecoverTerminalPersistenceAsync）
+    /// <summary>
+    /// 恢复（RecoverTerminalPersistenceAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task RecoverTerminalPersistenceAsync(ActiveUnifiedEntryExecution active)
     {
         TimeSpan[] delays =
@@ -1567,7 +1878,13 @@ public sealed class UnifiedEntryService
             }
         }
     }
+    #endregion
 
+    #region 处理（Retire）
+    /// <summary>
+    /// 处理（Retire）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
     private void Retire(ActiveUnifiedEntryExecution active)
     {
         if (!_active.TryRemove(
@@ -1606,7 +1923,15 @@ public sealed class UnifiedEntryService
             // The handle is already retired after confirmed persistence.
         }
     }
+    #endregion
 
+    #region 处理（PersistAndCollectAsync）
+    /// <summary>
+    /// 处理（PersistAndCollectAsync）
+    /// </summary>
+    /// <param name="active">当前活动状态。</param>
+    /// <param name="afterSequence">查询事件的起始序号，不包含该序号。</param>
+    /// <returns>聚合成功持久化后指定序号之后的运行事件。</returns>
     private async Task<IReadOnlyList<UnifiedRunEvent>> PersistAndCollectAsync(ActiveUnifiedEntryExecution active, long afterSequence)
     {
         UnifiedEntryAggregate snapshot = await active.Scope.PersistAsync(
@@ -1615,7 +1940,15 @@ public sealed class UnifiedEntryService
             .ConfigureAwait(false);
         return MapEvents(snapshot, afterSequence);
     }
+    #endregion
 
+    #region 映射（MapEvents）
+    /// <summary>
+    /// 映射（MapEvents）
+    /// </summary>
+    /// <param name="aggregate">聚合状态。</param>
+    /// <param name="afterSequence">查询事件的起始序号，不包含该序号。</param>
+    /// <returns>序号大于指定边界、按序号排序的对外运行事件，并为路由选择事件提取路由。</returns>
     private static IReadOnlyList<UnifiedRunEvent> MapEvents(UnifiedEntryAggregate aggregate, long afterSequence) =>
         aggregate.Events
             .Where(value => value.Sequence > afterSequence)
@@ -1636,7 +1969,14 @@ public sealed class UnifiedEntryService
                     : string.Empty
             })
             .ToArray();
+    #endregion
 
+    #region 读取（ReadRoute）
+    /// <summary>
+    /// 读取（ReadRoute）
+    /// </summary>
+    /// <param name="payloadJson">载荷的 JSON 文本。</param>
+    /// <returns>事件载荷中的 route 文本；字段缺失、值为 null 或 JSON 解析失败时返回空字符串。</returns>
     private static string ReadRoute(string payloadJson)
     {
         try
@@ -1653,7 +1993,14 @@ public sealed class UnifiedEntryService
             return string.Empty;
         }
     }
+    #endregion
 
+    #region 处理（ClassifyToolRoute）
+    /// <summary>
+    /// 处理（ClassifyToolRoute）
+    /// </summary>
+    /// <param name="toolName">工具名称。</param>
+    /// <returns>内部工具对应的 skill、child-agent 或 orchestration 路由，其他工具归为 mcp。</returns>
     private static string ClassifyToolRoute(string toolName) =>
         toolName switch
         {
@@ -1662,7 +2009,14 @@ public sealed class UnifiedEntryService
             "run_orchestration" => "orchestration",
             _ => "mcp"
         };
+    #endregion
 
+    #region 映射（MapMainEventKind）
+    /// <summary>
+    /// 映射（MapMainEventKind）
+    /// </summary>
+    /// <param name="source">源数据。</param>
+    /// <returns>映射到统一入口协议的主 Agent 事件名称，未单独映射的类型使用 message。</returns>
     private static string MapMainEventKind(AgentRunEvent source) =>
         source.Kind switch
         {
@@ -1679,13 +2033,27 @@ public sealed class UnifiedEntryService
             AgentRunEventKind.ApprovalRequired => "approval-required",
             _ => "message"
         };
+    #endregion
 
+    #region 识别不可继续执行的平台错误（IsFatalPlatformFailure）
+    /// <summary>
+    /// 识别不可继续执行的平台错误（IsFatalPlatformFailure）。
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>知识访问被拒绝，或错误码以 UNIFIED_ENTRY_ 开头且不是子运行失败或编排执行失败时返回 true，否则返回 false。</returns>
     private static bool IsFatalPlatformFailure(string errorCode) =>
         errorCode == UnifiedEntryErrorCodes.KnowledgeAccessDenied
         || (errorCode.StartsWith("UNIFIED_ENTRY_", StringComparison.Ordinal)
             && errorCode is not UnifiedEntryErrorCodes.ChildExecutionFailed
             && errorCode is not UnifiedEntryErrorCodes.OrchestrationExecutionFailed);
+    #endregion
 
+    #region 创建（CreateConversationTitle）
+    /// <summary>
+    /// 创建（CreateConversationTitle）
+    /// </summary>
+    /// <param name="protectedInput">已加密保护的输入内容。</param>
+    /// <returns>最多 80 个 UTF-16 代码单元的会话标题，截断时避免拆分代理对。</returns>
     private static string CreateConversationTitle(string protectedInput)
     {
         const int maximumCharacters = 80;
@@ -1703,7 +2071,14 @@ public sealed class UnifiedEntryService
 
         return protectedInput[..length];
     }
+    #endregion
 
+    #region 构建（BuildConversationHistory）
+    /// <summary>
+    /// 构建（BuildConversationHistory）
+    /// </summary>
+    /// <param name="messages">会话消息集合。</param>
+    /// <returns>满足消息数量及 UTF-8 字节预算的最近对话历史，按原顺序排列并排除业务查询结果消息。</returns>
     private static IReadOnlyList<AgentConversationMessage> BuildConversationHistory(IReadOnlyList<ConversationMessageRecord> messages)
     {
         var selected = new List<AgentConversationMessage>();
@@ -1736,16 +2111,39 @@ public sealed class UnifiedEntryService
         return new System.Collections.ObjectModel.ReadOnlyCollection<AgentConversationMessage>(
             selected);
     }
+    #endregion
 
+    #region 加密保护（Protect）
+    /// <summary>
+    /// 加密保护（Protect）
+    /// </summary>
+    /// <param name="value">待校验字节上限并脱敏的原始文本；null 按空字符串处理。</param>
+    /// <returns>按持久化载荷上限处理的脱敏内容、原始摘要及字节数。</returns>
     private static ProtectedUnifiedPayload Protect(string? value) =>
         UnifiedEntryPayloadProtector.Protect(
             value,
             MaximumStoredPayloadBytes,
             MaximumStoredPayloadBytes);
+    #endregion
 
+    #region 处理（NonNegative）
+    /// <summary>
+    /// 将负时长归零（NonNegative）。
+    /// </summary>
+    /// <param name="value">待检查的持续时间。</param>
+    /// <returns>输入为负数时返回零时长，否则返回原时长。</returns>
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
+    #endregion
 
+    #region 处理（TerminatePreparedAuditAsync）
+    /// <summary>
+    /// 处理（TerminatePreparedAuditAsync）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task TerminatePreparedAuditAsync(AgentRunContext context, AgentRunStatus status, string errorCode)
     {
         try
@@ -1761,7 +2159,13 @@ public sealed class UnifiedEntryService
             // Preserve the primary preparation failure.
         }
     }
+    #endregion
 
+    #region 尝试执行（TryCancel）
+    /// <summary>
+    /// 尝试执行（TryCancel）
+    /// </summary>
+    /// <param name="cancellation">执行取消控制对象。</param>
     private static void TryCancel(CancellationTokenSource cancellation)
     {
         try
@@ -1777,6 +2181,5 @@ public sealed class UnifiedEntryService
             // Terminal cleanup still runs with CancellationToken.None.
         }
     }
+    #endregion
 }
-
-#endregion

@@ -388,6 +388,8 @@ public static class AgentTaskErrorCodes
 /// <summary>
 /// 表示 Agent 任务操作中的领域异常。
 /// </summary>
+/// <param name="errorCode">用于标识失败原因的领域错误码。</param>
+/// <param name="message">描述异常原因的错误消息。</param>
 public sealed class AgentTaskException(string errorCode, string message) : Exception(message)
 {
     /// <summary>

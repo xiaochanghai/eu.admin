@@ -10,7 +10,7 @@ using EU.Core.Model;
 
 namespace EU.Core.Services;
 
-#region 文件职责：RunOrchestrationTool 职责实现
+// 文件职责：RunOrchestrationTool 职责实现
 
 /// <summary>
 /// 实现启动编排运行的内部工具。
@@ -32,6 +32,18 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
     private readonly string _description;
     private readonly string _inputSchemaJson;
 
+    #region 构造（RunOrchestrationTool）
+    /// <summary>
+    /// 构造（RunOrchestrationTool）
+    /// </summary>
+    /// <param name="orchestrationRuntime">编排运行时服务。</param>
+    /// <param name="scope">执行范围。</param>
+    /// <param name="authorizingSnapshot">授予访问权限的发布快照。</param>
+    /// <param name="parentLease">父级执行租约。</param>
+    /// <param name="parentRunId">父运行标识。</param>
+    /// <param name="executionIdentity">当前执行使用的用户、租户及权限身份。</param>
+    /// <param name="toolApprovalHandler">工具调用审批处理器。</param>
+    /// <param name="toolApprovalBinding">工具审批绑定。</param>
     public RunOrchestrationTool(
         OrchestrationRuntimeService orchestrationRuntime,
         UnifiedEntryExecutionScope scope,
@@ -81,6 +93,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             MaximumInputCharacters,
             MaximumReasonCharacters);
     }
+    #endregion
 
     /// <summary>
     /// 获取内部工具名称。
@@ -97,6 +110,13 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
     /// </summary>
     public string InputSchemaJson => _inputSchemaJson;
 
+    #region 调用（InvokeAsync）
+    /// <summary>
+    /// 调用（InvokeAsync）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>编排委派执行结果，成功时携带受保护输出，失败、超限或取消时携带错误码及安全提示。</returns>
     public async Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         if (!InternalToolArgumentParser.TryParse(
@@ -295,7 +315,16 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                 "The orchestration delegation failed.");
         }
     }
+    #endregion
 
+    #region 处理（RegisterLinkAsync）
+    /// <summary>
+    /// 处理（RegisterLinkAsync）
+    /// </summary>
+    /// <param name="run">运行记录。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="reason">操作原因或判断依据。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task RegisterLinkAsync(OrchestrationRunRecord run, string input, string reason)
     {
         ProtectedUnifiedPayload protectedInput = Protect(input);
@@ -362,7 +391,18 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                 rawPayload.OriginalSha256),
             CancellationToken.None).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（TransitionLinkAsync）
+    /// <summary>
+    /// 处理（TransitionLinkAsync）
+    /// </summary>
+    /// <param name="orchestrationRunId">编排运行标识。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task TransitionLinkAsync(Guid orchestrationRunId, UnifiedRunStatus status, string output, string errorCode, DateTimeOffset finishedAt)
     {
         ProtectedUnifiedPayload protectedOutput = Protect(output);
@@ -402,7 +442,16 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                 aggregate.Details.ToolCalls));
         }, CancellationToken.None).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 取消（CancelAndPersistLinkAsync）
+    /// <summary>
+    /// 取消（CancelAndPersistLinkAsync）
+    /// </summary>
+    /// <param name="started">已启动的执行状态。</param>
+    /// <param name="linkRegistered">是否已登记运行关联。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task CancelAndPersistLinkAsync(OrchestrationRunRecord started, bool linkRegistered, string errorCode)
     {
         OrchestrationRunRecord? terminal = null;
@@ -492,10 +541,23 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                 terminal?.FinishedAtUtc ?? _scope.GetUtcNow()).ConfigureAwait(false);
         }
     }
+    #endregion
 
+    #region 处理（ObserveInBackground）
+    /// <summary>
+    /// 处理（ObserveInBackground）
+    /// </summary>
+    /// <param name="task">任务对象。</param>
     private static void ObserveInBackground(Task task) =>
         _ = ObserveFailureAsync(task);
+    #endregion
 
+    #region 处理（ObserveFailureAsync）
+    /// <summary>
+    /// 处理（ObserveFailureAsync）
+    /// </summary>
+    /// <param name="task">任务对象。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private static async Task ObserveFailureAsync(Task task)
     {
         try
@@ -507,7 +569,18 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             // The tool already returned a stable cancellation result.
         }
     }
+    #endregion
 
+    #region 尝试执行（TryTransitionLinkAsync）
+    /// <summary>
+    /// 尝试执行（TryTransitionLinkAsync）
+    /// </summary>
+    /// <param name="orchestrationRunId">编排运行标识。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="finishedAt">完成时间（UTC）。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task TryTransitionLinkAsync(Guid orchestrationRunId, UnifiedRunStatus status, string output, string errorCode, DateTimeOffset finishedAt)
     {
         try
@@ -524,7 +597,14 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             // The internal-tool boundary returns only its stable primary error.
         }
     }
+    #endregion
 
+    #region 取消（CancellationFailure）
+    /// <summary>
+    /// 取消（CancellationFailure）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>按执行范围取消原因分类的编排工具失败结果。</returns>
     private AgentInternalToolResult CancellationFailure(CancellationToken cancellationToken)
     {
         string errorCode = _scope.ClassifyCancellation(
@@ -532,13 +612,27 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             cancellationToken);
         return Failure(errorCode, CancellationMessage(errorCode));
     }
+    #endregion
 
+    #region 加密保护（Protect）
+    /// <summary>
+    /// 加密保护（Protect）
+    /// </summary>
+    /// <param name="value">待校验字节上限并脱敏的原始文本；null 按空字符串处理。</param>
+    /// <returns>按当前执行范围内部载荷上限处理的脱敏内容、原始摘要及字节数。</returns>
     private ProtectedUnifiedPayload Protect(string? value) =>
         UnifiedEntryPayloadProtector.Protect(
             value,
             _scope.Limits.InternalPayloadUtf8Bytes,
             _scope.Limits.InternalPayloadUtf8Bytes);
+    #endregion
 
+    #region 映射（MapStatus）
+    /// <summary>
+    /// 映射（MapStatus）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>完成和取消对应的统一运行状态；其他编排状态映射为 Failed。</returns>
     private static UnifiedRunStatus MapStatus(OrchestrationRunStatus status) =>
         status switch
         {
@@ -546,17 +640,38 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
             OrchestrationRunStatus.Cancelled => UnifiedRunStatus.Cancelled,
             _ => UnifiedRunStatus.Failed
         };
+    #endregion
 
+    #region 取消（CancellationMessage）
+    /// <summary>
+    /// 取消（CancellationMessage）
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>入口超时对应的超时提示，或普通取消提示。</returns>
     private static string CancellationMessage(string errorCode) =>
         errorCode == UnifiedEntryErrorCodes.EntryTimeout
             ? "The unified entry execution timed out."
             : "The unified entry execution was cancelled.";
+    #endregion
 
+    #region 处理（NonNegative）
+    /// <summary>
+    /// 将负时长归零（NonNegative）。
+    /// </summary>
+    /// <param name="value">待检查的持续时间。</param>
+    /// <returns>输入为负数时返回零时长，否则返回原时长。</returns>
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="content">内部工具失败时对调用方展示的安全提示。</param>
+    /// <returns>包含指定内容和错误码、成功标志为 false 的内部工具结果。</returns>
     private static AgentInternalToolResult Failure(string errorCode, string content) =>
         new(false, content, errorCode);
+    #endregion
 }
-
-#endregion

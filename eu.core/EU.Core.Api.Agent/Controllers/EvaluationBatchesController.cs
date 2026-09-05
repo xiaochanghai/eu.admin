@@ -12,11 +12,15 @@ using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
-#region 文件职责：EvaluationBatchesController 接口处理
+// 文件职责：EvaluationBatchesController 接口处理
 
 /// <summary>
 /// 提供评测批次执行与对比的 HTTP 接口。
 /// </summary>
+/// <param name="service">用于执行和恢复评测批次的服务。</param>
+/// <param name="comparisons">用于比较评测批次并计算质量门禁结果的服务。</param>
+/// <param name="modelJudge">用于组织模型裁判评测并生成报告的服务。</param>
+/// <param name="caller">提供当前调用方身份、租户及权限的上下文。</param>
 [Route("api/evaluation-batches")]
 [Authorize(Policy = AgentAuthorizationPolicies.Debug)]
 public sealed class EvaluationBatchesController(
@@ -25,6 +29,13 @@ public sealed class EvaluationBatchesController(
     IModelJudgeService modelJudge,
     ICallerContext caller) : Base.ControllerBase
 {
+    #region 运行（Run）
+    /// <summary>
+    /// 运行（Run）
+    /// </summary>
+    /// <param name="request">运行评测批次所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含评测批次记录，失败时包含错误状态和提示。</returns>
     [HttpPost]
     public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Run(
         [FromBody] StartEvaluationBatchRequest request,
@@ -52,7 +63,15 @@ public sealed class EvaluationBatchesController(
                 EvaluationBatchServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
+    #endregion
 
+    #region 处理（Compare）
+    /// <summary>
+    /// 处理（Compare）
+    /// </summary>
+    /// <param name="request">对比评测批次所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含评测批次对比报告，失败时包含错误状态和提示。</returns>
     [HttpPost("compare")]
     public async Task<ActionResult<ServiceResult<EvaluationBatchComparisonReport>>> Compare(
         [FromBody] CompareEvaluationBatchesRequest request,
@@ -84,7 +103,16 @@ public sealed class EvaluationBatchesController(
                 EvaluationComparisonServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
+    #endregion
 
+    #region 查询列表（List）
+    /// <summary>
+    /// 查询列表（List）
+    /// </summary>
+    /// <param name="suiteId">评估套件标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含评测批次记录集合，失败时包含错误状态和提示。</returns>
     [HttpGet]
     public async Task<ActionResult<ServiceResult<IReadOnlyList<EvaluationBatchRecord>>>> List(
         [FromQuery] Guid suiteId,
@@ -100,7 +128,15 @@ public sealed class EvaluationBatchesController(
             await service.ListAsync(
                 suiteId, caller.TenantId, take, cancellationToken));
     }
+    #endregion
 
+    #region 获取（Get）
+    /// <summary>
+    /// 获取（Get）
+    /// </summary>
+    /// <param name="id">评测批次标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含评测批次记录，失败时包含错误状态和提示。</returns>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ServiceResult<EvaluationBatchRecord>>> Get(Guid id, CancellationToken cancellationToken)
     {
@@ -110,7 +146,16 @@ public sealed class EvaluationBatchesController(
             ? FromError(EvaluationBatchErrorCodes.BatchNotFound, "The evaluation batch was not found.")
             : ServiceResult<EvaluationBatchRecord>.QuerySuccess(value);
     }
+    #endregion
 
+    #region 运行（RunModelJudge）
+    /// <summary>
+    /// 运行（RunModelJudge）
+    /// </summary>
+    /// <param name="id">评测批次标识。</param>
+    /// <param name="request">运行模型裁判评测批次所需的请求参数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含模型裁判报告，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/model-judge")]
     public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> RunModelJudge(
         Guid id,
@@ -140,7 +185,16 @@ public sealed class EvaluationBatchesController(
                 ModelJudgeServiceStatusCodes.ToErrorCode(result.Status),
                 result.Message);
     }
+    #endregion
 
+    #region 查询列表（ListModelJudgeReports）
+    /// <summary>
+    /// 查询列表（ListModelJudgeReports）
+    /// </summary>
+    /// <param name="id">评测批次标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含模型裁判报告集合，失败时包含错误状态和提示。</returns>
     [HttpGet("{id:guid}/model-judge-reports")]
     public async Task<ActionResult<ServiceResult<IReadOnlyList<ModelJudgeReport>>>> ListModelJudgeReports(
         Guid id,
@@ -155,7 +209,16 @@ public sealed class EvaluationBatchesController(
         return ServiceResult<IReadOnlyList<ModelJudgeReport>>.QuerySuccess(
             await modelJudge.ListAsync(id, caller.TenantId, take, cancellationToken));
     }
+    #endregion
 
+    #region 获取（GetModelJudgeReport）
+    /// <summary>
+    /// 获取（GetModelJudgeReport）
+    /// </summary>
+    /// <param name="id">评测批次标识。</param>
+    /// <param name="reportId">模型评判报告标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含模型裁判报告，失败时包含错误状态和提示。</returns>
     [HttpGet("{id:guid}/model-judge-reports/{reportId:guid}")]
     public async Task<ActionResult<ServiceResult<ModelJudgeReport>>> GetModelJudgeReport(Guid id, Guid reportId, CancellationToken cancellationToken)
     {
@@ -165,7 +228,15 @@ public sealed class EvaluationBatchesController(
             ? FromError(ModelJudgeErrorCodes.BatchNotFound, "The model judge report was not found.")
             : ServiceResult<ModelJudgeReport>.QuerySuccess(value);
     }
+    #endregion
 
+    #region 转换（FromError）
+    /// <summary>
+    /// 转换（FromError）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含评测批次错误码和请求跟踪标识的失败响应，HTTP 状态由错误解析器确定，未指定时为 500。</returns>
     private JsonResult FromError(string errorCode, string message)
     {
         AgentApiErrorDescriptor descriptor = AgentApiErrorResolver.Resolve(HttpContext, errorCode);
@@ -176,13 +247,9 @@ public sealed class EvaluationBatchesController(
                 new AgentApiErrorData(errorCode, HttpContext.TraceIdentifier)))
         { StatusCode = descriptor.HttpStatus ?? StatusCodes.Status500InternalServerError };
     }
+    #endregion
 }
 
-/// <summary>
-/// 启动评测批次的请求。
-/// </summary>
-/// <param name="SuiteId">评测套件标识。</param>
-/// <param name="SuiteVersionId">评测套件版本标识。</param>
 /// <summary>
 /// 启动评测批次的请求。
 /// </summary>
@@ -302,5 +369,3 @@ public sealed class RunModelJudgeRequest
     /// </summary>
     public Dictionary<string, object?>? AdditionalProperties { get; init; }
 }
-
-#endregion

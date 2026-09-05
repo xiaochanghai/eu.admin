@@ -199,6 +199,12 @@ public static class EvaluationSuiteServiceStatusCodes
     /// <summary>表示 <c>LifecycleTransitionInvalid</c> 场景映射的服务状态码。</summary>
     public const int LifecycleTransitionInvalid = 670007;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <returns>评测套件错误码对应的服务状态值；未知错误码使用 500。</returns>
     public static int FromErrorCode(string code) => code switch
     {
         EvaluationSuiteErrorCodes.NotFound => NotFound,
@@ -210,7 +216,14 @@ public static class EvaluationSuiteServiceStatusCodes
         EvaluationSuiteErrorCodes.LifecycleTransitionInvalid => LifecycleTransitionInvalid,
         _ => 500
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的评测套件错误码；未知状态使用 INTERNAL_ERROR。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         NotFound => EvaluationSuiteErrorCodes.NotFound,
@@ -222,6 +235,7 @@ public static class EvaluationSuiteServiceStatusCodes
         LifecycleTransitionInvalid => EvaluationSuiteErrorCodes.LifecycleTransitionInvalid,
         _ => "INTERNAL_ERROR"
     };
+    #endregion
 }
 
 /// <summary>
@@ -229,6 +243,12 @@ public static class EvaluationSuiteServiceStatusCodes
 /// </summary>
 public static class EvaluationSuiteContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="value">本次操作使用的评测套件定义。</param>
+    /// <returns>复制草稿、发布版本及各用例规则集合后的评测套件副本。</returns>
     public static EvaluationSuiteDefinition Clone(EvaluationSuiteDefinition value) =>
         value with
         {
@@ -239,14 +259,26 @@ public static class EvaluationSuiteContractCloner
                     Cases = CloneCases(version.Cases)
                 }).ToArray())
         };
+    #endregion
 
-    public static IReadOnlyList<EvaluationSuiteDefinition> ReadOnly(
-        IEnumerable<EvaluationSuiteDefinition> values) =>
+    #region 读取（ReadOnly）
+    /// <summary>
+    /// 读取（ReadOnly）
+    /// </summary>
+    /// <param name="values">按原顺序枚举并复制为只读集合的源数据。</param>
+    /// <returns>逐个复制套件及其嵌套版本和用例后生成的只读套件集合。</returns>
+    public static IReadOnlyList<EvaluationSuiteDefinition> ReadOnly(IEnumerable<EvaluationSuiteDefinition> values) =>
         new ReadOnlyCollection<EvaluationSuiteDefinition>(
             values.Select(Clone).ToArray());
+    #endregion
 
-    private static IReadOnlyList<EvaluationCaseDefinition> CloneCases(
-        IEnumerable<EvaluationCaseDefinition> cases) =>
+    #region 复制（CloneCases）
+    /// <summary>
+    /// 复制（CloneCases）
+    /// </summary>
+    /// <param name="cases">评估用例集合。</param>
+    /// <returns>复制用例及其输出包含、排除和必需事件规则后的只读用例集合。</returns>
+    private static IReadOnlyList<EvaluationCaseDefinition> CloneCases(IEnumerable<EvaluationCaseDefinition> cases) =>
         new ReadOnlyCollection<EvaluationCaseDefinition>(cases.Select(value =>
             value with
             {
@@ -257,4 +289,5 @@ public static class EvaluationSuiteContractCloner
                     RequiredEventKinds = value.Specification.RequiredEventKinds.ToArray()
                 }
             }).ToArray());
+    #endregion
 }

@@ -10,7 +10,7 @@ using EU.Core.IServices.Runtime;
 
 namespace EU.Core.Services;
 
-#region 文件职责：DelegateToAgentTool 职责实现
+// 文件职责：DelegateToAgentTool 职责实现
 
 /// <summary>
 /// 实现向子 Agent 委派任务的内部工具。
@@ -33,6 +33,19 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     private readonly string _description;
     private readonly string _inputSchemaJson;
 
+    #region 构造（DelegateToAgentTool）
+    /// <summary>
+    /// 构造（DelegateToAgentTool）
+    /// </summary>
+    /// <param name="agentRuntime">Agent 运行时服务。</param>
+    /// <param name="scope">执行范围。</param>
+    /// <param name="authorizingSnapshot">授予访问权限的发布快照。</param>
+    /// <param name="parentLease">父级执行租约。</param>
+    /// <param name="parentRunId">父运行标识。</param>
+    /// <param name="executionIdentity">当前执行使用的用户、租户及权限身份。</param>
+    /// <param name="businessQueryPolicy">受控业务查询的工具调用策略。</param>
+    /// <param name="toolApprovalHandler">工具调用审批处理器。</param>
+    /// <param name="toolApprovalBinding">工具审批绑定。</param>
     public DelegateToAgentTool(
         IAgentRuntimeService agentRuntime,
         UnifiedEntryExecutionScope scope,
@@ -91,6 +104,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             MaximumTaskCharacters,
             MaximumReasonCharacters);
     }
+    #endregion
 
     /// <summary>
     /// 获取内部工具名称。
@@ -107,6 +121,12 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     /// </summary>
     public string InputSchemaJson => _inputSchemaJson;
 
+    #region 处理（DescribeBinding）
+    /// <summary>
+    /// 处理（DescribeBinding）
+    /// </summary>
+    /// <param name="binding">资源绑定。</param>
+    /// <returns>包含固定 Agent 和版本标识、编码、名称及职责的目录说明；缺少语义描述时附带使用限制提示。</returns>
     private static string DescribeBinding(AgentChildBindingSnapshot binding)
     {
         string code = CompactCatalogValue(
@@ -129,7 +149,15 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             + $"name={JsonSerializer.Serialize(name)}, "
             + $"responsibility={JsonSerializer.Serialize(description)}";
     }
+    #endregion
 
+    #region 处理（CompactCatalogValue）
+    /// <summary>
+    /// 处理（CompactCatalogValue）
+    /// </summary>
+    /// <param name="value">待合并空白并限制长度的目录说明文本。</param>
+    /// <param name="maximumCharacters">允许的最大字符数。</param>
+    /// <returns>合并空白并限制字符数的目录文本，截断时避免拆分 UTF-16 代理对。</returns>
     private static string CompactCatalogValue(string? value, int maximumCharacters)
     {
         string compact = string.Join(
@@ -151,7 +179,15 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
 
         return compact[..length];
     }
+    #endregion
 
+    #region 调用（InvokeAsync）
+    /// <summary>
+    /// 调用（InvokeAsync）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>子 Agent 委派结果，成功时携带受保护输出或业务查询摘要，失败时携带错误码及安全提示。</returns>
     public async Task<AgentInternalToolResult> InvokeAsync(string argumentsJson, CancellationToken cancellationToken = default)
     {
         if (!InternalToolArgumentParser.TryParse(
@@ -479,7 +515,17 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             childLease?.Dispose();
         }
     }
+    #endregion
 
+    #region 处理（RegisterChildRunAsync）
+    /// <summary>
+    /// 处理（RegisterChildRunAsync）
+    /// </summary>
+    /// <param name="context">Agent 运行上下文，包含固定版本快照、输入和工具资源。</param>
+    /// <param name="lease">执行租约。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task RegisterChildRunAsync(AgentRunContext context, UnifiedAgentExecutionLease lease, string input, CancellationToken cancellationToken)
     {
         ProtectedUnifiedPayload protectedInput = Protect(input);
@@ -523,7 +569,20 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                 aggregate.Details.ToolCalls));
         }, cancellationToken).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（PersistChildEventAsync）
+    /// <summary>
+    /// 处理（PersistChildEventAsync）
+    /// </summary>
+    /// <param name="childRunId">子运行标识。</param>
+    /// <param name="lease">执行租约。</param>
+    /// <param name="source">源数据。</param>
+    /// <param name="accumulatedOutput">当前累计的输出内容。</param>
+    /// <param name="reason">操作原因或判断依据。</param>
+    /// <param name="controlledBusinessQuery">是否按受控业务查询流程执行。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task PersistChildEventAsync(
         Guid childRunId,
         UnifiedAgentExecutionLease lease,
@@ -648,7 +707,17 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             rawPayload.OriginalSha256),
             cancellationToken).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 处理（PersistChildFailureAsync）
+    /// <summary>
+    /// 处理（PersistChildFailureAsync）
+    /// </summary>
+    /// <param name="childRunId">子运行标识。</param>
+    /// <param name="depth">当前递归或执行树深度。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task PersistChildFailureAsync(Guid childRunId, int depth, UnifiedRunStatus status, string errorCode)
     {
         DateTimeOffset finishedAt = _scope.GetUtcNow();
@@ -706,7 +775,17 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             payload.OriginalSha256),
             CancellationToken.None).ConfigureAwait(false);
     }
+    #endregion
 
+    #region 尝试执行（TryPersistChildFailureAsync）
+    /// <summary>
+    /// 尝试执行（TryPersistChildFailureAsync）
+    /// </summary>
+    /// <param name="childRunId">子运行标识。</param>
+    /// <param name="depth">当前递归或执行树深度。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task TryPersistChildFailureAsync(Guid childRunId, int depth, UnifiedRunStatus status, string errorCode)
     {
         try
@@ -722,7 +801,17 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             // The internal-tool boundary returns only its stable primary error.
         }
     }
+    #endregion
 
+    #region 尝试执行（TryTerminateUnstartedAuditAsync）
+    /// <summary>
+    /// 尝试执行（TryTerminateUnstartedAuditAsync）
+    /// </summary>
+    /// <param name="context">已准备但尚未开始流式执行的子 Agent 上下文；为 null 时不更新审计。</param>
+    /// <param name="runtimeStreamingStarted">运行时是否已开始流式输出。</param>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task TryTerminateUnstartedAuditAsync(AgentRunContext? context, bool runtimeStreamingStarted, AgentRunStatus status, string errorCode)
     {
         if (context is null || runtimeStreamingStarted)
@@ -743,19 +832,41 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             // The stable unified entry failure remains the primary error.
         }
     }
+    #endregion
 
+    #region 加密保护（Protect）
+    /// <summary>
+    /// 加密保护（Protect）
+    /// </summary>
+    /// <param name="value">待校验字节上限并脱敏的原始文本；null 按空字符串处理。</param>
+    /// <returns>按当前执行范围内部载荷上限处理的脱敏内容、原始摘要及字节数。</returns>
     private ProtectedUnifiedPayload Protect(string? value) =>
         UnifiedEntryPayloadProtector.Protect(
             value,
             _scope.Limits.InternalPayloadUtf8Bytes,
             _scope.Limits.InternalPayloadUtf8Bytes);
+    #endregion
 
+    #region 取消（CancellationFailure）
+    /// <summary>
+    /// 取消（CancellationFailure）
+    /// </summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <param name="lease">执行租约。</param>
+    /// <returns>按执行范围取消原因分类的内部工具失败结果。</returns>
     private AgentInternalToolResult CancellationFailure(CancellationToken cancellationToken, UnifiedAgentExecutionLease? lease)
     {
         string errorCode = _scope.ClassifyCancellation(lease, cancellationToken);
         return Failure(errorCode, CancellationMessage(errorCode));
     }
+    #endregion
 
+    #region 取消（CancellationMessage）
+    /// <summary>
+    /// 取消（CancellationMessage）
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>与入口超时、子 Agent 超时或普通取消对应的提示文本。</returns>
     private static string CancellationMessage(string errorCode) =>
         errorCode switch
         {
@@ -765,7 +876,14 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                 "The child Agent execution timed out.",
             _ => "The unified entry execution was cancelled."
         };
+    #endregion
 
+    #region 映射（MapEventKind）
+    /// <summary>
+    /// 映射（MapEventKind）
+    /// </summary>
+    /// <param name="kind">记录或事件类型。</param>
+    /// <returns>映射到统一入口协议的子 Agent 事件名称，未单独映射的类型使用 message。</returns>
     private static string MapEventKind(AgentRunEventKind kind) =>
         kind switch
         {
@@ -782,17 +900,40 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
             AgentRunEventKind.Cancelled => "cancelled",
             _ => "message"
         };
+    #endregion
 
+    #region 判断 Agent 事件是否表示运行结束（IsTerminal）
+    /// <summary>
+    /// 判断 Agent 事件是否表示运行结束（IsTerminal）。
+    /// </summary>
+    /// <param name="kind">待检查的 Agent 运行事件类型。</param>
+    /// <returns>事件类型为 Completed、Failed 或 Cancelled 时返回 true，否则返回 false。</returns>
     private static bool IsTerminal(AgentRunEventKind kind) =>
         kind is AgentRunEventKind.Completed
             or AgentRunEventKind.Failed
             or AgentRunEventKind.Cancelled;
+    #endregion
 
+    #region 处理（NonNegative）
+    /// <summary>
+    /// 将负时长归零（NonNegative）。
+    /// </summary>
+    /// <param name="value">待检查的持续时间。</param>
+    /// <returns>输入为负数时返回零时长，否则返回原时长。</returns>
     private static TimeSpan NonNegative(TimeSpan value) =>
         value < TimeSpan.Zero ? TimeSpan.Zero : value;
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="content">内部工具失败时对调用方展示的安全提示。</param>
+    /// <returns>包含指定内容和错误码、成功标志为 false 的内部工具结果。</returns>
     private static AgentInternalToolResult Failure(string errorCode, string content) =>
         new(false, content, errorCode);
+    #endregion
 }
 
 internal sealed record InternalToolArguments(
@@ -806,6 +947,18 @@ internal static class InternalToolArgumentParser
         encoderShouldEmitUTF8Identifier: false,
         throwOnInvalidBytes: true);
 
+    #region 尝试执行（TryParse）
+    /// <summary>
+    /// 尝试执行（TryParse）
+    /// </summary>
+    /// <param name="argumentsJson">工具调用参数的 JSON 文本。</param>
+    /// <param name="versionPropertyName">保存版本号的属性名称。</param>
+    /// <param name="valuePropertyName">保存值的属性名称。</param>
+    /// <param name="maximumValueCharacters">字段值允许的最大字符数。</param>
+    /// <param name="maximumReasonCharacters">原因说明允许的最大字符数。</param>
+    /// <param name="maximumValueUtf8Bytes">字段值按 UTF-8 编码后允许的最大字节数。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <returns>操作是否成功；未满足执行条件或更新未生效时返回 false。</returns>
     public static bool TryParse(
         string? argumentsJson,
         string versionPropertyName,
@@ -894,6 +1047,5 @@ internal static class InternalToolArgumentParser
             return false;
         }
     }
+    #endregion
 }
-
-#endregion

@@ -53,12 +53,25 @@ public sealed record ToolApprovalResumeRequest(
 /// <param name="ErrorCode">失败错误码；成功时为空。</param>
 public sealed record ToolApprovalPolicyResult(bool Allowed, string ErrorCode)
 {
+    #region 处理（Allow）
+    /// <summary>
+    /// 处理（Allow）
+    /// </summary>
+    /// <returns>允许继续执行且无错误码的审批策略结果。</returns>
     public static ToolApprovalPolicyResult Allow() => new(true, string.Empty);
+    #endregion
 
+    #region 处理（Deny）
+    /// <summary>
+    /// 处理（Deny）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <returns>拒绝执行的策略结果；未提供错误码时使用 ToolBlocked。</returns>
     public static ToolApprovalPolicyResult Deny(string errorCode) =>
         new(false, string.IsNullOrWhiteSpace(errorCode)
             ? AgentRunErrorCodes.ToolBlocked
             : errorCode);
+    #endregion
 }
 
 /// <summary>
@@ -66,12 +79,19 @@ public sealed record ToolApprovalPolicyResult(bool Allowed, string ErrorCode)
 /// </summary>
 public interface IToolApprovalExecutionPolicy
 {
+    #region 重新校验获批工具是否仍允许执行。
     /// <summary>重新校验获批工具是否仍允许执行。</summary>
+    /// <param name="approval">审批记录。</param>
+    /// <param name="currentTool">当前工具版本。</param>
+    /// <param name="requester">请求发起方。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>审批在当前工具配置及请求身份下是否仍允许执行，以及拒绝时的错误码。</returns>
     Task<ToolApprovalPolicyResult> RevalidateAsync(
         ToolApprovalRequestRecord approval,
         PublishedMcpToolReference currentTool,
         AgentExecutionIdentity requester,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -79,11 +99,19 @@ public interface IToolApprovalExecutionPolicy
 /// </summary>
 public interface IApprovedMcpRuntimeToolInvoker
 {
+    #region 调用已经审批通过的 MCP 工具。
     /// <summary>调用已经审批通过的 MCP 工具。</summary>
+    /// <param name="claim">已取得执行权的工具审批声明。</param>
+    /// <param name="tool">工具定义。</param>
+    /// <param name="arguments">调用参数。</param>
+    /// <param name="invocationContext">MCP 调用所用的执行身份和运行上下文。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>使用已认领审批授权调用工具后的成功、阻止状态、内容及错误码。</returns>
     Task<McpRuntimeToolResult> InvokeApprovedAsync(
         ToolApprovalExecutionClaim claim,
         PublishedMcpToolReference tool,
         IReadOnlyDictionary<string, object?> arguments,
         McpInvocationContext invocationContext,
         CancellationToken cancellationToken = default);
+    #endregion
 }

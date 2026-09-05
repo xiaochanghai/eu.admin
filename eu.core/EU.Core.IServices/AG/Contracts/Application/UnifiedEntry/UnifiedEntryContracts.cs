@@ -52,6 +52,18 @@ public enum ConversationMessageRole
 /// </summary>
 public sealed record UnifiedEntryLimits
 {
+    #region 构造（UnifiedEntryLimits）
+    /// <summary>
+    /// 构造（UnifiedEntryLimits）
+    /// </summary>
+    /// <param name="MaxAgentDepth">允许的最大 Agent 委派深度。</param>
+    /// <param name="MaxChildCalls">允许的最大子 Agent 调用次数。</param>
+    /// <param name="MaxOrchestrationCalls">允许的最大编排调用次数。</param>
+    /// <param name="MaxMcpCalls">允许的最大 MCP 工具调用次数。</param>
+    /// <param name="EntryTimeout">统一入口执行超时；未指定时使用默认值。</param>
+    /// <param name="ChildTimeout">子 Agent 执行超时；未指定时使用默认值。</param>
+    /// <param name="InternalPayloadUtf8Bytes">内部载荷允许的最大 UTF-8 字节数。</param>
+    /// <param name="MaxMcpResultUtf8Bytes">单次 MCP 结果允许的最大 UTF-8 字节数。</param>
     public UnifiedEntryLimits(
         int MaxAgentDepth = 4,
         int MaxChildCalls = 8,
@@ -71,6 +83,7 @@ public sealed record UnifiedEntryLimits
         this.InternalPayloadUtf8Bytes = InternalPayloadUtf8Bytes;
         this.MaxMcpResultUtf8Bytes = MaxMcpResultUtf8Bytes;
     }
+    #endregion
 
     /// <summary>
     /// Agent 委派允许的最大深度。
@@ -199,6 +212,8 @@ public static class UnifiedEntryErrorCodes
 /// <summary>
 /// 表示统一入口准备或执行过程中的领域异常。
 /// </summary>
+/// <param name="errorCode">用于标识失败原因的领域错误码。</param>
+/// <param name="message">描述异常原因的错误消息。</param>
 public sealed class UnifiedEntryException(string errorCode, string message)
     : Exception(message)
 {
@@ -485,6 +500,14 @@ public sealed record UnifiedRunEventRecord(
 /// </summary>
 public sealed record UnifiedRunDetails
 {
+    #region 构造（UnifiedRunDetails）
+    /// <summary>
+    /// 构造（UnifiedRunDetails）
+    /// </summary>
+    /// <param name="entryRun">统一入口的主运行记录。</param>
+    /// <param name="agentRuns">统一入口关联的 Agent 运行记录集合。</param>
+    /// <param name="orchestrations">编排仓储。</param>
+    /// <param name="toolCalls">工具调用记录集合。</param>
     public UnifiedRunDetails(
         UnifiedEntryRunRecord entryRun,
         IReadOnlyList<UnifiedAgentRunRecord> agentRuns,
@@ -499,6 +522,7 @@ public sealed record UnifiedRunDetails
         ToolCalls = UnifiedEntryContractCloner.ReadOnly(
             toolCalls.Select(value => value with { }));
     }
+    #endregion
 
     /// <summary>
     /// 获取统一入口主运行记录。
@@ -520,8 +544,15 @@ public sealed record UnifiedRunDetails
     /// </summary>
     public IReadOnlyList<UnifiedToolCallRecord> ToolCalls { get; }
 
+    #region 处理（WithEntryRun）
+    /// <summary>
+    /// 处理（WithEntryRun）
+    /// </summary>
+    /// <param name="entryRun">统一入口的主运行记录。</param>
+    /// <returns>替换入口运行、保留原 Agent、编排和工具记录的详情副本。</returns>
     public UnifiedRunDetails WithEntryRun(UnifiedEntryRunRecord entryRun) =>
         new(entryRun, AgentRuns, Orchestrations, ToolCalls);
+    #endregion
 }
 
 /// <summary>
@@ -529,6 +560,15 @@ public sealed record UnifiedRunDetails
 /// </summary>
 public sealed record UnifiedEntryAggregate
 {
+    #region 构造（UnifiedEntryAggregate）
+    /// <summary>
+    /// 构造（UnifiedEntryAggregate）
+    /// </summary>
+    /// <param name="conversation">聚合所属的会话记录。</param>
+    /// <param name="messages">会话消息集合。</param>
+    /// <param name="details">统一入口运行及其关联执行的明细。</param>
+    /// <param name="events">事件集合。</param>
+    /// <param name="persistenceRevision">聚合当前的持久化修订号。</param>
     public UnifiedEntryAggregate(
         ConversationRecord conversation,
         IReadOnlyList<ConversationMessageRecord> messages,
@@ -551,6 +591,7 @@ public sealed record UnifiedEntryAggregate
             events.Select(value => value with { }));
         PersistenceRevision = persistenceRevision;
     }
+    #endregion
 
     /// <summary>
     /// 获取统一入口会话记录。
@@ -577,9 +618,22 @@ public sealed record UnifiedEntryAggregate
     /// </summary>
     public long PersistenceRevision { get; }
 
+    #region 处理（WithDetails）
+    /// <summary>
+    /// 处理（WithDetails）
+    /// </summary>
+    /// <param name="details">统一入口运行及其关联执行的明细。</param>
+    /// <returns>替换运行详情、保留会话消息、事件及持久化版本的聚合副本。</returns>
     public UnifiedEntryAggregate WithDetails(UnifiedRunDetails details) =>
         new(Conversation, Messages, details, Events, PersistenceRevision);
+    #endregion
 
+    #region 处理（WithMessage）
+    /// <summary>
+    /// 处理（WithMessage）
+    /// </summary>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>在现有消息末尾追加指定消息后的聚合副本。</returns>
     public UnifiedEntryAggregate WithMessage(ConversationMessageRecord message) =>
         new(
             Conversation,
@@ -587,7 +641,14 @@ public sealed record UnifiedEntryAggregate
             Details,
             Events,
             PersistenceRevision);
+    #endregion
 
+    #region 处理（WithEvent）
+    /// <summary>
+    /// 处理（WithEvent）
+    /// </summary>
+    /// <param name="value">本次操作使用的统一运行事件。</param>
+    /// <returns>在现有事件末尾追加指定事件后的聚合副本。</returns>
     public UnifiedEntryAggregate WithEvent(UnifiedRunEventRecord value) =>
         new(
             Conversation,
@@ -595,9 +656,17 @@ public sealed record UnifiedEntryAggregate
             Details,
             Events.Append(value).ToArray(),
             PersistenceRevision);
+    #endregion
 
+    #region 处理（WithPersistenceRevision）
+    /// <summary>
+    /// 处理（WithPersistenceRevision）
+    /// </summary>
+    /// <param name="value">聚合使用的持久化版本号。</param>
+    /// <returns>使用指定持久化版本、保留其余内容的聚合副本。</returns>
     public UnifiedEntryAggregate WithPersistenceRevision(long value) =>
         new(Conversation, Messages, Details, Events, value);
+    #endregion
 }
 
 /// <summary>
@@ -616,66 +685,110 @@ public static class UnifiedEntryReadLimits
 /// </summary>
 public interface IUnifiedEntryRepository
 {
+    #region 获取统一入口会话。
     /// <summary>获取统一入口会话。</summary>
-    Task<ConversationRecord?> GetConversationAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
+    /// <param name="id">会话标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定标识的会话记录；不存在时为 null。</returns>
+    Task<ConversationRecord?> GetConversationAsync(Guid id, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询统一入口会话列表。
     /// <summary>查询统一入口会话列表。</summary>
-    Task<IReadOnlyList<ConversationRecord>> ListConversationsAsync(
-        int take,
-        CancellationToken cancellationToken = default);
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>受读取数量限制的会话记录集合。</returns>
+    Task<IReadOnlyList<ConversationRecord>> ListConversationsAsync(int take, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询统一入口会话消息。
     /// <summary>查询统一入口会话消息。</summary>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定会话受读取数量限制的消息集合。</returns>
     Task<IReadOnlyList<ConversationMessageRecord>> ListMessagesAsync(
         Guid conversationId,
         int take = UnifiedEntryReadLimits.DefaultMessageTake,
         CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 获取统一入口运行记录。
     /// <summary>获取统一入口运行记录。</summary>
-    Task<UnifiedEntryRunRecord?> GetRunAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default);
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定统一入口运行记录；不存在时为 null。</returns>
+    Task<UnifiedEntryRunRecord?> GetRunAsync(Guid runId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询统一入口运行列表。
     /// <summary>查询统一入口运行列表。</summary>
-    Task<IReadOnlyList<UnifiedEntryRunRecord>> ListRunsAsync(
-        Guid conversationId,
-        int take,
-        CancellationToken cancellationToken = default);
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定会话受读取数量限制的入口运行集合。</returns>
+    Task<IReadOnlyList<UnifiedEntryRunRecord>> ListRunsAsync(Guid conversationId, int take, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 获取统一入口记录详情。
     /// <summary>获取统一入口记录详情。</summary>
-    Task<UnifiedRunDetails?> GetDetailsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default);
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定入口运行及其子运行详情；不存在时为 null。</returns>
+    Task<UnifiedRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询统一入口记录事件列表。
     /// <summary>查询统一入口记录事件列表。</summary>
-    Task<IReadOnlyList<UnifiedRunEventRecord>> ListEventsAsync(
-        Guid runId,
-        CancellationToken cancellationToken = default);
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定入口运行的有序事件集合。</returns>
+    Task<IReadOnlyList<UnifiedRunEventRecord>> ListEventsAsync(Guid runId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 清理超过保留期限的业务查询结果。
     /// <summary>清理超过保留期限的业务查询结果。</summary>
-    Task<BusinessQueryCleanupResult> RedactExpiredBusinessQueryResultsAsync(
-        DateTimeOffset cutoffUtc,
-        CancellationToken cancellationToken = default) =>
+    /// <param name="cutoffUtc">筛选截止时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>过期业务查询结果的清理统计；接口默认实现不清理数据，各计数均为零。</returns>
+    Task<BusinessQueryCleanupResult> RedactExpiredBusinessQueryResultsAsync(DateTimeOffset cutoffUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult(new BusinessQueryCleanupResult(0, 0, 0, cutoffUtc));
+    #endregion
 
+    #region 按所有者边界获取统一入口会话。
     /// <summary>按所有者边界获取统一入口会话。</summary>
-    Task<ConversationRecord?> GetConversationForOwnerAsync(
-        Guid id,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default) =>
+    /// <param name="id">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的会话；不存在或所属身份不匹配时为 null。</returns>
+    Task<ConversationRecord?> GetConversationForOwnerAsync(Guid id, string tenantId, string userId, CancellationToken cancellationToken = default) =>
         GetOwnedConversationFallbackAsync(this, id, tenantId, userId, cancellationToken);
+    #endregion
 
+    #region 按所有者边界查询统一入口会话列表。
     /// <summary>按所有者边界查询统一入口会话列表。</summary>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的会话集合；默认兼容实现先限制读取数量再过滤身份，可能少于 take。</returns>
     Task<IReadOnlyList<ConversationRecord>> ListConversationsForOwnerAsync(
         string tenantId,
         string userId,
         int take,
         CancellationToken cancellationToken = default) =>
         ListOwnedConversationsFallbackAsync(this, tenantId, userId, take, cancellationToken);
+    #endregion
 
+    #region 按所有者边界查询会话消息。
     /// <summary>按所有者边界查询会话消息。</summary>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定用户会话的消息集合；会话不存在或所属身份不匹配时为空集合。</returns>
     Task<IReadOnlyList<ConversationMessageRecord>> ListMessagesForOwnerAsync(
         Guid conversationId,
         string tenantId,
@@ -684,16 +797,27 @@ public interface IUnifiedEntryRepository
         CancellationToken cancellationToken = default) =>
         ListOwnedMessagesFallbackAsync(
             this, conversationId, tenantId, userId, take, cancellationToken);
+    #endregion
 
+    #region 按所有者边界获取统一入口运行。
     /// <summary>按所有者边界获取统一入口运行。</summary>
-    Task<UnifiedEntryRunRecord?> GetRunForOwnerAsync(
-        Guid runId,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default) =>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的入口运行；不存在或所属身份不匹配时为 null。</returns>
+    Task<UnifiedEntryRunRecord?> GetRunForOwnerAsync(Guid runId, string tenantId, string userId, CancellationToken cancellationToken = default) =>
         GetOwnedRunFallbackAsync(this, runId, tenantId, userId, cancellationToken);
+    #endregion
 
+    #region 按所有者边界查询统一入口运行列表。
     /// <summary>按所有者边界查询统一入口运行列表。</summary>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定会话中属于该租户和用户的运行集合；默认兼容实现先限制读取数量再过滤身份。</returns>
     Task<IReadOnlyList<UnifiedEntryRunRecord>> ListRunsForOwnerAsync(
         Guid conversationId,
         string tenantId,
@@ -702,36 +826,63 @@ public interface IUnifiedEntryRepository
         CancellationToken cancellationToken = default) =>
         ListOwnedRunsFallbackAsync(
             this, conversationId, tenantId, userId, take, cancellationToken);
+    #endregion
 
+    #region 按所有者边界获取统一入口运行详情。
     /// <summary>按所有者边界获取统一入口运行详情。</summary>
-    Task<UnifiedRunDetails?> GetDetailsForOwnerAsync(
-        Guid runId,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default) =>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的运行详情；不存在或所属身份不匹配时为 null。</returns>
+    Task<UnifiedRunDetails?> GetDetailsForOwnerAsync(Guid runId, string tenantId, string userId, CancellationToken cancellationToken = default) =>
         GetOwnedDetailsFallbackAsync(this, runId, tenantId, userId, cancellationToken);
+    #endregion
 
+    #region 按所有者边界查询统一入口运行事件。
     /// <summary>按所有者边界查询统一入口运行事件。</summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的运行事件；运行不存在或所属身份不匹配时为空集合。</returns>
     Task<IReadOnlyList<UnifiedRunEventRecord>> ListEventsForOwnerAsync(
         Guid runId,
         string tenantId,
         string userId,
         CancellationToken cancellationToken = default) =>
         ListOwnedEventsFallbackAsync(this, runId, tenantId, userId, cancellationToken);
+    #endregion
 
+    #region 按所有者边界获取统一入口聚合记录。
     /// <summary>按所有者边界获取统一入口聚合记录。</summary>
-    Task<UnifiedEntryAggregate?> GetAggregateForOwnerAsync(
-        Guid runId,
-        string tenantId,
-        string userId,
-        CancellationToken cancellationToken = default) =>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>属于指定租户和用户的运行聚合；不存在时为 null，接口默认实现始终返回 null。</returns>
+    Task<UnifiedEntryAggregate?> GetAggregateForOwnerAsync(Guid runId, string tenantId, string userId, CancellationToken cancellationToken = default) =>
         Task.FromResult<UnifiedEntryAggregate?>(null);
+    #endregion
 
+    #region 保存统一入口记录。
     /// <summary>保存统一入口记录。</summary>
-    Task<UnifiedEntryAggregate> SaveAsync(
-        UnifiedEntryAggregate value,
-        CancellationToken cancellationToken = default);
+    /// <param name="value">本次操作使用的统一入口运行聚合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>成功持久化后的聚合及其持久化版本；并发版本冲突由实现拒绝。</returns>
+    Task<UnifiedEntryAggregate> SaveAsync(UnifiedEntryAggregate value, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 获取（GetOwnedConversationFallbackAsync）
+    /// <summary>
+    /// 获取（GetOwnedConversationFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="id">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>兼容查询后所属身份匹配的会话；不存在或身份不匹配时为 null。</returns>
     private static async Task<ConversationRecord?> GetOwnedConversationFallbackAsync(
         IUnifiedEntryRepository repository,
         Guid id,
@@ -744,7 +895,18 @@ public interface IUnifiedEntryRepository
             ? value
             : null;
     }
+    #endregion
 
+    #region 查询列表（ListOwnedConversationsFallbackAsync）
+    /// <summary>
+    /// 查询列表（ListOwnedConversationsFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>对受数量限制的会话查询结果再按租户和用户过滤的集合，可能少于 take。</returns>
     private static async Task<IReadOnlyList<ConversationRecord>>
         ListOwnedConversationsFallbackAsync(
             IUnifiedEntryRepository repository,
@@ -755,7 +917,19 @@ public interface IUnifiedEntryRepository
         (await repository.ListConversationsAsync(take, cancellationToken))
             .Where(value => Owned(value.TenantId, value.UserId, tenantId, userId))
             .ToArray();
+    #endregion
 
+    #region 查询列表（ListOwnedMessagesFallbackAsync）
+    /// <summary>
+    /// 查询列表（ListOwnedMessagesFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>通过会话所属身份检查后读取的消息；会话不可访问时为空集合。</returns>
     private static async Task<IReadOnlyList<ConversationMessageRecord>>
         ListOwnedMessagesFallbackAsync(
             IUnifiedEntryRepository repository,
@@ -764,13 +938,24 @@ public interface IUnifiedEntryRepository
             string userId,
             int take,
             CancellationToken cancellationToken) =>
-        /// <summary>使用兼容路径查找调用方拥有的会话。</summary>
+        // 使用兼容路径查找调用方拥有的会话。
         await GetOwnedConversationFallbackAsync(
             repository, conversationId, tenantId, userId, cancellationToken) is null
                 ? []
                 : await repository.ListMessagesAsync(
                     conversationId, take, cancellationToken);
+    #endregion
 
+    #region 获取（GetOwnedRunFallbackAsync）
+    /// <summary>
+    /// 获取（GetOwnedRunFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>兼容查询后所属身份匹配的入口运行；不存在或身份不匹配时为 null。</returns>
     private static async Task<UnifiedEntryRunRecord?> GetOwnedRunFallbackAsync(
         IUnifiedEntryRepository repository,
         Guid runId,
@@ -783,7 +968,19 @@ public interface IUnifiedEntryRepository
             ? value
             : null;
     }
+    #endregion
 
+    #region 查询列表（ListOwnedRunsFallbackAsync）
+    /// <summary>
+    /// 查询列表（ListOwnedRunsFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="conversationId">会话标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>对受数量限制的会话运行结果再按租户和用户过滤的集合，可能少于 take。</returns>
     private static async Task<IReadOnlyList<UnifiedEntryRunRecord>>
         ListOwnedRunsFallbackAsync(
             IUnifiedEntryRepository repository,
@@ -795,19 +992,41 @@ public interface IUnifiedEntryRepository
         (await repository.ListRunsAsync(conversationId, take, cancellationToken))
             .Where(value => Owned(value.TenantId, value.UserId, tenantId, userId))
             .ToArray();
+    #endregion
 
+    #region 获取（GetOwnedDetailsFallbackAsync）
+    /// <summary>
+    /// 获取（GetOwnedDetailsFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>通过运行所属身份检查后读取的运行详情；运行不可访问时为 null。</returns>
     private static async Task<UnifiedRunDetails?> GetOwnedDetailsFallbackAsync(
         IUnifiedEntryRepository repository,
         Guid runId,
         string tenantId,
         string userId,
         CancellationToken cancellationToken) =>
-        /// <summary>使用兼容路径查找调用方拥有的运行。</summary>
+        // 使用兼容路径查找调用方拥有的运行。
         await GetOwnedRunFallbackAsync(repository, runId, tenantId, userId, cancellationToken)
             is null
                 ? null
                 : await repository.GetDetailsAsync(runId, cancellationToken);
+    #endregion
 
+    #region 查询列表（ListOwnedEventsFallbackAsync）
+    /// <summary>
+    /// 查询列表（ListOwnedEventsFallbackAsync）
+    /// </summary>
+    /// <param name="repository">当前操作使用的持久化仓储。</param>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>通过运行所属身份检查后读取的事件集合；运行不可访问时为空集合。</returns>
     private static async Task<IReadOnlyList<UnifiedRunEventRecord>>
         ListOwnedEventsFallbackAsync(
             IUnifiedEntryRepository repository,
@@ -815,19 +1034,26 @@ public interface IUnifiedEntryRepository
             string tenantId,
             string userId,
             CancellationToken cancellationToken) =>
-        /// <summary>使用兼容路径查找调用方拥有的运行。</summary>
+        // 使用兼容路径查找调用方拥有的运行。
         await GetOwnedRunFallbackAsync(repository, runId, tenantId, userId, cancellationToken)
             is null
                 ? []
                 : await repository.ListEventsAsync(runId, cancellationToken);
+    #endregion
 
-    private static bool Owned(
-        string storedTenant,
-        string storedUser,
-        string tenantId,
-        string userId) =>
+    #region 核对记录的租户及用户归属（Owned）
+    /// <summary>
+    /// 核对记录的租户及用户归属（Owned）。
+    /// </summary>
+    /// <param name="storedTenant">记录中保存的租户标识。</param>
+    /// <param name="storedUser">记录中保存的用户标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <returns>记录中的租户和用户标识均与请求值按区分大小写的方式匹配时返回 true，否则返回 false。</returns>
+    private static bool Owned(string storedTenant, string storedUser, string tenantId, string userId) =>
         string.Equals(storedTenant, tenantId, StringComparison.Ordinal)
         && string.Equals(storedUser, userId, StringComparison.Ordinal);
+    #endregion
 }
 
 /// <summary>
@@ -835,10 +1061,13 @@ public interface IUnifiedEntryRepository
 /// </summary>
 public interface IUnifiedEntryRecovery
 {
+    #region 恢复或终结中断的统一入口运行。
     /// <summary>恢复或终结中断的统一入口运行。</summary>
-    Task<int> RecoverInterruptedAsync(
-        DateTimeOffset recoveredAtUtc,
-        CancellationToken cancellationToken = default);
+    /// <param name="recoveredAtUtc">恢复时间（UTC）。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>本次完成宿主中断恢复的入口运行数量。</returns>
+    Task<int> RecoverInterruptedAsync(DateTimeOffset recoveredAtUtc, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -846,6 +1075,12 @@ public interface IUnifiedEntryRecovery
 /// </summary>
 public static class UnifiedEntryContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="value">本次操作使用的统一入口运行聚合。</param>
+    /// <returns>通过聚合构造函数复制会话、消息、详情和事件并保留持久化版本的聚合副本。</returns>
     public static UnifiedEntryAggregate Clone(UnifiedEntryAggregate value) =>
         new(
             value.Conversation,
@@ -853,10 +1088,26 @@ public static class UnifiedEntryContractCloner
             value.Details,
             value.Events,
             value.PersistenceRevision);
+    #endregion
 
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="value">本次操作使用的统一入口运行详情。</param>
+    /// <returns>通过详情构造函数复制入口及各类子运行记录的详情副本。</returns>
     public static UnifiedRunDetails Clone(UnifiedRunDetails value) =>
         new(value.EntryRun, value.AgentRuns, value.Orchestrations, value.ToolCalls);
+    #endregion
 
+    #region 读取（ReadOnly）
+    /// <summary>
+    /// 读取（ReadOnly）
+    /// </summary>
+    /// <param name="values">按原顺序枚举并复制为只读集合的源数据。</param>
+    /// <typeparam name="T">待处理数据的泛型类型。</typeparam>
+    /// <returns>按枚举顺序复制到新数组并包装为只读的集合；元素本身不作深复制。</returns>
     public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> values) =>
         new ReadOnlyCollection<T>(values.ToArray());
+    #endregion
 }

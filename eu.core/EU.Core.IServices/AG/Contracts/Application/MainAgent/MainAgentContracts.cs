@@ -20,14 +20,23 @@ public sealed record MainAgentAssignment(
 /// </summary>
 public interface IMainAgentAssignmentRepository
 {
+    #region 获取主 Agent 分配记录。
     /// <summary>获取主 Agent 分配记录。</summary>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>当前固定版本的主 Agent 分配；尚未配置时为 null。</returns>
     Task<MainAgentAssignment?> GetAsync(CancellationToken cancellationToken = default);
+    #endregion
 
-    /// <summary>按并发条件尝试替换主 Agent 分配记录。</summary>
-    Task<bool> TryReplaceAsync(
-        MainAgentAssignment value,
-        long? expectedLogicalRevision,
-        CancellationToken cancellationToken = default);
+    #region 按修订号创建或替换主 Agent 分配（TryReplaceAsync）
+    /// <summary>
+    /// 按修订号创建或替换主 Agent 分配（TryReplaceAsync）。
+    /// </summary>
+    /// <param name="value">新的主 Agent 分配；初次创建的修订号为零，替换时为预期修订号加一。</param>
+    /// <param name="expectedLogicalRevision">为 null 时仅尝试初次创建；非 null 时要求现有记录修订号匹配，不允许为 long.MaxValue。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>成功创建或更新一条分配记录时返回 true；新修订号不合法、初次创建时记录已存在，或更新时未匹配到预期修订号的未删除记录时返回 false。</returns>
+    Task<bool> TryReplaceAsync(MainAgentAssignment value, long? expectedLogicalRevision, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -70,6 +79,12 @@ public static class MainAgentServiceStatusCodes
     /// <summary>表示 <c>RowVersionConflict</c> 场景映射的服务状态码。</summary>
     public const int RowVersionConflict = 610021;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <returns>主 Agent 错误码对应的服务状态值；未知错误码使用 500。</returns>
     public static int FromErrorCode(string code) => code switch
     {
         MainAgentErrorCodes.NotConfigured => NotConfigured,
@@ -79,7 +94,14 @@ public static class MainAgentServiceStatusCodes
         MainAgentErrorCodes.RowVersionConflict => RowVersionConflict,
         _ => 500
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的主 Agent 错误码；未知状态使用 INTERNAL_ERROR。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         NotConfigured => MainAgentErrorCodes.NotConfigured,
@@ -89,4 +111,5 @@ public static class MainAgentServiceStatusCodes
         RowVersionConflict => MainAgentErrorCodes.RowVersionConflict,
         _ => "INTERNAL_ERROR"
     };
+    #endregion
 }

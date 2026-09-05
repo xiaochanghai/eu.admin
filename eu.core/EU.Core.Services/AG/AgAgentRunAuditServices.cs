@@ -5,7 +5,7 @@ using EU.Core.IServices.Mcp;
 
 namespace EU.Core.Services;
 
-#region 文件职责：AgAgentRunAuditServices 职责实现
+// 文件职责：AgAgentRunAuditServices 职责实现
 
 /// <summary>
 /// 提供 Agent 运行审计记录的持久化服务。
@@ -15,11 +15,24 @@ public sealed class AgAgentRunAuditServices :
     IAgAgentRunAuditServices,
     IAgentRunAuditRepository
 {
+    #region 构造（AgAgentRunAuditServices）
+    /// <summary>
+    /// 构造（AgAgentRunAuditServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgAgentRunAuditServices(IBaseRepository<AgAgentRunAudit> dal)
         : base(dal ?? throw new ArgumentNullException(nameof(dal)))
     {
     }
+    #endregion
 
+    #region 保存（SaveAsync）
+    /// <summary>
+    /// 保存（SaveAsync）
+    /// </summary>
+    /// <param name="record">业务记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     public async Task SaveAsync(AgentRunAuditRecord record, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(record);
@@ -70,7 +83,16 @@ public sealed class AgAgentRunAuditServices :
             throw;
         }
     }
+    #endregion
 
+    #region 查询列表（ListAsync）
+    /// <summary>
+    /// 查询列表（ListAsync）
+    /// </summary>
+    /// <param name="agentId">Agent 定义标识。</param>
+    /// <param name="take">最多返回的记录数。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定 Agent 最近的运行审计及工具调用记录，按开始时间及标识倒序排列，最多 100 条。</returns>
     public async Task<IReadOnlyList<AgentRunAuditRecord>> ListAsync(Guid agentId, int take, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -95,7 +117,15 @@ public sealed class AgAgentRunAuditServices :
             throw;
         }
     }
+    #endregion
 
+    #region 加载（LoadAuditsAsync）
+    /// <summary>
+    /// 加载（LoadAuditsAsync）
+    /// </summary>
+    /// <param name="audits">审计记录集合。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>保持输入审计顺序并补齐工具调用明细的审计记录集合；输入为空时返回空集合。</returns>
     private async Task<IReadOnlyList<AgentRunAuditRecord>> LoadAuditsAsync(IReadOnlyList<AgAgentRunAudit> audits, CancellationToken cancellationToken)
     {
         if (audits.Count == 0)
@@ -120,7 +150,15 @@ public sealed class AgAgentRunAuditServices :
             .Select(AgentRunContractCloner.Clone)
             .ToArray();
     }
+    #endregion
 
+    #region 新增（InsertToolCallsAsync）
+    /// <summary>
+    /// 新增（InsertToolCallsAsync）
+    /// </summary>
+    /// <param name="record">业务记录。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task InsertToolCallsAsync(AgentRunAuditRecord record, CancellationToken cancellationToken)
     {
         if (record.ToolCalls.Count == 0)
@@ -132,7 +170,15 @@ public sealed class AgAgentRunAuditServices :
         await Db.Insertable(record.ToolCalls.Select((value, ordinal) =>
             MapToolCallEntity(record.RunId, ordinal, value)).ToList()).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 映射（MapAudit）
+    /// <summary>
+    /// 映射（MapAudit）
+    /// </summary>
+    /// <param name="value">本次操作使用的运行审计实体。</param>
+    /// <param name="toolCalls">工具调用记录集合。</param>
+    /// <returns>包含按序号及标识排序的工具调用明细的运行审计记录。</returns>
     private static AgentRunAuditRecord MapAudit(AgAgentRunAudit value, IReadOnlyList<AgAgentToolCallAudit> toolCalls) =>
         new(
             value.ID,
@@ -150,7 +196,14 @@ public sealed class AgAgentRunAuditServices :
                 .ThenBy(tool => tool.ID)
                 .Select(MapToolCall)
                 .ToArray());
+    #endregion
 
+    #region 映射（MapToolCall）
+    /// <summary>
+    /// 映射（MapToolCall）
+    /// </summary>
+    /// <param name="value">本次操作使用的工具调用审计实体。</param>
+    /// <returns>从持久化字段还原的工具调用审计记录。</returns>
     private static AgentToolCallAuditRecord MapToolCall(AgAgentToolCallAudit value) =>
         new(
             Required(value.ToolVersionId, "ToolCall.ToolVersionId"),
@@ -160,7 +213,14 @@ public sealed class AgAgentRunAuditServices :
             ToOffset(Required(value.StartedAtUtc, "ToolCall.StartedAtUtc")),
             ToOffset(Required(value.FinishedAtUtc, "ToolCall.FinishedAtUtc")),
             Required(value.ErrorCode, "ToolCall.ErrorCode"));
+    #endregion
 
+    #region 映射（MapAuditEntity）
+    /// <summary>
+    /// 映射（MapAuditEntity）
+    /// </summary>
+    /// <param name="value">本次操作使用的Agent 运行审计记录。</param>
+    /// <returns>由运行审计记录构造的持久化实体。</returns>
     private static AgAgentRunAudit MapAuditEntity(AgentRunAuditRecord value) => new()
     {
         ID = value.RunId,
@@ -177,7 +237,16 @@ public sealed class AgAgentRunAuditServices :
         IsDeleted = false,
         IsActive = true
     };
+    #endregion
 
+    #region 映射（MapToolCallEntity）
+    /// <summary>
+    /// 映射（MapToolCallEntity）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="ordinal">工具调用在审计记录中的排序序号。</param>
+    /// <param name="value">本次操作使用的工具调用审计记录。</param>
+    /// <returns>具有新标识、运行标识及调用序号的工具调用审计实体。</returns>
     private static AgAgentToolCallAudit MapToolCallEntity(Guid runId, int ordinal, AgentToolCallAuditRecord value) => new()
     {
         ID = Guid.NewGuid(),
@@ -193,23 +262,54 @@ public sealed class AgAgentRunAuditServices :
         IsDeleted = false,
         IsActive = true
     };
+    #endregion
 
+    #region 转换（ToOffset）
+    /// <summary>
+    /// 将数据库时间还原为 UTC 时间（ToOffset）。
+    /// </summary>
+    /// <param name="value">按 UTC 语义存储的数据库时间。</param>
+    /// <returns>将输入时间视为 UTC 后构造的零偏移时间。</returns>
     private static DateTimeOffset ToOffset(DateTime value) =>
         new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
+    #endregion
 
     // The current SQL Server provider binds DateTime parameters as legacy datetime,
     // whose 1/300-second precision can shift the stored value by up to 1.67 ms.
+    #region 按数据库时间精度比较 UTC 时间（StoredDateTimeEquals）
+    /// <summary>
+    /// 按数据库时间精度比较 UTC 时间（StoredDateTimeEquals）。
+    /// </summary>
+    /// <param name="stored">数据库中保存的 UTC 时间。</param>
+    /// <param name="value">待比较的带时区偏移时间，比较时转换为 UTC。</param>
+    /// <returns>已存储时间与待比较值的 UTC 时间相差不超过 2 毫秒时返回 true，否则返回 false。</returns>
     private static bool StoredDateTimeEquals(DateTime stored, DateTimeOffset value) =>
         Math.Abs((stored - value.UtcDateTime).Ticks) <=
         TimeSpan.TicksPerMillisecond * 2;
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <typeparam name="T">必填字段的值类型。</typeparam>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static T Required<T>(T? value, string field) where T : struct =>
         value ?? throw new InvalidDataException(
             $"Agent run audit field '{field}' is missing.");
+    #endregion
 
+    #region 处理（Required）
+    /// <summary>
+    /// 读取并校验必填字段（Required）。
+    /// </summary>
+    /// <param name="value">从持久化记录读取的可空字段值。</param>
+    /// <param name="field">字段名称，用于校验和错误提示。</param>
+    /// <returns>非 null 的必填字段值；缺失时抛出 InvalidDataException。</returns>
     private static string Required(string? value, string field) =>
         value ?? throw new InvalidDataException(
             $"Agent run audit field '{field}' is missing.");
+    #endregion
 }
-
-#endregion

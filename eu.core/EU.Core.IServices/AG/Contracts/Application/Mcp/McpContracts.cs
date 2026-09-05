@@ -284,6 +284,12 @@ public static class McpServiceStatusCodes
     /// <summary>表示 <c>ArchiveBlocked</c> 场景映射的服务状态码。</summary>
     public const int ArchiveBlocked = 630011;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="errorCode">操作失败对应的业务错误码。</param>
+    /// <returns>MCP 错误码对应的服务状态值；未知错误码抛出 ArgumentOutOfRangeException。</returns>
     public static int FromErrorCode(string errorCode) => errorCode switch
     {
         McpErrorCodes.NotFound => NotFound,
@@ -299,7 +305,14 @@ public static class McpServiceStatusCodes
         McpErrorCodes.ArchiveBlocked => ArchiveBlocked,
         _ => throw new ArgumentOutOfRangeException(nameof(errorCode), errorCode, null)
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的 MCP 错误码；未知状态抛出 ArgumentOutOfRangeException。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         NotFound => McpErrorCodes.NotFound,
@@ -315,6 +328,7 @@ public static class McpServiceStatusCodes
         ArchiveBlocked => McpErrorCodes.ArchiveBlocked,
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
     };
+    #endregion
 }
 
 /// <summary>
@@ -322,15 +336,21 @@ public static class McpServiceStatusCodes
 /// </summary>
 public interface IMcpServerDefinitionCatalog
 {
+    #region 获取MCP 服务定义。
     /// <summary>获取MCP 服务定义。</summary>
-    Task<McpServerDefinition?> GetAsync(
-        Guid id,
-        CancellationToken cancellationToken = default);
+    /// <param name="id">MCP 服务标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定标识的 MCP 服务定义及工具版本信息；不存在时为 null。</returns>
+    Task<McpServerDefinition?> GetAsync(Guid id, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询MCP 服务定义列表。
     /// <summary>查询MCP 服务定义列表。</summary>
-    Task<IReadOnlyList<McpServerDefinition>> ListAsync(
-        McpServerQuery query,
-        CancellationToken cancellationToken = default);
+    /// <param name="query">查询筛选条件。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>匹配查询条件的 MCP 服务定义集合；未指定状态时排除已归档服务。</returns>
+    Task<IReadOnlyList<McpServerDefinition>> ListAsync(McpServerQuery query, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -338,10 +358,13 @@ public interface IMcpServerDefinitionCatalog
 /// </summary>
 public interface IMcpToolDiscovery
 {
+    #region 从 MCP 服务发现可用工具。
     /// <summary>从 MCP 服务发现可用工具。</summary>
-    Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(
-        McpServerDefinition server,
-        CancellationToken cancellationToken = default);
+    /// <param name="server">MCP 服务器定义。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>从指定 MCP 服务发现的工具名称、描述、输入 Schema 等元数据集合。</returns>
+    Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(McpServerDefinition server, CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -349,12 +372,22 @@ public interface IMcpToolDiscovery
 /// </summary>
 public interface IPublishedMcpToolCatalog
 {
-    /// <summary>检查已发布 MCP 工具是否存在。</summary>
+    #region 查询可用的 MCP 工具版本是否存在（ExistsAsync）
+    /// <summary>
+    /// 查询可用的 MCP 工具版本是否存在（ExistsAsync）。
+    /// </summary>
+    /// <param name="toolVersionId">工具版本标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>指定工具版本及所属服务均未删除、服务未归档且工具风险不是 Unknown 时返回 true，否则返回 false。</returns>
     Task<bool> ExistsAsync(Guid toolVersionId, CancellationToken cancellationToken = default);
+    #endregion
 
+    #region 查询已发布 MCP 工具列表。
     /// <summary>查询已发布 MCP 工具列表。</summary>
-    Task<IReadOnlyList<PublishedMcpToolReference>> ListAsync(
-        CancellationToken cancellationToken = default);
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>可供 Agent 绑定的已发布 MCP 工具版本引用集合。</returns>
+    Task<IReadOnlyList<PublishedMcpToolReference>> ListAsync(CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -362,6 +395,12 @@ public interface IPublishedMcpToolCatalog
 /// </summary>
 public static class McpContractCloner
 {
+    #region 复制（Clone）
+    /// <summary>
+    /// 复制（Clone）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <returns>复制启动参数、当前工具标识及工具版本记录后的 MCP 服务定义副本。</returns>
     public static McpServerDefinition Clone(McpServerDefinition definition) =>
         definition with
         {
@@ -369,13 +408,27 @@ public static class McpContractCloner
             CurrentToolVersionIds = ReadOnly(definition.CurrentToolVersionIds),
             ToolVersions = ReadOnly(definition.ToolVersions.Select(version => version with { }))
         };
+    #endregion
 
+    #region 读取（ReadOnly）
+    /// <summary>
+    /// 读取（ReadOnly）
+    /// </summary>
+    /// <param name="values">按原顺序枚举并复制为只读集合的源数据。</param>
+    /// <typeparam name="T">待处理数据的泛型类型。</typeparam>
+    /// <returns>按枚举顺序复制到新数组并包装为只读的集合；元素本身不作深复制。</returns>
     public static IReadOnlyList<T> ReadOnly<T>(IEnumerable<T> values) =>
         new ReadOnlyCollection<T>(values.ToArray());
+    #endregion
 
-    public static bool PreservesToolHistory(
-        McpServerDefinition existing,
-        McpServerDefinition replacement)
+    #region 检查 MCP 工具版本历史是否保留（PreservesToolHistory）
+    /// <summary>
+    /// 检查 MCP 工具版本历史是否保留（PreservesToolHistory）。
+    /// </summary>
+    /// <param name="existing">包含原有工具版本历史的 MCP 服务定义。</param>
+    /// <param name="replacement">待检查的替换服务定义。</param>
+    /// <returns>替换列表不少于原列表，且原列表每个位置的版本都与替换列表对应版本相等时返回 true，否则返回 false；允许在末尾追加版本。</returns>
+    public static bool PreservesToolHistory(McpServerDefinition existing, McpServerDefinition replacement)
     {
         if (replacement.ToolVersions.Count < existing.ToolVersions.Count)
         {
@@ -386,4 +439,5 @@ public static class McpContractCloner
             .Select((version, index) => version == replacement.ToolVersions[index])
             .All(value => value);
     }
+    #endregion
 }

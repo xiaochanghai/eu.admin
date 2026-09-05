@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace EU.Core.Services;
 
-#region 文件职责：JsonSchemaValidator 职责实现
+// 文件职责：JsonSchemaValidator 职责实现
 
 /// <summary>
 /// JSON Schema 规范化及有效性校验结果。
@@ -18,7 +18,14 @@ namespace EU.Core.Services;
 /// <param name="Error">校验失败原因；校验成功时为空。</param>
 public sealed record JsonSchemaValidationResult(bool IsValid, string? CanonicalJson, string? Sha256, string? Error)
 {
+    #region 创建 Schema 校验失败结果（Invalid）
+    /// <summary>
+    /// 创建 Schema 校验失败结果（Invalid）。
+    /// </summary>
+    /// <param name="error">需要写入校验结果的失败原因。</param>
+    /// <returns>返回 IsValid 为 false、规范化 JSON 和摘要为 null，并包含指定错误说明的结果。</returns>
     public static JsonSchemaValidationResult Invalid(string error) => new(false, null, null, error);
+    #endregion
 }
 
 /// <summary>
@@ -28,9 +35,22 @@ public sealed record JsonSchemaValidationResult(bool IsValid, string? CanonicalJ
 /// <param name="Error">校验失败原因；校验成功时为空。</param>
 public sealed record JsonInstanceValidationResult(bool Succeeded, string? Error)
 {
+    #region 创建 JSON 实例校验成功结果（Success）
+    /// <summary>
+    /// 创建 JSON 实例校验成功结果（Success）。
+    /// </summary>
+    /// <returns>返回 Succeeded 为 true、Error 为 null 的结果。</returns>
     public static JsonInstanceValidationResult Success() => new(true, null);
+    #endregion
 
+    #region 创建 JSON 实例校验失败结果（Invalid）
+    /// <summary>
+    /// 创建 JSON 实例校验失败结果（Invalid）。
+    /// </summary>
+    /// <param name="error">需要写入校验结果的失败原因。</param>
+    /// <returns>返回 Succeeded 为 false 且包含指定错误说明的结果。</returns>
     public static JsonInstanceValidationResult Invalid(string error) => new(false, error);
+    #endregion
 }
 
 /// <summary>
@@ -46,6 +66,12 @@ public sealed class JsonSchemaValidator
         "object", "array", "string", "number", "integer", "boolean", "null"
     };
 
+    #region 校验并规范化受支持的 JSON Schema（Validate）
+    /// <summary>
+    /// 校验并规范化受支持的 JSON Schema（Validate）。
+    /// </summary>
+    /// <param name="schema">待校验的 Schema JSON 文本，根节点须为对象并声明受支持的类型；空白视为无效。</param>
+    /// <returns>成功时返回 IsValid 为 true、规范化 JSON 及其小写 SHA-256 摘要；失败时返回错误说明，规范化 JSON 和摘要均为 null。</returns>
     public JsonSchemaValidationResult Validate(string? schema)
     {
         if (string.IsNullOrWhiteSpace(schema))
@@ -81,7 +107,15 @@ public sealed class JsonSchemaValidator
             return JsonSchemaValidationResult.Invalid("The schema is not valid JSON.");
         }
     }
+    #endregion
 
+    #region 校验 JSON 实例是否符合受支持的 Schema 规则（ValidateInstance）
+    /// <summary>
+    /// 校验 JSON 实例是否符合受支持的 Schema 规则（ValidateInstance）。
+    /// </summary>
+    /// <param name="schema">先进行结构校验和规范化的 Schema JSON。</param>
+    /// <param name="instance">待校验的非 null JSON 实例文本，本方法不是完整 JSON Schema 标准实现。</param>
+    /// <returns>通过时返回 Succeeded 为 true 且 Error 为 null；Schema 无效、实例 JSON 解析失败或受支持规则不满足时返回失败原因。</returns>
     public JsonInstanceValidationResult ValidateInstance(string schema, string instance)
     {
         JsonSchemaValidationResult schemaResult = Validate(schema);
@@ -110,7 +144,17 @@ public sealed class JsonSchemaValidator
                 "The structured Agent output is not valid JSON.");
         }
     }
+    #endregion
 
+    #region 按受支持的 Schema 规则校验 JSON 实例（ValidateInstanceCore）
+    /// <summary>
+    /// 按受支持的 Schema 规则校验 JSON 实例（ValidateInstanceCore）。
+    /// </summary>
+    /// <param name="schema">已通过结构检查的 Schema 对象，仅使用本实现支持的规则。</param>
+    /// <param name="value">当前待校验的 JSON 实例。</param>
+    /// <param name="depth">当前对象属性的递归校验深度。</param>
+    /// <param name="error">失败时输出首个校验错误；成功时为 null。</param>
+    /// <returns>实例满足本方法的深度、类型、必填属性及已定义对象属性检查时返回 true，否则返回 false；不执行完整 JSON Schema 标准校验。</returns>
     private static bool ValidateInstanceCore(JsonElement schema, JsonElement value, int depth, out string? error)
     {
         if (depth > MaximumSchemaDepth)
@@ -175,7 +219,18 @@ public sealed class JsonSchemaValidator
         error = null;
         return true;
     }
+    #endregion
 
+    #region 递归校验受支持的 Schema 对象结构（ValidateSchemaObject）
+    /// <summary>
+    /// 递归校验受支持的 Schema 对象结构（ValidateSchemaObject）。
+    /// </summary>
+    /// <param name="schema">待校验的 JSON 对象形式 Schema。</param>
+    /// <param name="requireType">是否要求当前 Schema 对象显式声明受支持的 type。</param>
+    /// <param name="depth">当前 Schema 对象的递归深度。</param>
+    /// <param name="nodeCount">累计检查的 Schema 对象节点数，通过引用更新；失败时不回退。</param>
+    /// <param name="error">失败时输出首个结构错误；成功时为 null。</param>
+    /// <returns>深度、节点数、类型、属性定义和 required 列表均符合本实现约束时返回 true，否则返回 false；不代表支持所有 JSON Schema 关键字。</returns>
     private static bool ValidateSchemaObject(JsonElement schema, bool requireType, int depth, ref int nodeCount, out string? error)
     {
         if (depth > MaximumSchemaDepth || ++nodeCount > MaximumSchemaNodes)
@@ -268,7 +323,14 @@ public sealed class JsonSchemaValidator
         error = null;
         return true;
     }
+    #endregion
 
+    #region 规范化 JSON（Canonicalize）
+    /// <summary>
+    /// 规范化 JSON（Canonicalize）
+    /// </summary>
+    /// <param name="element">需要按规范化规则写入的 JSON 元素。</param>
+    /// <returns>按规范化写入规则生成的紧凑 JSON 文本。</returns>
     private static string Canonicalize(JsonElement element)
     {
         var buffer = new ArrayBufferWriter<byte>();
@@ -277,7 +339,14 @@ public sealed class JsonSchemaValidator
         writer.Flush();
         return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
+    #endregion
 
+    #region 写入（WriteCanonical）
+    /// <summary>
+    /// 写入（WriteCanonical）
+    /// </summary>
+    /// <param name="element">需要按规范化规则写入的 JSON 元素。</param>
+    /// <param name="writer">用于输出 JSON 内容的写入器。</param>
     private static void WriteCanonical(JsonElement element, Utf8JsonWriter writer)
     {
         switch (element.ValueKind)
@@ -306,6 +375,5 @@ public sealed class JsonSchemaValidator
                 break;
         }
     }
+    #endregion
 }
-
-#endregion

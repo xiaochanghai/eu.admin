@@ -22,8 +22,14 @@ namespace EU.Core.Services;
 /// </summary>
 public class AgAgentVersionSnapshotServices : BaseServices<AgAgentVersionSnapshot, AgAgentVersionSnapshotDto, InsertAgAgentVersionSnapshotInput, EditAgAgentVersionSnapshotInput>, IAgAgentVersionSnapshotServices
 {
+    #region 构造（AgAgentVersionSnapshotServices）
+    /// <summary>
+    /// 构造（AgAgentVersionSnapshotServices）
+    /// </summary>
+    /// <param name="dal">当前服务使用的数据访问仓储。</param>
     public AgAgentVersionSnapshotServices(IBaseRepository<AgAgentVersionSnapshot> dal)
     {
         BaseDal = dal;
     }
+    #endregion
 }

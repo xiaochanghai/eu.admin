@@ -10,11 +10,16 @@ using System.Text;
 
 namespace EU.Core.Services;
 
-#region 文件职责：OrchestrationRuntimeService 职责实现
+// 文件职责：OrchestrationRuntimeService 职责实现
 
 /// <summary>
 /// 负责执行已发布的 Agent 编排。
 /// </summary>
+/// <param name="orchestrations">用于读取和持久化编排定义的仓储。</param>
+/// <param name="runs">用于读取和持久化编排运行记录的仓储。</param>
+/// <param name="agents">用于查询 Agent 定义及已发布版本的目录。</param>
+/// <param name="agentRuntime">用于准备和启动 Agent 运行的服务。</param>
+/// <param name="payloadLimits">编排执行载荷的大小限制；为 null 时使用默认限制。</param>
 public sealed class OrchestrationRuntimeService(
     IOrchestrationRepository orchestrations,
     IOrchestrationRunRepository runs,
@@ -34,6 +39,14 @@ public sealed class OrchestrationRuntimeService(
     private readonly ConcurrentDictionary<Guid, string> _outputs = [];
     private readonly ConcurrentQueue<Guid> _outputOrder = [];
 
+    #region 启动（StartAsync）
+    /// <summary>
+    /// 启动（StartAsync）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排运行记录，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationRunRecord>> StartAsync(Guid orchestrationId, string? input, CancellationToken cancellationToken = default)
     {
         string normalized = input?.Trim() ?? "";
@@ -57,7 +70,17 @@ public sealed class OrchestrationRuntimeService(
 
         return await StartSnapshotAsync(definition, snapshot, normalized, cancellationToken);
     }
+    #endregion
 
+    #region 启动（StartVersionAsync）
+    /// <summary>
+    /// 启动（StartVersionAsync）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="orchestrationVersionId">编排版本标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排运行记录，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationRunRecord>> StartVersionAsync(
         Guid orchestrationId,
         Guid orchestrationVersionId,
@@ -69,7 +92,18 @@ public sealed class OrchestrationRuntimeService(
             input,
             executionOptions: null,
             cancellationToken);
+    #endregion
 
+    #region 启动（StartVersionAsync）
+    /// <summary>
+    /// 启动（StartVersionAsync）
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="orchestrationVersionId">编排版本标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="executionOptions">当前运行使用的执行选项。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排运行记录，失败时包含错误状态和提示。</returns>
     public async Task<ServiceResult<OrchestrationRunRecord>> StartVersionAsync(
         Guid orchestrationId,
         Guid orchestrationVersionId,
@@ -105,7 +139,17 @@ public sealed class OrchestrationRuntimeService(
             executionOptions,
             cancellationToken);
     }
+    #endregion
 
+    #region 启动（StartSnapshotAsync）
+    /// <summary>
+    /// 启动（StartSnapshotAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="normalized">规范化后的值。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排运行记录，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<OrchestrationRunRecord>> StartSnapshotAsync(
         OrchestrationDefinition definition,
         OrchestrationVersionSnapshot snapshot,
@@ -117,7 +161,18 @@ public sealed class OrchestrationRuntimeService(
             normalized,
             executionOptions: null,
             cancellationToken);
+    #endregion
 
+    #region 启动（StartSnapshotAsync）
+    /// <summary>
+    /// 启动（StartSnapshotAsync）
+    /// </summary>
+    /// <param name="definition">定义记录。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="normalized">规范化后的值。</param>
+    /// <param name="executionOptions">当前运行使用的执行选项。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含编排运行记录，失败时包含错误状态和提示。</returns>
     private async Task<ServiceResult<OrchestrationRunRecord>> StartSnapshotAsync(
         OrchestrationDefinition definition,
         OrchestrationVersionSnapshot snapshot,
@@ -216,12 +271,32 @@ public sealed class OrchestrationRuntimeService(
         registered.TrySetResult(true);
         return Success(record);
     }
+    #endregion
 
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含对应业务错误状态和提示信息的失败服务结果。</returns>
     private static ServiceResult<OrchestrationRunRecord> Failure(string code, string message) =>
         ServiceResult<OrchestrationRunRecord>.Failure(
             OrchestrationServiceStatusCodes.FromErrorCode(code),
             message);
+    #endregion
 
+    #region 核对并同步（ReconcileInitializationFailureAsync）
+    /// <summary>
+    /// 核对并同步（ReconcileInitializationFailureAsync）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="detailsIfMissing">明细缺失时使用的默认数据。</param>
+    /// <param name="runStatus">运行状态。</param>
+    /// <param name="nodeStatus">编排节点状态。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <param name="originalException">最初导致失败的异常。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ReconcileInitializationFailureAsync(
         Guid runId,
         OrchestrationRunDetails detailsIfMissing,
@@ -273,13 +348,38 @@ public sealed class OrchestrationRuntimeService(
             }
         }
     }
+    #endregion
 
+    #region 读取运行并检查宿主中断（GetAsync）
+    /// <summary>
+    /// 读取运行并检查宿主中断（GetAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回经中断恢复检查后的运行记录；不存在时为 null；该查询可能将无活动执行的 Running 记录终结为失败。</returns>
     public async Task<OrchestrationRunRecord?> GetAsync(Guid runId, CancellationToken cancellationToken = default) =>
         await RecoverIfInterruptedAsync(await runs.GetAsync(runId, cancellationToken), cancellationToken);
+    #endregion
 
+    #region 读取编排运行详情（GetDetailsAsync）
+    /// <summary>
+    /// 读取编排运行详情（GetDetailsAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回未删除的运行详情及尝试、工具调用记录；详情不存在时为 null。</returns>
     public Task<OrchestrationRunDetails?> GetDetailsAsync(Guid runId, CancellationToken cancellationToken = default) =>
         runs.GetDetailsAsync(runId, cancellationToken);
+    #endregion
 
+    #region 列出编排运行并检查中断记录（ListAsync）
+    /// <summary>
+    /// 列出编排运行并检查中断记录（ListAsync）。
+    /// </summary>
+    /// <param name="orchestrationId">编排定义标识。</param>
+    /// <param name="take">期望返回的记录数，持久化实现将其限制在 1 至 100 之间。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回查询并逐项完成中断恢复检查的运行列表；检查可能写入失败终态，无匹配项时为空集合。</returns>
     public async Task<IReadOnlyList<OrchestrationRunRecord>> ListAsync(Guid orchestrationId, int take, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<OrchestrationRunRecord> values =
@@ -289,7 +389,15 @@ public sealed class OrchestrationRuntimeService(
             recovered.Add((await RecoverIfInterruptedAsync(value, cancellationToken))!);
         return OrchestrationContractCloner.ReadOnly(recovered);
     }
+    #endregion
 
+    #region 请求取消编排运行（CancelAsync）
+    /// <summary>
+    /// 请求取消编排运行（CancelAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>找到活动执行并发出取消请求，或持久化运行记录存在时返回 true；两者都不存在时返回 false；不保证运行已经结束。</returns>
     public async Task<bool> CancelAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         if (!_active.TryGetValue(runId, out ActiveExecution? active))
@@ -304,7 +412,15 @@ public sealed class OrchestrationRuntimeService(
         }
         return true;
     }
+    #endregion
 
+    #region 强制终结编排并移出活动执行集合（ForceCancelAsync）
+    /// <summary>
+    /// 强制终结编排并移出活动执行集合（ForceCancelAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消等待运行互斥锁的令牌；取得锁后的持久化操作不使用该令牌。</param>
+    /// <returns>返回尝试取消后的运行记录；已非 Running 的记录保留原状态，记录不存在时返回 null；活动执行会被移出并尝试取消，不等待其任务结束。</returns>
     public async Task<OrchestrationRunRecord?> ForceCancelAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         SemaphoreSlim gate = GetRunGate(runId);
@@ -356,17 +472,44 @@ public sealed class OrchestrationRuntimeService(
             }
         }
     }
+    #endregion
 
+    #region 等待活动执行并读取编排运行结果（WaitForTerminalAsync）
+    /// <summary>
+    /// 等待活动执行并读取编排运行结果（WaitForTerminalAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>存在活动执行时先等待其任务，再返回经中断恢复检查的运行记录；无记录时为 null，等待任务的异常继续向上传播。</returns>
     public async Task<OrchestrationRunRecord?> WaitForTerminalAsync(Guid runId, CancellationToken cancellationToken = default)
     {
         if (_active.TryGetValue(runId, out ActiveExecution? active))
             await active.Execution.WaitAsync(cancellationToken);
         return await GetAsync(runId, cancellationToken);
     }
+    #endregion
 
+    #region 获取（GetEphemeralOutput）
+    /// <summary>
+    /// 获取（GetEphemeralOutput）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <returns>当前进程暂存的运行输出；未找到时为 null。</returns>
     public string? GetEphemeralOutput(Guid runId) =>
         _outputs.TryGetValue(runId, out string? value) ? value : null;
+    #endregion
 
+    #region 执行（ExecuteAfterRegistrationAsync）
+    /// <summary>
+    /// 执行（ExecuteAfterRegistrationAsync）
+    /// </summary>
+    /// <param name="record">业务记录。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="initialInput">初始执行输入。</param>
+    /// <param name="executionOptions">当前运行使用的执行选项。</param>
+    /// <param name="source">源数据。</param>
+    /// <param name="registered">已登记的数据。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ExecuteAfterRegistrationAsync(
         OrchestrationRunRecord record,
         OrchestrationVersionSnapshot snapshot,
@@ -383,7 +526,18 @@ public sealed class OrchestrationRuntimeService(
             executionOptions,
             source);
     }
+    #endregion
 
+    #region 执行（ExecuteGuardedAsync）
+    /// <summary>
+    /// 执行（ExecuteGuardedAsync）
+    /// </summary>
+    /// <param name="record">业务记录。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="initialInput">初始执行输入。</param>
+    /// <param name="executionOptions">当前运行使用的执行选项。</param>
+    /// <param name="source">源数据。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ExecuteGuardedAsync(
         OrchestrationRunRecord record,
         OrchestrationVersionSnapshot snapshot,
@@ -424,7 +578,18 @@ public sealed class OrchestrationRuntimeService(
             _runGates.TryRemove(record.Id, out _);
         }
     }
+    #endregion
 
+    #region 执行（ExecuteAsync）
+    /// <summary>
+    /// 执行（ExecuteAsync）
+    /// </summary>
+    /// <param name="initial">初始数据。</param>
+    /// <param name="snapshot">版本快照。</param>
+    /// <param name="initialInput">初始执行输入。</param>
+    /// <param name="executionOptions">当前运行使用的执行选项。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ExecuteAsync(
         OrchestrationRunRecord initial,
         OrchestrationVersionSnapshot snapshot,
@@ -485,7 +650,19 @@ public sealed class OrchestrationRuntimeService(
         }
         await FinishAsync(initial.Id, OrchestrationRunStatus.Failed, "ORCHESTRATION_STEP_LIMIT");
     }
+    #endregion
 
+    #region 执行编排节点并记录重试过程（ExecuteNodeAsync）
+    /// <summary>
+    /// 执行编排节点并记录重试过程（ExecuteNodeAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="node">包含目标 Agent、超时时间和最大重试次数的编排节点。</param>
+    /// <param name="agentVersionId">Agent 版本标识。</param>
+    /// <param name="input">执行输入内容。</param>
+    /// <param name="executionOptions">可选的内部工具、MCP 守卫、执行身份和审批处理覆盖项。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>返回执行结果元组：succeeded 表示是否成功，成功时 output 为未脱敏输出且 errorCode 为空；重试耗尽时 output 为空、errorCode 为最后保存的错误码。</returns>
     private async Task<(bool succeeded, string output, string errorCode)> ExecuteNodeAsync(
         Guid runId,
         OrchestrationNode node,
@@ -759,7 +936,16 @@ public sealed class OrchestrationRuntimeService(
         }));
         return (false, "", lastError);
     }
+    #endregion
 
+    #region 更新运行中编排的匹配节点（UpdateNodeAsync）
+    /// <summary>
+    /// 更新运行中编排的匹配节点（UpdateNodeAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="nodeId">编排节点标识。</param>
+    /// <param name="update">应用到匹配节点的转换函数；未匹配的节点保持原样。</param>
+    /// <returns>运行未退出活动管理且更新后读取到的状态仍为 Running 时返回 true，否则返回 false；true 不保证存在指定节点。</returns>
     private async Task<bool> UpdateNodeAsync(Guid runId, string nodeId, Func<OrchestrationNodeRunRecord, OrchestrationNodeRunRecord> update)
     {
         SemaphoreSlim gate = GetRunGate(runId);
@@ -788,7 +974,16 @@ public sealed class OrchestrationRuntimeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 保存运行中编排的节点尝试记录（UpsertAttemptAsync）
+    /// <summary>
+    /// 保存运行中编排的节点尝试记录（UpsertAttemptAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="attempt">按节点标识和尝试序号替换或追加的尝试记录。</param>
+    /// <param name="cancellationToken">用于取消等待运行互斥锁的令牌；取得锁后的读写使用 CancellationToken.None。</param>
+    /// <returns>运行仍有效且详情成功保存时返回 true；运行已退出活动管理、不存在、不再运行或条件保存未生效时返回 false。</returns>
     private async Task<bool> UpsertAttemptAsync(Guid runId, OrchestrationNodeAttemptRecord attempt, CancellationToken cancellationToken)
     {
         SemaphoreSlim gate = GetRunGate(runId);
@@ -828,7 +1023,15 @@ public sealed class OrchestrationRuntimeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 保存运行中编排的输出详情（UpdateDetailsOutputAsync）
+    /// <summary>
+    /// 保存运行中编排的输出详情（UpdateDetailsOutputAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="output">执行输出内容。</param>
+    /// <returns>运行仍有效且输出详情保存成功时返回 true；运行已退出活动管理、不存在、不再运行或条件保存未生效时返回 false。</returns>
     private async Task<bool> UpdateDetailsOutputAsync(Guid runId, string output)
     {
         SemaphoreSlim gate = GetRunGate(runId);
@@ -856,7 +1059,16 @@ public sealed class OrchestrationRuntimeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 尝试终结仍在运行的编排（FinishAsync）
+    /// <summary>
+    /// 尝试终结仍在运行的编排（FinishAsync）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="status">拟保存的编排结束状态，同时决定节点终态及待执行节点的处理策略。</param>
+    /// <param name="errorCode">失败对应的错误码。</param>
+    /// <returns>底层仓储实际完成状态转换时返回 true；运行已退出活动管理、不存在、不再运行或未取得转换权时返回 false。</returns>
     private async Task<bool> FinishAsync(Guid runId, OrchestrationRunStatus status, string errorCode)
     {
         SemaphoreSlim gate = GetRunGate(runId);
@@ -900,7 +1112,15 @@ public sealed class OrchestrationRuntimeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 检查并终结宿主中断的编排运行（RecoverIfInterruptedAsync）
+    /// <summary>
+    /// 检查并终结宿主中断的编排运行（RecoverIfInterruptedAsync）。
+    /// </summary>
+    /// <param name="value">待检查的运行记录，可能为空。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>输入为空或已非 Running 时原样返回；对仍运行但本服务无活动执行的记录尝试持久化失败终态，并返回仓储记录，记录已消失时为 null。</returns>
     private async Task<OrchestrationRunRecord?> RecoverIfInterruptedAsync(OrchestrationRunRecord? value, CancellationToken cancellationToken)
     {
         if (value is null || value.Status != OrchestrationRunStatus.Running)
@@ -939,7 +1159,16 @@ public sealed class OrchestrationRuntimeService(
             gate.Release();
         }
     }
+    #endregion
 
+    #region 构建（BuildInput）
+    /// <summary>
+    /// 构建（BuildInput）
+    /// </summary>
+    /// <param name="node">编排节点。</param>
+    /// <param name="initial">初始数据。</param>
+    /// <param name="previous">先前状态。</param>
+    /// <returns>根据节点输入模式选择初始输入、前序输出或替换模板占位符后的文本；未知模式使用初始输入。</returns>
     private static string BuildInput(OrchestrationNode node, string initial, string previous) =>
         node.InputMode switch
         {
@@ -950,7 +1179,16 @@ public sealed class OrchestrationRuntimeService(
                 .Replace("{{previous}}", previous, StringComparison.Ordinal),
             _ => initial
         };
+    #endregion
 
+    #region 按执行结果判断编排连线是否命中（Matches）
+    /// <summary>
+    /// 按执行结果判断编排连线是否命中（Matches）。
+    /// </summary>
+    /// <param name="edge">包含条件类型及可选条件值的编排连线。</param>
+    /// <param name="succeeded">上游节点本次执行是否成功。</param>
+    /// <param name="output">上游节点输出，供 OutputContains 条件匹配；空条件值匹配任意非 null 输出。</param>
+    /// <returns>Always 始终返回 true，Succeeded 或 Failed 按执行结果判断，OutputContains 忽略大小写匹配输出；未知条件返回 false。</returns>
     private static bool Matches(OrchestrationEdge edge, bool succeeded, string output) =>
         edge.Condition switch
         {
@@ -961,13 +1199,35 @@ public sealed class OrchestrationRuntimeService(
                 output.Contains(edge.ConditionValue ?? "", StringComparison.OrdinalIgnoreCase),
             _ => false
         };
+    #endregion
 
+    #region 检查是否存在（Hash）
+    /// <summary>
+    /// 检查是否存在（Hash）
+    /// </summary>
+    /// <param name="value">用于计算 SHA-256 摘要的原始文本。</param>
+    /// <returns>输入文本 UTF-8 字节的 SHA-256 小写十六进制摘要。</returns>
     private static string Hash(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+    #endregion
 
+    #region 脱敏（RedactContent）
+    /// <summary>
+    /// 脱敏（RedactContent）
+    /// </summary>
+    /// <param name="value">需要按执行载荷规则脱敏的文本。</param>
+    /// <returns>按执行载荷脱敏规则处理后的文本。</returns>
     private static string RedactContent(string value) =>
         ExecutionPayloadRedactor.RedactJson(value);
+    #endregion
 
+    #region 检查前置条件（EnsureWithinLimit）
+    /// <summary>
+    /// 检查前置条件（EnsureWithinLimit）
+    /// </summary>
+    /// <param name="value">需要校验 UTF-8 字节长度的载荷文本。</param>
+    /// <param name="maximum">允许的最大值。</param>
+    /// <param name="payloadName">载荷名称，用于识别和错误提示。</param>
     private static void EnsureWithinLimit(string value, int maximum, string payloadName)
     {
         if (value.Length <= maximum) return;
@@ -975,7 +1235,14 @@ public sealed class OrchestrationRuntimeService(
             OrchestrationErrorCodes.PayloadLimitExceeded,
             $"The {payloadName} exceeds the configured {maximum}-character limit.");
     }
+    #endregion
 
+    #region 处理（CacheOutput）
+    /// <summary>
+    /// 处理（CacheOutput）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="value">当前运行需要暂存的输出文本。</param>
     private void CacheOutput(Guid runId, string value)
     {
         _outputs[runId] = value.Length <= 65_536 ? value : value[..65_536];
@@ -983,7 +1250,14 @@ public sealed class OrchestrationRuntimeService(
         while (_outputOrder.Count > 100 && _outputOrder.TryDequeue(out Guid expired))
             _outputs.TryRemove(expired, out _);
     }
+    #endregion
 
+    #region 检查前置条件（EnsureOwnership）
+    /// <summary>
+    /// 检查前置条件（EnsureOwnership）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="mutationAccepted">是否已接受状态修改。</param>
     private void EnsureOwnership(Guid runId, bool mutationAccepted)
     {
         if (mutationAccepted)
@@ -1006,10 +1280,23 @@ public sealed class OrchestrationRuntimeService(
         }
         throw new OrchestrationOwnershipLostException(runId);
     }
+    #endregion
 
+    #region 获取或创建单个编排运行的互斥锁（GetRunGate）
+    /// <summary>
+    /// 获取或创建单个编排运行的互斥锁（GetRunGate）。
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <returns>返回按运行标识缓存的单通道信号量；缓存中不存在时新建，不在本方法中等待或取得锁。</returns>
     private SemaphoreSlim GetRunGate(Guid runId) =>
         _runGates.GetOrAdd(runId, static _ => new SemaphoreSlim(1, 1));
+    #endregion
 
+    #region 取消（CancelRetiredExecutionBestEffort）
+    /// <summary>
+    /// 取消（CancelRetiredExecutionBestEffort）
+    /// </summary>
+    /// <param name="retiredExecution">已退出的执行对象。</param>
     private static void CancelRetiredExecutionBestEffort(ActiveExecution retiredExecution)
     {
         try
@@ -1025,10 +1312,25 @@ public sealed class OrchestrationRuntimeService(
             // Cancellation callbacks cannot invalidate the durable terminal state.
         }
     }
+    #endregion
 
+    #region 处理（ObserveRetiredExecution）
+    /// <summary>
+    /// 处理（ObserveRetiredExecution）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="execution">当前执行对象。</param>
     private void ObserveRetiredExecution(Guid runId, Task execution) =>
         _ = ObserveRetiredExecutionAsync(runId, execution);
+    #endregion
 
+    #region 处理（ObserveRetiredExecutionAsync）
+    /// <summary>
+    /// 处理（ObserveRetiredExecutionAsync）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="execution">当前执行对象。</param>
+    /// <returns>表示该异步操作完成的任务。</returns>
     private async Task ObserveRetiredExecutionAsync(Guid runId, Task execution)
     {
         try
@@ -1045,13 +1347,16 @@ public sealed class OrchestrationRuntimeService(
             _runGates.TryRemove(runId, out _);
         }
     }
+    #endregion
 
     private sealed record ActiveExecution(
         CancellationTokenSource Cancellation,
         Task Execution);
 
+    /// <summary>
+    /// 表示编排运行已失去执行所有权。
+    /// </summary>
+    /// <param name="runId">关联的运行记录标识。</param>
     private sealed class OrchestrationOwnershipLostException(Guid runId) :
         Exception($"Orchestration run '{runId}' is no longer owned by this runtime.");
 }
-
-#endregion

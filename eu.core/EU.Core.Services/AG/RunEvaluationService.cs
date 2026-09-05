@@ -7,17 +7,29 @@ using EU.Core.IServices.UnifiedEntry;
 
 namespace EU.Core.Services;
 
-#region 文件职责：RunEvaluationService 职责实现
+// 文件职责：RunEvaluationService 职责实现
 
 /// <summary>
 /// 根据确定性规则评测统一入口运行结果。
 /// </summary>
+/// <param name="repository">用于读取和持久化统一入口会话、运行及事件的仓储。</param>
+/// <param name="timeProvider">用于获取当前时间的时间提供器；为 null 时使用系统时间提供器。</param>
 public sealed class RunEvaluationService(
     IUnifiedEntryRepository repository,
     TimeProvider? timeProvider = null) : IRunEvaluationService
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
+    #region 处理（EvaluateAsync）
+    /// <summary>
+    /// 处理（EvaluateAsync）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="specification">评估规范。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>所属身份匹配的运行规则评测报告；运行不存在或不属于指定租户和用户时为 null。</returns>
     public async Task<RunEvaluationReport?> EvaluateAsync(
         Guid runId,
         string tenantId,
@@ -116,7 +128,16 @@ public sealed class RunEvaluationService(
             Encoding.UTF8.GetByteCount(run.Output),
             new ReadOnlyCollection<RunEvaluationCheck>(checks));
     }
+    #endregion
 
+    #region 校验（Validate）
+    /// <summary>
+    /// 校验（Validate）
+    /// </summary>
+    /// <param name="runId">运行记录标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="userId">用户标识。</param>
+    /// <param name="specification">评估规范。</param>
     private static void Validate(Guid runId, string tenantId, string userId, RunEvaluationSpecification specification)
     {
         ArgumentNullException.ThrowIfNull(specification);
@@ -127,13 +148,28 @@ public sealed class RunEvaluationService(
 
         RunEvaluationSpecificationValidator.Validate(specification);
     }
+    #endregion
 
+    #region 处理（Invalid）
+    /// <summary>
+    /// 处理（Invalid）
+    /// </summary>
+    /// <returns>错误码为 SpecificationInvalid 的运行评测异常。</returns>
     private static RunEvaluationException Invalid() => new(
         RunEvaluationErrorCodes.SpecificationInvalid,
         "The run evaluation specification is invalid.");
+    #endregion
 
+    #region 添加（Add）
+    /// <summary>
+    /// 添加（Add）
+    /// </summary>
+    /// <param name="checks">评估检查项集合。</param>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="passed">校验或评估是否通过。</param>
+    /// <param name="expected">期望匹配的值。</param>
+    /// <param name="actual">实际取得的值。</param>
     private static void Add(ICollection<RunEvaluationCheck> checks, string code, bool passed, string expected, string actual) =>
         checks.Add(new RunEvaluationCheck(code, passed, expected, actual));
+    #endregion
 }
-
-#endregion

@@ -130,13 +130,21 @@ public sealed record EvaluationBatchComparisonReport(
 /// </summary>
 public interface IEvaluationBatchComparisonService
 {
+    #region 比较基线与候选评测批次并执行质量门禁。
     /// <summary>比较基线与候选评测批次并执行质量门禁。</summary>
+    /// <param name="baselineBatchId">基线评估批次标识。</param>
+    /// <param name="candidateBatchId">待比较的评估批次标识。</param>
+    /// <param name="tenantId">所属租户标识。</param>
+    /// <param name="specification">评估规范。</param>
+    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
+    /// <returns>服务结果，成功时包含评测批次对比报告，失败时包含错误状态和提示。</returns>
     Task<ServiceResult<EvaluationBatchComparisonReport>> CompareAsync(
         Guid baselineBatchId,
         Guid candidateBatchId,
         string tenantId,
         EvaluationQualityGateSpecification specification,
         CancellationToken cancellationToken = default);
+    #endregion
 }
 
 /// <summary>
@@ -153,6 +161,12 @@ public static class EvaluationComparisonServiceStatusCodes
     /// <summary>表示 <c>SpecificationInvalid</c> 场景映射的服务状态码。</summary>
     public const int SpecificationInvalid = 670021;
 
+    #region 转换（FromErrorCode）
+    /// <summary>
+    /// 转换（FromErrorCode）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <returns>评测比较错误码对应的服务状态值；未知错误码使用 500。</returns>
     public static int FromErrorCode(string code) => code switch
     {
         EvaluationComparisonErrorCodes.BatchNotFound => BatchNotFound,
@@ -161,7 +175,14 @@ public static class EvaluationComparisonServiceStatusCodes
         EvaluationComparisonErrorCodes.SpecificationInvalid => SpecificationInvalid,
         _ => 500
     };
+    #endregion
 
+    #region 转换（ToErrorCode）
+    /// <summary>
+    /// 转换（ToErrorCode）
+    /// </summary>
+    /// <param name="status">当前操作使用的状态值。</param>
+    /// <returns>服务状态值对应的评测比较错误码；未知状态使用 INTERNAL_ERROR。</returns>
     public static string ToErrorCode(int status) => status switch
     {
         BatchNotFound => EvaluationComparisonErrorCodes.BatchNotFound,
@@ -170,4 +191,5 @@ public static class EvaluationComparisonServiceStatusCodes
         SpecificationInvalid => EvaluationComparisonErrorCodes.SpecificationInvalid,
         _ => "INTERNAL_ERROR"
     };
+    #endregion
 }

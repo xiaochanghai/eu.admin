@@ -32,13 +32,26 @@ public sealed record UnifiedEntryPreparationResult(
     /// </summary>
     public bool Succeeded => Error is null;
 
+    #region 处理（Success）
+    /// <summary>
+    /// 处理（Success）
+    /// </summary>
+    /// <param name="context">统一入口执行上下文，包含执行范围和主 Agent 运行信息。</param>
+    /// <returns>包含执行上下文且无错误信息的统一入口准备成功结果。</returns>
     public static UnifiedEntryPreparationResult Success(UnifiedEntryContext context) =>
         new(context, null);
+    #endregion
 
-    public static UnifiedEntryPreparationResult Failure(
-        string code,
-        string message) =>
+    #region 处理（Failure）
+    /// <summary>
+    /// 处理（Failure）
+    /// </summary>
+    /// <param name="code">对象编码或业务错误码。</param>
+    /// <param name="message">消息或提示文本。</param>
+    /// <returns>包含指定错误码和消息、不含执行上下文的统一入口准备失败结果。</returns>
+    public static UnifiedEntryPreparationResult Failure(string code, string message) =>
         new(null, new UnifiedEntryError(code, message));
+    #endregion
 }
 
 /// <summary>
@@ -75,15 +88,20 @@ public sealed record UnifiedRunEvent(
 /// </summary>
 public sealed class UnifiedEntryContext
 {
-    internal UnifiedEntryContext(
-        AgentRunContext mainAgentContext,
-        ActiveUnifiedEntryExecution execution)
+    #region 构造（UnifiedEntryContext）
+    /// <summary>
+    /// 构造（UnifiedEntryContext）
+    /// </summary>
+    /// <param name="mainAgentContext">主 Agent 的执行上下文。</param>
+    /// <param name="execution">当前执行对象。</param>
+    internal UnifiedEntryContext(AgentRunContext mainAgentContext, ActiveUnifiedEntryExecution execution)
     {
         MainAgentContext = mainAgentContext
             ?? throw new ArgumentNullException(nameof(mainAgentContext));
         Execution = execution
             ?? throw new ArgumentNullException(nameof(execution));
     }
+    #endregion
 
     internal ActiveUnifiedEntryExecution Execution { get; }
 
@@ -116,6 +134,15 @@ internal enum UnifiedEntryLifecycleState
     Retired
 }
 
+/// <summary>
+/// 跟踪统一入口运行的执行资源及生命周期状态。
+/// </summary>
+/// <param name="runId">关联的运行记录标识。</param>
+/// <param name="conversationId">关联的会话标识。</param>
+/// <param name="cancellation">控制本次统一入口执行取消的令牌源。</param>
+/// <param name="scope">承载本次统一入口执行身份和资源的作用域。</param>
+/// <param name="mainLease">主 Agent 执行所持有的租约。</param>
+/// <param name="mainContext">主 Agent 的运行上下文。</param>
 internal sealed class ActiveUnifiedEntryExecution(
     Guid runId,
     Guid conversationId,
@@ -180,8 +207,14 @@ internal sealed class ActiveUnifiedEntryExecution(
     /// </summary>
     public string TerminalErrorCode { get; set; } = string.Empty;
 
+    #region 原子地认领事件流启动权（TryStartStream）
+    /// <summary>
+    /// 原子地认领事件流启动权（TryStartStream）。
+    /// </summary>
+    /// <returns>本次首次将事件流标记为已启动时返回 true；已经标记为启动时返回 false。</returns>
     public bool TryStartStream() =>
         Interlocked.CompareExchange(ref _streamStarted, 1, 0) == 0;
+    #endregion
 
     /// <summary>
     /// 获取或设置主终结流程是否完成。
@@ -195,27 +228,62 @@ internal sealed class ActiveUnifiedEntryExecution(
     public UnifiedEntryLifecycleState LifecycleState =>
         (UnifiedEntryLifecycleState)Volatile.Read(ref _lifecycleState);
 
+    #region 原子地认领运行执行权（TryClaimRuntimeOwnership）
+    /// <summary>
+    /// 原子地认领运行执行权（TryClaimRuntimeOwnership）。
+    /// </summary>
+    /// <returns>成功将 Prepared 状态转换为 RuntimeOwned 时返回 true；当前状态不是 Prepared 时返回 false。</returns>
     public bool TryClaimRuntimeOwnership() =>
         Interlocked.CompareExchange(
             ref _lifecycleState,
             (int)UnifiedEntryLifecycleState.RuntimeOwned,
             (int)UnifiedEntryLifecycleState.Prepared)
         == (int)UnifiedEntryLifecycleState.Prepared;
+    #endregion
 
+    #region 认领尚未启动运行的收尾权（TryClaimPreparedFinalization）
+    /// <summary>
+    /// 认领尚未启动运行的收尾权（TryClaimPreparedFinalization）。
+    /// </summary>
+    /// <returns>成功将 Prepared 状态转换为 Finalizing 时返回 true；状态不匹配时返回 false。</returns>
     public bool TryClaimPreparedFinalization() =>
         TryTransitionToFinalizing(UnifiedEntryLifecycleState.Prepared);
+    #endregion
 
+    #region 认领运行中的收尾权（TryClaimRuntimeFinalization）
+    /// <summary>
+    /// 认领运行中的收尾权（TryClaimRuntimeFinalization）。
+    /// </summary>
+    /// <returns>成功将 RuntimeOwned 状态转换为 Finalizing 时返回 true；状态不匹配时返回 false。</returns>
     public bool TryClaimRuntimeFinalization() =>
         TryTransitionToFinalizing(UnifiedEntryLifecycleState.RuntimeOwned);
+    #endregion
 
+    #region 处理（MarkRetired）
+    /// <summary>
+    /// 处理（MarkRetired）
+    /// </summary>
     public void MarkRetired() =>
         Interlocked.Exchange(
             ref _lifecycleState,
             (int)UnifiedEntryLifecycleState.Retired);
+    #endregion
 
+    #region 原子地认领恢复调度权（TryScheduleRecovery）
+    /// <summary>
+    /// 原子地认领恢复调度权（TryScheduleRecovery）。
+    /// </summary>
+    /// <returns>本次首次将恢复标记设为已调度时返回 true；已被认领时返回 false；本方法不实际执行恢复任务。</returns>
     public bool TryScheduleRecovery() =>
         Interlocked.CompareExchange(ref _recoveryScheduled, 1, 0) == 0;
+    #endregion
 
+    #region 按预期生命周期状态认领收尾权（TryTransitionToFinalizing）
+    /// <summary>
+    /// 按预期生命周期状态认领收尾权（TryTransitionToFinalizing）。
+    /// </summary>
+    /// <param name="expected">认领收尾权所要求的当前生命周期状态。</param>
+    /// <returns>当前生命周期状态等于 expected 且成功转换为 Finalizing 时返回 true，否则返回 false。</returns>
     private bool TryTransitionToFinalizing(UnifiedEntryLifecycleState expected)
     {
         bool claimed = Interlocked.CompareExchange(
@@ -224,4 +292,5 @@ internal sealed class ActiveUnifiedEntryExecution(
             (int)expected) == (int)expected;
         return claimed;
     }
+    #endregion
 }
