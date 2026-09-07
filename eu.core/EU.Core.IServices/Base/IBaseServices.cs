@@ -345,6 +345,15 @@ public interface IBaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> where 
     Task<bool> Update(TEntity entity, string where);
 
     /// <summary>
+    /// 按完整条件更新明确指定的字段，不自动追加主键条件或其他审计字段。
+    /// </summary>
+    /// <param name="entity">提供更新字段值的实体。</param>
+    /// <param name="columns">要更新的字段表达式。</param>
+    /// <param name="predicate">完整更新条件；按主键更新时须显式包含主键限制。</param>
+    /// <returns>至少一条记录受影响时返回 true，否则返回 false。</returns>
+    Task<bool> UpdateAsync(TEntity entity, Expression<Func<TEntity, object>> columns, Expression<Func<TEntity, bool>> predicate);
+
+    /// <summary>
     /// 使用匿名对象更新
     /// </summary>
     /// <param name="operateAnonymousObjects">匿名对象</param>

@@ -80,6 +80,15 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
         return await BaseDal.Update(entity);
     }
 
+    /// <summary>
+    /// 按完整条件更新明确指定的字段，不自动追加主键条件或其他审计字段。
+    /// </summary>
+    /// <param name="entity">提供更新字段值的实体。</param>
+    /// <param name="columns">要更新的字段表达式。</param>
+    /// <param name="predicate">完整更新条件；按主键更新时须显式包含主键限制。</param>
+    /// <returns>至少一条记录受影响时返回 true，否则返回 false。</returns>
+    public async Task<bool> UpdateAsync(TEntity entity, Expression<Func<TEntity, object>> columns, Expression<Func<TEntity, bool>> predicate) => await BaseDal.UpdateAsync(entity, columns, predicate);
+
     public async Task<bool> Update(TEntity entity, string where)
     {
         return await BaseDal.Update(entity, where);
@@ -351,7 +360,7 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
 
 
     /// <summary>
-    /// 根据条件查询单条数据
+    /// 根据条件查询首条数据，不加载完整结果列表；未指定排序时不保证匹配记录的顺序。
     /// </summary>
     /// <param name="whereExpression">Lambda条件表达式</param>
     /// <returns>实体对象，不存在返回null</returns>
@@ -360,8 +369,7 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
     /// </example>
     public async Task<TEntity> QuerySingle(Expression<Func<TEntity, bool>> whereExpression)
     {
-        var list = await BaseDal.Query(whereExpression);
-        return list.Any() ? list.FirstOrDefault() : default;
+        return await BaseDal.QuerySingle(whereExpression ?? (_ => true));
     }
 
     #endregion

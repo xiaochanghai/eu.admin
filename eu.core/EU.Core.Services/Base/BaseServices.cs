@@ -159,10 +159,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         var list = Mapper.Map(listEntity).ToANew<List<TEntity>>();
 
         // 对每个实体执行新增前验证
-        list.ForEach(async entity =>
+        foreach (var entity in list)
         {
             await CheckForm(entity, OperateType.Add);
-        });
+        }
 
         return await BaseDal.Add(list);
     }
@@ -179,10 +179,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     public virtual async Task<List<Guid>> Add(List<TEntity> list)
     {
         // 对每个实体执行新增前验证
-        list.ForEach(async entity =>
+        foreach (var entity in list)
         {
             await CheckForm(entity, OperateType.Add);
-        });
+        }
 
         return await BaseDal.Add(list);
     }
@@ -361,9 +361,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </remarks>
     public virtual async Task<TEntityDto> UpdateReturn(Guid Id, object entity)
     {
-        var model = ConvertToEntity(entity);
-        await Update(Id, entity);
-        return Mapper.Map(model).ToANew<TEntityDto>();
+        if (!await Update(Id, entity))
+            return default;
+
+        return await QueryDto(Id);
     }
 
     /// <summary>
@@ -384,11 +385,13 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
         foreach (var keyValuePairs in editModels)
         {
             // 验证数据有效性和存在性
-            if (keyValuePairs.Value == null || !BaseDal.Any(keyValuePairs.Key))
+            if (keyValuePairs.Value == null)
                 continue;
 
             // 查询原有实体
             var entity = await Query(keyValuePairs.Key);
+            if (entity == null)
+                continue;
 
             // 将DTO属性值复制到实体
             ConvertTEditDto2TEntity(keyValuePairs.Value, entity);
@@ -410,14 +413,20 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     public async Task<bool> Update(List<TEntity> listEntity) => await BaseDal.Update(listEntity);
 
     /// <summary>
-    /// 根据WHERE条件更新实体
+    /// 按完整条件更新明确指定的字段，不自动追加主键条件或其他审计字段。
     /// </summary>
-    /// <param name="entity">实体对象（包含要更新的值）</param>
-    /// <param name="where">WHERE条件字符串</param>
-    /// <returns>更新成功返回true</returns>
-    /// <example>
-    /// await Update(entity, "Status='Active' AND CreateTime > '2024-01-01'");
-    /// </example>
+    /// <param name="entity">提供更新字段值的实体。</param>
+    /// <param name="columns">要更新的字段表达式。</param>
+    /// <param name="predicate">完整更新条件；按主键更新时须显式包含主键限制。</param>
+    /// <returns>至少一条记录受影响时返回 true，否则返回 false。</returns>
+    public async Task<bool> UpdateAsync(TEntity entity, Expression<Func<TEntity, object>> columns, Expression<Func<TEntity, bool>> predicate) => await BaseDal.UpdateAsync(entity, columns, predicate);
+
+    /// <summary>
+    /// 根据WHERE条件更新实体。
+    /// </summary>
+    /// <param name="entity">实体对象（包含要更新的值）。</param>
+    /// <param name="where">WHERE条件字符串。</param>
+    /// <returns>更新成功返回 true。</returns>
     public async Task<bool> Update(TEntity entity, string where) => await BaseDal.Update(entity, where);
 
     /// <summary>
@@ -622,7 +631,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     public async Task<TEntity> Query(object objId, bool blnUseCache = false) => await BaseDal.QueryById(objId, blnUseCache);
 
     /// <summary>
-    /// 根据条件查询单条数据
+    /// 根据条件查询首条数据，不加载完整结果列表；未指定排序时不保证匹配记录的顺序。
     /// </summary>
     /// <param name="whereExpression">Lambda条件表达式</param>
     /// <returns>实体对象，不存在返回null</returns>
@@ -631,8 +640,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// </example>
     public async Task<TEntity> QuerySingle(Expression<Func<TEntity, bool>> whereExpression)
     {
-        var list = await BaseDal.Query(whereExpression);
-        return list.Any() ? list.FirstOrDefault() : default;
+        return await BaseDal.QuerySingle(whereExpression ?? (_ => true));
     }
 
     /// <summary>
@@ -1035,7 +1043,10 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
             return false;
 
         // 3. 批量更新（只需1次数据库访问）
-        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"], null, where);
+        var stateCondition = "AuditStatus = 'Add'";
+        if (!string.IsNullOrWhiteSpace(where))
+            stateCondition += " AND (" + where + ")";
+        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"], null, stateCondition);
     }
 
     #endregion
@@ -1091,7 +1102,7 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
             return false;
 
         // 3. 批量更新（只需1次数据库访问）
-        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"]);
+        return await BaseDal.Update(entitiesToUpdate, ["AuditStatus"], null, "AuditStatus = 'CompleteAudit'");
     }
 
     #endregion
@@ -1298,52 +1309,39 @@ public class BaseServices<TEntity, TEntityDto, TInsertDto, TEditDto> : IBaseServ
     /// <param name="whereCondition">Where后的条件，如：IS_ALCON='Y'</param>
     public static bool CheckCodeExist(string tableName, string fieldName, object fieldValue, ModifyType modifyType, Guid? rowid, string promptName, string whereCondition)
     {
-        try
+        // 标识符不能作为 SQL 参数，限制为可信元数据使用的普通名称（表名允许 schema 前缀）。
+        const string identifierPattern = @"^[\p{L}_][\p{L}\p{N}_]*$";
+        if (string.IsNullOrWhiteSpace(tableName)
+            || tableName.Split('.').Any(part => !System.Text.RegularExpressions.Regex.IsMatch(part, identifierPattern))
+            || string.IsNullOrWhiteSpace(fieldName)
+            || !System.Text.RegularExpressions.Regex.IsMatch(fieldName, identifierPattern))
+            throw new ArgumentException("唯一性校验的表名或字段名无效。");
+
+        if (modifyType != ModifyType.Add && modifyType != ModifyType.Edit)
+            return false;
+
+        if (modifyType == ModifyType.Edit && !rowid.HasValue)
+            throw new ArgumentException("编辑唯一性校验必须提供记录 ID。", nameof(rowid));
+
+        string sql = $"SELECT COUNT(*) FROM {tableName} WHERE {fieldName}=@FieldValue AND IsDeleted=@IsDeleted";
+        if (modifyType != ModifyType.Add)
+            sql += " AND ID<>@RowId";
+
+        // 兼容既有内部调用；此片段仅允许来自服务端可信代码，不能传入请求内容。
+        if (!string.IsNullOrWhiteSpace(whereCondition))
+            sql += " AND (" + whereCondition + ")";
+
+        int count = Convert.ToInt32(DBHelper.ExecuteScalar(sql, new
         {
-            bool result = false;
-            if (modifyType == ModifyType.Add)
-            {
-                string sql = string.Empty;
-                sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + fieldName + "='" + fieldValue + "' AND IsDeleted='false'";
+            FieldValue = fieldValue ?? "",
+            IsDeleted = false,
+            RowId = rowid
+        }));
+        if (count > 0)
+            throw new Exception(string.Format("{0}【{1}】已经存在！", promptName, fieldValue));
 
-                if (!string.IsNullOrEmpty(whereCondition))
-                    sql += " AND " + whereCondition;
-
-                int count = Convert.ToInt32(DBHelper.ExecuteScalar(sql));
-                if (count > 0)
-                {
-                    result = true;
-                    throw new Exception(string.Format("{0}【{1}】已经存在！", promptName, fieldValue));
-                }
-                else
-                    result = false;
-
-            }
-            else if (modifyType == ModifyType.Edit)
-            {
-                string sql = string.Empty;
-                sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + fieldName + "='" + fieldValue + "' AND IsDeleted='false' AND ID!='" + rowid.Value + "'";
-
-                if (!string.IsNullOrEmpty(whereCondition))
-                    sql += " AND " + whereCondition;
-
-                int count = Convert.ToInt32(DBHelper.ExecuteScalar(sql));
-                if (count > 0)
-                {
-                    result = true;
-                    throw new Exception(string.Format("{0}【{1}】已经存在！", promptName, fieldValue));
-                }
-                else
-                    result = false;
-            }
-            return result;
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        return false;
     }
-
 
     public ServiceResult<T> Success<T>(string message = ResponseText.QUERY_SUCCESS)
     {

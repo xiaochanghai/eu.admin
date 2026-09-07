@@ -129,14 +129,13 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         }
 
         var insert = _db.Insertable(entity);
-        string sql = insert.ToSqlString();
+        await insert.ExecuteCommandAsync();
 
         if (entity is RootEntityTkey<Guid> rootEntity)
         {
             resultId = rootEntity.ID;
         }
 
-        await _db.Ado.ExecuteCommandAsync(sql);
         return resultId;
     }
 
@@ -222,22 +221,65 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     /// <returns></returns>
     public async Task<bool> Update(List<TEntity> entities, List<string> lstColumns = null, List<string> lstIgnoreColumns = null, string where = null)
     {
-        var up = _db.Updateable(entities);
-        if (lstIgnoreColumns != null && lstIgnoreColumns.Count > 0)
-            up = up.IgnoreColumns(lstIgnoreColumns.ToArray());
+        if (entities == null || entities.Count == 0)
+            return false;
 
-        if (lstColumns != null && lstColumns.Count > 0)
+        // 部分数据库不支持集合更新附加 Where；条件更新逐条生成，保留每条记录的主键条件。
+        var updates = string.IsNullOrWhiteSpace(where)
+            ? new[] { _db.Updateable(entities) }
+            : entities.Select(entity => _db.Updateable(entity).Where(BuildPrimaryKeyPredicate(entity))).ToArray();
+        bool changed = false;
+        foreach (var update in updates)
         {
-            lstColumns.Add("UpdateBy");
-            lstColumns.Add("UpdateTime");
-            lstColumns.Add("ModificationNum");
-            up = up.UpdateColumns(lstColumns.ToArray());
+            var up = update;
+            if (lstIgnoreColumns?.Count > 0)
+                up = up.IgnoreColumns(lstIgnoreColumns.ToArray());
+
+            if (lstColumns?.Count > 0)
+            {
+                var columns = lstColumns.Concat(new[] { "UpdateBy", "UpdateTime", "ModificationNum" }).Distinct().ToArray();
+                up = up.UpdateColumns(columns);
+            }
+
+            if (!string.IsNullOrWhiteSpace(where))
+                up = up.Where(where);
+
+            changed |= await up.ExecuteCommandHasChangeAsync();
         }
+        return changed;
+    }
 
-        if (!string.IsNullOrEmpty(where))
-            up = up.Where(where);
+    private Expression<Func<TEntity, bool>> BuildPrimaryKeyPredicate(TEntity entity)
+    {
+        var keys = _db.EntityMaintenance.GetEntityInfo<TEntity>().Columns.Where(column => column.IsPrimarykey).ToArray();
+        if (keys.Length == 0)
+            throw new InvalidOperationException("带条件的实体更新必须声明主键。");
 
-        return await up.ExecuteCommandHasChangeAsync();
+        var parameter = Expression.Parameter(typeof(TEntity), "entity");
+        Expression predicate = null;
+        foreach (var key in keys)
+        {
+            var property = Expression.Property(parameter, key.PropertyName);
+            var value = typeof(TEntity).GetProperty(key.PropertyName).GetValue(entity);
+            var equality = Expression.Equal(property, Expression.Constant(value, property.Type));
+            predicate = predicate == null ? equality : Expression.AndAlso(predicate, equality);
+        }
+        return Expression.Lambda<Func<TEntity, bool>>(predicate, parameter);
+    }
+
+    /// <summary>
+    /// 按完整条件更新明确指定的字段，不自动追加主键条件或其他审计字段。
+    /// </summary>
+    /// <param name="entity">提供更新字段值的实体。</param>
+    /// <param name="columns">要更新的字段表达式。</param>
+    /// <param name="predicate">完整更新条件；按主键更新时须显式包含主键限制。</param>
+    /// <returns>至少一条记录受影响时返回 true，否则返回 false。</returns>
+    public async Task<bool> UpdateAsync(TEntity entity, Expression<Func<TEntity, object>> columns, Expression<Func<TEntity, bool>> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        ArgumentNullException.ThrowIfNull(columns);
+        ArgumentNullException.ThrowIfNull(predicate);
+        return await _db.Updateable(entity).UpdateColumns(columns).Where(predicate).ExecuteCommandAsync() > 0;
     }
 
     public async Task<bool> Update(TEntity entity, string where) => await _db.Updateable(entity).Where(where).ExecuteCommandHasChangeAsync();
