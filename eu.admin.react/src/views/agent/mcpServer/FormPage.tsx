@@ -288,7 +288,8 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
     setEditorError("");
     try {
       const updated = await classifyMcpTool(current.Id, toolVersionId, current.LogicalRevision, risk);
-      fillEditor(updated);
+      // 风险分类只更新工具及修订号，不覆盖尚未保存的配置表单。
+      setCurrent(updated);
       onReload?.();
       message.success("工具风险分类已保存，新工具版本已生成");
     } catch (error) {

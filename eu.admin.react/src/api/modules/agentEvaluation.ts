@@ -87,6 +87,16 @@ export interface EvaluationQualityGate {
 }
 
 export interface EvaluationComparison {
+  Cases: Array<{
+    CaseId: string;
+    CaseName: string;
+    BaselineStatus?: EvaluationCaseStatus | null;
+    CandidateStatus?: EvaluationCaseStatus | null;
+    ToolCallDelta: number;
+    RoutesChanged: boolean;
+    EventKindsChanged: boolean;
+    NewFailure: boolean;
+  }>;
   GatePassed: boolean;
   GateChecks: EvaluationCheck[];
   Baseline: { TotalCases: number; PassedCases: number; FailedCases: number; PassRate: number; AverageDurationMilliseconds?: number | null; TotalToolCalls: number };

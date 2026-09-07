@@ -116,9 +116,9 @@ const normalizeCase = (value: EvaluationCase): EvaluationCase => {
     Specification: {
       ...defaultSpecification(),
       ...specification,
-      OutputContains: Array.isArray(specification.OutputContains) ? specification.OutputContains : [],
-      OutputExcludes: Array.isArray(specification.OutputExcludes) ? specification.OutputExcludes : [],
-      RequiredEventKinds: Array.isArray(specification.RequiredEventKinds) ? specification.RequiredEventKinds : []
+      OutputContains: (specification.OutputContains || []).map(item => item.trim()).filter(Boolean),
+      OutputExcludes: (specification.OutputExcludes || []).map(item => item.trim()).filter(Boolean),
+      RequiredEventKinds: (specification.RequiredEventKinds || []).map(item => item.trim()).filter(Boolean)
     }
   };
 };
@@ -132,7 +132,8 @@ const newCase = (): EvaluationCase => ({
   Specification: defaultSpecification()
 });
 
-const parseRules = (value: string) => value.split("\n").map(item => item.trim()).filter(Boolean);
+// 编辑时保留空行和空格，仅在保存时规范化规则。
+const parseRules = (value: string) => value.split("\n");
 const rulesText = (value?: string[]) => (value || []).join("\n");
 const EvaluationPage = () => {
   const [form] = Form.useForm<SuiteFormValues>();
@@ -278,10 +279,19 @@ const EvaluationPage = () => {
   };
 
   const publish = async () => {
-    if (!current) return;
+    if (!current || saving) return;
     setSaving(true);
     try {
-      const suite = await publishEvaluationSuite(current.Id, current.LogicalRevision);
+      const values = await form.validateFields();
+      const saved = await saveEvaluationDraft(current.Id, {
+        expectedLogicalRevision: current.LogicalRevision,
+        name: values.name,
+        description: values.description || "",
+        cases: (values.cases || []).map(normalizeCase)
+      });
+      // 即使发布失败，也保留已保存草稿的最新修订号。
+      applySuite(saved);
+      const suite = await publishEvaluationSuite(saved.Id, saved.LogicalRevision);
       applySuite(suite);
       await loadList();
       message.success("评测 Suite 已发布不可变版本");
@@ -360,6 +370,11 @@ const EvaluationPage = () => {
       const evaluators = [values.relevance && "Relevance", values.coherence && "Coherence"].filter(Boolean) as string[];
       if (!values.explicitlyEnabled || evaluators.length === 0 || !values.modelProfileId) {
         message.warning("请明确确认执行模型裁判，并至少选择一项指标和模型配置");
+        return;
+      }
+      const thresholds = [values.relevance && values.relevanceMinimum, values.coherence && values.coherenceMinimum].filter(value => value !== false);
+      if (thresholds.some(value => typeof value !== "number" || !Number.isFinite(value) || value < 1 || value > 5)) {
+        message.warning("已选指标的最低分必须在 1～5 之间");
         return;
       }
       setJudgeLoading(true);
@@ -460,12 +475,29 @@ const EvaluationPage = () => {
                 <Flex justify="space-between" align="center" wrap gap={12}><div className="evaluation-page__section-title">模型裁判 · Batch {selectedBatch.Id.slice(0, 8)}</div>{selectedBatch.Status === "Completed" && <Button size="small" icon={<ReloadOutlined />} loading={judgeLoading} onClick={() => void loadJudgeReports(selectedBatch.Id)}>刷新报告</Button>}</Flex>
                 {selectedBatch.Status !== "Completed" ? <Alert type="info" showIcon message="只有已完成的批次可以运行模型裁判。" /> : <>
                   <Alert type={modelJudgeEnabled ? "info" : "warning"} showIcon message={modelJudgeEnabled ? "模型裁判为可选 advisory；执行前需要明确确认。" : "当前 Host 未启用模型裁判，仅可查看已保存报告。"} />
-                  {modelJudgeEnabled && !archived && <Form<JudgeFormValues> form={judgeForm} layout="vertical" initialValues={{ explicitlyEnabled: false, modelProfileId: modelProfileIds[0], relevance: true, relevanceMinimum: 0.7, coherence: true, coherenceMinimum: 0.7 }} className="evaluation-page__judge-form"><Flex wrap gap={16}><Form.Item name="modelProfileId" label="裁判模型" rules={[{ required: true }]}><Select options={modelProfileIds.map(value => ({ value, label: value }))} /></Form.Item><Form.Item name="explicitlyEnabled" label="执行确认" valuePropName="checked"><Switch checkedChildren="明确执行" unCheckedChildren="未确认" /></Form.Item></Flex><Flex wrap gap={16}><Form.Item name="relevance" label="相关性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="relevanceMinimum" label="相关性最低分"><InputNumber min={0} max={1} step={0.05} /></Form.Item><Form.Item name="coherence" label="连贯性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="coherenceMinimum" label="连贯性最低分"><InputNumber min={0} max={1} step={0.05} /></Form.Item></Flex><Button type="primary" loading={judgeLoading} onClick={() => void runJudge()}>运行模型裁判</Button></Form>}
+                  {modelJudgeEnabled && !archived && <Form<JudgeFormValues> form={judgeForm} layout="vertical" initialValues={{ explicitlyEnabled: false, modelProfileId: modelProfileIds[0], relevance: true, relevanceMinimum: 4, coherence: true, coherenceMinimum: 4 }} className="evaluation-page__judge-form"><Flex wrap gap={16}><Form.Item name="modelProfileId" label="裁判模型" rules={[{ required: true }]}><Select options={modelProfileIds.map(value => ({ value, label: value }))} /></Form.Item><Form.Item name="explicitlyEnabled" label="执行确认" valuePropName="checked"><Switch checkedChildren="明确执行" unCheckedChildren="未确认" /></Form.Item></Flex><Flex wrap gap={16}><Form.Item name="relevance" label="相关性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="relevanceMinimum" label="相关性最低分"><InputNumber min={1} max={5} step={0.1} /></Form.Item><Form.Item name="coherence" label="连贯性" valuePropName="checked"><Switch /></Form.Item><Form.Item name="coherenceMinimum" label="连贯性最低分"><InputNumber min={1} max={5} step={0.1} /></Form.Item></Flex><Button type="primary" loading={judgeLoading} onClick={() => void runJudge()}>运行模型裁判</Button></Form>}
                   <List className="evaluation-page__judge-reports" loading={judgeLoading} dataSource={judgeReports} locale={{ emptyText: "尚无模型裁判报告" }} renderItem={report => <List.Item><List.Item.Meta title={<Space><Tag color={report.AdvisoryPassed ? "success" : "error"}>{report.AdvisoryPassed ? "advisory 通过" : "advisory 未通过"}</Tag><Typography.Text>{report.ModelProfileId}</Typography.Text></Space>} description={<Collapse size="small" items={[{ key: "metrics", label: `${report.Cases.length} 个 Case · ${new Date(report.FinishedAtUtc).toLocaleString()}`, children: <List size="small" dataSource={report.Cases} renderItem={item => <List.Item><Typography.Text>{item.CaseName}</Typography.Text><Space wrap>{item.Metrics.map(metric => <Tag key={metric.Name} color={metric.Passed ? "success" : "error"}>{metric.Name}: {metric.Score ?? "-"}/{metric.MinimumScore}</Tag>)}</Space></List.Item>} /> }]} />} /></List.Item>} />
                 </>}
               </div>}
             </section>
             <section className="evaluation-page__section"><div className="evaluation-page__section-title">质量门禁对比</div><Form<CompareFormValues> form={compareForm} layout="vertical" initialValues={{ minimumCandidatePassRate: 1, maximumPassRateRegression: 0, requireNoNewFailures: true, requireSameCaseSet: true, requireStableRoutes: false }}><Flex wrap gap={16}><Form.Item className="evaluation-page__half" name="baselineBatchId" label="基线批次" rules={[{ required: true }]}><Select options={completedBatches.map(batch => ({ value: batch.Id, label: `${batch.Id.slice(0, 8)} · ${new Date(batch.StartedAtUtc).toLocaleString()}` }))} /></Form.Item><Form.Item className="evaluation-page__half" name="candidateBatchId" label="候选批次" rules={[{ required: true }]}><Select options={completedBatches.map(batch => ({ value: batch.Id, label: `${batch.Id.slice(0, 8)} · ${new Date(batch.StartedAtUtc).toLocaleString()}` }))} /></Form.Item></Flex><Flex wrap gap={16}><Form.Item name="minimumCandidatePassRate" label="候选最低通过率"><InputNumber min={0} max={1} step={0.01} /></Form.Item><Form.Item name="maximumPassRateRegression" label="最大通过率回退"><InputNumber min={0} max={1} step={0.01} /></Form.Item><Form.Item name="maximumAverageDurationRegressionPercent" label="最大耗时回退(%)"><InputNumber min={0} max={10000} /></Form.Item><Form.Item name="maximumToolCallIncreasePerCase" label="每 Case 工具调用增量"><InputNumber min={0} max={1000} /></Form.Item></Flex><Flex wrap gap={20}><Form.Item name="requireNoNewFailures" valuePropName="checked"><Switch checkedChildren="无新增失败" unCheckedChildren="允许新增失败" /></Form.Item><Form.Item name="requireSameCaseSet" valuePropName="checked"><Switch checkedChildren="Case 集一致" unCheckedChildren="允许 Case 变化" /></Form.Item><Form.Item name="requireStableRoutes" valuePropName="checked"><Switch checkedChildren="路由稳定" unCheckedChildren="允许路由变化" /></Form.Item></Flex><Button type="primary" onClick={() => void compare()} disabled={completedBatches.length < 2} loading={saving}>执行质量门禁</Button></Form>{comparison && <Descriptions className="evaluation-page__comparison" bordered size="small" column={1} title={<Tag color={comparison.GatePassed ? "success" : "error"}>{comparison.GatePassed ? "门禁通过" : "门禁未通过"}</Tag>} items={[{ key: "baseline", label: "基线", children: `${comparison.Baseline.PassedCases}/${comparison.Baseline.TotalCases} 通过 (${(comparison.Baseline.PassRate * 100).toFixed(1)}%)` }, { key: "candidate", label: "候选", children: `${comparison.Candidate.PassedCases}/${comparison.Candidate.TotalCases} 通过 (${(comparison.Candidate.PassRate * 100).toFixed(1)}%)` }, { key: "checks", label: "检查", children: <List size="small" dataSource={comparison.GateChecks} renderItem={check => <List.Item><Tag color={check.Passed ? "success" : "error"}>{check.Passed ? "通过" : "失败"}</Tag>{check.Code}: {check.Actual}</List.Item>} /> }]} />}</section>
+            {comparison && <section className="evaluation-page__section">
+              <div className="evaluation-page__section-title">逐 Case 差异</div>
+              <List
+                dataSource={(comparison.Cases || []).filter(item => item.NewFailure || item.RoutesChanged || item.EventKindsChanged || item.ToolCallDelta !== 0 || item.BaselineStatus !== item.CandidateStatus)}
+                locale={{ emptyText: "未发现 Case 状态、路由、事件或工具调用次数差异" }}
+                renderItem={item => <List.Item key={item.CaseId}><Flex vertical gap={8}>
+                  <Typography.Text strong>{item.CaseName || item.CaseId}</Typography.Text>
+                  <Space wrap>
+                    <Typography.Text>{item.BaselineStatus || "不存在"} → {item.CandidateStatus || "不存在"}</Typography.Text>
+                    <Tag>工具调用 Δ {item.ToolCallDelta > 0 ? "+" : ""}{item.ToolCallDelta}</Tag>
+                    {item.NewFailure && <Tag color="error">新增失败</Tag>}
+                    {item.RoutesChanged && <Tag color="warning">路由变化</Tag>}
+                    {item.EventKindsChanged && <Tag color="warning">事件类型变化</Tag>}
+                  </Space>
+                </Flex></List.Item>}
+              />
+            </section>}
           </>}
         </Spin>}
       </main>
