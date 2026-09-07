@@ -36,9 +36,7 @@ public sealed class AgMainAgentAssignmentServices :
     public async Task<MainAgentAssignment?> GetAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        AgMainAgentAssignment? entity = await Db.Queryable<AgMainAgentAssignment>()
-            .Where(value => value.AssignmentKey == AssignmentKey && !value.IsDeleted)
-            .FirstAsync();
+        var entity = await QuerySingle(value => value.AssignmentKey == AssignmentKey && !value.IsDeleted);
         return entity is null ? null : MapAssignment(entity);
     }
     #endregion
@@ -81,31 +79,38 @@ public sealed class AgMainAgentAssignmentServices :
             return updated == 1;
         }
 
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
+        await Db.Ado.BeginTranAsync(IsolationLevel.Serializable);
         try
         {
-            bool exists = await Db.Queryable<AgMainAgentAssignment>()
-                .Where(entity => entity.AssignmentKey == AssignmentKey)
-                .AnyAsync();
+            bool exists = await AnyAsync(entity => entity.AssignmentKey == AssignmentKey);
             if (exists)
             {
                 await Db.Ado.RollbackTranAsync();
                 return false;
             }
 
-            int inserted = await Db.Insertable(new AgMainAgentAssignment
+            var insert = new AgMainAgentAssignment()
             {
-                ID = Guid.NewGuid(),
                 AssignmentKey = AssignmentKey,
                 AgentId = value.AgentId,
                 AgentVersionId = value.AgentVersionId,
                 LogicalRevision = value.LogicalRevision,
                 UpdatedAtUtc = value.UpdatedAtUtc.UtcDateTime,
-                IsDeleted = false,
-                IsActive = true
-            }).ExecuteCommandAsync();
+            };
+            var id = await Add(insert);
+            //int inserted = await Db.Insertable(new AgMainAgentAssignment
+            //{
+            //    ID = Guid.NewGuid(),
+            //    AssignmentKey = AssignmentKey,
+            //    AgentId = value.AgentId,
+            //    AgentVersionId = value.AgentVersionId,
+            //    LogicalRevision = value.LogicalRevision,
+            //    UpdatedAtUtc = value.UpdatedAtUtc.UtcDateTime,
+            //    IsDeleted = false,
+            //    IsActive = true
+            //}).ExecuteCommandAsync();
             await Db.Ado.CommitTranAsync();
-            return inserted == 1;
+            return true;
         }
         catch
         {

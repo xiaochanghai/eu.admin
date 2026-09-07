@@ -46,7 +46,7 @@ public sealed class AgApiIdempotencyServices :
             .Where(value => value.ExpiresAtUtc <= now)
             .ExecuteCommandAsync();
 
-        AgApiIdempotency? existing = await GetByScopeAsync(pending.ScopeSha256);
+        var existing = await GetByScopeAsync(pending.ScopeSha256);
         if (existing is not null)
         {
             return new HttpIdempotencyBeginResult(false, MapRecord(existing));

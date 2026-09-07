@@ -35,30 +35,25 @@ public sealed class AgAgentOperationAuditServices :
     {
         ArgumentNullException.ThrowIfNull(record);
         cancellationToken.ThrowIfCancellationRequested();
-        var existing = await Db.Queryable<AgAgentOperationAudit>()
-            .Where(value => value.ID == record.Id)
-            .FirstAsync();
+        var existing = await QuerySingle(value => value.ID == record.Id);
         if (existing is null)
         {
-            await Db.Insertable(MapEntity(record)).ExecuteCommandAsync();
+            await Add(MapEntity(record));
         }
         else if (!existing.IsDeleted &&
                  string.Equals(existing.Outcome, "Started", StringComparison.Ordinal) &&
                  SameIdentity(existing, record))
         {
             var entity = MapEntity(record);
-            await Db.Updateable(entity)
-                .UpdateColumns(value => new
+            await UpdateAsync(entity, value => new
                 {
                     value.StatusCode,
                     value.Outcome,
                     value.ErrorCode,
                     value.DurationMilliseconds
-                })
-                .Where(value => value.ID == record.Id &&
+                }, value => value.ID == record.Id &&
                                 !value.IsDeleted &&
-                                value.Outcome == "Started")
-                .ExecuteCommandAsync();
+                                value.Outcome == "Started");
         }
     }
     #endregion
@@ -75,12 +70,8 @@ public sealed class AgAgentOperationAuditServices :
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         cancellationToken.ThrowIfCancellationRequested();
-        var records = await Db.Queryable<AgAgentOperationAudit>()
-            .Where(value => value.TenantId == tenantId && !value.IsDeleted)
-            .OrderBy(value => value.OccurredAtUtc, OrderByType.Desc)
-            .OrderBy(value => value.ID, OrderByType.Desc)
-            .Take(Math.Clamp(take, 1, 100))
-            .ToListAsync();
+        var records = await Query(value => value.TenantId == tenantId && !value.IsDeleted,
+            Math.Clamp(take, 1, 100), "OccurredAtUtc DESC, ID DESC");
         cancellationToken.ThrowIfCancellationRequested();
         return records.Select(MapRecord).ToArray();
     }

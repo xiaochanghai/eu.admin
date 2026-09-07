@@ -58,12 +58,10 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
 
         if (idempotencyKey.Length > 0)
         {
-            AgAgentTask? existing = await Db.Queryable<AgAgentTask>()
-                .Where(value => value.TenantId == tenantId &&
+            AgAgentTask? existing = await QuerySingle(value => value.TenantId == tenantId &&
                                 value.UserId == userId &&
                                 value.IdempotencyKey == idempotencyKey &&
-                                !value.IsDeleted)
-                .FirstAsync();
+                                !value.IsDeleted);
             if (existing is not null)
             {
                 EnsureIdempotencyMatch(existing, command, sourceType, protectedInput.OriginalSha256);
@@ -818,11 +816,9 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        AgAgentTask? entity = await Db.Queryable<AgAgentTask>()
-            .Where(value => value.CurrentRunId == command.RunId &&
+        AgAgentTask? entity = await QuerySingle(value => value.CurrentRunId == command.RunId &&
                             value.TenantId == command.TenantId &&
-                            value.UserId == command.UserId && !value.IsDeleted)
-            .FirstAsync();
+                            value.UserId == command.UserId && !value.IsDeleted);
         if (entity is null)
         {
             return null;

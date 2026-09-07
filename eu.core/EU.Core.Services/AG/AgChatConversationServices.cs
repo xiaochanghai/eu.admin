@@ -38,9 +38,7 @@ public sealed class AgChatConversationServices :
     public async Task<ConversationRecord?> GetConversationAsync(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        AgChatConversation? value = await Db.Queryable<AgChatConversation>()
-            .Where(item => item.ID == id && !item.IsDeleted)
-            .FirstAsync();
+        AgChatConversation? value = await QuerySingle(item => item.ID == id && !item.IsDeleted);
         return value is null ? null : MapConversation(value);
     }
     #endregion
@@ -181,10 +179,8 @@ public sealed class AgChatConversationServices :
     public async Task<ConversationRecord?> GetConversationForOwnerAsync(Guid id, string tenantId, string userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        AgChatConversation? value = await Db.Queryable<AgChatConversation>()
-            .Where(item => item.ID == id && item.TenantId == tenantId &&
-                           item.UserId == userId && !item.IsDeleted)
-            .FirstAsync();
+        AgChatConversation? value = await QuerySingle(item => item.ID == id && item.TenantId == tenantId &&
+                           item.UserId == userId && !item.IsDeleted);
         return value is null ? null : MapConversation(value);
     }
     #endregion
@@ -764,7 +760,8 @@ public sealed class AgChatConversationServices :
                 await Db.Updateable<AgUnifiedAgentRun>()
                     .SetColumns(_ => new AgUnifiedAgentRun
                     {
-                        Status = nameof(UnifiedRunStatus.Failed), FinishedAtUtc = recovered,
+                        Status = nameof(UnifiedRunStatus.Failed),
+                        FinishedAtUtc = recovered,
                         DurationTicks = Math.Max(0, (recovered - value.StartedAtUtc!.Value).Ticks),
                         ErrorCode = UnifiedEntryErrorCodes.HostInterrupted
                     }).Where(item => item.ID == value.ID && !item.IsDeleted).ExecuteCommandAsync();
@@ -782,7 +779,8 @@ public sealed class AgChatConversationServices :
                 await Db.Updateable<AgUnifiedOrchestrationLink>()
                     .SetColumns(_ => new AgUnifiedOrchestrationLink
                     {
-                        Status = nameof(UnifiedRunStatus.Failed), FinishedAtUtc = recovered,
+                        Status = nameof(UnifiedRunStatus.Failed),
+                        FinishedAtUtc = recovered,
                         DurationTicks = Math.Max(0, (recovered - value.StartedAtUtc!.Value).Ticks),
                         ErrorCode = UnifiedEntryErrorCodes.HostInterrupted
                     }).Where(item => item.ID == value.ID && !item.IsDeleted).ExecuteCommandAsync();
@@ -799,7 +797,8 @@ public sealed class AgChatConversationServices :
             await Db.Updateable<AgUnifiedToolCall>()
                 .SetColumns(_ => new AgUnifiedToolCall
                 {
-                    Status = nameof(UnifiedRunStatus.Failed), FinishedAtUtc = recovered,
+                    Status = nameof(UnifiedRunStatus.Failed),
+                    FinishedAtUtc = recovered,
                     DurationTicks = Math.Max(0, (recovered - value.StartedAtUtc!.Value).Ticks),
                     ErrorCode = UnifiedEntryErrorCodes.HostInterrupted
                 }).Where(item => item.ID == value.ID && !item.IsDeleted).ExecuteCommandAsync();
@@ -1141,9 +1140,14 @@ public sealed class AgChatConversationServices :
     /// <returns>由会话记录构造的持久化实体。</returns>
     private static AgChatConversation MapConversation(ConversationRecord value) => new()
     {
-        ID = value.Id, Title = value.Title, CreatedAtUtc = value.CreatedAtUtc.UtcDateTime,
-        UpdatedAtUtc = value.UpdatedAtUtc.UtcDateTime, TenantId = value.TenantId,
-        UserId = value.UserId, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        Title = value.Title,
+        CreatedAtUtc = value.CreatedAtUtc.UtcDateTime,
+        UpdatedAtUtc = value.UpdatedAtUtc.UtcDateTime,
+        TenantId = value.TenantId,
+        UserId = value.UserId,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1177,14 +1181,21 @@ public sealed class AgChatConversationServices :
     /// <returns>带有消息序号及业务查询信息的会话消息持久化实体。</returns>
     private static AgChatMessage MapMessage(ConversationMessageRecord value, long ordinal) => new()
     {
-        ID = value.Id, ConversationId = value.ConversationId, Ordinal = ordinal,
-        Role = value.Role.ToString(), Content = value.Content, ContentSha256 = value.ContentSha256,
-        ContentUtf8Bytes = value.ContentUtf8Bytes, CreatedAtUtc = value.CreatedAtUtc.UtcDateTime,
-        Kind = value.Kind.ToString(), BusinessQueryId = value.BusinessQueryId,
+        ID = value.Id,
+        ConversationId = value.ConversationId,
+        Ordinal = ordinal,
+        Role = value.Role.ToString(),
+        Content = value.Content,
+        ContentSha256 = value.ContentSha256,
+        ContentUtf8Bytes = value.ContentUtf8Bytes,
+        CreatedAtUtc = value.CreatedAtUtc.UtcDateTime,
+        Kind = value.Kind.ToString(),
+        BusinessQueryId = value.BusinessQueryId,
         BusinessReceiptJson = value.BusinessQueryReceiptJson,
         BusinessPresentationJson = value.BusinessQueryPresentationJson,
         BusinessIntegritySha256 = value.BusinessQueryIntegritySha256,
-        IsDeleted = false, IsActive = true
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1215,13 +1226,25 @@ public sealed class AgChatConversationServices :
     /// <returns>带有持久化版本和状态指纹的入口运行实体。</returns>
     private static AgUnifiedEntryRun MapEntryRun(UnifiedEntryRunRecord value, long revision, string fingerprint) => new()
     {
-        ID = value.Id, ConversationId = value.ConversationId, CorrelationId = value.CorrelationId,
-        MainAgentVersionId = value.MainAgentVersionId, Status = value.Status.ToString(),
-        StartedAtUtc = value.StartedAtUtc.UtcDateTime, FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
-        DurationTicks = value.Duration?.Ticks, InputText = value.Input, InputSha256 = value.InputSha256,
-        OutputText = value.Output, OutputSha256 = value.OutputSha256, ErrorCode = value.ErrorCode,
-        PersistenceRevision = revision, StateSha256 = fingerprint, TenantId = value.TenantId,
-        UserId = value.UserId, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        ConversationId = value.ConversationId,
+        CorrelationId = value.CorrelationId,
+        MainAgentVersionId = value.MainAgentVersionId,
+        Status = value.Status.ToString(),
+        StartedAtUtc = value.StartedAtUtc.UtcDateTime,
+        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
+        DurationTicks = value.Duration?.Ticks,
+        InputText = value.Input,
+        InputSha256 = value.InputSha256,
+        OutputText = value.Output,
+        OutputSha256 = value.OutputSha256,
+        ErrorCode = value.ErrorCode,
+        PersistenceRevision = revision,
+        StateSha256 = fingerprint,
+        TenantId = value.TenantId,
+        UserId = value.UserId,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1250,12 +1273,25 @@ public sealed class AgChatConversationServices :
     /// <returns>带有聚合内排序序号的 Agent 运行实体。</returns>
     private static AgUnifiedAgentRun MapAgentRun(UnifiedAgentRunRecord value, int ordinal) => new()
     {
-        ID = value.Id, EntryRunId = value.EntryRunId, Ordinal = ordinal, ParentRunId = value.ParentRunId,
-        Kind = value.Kind.ToString(), AgentId = value.AgentId, AgentVersionId = value.AgentVersionId,
-        Depth = value.Depth, Status = value.Status.ToString(), StartedAtUtc = value.StartedAtUtc.UtcDateTime,
-        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime, DurationTicks = value.Duration?.Ticks,
-        InputText = value.Input, InputSha256 = value.InputSha256, OutputText = value.Output,
-        OutputSha256 = value.OutputSha256, ErrorCode = value.ErrorCode, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        EntryRunId = value.EntryRunId,
+        Ordinal = ordinal,
+        ParentRunId = value.ParentRunId,
+        Kind = value.Kind.ToString(),
+        AgentId = value.AgentId,
+        AgentVersionId = value.AgentVersionId,
+        Depth = value.Depth,
+        Status = value.Status.ToString(),
+        StartedAtUtc = value.StartedAtUtc.UtcDateTime,
+        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
+        DurationTicks = value.Duration?.Ticks,
+        InputText = value.Input,
+        InputSha256 = value.InputSha256,
+        OutputText = value.Output,
+        OutputSha256 = value.OutputSha256,
+        ErrorCode = value.ErrorCode,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1283,12 +1319,24 @@ public sealed class AgChatConversationServices :
     /// <returns>带有聚合内排序序号的编排运行关联实体。</returns>
     private static AgUnifiedOrchestrationLink MapOrchestration(UnifiedOrchestrationRunLink value, int ordinal) => new()
     {
-        ID = value.Id, EntryRunId = value.EntryRunId, Ordinal = ordinal, ParentRunId = value.ParentRunId,
-        OrchestrationRunId = value.OrchestrationRunId, OrchestrationVersionId = value.OrchestrationVersionId,
-        Depth = value.Depth, Status = value.Status.ToString(), StartedAtUtc = value.StartedAtUtc.UtcDateTime,
-        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime, DurationTicks = value.Duration?.Ticks,
-        InputText = value.Input, InputSha256 = value.InputSha256, OutputText = value.Output,
-        OutputSha256 = value.OutputSha256, ErrorCode = value.ErrorCode, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        EntryRunId = value.EntryRunId,
+        Ordinal = ordinal,
+        ParentRunId = value.ParentRunId,
+        OrchestrationRunId = value.OrchestrationRunId,
+        OrchestrationVersionId = value.OrchestrationVersionId,
+        Depth = value.Depth,
+        Status = value.Status.ToString(),
+        StartedAtUtc = value.StartedAtUtc.UtcDateTime,
+        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
+        DurationTicks = value.Duration?.Ticks,
+        InputText = value.Input,
+        InputSha256 = value.InputSha256,
+        OutputText = value.Output,
+        OutputSha256 = value.OutputSha256,
+        ErrorCode = value.ErrorCode,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1316,12 +1364,23 @@ public sealed class AgChatConversationServices :
     /// <returns>带有聚合内排序序号的工具调用实体。</returns>
     private static AgUnifiedToolCall MapToolCall(UnifiedToolCallRecord value, int ordinal) => new()
     {
-        ID = value.Id, EntryRunId = value.EntryRunId, Ordinal = ordinal, ParentRunId = value.ParentRunId,
-        ToolVersionId = value.ToolVersionId, Depth = value.Depth, Status = value.Status.ToString(),
-        StartedAtUtc = value.StartedAtUtc.UtcDateTime, FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
-        DurationTicks = value.Duration?.Ticks, ArgumentsJson = value.ArgumentsJson,
-        ArgumentsSha256 = value.ArgumentsSha256, ResultContent = value.ResultContent,
-        ResultSha256 = value.ResultSha256, ErrorCode = value.ErrorCode, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        EntryRunId = value.EntryRunId,
+        Ordinal = ordinal,
+        ParentRunId = value.ParentRunId,
+        ToolVersionId = value.ToolVersionId,
+        Depth = value.Depth,
+        Status = value.Status.ToString(),
+        StartedAtUtc = value.StartedAtUtc.UtcDateTime,
+        FinishedAtUtc = value.FinishedAtUtc?.UtcDateTime,
+        DurationTicks = value.Duration?.Ticks,
+        ArgumentsJson = value.ArgumentsJson,
+        ArgumentsSha256 = value.ArgumentsSha256,
+        ResultContent = value.ResultContent,
+        ResultSha256 = value.ResultSha256,
+        ErrorCode = value.ErrorCode,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 
@@ -1347,10 +1406,18 @@ public sealed class AgChatConversationServices :
     /// <returns>保留事件序号及载荷摘要的运行事件持久化实体。</returns>
     private static AgUnifiedRunEvent MapEvent(UnifiedRunEventRecord value) => new()
     {
-        ID = value.Id, EntryRunId = value.EntryRunId, Sequence = value.Sequence,
-        CorrelationId = value.CorrelationId, Kind = value.Kind, OccurredAtUtc = value.OccurredAtUtc.UtcDateTime,
-        ParentRunId = value.ParentRunId, Depth = value.Depth, PayloadJson = value.PayloadJson,
-        PayloadSha256 = value.PayloadSha256, IsDeleted = false, IsActive = true
+        ID = value.Id,
+        EntryRunId = value.EntryRunId,
+        Sequence = value.Sequence,
+        CorrelationId = value.CorrelationId,
+        Kind = value.Kind,
+        OccurredAtUtc = value.OccurredAtUtc.UtcDateTime,
+        ParentRunId = value.ParentRunId,
+        Depth = value.Depth,
+        PayloadJson = value.PayloadJson,
+        PayloadSha256 = value.PayloadSha256,
+        IsDeleted = false,
+        IsActive = true
     };
     #endregion
 

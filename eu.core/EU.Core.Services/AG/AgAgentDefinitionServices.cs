@@ -121,7 +121,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            Guid[] agentIds = definitions.Select(definition => definition.ID).ToArray();
+            var agentIds = definitions.Select(definition => definition.ID).ToArray();
             var versions = await Db.Queryable<AgAgentVersion>()
                 .Where(version =>
                     version.AgentId.HasValue &&
@@ -144,7 +144,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     continue;
                 }
 
-                AgAgentVersion[] drafts = agentVersions
+                var drafts = agentVersions
                     .Where(version => version.IsDraft == true)
                     .ToArray();
                 if (drafts.Length != 1)
@@ -152,8 +152,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                     continue;
                 }
 
-                AgAgentVersion draft = drafts[0];
-                AgAgentVersion? currentPublished = agentVersions
+                var draft = drafts[0];
+                var currentPublished = agentVersions
                     .Where(version => version.IsDraft != true)
                     .OrderBy(version => version.Ordinal)
                     .LastOrDefault();
@@ -193,12 +193,10 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     public async Task<AgAgentDefinitionDetailDto?> QueryAgent(Guid id, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
+        await Db.Ado.BeginTranAsync(IsolationLevel.RepeatableRead);
         try
         {
-            AgAgentDefinition? definition = await Db.Queryable<AgAgentDefinition>()
-                .Where(value => value.ID == id)
-                .FirstAsync();
+            var definition = await QuerySingle(value => value.ID == id);
             if (definition is null)
             {
                 await Db.Ado.CommitTranAsync();
@@ -206,7 +204,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            List<AgAgentVersion> versions = await Db.Queryable<AgAgentVersion>()
+            var versions = await Db.Queryable<AgAgentVersion>()
                 .Where(value => value.AgentId == id)
                 .OrderBy(value => value.IsDraft, OrderByType.Desc)
                 .OrderBy(value => value.Ordinal)
@@ -217,7 +215,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 return null;
             }
 
-            List<AgAgentVersionSnapshot> snapshots = await Db
+            var snapshots = await Db
                 .Queryable<AgAgentVersionSnapshot, AgAgentVersion>(
                     (snapshot, version) => new JoinQueryInfos(
                         JoinType.Inner,
@@ -225,7 +223,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
                 .Where((snapshot, version) => version.AgentId == id)
                 .Select((snapshot, version) => snapshot)
                 .ToListAsync();
-            List<AgAgentVersionBinding> bindings = await Db
+            var bindings = await Db
                 .Queryable<AgAgentVersionBinding, AgAgentVersion>(
                     (binding, version) => new JoinQueryInfos(
                         JoinType.Inner,
@@ -246,7 +244,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
             var bindingsByVersion = bindings
                 .GroupBy(value => value.VersionId.GetValueOrDefault())
                 .ToDictionary(group => group.Key, group => group.ToList());
-            AgAgentVersion draft = versions.SingleOrDefault(value => value.IsDraft == true)
+            var draft = versions.SingleOrDefault(value => value.IsDraft == true)
                 ?? throw new InvalidDataException(
                     "The Agent does not have exactly one Draft version.");
             var result = new AgAgentDefinitionDetailDto
@@ -711,7 +709,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
         try
         {
-            List<AgAgentDefinition> definitions = await Db.Queryable<AgAgentDefinition>()
+            var definitions = await Db.Queryable<AgAgentDefinition>()
                 .WhereIF(
                     runtimeStatus.IsNullOrEmpty(),
                     value => value.RuntimeStatus != "Archived")

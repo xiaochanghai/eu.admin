@@ -40,9 +40,7 @@ public sealed class AgAgentRunAuditServices :
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.Serializable);
         try
         {
-            AgAgentRunAudit? existing = await Db.Queryable<AgAgentRunAudit>()
-                .Where(value => value.ID == record.RunId)
-                .FirstAsync();
+            var existing = await QuerySingle(value => value.ID == record.RunId);
             if (existing is null)
             {
                 await Db.Insertable(MapAuditEntity(record)).ExecuteCommandAsync();
@@ -54,7 +52,7 @@ public sealed class AgAgentRunAuditServices :
                          Required(existing.StartedAtUtc, "StartedAtUtc"),
                          record.StartedAtUtc))
             {
-                AgAgentRunAudit entity = MapAuditEntity(record);
+                var entity = MapAuditEntity(record);
                 await Db.Updateable(entity)
                     .UpdateColumns(value => new
                     {
@@ -99,7 +97,7 @@ public sealed class AgAgentRunAuditServices :
         await Db.Ado.BeginTranAsync(System.Data.IsolationLevel.RepeatableRead);
         try
         {
-            List<AgAgentRunAudit> audits = await Db.Queryable<AgAgentRunAudit>()
+            var audits = await Db.Queryable<AgAgentRunAudit>()
                 .Where(value => value.AgentId == agentId && !value.IsDeleted)
                 .OrderBy(value => value.StartedAtUtc, OrderByType.Desc)
                 .OrderBy(value => value.ID, OrderByType.Desc)
