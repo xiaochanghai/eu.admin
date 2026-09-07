@@ -69,7 +69,8 @@ public sealed class SdkMcpToolDiscovery(
 
     public async Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(
         McpServerDefinition server,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? callerBearerToken = null)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(settings.ConnectionTimeout + settings.DiscoveryTimeout);
@@ -80,12 +81,12 @@ public sealed class SdkMcpToolDiscovery(
                 McpTransportKind.StreamableHttp => await CreateHttpTransportAsync(
                     server,
                     HttpTransportMode.StreamableHttp,
-                    null,
+                    callerBearerToken,
                     timeout.Token),
                 McpTransportKind.Sse => await CreateHttpTransportAsync(
                     server,
                     HttpTransportMode.Sse,
-                    null,
+                    callerBearerToken,
                     timeout.Token),
                 McpTransportKind.Stdio => await CreateStdioTransportAsync(
                     server,

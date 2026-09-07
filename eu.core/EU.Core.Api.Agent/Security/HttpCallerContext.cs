@@ -18,7 +18,8 @@ public sealed class HttpCallerContext : ICallerContext
 
         UserId = user.ID?.ToString("D") ?? throw InvalidContext();
         TenantId = user.TenantId.ToString(CultureInfo.InvariantCulture);
-        Permissions = new HashSet<string>(StringComparer.Ordinal);
+        // 仅允许发起项目查询；具体模块/公司授权由 MCP 在业务库中重新核实。
+        Permissions = new HashSet<string>(StringComparer.Ordinal) { "business.project.query" };
         CorrelationId = string.IsNullOrWhiteSpace(context.TraceIdentifier)
             ? throw InvalidContext()
             : context.TraceIdentifier;

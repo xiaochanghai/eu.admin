@@ -1038,6 +1038,14 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                         $"MCP tool '{tool.ToolName}' could not be invoked.");
                 }
 
+                // The owning service still validates the server receipt before accepting it.
+                // Stop the SDK loop so a subsequent model call cannot overwrite this result.
+                if (callLimit?.CompleteAfterSuccess == true &&
+                    FunctionInvokingChatClient.CurrentContext is { } invocation)
+                {
+                    invocation.Terminate = true;
+                }
+
                 return result.Content;
             }
             catch (OperationCanceledException)

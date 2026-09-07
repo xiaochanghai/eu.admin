@@ -49,7 +49,8 @@ public interface IAgMcpServerDefinitionServices : IBaseServices<AgMcpServerDefin
     /// <param name="command">当前业务操作的命令参数。</param>
     /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
     /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
-    Task<ServiceResult<McpServerDefinition>> SyncAsync(SyncMcpServerCommand command, CancellationToken cancellationToken = default);
+    /// <param name="callerBearerToken">当前请求的 Bearer Token，仅在未配置凭据别名时用于 HTTP 发现，不持久化。</param>
+    Task<ServiceResult<McpServerDefinition>> SyncAsync(SyncMcpServerCommand command, CancellationToken cancellationToken = default, string? callerBearerToken = null);
     #endregion
 
     #region 设置 MCP 工具的风险等级。

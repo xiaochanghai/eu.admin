@@ -43,6 +43,11 @@ public sealed class BusinessQueryToolSchemaBuilder
             .Select(ToCamelCase).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         string entityGuidance =
             $"Select the root entity that owns the requested facts. Available entities: {string.Join(", ", entities)}.";
+        foreach (BusinessCatalogEntitySnapshot entity in catalog.Entities.Values.OrderBy(value => value.Name, StringComparer.Ordinal))
+        {
+            if (entity.RequiredMeasureDimensions.Count > 0)
+                entityGuidance += $" When aggregating {entity.Name}, dimensions must include {string.Join(", ", entity.RequiredMeasureDimensions)}; never combine these groups into one total.";
+        }
         string relationshipGuidance = catalog.Relationships.Count == 0
             ? "Only fields declared by the selected entity are reachable."
             : $"Related fields are reachable only through these catalog relationships: {string.Join("; ", catalog.Relationships.Select(value => $"{value.FromEntity}->{value.ToEntity} ({ToCamelCase(value.Cardinality)})"))}.";

@@ -98,7 +98,17 @@ public sealed record BusinessCatalogEntity(
     bool RequiresTimeRange,
     IReadOnlyList<string> Grain,
     string DefaultScopeField,
-    IReadOnlyList<BusinessCatalogField> Fields);
+    IReadOnlyList<BusinessCatalogField> Fields)
+{
+    /// <summary>受信任目录定义的物理布尔列过滤，不允许查询计划取消或覆盖。</summary>
+    public IReadOnlyDictionary<string, bool> RequiredBooleanFilters { get; init; } = new Dictionary<string, bool>();
+
+    /// <summary>聚合时必须保留的维度，例如按订单币别分别统计，禁止跨币别合计。</summary>
+    public IReadOnlyList<string> RequiredMeasureDimensions { get; init; } = [];
+
+    /// <summary>EU 项目模块代码；设置后必须通过项目模块权限和公司数据范围校验。</summary>
+    public string ProjectModuleCode { get; init; } = string.Empty;
+}
 
 public sealed record BusinessCatalogRelationship(
     string Name,

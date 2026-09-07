@@ -363,7 +363,8 @@ public interface IMcpToolDiscovery
     /// <param name="server">MCP 服务器定义。</param>
     /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
     /// <returns>从指定 MCP 服务发现的工具名称、描述、输入 Schema 等元数据集合。</returns>
-    Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(McpServerDefinition server, CancellationToken cancellationToken = default);
+    /// <param name="callerBearerToken">本次 HTTP 发现可用的调用方 Token；凭据别名优先，stdio 不注入。</param>
+    Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(McpServerDefinition server, CancellationToken cancellationToken = default, string? callerBearerToken = null);
     #endregion
 }
 

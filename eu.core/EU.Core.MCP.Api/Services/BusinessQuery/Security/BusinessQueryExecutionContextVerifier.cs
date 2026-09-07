@@ -1,3 +1,5 @@
+using EU.Core.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -19,63 +21,11 @@ public sealed record BusinessQueryExecutionContextValidation(
     public bool Succeeded => Context is not null;
 }
 
-public sealed class BusinessQueryExecutionContextKeyResolver(
-    IOptions<BusinessQueryOptions> options,
-    IHostEnvironment environment)
+/// <summary>与 Agent 共用现有本地 JWT 签名配置，不读取独立密钥或环境变量。</summary>
+public sealed class BusinessQueryExecutionContextKeyResolver(IOptionsMonitor<JwtBearerOptions> jwtOptions)
 {
-    public IReadOnlyList<byte[]> ResolveVerificationKeys()
-    {
-        BusinessQueryOptions configuration = options.Value;
-        string[] aliases = string.IsNullOrEmpty(
-            configuration.PreviousExecutionContextSigningKeyAlias)
-                ? [configuration.ExecutionContextSigningKeyAlias]
-                : [
-                    configuration.ExecutionContextSigningKeyAlias,
-                    configuration.PreviousExecutionContextSigningKeyAlias
-                ];
-        var keys = new List<byte[]>(aliases.Length);
-        try
-        {
-            foreach (string alias in aliases)
-            {
-                string suffix = alias["alias:".Length..]
-                    .ToUpperInvariant()
-                    .Replace('-', '_')
-                    .Replace('.', '_');
-                string encoded = environment.IsDevelopment()
-                    && string.Equals(
-                        alias,
-                        configuration.ExecutionContextSigningKeyAlias,
-                        StringComparison.Ordinal)
-                    && !string.IsNullOrEmpty(
-                        configuration.DevelopmentExecutionContextSigningKey)
-                            ? configuration.DevelopmentExecutionContextSigningKey
-                            : Environment.GetEnvironmentVariable(
-                                $"AGENT_BUSINESS_QUERY_SIGNING_KEY_{suffix}")
-                                ?? string.Empty;
-                byte[] key = Convert.FromBase64String(encoded);
-                if (key.Length is < 32 or > 64)
-                {
-                    CryptographicOperations.ZeroMemory(key);
-                    throw new InvalidOperationException();
-                }
-
-                keys.Add(key);
-            }
-
-            return keys;
-        }
-        catch
-        {
-            foreach (byte[] key in keys)
-            {
-                CryptographicOperations.ZeroMemory(key);
-            }
-
-            throw new InvalidOperationException(
-                "The Business Query execution-context key is unavailable.");
-        }
-    }
+    public IReadOnlyList<byte[]> ResolveVerificationKeys() =>
+        [JwtPurposeSigningKey.Derive(jwtOptions, "EU.Core.BusinessQuery.ExecutionContext.v1")];
 }
 
 public sealed partial class BusinessQueryExecutionContextVerifier(

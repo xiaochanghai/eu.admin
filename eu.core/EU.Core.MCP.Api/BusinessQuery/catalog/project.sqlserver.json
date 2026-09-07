@@ -1,0 +1,375 @@
+{
+  "catalogId": "eu-core-business-sqlserver",
+  "revision": 1,
+  "dataSourceCode": "eu-core-main",
+  "dialect": "sqlServer",
+  "timeZoneId": "Asia/Shanghai",
+  "culture": "zh-CN",
+  "formatterVersion": "1.0",
+  "includeBoundaryTies": true,
+  "entities": [
+    {
+      "name": "supplier",
+      "physicalTable": "BdSupplier",
+      "requiredPermission": "business.project.query",
+      "requiresTimeRange": false,
+      "description": "EU 供应商主数据；按税别等维度统计税率，税率仅支持平均、最小、最大值，不是供应商数量。",
+      "grain": [
+        "supplier.code"
+      ],
+      "defaultScopeField": "supplier.companyId",
+      "fields": [
+        {
+          "name": "supplier.code",
+          "physicalColumn": "SupplierNo",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.project.query",
+          "description": "Supplier code.",
+          "allowedOperators": [
+            "equal",
+            "in",
+            "contains"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "supplier.name",
+          "physicalColumn": "FullName",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.project.query",
+          "description": "Supplier full name.",
+          "allowedOperators": [
+            "equal",
+            "in",
+            "contains"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "confidential",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "supplier.shortName",
+          "physicalColumn": "ShortName",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.project.query",
+          "description": "Supplier short name.",
+          "allowedOperators": [
+            "equal",
+            "in",
+            "contains"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "confidential",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "supplier.taxType",
+          "physicalColumn": "TaxType",
+          "kind": "dimension",
+          "dataType": "string",
+          "requiredPermission": "business.project.query",
+          "description": "Supplier tax type.",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "supplier.taxRate",
+          "physicalColumn": "TaxRate",
+          "kind": "measure",
+          "dataType": "decimal",
+          "requiredPermission": "business.project.query",
+          "description": "Supplier tax rate.",
+          "allowedOperators": [
+            "equal",
+            "greaterThan",
+            "greaterThanOrEqual",
+            "lessThan",
+            "lessThanOrEqual",
+            "between"
+          ],
+          "allowedAggregations": [
+            "average",
+            "minimum",
+            "maximum"
+          ],
+          "sensitivity": "confidential",
+          "additivity": "nonAdditive",
+          "unit": "percentage",
+          "currency": "",
+          "precision": 20,
+          "scale": 6,
+          "nullHandling": "exclude"
+        },
+        {
+          "name": "supplier.companyId",
+          "physicalColumn": "CompanyId",
+          "kind": "scope",
+          "dataType": "string",
+          "description": "由可信用户公司授权注入，不能由模型筛选",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        }
+      ],
+      "projectModuleCode": "BD_SUPPLIER_MNG",
+      "requiredBooleanFilters": {
+        "IsActive": true,
+        "IsDeleted": false
+      },
+      "requiredMeasureDimensions": []
+    },
+    {
+      "name": "salesOrder",
+      "physicalTable": "SdOrder",
+      "description": "EU 销售订单金额来自有效且未删除明细，先按订单汇总再按客户、币别聚合；空金额及无明细金额补零。必须包含 currencyId 维度，金额不可跨币别合计。",
+      "requiredPermission": "business.project.query",
+      "requiresTimeRange": false,
+      "grain": [
+        "salesOrder.id"
+      ],
+      "defaultScopeField": "salesOrder.companyId",
+      "fields": [
+        {
+          "name": "salesOrder.id",
+          "physicalColumn": "ID",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "订单主键",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.orderNo",
+          "physicalColumn": "OrderNo",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "订单编号；本工具用于聚合，不保证单张订单详情返回",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.currencyId",
+          "physicalColumn": "CurrencyId",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "币别标识；不同币别不得合计",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.customerId",
+          "physicalColumn": "CustomerId",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "客户标识",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.status",
+          "physicalColumn": "SalesOrderStatus",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "订单状态代码",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.auditStatus",
+          "physicalColumn": "AuditStatus",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "审核状态代码",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.companyId",
+          "physicalColumn": "CompanyId",
+          "kind": "scope",
+          "dataType": "string",
+          "description": "由可信用户公司授权注入，不能由模型筛选",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.netAmount",
+          "physicalColumn": "NoTaxAmount",
+          "kind": "measure",
+          "dataType": "decimal",
+          "description": "有效订单明细未税金额合计，空值补零，按币别分别统计",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [
+            "sum"
+          ],
+          "sensitivity": "internal",
+          "additivity": "additive",
+          "unit": "amount",
+          "currency": "",
+          "precision": 20,
+          "scale": 2,
+          "nullHandling": "zero"
+        },
+        {
+          "name": "salesOrder.taxAmount",
+          "physicalColumn": "TaxAmount",
+          "kind": "measure",
+          "dataType": "decimal",
+          "description": "有效订单明细税额合计，空值补零，按币别分别统计",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [
+            "sum"
+          ],
+          "sensitivity": "internal",
+          "additivity": "additive",
+          "unit": "amount",
+          "currency": "",
+          "precision": 20,
+          "scale": 2,
+          "nullHandling": "zero"
+        },
+        {
+          "name": "salesOrder.grossAmount",
+          "physicalColumn": "TaxIncludedAmount",
+          "kind": "measure",
+          "dataType": "decimal",
+          "description": "有效订单明细含税金额合计，空值补零，按币别分别统计",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [
+            "sum"
+          ],
+          "sensitivity": "internal",
+          "additivity": "additive",
+          "unit": "amount",
+          "currency": "",
+          "precision": 20,
+          "scale": 2,
+          "nullHandling": "zero"
+        }
+      ],
+      "projectModuleCode": "SD_SALES_ORDER_MNG",
+      "requiredBooleanFilters": {
+        "IsActive": true,
+        "IsDeleted": false
+      },
+      "requiredMeasureDimensions": [
+        "salesOrder.currencyId"
+      ]
+    }
+  ],
+  "relationships": []
+}

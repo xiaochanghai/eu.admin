@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\EU.Core.Api\EU.Core.Api.csproj" />
     <ProjectReference Include="..\..\EU.Core.Api.Agent\EU.Core.Api.Agent.csproj" />
+    <ProjectReference Include="..\..\EU.Core.MCP.Api\EU.Core.Api.MCP.csproj" />
     <ProjectReference Include="..\..\EU.Core.Services\EU.Core.Services.csproj" />
     <ProjectReference Include="..\EU.Core.Common\EU.Core.Common.csproj" />
     <ProjectReference Include="..\EU.Core.Extensions\EU.Core.Extensions.csproj" />
@@ -52,6 +53,11 @@
 
   <ItemGroup>
     <Folder Include="Service_Test\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\EU.Core.MCP.Api\BusinessQuery\catalog\sales-order.*.json" Link="ProjectCatalogs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\EU.Core.MCP.Api\BusinessQuery\catalog\project.*.json" Link="ProjectCatalogs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

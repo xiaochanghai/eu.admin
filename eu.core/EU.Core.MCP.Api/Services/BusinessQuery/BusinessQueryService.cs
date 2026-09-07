@@ -40,6 +40,7 @@ public sealed class BusinessQueryService(
     BusinessQueryExecutionContextAccessor executionContextAccessor,
     BusinessQueryExecutionContextVerifier executionContextVerifier,
     IBusinessQueryExecutor executor,
+    BusinessProjectCallerResolver projectCallerResolver,
     TimeProvider timeProvider) : BaseService<BusinessQueryService, BdSupplier>(logger, baseDal),
     IBusinessQueryService
 {
@@ -209,19 +210,56 @@ public sealed class BusinessQueryService(
                 MaximumComplexity = configuration.MaximumComplexity
             },
             quotaStore);
-        var caller = new BusinessCallerContext(
-            userId,
-            trustedContext.TenantId,
-            trustedContext.Permissions,
-            [configuration.DataSourceCode],
-            string.IsNullOrEmpty(rootEntity.DefaultScopeField)
-                ? new Dictionary<string, IReadOnlyList<string>>()
-                : new Dictionary<string, IReadOnlyList<string>>
-                {
-                    [rootEntity.DefaultScopeField] = [configuration.TenantId]
-                });
-        BusinessQueryPolicyDecision decision = await policy.AuthorizeAsync(
-            caller, catalog, plan, resolution.EvaluationTime!, cancellationToken);
+        // 每次查询使用独立客户端，避免并发请求互相覆盖 ADO 取消令牌和超时。
+        using var queryDatabase = Db.CopyNew();
+        queryDatabase.Ado.CommandTimeOut = configuration.CommandTimeoutSeconds;
+        BusinessCallerContext? caller;
+        try
+        {
+            string actualDialect = queryDatabase.CurrentConnectionConfig.DbType.ToString();
+            if (!string.Equals(actualDialect, configuration.Dialect, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("The project database dialect does not match the catalog.");
+            caller = await projectCallerResolver.ResolveAsync(trustedContext, rootEntity, configuration.TenantId,
+                configuration.DataSourceCode, queryDatabase, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 此时尚未预留配额或执行 SQL，仍须用独立于请求取消的令牌写入终态审计。
+            await WriteAuditOrThrowAsync(new BusinessQueryAuditRecord(
+                queryId, userId, configuration.TenantId, catalog.Revision,
+                BusinessQueryPlanFingerprint.Compute(plan), [], string.Empty, 0,
+                elapsed.ElapsedMilliseconds, "cancelled", "BUSINESS_QUERY_CANCELLED", timeProvider.GetUtcNow()));
+            throw;
+        }
+        catch
+        {
+            return await AuditedAsync(queryId, userId, configuration.TenantId, catalog.Revision,
+                string.Empty, [], string.Empty, 0, elapsed, Failure("BUSINESS_QUERY_AUTHORIZATION_UNAVAILABLE"));
+        }
+        if (caller is null)
+            return await AuditedAsync(queryId, userId, configuration.TenantId, catalog.Revision,
+                string.Empty, [], string.Empty, 0, elapsed, Failure("BUSINESS_QUERY_PERMISSION_DENIED"));
+        BusinessQueryPolicyDecision decision;
+        try
+        {
+            decision = await policy.AuthorizeAsync(caller, catalog, plan, resolution.EvaluationTime!, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 策略检查/配额预留同样属于已验证请求的生命周期，取消后必须记录终态。
+            // 未取得预留 ID，不能臆造 ID 结算；存储侧可能残留的预留由既有 TTL 机制失效。
+            await WriteAuditOrThrowAsync(new BusinessQueryAuditRecord(
+                queryId, userId, configuration.TenantId, catalog.Revision,
+                BusinessQueryPlanFingerprint.Compute(plan), [], string.Empty, 0,
+                elapsed.ElapsedMilliseconds, "cancelled", "BUSINESS_QUERY_CANCELLED", timeProvider.GetUtcNow()));
+            throw;
+        }
+        catch
+        {
+            return await AuditedAsync(queryId, userId, configuration.TenantId, catalog.Revision,
+                BusinessQueryPlanFingerprint.Compute(plan), [], string.Empty, 0, elapsed,
+                Failure("BUSINESS_QUERY_POLICY_UNAVAILABLE"));
+        }
         if (!decision.Allowed)
         {
             return await AuditedAsync(
@@ -258,7 +296,7 @@ public sealed class BusinessQueryService(
                     },
                     configuration.CredentialAlias,
                     true),
-                Db,
+                queryDatabase,
                 new BusinessQueryExecutionLimits
                 {
                     CommandTimeoutSeconds = configuration.CommandTimeoutSeconds,
@@ -269,7 +307,10 @@ public sealed class BusinessQueryService(
             BusinessQueryReceipt receipt = BusinessQueryReceipt.Create(
                 queryId, compiled, definition.ToolVersionHash, execution);
             BusinessQueryPresentation presentation =
-                new BusinessQueryPresentationFormatter().Format(compiled, execution.Result);
+                new BusinessQueryPresentationFormatter().Format(compiled, execution.Result,
+                    rootEntity.ProjectModuleCode == "SD_SALES_ORDER_MNG" && compiled.Entity == "salesOrder"
+                        ? await ProjectBusinessQueryPresentation.CreateAsync(compiled, execution.Result, queryDatabase, cancellationToken)
+                        : null);
             quotaOutcome = BusinessQueryQuotaOutcome.Succeeded;
             response = new QueryBusinessDataResponse(
                 true, null, execution.Result, presentation, receipt);

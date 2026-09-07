@@ -86,6 +86,12 @@ public sealed class BusinessQueryPolicy
         }
 
         var selectedFields = new List<BusinessCatalogFieldSnapshot>();
+        if (plan.Measures.Count > 0
+            && entity.RequiredMeasureDimensions.Any(name => !plan.Dimensions.Contains(name, StringComparer.Ordinal)))
+        {
+            return Deny(BusinessQueryPolicyErrorCodes.FieldInvalid, catalog, planHash);
+        }
+
         foreach (string dimension in plan.Dimensions)
         {
             BusinessCatalogFieldSnapshot? field = ResolveField(catalog, entity, dimension);
@@ -211,7 +217,9 @@ public sealed class BusinessQueryPolicy
             Guid.NewGuid(),
             catalog.Revision,
             catalog.Sha256,
-            AllowRuleIds,
+            // TEMP-PROJECT-AUTH: 审计明确标记公司权限暂停，不声称已注入公司范围；恢复时改回 AllowRuleIds。
+            string.IsNullOrEmpty(entity.ProjectModuleCode) ? AllowRuleIds
+                : AllowRuleIds.Select(rule => rule == "scope.trusted-injection" ? "scope.project-disabled" : rule).ToArray(),
             _options.MaximumResultRows,
             _options.MinimumGroupSize,
             complexity,
@@ -334,6 +342,15 @@ public sealed class BusinessQueryPolicy
         out BusinessDataScope? scope,
         out string? error)
     {
+        // TEMP-PROJECT-AUTH: 所有环境暂不限制项目实体的公司范围；非项目目录的租户范围仍然校验。
+        // 恢复时移除此分支，并恢复 BusinessProjectCallerResolver 内已注释的模块/公司权限代码。
+        if (!string.IsNullOrEmpty(entity.ProjectModuleCode))
+        {
+            scope = BusinessDataScope.Empty;
+            error = null;
+            return true;
+        }
+
         if (string.IsNullOrEmpty(entity.DefaultScopeField))
         {
             scope = BusinessDataScope.Empty;

@@ -29,7 +29,10 @@ public sealed record BusinessCatalogEntitySnapshot
         bool requiresTimeRange,
         IReadOnlyList<string> grain,
         string defaultScopeField,
-        IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields)
+        IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields,
+        IReadOnlyDictionary<string, bool>? requiredBooleanFilters = null,
+        IReadOnlyList<string>? requiredMeasureDimensions = null,
+        string projectModuleCode = "")
     {
         Name = name;
         PhysicalTable = physicalTable;
@@ -38,6 +41,10 @@ public sealed record BusinessCatalogEntitySnapshot
         RequiresTimeRange = requiresTimeRange;
         Grain = new ReadOnlyCollection<string>(grain.ToArray());
         DefaultScopeField = defaultScopeField;
+        ProjectModuleCode = projectModuleCode;
+        RequiredBooleanFilters = new ReadOnlyDictionary<string, bool>(
+            (requiredBooleanFilters ?? new Dictionary<string, bool>()).ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal));
+        RequiredMeasureDimensions = new ReadOnlyCollection<string>((requiredMeasureDimensions ?? []).ToArray());
         Fields = new ReadOnlyDictionary<string, BusinessCatalogFieldSnapshot>(
             fields.ToDictionary(
                 item => item.Key,
@@ -60,6 +67,12 @@ public sealed record BusinessCatalogEntitySnapshot
     public string DefaultScopeField { get; }
 
     public IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> Fields { get; }
+
+    public IReadOnlyDictionary<string, bool> RequiredBooleanFilters { get; }
+
+    public IReadOnlyList<string> RequiredMeasureDimensions { get; }
+
+    public string ProjectModuleCode { get; }
 }
 
 public sealed record BusinessCatalogRelationshipSnapshot(

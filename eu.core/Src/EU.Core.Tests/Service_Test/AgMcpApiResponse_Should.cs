@@ -19,6 +19,51 @@ namespace EU.Core.Tests.Service_Test;
 
 public sealed class AgMcpApiResponse_Should
 {
+    [Theory]
+    [InlineData(true, "Bearer test-only-token", "test-only-token")]
+    [InlineData(true, "bearer test-only-token", "test-only-token")]
+    [InlineData(false, "Bearer test-only-token", null)]
+    [InlineData(true, "Basic test-only-token", null)]
+    [InlineData(true, "", null)]
+    public async Task Sync_forwards_only_authenticated_bearer(bool authenticated, string header, string? expected)
+    {
+        bool invoked = false;
+        var lifecycle = Proxy<IAgMcpServerDefinitionServices>((method, args) =>
+        {
+            Assert.Equal(nameof(IAgMcpServerDefinitionServices.SyncAsync), method.Name);
+            Assert.Equal(expected, args![2]);
+            invoked = true;
+            return Task.FromResult(ServiceResult<McpServerDefinition>.OprateSuccess(CreateServer()));
+        });
+        var controller = WithHttpContext(new McpServersController(lifecycle));
+        controller.HttpContext.User = new System.Security.Claims.ClaimsPrincipal(
+            new System.Security.Claims.ClaimsIdentity(authenticated ? "test" : null));
+        controller.Request.Headers.Authorization = header;
+        await controller.Sync(Guid.NewGuid(), new SyncMcpServerRequest(39), CancellationToken.None);
+        Assert.True(invoked);
+    }
+
+    [Theory]
+    [InlineData("", "test-caller-token", "test-caller-token")]
+    [InlineData("", null, null)]
+    [InlineData("alias:test", "test-caller-token", "test-service-token")]
+    public async Task Discovery_prefers_alias_over_caller_token(string alias, string? caller, string? expected)
+    {
+        var discovery = new EU.Core.Agent.Infrastructure.Mcp.SdkMcpToolDiscovery(
+            new([], [], [], false, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)),
+            new TestCredentialResolver());
+        var method = discovery.GetType().GetMethod("ResolveHttpBearerTokenAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var result = (ValueTask<string?>)method.Invoke(discovery,
+            [CreateServer() with { CredentialAlias = alias }, caller, CancellationToken.None])!;
+        Assert.Equal(expected, await result);
+    }
+
+    private sealed class TestCredentialResolver : EU.Core.Agent.Infrastructure.Mcp.IMcpCredentialResolver
+    {
+        public ValueTask<string?> ResolveAsync(string credentialAlias, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<string?>("test-service-token");
+    }
+
     [Fact]
     public async Task Wrap_mcp_queries_and_mutations()
     {

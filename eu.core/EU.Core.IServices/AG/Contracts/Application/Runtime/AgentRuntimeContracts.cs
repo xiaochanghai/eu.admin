@@ -278,7 +278,11 @@ public sealed record AgentMcpToolCallLimit(
     Guid ToolVersionId,
     int MaximumCalls,
     string ErrorCode,
-    string Message);
+    string Message)
+{
+    /// <summary>工具成功后结束当前模型工具循环；默认关闭，不影响普通 MCP 工具。</summary>
+    public bool CompleteAfterSuccess { get; init; }
+}
 
 /// <summary>
 /// 工具审批与统一入口运行的关联信息。

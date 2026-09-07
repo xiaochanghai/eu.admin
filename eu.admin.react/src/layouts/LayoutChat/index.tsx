@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { readBusinessQueryEvent } from "./businessQueryResult";
 import { Bubble, Conversations, Prompts, Sender } from "@ant-design/x";
 import type { BubbleListProps } from "@ant-design/x";
 import { useXChat } from "@ant-design/x-sdk";
@@ -177,6 +178,7 @@ const BusinessQueryResultContent: React.FC<{ content: string; presentationJson?:
 const getTrace = (event: UnifiedChatRunEvent): TraceItem => {
   const payload = parsePayload(event.payloadJson);
   let description = getPayloadText(payload) || event.route || "正在处理";
+  if (event.kind === "completed") description = "运行已完成";
   if (event.kind === "knowledge-retrieved") {
     description = `检索 ${Number(payload.knowledgeBaseCount || 0)} 个知识库，命中 ${Number(payload.knowledgeHitCount || 0)} 个分块`;
   }
@@ -509,6 +511,18 @@ const LayoutChat: React.FC = () => {
       if (citation) setMessages(current => current.map(item => (item.id === active.assistantId && !item.citations.includes(citation) ? { ...item, citations: [...item.citations, citation] } : item)));
     }
     if (event.kind === "tool-succeeded") appendAssistantModules(active.assistantId, extractEmbeddedModules(payload));
+    const businessResult = readBusinessQueryEvent(event);
+    if (businessResult) {
+        flushTyping();
+        setMessages(current => current.some(item => item.id === businessResult.id) ? current : [...current, {
+          ...businessResult,
+          role: "assistant",
+          kind: "BusinessQueryResult",
+          citations: [],
+          modules: [],
+          status: "completed"
+        }]);
+    }
     if (event.kind === "approval-required") {
       const approvalId = getPayloadValue(payload, "approvalId", "ApprovalId");
       active.waitingApproval = true;
@@ -548,7 +562,7 @@ const LayoutChat: React.FC = () => {
               item.id === active.assistantId
                 ? {
                     ...item,
-                    content: run.output || item.content || (messageStatus === "cancelled" ? "运行已取消。" : run.errorCode || "请求失败，请重试。"),
+                    content: run.output || item.content || (messageStatus === "completed" ? "" : messageStatus === "cancelled" ? "运行已取消。" : run.errorCode || "请求失败，请重试。"),
                     status: messageStatus
                   }
                 : item
@@ -559,6 +573,17 @@ const LayoutChat: React.FC = () => {
             if (!events.length) events = await getUnifiedChatRunDetailEvents(active.runId);
             if (activeSdkRunRef.current === active) {
               setTraces(events.filter(event => event.kind !== "message").map(getTrace));
+              const results = events.map(readBusinessQueryEvent).filter(value => value !== undefined);
+              setMessages(current => {
+                const existing = new Set(current.map(item => item.id));
+                const recovered: ChatMessage[] = [];
+                for (const result of results) {
+                  if (existing.has(result.id)) continue;
+                  existing.add(result.id);
+                  recovered.push({ ...result, role: "assistant", kind: "BusinessQueryResult", citations: [], modules: [], status: "completed" });
+                }
+                return [...current, ...recovered];
+              });
             }
           } catch {
             // The terminal Run remains authoritative when trace recovery fails.

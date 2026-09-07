@@ -208,7 +208,8 @@ public sealed class AgMcpPersistence_Should
     {
         public Task<IReadOnlyList<DiscoveredMcpTool>> DiscoverAsync(
             McpServerDefinition server,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            string? callerBearerToken = null)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(tools);

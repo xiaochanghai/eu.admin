@@ -674,6 +674,7 @@ public sealed class UnifiedEntryService
         bool terminalRequested = false;
         bool waitingForApproval = false;
         bool routeSelected = false;
+        var mainBusinessResults = new BusinessQueryRunResultCollector(_businessQueryPolicy, context.MainAgentContext);
         long yieldedSequence = 0;
         IAsyncEnumerator<AgentRunEvent>? enumerator = null;
         using var effectiveCancellation =
@@ -746,6 +747,12 @@ public sealed class UnifiedEntryService
                 }
 
                 AgentRunEvent source = enumerator.Current;
+                BusinessQueryAuthoritativeResult? businessResult = mainBusinessResults.Observe(source);
+                if (businessResult is not null && !active.Scope.TryRegisterBusinessQueryResult(source.RunId, businessResult))
+                {
+                    throw new UnifiedEntryException(UnifiedEntryErrorCodes.BusinessQueryEvidenceRequired,
+                        "The main Agent business query evidence could not be registered.");
+                }
                 string? route = source.Kind switch
                 {
                     AgentRunEventKind.ToolStarted =>

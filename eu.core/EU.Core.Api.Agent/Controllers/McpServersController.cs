@@ -4,6 +4,7 @@ using EU.Core.IServices.Mcp;
 using EU.Core.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Http.Headers;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -128,10 +129,18 @@ public sealed class McpServersController(
     /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
     /// <returns>服务结果，成功时包含MCP 服务定义，失败时包含错误状态和提示。</returns>
     [HttpPost("{id:guid}/sync")]
-    public async Task<ServiceResult<McpServerDefinition>> Sync(Guid id, [FromBody] SyncMcpServerRequest request, CancellationToken cancellationToken) =>
-        await lifecycle.SyncAsync(
+    public async Task<ServiceResult<McpServerDefinition>> Sync(Guid id, [FromBody] SyncMcpServerRequest request, CancellationToken cancellationToken)
+    {
+        string? callerBearerToken = User.Identity?.IsAuthenticated == true
+            && AuthenticationHeaderValue.TryParse(Request.Headers.Authorization.ToString(), out var authorization)
+            && string.Equals(authorization.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase)
+                ? authorization.Parameter
+                : null;
+        return await lifecycle.SyncAsync(
             new SyncMcpServerCommand(id, request.ExpectedLogicalRevision),
-            cancellationToken);
+            cancellationToken,
+            callerBearerToken);
+    }
     #endregion
 
     #region 设置（SetArchived）

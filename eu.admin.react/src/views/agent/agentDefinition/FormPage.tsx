@@ -99,6 +99,11 @@ const emptyReferences: ReferenceState = {
 
 const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, onDisabled }) => {
   const [form] = Form.useForm<AgentFormValues>();
+  // TableList recreates this callback when save-button state changes; it must not reload the draft.
+  const onDisabledRef = React.useRef(onDisabled);
+  useEffect(() => {
+    onDisabledRef.current = onDisabled;
+  }, [onDisabled]);
   const outputMode = Form.useWatch("outputMode", form);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -140,8 +145,8 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
       orchestrationIds: value.Draft.OrchestrationIds || []
     });
     setDirty(false);
-    onDisabled?.(true);
-  }, [form, onDisabled]);
+    onDisabledRef.current?.(true);
+  }, [form]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -167,7 +172,7 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
       if (currentAgent) fillAgent(currentAgent);
       else {
         form.setFieldsValue({ outputMode: "Text", skillVersionIds: [], toolVersionIds: [], knowledgeBaseIds: [], childAgentIds: [], orchestrationIds: [] });
-        onDisabled?.(false);
+        onDisabledRef.current?.(false);
       }
       try {
         setMainAssignmentState(await getMainAgent());
@@ -179,7 +184,7 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
     } finally {
       setLoading(false);
     }
-  }, [Id, fillAgent, form, onDisabled]);
+  }, [Id, fillAgent, form]);
 
   useEffect(() => {
     void load();

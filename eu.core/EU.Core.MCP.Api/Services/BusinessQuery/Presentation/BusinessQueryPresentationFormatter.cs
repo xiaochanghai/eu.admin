@@ -9,7 +9,8 @@ public sealed class BusinessQueryPresentationFormatter
 {
     public BusinessQueryPresentation Format(
         CompiledBusinessQuery query,
-        BusinessQueryResult result)
+        BusinessQueryResult result,
+        BusinessQueryPresentationOverrides? display = null)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(result);
@@ -17,8 +18,8 @@ public sealed class BusinessQueryPresentationFormatter
         var columns = result.Columns.Select(value =>
             new BusinessQueryPresentationColumn(
                 value.Key,
-                value.Key,
-                value.Unit,
+                display?.Labels.GetValueOrDefault(value.Key) ?? value.Key,
+                display?.Labels.ContainsKey(value.Key) == true ? string.Empty : value.Unit,
                 value.Currency)).ToArray();
         var rows = result.Rows.Select(row =>
         {
@@ -27,14 +28,15 @@ public sealed class BusinessQueryPresentationFormatter
             foreach (BusinessQueryColumn column in result.Columns)
             {
                 BusinessQueryValue value = row.Values[column.Key];
+                string? name = display?.Values.GetValueOrDefault((column.Key, value.CanonicalValue));
                 values.Add(column.Key, new BusinessQueryPresentationCell(
-                    FormatValue(value, column, culture),
-                    value.UntrustedData));
+                    name ?? FormatValue(value, column, culture),
+                    name is not null || value.UntrustedData));
             }
 
             return (IReadOnlyDictionary<string, BusinessQueryPresentationCell>)values;
         }).ToArray();
-        string title = $"Business query result: {query.Entity}";
+        string title = display?.Title ?? $"Business query result: {query.Entity}";
         return new BusinessQueryPresentation(
             title,
             columns,

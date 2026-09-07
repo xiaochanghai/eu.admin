@@ -15,7 +15,8 @@ public sealed record BusinessQueryForwardingOptions
     public string Origin { get; init; } = string.Empty;
     public string Issuer { get; init; } = string.Empty;
     public string Audience { get; init; } = string.Empty;
-    public string SigningKeyAlias { get; init; } = string.Empty;
+    public string SigningKeyAlias { get; init; } = "alias:project-jwt";
+    // Legacy field retained for configuration compatibility; ignored.
     public string DevelopmentSigningKey { get; init; } = string.Empty;
     public long CatalogRevision { get; init; }
     public string CatalogHash { get; init; } = string.Empty;
@@ -31,14 +32,6 @@ public sealed partial class BusinessQueryForwardingOptionsValidator(
         string? name,
         BusinessQueryForwardingOptions options)
     {
-        if (!string.IsNullOrEmpty(options.DevelopmentSigningKey)
-            && (!environment.IsDevelopment()
-                || !IsValidSigningKey(options.DevelopmentSigningKey)))
-        {
-            return ValidateOptionsResult.Fail(
-                "BusinessQueryForwarding development signing key is invalid.");
-        }
-
         if (!options.Enabled)
         {
             return ValidateOptionsResult.Success;
@@ -69,21 +62,6 @@ public sealed partial class BusinessQueryForwardingOptionsValidator(
         }
 
         return ValidateOptionsResult.Success;
-    }
-
-    private static bool IsValidSigningKey(string encoded)
-    {
-        try
-        {
-            byte[] key = Convert.FromBase64String(encoded);
-            bool valid = key.Length is >= 32 and <= 64;
-            System.Security.Cryptography.CryptographicOperations.ZeroMemory(key);
-            return valid;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
     }
 
     [GeneratedRegex("^[a-z][a-z0-9-]{1,63}$", RegexOptions.CultureInvariant)]

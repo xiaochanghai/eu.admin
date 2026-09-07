@@ -87,6 +87,8 @@ public static class McpServiceExtensions
         services.AddSingleton<BusinessQueryReadiness>();
         services.AddSingleton<BusinessQueryResultProtector>();
         services.AddSingleton<IBusinessQueryExecutor, SqlSugarBusinessQueryExecutor>();
+        services.AddSingleton<IBusinessProjectAccessReader, BusinessProjectAccessReader>();
+        services.AddSingleton<BusinessProjectCallerResolver>();
         services.AddSingleton<BusinessQueryService>();
         services.AddSingleton<IBusinessQueryService>(serviceProvider =>
             serviceProvider.GetRequiredService<BusinessQueryService>());

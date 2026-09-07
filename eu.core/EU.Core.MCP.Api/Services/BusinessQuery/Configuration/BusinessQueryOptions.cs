@@ -23,6 +23,7 @@ public sealed record BusinessQueryOptions
     public string ServerCode { get; init; } = string.Empty;
     public string ExecutionContextIssuer { get; init; } = string.Empty;
     public string ExecutionContextAudience { get; init; } = string.Empty;
+    // Legacy key fields retained for configuration compatibility; ignored.
     public string ExecutionContextSigningKeyAlias { get; init; } = string.Empty;
     public string DevelopmentExecutionContextSigningKey { get; init; } = string.Empty;
     public string PreviousExecutionContextSigningKeyAlias { get; init; } = string.Empty;
@@ -76,15 +77,6 @@ public sealed partial class BusinessQueryOptionsValidator(
             failures.Add("Development SQLite settings cannot be enabled for this provider.");
         }
 
-        if (!string.IsNullOrEmpty(options.DevelopmentExecutionContextSigningKey)
-            && (environment?.IsDevelopment() != true
-                || !sqlite
-                || !options.AllowDevelopmentSqlite
-                || !IsValidSigningKey(options.DevelopmentExecutionContextSigningKey)))
-        {
-            failures.Add("The development execution-context signing key is invalid.");
-        }
-
         if (!string.IsNullOrEmpty(options.DevelopmentServiceToken)
             && (environment?.IsDevelopment() != true
                 || !sqlite
@@ -124,15 +116,6 @@ public sealed partial class BusinessQueryOptionsValidator(
         if (!SafeCode().IsMatch(options.ServerCode ?? string.Empty)
             || !SafeCode().IsMatch(options.ExecutionContextIssuer ?? string.Empty)
             || !SafeCode().IsMatch(options.ExecutionContextAudience ?? string.Empty)
-            || !CredentialAlias().IsMatch(
-                options.ExecutionContextSigningKeyAlias ?? string.Empty)
-            || (!string.IsNullOrEmpty(options.PreviousExecutionContextSigningKeyAlias)
-                && (!CredentialAlias().IsMatch(
-                        options.PreviousExecutionContextSigningKeyAlias)
-                    || string.Equals(
-                        options.ExecutionContextSigningKeyAlias,
-                        options.PreviousExecutionContextSigningKeyAlias,
-                        StringComparison.Ordinal)))
             || options.ExecutionContextClockSkewSeconds is < 0 or > 5)
         {
             failures.Add("Business Query execution-context configuration is invalid.");
@@ -149,7 +132,7 @@ public sealed partial class BusinessQueryOptionsValidator(
             failures.Add("BusinessQuery:AuditDatabasePath must be a separate safe relative .db path.");
         }
 
-        if (!SafeCode().IsMatch(options.TenantId ?? string.Empty)
+        if (!Regex.IsMatch(options.TenantId ?? string.Empty, "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
             || options.CommandTimeoutSeconds is < 1 or > 300
             || options.MaximumResultRows is < 1 or > 100
             || options.MinimumGroupSize is < 2 or > 1000
@@ -181,21 +164,6 @@ public sealed partial class BusinessQueryOptionsValidator(
 
         return value.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries)
             .All(segment => segment.Length <= 128 && SafePathSegment().IsMatch(segment));
-    }
-
-    private static bool IsValidSigningKey(string encoded)
-    {
-        try
-        {
-            byte[] key = Convert.FromBase64String(encoded);
-            bool valid = key.Length is >= 32 and <= 64;
-            System.Security.Cryptography.CryptographicOperations.ZeroMemory(key);
-            return valid;
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
     }
 
     [GeneratedRegex("^[a-z][a-z0-9-]{1,63}$", RegexOptions.CultureInvariant)]

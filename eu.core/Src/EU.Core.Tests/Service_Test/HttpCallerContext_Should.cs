@@ -31,7 +31,7 @@ public sealed class HttpCallerContext_Should
 
         Assert.Equal(UserId.ToString("D"), caller.UserId);
         Assert.Equal("7", caller.TenantId);
-        Assert.Empty(caller.Permissions);
+        Assert.Equal("business.project.query", Assert.Single(caller.Permissions));
         Assert.Equal("trace-1", caller.CorrelationId);
 
         var identity = new AgentExecutionIdentity(
@@ -39,7 +39,7 @@ public sealed class HttpCallerContext_Should
             caller.TenantId,
             caller.Permissions,
             caller.CorrelationId);
-        Assert.Empty(identity.Permissions);
+        Assert.Equal("business.project.query", Assert.Single(identity.Permissions));
     }
 
     [Fact]
@@ -55,6 +55,26 @@ public sealed class HttpCallerContext_Should
             new HttpCallerContext(
                 new HttpContextAccessor { HttpContext = context },
                 new TestUser(null, 0)));
+    }
+
+    [Fact]
+    public void Reject_unauthenticated_user_even_when_user_id_is_available()
+    {
+        var context = new DefaultHttpContext { TraceIdentifier = "trace-1" };
+        Assert.Throws<InvalidOperationException>(() => new HttpCallerContext(
+            new HttpContextAccessor { HttpContext = context }, new TestUser(UserId, 7)));
+    }
+
+    [Fact]
+    public void Does_not_promote_arbitrary_permission_claims_to_business_authorization()
+    {
+        var context = new DefaultHttpContext
+        {
+            TraceIdentifier = "trace-1",
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("permission", "business.sales.admin")], "Bearer"))
+        };
+        var caller = new HttpCallerContext(new HttpContextAccessor { HttpContext = context }, new TestUser(UserId, 7));
+        Assert.Equal("business.project.query", Assert.Single(caller.Permissions));
     }
 
     private sealed class TestUser(Guid? id, long tenantId) : IUser

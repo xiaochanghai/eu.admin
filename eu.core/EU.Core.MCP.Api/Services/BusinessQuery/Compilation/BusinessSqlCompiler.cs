@@ -76,6 +76,12 @@ public sealed class BusinessSqlCompiler
             throw Error(BusinessQueryCompilationErrorCodes.FieldInvalid);
         }
 
+        if (plan.Measures.Count > 0
+            && root.RequiredMeasureDimensions.Any(name => !plan.Dimensions.Contains(name, StringComparer.Ordinal)))
+        {
+            throw Error(BusinessQueryCompilationErrorCodes.PolicyMismatch);
+        }
+
         IReadOnlyDictionary<string, FieldBinding> bindings = BuildBindings(
             catalog,
             root,
@@ -179,22 +185,27 @@ public sealed class BusinessSqlCompiler
             throw Error(BusinessQueryCompilationErrorCodes.FieldInvalid);
         }
 
-        string minimumGroup = parameters.Add(
-            BusinessCatalogDataType.Integer,
-            policy.MinimumGroupSize);
-        string[] minimumGroupChecks =
-        [
-            $"COUNT(*) >= {minimumGroup}",
-            .. plan.Measures
-                .Select(value => GetBinding(bindings, value.Field))
-                .Where(value =>
-                    value.Field.Sensitivity is BusinessCatalogSensitivity.Confidential
-                        or BusinessCatalogSensitivity.Restricted
-                    && value.Field.NullHandling is BusinessNullHandling.Preserve
-                        or BusinessNullHandling.Exclude)
-                .DistinctBy(value => value.Field.Name)
-                .Select(value => $"COUNT({Column(dialect, value)}) >= {minimumGroup}")
-        ];
+        // 项目业务报表必须保留小分组；非项目统计目录继续执行小样本保护。
+        string[] minimumGroupChecks = [];
+        if (string.IsNullOrEmpty(root.ProjectModuleCode))
+        {
+            string minimumGroup = parameters.Add(
+                BusinessCatalogDataType.Integer,
+                policy.MinimumGroupSize);
+            minimumGroupChecks =
+            [
+                $"COUNT(*) >= {minimumGroup}",
+                .. plan.Measures
+                    .Select(value => GetBinding(bindings, value.Field))
+                    .Where(value =>
+                        value.Field.Sensitivity is BusinessCatalogSensitivity.Confidential
+                            or BusinessCatalogSensitivity.Restricted
+                        && value.Field.NullHandling is BusinessNullHandling.Preserve
+                            or BusinessNullHandling.Exclude)
+                    .DistinctBy(value => value.Field.Name)
+                    .Select(value => $"COUNT({Column(dialect, value)}) >= {minimumGroup}")
+            ];
+        }
         string rankLimit = parameters.Add(BusinessCatalogDataType.Integer, plan.Limit);
         string[] requestedOrder = ResolveOrder(plan, orderAliases);
         string[] stableOrder = plan.Dimensions
@@ -228,13 +239,13 @@ public sealed class BusinessSqlCompiler
         sql.AppendLine("WITH grouped AS (");
         sql.Append("    SELECT ").AppendLine(string.Join(", ", groupedSelect));
         sql.Append("    FROM ")
-            .Append(dialect.QuoteIdentifier(root.PhysicalTable))
+            .Append(FilteredTable(root, dialect, parameters))
             .Append(" AS ")
             .AppendLine(dialect.QuoteIdentifier("e0"));
         foreach (JoinBinding join in joins)
         {
             sql.Append("    LEFT JOIN ")
-                .Append(dialect.QuoteIdentifier(join.Target.PhysicalTable))
+                .Append(FilteredTable(join.Target, dialect, parameters))
                 .Append(" AS ")
                 .Append(dialect.QuoteIdentifier(join.TargetAlias))
                 .Append(" ON ")
@@ -257,7 +268,10 @@ public sealed class BusinessSqlCompiler
             sql.Append("    GROUP BY ").AppendLine(string.Join(", ", groupBy));
         }
 
-        sql.Append("    HAVING ").AppendLine(string.Join(" AND ", minimumGroupChecks));
+        if (minimumGroupChecks.Length > 0)
+        {
+            sql.Append("    HAVING ").AppendLine(string.Join(" AND ", minimumGroupChecks));
+        }
         sql.AppendLine("),");
         sql.AppendLine("ranked AS (");
         sql.Append("    SELECT ").Append(groupedColumns)
@@ -301,6 +315,45 @@ public sealed class BusinessSqlCompiler
             plan.Limit,
             policy.MaximumResultRows,
             catalog.IncludeBoundaryTies);
+    }
+
+    /// <summary>在每个实体的输入表上施加状态约束，关联表同样受保护且保留 LEFT JOIN 语义。</summary>
+    private static string FilteredTable(BusinessCatalogEntitySnapshot entity, IBusinessSqlDialect dialect, ParameterBuilder parameters)
+    {
+        string table = dialect.QuoteIdentifier(entity.PhysicalTable);
+        string sourceAlias = string.Empty;
+        if (entity.Name == "salesOrder" && entity.ProjectModuleCode == "SD_SALES_ORDER_MNG"
+            && entity.PhysicalTable == "SdOrder")
+        {
+            table = SalesOrderDetailTotals(entity, dialect, parameters);
+            sourceAlias = $" AS {dialect.QuoteIdentifier("source")}";
+        }
+        if (entity.RequiredBooleanFilters.Count == 0)
+            return table;
+
+        string[] conditions = entity.RequiredBooleanFilters.OrderBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => $"{dialect.QuoteIdentifier(item.Key)} = {parameters.Add(BusinessCatalogDataType.Boolean, item.Value)}")
+            .ToArray();
+        return $"(SELECT * FROM {table}{sourceAlias} WHERE {string.Join(" AND ", conditions)})";
+    }
+
+    /// <summary>项目销售金额取有效明细，先按订单汇总再关联主表，避免放大客户/币别聚合。</summary>
+    private static string SalesOrderDetailTotals(BusinessCatalogEntitySnapshot entity, IBusinessSqlDialect dialect, ParameterBuilder parameters)
+    {
+        string Q(string name) => dialect.QuoteIdentifier(name);
+        string[] amounts = ["NoTaxAmount", "TaxAmount", "TaxIncludedAmount"];
+        string active = parameters.Add(BusinessCatalogDataType.Boolean, true);
+        string deleted = parameters.Add(BusinessCatalogDataType.Boolean, false);
+        string totals = string.Join(", ", amounts.Select(name => $"SUM(COALESCE({Q(name)}, 0)) AS {Q(name)}"));
+        string[] sourceColumns = entity.Fields.Values.Select(field => field.PhysicalColumn)
+            .Concat(entity.RequiredBooleanFilters.Keys).Distinct(StringComparer.Ordinal).ToArray();
+        string projection = string.Join(", ", sourceColumns.Select(name => amounts.Contains(name, StringComparer.Ordinal)
+            ? $"COALESCE({Q("detailTotals")}.{Q(name)}, 0) AS {Q(name)}"
+            : $"{Q("orders")}.{Q(name)} AS {Q(name)}"));
+        return $"(SELECT {projection} FROM {Q("SdOrder")} AS {Q("orders")} LEFT JOIN "
+            + $"(SELECT {Q("OrderId")}, {totals} FROM {Q("SdOrderDetail")} "
+            + $"WHERE {Q("IsActive")} = {active} AND {Q("IsDeleted")} = {deleted} GROUP BY {Q("OrderId")}) AS {Q("detailTotals")} "
+            + $"ON {Q("orders")}.{Q("ID")} = {Q("detailTotals")}.{Q("OrderId")})";
     }
 
     private static IReadOnlyDictionary<string, FieldBinding> BuildBindings(

@@ -100,6 +100,34 @@ public sealed partial class BusinessSemanticCatalogValidator
                 return Invalid("Entity Grain or default scope fields are invalid.");
             }
 
+            if (entity.RequiredMeasureDimensions.Any(name =>
+                    !fields.TryGetValue(name, out BusinessCatalogFieldSnapshot? dimension)
+                    || dimension.Kind != BusinessCatalogFieldKind.Dimension
+                    || dimension.Sensitivity == BusinessCatalogSensitivity.Restricted))
+            {
+                return Invalid("Required measure dimensions must be visible dimensions of the entity.");
+            }
+
+            if (string.IsNullOrEmpty(entity.ProjectModuleCode)
+                && (entity.RequiredPermission == "business.project.query"
+                    || entity.Fields.Any(field => field.RequiredPermission == "business.project.query")))
+                return Invalid("The project query capability requires a project module binding.");
+
+            if (!string.IsNullOrEmpty(entity.ProjectModuleCode)
+                && (!Regex.IsMatch(entity.ProjectModuleCode, "^[A-Z][A-Z0-9_]{0,63}$")
+                    || entity.RequiredPermission != "business.project.query"
+                    || entity.Fields.Any(field => field.RequiredPermission != "business.project.query")
+                    || string.IsNullOrEmpty(entity.DefaultScopeField)
+                    || !fields.TryGetValue(entity.DefaultScopeField, out var companyScope)
+                    || companyScope.Kind != BusinessCatalogFieldKind.Scope
+                    || companyScope.DataType != BusinessCatalogDataType.String
+                    || companyScope.PhysicalColumn != "CompanyId"
+                    || !entity.RequiredBooleanFilters.TryGetValue("IsDeleted", out bool deleted) || deleted
+                    || !entity.RequiredBooleanFilters.TryGetValue("IsActive", out bool active) || !active))
+            {
+                return Invalid("Project entities require module authorization, company scope and active/undeleted filters.");
+            }
+
             snapshots.Add(
                 entity.Name,
                 new BusinessCatalogEntitySnapshot(
@@ -110,7 +138,10 @@ public sealed partial class BusinessSemanticCatalogValidator
                     entity.RequiresTimeRange,
                     entity.Grain,
                     entity.DefaultScopeField,
-                    fields));
+                    fields,
+                    entity.RequiredBooleanFilters,
+                    entity.RequiredMeasureDimensions,
+                    entity.ProjectModuleCode));
         }
 
         var relationships = new List<BusinessCatalogRelationshipSnapshot>();
@@ -135,6 +166,8 @@ public sealed partial class BusinessSemanticCatalogValidator
                 relationship.ToField,
                 relationship.Cardinality,
                 relationship.FanOutPolicy));
+            if (!string.IsNullOrEmpty(snapshots[relationship.ToEntity].ProjectModuleCode))
+                return Invalid("Project-authorized entities must be queried as roots, not through another entity.");
         }
 
         if (HasRelationshipCycle(snapshots.Keys, relationships))
@@ -192,6 +225,14 @@ public sealed partial class BusinessSemanticCatalogValidator
             || HasDuplicates(entity.Grain)
             || (entity.DefaultScopeField?.Length > 0
                 && !LogicalNamePattern().IsMatch(entity.DefaultScopeField))
+            || entity.RequiredBooleanFilters is null
+            || entity.RequiredBooleanFilters.Count > 8
+            || entity.RequiredBooleanFilters.Keys.Any(name => !PhysicalSegmentPattern().IsMatch(name))
+            || entity.RequiredBooleanFilters.Keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != entity.RequiredBooleanFilters.Count
+            || entity.RequiredMeasureDimensions is null
+            || entity.RequiredMeasureDimensions.Count > 8
+            || entity.RequiredMeasureDimensions.Any(name => !LogicalNamePattern().IsMatch(name ?? string.Empty))
+            || HasDuplicates(entity.RequiredMeasureDimensions)
             || entity.Fields is null
             || entity.Fields.Count is < 1 or > MaximumFieldsPerEntity)
         {

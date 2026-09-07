@@ -394,7 +394,10 @@ public static class BusinessQueryMcpToolCallLimits
                     tool.ToolVersionId,
                     1,
                     UnifiedEntryErrorCodes.BusinessQueryCallLimitExceeded,
-                    "The controlled business query tool may be called only once per run."))
+                    "The controlled business query tool may be called only once per run.")
+                {
+                    CompleteAfterSuccess = true
+                })
                 .ToArray();
     #endregion
 }
