@@ -322,10 +322,9 @@ public sealed class BusinessSqlCompiler
     {
         string table = dialect.QuoteIdentifier(entity.PhysicalTable);
         string sourceAlias = string.Empty;
-        if (entity.Name == "salesOrder" && entity.ProjectModuleCode == "SD_SALES_ORDER_MNG"
-            && entity.PhysicalTable == "SdOrder")
+        if (entity.DetailAggregate is not null)
         {
-            table = SalesOrderDetailTotals(entity, dialect, parameters);
+            table = DetailAggregateSource(entity, dialect, parameters);
             sourceAlias = $" AS {dialect.QuoteIdentifier("source")}";
         }
         if (entity.RequiredBooleanFilters.Count == 0)
@@ -337,23 +336,25 @@ public sealed class BusinessSqlCompiler
         return $"(SELECT * FROM {table}{sourceAlias} WHERE {string.Join(" AND ", conditions)})";
     }
 
-    /// <summary>项目销售金额取有效明细，先按订单汇总再关联主表，避免放大客户/币别聚合。</summary>
-    private static string SalesOrderDetailTotals(BusinessCatalogEntitySnapshot entity, IBusinessSqlDialect dialect, ParameterBuilder parameters)
+    /// <summary>按目录声明的唯一主表粒度预汇总明细，再 LEFT JOIN 主表；不包含业务表名或字段名。</summary>
+    private static string DetailAggregateSource(BusinessCatalogEntitySnapshot entity, IBusinessSqlDialect dialect, ParameterBuilder parameters)
     {
+        var source = entity.DetailAggregate!;
         string Q(string name) => dialect.QuoteIdentifier(name);
-        string[] amounts = ["NoTaxAmount", "TaxAmount", "TaxIncludedAmount"];
-        string active = parameters.Add(BusinessCatalogDataType.Boolean, true);
-        string deleted = parameters.Add(BusinessCatalogDataType.Boolean, false);
-        string totals = string.Join(", ", amounts.Select(name => $"SUM(COALESCE({Q(name)}, 0)) AS {Q(name)}"));
+        var mappings = source.Measures.OrderBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => (Target: entity.Fields[item.Key].PhysicalColumn, Source: item.Value)).ToArray();
+        string totals = string.Join(", ", mappings.Select(item => $"SUM(COALESCE({Q(item.Source)}, 0)) AS {Q(item.Target)}"));
+        string conditions = string.Join(" AND ", source.RequiredBooleanFilters.OrderBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => $"{Q(item.Key)} = {parameters.Add(BusinessCatalogDataType.Boolean, item.Value)}"));
         string[] sourceColumns = entity.Fields.Values.Select(field => field.PhysicalColumn)
             .Concat(entity.RequiredBooleanFilters.Keys).Distinct(StringComparer.Ordinal).ToArray();
-        string projection = string.Join(", ", sourceColumns.Select(name => amounts.Contains(name, StringComparer.Ordinal)
+        string projection = string.Join(", ", sourceColumns.Select(name => mappings.Any(item => item.Target == name)
             ? $"COALESCE({Q("detailTotals")}.{Q(name)}, 0) AS {Q(name)}"
             : $"{Q("orders")}.{Q(name)} AS {Q(name)}"));
-        return $"(SELECT {projection} FROM {Q("SdOrder")} AS {Q("orders")} LEFT JOIN "
-            + $"(SELECT {Q("OrderId")}, {totals} FROM {Q("SdOrderDetail")} "
-            + $"WHERE {Q("IsActive")} = {active} AND {Q("IsDeleted")} = {deleted} GROUP BY {Q("OrderId")}) AS {Q("detailTotals")} "
-            + $"ON {Q("orders")}.{Q("ID")} = {Q("detailTotals")}.{Q("OrderId")})";
+        return $"(SELECT {projection} FROM {Q(entity.PhysicalTable)} AS {Q("orders")} LEFT JOIN "
+            + $"(SELECT {Q(source.ForeignKeyColumn)}, {totals} FROM {Q(source.PhysicalTable)} "
+            + $"WHERE {conditions} GROUP BY {Q(source.ForeignKeyColumn)}) AS {Q("detailTotals")} "
+            + $"ON {Q("orders")}.{Q(entity.Fields[source.ParentKeyField].PhysicalColumn)} = {Q("detailTotals")}.{Q(source.ForeignKeyColumn)})";
     }
 
     private static IReadOnlyDictionary<string, FieldBinding> BuildBindings(

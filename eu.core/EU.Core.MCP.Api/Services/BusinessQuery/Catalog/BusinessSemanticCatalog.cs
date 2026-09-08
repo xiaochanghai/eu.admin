@@ -7,7 +7,8 @@ public enum BusinessCatalogDialect
     Unknown,
     SqlServer,
     Sqlite,
-    MySql
+    MySql,
+    Auto
 }
 
 public enum BusinessCatalogFieldKind
@@ -108,7 +109,18 @@ public sealed record BusinessCatalogEntity(
 
     /// <summary>EU 项目模块代码；设置后必须通过项目模块权限和公司数据范围校验。</summary>
     public string ProjectModuleCode { get; init; } = string.Empty;
+
+    /// <summary>可选的单明细源：按主表唯一粒度预汇总后 LEFT JOIN；未配置时直接读取主表。</summary>
+    public BusinessDetailAggregate? DetailAggregate { get; init; }
 }
+
+/// <summary>受信任的明细预汇总配置，不允许 SQL 表达式；当前仅支持数值求和与空值补零。</summary>
+public sealed record BusinessDetailAggregate(
+    string PhysicalTable,
+    string ParentKeyField,
+    string ForeignKeyColumn,
+    IReadOnlyDictionary<string, bool> RequiredBooleanFilters,
+    IReadOnlyDictionary<string, string> Measures);
 
 public sealed record BusinessCatalogRelationship(
     string Name,

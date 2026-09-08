@@ -48,19 +48,15 @@ public static class McpServiceExtensions
                 throw new InvalidOperationException("The configured business Catalog is unavailable.");
             }
 
+            // 与 BusinessQueryService 使用同一仓储所选连接，仅读取类型，不打开数据库。
+            var database = serviceProvider.GetRequiredService<IBaseRepository<BdSupplier>>().Db;
+            BusinessCatalogDialect configuredDialect = BusinessQueryDatabaseDialect.Resolve(
+                database.CurrentConnectionConfig.DbType, options.Dialect, environment.IsDevelopment(), options.AllowDevelopmentSqlite);
             BusinessCatalogLoadResult loaded = new BusinessSemanticCatalogLoader().Load(
                 File.ReadAllText(path),
-                options.ExpectedCatalogHash);
+                options.ExpectedCatalogHash, configuredDialect);
             BusinessCatalogSnapshot catalog = loaded.Snapshot
                 ?? throw new InvalidOperationException(loaded.Error?.Code ?? "BUSINESS_CATALOG_INVALID");
-            BusinessCatalogDialect configuredDialect = options.Dialect switch
-            {
-                "SqlServer" => BusinessCatalogDialect.SqlServer,
-                "MySql" => BusinessCatalogDialect.MySql,
-                "Sqlite" when environment.IsDevelopment() && options.AllowDevelopmentSqlite =>
-                    BusinessCatalogDialect.Sqlite,
-                _ => throw new InvalidOperationException("The configured business data provider is unavailable.")
-            };
             if (!string.Equals(catalog.DataSourceCode, options.DataSourceCode, StringComparison.Ordinal)
                 || catalog.Dialect != configuredDialect)
             {

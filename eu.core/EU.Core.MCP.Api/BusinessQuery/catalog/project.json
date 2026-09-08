@@ -1,8 +1,8 @@
 {
-  "catalogId": "eu-core-business-mysql",
+  "catalogId": "eu-core-business",
   "revision": 1,
   "dataSourceCode": "eu-core-main",
-  "dialect": "mySql",
+  "dialect": "auto",
   "timeZoneId": "Asia/Shanghai",
   "culture": "zh-CN",
   "formatterVersion": "1.0",
@@ -362,6 +362,17 @@
         }
       ],
       "projectModuleCode": "SD_SALES_ORDER_MNG",
+      "detailAggregate": {
+        "physicalTable": "SdOrderDetail",
+        "parentKeyField": "salesOrder.id",
+        "foreignKeyColumn": "OrderId",
+        "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false },
+        "measures": {
+          "salesOrder.netAmount": "NoTaxAmount",
+          "salesOrder.taxAmount": "TaxAmount",
+          "salesOrder.grossAmount": "TaxIncludedAmount"
+        }
+      },
       "requiredBooleanFilters": {
         "IsActive": true,
         "IsDeleted": false

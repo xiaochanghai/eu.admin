@@ -56,9 +56,9 @@ public sealed partial class BusinessQueryOptionsValidator(
             options.Dialect, "Sqlite", StringComparison.Ordinal);
         bool mySql = string.Equals(
             options.Dialect, "MySql", StringComparison.Ordinal);
-        if (!sqlServer && !sqlite && !mySql)
+        if (!sqlServer && !sqlite && !mySql && options.Dialect != "Auto")
         {
-            failures.Add("BusinessQuery:Dialect must be SqlServer, MySql, or the development-only Sqlite mode.");
+            failures.Add("BusinessQuery:Dialect must be Auto, SqlServer, MySql, or the development-only Sqlite mode.");
         }
 
         if (sqlite

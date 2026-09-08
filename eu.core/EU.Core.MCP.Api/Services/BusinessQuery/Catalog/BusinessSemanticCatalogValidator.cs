@@ -40,7 +40,7 @@ public sealed partial class BusinessSemanticCatalogValidator
             || !SafeCodePattern().IsMatch(catalog.CatalogId ?? string.Empty)
             || catalog.Revision <= 0
             || !SafeCodePattern().IsMatch(catalog.DataSourceCode ?? string.Empty)
-            || catalog.Dialect == BusinessCatalogDialect.Unknown
+            || catalog.Dialect is not (BusinessCatalogDialect.SqlServer or BusinessCatalogDialect.MySql or BusinessCatalogDialect.Sqlite)
             || !IsValidTimeZone(catalog.TimeZoneId)
             || !IsValidCulture(catalog.Culture)
             || !SafeVersionPattern().IsMatch(catalog.FormatterVersion ?? string.Empty)
@@ -128,6 +128,9 @@ public sealed partial class BusinessSemanticCatalogValidator
                 return Invalid("Project entities require module authorization, company scope and active/undeleted filters.");
             }
 
+            if (!IsValidDetailAggregate(entity, fields))
+                return Invalid("Detail aggregation requires a unique parent grain, safe identifiers, active/undeleted filters and additive zero-filled sum measures.");
+
             snapshots.Add(
                 entity.Name,
                 new BusinessCatalogEntitySnapshot(
@@ -141,7 +144,8 @@ public sealed partial class BusinessSemanticCatalogValidator
                     fields,
                     entity.RequiredBooleanFilters,
                     entity.RequiredMeasureDimensions,
-                    entity.ProjectModuleCode));
+                    entity.ProjectModuleCode,
+                    entity.DetailAggregate));
         }
 
         var relationships = new List<BusinessCatalogRelationshipSnapshot>();
@@ -206,6 +210,42 @@ public sealed partial class BusinessSemanticCatalogValidator
                 snapshots,
                 relationships),
             null);
+    }
+
+    private static bool IsValidDetailAggregate(BusinessCatalogEntity entity, IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields)
+    {
+        var source = entity.DetailAggregate;
+        if (source is null) return true;
+        if (string.IsNullOrEmpty(entity.ProjectModuleCode)
+            || !PhysicalIdentifierPattern().IsMatch(source.PhysicalTable ?? string.Empty)
+            || string.Equals(source.PhysicalTable, entity.PhysicalTable, StringComparison.OrdinalIgnoreCase)
+            || !PhysicalSegmentPattern().IsMatch(source.ForeignKeyColumn ?? string.Empty)
+            || entity.Grain.Count != 1 || entity.Grain[0] != source.ParentKeyField
+            || !fields.TryGetValue(source.ParentKeyField ?? string.Empty, out var parent)
+            || parent.Kind != BusinessCatalogFieldKind.Dimension
+            || source.RequiredBooleanFilters is null || source.RequiredBooleanFilters.Count > 8
+            || source.RequiredBooleanFilters.Keys.Any(key => !PhysicalSegmentPattern().IsMatch(key))
+            || source.RequiredBooleanFilters.Keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != source.RequiredBooleanFilters.Count
+            || !source.RequiredBooleanFilters.TryGetValue("IsActive", out bool active) || !active
+            || !source.RequiredBooleanFilters.TryGetValue("IsDeleted", out bool deleted) || deleted
+            || source.Measures is null || source.Measures.Count is < 1 or > 8)
+            return false;
+
+        foreach (var mapping in source.Measures)
+        {
+            if (!PhysicalSegmentPattern().IsMatch(mapping.Value ?? string.Empty)
+                || !fields.TryGetValue(mapping.Key, out var field)
+                || field.Kind != BusinessCatalogFieldKind.Measure
+                || field.DataType is not (BusinessCatalogDataType.Decimal or BusinessCatalogDataType.Integer)
+                || field.Additivity != BusinessMeasureAdditivity.Additive
+                || field.NullHandling != BusinessNullHandling.Zero
+                || field.AllowedAggregations.Count != 1 || !field.AllowedAggregations.Contains(BusinessAggregation.Sum)
+                || field.Sensitivity is BusinessCatalogSensitivity.Confidential or BusinessCatalogSensitivity.Restricted
+                || string.Equals(field.PhysicalColumn, source.ForeignKeyColumn, StringComparison.OrdinalIgnoreCase)
+                || entity.RequiredBooleanFilters.Keys.Contains(field.PhysicalColumn, StringComparer.OrdinalIgnoreCase))
+                return false;
+        }
+        return fields.Values.Select(field => field.PhysicalColumn).Distinct(StringComparer.OrdinalIgnoreCase).Count() == fields.Count;
     }
 
     private static bool TryValidateEntity(

@@ -57,7 +57,7 @@
 
   <ItemGroup>
     <Content Include="..\..\EU.Core.MCP.Api\BusinessQuery\catalog\sales-order.*.json" Link="ProjectCatalogs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\EU.Core.MCP.Api\BusinessQuery\catalog\project.*.json" Link="ProjectCatalogs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\EU.Core.MCP.Api\BusinessQuery\catalog\project.json" Link="ProjectCatalogs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

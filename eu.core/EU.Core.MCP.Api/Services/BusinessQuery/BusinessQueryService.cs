@@ -217,7 +217,7 @@ public sealed class BusinessQueryService(
         try
         {
             string actualDialect = queryDatabase.CurrentConnectionConfig.DbType.ToString();
-            if (!string.Equals(actualDialect, configuration.Dialect, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(actualDialect, catalog.Dialect.ToString(), StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The project database dialect does not match the catalog.");
             caller = await projectCallerResolver.ResolveAsync(trustedContext, rootEntity, configuration.TenantId,
                 configuration.DataSourceCode, queryDatabase, cancellationToken);
@@ -282,18 +282,13 @@ public sealed class BusinessQueryService(
                 compiled,
                 new BusinessDataSourceDescriptor(
                     configuration.DataSourceCode,
-                    configuration.Dialect switch
+                    catalog.Dialect switch
                     {
-                        "Sqlite" => "Microsoft.Data.Sqlite",
-                        "MySql" => "SqlSugar.MySql",
+                        BusinessCatalogDialect.Sqlite => "Microsoft.Data.Sqlite",
+                        BusinessCatalogDialect.MySql => "SqlSugar.MySql",
                         _ => "Microsoft.Data.SqlClient"
                     },
-                    configuration.Dialect switch
-                    {
-                        "Sqlite" => BusinessCatalogDialect.Sqlite,
-                        "MySql" => BusinessCatalogDialect.MySql,
-                        _ => BusinessCatalogDialect.SqlServer
-                    },
+                    catalog.Dialect,
                     configuration.CredentialAlias,
                     true),
                 queryDatabase,

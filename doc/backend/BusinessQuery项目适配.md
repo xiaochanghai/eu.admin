@@ -77,9 +77,9 @@ React 聊天页消费该结果事件渲染独立结果表格，以 queryId 去�
 
 ### 当前统一项目目录
 
-运行配置固定指向 [project.sqlserver.json](../../eu.core/EU.Core.MCP.Api/BusinessQuery/catalog/project.sqlserver.json)，
-目录标识为 `eu-core-business-sqlserver`，revision 为 `1`。对应 MySQL 文件为
-[project.mysql.json](../../eu.core/EU.Core.MCP.Api/BusinessQuery/catalog/project.mysql.json)。
+运行配置指向唯一的 [project.json](../../eu.core/EU.Core.MCP.Api/BusinessQuery/catalog/project.json)，
+目录标识为 `eu-core-business`，revision 为 `1`，目录 `dialect` 为 `auto`，宿主 `BusinessQuery:Dialect` 为 `Auto`。
+原 `project.sqlserver.json` / `project.mysql.json` 已合并移除（可从 Git 恢复），业务定义不再维护两份。
 同一个 `query_business_data` 同时暴露 `supplier` 和 `salesOrder`，按查询计划的 `entity` 选择主表，
 不再为查询供应商或销售而切换 appsettings。两个实体之间未声明关联，不能混用字段或跨实体汇总。
 
@@ -117,12 +117,46 @@ React 聊天页消费该结果事件渲染独立结果表格，以 queryId 去�
 
 后续同类模块主要增加目录实体和测试；不同的数据隔离模型、字段级授权、跨模块关联或复杂业务指标需要扩展适配能力，而不是复制整个 MCP 工具。
 
-## 销售订单首版
+## 通用明细预汇总目录配置
+
+当前生效的是 `project.json` 中的销售实体，其配置如下：
+
+```json
+"detailAggregate": {
+  "physicalTable": "SdOrderDetail",
+  "parentKeyField": "salesOrder.id",
+  "foreignKeyColumn": "OrderId",
+  "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false },
+  "measures": {
+    "salesOrder.netAmount": "NoTaxAmount",
+    "salesOrder.taxAmount": "TaxAmount",
+    "salesOrder.grossAmount": "TaxIncludedAmount"
+  }
+}
+```
+
+- `physicalTable` 是同数据库明细表；`parentKeyField` 是主表的逻辑唯一主键，必须等于目录唯一 grain 字段；`foreignKeyColumn` 是明细外键物理列。目录维护者必须保证真实主键唯一以及关联列类型匹配，加载校验不连接数据库证明这些约束。
+- `measures` 左边是已声明的主实体逻辑度量，右边是明细金额物理列。度量的 `physicalColumn` 在派生输入中用作输出列别名，不再从主表取该列。当前只支持最多 8 个 additive 数值 sum 度量，要求 `nullHandling: zero`，不支持保密/受限度量、均价、比例、任意表达式、多层明细或复合键。
+- 明细先按外键 SUM，再 LEFT JOIN 主表，最后按用户请求的客户、币别等维度聚合。明细状态条件参数化，必须有效且未删除；主表原过滤、币别要求、权限/审计边界不变。全空金额和无有效明细金额均补 0，不更新数据。
+- 配置只接受安全标识符及布尔条件，不接受 SQL 片段；嵌套对象、映射复制为只读快照，整个配置参与目录哈希。此能力目前仅用于已有项目模块绑定的实体。未配置 `detailAggregate` 的实体继续直读其物理主表，旧非项目目录保持原行为。
+- 销售专用 `SalesOrderDetailTotals` 已移除，统一使用 `DetailAggregateSource`。符合上述结构的其他主明细业务可通过目录接入，但客户/币别名称展示仍属于现有销售展示适配，不声称已经通用化。此次不实际接入采购实体。
+
+部署时一并发布编译器、通用项目目录和 Agent/MCP 的哈希配置，重启双方，同步并确认新版工具后新建查询。不使用环境变量，也不更改凭据；不要让新目录与旧宿主混用。回滚时整体恢复上个基线提交 `3eb62dfc` 对应的代码、目录和哈希，再同步工具；旧会话结果不重写。
+
+### SqlSugar 自动方言绑定
+
+目录启动加载时读取与查询服务相同的 `IBaseRepository<BdSupplier>.Db.CurrentConnectionConfig.DbType`，只读取连接配置，不为检测方言打开数据库。`Auto` 仅允许 SQL Server/MySQL；SQLite 仍要求显式 `Sqlite`、开发环境及原有 opt-in，未知数据库拒绝启动。保留旧显式方言配置的兼容路径，显式值与连接不一致时拒绝。
+
+Loader 先校验原始目录 SHA-256，再把 `auto` 绑定为具体执行快照方言；原始规范化 JSON 和哈希不变，因此两种数据库共用目录/工具哈希。每次查询复制当前客户端后再次与快照方言核对，不允许运行中更换数据库类型后沿用旧快照。`DataSourceCode`、租户、签名、配额和审计检查保持不变。
+
+SQL 仍由受控编译器按具体方言生成，经 `SqlSugarBusinessQueryExecutor` 参数化执行。这里没有改成 `Queryable` 动态表达式，也不声称 SqlSugar 能转换手写 SQL。部署人员仍须正确选择项目主数据库连接；相同 DbType 并不能证明连接指向相同物理数据库，目录 `DataSourceCode` 是逻辑标识而非连接身份校验。
+
+## 销售订单首版（历史独立目录）
 
 - SQL Server：[sales-order.sqlserver.json](../../eu.core/EU.Core.MCP.Api/BusinessQuery/catalog/sales-order.sqlserver.json)
 - MySQL：[sales-order.mysql.json](../../eu.core/EU.Core.MCP.Api/BusinessQuery/catalog/sales-order.mysql.json)
 - 模块：`SD_SALES_ORDER_MNG`；主表：`SdOrder`。
-- 金额：有效未删除 `SdOrderDetail` 的 `NoTaxAmount`、`TaxAmount`、`TaxIncludedAmount`，按订单预汇总，NULL 补 0。固定销售源适配仅匹配 salesOrder / SD_SALES_ORDER_MNG / SdOrder，不改变供应商及非项目目录；后续其他主明细模块需要自己的适配，不自动套用销售表。
+- 金额：有效未删除 `SdOrderDetail` 的 `NoTaxAmount`、`TaxAmount`、`TaxIncludedAmount`，按订单预汇总，NULL 补 0。来源由统一目录的 `detailAggregate` 声明，编译器不再按销售实体、模块或表名分支。
 - 维度：币别 ID、客户 ID、订单编号、订单状态、审核状态；所有金额聚合必须包含币别 ID。
 - 未提供币别/客户名称解析，不能把 GUID 当作人民币或自行编造名称；金额不硬编码 CNY。
 - 暂未开放日期范围。当前引擎时间边界使用 UTC，而订单日期的实际存储语义尚未完成验证，不能直接用 UTC 边界比较本地业务日期。
@@ -151,7 +185,7 @@ React 聊天页消费该结果事件渲染独立结果表格，以 queryId 去�
 上线前：
 
 1. 确认部署者接受当前所有环境暂停模块/公司权限的范围扩展，使用明确的测试身份。恢复权限前再核对模块、角色和公司配置；不要为测试自动授予权限。
-2. 先部署支持新目录属性的 MCP；按实际数据库方言选择统一项目目录，并核对 `DataSourceCode`、`Dialect` 和精确的 `TenantId`。目录含多个模块，不按用户问题切换配置。
+2. 先部署支持新目录属性及 Auto 的 MCP；使用 `project.json`，核对主数据库连接、`DataSourceCode`、`Dialect: Auto` 和精确的 `TenantId`。目录含多个模块，不按用户问题或 SQL Server/MySQL 类型切换目录。
 3. 用 `BusinessSemanticCatalogLoader` 获取目录规范化哈希，再用 `BusinessQueryToolSchemaBuilder` 生成工具哈希；同步 MCP 的 `ExpectedCatalogHash` 与 Agent 的 `CatalogRevision`、`CatalogHash`、`ToolSchemaHash`。不要把文件原始字节 SHA 当作规范化目录哈希。
 4. 已修改 MCP 的 `CatalogPath` / `ExpectedCatalogHash`，以及 Agent 的 `BusinessQueryForwarding:CatalogHash` / `ToolSchemaHash`，revision 仍为新统一目录的 1；MCP 的 TenantId 对齐当前登录签发值 `0`，未修改运行中工具注册数据。HTTP 保留服务令牌／登录 JWT 双认证；查询上下文签名现复用项目 JWT 配置，不再单独注入密钥，部署要求见 [Agent 统一认证](Agent统一认证.md)。
 5. 重新编译并重启 MCP 和 Agent，确认 MCP Server 的 Code、Endpoint 与转发策略的 ServerCode、Origin 匹配；同步工具并完成 ReadOnly 分类，在 Agent Draft 中替换旧工具版本，保存后发布，再新建会话。历史发布版本不会自动更新。

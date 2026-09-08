@@ -32,7 +32,8 @@ public sealed record BusinessCatalogEntitySnapshot
         IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields,
         IReadOnlyDictionary<string, bool>? requiredBooleanFilters = null,
         IReadOnlyList<string>? requiredMeasureDimensions = null,
-        string projectModuleCode = "")
+        string projectModuleCode = "",
+        BusinessDetailAggregate? detailAggregate = null)
     {
         Name = name;
         PhysicalTable = physicalTable;
@@ -42,6 +43,11 @@ public sealed record BusinessCatalogEntitySnapshot
         Grain = new ReadOnlyCollection<string>(grain.ToArray());
         DefaultScopeField = defaultScopeField;
         ProjectModuleCode = projectModuleCode;
+        DetailAggregate = detailAggregate is null ? null : detailAggregate with
+        {
+            RequiredBooleanFilters = new ReadOnlyDictionary<string, bool>(detailAggregate.RequiredBooleanFilters.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal)),
+            Measures = new ReadOnlyDictionary<string, string>(detailAggregate.Measures.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal))
+        };
         RequiredBooleanFilters = new ReadOnlyDictionary<string, bool>(
             (requiredBooleanFilters ?? new Dictionary<string, bool>()).ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal));
         RequiredMeasureDimensions = new ReadOnlyCollection<string>((requiredMeasureDimensions ?? []).ToArray());
@@ -73,6 +79,8 @@ public sealed record BusinessCatalogEntitySnapshot
     public IReadOnlyList<string> RequiredMeasureDimensions { get; }
 
     public string ProjectModuleCode { get; }
+
+    public BusinessDetailAggregate? DetailAggregate { get; }
 }
 
 public sealed record BusinessCatalogRelationshipSnapshot(

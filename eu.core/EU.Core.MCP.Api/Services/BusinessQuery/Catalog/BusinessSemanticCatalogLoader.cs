@@ -51,7 +51,8 @@ public sealed class BusinessSemanticCatalogLoader
 
     public BusinessCatalogLoadResult Load(
         string? json,
-        string? expectedSha256 = null)
+        string? expectedSha256 = null,
+        BusinessCatalogDialect? runtimeDialect = null)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -124,6 +125,18 @@ public sealed class BusinessSemanticCatalogLoader
                     CatalogUnknownProperty,
                     "The semantic Catalog contains an unsupported property.");
             }
+
+            if (runtimeDialect.HasValue && runtimeDialect is not (BusinessCatalogDialect.SqlServer or BusinessCatalogDialect.MySql or BusinessCatalogDialect.Sqlite))
+                return Failure(BusinessSemanticCatalogValidator.CatalogInvalid, "The runtime database dialect is unsupported.");
+            if (catalog?.Dialect == BusinessCatalogDialect.Auto)
+            {
+                if (!runtimeDialect.HasValue)
+                    return Failure(BusinessSemanticCatalogValidator.CatalogInvalid, "An automatic Catalog requires a trusted runtime dialect.");
+                // 哈希保留原始业务目录；仅执行快照绑定受信任连接的方言。
+                catalog = catalog with { Dialect = runtimeDialect.Value };
+            }
+            else if (runtimeDialect.HasValue && catalog?.Dialect != runtimeDialect.Value)
+                return Failure(BusinessSemanticCatalogValidator.CatalogInvalid, "The Catalog does not match the runtime database dialect.");
 
             BusinessCatalogValidationResult validation = _validator.Validate(
                 catalog,

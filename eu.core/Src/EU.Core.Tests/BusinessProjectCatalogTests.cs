@@ -27,7 +27,8 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         var agent = agentDocument.RootElement.GetProperty("BusinessQueryForwarding");
         var catalog = Load("sqlserver");
         var tool = new BusinessQueryToolSchemaBuilder().Build(catalog);
-        Assert.Equal("BusinessQuery/catalog/project.sqlserver.json", mcp.GetProperty("CatalogPath").GetString());
+        Assert.Equal("BusinessQuery/catalog/project.json", mcp.GetProperty("CatalogPath").GetString());
+        Assert.Equal("Auto", mcp.GetProperty("Dialect").GetString());
         // SmUsersServices.GenerateJwtToken currently issues TenantId=0 for project logins.
         Assert.Equal("0", mcp.GetProperty("TenantId").GetString());
         Assert.Equal(catalog.Sha256, mcp.GetProperty("ExpectedCatalogHash").GetString());
@@ -114,13 +115,24 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         Assert.False(decision.Allowed);
     }
 
-    [Fact]
-    public async Task Detail_totals_do_not_duplicate_orders_and_zero_missing_or_null_amounts()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Detail_totals_do_not_duplicate_orders_and_zero_missing_or_null_amounts(bool useOtherTables)
     {
         // 隔离内存数据库：执行实际编译 SQL，不连接项目数据库。
-        string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", "project.sqlserver.json"));
+        string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", "project.json"));
         var node = System.Text.Json.Nodes.JsonNode.Parse(json)!;
         node["dialect"] = "sqlite";
+        if (useOtherTables)
+        {
+            var entity = node["entities"]![1]!;
+            entity["physicalTable"] = "PurchaseHeader";
+            entity["projectModuleCode"] = "TEST_PURCHASE_MNG";
+            entity["detailAggregate"]!["physicalTable"] = "PurchaseLines";
+            entity["detailAggregate"]!["foreignKeyColumn"] = "HeaderId";
+            entity["detailAggregate"]!["measures"]!["salesOrder.grossAmount"] = "LineTotal";
+        }
         var catalog = new BusinessSemanticCatalogLoader().Load(node.ToJsonString()).Snapshot!;
         var plan = Plan("salesOrder") with { Dimensions = ["salesOrder.customerId", "salesOrder.currencyId"],
             Measures = [new("salesOrder.netAmount", BusinessAggregation.Sum, "net"),
@@ -144,6 +156,14 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
                 ('1',0,0,100,100,100), ('1',1,1,100,100,100), ('4',1,0,NULL,NULL,NULL),
                 ('5',1,0,100,100,100), ('6',1,0,100,100,100);
             """;
+        if (useOtherTables)
+        {
+            seed.CommandText = seed.CommandText.Replace("SdOrderDetail", "PurchaseLines").Replace("SdOrder", "PurchaseHeader")
+                .Replace("OrderId", "HeaderId").Replace("TaxIncludedAmount", "LineTotal");
+            Assert.DoesNotContain("SdOrder", query.CommandText);
+            Assert.Contains("HeaderId", query.CommandText);
+            Assert.Contains("LineTotal", query.CommandText);
+        }
         await seed.ExecuteNonQueryAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = query.CommandText;
@@ -161,6 +181,112 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         Assert.Equal(3, count);
     }
 
+    [Theory]
+    [InlineData("table")]
+    [InlineData("foreign-key")]
+    [InlineData("parent-key")]
+    [InlineData("dimension")]
+    [InlineData("null-measures")]
+    [InlineData("empty-measures")]
+    [InlineData("column-expression")]
+    [InlineData("deleted-filter")]
+    [InlineData("null-filters")]
+    [InlineData("aggregation")]
+    [InlineData("null-handling")]
+    [InlineData("unknown-property")]
+    public void Unsafe_or_unsupported_detail_configuration_is_rejected(string kind)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", "project.json")))!;
+        var entity = node["entities"]![1]!;
+        var source = entity["detailAggregate"]!;
+        switch (kind)
+        {
+            case "table": source["physicalTable"] = "SdOrderDetail; DROP TABLE SdOrder"; break;
+            case "foreign-key": source["foreignKeyColumn"] = "OrderId OR 1=1"; break;
+            case "parent-key": source["parentKeyField"] = "salesOrder.customerId"; break;
+            case "dimension": source["measures"]!["salesOrder.customerId"] = "CustomerId"; break;
+            case "null-measures": source["measures"] = null; break;
+            case "empty-measures": source["measures"] = new System.Text.Json.Nodes.JsonObject(); break;
+            case "column-expression": source["measures"]!["salesOrder.netAmount"] = "SUM(Amount)"; break;
+            case "deleted-filter": source["requiredBooleanFilters"]!["IsDeleted"] = true; break;
+            case "null-filters": source["requiredBooleanFilters"] = null; break;
+            case "unknown-property": source["sql"] = "SELECT 1"; break;
+            default:
+                var measure = entity["fields"]!.AsArray().Single(field => field!["name"]!.GetValue<string>() == "salesOrder.netAmount")!;
+                if (kind == "aggregation") measure["allowedAggregations"] = new System.Text.Json.Nodes.JsonArray("average");
+                else measure["nullHandling"] = "preserve";
+                break;
+        }
+        Assert.False(new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer).Succeeded);
+    }
+
+    [Fact]
+    public void Detail_configuration_is_frozen_and_changes_the_catalog_hash()
+    {
+        var original = Load("sqlserver");
+        var detail = original.Entities["salesOrder"].DetailAggregate!;
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<string, string>)detail.Measures)["salesOrder.netAmount"] = "OtherAmount");
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<string, bool>)detail.RequiredBooleanFilters)["IsDeleted"] = true);
+        var node = System.Text.Json.Nodes.JsonNode.Parse(original.CanonicalJson)!;
+        node["entities"]![1]!["detailAggregate"]!["measures"]!["salesOrder.netAmount"] = "OtherAmount";
+        var changed = new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer);
+        Assert.True(changed.Succeeded);
+        Assert.NotEqual(original.Sha256, changed.Snapshot!.Sha256);
+    }
+
+    [Fact]
+    public async Task Omitted_detail_configuration_keeps_direct_table_compilation_and_original_hash()
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(Load("sqlserver").CanonicalJson)!;
+        node["entities"]![1]!.AsObject().Remove("detailAggregate");
+        var loaded = new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer);
+        Assert.True(loaded.Succeeded);
+        var catalog = loaded.Snapshot!;
+        Assert.NotEqual(Load("sqlserver").Sha256, catalog.Sha256);
+        var plan = Plan("salesOrder");
+        var time = new BusinessQueryEvaluationTime(DateTimeOffset.UtcNow, catalog.TimeZoneId, null, null);
+        var query = new BusinessSqlCompiler().Compile(catalog, plan, await Authorize(catalog, plan, time), time);
+        Assert.Contains("FROM [SdOrder]", query.CommandText);
+        Assert.DoesNotContain("SdOrderDetail", query.CommandText);
+        Assert.DoesNotContain("LEFT JOIN", query.CommandText);
+    }
+
+    [Fact]
+    public void Automatic_catalog_has_one_hash_and_tool_schema_for_both_databases()
+    {
+        var sqlServer = Load("sqlserver");
+        var mySql = Load("mysql");
+        Assert.Equal(sqlServer.Sha256, mySql.Sha256);
+        Assert.Equal(new BusinessQueryToolSchemaBuilder().Build(sqlServer).ToolVersionHash,
+            new BusinessQueryToolSchemaBuilder().Build(mySql).ToolVersionHash);
+        Assert.NotEqual(sqlServer.Dialect, mySql.Dialect);
+        var loader = new BusinessSemanticCatalogLoader();
+        Assert.False(loader.Load(sqlServer.CanonicalJson).Succeeded);
+        Assert.False(loader.Load(sqlServer.CanonicalJson, runtimeDialect: BusinessCatalogDialect.Auto).Succeeded);
+        Assert.False(loader.Load(sqlServer.CanonicalJson, new string('0', 64), BusinessCatalogDialect.SqlServer).Succeeded);
+        var explicitCatalog = System.Text.Json.Nodes.JsonNode.Parse(sqlServer.CanonicalJson)!;
+        explicitCatalog["dialect"] = "sqlServer";
+        Assert.True(loader.Load(explicitCatalog.ToJsonString()).Succeeded);
+        Assert.False(loader.Load(explicitCatalog.ToJsonString(), runtimeDialect: BusinessCatalogDialect.MySql).Succeeded);
+    }
+
+    [Theory]
+    [InlineData(SqlSugar.DbType.SqlServer, "Auto", false, false, true)]
+    [InlineData(SqlSugar.DbType.MySql, "Auto", false, false, true)]
+    [InlineData(SqlSugar.DbType.SqlServer, "MySql", false, false, false)]
+    [InlineData(SqlSugar.DbType.Oracle, "Auto", false, false, false)]
+    [InlineData(SqlSugar.DbType.Sqlite, "Auto", true, true, false)]
+    [InlineData(SqlSugar.DbType.Sqlite, "Sqlite", false, true, false)]
+    [InlineData(SqlSugar.DbType.Sqlite, "Sqlite", true, false, false)]
+    [InlineData(SqlSugar.DbType.Sqlite, "Sqlite", true, true, true)]
+    public void Runtime_dialect_uses_connection_type_and_preserves_sqlite_opt_in(SqlSugar.DbType type, string configured, bool development, bool allowSqlite, bool allowed)
+    {
+        if (allowed)
+            Assert.Equal(type.ToString(), EU.Core.Api.MCP.Services.BusinessQuery.Configuration.BusinessQueryDatabaseDialect.Resolve(type, configured, development, allowSqlite).ToString());
+        else
+            Assert.Throws<InvalidOperationException>(() => EU.Core.Api.MCP.Services.BusinessQuery.Configuration.BusinessQueryDatabaseDialect.Resolve(type, configured, development, allowSqlite));
+    }
+
     private static BusinessQueryPlan Plan(string entity) => entity == "supplier"
         ? new(entity, ["supplier.taxType"], [new("supplier.taxRate", BusinessAggregation.Average, "averageRate")], [], null, [], 10)
         : new(entity, ["salesOrder.currencyId"], [new("salesOrder.grossAmount", BusinessAggregation.Sum, "grossTotal")], [], null, [], 10);
@@ -172,7 +298,7 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
     private static BusinessCatalogSnapshot Load(string dialect)
     {
         var result = new BusinessSemanticCatalogLoader().Load(File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", $"project.{dialect}.json")));
+            Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", "project.json")), runtimeDialect: dialect == "mysql" ? BusinessCatalogDialect.MySql : BusinessCatalogDialect.SqlServer);
         Assert.True(result.Succeeded, result.Error?.Message);
         return result.Snapshot!;
     }
