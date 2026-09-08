@@ -1,6 +1,6 @@
 using EU.Core.Api.MCP.Services.BusinessQuery.Compilation;
 using EU.Core.Api.MCP.Services.BusinessQuery.Contracts;
-using EU.Core.Model.Entity;
+using EU.Core.Api.MCP.Services.BusinessQuery.Catalog;
 using SqlSugar;
 
 namespace EU.Core.Api.MCP.Services.BusinessQuery.Presentation;
@@ -10,52 +10,75 @@ public sealed record BusinessQueryPresentationOverrides(string Title,
     IReadOnlyDictionary<string, string> Labels,
     IReadOnlyDictionary<(string Key, string Value), string> Values);
 
-/// <summary>销售主表查询的固定名称映射；只查已返回的 ID，不接收模型指定表或列。</summary>
+/// <summary>目录驱动的项目展示；只查已返回的 ID，不接收模型指定表或列。</summary>
 public static class ProjectBusinessQueryPresentation
 {
     public static async Task<BusinessQueryPresentationOverrides> CreateAsync(CompiledBusinessQuery query,
-        BusinessQueryResult result, ISqlSugarClient database, CancellationToken cancellationToken)
+        BusinessQueryResult result, BusinessCatalogPresentation display, ISqlSugarClient database, CancellationToken cancellationToken)
     {
         var values = new Dictionary<(string Key, string Value), string>();
-        Guid[] customerIds = ReadIds(result, "salesOrder.customerId");
-        Guid[] currencyIds = ReadIds(result, "salesOrder.currencyId");
-        // 使用同一请求已选定的数据库；公司权限当前按项目要求停用，不跨库查询名称。
-        if (customerIds.Length > 0)
-        {
-            var customers = await database.Queryable<BdCustomer>()
-                .Where(x => customerIds.Contains(x.ID) && x.IsActive == true && x.IsDeleted == false)
-                .Select(x => new { x.ID, Name = x.CustomerName }).ToListAsync(cancellationToken);
-            foreach (var item in customers) AddNames(values, result, "salesOrder.customerId", item.ID, item.Name);
-        }
-        if (currencyIds.Length > 0)
-        {
-            var currencies = await database.Queryable<BdCurrency>()
-                .Where(x => currencyIds.Contains(x.ID) && x.IsActive == true && x.IsDeleted == false)
-                .Select(x => new { x.ID, Name = x.CurrencyName }).ToListAsync(cancellationToken);
-            foreach (var item in currencies) AddNames(values, result, "salesOrder.currencyId", item.ID, item.Name);
-        }
-        return new BusinessQueryPresentationOverrides("销售订单查询结果", CreateLabels(query), values);
-    }
-
-    public static IReadOnlyDictionary<string, string> CreateLabels(CompiledBusinessQuery query)
-    {
-        var labels = new Dictionary<string, string> { ["rank"] = "排名" };
+        if (result.Rows.Count > query.MaximumResultRows)
+            throw new InvalidOperationException("BUSINESS_QUERY_PRESENTATION_LIMIT_EXCEEDED");
         foreach (var column in query.Columns)
         {
-            string? label = column.LogicalField switch
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!display.Lookups.TryGetValue(column.LogicalField, out var lookup)) continue;
+            Guid[] ids = ReadIds(result, column.ResultKey);
+            if (ids.Length == 0) continue;
+            await ReadNamesAsync(query, result, column.ResultKey, ids, lookup, database, values, cancellationToken);
+        }
+        return new BusinessQueryPresentationOverrides(display.Title, CreateLabels(query, display), values);
+    }
+
+    private static async Task ReadNamesAsync(CompiledBusinessQuery query, BusinessQueryResult result, string key, Guid[] ids,
+        BusinessCatalogNameLookup lookup, ISqlSugarClient database, Dictionary<(string Key, string Value), string> values, CancellationToken cancellationToken)
+    {
+        IBusinessSqlDialect dialect = query.Dialect switch
+        {
+            BusinessCatalogDialect.SqlServer => new SqlServerBusinessSqlDialect(),
+            BusinessCatalogDialect.MySql => new MySqlBusinessSqlDialect(),
+            BusinessCatalogDialect.Sqlite => new SqliteBusinessSqlDialect(),
+            _ => throw new InvalidOperationException("BUSINESS_QUERY_DIALECT_UNSUPPORTED")
+        };
+        string Q(string name) => dialect.QuoteIdentifier(name);
+        var parameters = new List<SugarParameter>();
+        string Parameter(object value)
+        {
+            string name = dialect.ParameterName(parameters.Count);
+            parameters.Add(new SugarParameter(name, value));
+            return name;
+        }
+        string inValues = string.Join(", ", ids.Select(id => Parameter(query.Dialect == BusinessCatalogDialect.SqlServer ? (object)id : id.ToString())));
+        string filters = string.Join(" AND ", lookup.RequiredBooleanFilters.OrderBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => $"{Q(item.Key)} = {Parameter(item.Value)}"));
+        string limit = Parameter(ids.Length + 1);
+        string sql = $"SELECT {(query.Dialect == BusinessCatalogDialect.SqlServer ? $"TOP ({limit}) " : "")}{Q(lookup.KeyColumn)}, {Q(lookup.NameColumn)} FROM {Q(lookup.PhysicalTable)} "
+            + $"WHERE {Q(lookup.KeyColumn)} IN ({inValues}) AND {filters}"
+            + (query.Dialect == BusinessCatalogDialect.SqlServer ? "" : $" LIMIT {limit}");
+        var seen = new HashSet<Guid>();
+        database.Ado.CancellationToken = cancellationToken;
+        try
+        {
+            using var dataReader = await database.Ado.GetDataReaderAsync(sql, parameters.ToArray());
+            if (dataReader is not System.Data.Common.DbDataReader reader)
+                throw new InvalidOperationException("BUSINESS_QUERY_PRESENTATION_RESULT_INVALID");
+            while (await reader.ReadAsync(cancellationToken))
             {
-                "salesOrder.customerId" => "客户",
-                "salesOrder.currencyId" => "币别",
-                "salesOrder.id" => "订单标识",
-                "salesOrder.orderNo" => "订单编号",
-                "salesOrder.netAmount" => "未税金额",
-                "salesOrder.taxAmount" => "税额",
-                "salesOrder.grossAmount" => "含税金额",
-                "salesOrder.status" => "订单状态",
-                "salesOrder.auditStatus" => "审核状态",
-                _ => null
-            };
-            if (label is not null) labels[column.ResultKey] = label;
+                if (!Guid.TryParse(reader.GetValue(0).ToString(), out var id) || !ids.Contains(id) || !seen.Add(id))
+                    throw new InvalidOperationException("BUSINESS_QUERY_PRESENTATION_LOOKUP_NOT_UNIQUE");
+                AddNames(values, result, key, id, reader.IsDBNull(1) ? null : reader.GetValue(1).ToString());
+            }
+        }
+        finally { database.Ado.RemoveCancellationToken(); }
+    }
+
+    public static IReadOnlyDictionary<string, string> CreateLabels(CompiledBusinessQuery query, BusinessCatalogPresentation display)
+    {
+        var labels = new Dictionary<string, string>();
+        if (display.Labels.TryGetValue("rank", out var rank)) labels["rank"] = rank;
+        foreach (var column in query.Columns)
+        {
+            if (display.Labels.TryGetValue(column.LogicalField, out var label)) labels[column.ResultKey] = label;
         }
         return labels;
     }

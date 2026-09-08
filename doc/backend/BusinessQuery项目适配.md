@@ -19,16 +19,16 @@
 
 ### 销售订单展示名称与空金额
 
-- 销售项目目录（`SD_SALES_ORDER_MNG`）在聚合完成后，由 `ProjectBusinessQueryPresentation` 对结果中已有的客户／币别 ID 批量补充显示名称。
-  查询固定使用 `BdCustomer.CustomerName`、`BdCurrency.CurrencyName`，与业务查询共用已选择的数据库；只读取有效、未删除记录，不允许模型指定表名或列名。
+- 配置了 `presentation` 的项目实体在聚合完成后，由 `ProjectBusinessQueryPresentation` 根据目录对结果中已有的 ID 批量补充名称，不再按销售模块或字段名分支。
+  当前目录将客户映射到 `BdCustomer.CustomerName`、币别映射到 `BdCurrency.CurrencyName`，与业务查询共用已选择的数据库；只读取有效、未删除记录，不允许模型指定表名或列名。
   这是展示字段扩展，不提供这些名称字段的筛选、分组或聚合能力；不修改原始分组键、行数、金额或 resultHash。
 - 名称标记为不可信数据；去除控制字符并限制长度，Markdown 转义，React 按文本渲染。未匹配或名称为空时保留原 ID。
   查询异常不会被伪装成“查不到名称”，仍沿用查询失败和终态审计路径。名称读取也支持请求取消。
 - 中文表头根据编译后的 LogicalField 确定，不猜测模型 resultKey 的含义，因此 `netAmountSum`、`totalNetAmount` 等别名都显示“未税金额”。
-  未税金额、税额、含税金额按原金额口径展示，空值继续显示 `—`。
+  金额按结果原值展示；销售查询已在 SQL 中将空金额补 0，展示层不改变金额。其他目录的原始 NULL 仍显示 `—`。
 - 2026-09-07 对用户提供的客户／币别分组执行过参数化只读核查：有效且未删除订单 11 张，三项主表金额的非空记录数均为 0。
   本次未写数据库、未回填金额、未改用明细计算。该结果是核查时点的数据事实，不保证之后的数据状态。
-- 本次展示扩展无需修改工具输入 schema 或目录哈希；重新构建并重启 MCP 后，新查询即可使用。历史 presentation 不自动重写。
+- `presentation` 参与目录哈希，增加或修改标题、标签、名称映射后需同步更新 Agent/MCP 哈希，重启双方并同步确认新版工具。模型输入参数结构不变，但工具版本随目录哈希变化。历史 presentation 不自动重写。
   当前公司／模块权限仍按原要求停用；恢复时须连同名称查询的数据可见范围一起审查。
 
 ### 单次查询成功后的结束行为
@@ -139,11 +139,36 @@ React 聊天页消费该结果事件渲染独立结果表格，以 queryId 去�
 - `measures` 左边是已声明的主实体逻辑度量，右边是明细金额物理列。度量的 `physicalColumn` 在派生输入中用作输出列别名，不再从主表取该列。当前只支持最多 8 个 additive 数值 sum 度量，要求 `nullHandling: zero`，不支持保密/受限度量、均价、比例、任意表达式、多层明细或复合键。
 - 明细先按外键 SUM，再 LEFT JOIN 主表，最后按用户请求的客户、币别等维度聚合。明细状态条件参数化，必须有效且未删除；主表原过滤、币别要求、权限/审计边界不变。全空金额和无有效明细金额均补 0，不更新数据。
 - 配置只接受安全标识符及布尔条件，不接受 SQL 片段；嵌套对象、映射复制为只读快照，整个配置参与目录哈希。此能力目前仅用于已有项目模块绑定的实体。未配置 `detailAggregate` 的实体继续直读其物理主表，旧非项目目录保持原行为。
-- 销售专用 `SalesOrderDetailTotals` 已移除，统一使用 `DetailAggregateSource`。符合上述结构的其他主明细业务可通过目录接入，但客户/币别名称展示仍属于现有销售展示适配，不声称已经通用化。此次不实际接入采购实体。
+- 销售专用 `SalesOrderDetailTotals` 已移除，统一使用 `DetailAggregateSource`。符合上述结构的其他主明细业务可通过目录接入；中文标签和名称展示也可用下述 `presentation` 配置。此次不实际接入采购实体。
 
 部署时一并发布编译器、通用项目目录和 Agent/MCP 的哈希配置，重启双方，同步并确认新版工具后新建查询。不使用环境变量，也不更改凭据；不要让新目录与旧宿主混用。回滚时整体恢复上个基线提交 `3eb62dfc` 对应的代码、目录和哈希，再同步工具；旧会话结果不重写。
 
-### SqlSugar 自动方言绑定
+### 通用展示配置
+
+在实体上声明 `presentation`，例如（其余字段同 `project.json`）：
+
+```json
+"presentation": {
+  "title": "销售订单查询结果",
+  "labels": { "salesOrder.customerId": "客户", "salesOrder.netAmount": "未税金额", "rank": "排名" },
+  "lookups": {
+    "salesOrder.customerId": {
+      "physicalTable": "BdCustomer",
+      "keyColumn": "ID",
+      "nameColumn": "CustomerName",
+      "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false }
+    }
+  }
+}
+```
+
+标签按逻辑字段映射到本次 `resultKey`，因此修改聚合别名不会丢失中文标题。未配置展示时使用原通用标题/列名且不查询名称。Lookups 最多 8 项，仅接受可见 string 维度，首版 ID 必须是非空 GUID；非 GUID、缺失、停用、删除及空名称均回退原值。
+
+映射表/列只来自经过安全标识符校验和哈希确认的目录。ID 和布尔条件参数化，结果最多读取本次 ID 数量加 1 条，重复键直接失败并走原终态审计，不任取名称；取消和命令超时沿用当前 SqlSugar 客户端。只请求本次输出的映射字段，不批量读取基础资料全表。名称清除控制字符、截断 256 字符并标记不可信；原始 ID、金额、行数、结果哈希不变。
+
+目录维护者需确认 KeyColumn 的唯一性及 GUID 类型，并审查 NameColumn 是否属于允许展示的业务资料；此配置不是绕过字段授权读取敏感列的入口。当前公司/模块权限暂停的既有状态不变，恢复权限时必须一起审查名称数据范围。暂不支持字符串业务编码、复合键、任意 SQL 或跨库名称查询。
+
+### SqlSugar 自动方言绑定（运行时）
 
 目录启动加载时读取与查询服务相同的 `IBaseRepository<BdSupplier>.Db.CurrentConnectionConfig.DbType`，只读取连接配置，不为检测方言打开数据库。`Auto` 仅允许 SQL Server/MySQL；SQLite 仍要求显式 `Sqlite`、开发环境及原有 opt-in，未知数据库拒绝启动。保留旧显式方言配置的兼容路径，显式值与连接不一致时拒绝。
 

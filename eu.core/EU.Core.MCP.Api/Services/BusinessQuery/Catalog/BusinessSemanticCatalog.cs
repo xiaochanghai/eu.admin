@@ -112,7 +112,18 @@ public sealed record BusinessCatalogEntity(
 
     /// <summary>可选的单明细源：按主表唯一粒度预汇总后 LEFT JOIN；未配置时直接读取主表。</summary>
     public BusinessDetailAggregate? DetailAggregate { get; init; }
+
+    /// <summary>可选展示配置；不改变原始查询结果及分组键。</summary>
+    public BusinessCatalogPresentation? Presentation { get; init; }
 }
+
+/// <summary>标题、逻辑字段标签及名称查找配置；仅受信任目录可定义。</summary>
+public sealed record BusinessCatalogPresentation(string Title, IReadOnlyDictionary<string, string> Labels,
+    IReadOnlyDictionary<string, BusinessCatalogNameLookup> Lookups);
+
+/// <summary>同数据库的 GUID 名称映射；只查已返回的 ID，缺失名称回退原 ID。</summary>
+public sealed record BusinessCatalogNameLookup(string PhysicalTable, string KeyColumn, string NameColumn,
+    IReadOnlyDictionary<string, bool> RequiredBooleanFilters);
 
 /// <summary>受信任的明细预汇总配置，不允许 SQL 表达式；当前仅支持数值求和与空值补零。</summary>
 public sealed record BusinessDetailAggregate(

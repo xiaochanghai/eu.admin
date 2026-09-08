@@ -362,6 +362,35 @@
         }
       ],
       "projectModuleCode": "SD_SALES_ORDER_MNG",
+      "presentation": {
+        "title": "销售订单查询结果",
+        "labels": {
+          "salesOrder.id": "订单标识",
+          "salesOrder.orderNo": "订单编号",
+          "salesOrder.customerId": "客户",
+          "salesOrder.currencyId": "币别",
+          "salesOrder.status": "订单状态",
+          "salesOrder.auditStatus": "审核状态",
+          "salesOrder.netAmount": "未税金额",
+          "salesOrder.taxAmount": "税额",
+          "salesOrder.grossAmount": "含税金额",
+          "rank": "排名"
+        },
+        "lookups": {
+          "salesOrder.customerId": {
+            "physicalTable": "BdCustomer",
+            "keyColumn": "ID",
+            "nameColumn": "CustomerName",
+            "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false }
+          },
+          "salesOrder.currencyId": {
+            "physicalTable": "BdCurrency",
+            "keyColumn": "ID",
+            "nameColumn": "CurrencyName",
+            "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false }
+          }
+        }
+      },
       "detailAggregate": {
         "physicalTable": "SdOrderDetail",
         "parentKeyField": "salesOrder.id",

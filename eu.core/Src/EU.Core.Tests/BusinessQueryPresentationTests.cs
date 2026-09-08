@@ -9,6 +9,54 @@ namespace EU.Core.Tests;
 public sealed class BusinessQueryPresentationTests
 {
     [Theory]
+    [InlineData("normal")]
+    [InlineData("inactive")]
+    [InlineData("duplicate")]
+    [InlineData("cancelled")]
+    public async Task Configured_name_lookup_is_bounded_and_preserves_raw_result(string scenario)
+    {
+        const string id = "11111111-1111-1111-1111-111111111111";
+        const string missingId = "22222222-2222-2222-2222-222222222222";
+        const string key = "purchase.vendorId";
+        var query = new CompiledBusinessQuery("", [], [new(key, key, "d0", BusinessCatalogDataType.String,
+            BusinessCatalogFieldKind.Dimension, BusinessCatalogSensitivity.Internal, "", "", null, null)],
+            BusinessCatalogDialect.Sqlite, "project", "purchase", "zh-CN", "1.0", 1, "catalog", "plan",
+            Guid.NewGuid(), DateTimeOffset.UtcNow, "Asia/Shanghai", null, null, 100, 100, false);
+        var result = new BusinessQueryResult([new(key, BusinessQueryValueKind.String, "", "")],
+            new[] { id, missingId }.Select(value => new BusinessQueryRow(new Dictionary<string, BusinessQueryValue>
+                { [key] = new(BusinessQueryValueKind.String, value, true) })).ToArray(), false, "unchanged");
+        var display = new BusinessCatalogPresentation("采购测试", new Dictionary<string, string> { [key] = "供应商" },
+            new Dictionary<string, BusinessCatalogNameLookup> { [key] = new("Names", "KeyId", "Caption",
+                new Dictionary<string, bool> { ["IsActive"] = true, ["IsDeleted"] = false }) });
+        using var database = new SqlSugar.SqlSugarClient(new SqlSugar.ConnectionConfig
+            { DbType = SqlSugar.DbType.Sqlite, ConnectionString = "Data Source=:memory:", IsAutoCloseConnection = false });
+        await database.Ado.ExecuteCommandAsync("CREATE TABLE Names(KeyId TEXT, Caption TEXT, IsActive INTEGER, IsDeleted INTEGER)");
+        await database.Ado.ExecuteCommandAsync("INSERT INTO Names VALUES (@id, @caption, @active, 0)",
+            new SqlSugar.SugarParameter("@id", id), new SqlSugar.SugarParameter("@caption", "供应商<测试>|一"),
+            new SqlSugar.SugarParameter("@active", scenario == "inactive" ? 0 : 1));
+        // 数据库中存在额外 ID，但查询只允许读取结果集中的 ID。
+        await database.Ado.ExecuteCommandAsync("INSERT INTO Names VALUES ('33333333-3333-3333-3333-333333333333', '不得返回', 1, 0)");
+        if (scenario == "duplicate") await database.Ado.ExecuteCommandAsync("INSERT INTO Names SELECT * FROM Names WHERE KeyId=@id", new SqlSugar.SugarParameter("@id", id));
+        if (scenario == "cancelled")
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ProjectBusinessQueryPresentation.CreateAsync(query, result, display, database, new CancellationToken(true)));
+        else if (scenario == "duplicate")
+            await Assert.ThrowsAsync<InvalidOperationException>(() => ProjectBusinessQueryPresentation.CreateAsync(query, result, display, database, default));
+        else
+        {
+            var overrides = await ProjectBusinessQueryPresentation.CreateAsync(query, result, display, database, default);
+            var formatted = new BusinessQueryPresentationFormatter().Format(query, result, overrides);
+            Assert.Equal(scenario == "normal" ? "供应商<测试>|一" : id, formatted.Rows[0][key].DisplayValue);
+            Assert.Equal(missingId, formatted.Rows[1][key].DisplayValue);
+            Assert.True(formatted.Rows[0][key].UntrustedData);
+            Assert.Equal("供应商", formatted.Columns[0].Label);
+            Assert.Equal("采购测试", formatted.Title);
+            Assert.DoesNotContain("不得返回", formatted.Markdown);
+        }
+        Assert.Equal(id, result.Rows[0].Values[key].CanonicalValue);
+        Assert.Equal("unchanged", result.ResultSha256);
+    }
+
+    [Theory]
     [InlineData("totalNetAmount", true)]
     [InlineData("netAmountSum", false)]
     public void Project_display_uses_logical_labels_and_keeps_raw_values(string alias, bool found)
@@ -33,7 +81,8 @@ public sealed class BusinessQueryPresentationTests
         var names = new Dictionary<(string Key, string Value), string>();
         if (found) names[(customerKey, customerId)] = "客户<测试>|一";
         var formatted = new BusinessQueryPresentationFormatter().Format(query, result,
-            new BusinessQueryPresentationOverrides("销售订单查询结果", ProjectBusinessQueryPresentation.CreateLabels(query), names));
+            new BusinessQueryPresentationOverrides("销售订单查询结果", ProjectBusinessQueryPresentation.CreateLabels(query,
+                new("销售订单查询结果", new Dictionary<string, string> { [customerKey] = "客户", ["salesOrder.netAmount"] = "未税金额" }, new Dictionary<string, BusinessCatalogNameLookup>())), names));
         Assert.Equal("销售订单查询结果", formatted.Title);
         Assert.Equal("客户", formatted.Columns[0].Label);
         Assert.Equal("未税金额", formatted.Columns[1].Label);

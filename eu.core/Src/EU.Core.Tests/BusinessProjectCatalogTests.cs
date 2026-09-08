@@ -287,6 +287,48 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
             Assert.Throws<InvalidOperationException>(() => EU.Core.Api.MCP.Services.BusinessQuery.Configuration.BusinessQueryDatabaseDialect.Resolve(type, configured, development, allowSqlite));
     }
 
+    [Theory]
+    [InlineData("table")]
+    [InlineData("name-column")]
+    [InlineData("unknown-label")]
+    [InlineData("measure-lookup")]
+    [InlineData("deleted")]
+    [InlineData("null-lookups")]
+    [InlineData("control-label")]
+    public void Invalid_presentation_configuration_is_rejected(string kind)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(Load("sqlserver").CanonicalJson)!;
+        var display = node["entities"]![1]!["presentation"]!;
+        var lookup = display["lookups"]!["salesOrder.customerId"]!;
+        switch (kind)
+        {
+            case "table": lookup["physicalTable"] = "BdCustomer; SELECT 1"; break;
+            case "name-column": lookup["nameColumn"] = "Name + Password"; break;
+            case "unknown-label": display["labels"]!["unknown.id"] = "未知"; break;
+            case "measure-lookup": display["lookups"]!["salesOrder.netAmount"] = lookup.DeepClone(); break;
+            case "deleted": lookup["requiredBooleanFilters"]!["IsDeleted"] = true; break;
+            case "null-lookups": display["lookups"] = null; break;
+            default: display["labels"]!["rank"] = "排名\n指令"; break;
+        }
+        Assert.False(new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer).Succeeded);
+    }
+
+    [Fact]
+    public void Presentation_is_frozen_hashed_and_optional()
+    {
+        var catalog = Load("sqlserver");
+        var display = catalog.Entities["salesOrder"].Presentation!;
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<string, string>)display.Labels)["rank"] = "修改");
+        Assert.Throws<NotSupportedException>(() => ((IDictionary<string, bool>)display.Lookups["salesOrder.customerId"].RequiredBooleanFilters)["IsDeleted"] = true);
+        var node = System.Text.Json.Nodes.JsonNode.Parse(catalog.CanonicalJson)!;
+        node["entities"]![1]!.AsObject().Remove("presentation");
+        var old = new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer);
+        Assert.True(old.Succeeded);
+        Assert.Null(old.Snapshot!.Entities["salesOrder"].Presentation);
+        Assert.Equal("7d915e5743b3e62d147e26f1200e8d1f168b32ba45e9e35f24a48dbabb851392", old.Snapshot.Sha256);
+        Assert.NotEqual(catalog.Sha256, old.Snapshot.Sha256);
+    }
+
     private static BusinessQueryPlan Plan(string entity) => entity == "supplier"
         ? new(entity, ["supplier.taxType"], [new("supplier.taxRate", BusinessAggregation.Average, "averageRate")], [], null, [], 10)
         : new(entity, ["salesOrder.currencyId"], [new("salesOrder.grossAmount", BusinessAggregation.Sum, "grossTotal")], [], null, [], 10);

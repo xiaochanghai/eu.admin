@@ -33,7 +33,8 @@ public sealed record BusinessCatalogEntitySnapshot
         IReadOnlyDictionary<string, bool>? requiredBooleanFilters = null,
         IReadOnlyList<string>? requiredMeasureDimensions = null,
         string projectModuleCode = "",
-        BusinessDetailAggregate? detailAggregate = null)
+        BusinessDetailAggregate? detailAggregate = null,
+        BusinessCatalogPresentation? presentation = null)
     {
         Name = name;
         PhysicalTable = physicalTable;
@@ -43,6 +44,12 @@ public sealed record BusinessCatalogEntitySnapshot
         Grain = new ReadOnlyCollection<string>(grain.ToArray());
         DefaultScopeField = defaultScopeField;
         ProjectModuleCode = projectModuleCode;
+        Presentation = presentation is null ? null : presentation with
+        {
+            Labels = new ReadOnlyDictionary<string, string>(presentation.Labels.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal)),
+            Lookups = new ReadOnlyDictionary<string, BusinessCatalogNameLookup>(presentation.Lookups.ToDictionary(item => item.Key,
+                item => item.Value with { RequiredBooleanFilters = new ReadOnlyDictionary<string, bool>(item.Value.RequiredBooleanFilters.ToDictionary(filter => filter.Key, filter => filter.Value, StringComparer.Ordinal)) }, StringComparer.Ordinal))
+        };
         DetailAggregate = detailAggregate is null ? null : detailAggregate with
         {
             RequiredBooleanFilters = new ReadOnlyDictionary<string, bool>(detailAggregate.RequiredBooleanFilters.ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal)),
@@ -81,6 +88,8 @@ public sealed record BusinessCatalogEntitySnapshot
     public string ProjectModuleCode { get; }
 
     public BusinessDetailAggregate? DetailAggregate { get; }
+
+    public BusinessCatalogPresentation? Presentation { get; }
 }
 
 public sealed record BusinessCatalogRelationshipSnapshot(

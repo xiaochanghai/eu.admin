@@ -303,8 +303,8 @@ public sealed class BusinessQueryService(
                 queryId, compiled, definition.ToolVersionHash, execution);
             BusinessQueryPresentation presentation =
                 new BusinessQueryPresentationFormatter().Format(compiled, execution.Result,
-                    rootEntity.ProjectModuleCode == "SD_SALES_ORDER_MNG" && compiled.Entity == "salesOrder"
-                        ? await ProjectBusinessQueryPresentation.CreateAsync(compiled, execution.Result, queryDatabase, cancellationToken)
+                    rootEntity.Presentation is not null
+                        ? await ProjectBusinessQueryPresentation.CreateAsync(compiled, execution.Result, rootEntity.Presentation, queryDatabase, cancellationToken)
                         : null);
             quotaOutcome = BusinessQueryQuotaOutcome.Succeeded;
             response = new QueryBusinessDataResponse(

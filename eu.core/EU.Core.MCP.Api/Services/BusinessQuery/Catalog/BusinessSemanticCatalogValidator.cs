@@ -131,6 +131,9 @@ public sealed partial class BusinessSemanticCatalogValidator
             if (!IsValidDetailAggregate(entity, fields))
                 return Invalid("Detail aggregation requires a unique parent grain, safe identifiers, active/undeleted filters and additive zero-filled sum measures.");
 
+            if (!IsValidPresentation(entity, fields))
+                return Invalid("Presentation labels or name lookups are invalid.");
+
             snapshots.Add(
                 entity.Name,
                 new BusinessCatalogEntitySnapshot(
@@ -145,7 +148,8 @@ public sealed partial class BusinessSemanticCatalogValidator
                     entity.RequiredBooleanFilters,
                     entity.RequiredMeasureDimensions,
                     entity.ProjectModuleCode,
-                    entity.DetailAggregate));
+                    entity.DetailAggregate,
+                    entity.Presentation));
         }
 
         var relationships = new List<BusinessCatalogRelationshipSnapshot>();
@@ -210,6 +214,38 @@ public sealed partial class BusinessSemanticCatalogValidator
                 snapshots,
                 relationships),
             null);
+    }
+
+    private static bool IsValidPresentation(BusinessCatalogEntity entity, IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields)
+    {
+        var display = entity.Presentation;
+        if (display is null) return true;
+        if (string.IsNullOrEmpty(entity.ProjectModuleCode) || string.IsNullOrWhiteSpace(display.Title)
+            || !IsDescription(display.Title) || display.Title.Length > 128
+            || display.Labels is null || display.Labels.Count > MaximumFieldsPerEntity + 1
+            || display.Labels.Any(item => (item.Key != "rank" && (!fields.TryGetValue(item.Key, out var field)
+                    || field.Kind == BusinessCatalogFieldKind.Scope || field.Sensitivity == BusinessCatalogSensitivity.Restricted))
+                || string.IsNullOrWhiteSpace(item.Value) || item.Value.Length > 64 || !IsDescription(item.Value))
+            || display.Lookups is null || display.Lookups.Count > 8)
+            return false;
+        foreach (var item in display.Lookups)
+        {
+            var lookup = item.Value;
+            if (!fields.TryGetValue(item.Key, out var field) || field.Kind != BusinessCatalogFieldKind.Dimension
+                || field.DataType != BusinessCatalogDataType.String
+                || field.Sensitivity is BusinessCatalogSensitivity.Confidential or BusinessCatalogSensitivity.Restricted
+                || lookup is null || !PhysicalIdentifierPattern().IsMatch(lookup.PhysicalTable ?? string.Empty)
+                || !PhysicalSegmentPattern().IsMatch(lookup.KeyColumn ?? string.Empty)
+                || !PhysicalSegmentPattern().IsMatch(lookup.NameColumn ?? string.Empty)
+                || string.Equals(lookup.KeyColumn, lookup.NameColumn, StringComparison.OrdinalIgnoreCase)
+                || lookup.RequiredBooleanFilters is null || lookup.RequiredBooleanFilters.Count > 8
+                || lookup.RequiredBooleanFilters.Keys.Any(key => !PhysicalSegmentPattern().IsMatch(key))
+                || lookup.RequiredBooleanFilters.Keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != lookup.RequiredBooleanFilters.Count
+                || !lookup.RequiredBooleanFilters.TryGetValue("IsActive", out bool active) || !active
+                || !lookup.RequiredBooleanFilters.TryGetValue("IsDeleted", out bool deleted) || deleted)
+                return false;
+        }
+        return true;
     }
 
     private static bool IsValidDetailAggregate(BusinessCatalogEntity entity, IReadOnlyDictionary<string, BusinessCatalogFieldSnapshot> fields)
