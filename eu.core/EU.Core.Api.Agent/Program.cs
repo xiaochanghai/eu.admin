@@ -235,7 +235,7 @@ builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
             execution.MaximumToolArgumentBytes,
             execution.MaximumInternalToolResultBytes,
             execution.MaximumInternalToolCalls,
-            execution.MaximumMcpToolCalls),
+            execution.MaximumMcpToolCalls) { QwenThinkingByModel = new Dictionary<string, bool>(platform.QwenThinkingByModel, StringComparer.Ordinal) },
         services.GetRequiredService<IModelCredentialResolver>(),
         services.GetRequiredService<IMcpRuntimeToolInvoker>(),
         services.GetRequiredService<ILogger<MicrosoftAgentRuntimeEngine>>());

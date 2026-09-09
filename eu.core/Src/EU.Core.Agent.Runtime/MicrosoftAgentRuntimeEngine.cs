@@ -270,6 +270,10 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
             throwOnInvalidBytes: true).GetEncoder();
         int outputUtf8Bytes = 0;
         int outputEventCount = 0;
+        var modelClock = System.Diagnostics.Stopwatch.StartNew();
+        bool firstUpdate = true;
+        _logger.LogInformation("Agent model request started. RunId: {RunId}, ModelProfileId: {ModelProfileId}, MessageCount: {MessageCount}, ToolCount: {ToolCount}, KnowledgeCount: {KnowledgeCount}",
+            context.RunId, context.Snapshot.ModelProfileId, messages.Count, tools.Count, context.Knowledge.Count);
         try
         {
             await foreach (MicrosoftAgentRuntimeModelUpdate update in _modelClient.StreamAsync(
@@ -279,6 +283,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 messages,
                 cancellationToken))
             {
+                if (firstUpdate)
+                {
+                    firstUpdate = false;
+                    _logger.LogInformation("Agent model first SDK update. RunId: {RunId}, ElapsedMs: {ElapsedMs}", context.RunId, modelClock.ElapsedMilliseconds);
+                }
                 if (update.ApprovalRequest is not null)
                 {
                     await PersistApprovalRequestAsync(
@@ -350,6 +359,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 context.Snapshot.VersionId,
                 context.Snapshot.ModelProfileId);
             writer.TryComplete(exception);
+        }
+        finally
+        {
+            _logger.LogInformation("Agent model execution ended. RunId: {RunId}, ElapsedMs: {ElapsedMs}, OutputEvents: {OutputEvents}",
+                context.RunId, modelClock.ElapsedMilliseconds, outputEventCount);
         }
     }
 
@@ -552,12 +566,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 .AsAIAgent(new ChatClientAgentOptions
                 {
                     Name = context.Snapshot.AgentCode,
-                    ChatOptions = new ChatOptions
-                    {
-                        Instructions = context.Snapshot.Instructions,
-                        AllowMultipleToolCalls = false,
-                        Tools = tools.ToList()
-                    }
+                    ChatOptions = CreateChatOptions(context.Snapshot.ModelProfileId, context.Snapshot.Instructions, tools, options)
                 });
 
             await foreach (AgentResponseUpdate update in agent.RunStreamingAsync(
@@ -582,6 +591,23 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                     approval);
             }
         }
+    }
+
+    internal static ChatOptions CreateChatOptions(string model, string instructions, IReadOnlyList<AITool> tools, AgentRuntimeOptions options)
+    {
+        var chatOptions = new ChatOptions { Instructions = instructions, AllowMultipleToolCalls = false, Tools = tools.ToList() };
+        if (model.StartsWith("qwen", StringComparison.Ordinal) && options.QwenThinkingByModel.TryGetValue(model, out bool thinking))
+        {
+            chatOptions.RawRepresentationFactory = _ =>
+            {
+                var raw = new ChatCompletionOptions();
+#pragma warning disable SCME0001 // SDK 扩展 JSON 字段入口，由离线请求测试覆盖。
+                raw.Patch.Set("$.enable_thinking"u8, thinking);
+#pragma warning restore SCME0001
+                return raw;
+            };
+        }
+        return chatOptions;
     }
 
     internal static IReadOnlyList<AIChatMessage> BuildConversationMessages(

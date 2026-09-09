@@ -104,12 +104,17 @@ public sealed class BusinessSqlCompiler
             }
 
             FieldBinding time = GetBinding(bindings, plan.TimeRange.Field);
+            bool businessDate = time.Field.DataType == BusinessCatalogDataType.Date;
+            var zone = TimeZoneInfo.FindSystemTimeZoneById(catalog.TimeZoneId);
+            if (businessDate && (TimeZoneInfo.ConvertTime(evaluationTime.StartUtc.Value, zone).TimeOfDay != TimeSpan.Zero
+                || TimeZoneInfo.ConvertTime(evaluationTime.EndUtc.Value, zone).TimeOfDay != TimeSpan.Zero))
+                throw Error(BusinessQueryCompilationErrorCodes.PolicyMismatch);
             string start = parameters.Add(
-                BusinessCatalogDataType.DateTime,
-                evaluationTime.StartUtc.Value);
+                time.Field.DataType,
+                businessDate ? (object)TimeZoneInfo.ConvertTime(evaluationTime.StartUtc.Value, zone).Date : evaluationTime.StartUtc.Value);
             string end = parameters.Add(
-                BusinessCatalogDataType.DateTime,
-                evaluationTime.EndUtc.Value);
+                time.Field.DataType,
+                businessDate ? (object)TimeZoneInfo.ConvertTime(evaluationTime.EndUtc.Value, zone).Date : evaluationTime.EndUtc.Value);
             string expression = Column(dialect, time);
             where.Add($"{expression} >= {start}");
             where.Add($"{expression} < {end}");
@@ -346,7 +351,7 @@ public sealed class BusinessSqlCompiler
         string totals = string.Join(", ", mappings.Select(item => $"SUM(COALESCE({Q(item.Source)}, 0)) AS {Q(item.Target)}"));
         string conditions = string.Join(" AND ", source.RequiredBooleanFilters.OrderBy(item => item.Key, StringComparer.Ordinal)
             .Select(item => $"{Q(item.Key)} = {parameters.Add(BusinessCatalogDataType.Boolean, item.Value)}"));
-        string[] sourceColumns = entity.Fields.Values.Select(field => field.PhysicalColumn)
+        string[] sourceColumns = entity.Fields.Values.Where(field => field.CalendarDimension is null).Select(field => field.PhysicalColumn)
             .Concat(entity.RequiredBooleanFilters.Keys).Distinct(StringComparer.Ordinal).ToArray();
         string projection = string.Join(", ", sourceColumns.Select(name => mappings.Any(item => item.Target == name)
             ? $"COALESCE({Q("detailTotals")}.{Q(name)}, 0) AS {Q(name)}"
@@ -721,8 +726,22 @@ public sealed class BusinessSqlCompiler
             _ => throw Error(BusinessQueryCompilationErrorCodes.PolicyMismatch)
         };
 
-    private static string Column(IBusinessSqlDialect dialect, FieldBinding binding) =>
-        $"{dialect.QuoteIdentifier(binding.EntityAlias)}.{dialect.QuoteIdentifier(binding.Field.PhysicalColumn)}";
+    private static string Column(IBusinessSqlDialect dialect, FieldBinding binding)
+    {
+        var calendar = binding.Field.CalendarDimension;
+        string physical = calendar is null ? binding.Field.PhysicalColumn : binding.Owner.Fields[calendar.SourceField].PhysicalColumn;
+        string column = $"{dialect.QuoteIdentifier(binding.EntityAlias)}.{dialect.QuoteIdentifier(physical)}";
+        if (calendar is null) return column;
+        return (dialect.Dialect, calendar.Part) switch
+        {
+            (BusinessCatalogDialect.SqlServer or BusinessCatalogDialect.MySql, "year") => $"YEAR({column})",
+            (BusinessCatalogDialect.SqlServer, "yearMonth") => $"CONVERT(char(7), {column}, 120)",
+            (BusinessCatalogDialect.MySql, "yearMonth") => $"DATE_FORMAT({column}, '%Y-%m')",
+            (BusinessCatalogDialect.Sqlite, "year") => $"CAST(strftime('%Y', {column}) AS INTEGER)",
+            (BusinessCatalogDialect.Sqlite, "yearMonth") => $"strftime('%Y-%m', {column})",
+            _ => throw Error(BusinessQueryCompilationErrorCodes.FieldInvalid)
+        };
+    }
 
     private static FieldBinding GetBinding(
         IReadOnlyDictionary<string, FieldBinding> bindings,

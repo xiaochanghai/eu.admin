@@ -89,7 +89,13 @@ public sealed record BusinessCatalogField(
     string Currency,
     int? Precision,
     int? Scale,
-    BusinessNullHandling NullHandling);
+    BusinessNullHandling NullHandling)
+{
+    /// <summary>可选业务日期派生维度；只允许 year 或 yearMonth，不接受 SQL 表达式。</summary>
+    public BusinessCalendarDimension? CalendarDimension { get; init; }
+}
+
+public sealed record BusinessCalendarDimension(string SourceField, string Part);
 
 public sealed record BusinessCatalogEntity(
     string Name,
@@ -123,7 +129,11 @@ public sealed record BusinessCatalogPresentation(string Title, IReadOnlyDictiona
 
 /// <summary>同数据库的 GUID 名称映射；只查已返回的 ID，缺失名称回退原 ID。</summary>
 public sealed record BusinessCatalogNameLookup(string PhysicalTable, string KeyColumn, string NameColumn,
-    IReadOnlyDictionary<string, bool> RequiredBooleanFilters);
+    IReadOnlyDictionary<string, bool> RequiredBooleanFilters)
+{
+    /// <summary>仅供历史报表名称展示包含软删除记录，默认关闭；不放宽事实查询或启用条件。</summary>
+    public bool IncludeSoftDeleted { get; init; }
+}
 
 /// <summary>受信任的明细预汇总配置，不允许 SQL 表达式；当前仅支持数值求和与空值补零。</summary>
 public sealed record BusinessDetailAggregate(

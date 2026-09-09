@@ -102,6 +102,10 @@ public sealed class BusinessQueryTimeRangeResolver
         {
             DateTimeOffset start = plan.TimeRange.Start.Value.ToUniversalTime();
             DateTimeOffset end = plan.TimeRange.End.Value.ToUniversalTime();
+            if (catalog.FindField(plan.TimeRange.Field)?.DataType == BusinessCatalogDataType.Date
+                && (TimeZoneInfo.ConvertTime(start, timeZone).TimeOfDay != TimeSpan.Zero
+                    || TimeZoneInfo.ConvertTime(end, timeZone).TimeOfDay != TimeSpan.Zero))
+                return Failure(TimeRangeInvalid, "Business Date ranges must use midnight boundaries in the catalog time zone.");
             if (start >= end)
             {
                 return Failure(

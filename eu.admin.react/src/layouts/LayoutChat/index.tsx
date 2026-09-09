@@ -168,7 +168,7 @@ const BusinessQueryResultContent: React.FC<{ content: string; presentationJson?:
       const unit = column.unit || column.Unit;
       const currency = column.currency || column.Currency;
       return <th key={`${column.key || column.Key || index}`}>{[label, unit, currency].filter(Boolean).join(" · ")}</th>;
-    })}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{columns.map((column, columnIndex) => {
+    })}</tr></thead><tbody>{rows.length === 0 ? <tr><td colSpan={columns.length} style={{ textAlign: "center" }}><Typography.Text type="secondary">暂无数据</Typography.Text></td></tr> : rows.map((row, rowIndex) => <tr key={rowIndex}>{columns.map((column, columnIndex) => {
       const key = column.key || column.Key || "";
       const cell = row[key];
       return <td key={`${key}-${columnIndex}`}>{cell?.displayValue || cell?.DisplayValue || ""}</td>;

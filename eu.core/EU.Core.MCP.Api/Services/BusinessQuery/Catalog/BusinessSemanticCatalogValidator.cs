@@ -86,6 +86,19 @@ public sealed partial class BusinessSemanticCatalogValidator
                 }
             }
 
+            foreach (var field in fields.Values.Where(field => field.CalendarDimension is not null))
+            {
+                var dimension = field.CalendarDimension!;
+                if (field.Kind != BusinessCatalogFieldKind.Dimension || field.NullHandling != BusinessNullHandling.Preserve
+                    || !fields.TryGetValue(dimension.SourceField ?? string.Empty, out var source)
+                    || source.Kind != BusinessCatalogFieldKind.Time || source.DataType != BusinessCatalogDataType.Date
+                    || source.CalendarDimension is not null || field.RequiredPermission != source.RequiredPermission
+                    || field.Sensitivity != source.Sensitivity || entity.Grain.Contains(field.Name)
+                    || (dimension.Part == "year" ? field.DataType != BusinessCatalogDataType.Integer
+                        : dimension.Part == "yearMonth" ? field.DataType != BusinessCatalogDataType.String : true))
+                    return Invalid("Calendar dimensions require a business Date field and year/integer or yearMonth/string metadata.");
+            }
+
             if (entity.Grain.Any(name =>
                     !fields.TryGetValue(name, out BusinessCatalogFieldSnapshot? field)
                     || field.Kind is not (
@@ -242,7 +255,9 @@ public sealed partial class BusinessSemanticCatalogValidator
                 || lookup.RequiredBooleanFilters.Keys.Any(key => !PhysicalSegmentPattern().IsMatch(key))
                 || lookup.RequiredBooleanFilters.Keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != lookup.RequiredBooleanFilters.Count
                 || !lookup.RequiredBooleanFilters.TryGetValue("IsActive", out bool active) || !active
-                || !lookup.RequiredBooleanFilters.TryGetValue("IsDeleted", out bool deleted) || deleted)
+                || (lookup.IncludeSoftDeleted
+                    ? lookup.RequiredBooleanFilters.Keys.Any(key => string.Equals(key, "IsDeleted", StringComparison.OrdinalIgnoreCase))
+                    : !lookup.RequiredBooleanFilters.TryGetValue("IsDeleted", out bool deleted) || deleted))
                 return false;
         }
         return true;
@@ -423,6 +438,7 @@ public sealed partial class BusinessSemanticCatalogValidator
             || fieldOwners[relationship.FromField!] != relationship.FromEntity
             || fieldOwners[relationship.ToField!] != relationship.ToEntity
             || fromField.DataType != toField.DataType
+            || fromField.CalendarDimension is not null || toField.CalendarDimension is not null
             || fromField.Kind is not (
                 BusinessCatalogFieldKind.Dimension
                 or BusinessCatalogFieldKind.Scope)
@@ -473,7 +489,7 @@ public sealed partial class BusinessSemanticCatalogValidator
             field.Currency,
             field.Precision,
             field.Scale,
-            field.NullHandling);
+            field.NullHandling) { CalendarDimension = field.CalendarDimension is null ? null : field.CalendarDimension with { } };
 
     private static bool HasRelationshipCycle(
         IEnumerable<string> entityNames,

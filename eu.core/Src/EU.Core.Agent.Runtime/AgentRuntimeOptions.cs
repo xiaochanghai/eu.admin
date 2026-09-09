@@ -12,7 +12,11 @@ public sealed record AgentRuntimeOptions(
     int MaximumToolArgumentBytes = 32_768,
     int MaximumInternalToolResultBytes = 32_768,
     int MaximumInternalToolCalls = 32,
-    int MaximumMcpToolCalls = 32);
+    int MaximumMcpToolCalls = 32)
+{
+    /// <summary>按精确模型名称配置 Qwen 思考模式；未配置的模型保持供应商默认值。</summary>
+    public IReadOnlyDictionary<string, bool> QwenThinkingByModel { get; init; } = new Dictionary<string, bool>();
+}
 
 public interface IModelCredentialResolver
 {

@@ -158,7 +158,7 @@
     {
       "name": "salesOrder",
       "physicalTable": "SdOrder",
-      "description": "EU 销售订单金额来自有效且未删除明细，先按订单汇总再按客户、币别聚合；空金额及无明细金额补零。必须包含 currencyId 维度，金额不可跨币别合计。",
+      "description": "EU 销售订单金额来自有效且未删除明细，先按订单汇总再按客户、币别聚合；空金额及无明细金额补零。必须包含 currencyId 维度，金额不可跨币别合计。 按年使用 orderYear，按月使用 orderYearMonth；日期范围使用 orderDate、上海时区午夜、结束日不包含。",
       "requiredPermission": "business.project.query",
       "requiresTimeRange": false,
       "grain": [
@@ -359,6 +359,71 @@
           "precision": 20,
           "scale": 2,
           "nullHandling": "zero"
+        },
+        {
+          "name": "salesOrder.orderDate",
+          "physicalColumn": "OrderDate",
+          "kind": "time",
+          "dataType": "date",
+          "description": "订单业务日期（Asia/Shanghai），日期范围起始日包含、结束日不包含；请使用当地午夜边界。",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve"
+        },
+        {
+          "name": "salesOrder.orderYear",
+          "physicalColumn": "OrderYear",
+          "kind": "dimension",
+          "dataType": "integer",
+          "description": "订单日期的年份，如 2026；日期为空时年份为空。",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve",
+          "calendarDimension": {
+            "sourceField": "salesOrder.orderDate",
+            "part": "year"
+          }
+        },
+        {
+          "name": "salesOrder.orderYearMonth",
+          "physicalColumn": "OrderYearMonth",
+          "kind": "dimension",
+          "dataType": "string",
+          "description": "订单日期的年月，如 2026-01；按月报表使用此维度，不合并不同年份的月份。",
+          "requiredPermission": "business.project.query",
+          "allowedOperators": [
+            "equal",
+            "in"
+          ],
+          "allowedAggregations": [],
+          "sensitivity": "internal",
+          "additivity": "notApplicable",
+          "unit": "",
+          "currency": "",
+          "precision": null,
+          "scale": null,
+          "nullHandling": "preserve",
+          "calendarDimension": {
+            "sourceField": "salesOrder.orderDate",
+            "part": "yearMonth"
+          }
         }
       ],
       "projectModuleCode": "SD_SALES_ORDER_MNG",
@@ -374,20 +439,28 @@
           "salesOrder.netAmount": "未税金额",
           "salesOrder.taxAmount": "税额",
           "salesOrder.grossAmount": "含税金额",
-          "rank": "排名"
+          "rank": "排名",
+          "salesOrder.orderYear": "年份",
+          "salesOrder.orderYearMonth": "年月"
         },
         "lookups": {
           "salesOrder.customerId": {
             "physicalTable": "BdCustomer",
             "keyColumn": "ID",
             "nameColumn": "CustomerName",
-            "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false }
+            "includeSoftDeleted": true,
+            "requiredBooleanFilters": {
+              "IsActive": true
+            }
           },
           "salesOrder.currencyId": {
             "physicalTable": "BdCurrency",
             "keyColumn": "ID",
             "nameColumn": "CurrencyName",
-            "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false }
+            "requiredBooleanFilters": {
+              "IsActive": true,
+              "IsDeleted": false
+            }
           }
         }
       },
@@ -395,7 +468,10 @@
         "physicalTable": "SdOrderDetail",
         "parentKeyField": "salesOrder.id",
         "foreignKeyColumn": "OrderId",
-        "requiredBooleanFilters": { "IsActive": true, "IsDeleted": false },
+        "requiredBooleanFilters": {
+          "IsActive": true,
+          "IsDeleted": false
+        },
         "measures": {
           "salesOrder.netAmount": "NoTaxAmount",
           "salesOrder.taxAmount": "TaxAmount",

@@ -116,9 +116,12 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Detail_totals_do_not_duplicate_orders_and_zero_missing_or_null_amounts(bool useOtherTables)
+    [InlineData(false, "none")]
+    [InlineData(true, "none")]
+    [InlineData(false, "year")]
+    [InlineData(false, "month")]
+    [InlineData(false, "range")]
+    public async Task Detail_totals_do_not_duplicate_orders_and_zero_missing_or_null_amounts(bool useOtherTables, string period)
     {
         // 隔离内存数据库：执行实际编译 SQL，不连接项目数据库。
         string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "ProjectCatalogs", "project.json"));
@@ -137,14 +140,17 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         var plan = Plan("salesOrder") with { Dimensions = ["salesOrder.customerId", "salesOrder.currencyId"],
             Measures = [new("salesOrder.netAmount", BusinessAggregation.Sum, "net"),
                 new("salesOrder.taxAmount", BusinessAggregation.Sum, "tax"), new("salesOrder.grossAmount", BusinessAggregation.Sum, "gross")] };
-        var time = new BusinessQueryEvaluationTime(DateTimeOffset.UtcNow, catalog.TimeZoneId, null, null);
+        if (period != "none") plan = plan with { Dimensions = [period == "year" ? "salesOrder.orderYear" : "salesOrder.orderYearMonth", "salesOrder.currencyId"] };
+        if (period == "range") plan = plan with { TimeRange = new("salesOrder.orderDate", null,
+            DateTimeOffset.Parse("2026-01-01T00:00:00+08:00"), DateTimeOffset.Parse("2027-01-01T00:00:00+08:00")) };
+        var time = new EU.Core.Api.MCP.Services.BusinessQuery.Time.BusinessQueryTimeRangeResolver().Resolve(plan, catalog).EvaluationTime!;
         var query = new BusinessSqlCompiler().Compile(catalog, plan, await Authorize(catalog, plan, time), time);
         await using var connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
         await using var seed = connection.CreateCommand();
         seed.CommandText = """
             CREATE TABLE SdOrder(ID TEXT, OrderNo TEXT, CustomerId TEXT, CurrencyId TEXT, CompanyId TEXT,
-                SalesOrderStatus TEXT, AuditStatus TEXT, IsActive INTEGER, IsDeleted INTEGER,
+                SalesOrderStatus TEXT, AuditStatus TEXT, IsActive INTEGER, IsDeleted INTEGER, OrderDate TEXT,
                 NoTaxAmount NUMERIC, TaxAmount NUMERIC, TaxIncludedAmount NUMERIC);
             CREATE TABLE SdOrderDetail(OrderId TEXT, IsActive INTEGER, IsDeleted INTEGER,
                 NoTaxAmount NUMERIC, TaxAmount NUMERIC, TaxIncludedAmount NUMERIC);
@@ -155,6 +161,9 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
                 ('1',1,0,10,1,11), ('1',1,0,20,2,22), ('2',1,0,30,3,33),
                 ('1',0,0,100,100,100), ('1',1,1,100,100,100), ('4',1,0,NULL,NULL,NULL),
                 ('5',1,0,100,100,100), ('6',1,0,100,100,100);
+            UPDATE SdOrder SET OrderDate='2025-12-31 00:00:00' WHERE ID='1';
+            UPDATE SdOrder SET OrderDate='2026-01-01 00:00:00' WHERE ID='2';
+            UPDATE SdOrder SET OrderDate='2026-02-01 00:00:00' WHERE ID='3';
             """;
         if (useOtherTables)
         {
@@ -164,6 +173,7 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
             Assert.Contains("HeaderId", query.CommandText);
             Assert.Contains("LineTotal", query.CommandText);
         }
+        if (period == "range") seed.CommandText += " INSERT INTO SdOrder(ID, CustomerId, CurrencyId, IsActive, IsDeleted, OrderDate) VALUES ('7','a','x',1,0,'2027-01-01 00:00:00'); INSERT INTO SdOrderDetail VALUES ('7',1,0,40,4,44);";
         await seed.ExecuteNonQueryAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = query.CommandText;
@@ -172,13 +182,16 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         int count = 0;
         while (await reader.ReadAsync())
         {
-            bool hasAmounts = reader.GetString(0) == "a";
-            Assert.Equal(hasAmounts ? 60m : 0m, Convert.ToDecimal(reader.GetValue(2)));
-            Assert.Equal(hasAmounts ? 6m : 0m, Convert.ToDecimal(reader.GetValue(3)));
-            Assert.Equal(hasAmounts ? 66m : 0m, Convert.ToDecimal(reader.GetValue(4)));
+            string group = reader.IsDBNull(0) ? "" : reader.GetValue(0).ToString()!;
+            decimal net = period == "none" ? (group == "a" ? 60m : 0m)
+                : group is "2025" or "2026" or "2025-12" or "2026-01" ? 30m : 0m;
+            if (period == "range") Assert.Contains(group, new[] { "2026-01", "2026-02" });
+            Assert.Equal(net, Convert.ToDecimal(reader.GetValue(2)));
+            Assert.Equal(net / 10, Convert.ToDecimal(reader.GetValue(3)));
+            Assert.Equal(net * 1.1m, Convert.ToDecimal(reader.GetValue(4)));
             count++;
         }
-        Assert.Equal(3, count);
+        Assert.Equal(period == "range" ? 2 : period == "month" ? 4 : 3, count);
     }
 
     [Theory]
@@ -293,6 +306,9 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
     [InlineData("unknown-label")]
     [InlineData("measure-lookup")]
     [InlineData("deleted")]
+    [InlineData("missing-delete-opt-in")]
+    [InlineData("conflicting-delete-filter")]
+    [InlineData("inactive-lookup")]
     [InlineData("null-lookups")]
     [InlineData("control-label")]
     public void Invalid_presentation_configuration_is_rejected(string kind)
@@ -307,6 +323,9 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
             case "unknown-label": display["labels"]!["unknown.id"] = "未知"; break;
             case "measure-lookup": display["lookups"]!["salesOrder.netAmount"] = lookup.DeepClone(); break;
             case "deleted": lookup["requiredBooleanFilters"]!["IsDeleted"] = true; break;
+            case "missing-delete-opt-in": lookup.AsObject().Remove("includeSoftDeleted"); break;
+            case "conflicting-delete-filter": lookup["requiredBooleanFilters"]!["IsDeleted"] = false; break;
+            case "inactive-lookup": lookup["requiredBooleanFilters"]!["IsActive"] = false; break;
             case "null-lookups": display["lookups"] = null; break;
             default: display["labels"]!["rank"] = "排名\n指令"; break;
         }
@@ -318,6 +337,10 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
     {
         var catalog = Load("sqlserver");
         var display = catalog.Entities["salesOrder"].Presentation!;
+        Assert.True(display.Lookups["salesOrder.customerId"].IncludeSoftDeleted);
+        Assert.False(display.Lookups["salesOrder.customerId"].RequiredBooleanFilters.ContainsKey("IsDeleted"));
+        Assert.False(display.Lookups["salesOrder.currencyId"].IncludeSoftDeleted);
+        Assert.False(display.Lookups["salesOrder.currencyId"].RequiredBooleanFilters["IsDeleted"]);
         Assert.Throws<NotSupportedException>(() => ((IDictionary<string, string>)display.Labels)["rank"] = "修改");
         Assert.Throws<NotSupportedException>(() => ((IDictionary<string, bool>)display.Lookups["salesOrder.customerId"].RequiredBooleanFilters)["IsDeleted"] = true);
         var node = System.Text.Json.Nodes.JsonNode.Parse(catalog.CanonicalJson)!;
@@ -325,8 +348,40 @@ public sealed class BusinessProjectCatalogTests(ITestOutputHelper output)
         var old = new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer);
         Assert.True(old.Succeeded);
         Assert.Null(old.Snapshot!.Entities["salesOrder"].Presentation);
-        Assert.Equal("7d915e5743b3e62d147e26f1200e8d1f168b32ba45e9e35f24a48dbabb851392", old.Snapshot.Sha256);
         Assert.NotEqual(catalog.Sha256, old.Snapshot.Sha256);
+    }
+
+    [Theory]
+    [InlineData("sqlserver", "year", "YEAR(")]
+    [InlineData("mysql", "year", "YEAR(")]
+    [InlineData("sqlserver", "yearMonth", "CONVERT(char(7)")]
+    [InlineData("mysql", "yearMonth", "DATE_FORMAT(")]
+    public async Task Calendar_grouping_uses_dialect_and_local_midnight_parameters(string dialect, string part, string expectedSql)
+    {
+        var catalog = Load(dialect);
+        var plan = Plan("salesOrder") with { Dimensions = [part == "year" ? "salesOrder.orderYear" : "salesOrder.orderYearMonth", "salesOrder.currencyId"],
+            TimeRange = new("salesOrder.orderDate", null, DateTimeOffset.Parse("2026-01-01T00:00:00+08:00"), DateTimeOffset.Parse("2027-01-01T00:00:00+08:00")) };
+        var resolver = new EU.Core.Api.MCP.Services.BusinessQuery.Time.BusinessQueryTimeRangeResolver();
+        var time = resolver.Resolve(plan, catalog).EvaluationTime!;
+        var query = new BusinessSqlCompiler().Compile(catalog, plan, await Authorize(catalog, plan, time), time);
+        Assert.Contains(expectedSql, query.CommandText);
+        Assert.Contains(query.Parameters, parameter => parameter.DataType == BusinessCatalogDataType.Date && Equals(parameter.Value, new DateTime(2026, 1, 1)));
+        Assert.Contains(query.Parameters, parameter => parameter.DataType == BusinessCatalogDataType.Date && Equals(parameter.Value, new DateTime(2027, 1, 1)));
+        Assert.False(resolver.Resolve(plan with { TimeRange = plan.TimeRange with { Start = DateTimeOffset.Parse("2026-01-01T00:00:00Z") } }, catalog).Succeeded);
+    }
+
+    [Theory]
+    [InlineData("source")]
+    [InlineData("expression")]
+    [InlineData("type")]
+    public void Invalid_calendar_dimension_is_rejected(string kind)
+    {
+        var node = System.Text.Json.Nodes.JsonNode.Parse(Load("sqlserver").CanonicalJson)!;
+        var year = node["entities"]![1]!["fields"]!.AsArray().Single(field => field!["name"]!.GetValue<string>() == "salesOrder.orderYear")!;
+        if (kind == "source") year["calendarDimension"]!["sourceField"] = "salesOrder.netAmount";
+        else if (kind == "expression") year["calendarDimension"]!["part"] = "YEAR(OrderDate); DROP TABLE SdOrder";
+        else year["dataType"] = "string";
+        Assert.False(new BusinessSemanticCatalogLoader().Load(node.ToJsonString(), runtimeDialect: BusinessCatalogDialect.SqlServer).Succeeded);
     }
 
     private static BusinessQueryPlan Plan(string entity) => entity == "supplier"

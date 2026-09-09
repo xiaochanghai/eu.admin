@@ -17,7 +17,10 @@ public sealed record BusinessCatalogFieldSnapshot(
     string Currency,
     int? Precision,
     int? Scale,
-    BusinessNullHandling NullHandling);
+    BusinessNullHandling NullHandling)
+{
+    public BusinessCalendarDimension? CalendarDimension { get; init; }
+}
 
 public sealed record BusinessCatalogEntitySnapshot
 {

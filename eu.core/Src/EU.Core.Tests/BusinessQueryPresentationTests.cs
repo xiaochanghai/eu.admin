@@ -13,6 +13,9 @@ public sealed class BusinessQueryPresentationTests
     [InlineData("inactive")]
     [InlineData("duplicate")]
     [InlineData("cancelled")]
+    [InlineData("deleted-default")]
+    [InlineData("deleted-included")]
+    [InlineData("deleted-inactive")]
     public async Task Configured_name_lookup_is_bounded_and_preserves_raw_result(string scenario)
     {
         const string id = "11111111-1111-1111-1111-111111111111";
@@ -25,15 +28,19 @@ public sealed class BusinessQueryPresentationTests
         var result = new BusinessQueryResult([new(key, BusinessQueryValueKind.String, "", "")],
             new[] { id, missingId }.Select(value => new BusinessQueryRow(new Dictionary<string, BusinessQueryValue>
                 { [key] = new(BusinessQueryValueKind.String, value, true) })).ToArray(), false, "unchanged");
+        bool includeDeleted = scenario is "deleted-included" or "deleted-inactive";
+        var lookupFilters = new Dictionary<string, bool> { ["IsActive"] = true };
+        if (!includeDeleted) lookupFilters["IsDeleted"] = false;
         var display = new BusinessCatalogPresentation("采购测试", new Dictionary<string, string> { [key] = "供应商" },
             new Dictionary<string, BusinessCatalogNameLookup> { [key] = new("Names", "KeyId", "Caption",
-                new Dictionary<string, bool> { ["IsActive"] = true, ["IsDeleted"] = false }) });
+                lookupFilters) { IncludeSoftDeleted = includeDeleted } });
         using var database = new SqlSugar.SqlSugarClient(new SqlSugar.ConnectionConfig
             { DbType = SqlSugar.DbType.Sqlite, ConnectionString = "Data Source=:memory:", IsAutoCloseConnection = false });
         await database.Ado.ExecuteCommandAsync("CREATE TABLE Names(KeyId TEXT, Caption TEXT, IsActive INTEGER, IsDeleted INTEGER)");
-        await database.Ado.ExecuteCommandAsync("INSERT INTO Names VALUES (@id, @caption, @active, 0)",
+        await database.Ado.ExecuteCommandAsync("INSERT INTO Names VALUES (@id, @caption, @active, @deleted)",
             new SqlSugar.SugarParameter("@id", id), new SqlSugar.SugarParameter("@caption", "供应商<测试>|一"),
-            new SqlSugar.SugarParameter("@active", scenario == "inactive" ? 0 : 1));
+            new SqlSugar.SugarParameter("@active", scenario is "inactive" or "deleted-inactive" ? 0 : 1),
+            new SqlSugar.SugarParameter("@deleted", scenario.StartsWith("deleted-") ? 1 : 0));
         // 数据库中存在额外 ID，但查询只允许读取结果集中的 ID。
         await database.Ado.ExecuteCommandAsync("INSERT INTO Names VALUES ('33333333-3333-3333-3333-333333333333', '不得返回', 1, 0)");
         if (scenario == "duplicate") await database.Ado.ExecuteCommandAsync("INSERT INTO Names SELECT * FROM Names WHERE KeyId=@id", new SqlSugar.SugarParameter("@id", id));
@@ -45,7 +52,7 @@ public sealed class BusinessQueryPresentationTests
         {
             var overrides = await ProjectBusinessQueryPresentation.CreateAsync(query, result, display, database, default);
             var formatted = new BusinessQueryPresentationFormatter().Format(query, result, overrides);
-            Assert.Equal(scenario == "normal" ? "供应商<测试>|一" : id, formatted.Rows[0][key].DisplayValue);
+            Assert.Equal(scenario is "normal" or "deleted-included" ? "供应商<测试>|一" : id, formatted.Rows[0][key].DisplayValue);
             Assert.Equal(missingId, formatted.Rows[1][key].DisplayValue);
             Assert.True(formatted.Rows[0][key].UntrustedData);
             Assert.Equal("供应商", formatted.Columns[0].Label);

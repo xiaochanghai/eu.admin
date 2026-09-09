@@ -15,6 +15,9 @@ public sealed class AgentPlatformOptions
     public string ModelCredentialAlias { get; init; } = string.Empty;
 
     public bool ExposeOpenApi { get; init; }
+
+    /// <summary>仅控制指定 Qwen 模型的 enable_thinking，不影响其他模型或评估裁判。</summary>
+    public Dictionary<string, bool> QwenThinkingByModel { get; init; } = new(StringComparer.Ordinal);
 }
 
 public sealed partial class AgentPlatformOptionsValidator(IConfiguration configuration) : IValidateOptions<AgentPlatformOptions>
@@ -43,6 +46,11 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
     public ValidateOptionsResult Validate(string? name, AgentPlatformOptions options)
     {
         List<string> failures = [];
+
+        if (options.QwenThinkingByModel is null || options.QwenThinkingByModel.Count > 32
+            || options.QwenThinkingByModel.Keys.Any(key => !key.StartsWith("qwen", StringComparison.Ordinal)
+                || key.Length > 128 || key.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '.')))
+            failures.Add("AgentPlatform:QwenThinkingByModel requires at most 32 exact Qwen model names.");
 
         if (!ServiceNamePattern().IsMatch(options.ServiceName))
         {
