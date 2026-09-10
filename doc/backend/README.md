@@ -15,6 +15,7 @@
 ## 入口
 
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)
+- 标准业务模块开发约定：[`标准业务模块开发约定.md`](标准业务模块开发约定.md)（复用基类、自动注册，不另建重复 Store 层）
 - 数据库表设计硬约束：[`数据库表设计约束.md`](数据库表设计约束.md)
 - Agent 数据库同步：[`Agent数据库同步.md`](Agent数据库同步.md)
 - Agent 统一认证：[`Agent统一认证.md`](Agent统一认证.md)
