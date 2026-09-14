@@ -7,6 +7,7 @@ using StackExchange.Redis;
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.IRepository.Base;
 using EU.Core.Model.Entity;
+using EU.Core.Model.Models;
 using EU.Core.Services;
 using EU.Core.Agent.Runtime;
 using EU.Core.IServices;
@@ -49,7 +50,7 @@ public sealed class AgModelConfigAgentIntegrationTests
     public async Task Invalid_api_key_does_not_insert_partial_configuration(string? key)
     {
         var fixture = Create();
-        var input = Newtonsoft.Json.JsonConvert.SerializeObject(new { ProfileCode = "new-model", ApiKey = key });
+        var input = ValidInput(new() { ["ApiKey"] = key });
         await Assert.ThrowsAsync<ArgumentException>(() => fixture.Service.Add((object)input));
         Assert.Equal(0, fixture.Repository.AddCalls);
         Assert.Single(fixture.Rows);
@@ -60,7 +61,7 @@ public sealed class AgModelConfigAgentIntegrationTests
     {
         var fixture = Create();
         fixture.Redis.Key = "invalid";
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Add((object)"{\"ApiKey\":\"offline-value\"}"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Add((object)ValidInput()));
         Assert.Equal(0, fixture.Repository.AddCalls);
     }
 
@@ -144,7 +145,8 @@ public sealed class AgModelConfigAgentIntegrationTests
         Assert.Equal("qwen-offline", (await catalog.ResolveAsync("sales-model")).ModelName);
         fixture.Rows[0].Enabled = false;
         Assert.Empty(await catalog.ListAsync());
-        await Assert.ThrowsAsync<InvalidOperationException>(() => catalog.ResolveAsync("sales-model"));
+        var failure = await Assert.ThrowsAsync<AgentRuntimeException>(() => catalog.ResolveAsync("sales-model"));
+        Assert.Equal(AgentRunErrorCodes.ModelConfigurationUnavailable, failure.ErrorCode);
         Assert.Equal(5, scopes);
     }
 
@@ -367,7 +369,7 @@ public sealed class AgModelConfigAgentIntegrationTests
         fixture.Redis.Key = key;
         var row = fixture.Rows[0];
         var ciphertext = row.ApiKeyCiphertext;
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Add((object)"{\"ApiKey\":\"offline-value\"}"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Add((object)ValidInput()));
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Update(row.ID, (object)"{\"ApiKey\":\"offline-value\"}"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.ResolveRuntimeProfileAsync("sales-model"));
         Assert.Equal(3, fixture.Redis.Reads);
@@ -381,7 +383,7 @@ public sealed class AgModelConfigAgentIntegrationTests
     {
         var fixture = Create();
         fixture.Redis.Failure = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Offline simulated failure.");
-        await Assert.ThrowsAsync<RedisConnectionException>(() => fixture.Service.Add((object)"{\"ApiKey\":\"offline-value\"}"));
+        await Assert.ThrowsAsync<RedisConnectionException>(() => fixture.Service.Add((object)ValidInput()));
         await Assert.ThrowsAsync<RedisConnectionException>(() => fixture.Service.Update(fixture.Rows[0].ID, (object)"{\"ApiKey\":\"offline-value\"}"));
         await Assert.ThrowsAsync<RedisConnectionException>(() => fixture.Service.ResolveRuntimeProfileAsync("sales-model"));
         Assert.Equal(0, fixture.Repository.AddCalls);
@@ -400,6 +402,139 @@ public sealed class AgModelConfigAgentIntegrationTests
         Assert.Equal("offline-test-value", (await second.Service.ResolveRuntimeProfileAsync("sales-model")).ApiKey);
         Assert.Equal(2, first.Redis.Reads);
         Assert.Equal(2, second.Redis.Reads);
+    }
+
+    [Theory]
+    [InlineData("timeout")]
+    [InlineData("endpoint")]
+    public async Task Invalid_legacy_model_can_be_disabled_without_reading_key(string invalidField)
+    {
+        var fixture = Create();
+        var row = fixture.Rows[0];
+        if (invalidField == "timeout") row.TimeoutSeconds = 1;
+        else row.Endpoint = "invalid-address";
+        fixture.Redis.Failure = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "offline");
+        var ciphertext = row.ApiKeyCiphertext;
+        Assert.True(await fixture.Service.Update(row.ID, (object)"{\"Enabled\":false}"));
+        Assert.False(row.Enabled);
+        Assert.Empty(await fixture.Service.ListAvailableProfilesAsync());
+        Assert.Equal(0, fixture.Redis.Reads);
+        Assert.Equal(ciphertext, row.ApiKeyCiphertext);
+        Assert.Equal(1L, row.CredentialRevision);
+        Assert.Equal(2L, row.LogicalRevision);
+        Assert.Equal(new[] { "Enabled", "LogicalRevision" }, fixture.Repository.LastColumns);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Update(row.ID, (object)"{\"Enabled\":true}"));
+        Assert.False(row.Enabled);
+        Assert.Equal(1, fixture.Repository.UpdateCalls);
+    }
+
+    [Theory]
+    [InlineData("{\"Enabled\":false,\"TimeoutSeconds\":1}")]
+    [InlineData("{\"Enabled\":false,\"DisplayName\":\"changed\"}")]
+    [InlineData("{\"Enabled\":false,\"ApiKey\":\"new-offline-key\"}")]
+    public async Task Disabling_does_not_bypass_validation_for_other_changes(string input)
+    {
+        var fixture = Create();
+        fixture.Rows[0].TimeoutSeconds = 1;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Update(fixture.Rows[0].ID, (object)input));
+        Assert.True(fixture.Rows[0].Enabled);
+        Assert.Equal(0, fixture.Repository.UpdateCalls);
+        Assert.Equal(0, fixture.Redis.Reads);
+    }
+
+    private static string ValidInput(Dictionary<string, object?>? changes = null)
+    {
+        var values = new Dictionary<string, object?>
+        {
+            ["ProfileCode"] = "new-model", ["Provider"] = "OpenAICompatible",
+            ["ModelName"] = "qwen-offline", ["Endpoint"] = "https://models.example.test/v1",
+            ["TimeoutSeconds"] = 150, ["ApiKey"] = "offline-value"
+        };
+        foreach (var pair in changes ?? []) values[pair.Key] = pair.Value;
+        return Newtonsoft.Json.JsonConvert.SerializeObject(values);
+    }
+
+    [Theory]
+    [InlineData("TimeoutSeconds", 1)]
+    [InlineData("TimeoutSeconds", 601)]
+    [InlineData("TimeoutSeconds", null)]
+    [InlineData("Endpoint", "http://models.example.test/v1")]
+    [InlineData("Endpoint", "https://localhost/v1")]
+    [InlineData("Endpoint", "https://user:secret@models.example.test/v1")]
+    [InlineData("Endpoint", "https://models.example.test/v1?key=secret")]
+    [InlineData("ModelName", "")]
+    [InlineData("ModelName", "model\nname")]
+    [InlineData("Provider", "unsupported")]
+    [InlineData("ProfileCode", " padded ")]
+    public async Task Invalid_add_and_partial_update_do_not_write_or_read_key(string field, object? value)
+    {
+        var fixture = Create();
+        var patch = new Dictionary<string, object?> { [field] = value };
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Add((object)ValidInput(patch)));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Service.Update(fixture.Rows[0].ID,
+            (object)Newtonsoft.Json.JsonConvert.SerializeObject(patch)));
+        Assert.Equal(0, fixture.Repository.AddCalls);
+        Assert.Equal(0, fixture.Repository.UpdateCalls);
+        Assert.Equal(0, fixture.Redis.Reads);
+        Assert.Equal(45, fixture.Rows[0].TimeoutSeconds);
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(600)]
+    public async Task Timeout_boundaries_can_be_saved(int seconds)
+    {
+        var fixture = Create();
+        await fixture.Service.Add((object)ValidInput(new() { ["TimeoutSeconds"] = seconds }));
+        Assert.True(await fixture.Service.Update(fixture.Rows[0].ID, (object)$"{{\"TimeoutSeconds\":{seconds}}}"));
+        Assert.Equal(seconds, fixture.Rows[0].TimeoutSeconds);
+    }
+
+    [Fact]
+    public void Entity_and_detail_dto_never_serialize_ciphertext()
+    {
+        var entity = new AgModelConfig { ApiKeyCiphertext = "offline-ciphertext" };
+        var dto = new AgModelConfigDto { ApiKeyCiphertext = "offline-ciphertext" };
+        foreach (var value in new object[] { entity, dto })
+        {
+            Assert.DoesNotContain("ApiKeyCiphertext", Newtonsoft.Json.JsonConvert.SerializeObject(value));
+            Assert.DoesNotContain("offline-ciphertext", System.Text.Json.JsonSerializer.Serialize(value));
+        }
+        const string request = "{\"ApiKeyCiphertext\":\"untrusted\"}";
+        Assert.Null(Newtonsoft.Json.JsonConvert.DeserializeObject<AgModelConfig>(request)!.ApiKeyCiphertext);
+        Assert.Null(System.Text.Json.JsonSerializer.Deserialize<AgModelConfig>(request)!.ApiKeyCiphertext);
+    }
+
+    [Fact]
+    public async Task Host_resolution_failure_is_safe_and_cancellation_is_not_reclassified()
+    {
+        var fixture = Create();
+        fixture.Redis.Failure = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "offline-secret-connection");
+        var services = new ServiceCollection();
+        services.AddScoped<IAgModelConfigServices>(_ => fixture.Service);
+        using var provider = services.BuildServiceProvider();
+        var catalog = new AgModelProfileCatalog(provider.GetRequiredService<IServiceScopeFactory>());
+        var error = await Assert.ThrowsAsync<AgentRuntimeException>(() => catalog.ResolveAsync("sales-model"));
+        Assert.Equal(AgentRunErrorCodes.ModelConfigurationUnavailable, error.ErrorCode);
+        Assert.DoesNotContain("offline-secret-connection", error.ToString());
+        Assert.Null(error.InnerException);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => catalog.ResolveAsync("sales-model", cancellation.Token));
+    }
+
+    [Fact]
+    public void Invalid_legacy_model_formats_do_not_block_database_host()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["AgentPlatform:ModelEndpoint"] = "not-an-address",
+            ["AgentPlatform:ModelCredentialAlias"] = "old-invalid-alias",
+            ["AgentControl:ModelProfileIds:0"] = "old invalid model"
+        };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var options = new AgentPlatformOptions { ServiceName = "agent-api", ModelEndpoint = "not-an-address", ModelCredentialAlias = "old-invalid-alias" };
+        Assert.True(new AgentPlatformOptionsValidator(configuration).Validate(null, options).Succeeded);
     }
 
     public class MemoryRepository : DispatchProxy

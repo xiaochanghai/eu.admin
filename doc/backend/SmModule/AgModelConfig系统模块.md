@@ -6,6 +6,21 @@
 
 ## 标准开发约定（后续必须遵循）
 
+### 模型配置边界修正（2026-09-14）
+
+分类：BACKEND-BUSINESS + BACKEND-HOST + API-CONTRACT。
+
+- 实体和 Base DTO 的 `ApiKeyCiphertext` 同时标记 Newtonsoft.Json / System.Text.Json 的 JsonIgnore；标准详情 DTO 继承后不再输出密文，也不接受客户端密文赋值。数据库列、加密格式和服务端按列持久化保持不变。生成器重新生成这些文件后必须保留该安全标记。
+- 标准 object Add/Update 与运行时解析共用模型配置校验：合法公开标识、OpenAICompatible、非空且不含控制字符的模型名、5–600 秒超时及无凭据/查询参数/片段的非回环 HTTPS 地址。部分更新合并当前值后校验，不把省略字段当成 null；显式清空必需字段会失败。没有新增主机白名单。
+- 当前 Agent 宿主不再根据旧 `ModelEndpoint` 构造客户端地址，也不校验旧地址/别名格式或静态 `ModelProfileIds` 目录；实际配置只从数据库解析。现有敏感配置检测及 MCP、审批等非模型配置检查保持不变，兼容运行时类型和其他用途的 dotenv 支持未删除。
+- 宿主模型配置解析器将配置查询/校验/解密失败转换为 `MODEL_CONFIGURATION_UNAVAILABLE`，运行审计和失败事件沿用现有领域错误码传播；模型供应商调用失败仍为 `MODEL_INVOCATION_FAILED`。请求取消继续传播，不改判配置失败。日志只记录固定错误码与异常类型，不保留原异常正文或内部异常。
+- 仓库内 React 消费者不依赖密文字段，错误码按字符串展示，无需修改页面。仓库外如依赖密文输出需移除依赖；先部署后端，再验证模型维护、运行事件与就绪接口。无数据库迁移；回滚代码会恢复旧输出和校验行为，不建议为兼容恢复密文输出。
+- 本次未扩展到通用批量/DTO 保存重载、全局请求/AOP/SQL 日志脱敏，也未增加外部模型网络探测。不能据此宣称所有日志和所有继承入口均已完成安全加固。
+
+### Agent 就绪检查
+
+`GET /health/ready` 的 `modelCredential` 检查复用 `IAgModelConfigServices`：读取当前可用模型目录，逐项调用 `ResolveRuntimeProfileAsync`，校验配置并通过 Redis 主密钥解密。目录为空、任一启用模型解析失败或凭据为空时返回未就绪；不再依赖旧 `ModelCredentialAlias` 或环境变量凭据。不请求模型供应商，因此就绪不代表外部模型网络、额度或 API Key 有效性已验证。检查不缓存明文，响应只包含状态，不输出模型名、密钥或底层异常。停机排空、审计存储及 Skill 文件读写检查保持不变。
+
 模型配置按照项目现有标准业务模块开发，不另建平行的存储、接口或管理体系。
 
 ```text
@@ -95,7 +110,9 @@ AgModelConfigController : BaseController<...>
 
 此前 ModelConfigStore、AgModelConfigServices1、ModelConfigContracts、独立 FormPage 及统一 PUT 接口属于旧方案，不作为后续扩展依据。2026-09-10 按项目所有者要求，已删除 AgModelConfigServices1.cs、ModelConfigStore.cs（含 IModelConfigStore）及其 ModelConfigMaintenanceTests.cs、ModelConfigStoreTests.cs 两个旧测试文件。当前生产 Service 和 ModelConfigCredentialCipher 保留不变；其余遗留文件未在本次清理范围内。
 
-[073 脚本](../../../eu.core/EU.Core.Api.Agent/Database/Migrations/SqlServer/073_add_model_config_admin_module.sql)保留初始模块配置；[074 脚本](../../../eu.core/EU.Core.Api.Agent/Database/Migrations/SqlServer/074_enable_model_config_maintenance.sql)指向旧专用 FormPage，**不能作为当前标准动态表单的直接部署步骤**。后续若需执行，应先按当前页面、DTO、模块表单元数据核对并修正，再经授权执行。
+[073 脚本](../../../eu.core/EU.Core.Api.Agent/Database/Migrations/SqlServer/073_add_model_config_admin_module.sql)保留初始模块配置。旧自定义 FormPage、API 封装与指向旧表单的 074 脚本已移除，不作为部署步骤。当前维护沿用标准动态表单；若环境曾执行旧 074，须由管理员在模块管理中清除旧 FormPage 配置并核对动态表单元数据，再清理模块缓存，本次不自动修改数据库。
+
+历史无效配置允许通过标准更新接口仅提交 `{"Enabled":false}` 停用（可带路由对应 ID），不读取 Redis 主密钥，仍递增 LogicalRevision。重新启用、修改其他业务字段或同时轮换密钥仍执行完整配置校验，不能借停用绕过校验。停用后该模型不再进入可用目录及模型就绪探测。
 
 此前 15 项定向测试及前端类型检查是旧实现阶段的历史结果，不代表当前 AgModelConfigServices 重写方法已通过相同验证。上述旧测试已按要求删除，其中的加密测试本次也未迁移；当前生产链路的定向测试覆盖仍需后续补充。
 

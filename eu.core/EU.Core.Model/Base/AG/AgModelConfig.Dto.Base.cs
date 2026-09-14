@@ -57,6 +57,7 @@ public class AgModelConfigBase : BasePoco
     /// 绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。
     /// </summary>
     [Display(Name = "ApiKeyCiphertext"), Description("绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。"), MaxLength(5600, ErrorMessage = "绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。 不能超过 5600 个字符")]
+    [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
     public string ApiKeyCiphertext { get; set; }
 
     /// <summary>

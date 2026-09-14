@@ -225,8 +225,8 @@ builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
     return new MicrosoftAgentRuntimeEngine(
         new AgentRuntimeOptions(
             // 数据库解析器在每次调用前提供实际地址；空旧配置不再阻止宿主启动。
-            new Uri(string.IsNullOrEmpty(platform.ModelEndpoint) ? "https://unused.invalid" : platform.ModelEndpoint, UriKind.Absolute),
-            platform.ModelCredentialAlias,
+            new Uri("https://unused.invalid"),
+            string.Empty,
             TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
             TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
             execution.MaximumToolResultBytes,
@@ -250,8 +250,8 @@ builder.Services.AddSingleton<IModelJudgeEngine>(services =>
         services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
     return new MicrosoftExtensionsModelJudgeEngine(
         new AgentRuntimeOptions(
-            new Uri(string.IsNullOrEmpty(platform.ModelEndpoint) ? "https://unused.invalid" : platform.ModelEndpoint, UriKind.Absolute),
-            platform.ModelCredentialAlias,
+            new Uri("https://unused.invalid"),
+            string.Empty,
             TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
             TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
             execution.MaximumToolResultBytes,

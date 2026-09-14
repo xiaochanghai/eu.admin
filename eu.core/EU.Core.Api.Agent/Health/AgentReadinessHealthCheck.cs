@@ -1,35 +1,28 @@
-using System.Text.Json;
-using EU.Core.Api.Agent.Configuration;
-using EU.Core.Api.Agent.Security;
-using EU.Core.IServices;
-using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.Agent.Infrastructure.Skills;
-using EU.Core.Agent.Runtime;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using EU.Core.Api.Agent.Configuration;
+using EU.Core.IServices;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace EU.Core.Api.Agent.Health;
 
 public sealed class AgentReadinessHealthCheck : IHealthCheck
 {
     private readonly IAgAgentOperationAuditServices _storage;
-    private readonly IModelCredentialResolver _credentials;
-    private readonly AgentPlatformOptions _platform;
+    private readonly IAgModelConfigServices _models;
     private readonly string _skillRoot;
     private readonly HostDrainState _drainState;
 
     public AgentReadinessHealthCheck(
         IAgAgentOperationAuditServices storage,
-        IModelCredentialResolver credentials,
-        IOptions<AgentPlatformOptions> platform,
+        IAgModelConfigServices models,
         IOptions<AgentStorageOptions> storageOptions,
         IHostEnvironment environment,
         HostDrainState drainState)
     {
         _storage = storage;
-        _credentials = credentials;
-        _platform = platform.Value;
+        _models = models;
         _skillRoot = storageOptions.Value.ResolveSkillRootPath(
             environment.ContentRootPath);
         _drainState = drainState;
@@ -112,12 +105,16 @@ public sealed class AgentReadinessHealthCheck : IHealthCheck
     {
         try
         {
-            string? credential = await _credentials.ResolveAsync(
-                _platform.ModelCredentialAlias,
-                cancellationToken);
-            return string.IsNullOrWhiteSpace(credential)
-                ? "unavailable"
-                : "ready";
+            // 与实际调用共用数据库配置校验及 Redis 主密钥解密，不请求模型供应商。
+            var profiles = await _models.ListAvailableProfilesAsync(cancellationToken);
+            if (profiles.Count == 0) return "unavailable";
+            foreach (var profileCode in profiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var profile = await _models.ResolveRuntimeProfileAsync(profileCode, cancellationToken);
+                if (profile is null || string.IsNullOrWhiteSpace(profile.ApiKey)) return "unavailable";
+            }
+            return "ready";
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

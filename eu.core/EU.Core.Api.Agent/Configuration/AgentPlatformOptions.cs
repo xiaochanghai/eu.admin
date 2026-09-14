@@ -57,17 +57,7 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             failures.Add("AgentPlatform:ServiceName is required and must be a lowercase service identifier.");
         }
 
-        if (!string.IsNullOrEmpty(options.ModelEndpoint) && (!Uri.TryCreate(options.ModelEndpoint, UriKind.Absolute, out Uri? endpoint) ||
-            (endpoint.Scheme != Uri.UriSchemeHttp && endpoint.Scheme != Uri.UriSchemeHttps) ||
-            !string.IsNullOrEmpty(endpoint.UserInfo)))
-        {
-            failures.Add("AgentPlatform:ModelEndpoint is required and must be an absolute HTTP or HTTPS URI.");
-        }
-
-        if (!string.IsNullOrEmpty(options.ModelCredentialAlias) && (!CredentialAliasPattern().IsMatch(options.ModelCredentialAlias) || SecretShapedAliasPattern().IsMatch(options.ModelCredentialAlias)))
-        {
-            failures.Add("AgentPlatform:ModelCredentialAlias is required and must be a credential alias, not a credential value.");
-        }
+        // 模型地址和别名为旧兼容配置，当前宿主只使用数据库模型；不再校验旧字段格式。
 
         foreach ((string key, string? value) in configuration.AsEnumerable())
         {

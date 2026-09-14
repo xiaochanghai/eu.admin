@@ -1,11 +1,12 @@
 using EU.Core.Agent.Runtime;
 using EU.Core.IServices;
 using EU.Core.IServices.Agents;
+using EU.Core.IServices.Runtime;
 
 namespace EU.Core.Api.Agent.Configuration;
 
 /// <summary>将单例 Agent 运行时与按作用域解析的标准模型配置 Service 连接，不直接访问数据库。</summary>
-public sealed class AgModelProfileCatalog(IServiceScopeFactory scopeFactory) : IPublicModelProfileCatalog, IAgentModelProfileResolver
+public sealed class AgModelProfileCatalog(IServiceScopeFactory scopeFactory, ILogger<AgModelProfileCatalog>? logger = null) : IPublicModelProfileCatalog, IAgentModelProfileResolver
 {
     #region 获取模型目录（ListAsync）
     /// <summary>读取当前已启用的公开模型标识，不缓存凭据或服务实例。</summary>
@@ -34,8 +35,23 @@ public sealed class AgModelProfileCatalog(IServiceScopeFactory scopeFactory) : I
     /// <returns>本次调用使用的模型配置，凭据仅保留在服务端内存。</returns>
     public async Task<AgentModelRuntimeProfile> ResolveAsync(string profileCode, CancellationToken cancellationToken = default)
     {
-        await using var scope = scopeFactory.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IAgModelConfigServices>().ResolveRuntimeProfileAsync(profileCode, cancellationToken);
+        try
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            return await scope.ServiceProvider.GetRequiredService<IAgModelConfigServices>().ResolveRuntimeProfileAsync(profileCode, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // 不记录异常正文、内部异常或配置值，避免连接串及凭据进入日志。
+            logger?.LogWarning("Model configuration resolution failed. ErrorCode={ErrorCode}; ExceptionType={ExceptionType}",
+                AgentRunErrorCodes.ModelConfigurationUnavailable, exception.GetType().Name);
+            throw new AgentRuntimeException(AgentRunErrorCodes.ModelConfigurationUnavailable,
+                "模型配置不可用，请检查启用状态、配置字段及 Redis 主密钥。");
+        }
     }
     #endregion
 }

@@ -58,6 +58,7 @@ public class AgModelConfig : BasePoco
     /// 绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。
     /// </summary>
     [Display(Name = "ApiKeyCiphertext"), Description("绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。"), SugarColumn(IsNullable = true, Length = 5600)]
+    [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
     public string ApiKeyCiphertext { get; set; }
 
     /// <summary>

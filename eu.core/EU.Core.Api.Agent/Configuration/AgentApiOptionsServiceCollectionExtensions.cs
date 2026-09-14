@@ -14,11 +14,7 @@ internal static class AgentApiOptionsServiceCollectionExtensions
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<AgentPlatformOptions>, AgentPlatformOptionsValidator>();
         services.AddOptions<AgentControlOptions>()
-            .BindConfiguration(AgentControlOptions.SectionName)
-            .Validate(
-                options => PublicModelProfileCatalog.AreValid(options.ModelProfileIds),
-                "AgentControl public model profile identifiers are invalid.")
-            .ValidateOnStart();
+            .BindConfiguration(AgentControlOptions.SectionName);
         services.AddOptions<AgentStorageOptions>()
             .BindConfiguration(AgentStorageOptions.SectionName)
             .ValidateOnStart();

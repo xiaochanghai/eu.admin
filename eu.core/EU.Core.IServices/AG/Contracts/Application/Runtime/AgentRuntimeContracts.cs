@@ -449,6 +449,8 @@ public static class AgentRunErrorCodes
     public const string ModelCredentialMissing = "MODEL_CREDENTIAL_MISSING";
     /// <summary>表示 <c>ModelFailed</c> 场景的错误码。</summary>
     public const string ModelFailed = "MODEL_INVOCATION_FAILED";
+    /// <summary>数据库模型配置解析或凭据解密失败，尚未调用模型供应商。</summary>
+    public const string ModelConfigurationUnavailable = "MODEL_CONFIGURATION_UNAVAILABLE";
     /// <summary>表示 <c>ModelOutputLimitExceeded</c> 场景的错误码。</summary>
     public const string ModelOutputLimitExceeded = "MODEL_OUTPUT_LIMIT_EXCEEDED";
     /// <summary>表示 <c>ModelOutputEventLimitExceeded</c> 场景的错误码。</summary>

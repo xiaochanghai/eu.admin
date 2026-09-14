@@ -64,15 +64,7 @@ public class AgModelConfigServices : BaseServices<AgModelConfig, AgModelConfigDt
         if (matches.Length != 1)
             throw new InvalidOperationException("模型配置不存在、已禁用或标识重复。");
         var model = matches[0];
-        if (model.Provider != "OpenAICompatible" || string.IsNullOrWhiteSpace(model.ModelName)
-            || model.ModelName.Length > 200 || model.ModelName.Any(char.IsControl)
-            || model.TimeoutSeconds is not (>= 5 and <= 600))
-            throw new InvalidOperationException("模型提供商、模型名称或超时配置无效。");
-        if (!Uri.TryCreate(model.Endpoint, UriKind.Absolute, out var endpoint)
-            || endpoint.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(endpoint.UserInfo)
-            || !string.IsNullOrEmpty(endpoint.Query) || !string.IsNullOrEmpty(endpoint.Fragment)
-            || endpoint.IsLoopback)
-            throw new InvalidOperationException("模型地址必须是无凭据、无查询参数的 HTTPS 地址。");
+        var endpoint = ValidateConfiguration(model.ProfileCode, model.Provider, model.ModelName, model.Endpoint, model.TimeoutSeconds);
         string apiKey;
         try
         {
@@ -110,7 +102,8 @@ public class AgModelConfigServices : BaseServices<AgModelConfig, AgModelConfigDt
         #region 检查是否存在相同值
         await CheckOnly(model);
         #endregion
-        model.Provider = "OpenAICompatible";
+        if (string.IsNullOrWhiteSpace(model.Provider)) model.Provider = "OpenAICompatible";
+        ValidateConfiguration(model.ProfileCode, model.Provider, model.ModelName, model.Endpoint, model.TimeoutSeconds);
         model.CredentialRevision = 1;
         model.LogicalRevision = 1;
         var id = Guid.NewGuid();
@@ -142,6 +135,18 @@ public class AgModelConfigServices : BaseServices<AgModelConfig, AgModelConfigDt
             nameof(AgModelConfig.CredentialRevision), nameof(AgModelConfig.LogicalRevision)
         };
         var lstColumns = dic.Keys.Where(x => !protectedColumns.Contains(x)).ToList();
+        // 部分更新按提交字段覆盖当前值后验证，不能把未提交字段当成空值。
+        bool Submitted(string field) => lstColumns.Contains(field, StringComparer.OrdinalIgnoreCase);
+        // 仅停用允许隔离历史无效配置；不能借停用同时修改配置或轮换密钥。
+        bool disableOnly = lstColumns.Count == 1 && Submitted(nameof(model.Enabled))
+            && model.Enabled == false && string.IsNullOrWhiteSpace(insert.ApiKey);
+        if (!disableOnly)
+            ValidateConfiguration(
+                Submitted(nameof(model.ProfileCode)) ? model.ProfileCode : current.ProfileCode,
+                Submitted(nameof(model.Provider)) ? model.Provider : current.Provider,
+                Submitted(nameof(model.ModelName)) ? model.ModelName : current.ModelName,
+                Submitted(nameof(model.Endpoint)) ? model.Endpoint : current.Endpoint,
+                Submitted(nameof(model.TimeoutSeconds)) ? model.TimeoutSeconds : current.TimeoutSeconds);
         if (!string.IsNullOrWhiteSpace(insert.ApiKey))
         {
             var key = await Redis.GetAsync("ModelConfig", "EncryptionKey");
@@ -157,6 +162,31 @@ public class AgModelConfigServices : BaseServices<AgModelConfig, AgModelConfigDt
         var result = await Update(model, lstColumns);
 
         return result;
+    }
+    #endregion
+
+    #region 校验模型配置（ValidateConfiguration）
+    /// <summary>保存与运行共用配置校验，不包含密钥，不回显输入值。</summary>
+    /// <param name="profileCode">公开模型配置标识。</param>
+    /// <param name="provider">协议提供商。</param>
+    /// <param name="modelName">供应商模型名。</param>
+    /// <param name="endpoint">模型服务地址。</param>
+    /// <param name="timeoutSeconds">请求超时秒数。</param>
+    /// <returns>通过校验的 HTTPS 地址。</returns>
+    private static Uri ValidateConfiguration(string profileCode, string provider, string modelName, string endpoint, int? timeoutSeconds)
+    {
+        if (!PublicModelProfileCatalog.AreValid(new[] { profileCode }) || profileCode != profileCode.Trim())
+            throw new InvalidOperationException("模型配置标识无效。");
+        if (provider != "OpenAICompatible") throw new InvalidOperationException("模型提供商必须是 OpenAICompatible。");
+        if (string.IsNullOrWhiteSpace(modelName) || modelName.Length > 200 || modelName.Any(char.IsControl))
+            throw new InvalidOperationException("模型名称不能为空、不能含控制字符，且长度不能超过 200。");
+        if (timeoutSeconds is not (>= 5 and <= 600))
+            throw new InvalidOperationException("模型超时必须为 5 至 600 秒。");
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri)
+            || uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo)
+            || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment) || uri.IsLoopback)
+            throw new InvalidOperationException("模型地址必须是无凭据、无查询参数的 HTTPS 地址。");
+        return uri;
     }
     #endregion
 }
