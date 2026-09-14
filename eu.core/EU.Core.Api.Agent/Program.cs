@@ -348,7 +348,6 @@ await using (AsyncServiceScope startupScope = app.Services.CreateAsyncScope())
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseResponseBodyRead();
-app.UseRequestResponseLogMiddle();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.Use(async (context, next) =>
@@ -377,6 +376,9 @@ app.UseMiddleware<AgentOperationAuditMiddleware>();
 app.UseRateLimiter();
 app.UseMiddleware<ProblemDetailsMiddleware>();
 app.UseMiddleware<RequestBodyLimitMiddleware>();
+// 日志会读取并缓冲请求体，必须在限流、审计及有界读取包装之后执行。
+// 保留 ProblemDetailsMiddleware 在外层，使超限读取统一返回 413。
+app.UseRequestResponseLogMiddle();
 app.UseAuthorization();
 app.UseMiddleware<HttpIdempotencyMiddleware>();
 app.UseMiddleware<ExpensiveRequestAdmissionMiddleware>();
