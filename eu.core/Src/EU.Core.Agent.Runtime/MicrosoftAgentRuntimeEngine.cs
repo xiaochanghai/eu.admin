@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using EU.Core.IServices.Mcp;
+using EU.Core.IServices;
 using EU.Core.IServices.Approvals;
 using EU.Core.IServices.Runtime;
 using EU.Core.IServices.Knowledge;
@@ -40,40 +41,16 @@ internal sealed record MicrosoftAgentRuntimeModelUpdate(
 public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
 {
     private const int MaximumFunctionNameLength = 64;
-    private readonly IModelCredentialResolver _credentials;
     private readonly ILogger<MicrosoftAgentRuntimeEngine> _logger;
-    private readonly IMicrosoftAgentRuntimeModelClient _modelClient;
     private readonly AgentRuntimeOptions _options;
     private readonly IMcpRuntimeToolInvoker _toolInvoker;
-    private readonly IAgentModelProfileResolver? _modelProfiles;
+    private readonly IAgentModelProfileResolver _modelProfiles;
 
-    public MicrosoftAgentRuntimeEngine(
-        AgentRuntimeOptions options,
-        IModelCredentialResolver credentials,
-        IMcpRuntimeToolInvoker toolInvoker,
-        ILogger<MicrosoftAgentRuntimeEngine> logger,
-        IAgentModelProfileResolver? modelProfiles = null)
-        : this(
-            options,
-            credentials,
-            toolInvoker,
-            new OpenAiMicrosoftAgentRuntimeModelClient(options),
-            logger)
-    {
-        _modelProfiles = modelProfiles;
-    }
-
-    internal MicrosoftAgentRuntimeEngine(
-        AgentRuntimeOptions options,
-        IModelCredentialResolver credentials,
-        IMcpRuntimeToolInvoker toolInvoker,
-        IMicrosoftAgentRuntimeModelClient modelClient,
-        ILogger<MicrosoftAgentRuntimeEngine> logger)
+    public MicrosoftAgentRuntimeEngine(AgentRuntimeOptions options, IAgentModelProfileResolver modelProfiles, IMcpRuntimeToolInvoker toolInvoker, ILogger<MicrosoftAgentRuntimeEngine> logger)
     {
         _options = options;
-        _credentials = credentials;
+        _modelProfiles = modelProfiles ?? throw new ArgumentNullException(nameof(modelProfiles));
         _toolInvoker = toolInvoker;
-        _modelClient = modelClient;
         _logger = logger;
     }
 
@@ -91,29 +68,20 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         IReadOnlyList<AITool> tools = BuildTools(context, channel.Writer);
         IReadOnlyList<AIChatMessage> messages =
             BuildConversationMessages(context);
-        var profile = _modelProfiles is null ? null : await _modelProfiles.ResolveAsync(context.Snapshot.ModelProfileId, cancellationToken)
+        var profile = await _modelProfiles.ResolveAsync(context.Snapshot.ModelProfileId, cancellationToken)
             ?? throw new InvalidOperationException("模型配置解析失败，禁止回退到旧凭据。");
-        string? apiKey = profile is null
-            ? await _credentials.ResolveAsync(_options.ModelCredentialAlias, cancellationToken)
-            : profile.ApiKey;
+        string? apiKey = profile.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new AgentRuntimeException(
                 AgentRunErrorCodes.ModelCredentialMissing,
-                "The configured model credential alias could not be resolved.");
+                "The configured model profile has no credential.");
         }
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(profile?.Timeout ?? _options.ModelTimeout);
+        timeout.CancelAfter(profile.Timeout);
         // 每次运行独立构造客户端，防止并发 Agent 互相覆盖地址、模型或密钥。
-        IMicrosoftAgentRuntimeModelClient modelClient = profile is null ? _modelClient
-            : new OpenAiMicrosoftAgentRuntimeModelClient(_options with
-            {
-                ModelEndpoint = profile.Endpoint,
-                QwenThinkingByModel = profile.EnableThinking.HasValue
-                    ? new Dictionary<string, bool> { [profile.ModelName] = profile.EnableThinking.Value }
-                    : new Dictionary<string, bool>()
-            }, profile.ModelName);
+        IMicrosoftAgentRuntimeModelClient modelClient = new OpenAiMicrosoftAgentRuntimeModelClient(profile);
         Task producer = ProduceAsync(
             context,
             apiKey,
@@ -565,7 +533,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     }
 
     private sealed class OpenAiMicrosoftAgentRuntimeModelClient(
-        AgentRuntimeOptions options, string? modelName = null) : IMicrosoftAgentRuntimeModelClient
+        AgentModelRuntimeProfile profile) : IMicrosoftAgentRuntimeModelClient
     {
         public async IAsyncEnumerable<MicrosoftAgentRuntimeModelUpdate> StreamAsync(
             RuntimeRunContext context,
@@ -576,13 +544,13 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         {
             var client = new OpenAIClient(
                 new ApiKeyCredential(apiKey),
-                new OpenAIClientOptions { Endpoint = options.ModelEndpoint });
+                new OpenAIClientOptions { Endpoint = profile.Endpoint });
             AIAgent agent = client
-                .GetChatClient(modelName ?? context.Snapshot.ModelProfileId)
+                .GetChatClient(profile.ModelName)
                 .AsAIAgent(new ChatClientAgentOptions
                 {
                     Name = context.Snapshot.AgentCode,
-                    ChatOptions = CreateChatOptions(modelName ?? context.Snapshot.ModelProfileId, context.Snapshot.Instructions, tools, options)
+                    ChatOptions = CreateChatOptions(profile.ModelName, context.Snapshot.Instructions, tools, profile.EnableThinking)
                 });
 
             await foreach (AgentResponseUpdate update in agent.RunStreamingAsync(
@@ -609,10 +577,10 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         }
     }
 
-    internal static ChatOptions CreateChatOptions(string model, string instructions, IReadOnlyList<AITool> tools, AgentRuntimeOptions options)
+    internal static ChatOptions CreateChatOptions(string model, string instructions, IReadOnlyList<AITool> tools, bool? enableThinking)
     {
         var chatOptions = new ChatOptions { Instructions = instructions, AllowMultipleToolCalls = false, Tools = tools.ToList() };
-        if (model.StartsWith("qwen", StringComparison.Ordinal) && options.QwenThinkingByModel.TryGetValue(model, out bool thinking))
+        if (model.StartsWith("qwen", StringComparison.Ordinal) && enableThinking is bool thinking)
         {
             chatOptions.RawRepresentationFactory = _ =>
             {

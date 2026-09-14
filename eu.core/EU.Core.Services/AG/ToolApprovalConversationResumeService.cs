@@ -22,7 +22,7 @@ public sealed class ToolApprovalConversationResumeService(
     IToolApprovalRepository approvals,
     ToolApprovalRuntimeService runtime,
     IUnifiedEntryRepository unifiedEntries,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider) : IToolApprovalConversationResumeService
 {
     #region 处理（ResumeAsync）
     /// <summary>

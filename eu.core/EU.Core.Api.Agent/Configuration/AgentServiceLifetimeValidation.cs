@@ -12,7 +12,7 @@ public static class AgentServiceLifetimeValidation
     private static readonly HashSet<Type> ScopedServiceTypes =
     [
         typeof(IToolApprovalManagementService),
-        typeof(ToolApprovalConversationResumeService),
+        typeof(IToolApprovalConversationResumeService),
         typeof(IOrchestrationLifecycleService),
         typeof(IRunEvaluationService),
         typeof(IAgEvaluationSuiteServices),

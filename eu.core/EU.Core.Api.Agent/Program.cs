@@ -188,8 +188,6 @@ if (toolApproval.Enabled)
             CryptographicOperations.ZeroMemory(key);
         }
     });
-    builder.Services.AddSingleton<IToolApprovalExecutionPolicy,
-        DefaultToolApprovalExecutionPolicy>();
     builder.Services.AddSingleton(services =>
     {
         ToolApprovalOptions options = services
@@ -210,61 +208,23 @@ if (toolApproval.Enabled)
     });
     builder.Services.AddSingleton<IAgentToolApprovalHandler>(services =>
         services.GetRequiredService<ToolApprovalRuntimeService>());
-    builder.Services.AddScoped<ToolApprovalConversationResumeService>();
 }
-builder.Services.AddSingleton<IModelCredentialResolver>(services =>
-    new EnvironmentAndDotEnvModelCredentialResolver(
-        services.GetRequiredService<IHostEnvironment>().ContentRootPath,
-        builder.Configuration.GetValue<bool>("AgentPlatform:LoadDotEnv")));
-builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
+builder.Services.AddSingleton(services =>
 {
-    AgentPlatformOptions platform =
-        services.GetRequiredService<IOptions<AgentPlatformOptions>>().Value;
-    AgentExecutionOptions execution =
-        services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
-    return new MicrosoftAgentRuntimeEngine(
-        new AgentRuntimeOptions(
-            // 数据库解析器在每次调用前提供实际地址；空旧配置不再阻止宿主启动。
-            new Uri("https://unused.invalid"),
-            string.Empty,
-            TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
-            TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
-            execution.MaximumToolResultBytes,
-            execution.MaximumModelOutputBytes,
-            execution.MaximumModelOutputEvents,
-            execution.MaximumModelInputBytes,
-            execution.MaximumToolArgumentBytes,
-            execution.MaximumInternalToolResultBytes,
-            execution.MaximumInternalToolCalls,
-            execution.MaximumMcpToolCalls) { QwenThinkingByModel = new Dictionary<string, bool>(platform.QwenThinkingByModel, StringComparer.Ordinal) },
-        services.GetRequiredService<IModelCredentialResolver>(),
-        services.GetRequiredService<IMcpRuntimeToolInvoker>(),
-        services.GetRequiredService<ILogger<MicrosoftAgentRuntimeEngine>>(),
-        services.GetRequiredService<IAgentModelProfileResolver>());
+    AgentExecutionOptions execution = services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
+    return new AgentRuntimeOptions(
+        TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
+        execution.MaximumToolResultBytes,
+        execution.MaximumModelOutputBytes,
+        execution.MaximumModelOutputEvents,
+        execution.MaximumModelInputBytes,
+        execution.MaximumToolArgumentBytes,
+        execution.MaximumInternalToolResultBytes,
+        execution.MaximumInternalToolCalls,
+        execution.MaximumMcpToolCalls);
 });
-builder.Services.AddSingleton<IModelJudgeEngine>(services =>
-{
-    AgentPlatformOptions platform =
-        services.GetRequiredService<IOptions<AgentPlatformOptions>>().Value;
-    AgentExecutionOptions execution =
-        services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
-    return new MicrosoftExtensionsModelJudgeEngine(
-        new AgentRuntimeOptions(
-            new Uri("https://unused.invalid"),
-            string.Empty,
-            TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
-            TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
-            execution.MaximumToolResultBytes,
-            execution.MaximumModelOutputBytes,
-            execution.MaximumModelOutputEvents,
-            execution.MaximumModelInputBytes,
-            execution.MaximumToolArgumentBytes,
-            execution.MaximumInternalToolResultBytes,
-            execution.MaximumInternalToolCalls,
-            execution.MaximumMcpToolCalls),
-        services.GetRequiredService<IModelCredentialResolver>(),
-        services.GetRequiredService<IAgentModelProfileResolver>());
-});
+builder.Services.AddSingleton<IAgentRuntimeEngine, MicrosoftAgentRuntimeEngine>();
+builder.Services.AddSingleton<IModelJudgeEngine, MicrosoftExtensionsModelJudgeEngine>();
 builder.Services.AddSingleton<ControlledSkillFileStore>(services =>
 {
     AgentStorageOptions options = services

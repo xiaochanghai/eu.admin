@@ -155,30 +155,18 @@ public sealed class AgModelConfigAgentIntegrationTests
     [InlineData(true)]
     public async Task Runtime_and_judge_never_fall_back_when_database_resolution_fails(bool nullResult)
     {
-        var options = new AgentRuntimeOptions(new Uri("https://unused.invalid"), "unused", TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5));
-        var legacy = new RejectLegacyCredentials();
+        var options = new AgentRuntimeOptions(TimeSpan.FromSeconds(5));
         var resolver = new UnavailableResolver(nullResult);
-        var engine = new MicrosoftAgentRuntimeEngine(options, legacy, null!, NullLogger<MicrosoftAgentRuntimeEngine>.Instance, resolver);
+        var engine = new MicrosoftAgentRuntimeEngine(options, resolver, null!, NullLogger<MicrosoftAgentRuntimeEngine>.Instance);
         var snapshot = new AgentVersionSnapshot(Guid.NewGuid(), "sales-agent", "instructions", "sales-model", default, null, [], []);
         var context = new AgentRunContext(Guid.NewGuid(), Guid.NewGuid(), snapshot, "hello", "", DateTimeOffset.UtcNow, []);
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
             await foreach (var item in engine.StreamAsync(context)) Assert.Fail("No model request should be made.");
         });
-        var judge = new MicrosoftExtensionsModelJudgeEngine(options, legacy, resolver);
+        var judge = new MicrosoftExtensionsModelJudgeEngine(resolver);
         await Assert.ThrowsAsync<InvalidOperationException>(() => judge.EvaluateAsync("input", "output", "sales-model", []));
-        Assert.Equal(0, legacy.Calls);
         Assert.Equal(new[] { "sales-model", "sales-model" }, resolver.Codes);
-    }
-
-    private sealed class RejectLegacyCredentials : IModelCredentialResolver
-    {
-        public int Calls { get; private set; }
-        public ValueTask<string?> ResolveAsync(string credentialAlias, CancellationToken cancellationToken = default)
-        {
-            Calls++;
-            throw new NotSupportedException("Legacy credentials must not be read.");
-        }
     }
 
     private sealed class UnavailableResolver(bool nullResult) : IAgentModelProfileResolver
@@ -533,7 +521,7 @@ public sealed class AgModelConfigAgentIntegrationTests
             ["AgentControl:ModelProfileIds:0"] = "old invalid model"
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
-        var options = new AgentPlatformOptions { ServiceName = "agent-api", ModelEndpoint = "not-an-address", ModelCredentialAlias = "old-invalid-alias" };
+        var options = new AgentPlatformOptions { ServiceName = "agent-api" };
         Assert.True(new AgentPlatformOptionsValidator(configuration).Validate(null, options).Succeeded);
     }
 

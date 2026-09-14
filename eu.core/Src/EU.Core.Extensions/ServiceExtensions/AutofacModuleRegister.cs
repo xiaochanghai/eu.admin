@@ -23,7 +23,6 @@ public class AutofacModuleRegister : Autofac.Module
             "EU.Core.Services.EvaluationBatchService",
             "EU.Core.Services.RunOrchestrationTool",
             "EU.Core.Services.ToolApprovalRuntimeService",
-            "EU.Core.Services.DefaultToolApprovalExecutionPolicy",
             "EU.Core.Services.UseSkillTool"
         };
 

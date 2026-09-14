@@ -309,6 +309,40 @@ public sealed class AgMcpApiResponse_Should
             "TOOL_APPROVAL_DISABLED");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Resume_uses_interface_only_when_execution_is_enabled(bool enabled)
+    {
+        var controller = CreateApprovalController(new ApprovalRepository([]));
+        var services = new ServiceCollection();
+        if (enabled)
+            services.AddSingleton(Proxy<IAgentToolApprovalHandler>((_, _) => throw new InvalidOperationException("must not invoke handler")));
+        bool resolved = false;
+        Guid approvalId = Guid.NewGuid();
+        services.AddTransient<IToolApprovalConversationResumeService>(_ =>
+        {
+            resolved = true;
+            Assert.True(enabled);
+            return Proxy<IToolApprovalConversationResumeService>((method, args) =>
+            {
+                Assert.Equal(nameof(IToolApprovalConversationResumeService.ResumeAsync), method.Name);
+                Assert.Equal(approvalId, args![0]);
+                var identity = Assert.IsType<AgentExecutionIdentity>(args[1]);
+                Assert.Equal("operator", identity.UserId);
+                Assert.Equal("tenant", identity.TenantId);
+                return Task.FromResult(new ToolApprovalConversationResumeResult(approvalId, Guid.NewGuid(), Guid.NewGuid(),
+                    EU.Core.IServices.UnifiedEntry.UnifiedRunStatus.Completed, "offline result", ""));
+            });
+        });
+        using var provider = services.BuildServiceProvider();
+        controller.HttpContext.RequestServices = provider;
+        var response = await controller.Resume(approvalId, CancellationToken.None);
+        Assert.Equal(enabled, resolved);
+        if (enabled) Assert.Equal("offline result", AssertServiceSuccess<ToolApprovalConversationResumeResult>(response).Data.Content);
+        else AssertServiceError(Assert.IsType<JsonResult>(response.Result), StatusCodes.Status503ServiceUnavailable, 630034, "TOOL_APPROVAL_DISABLED");
+    }
+
     private static McpServerDefinition CreateServer() => new(
         Guid.NewGuid(),
         "server",

@@ -16,18 +16,17 @@ public sealed class AgentModelThinkingOptionsTests
     [Theory]
     [InlineData("qwen3.8-max", false, false)]
     [InlineData("qwen3.8-max", true, true)]
-    [InlineData("qwen-other", false, null)]
+    [InlineData("qwen-other", false, false)]
+    [InlineData("qwen-other", null, null)]
     [InlineData("other-model", false, null)]
-    public async Task Thinking_override_is_top_level_boolean_for_exact_model_only(string model, bool enabled, bool? expected)
+    public async Task Database_thinking_is_top_level_boolean_for_qwen_only(string model, bool? enabled, bool? expected)
     {
-        var options = new AgentRuntimeOptions(new Uri("https://offline.invalid/v1"), "alias:offline", TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5))
-        { QwenThinkingByModel = new Dictionary<string, bool> { ["qwen3.8-max"] = enabled } };
         using var handler = new CaptureHandler();
         using var http = new HttpClient(handler);
         using var client = new OpenAIClient(new ApiKeyCredential("offline-placeholder"), new OpenAIClientOptions
-        { Endpoint = options.ModelEndpoint, Transport = new HttpClientPipelineTransport(http) }).GetChatClient(model).AsIChatClient();
+        { Endpoint = new Uri("https://offline.invalid/v1"), Transport = new HttpClientPipelineTransport(http) }).GetChatClient(model).AsIChatClient();
         var factory = typeof(MicrosoftAgentRuntimeEngine).GetMethod("CreateChatOptions", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
-        var chat = (ChatOptions)factory.Invoke(null, [model, "Preserve instructions", Array.Empty<AITool>(), options])!;
+        var chat = (ChatOptions)factory.Invoke(null, [model, "Preserve instructions", Array.Empty<AITool>(), enabled])!;
         await client.GetResponseAsync([new ChatMessage(ChatRole.User, "query")], chat);
         using var json = JsonDocument.Parse(handler.Body!);
         Assert.Equal(model, json.RootElement.GetProperty("model").GetString());

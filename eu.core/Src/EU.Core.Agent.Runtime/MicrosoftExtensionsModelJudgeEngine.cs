@@ -8,10 +8,10 @@ using OpenAI;
 namespace EU.Core.Agent.Runtime;
 
 public sealed class MicrosoftExtensionsModelJudgeEngine(
-    AgentRuntimeOptions options,
-    IModelCredentialResolver credentials,
-    IAgentModelProfileResolver? modelProfiles = null) : IModelJudgeEngine
+    IAgentModelProfileResolver modelProfiles) : IModelJudgeEngine
 {
+    private readonly IAgentModelProfileResolver _modelProfiles = modelProfiles ?? throw new ArgumentNullException(nameof(modelProfiles));
+
     public async Task<IReadOnlyList<ModelJudgeEngineMetric>> EvaluateAsync(
         string input,
         string output,
@@ -19,25 +19,23 @@ public sealed class MicrosoftExtensionsModelJudgeEngine(
         IReadOnlyList<string> evaluators,
         CancellationToken cancellationToken = default)
     {
-        var profile = modelProfiles is null ? null : await modelProfiles.ResolveAsync(modelProfileId, cancellationToken)
+        var profile = await _modelProfiles.ResolveAsync(modelProfileId, cancellationToken)
             ?? throw new InvalidOperationException("模型配置解析失败，禁止回退到旧凭据。");
-        string? apiKey = profile is null
-            ? await credentials.ResolveAsync(options.ModelCredentialAlias, cancellationToken)
-            : profile.ApiKey;
+        string? apiKey = profile.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "The configured model credential alias could not be resolved.");
+                "The configured model profile has no credential.");
         }
 
         var client = new OpenAIClient(
             new ApiKeyCredential(apiKey),
-            new OpenAIClientOptions { Endpoint = profile?.Endpoint ?? options.ModelEndpoint });
+            new OpenAIClientOptions { Endpoint = profile.Endpoint });
         using IChatClient chatClient = client
-            .GetChatClient(profile?.ModelName ?? modelProfileId)
+            .GetChatClient(profile.ModelName)
             .AsIChatClient();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(profile?.Timeout ?? options.ModelTimeout);
+        timeout.CancelAfter(profile.Timeout);
         var configuration = new ChatConfiguration(chatClient);
         var results = new List<ModelJudgeEngineMetric>(evaluators.Count);
         foreach (string name in evaluators)

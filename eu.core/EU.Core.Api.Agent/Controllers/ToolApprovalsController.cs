@@ -13,7 +13,6 @@ using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EU.Core.Services;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -153,10 +152,8 @@ public sealed class ToolApprovalsController(
     [Authorize(Policy = AgentAuthorizationPolicies.Chat)]
     public async Task<ActionResult<ServiceResult<ToolApprovalConversationResumeResult>>> Resume(Guid id, CancellationToken cancellationToken)
     {
-        ToolApprovalConversationResumeService? resumeService =
-            HttpContext.RequestServices.GetService<
-                ToolApprovalConversationResumeService>();
-        if (resumeService is null)
+        // 审批执行器仍按宿主开关注册；先检查它，避免解析已自动注册的恢复服务时依赖缺失。
+        if (HttpContext.RequestServices.GetService<IAgentToolApprovalHandler>() is null)
         {
             return FromError(
                 "TOOL_APPROVAL_DISABLED",
@@ -165,6 +162,8 @@ public sealed class ToolApprovalsController(
 
         try
         {
+            IToolApprovalConversationResumeService resumeService =
+                HttpContext.RequestServices.GetRequiredService<IToolApprovalConversationResumeService>();
             ToolApprovalConversationResumeResult value = await resumeService.ResumeAsync(
                 id,
                 new AgentExecutionIdentity(

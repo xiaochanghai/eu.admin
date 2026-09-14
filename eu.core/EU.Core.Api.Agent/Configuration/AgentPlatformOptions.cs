@@ -10,26 +10,13 @@ public sealed class AgentPlatformOptions
 
     public string ServiceName { get; init; } = string.Empty;
 
-    public string ModelEndpoint { get; init; } = string.Empty;
-
-    public string ModelCredentialAlias { get; init; } = string.Empty;
-
     public bool ExposeOpenApi { get; init; }
-
-    /// <summary>仅控制指定 Qwen 模型的 enable_thinking，不影响其他模型或评估裁判。</summary>
-    public Dictionary<string, bool> QwenThinkingByModel { get; init; } = new(StringComparer.Ordinal);
 }
 
 public sealed partial class AgentPlatformOptionsValidator(IConfiguration configuration) : IValidateOptions<AgentPlatformOptions>
 {
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{0,62}$", RegexOptions.CultureInvariant)]
     private static partial Regex ServiceNamePattern();
-
-    [GeneratedRegex("^alias:[a-z][a-z0-9-]{2,62}$", RegexOptions.CultureInvariant)]
-    private static partial Regex CredentialAliasPattern();
-
-    [GeneratedRegex("^(?:sk-|bearer[._-]|eyJ)", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
-    private static partial Regex SecretShapedAliasPattern();
 
     [GeneratedRegex("(?i)(api[_-]?key|authorization|password|pwd|token|secret|connection[_-]?string)", RegexOptions.CultureInvariant)]
     private static partial Regex SensitiveKeyPattern();
@@ -47,17 +34,12 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
     {
         List<string> failures = [];
 
-        if (options.QwenThinkingByModel is null || options.QwenThinkingByModel.Count > 32
-            || options.QwenThinkingByModel.Keys.Any(key => !key.StartsWith("qwen", StringComparison.Ordinal)
-                || key.Length > 128 || key.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '.')))
-            failures.Add("AgentPlatform:QwenThinkingByModel requires at most 32 exact Qwen model names.");
-
         if (!ServiceNamePattern().IsMatch(options.ServiceName))
         {
             failures.Add("AgentPlatform:ServiceName is required and must be a lowercase service identifier.");
         }
 
-        // 模型地址和别名为旧兼容配置，当前宿主只使用数据库模型；不再校验旧字段格式。
+        // 模型字段已从宿主选项移除；保留配置中敏感值的通用检查。
 
         foreach ((string key, string? value) in configuration.AsEnumerable())
         {
@@ -67,10 +49,6 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             }
 
             string propertyName = key[(key.LastIndexOf(ConfigurationPath.KeyDelimiter, StringComparison.Ordinal) + 1)..];
-            bool isModelCredentialAlias = string.Equals(key, $"{AgentPlatformOptions.SectionName}{ConfigurationPath.KeyDelimiter}{nameof(AgentPlatformOptions.ModelCredentialAlias)}", StringComparison.OrdinalIgnoreCase) &&
-                CredentialAliasPattern().IsMatch(value) &&
-                !SecretShapedAliasPattern().IsMatch(value);
-            bool isCredentialAlias = isModelCredentialAlias;
             bool isRuntimeSecret =
                 string.Equals(key, "AGENT_MODEL_API_KEY", StringComparison.OrdinalIgnoreCase) ||
                 key.StartsWith("AGENT_MODEL_CREDENTIAL_", StringComparison.OrdinalIgnoreCase) ||
@@ -95,7 +73,7 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
                 key,
                 "Redis:ConnectionString",
                 StringComparison.OrdinalIgnoreCase);
-            if (!isCredentialAlias && !isRuntimeSecret && !isNonSecretLifetime &&
+            if (!isRuntimeSecret && !isNonSecretLifetime &&
                 !isSqlSugarConnection && !isSharedAuthenticationCredential &&
                 !isSharedRedisConnection &&
                 (SensitiveKeyPattern().IsMatch(propertyName) ||

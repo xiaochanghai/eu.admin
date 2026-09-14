@@ -11,9 +11,7 @@ public sealed class AgentPlatformOptionsValidator_Should
 {
     private static readonly AgentPlatformOptions ValidOptions = new()
     {
-        ServiceName = "agent-api",
-        ModelEndpoint = "https://models.example.test/v1",
-        ModelCredentialAlias = "alias:test-model"
+        ServiceName = "agent-api"
     };
 
     [Fact]

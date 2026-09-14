@@ -6,9 +6,6 @@ public static class LocalDotEnvConfiguration
 {
     private const string LoadDotEnvKey = "AgentPlatform:LoadDotEnv";
     private const string ServiceNameKey = "AgentPlatform:ServiceName";
-    private const string ModelEndpointKey = "AgentPlatform:ModelEndpoint";
-    private const string ModelCredentialAliasKey = "AgentPlatform:ModelCredentialAlias";
-    private const string ModelProfileSection = "AgentControl:ModelProfileIds";
 
     public static void ConfigureWithDotEnvFallback(
         IConfigurationManager configuration,
@@ -64,31 +61,12 @@ public static class LocalDotEnvConfiguration
         AddWhenMissing(
             configuration,
             additions,
-            ModelEndpointKey,
-            GetAny(
-                entries,
-                "AgentPlatform__ModelEndpoint",
-                "AGENT_PLATFORM__MODEL_ENDPOINT") ??
-            Get(entries, "AGENT_MODEL_ENDPOINT"));
-        AddWhenMissing(
-            configuration,
-            additions,
-            ModelCredentialAliasKey,
-            GetAny(
-                entries,
-                "AgentPlatform__ModelCredentialAlias",
-                "AGENT_PLATFORM__MODEL_CREDENTIAL_ALIAS") ??
-            "alias:local-agent-model");
-        AddWhenMissing(
-            configuration,
-            additions,
             "AgentStorage:SkillRootPath",
             Get(entries, "AgentStorage__SkillRootPath"));
         AddWhenMissing(configuration, additions, "AgentMcp:EnableStdio", Get(entries, "AgentMcp__EnableStdio"));
         AddWhenMissing(configuration, additions, "AgentMcp:AllowDevelopmentHttp", Get(entries, "AgentMcp__AllowDevelopmentHttp"));
         AddWhenMissing(configuration, additions, "AgentMcp:ConnectionTimeoutSeconds", Get(entries, "AgentMcp__ConnectionTimeoutSeconds"));
         AddWhenMissing(configuration, additions, "AgentMcp:DiscoveryTimeoutSeconds", Get(entries, "AgentMcp__DiscoveryTimeoutSeconds"));
-        AddWhenMissing(configuration, additions, "AgentExecution:ModelTimeoutSeconds", Get(entries, "AgentExecution__ModelTimeoutSeconds"));
         AddWhenMissing(configuration, additions, "AgentExecution:ToolCallTimeoutSeconds", Get(entries, "AgentExecution__ToolCallTimeoutSeconds"));
         AddWhenMissing(configuration, additions, "AgentExecution:MaximumToolResultBytes", Get(entries, "AgentExecution__MaximumToolResultBytes"));
         AddWhenMissing(configuration, additions, "AgentExecution:MaximumModelOutputBytes", Get(entries, "AgentExecution__MaximumModelOutputBytes"));
@@ -121,30 +99,6 @@ public static class LocalDotEnvConfiguration
         CopyIndexed(entries, additions, "AgentMcp__AllowedHosts__", "AgentMcp:AllowedHosts");
         CopyIndexed(entries, additions, "AgentMcp__AllowedPorts__", "AgentMcp:AllowedPorts");
         CopyIndexed(entries, additions, "AgentHttpSecurity__AllowedOrigins__", "AgentHttpSecurity:AllowedOrigins");
-
-        if (!configuration.GetSection(ModelProfileSection).GetChildren().Any())
-        {
-            IEnumerable<KeyValuePair<string, string>> configuredProfiles = entries
-                .Where(entry =>
-                    entry.Key.StartsWith(
-                        "AgentControl__ModelProfileIds__",
-                        StringComparison.OrdinalIgnoreCase) ||
-                    entry.Key.StartsWith(
-                        "AGENT_CONTROL__MODEL_PROFILE_IDS__",
-                        StringComparison.OrdinalIgnoreCase))
-                .OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase);
-
-            int index = 0;
-            foreach ((_, string value) in configuredProfiles)
-            {
-                additions[$"{ModelProfileSection}:{index++}"] = value;
-            }
-
-            if (index == 0 && Get(entries, "AGENT_MODEL_DEFAULT_ID") is string modelId)
-            {
-                additions[$"{ModelProfileSection}:0"] = modelId;
-            }
-        }
 
         configuration.AddInMemoryCollection(additions);
     }
@@ -185,19 +139,12 @@ public static class LocalDotEnvConfiguration
 
     private static bool IsAllowed(string name) =>
         name.Equals("AgentPlatform__ServiceName", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AgentPlatform__ModelEndpoint", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AgentPlatform__ModelCredentialAlias", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AGENT_PLATFORM__SERVICE_NAME", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AGENT_PLATFORM__MODEL_ENDPOINT", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AGENT_PLATFORM__MODEL_CREDENTIAL_ALIAS", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AGENT_MODEL_ENDPOINT", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AGENT_MODEL_DEFAULT_ID", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentStorage__SkillRootPath", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__EnableStdio", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__AllowDevelopmentHttp", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__ConnectionTimeoutSeconds", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentMcp__DiscoveryTimeoutSeconds", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("AgentExecution__ModelTimeoutSeconds", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentExecution__ToolCallTimeoutSeconds", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentExecution__MaximumToolResultBytes", StringComparison.OrdinalIgnoreCase) ||
         name.Equals("AgentExecution__MaximumModelOutputBytes", StringComparison.OrdinalIgnoreCase) ||
@@ -229,9 +176,7 @@ public static class LocalDotEnvConfiguration
         name.Equals("AgentHttpSecurity__AllowDevelopmentHttpOrigins", StringComparison.OrdinalIgnoreCase) ||
         name.StartsWith("AgentHttpSecurity__AllowedOrigins__", StringComparison.OrdinalIgnoreCase) ||
         name.StartsWith("AgentMcp__AllowedHosts__", StringComparison.OrdinalIgnoreCase) ||
-        name.StartsWith("AgentMcp__AllowedPorts__", StringComparison.OrdinalIgnoreCase) ||
-        name.StartsWith("AgentControl__ModelProfileIds__", StringComparison.OrdinalIgnoreCase) ||
-        name.StartsWith("AGENT_CONTROL__MODEL_PROFILE_IDS__", StringComparison.OrdinalIgnoreCase);
+        name.StartsWith("AgentMcp__AllowedPorts__", StringComparison.OrdinalIgnoreCase);
 
     private static void CopyIndexed(
         IReadOnlyDictionary<string, string> entries,

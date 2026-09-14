@@ -4,6 +4,19 @@
 >
 > 2026-09-10 接入分类：BACKEND-BUSINESS + BACKEND-HOST。Agent 模型目录和运行时已接入标准 Service；真实宿主及数据库联调仍需验证。
 
+## 旧模型配置清理（2026-09-14）
+
+分类：BACKEND-HOST + BACKEND-PLATFORM。没有 HTTP 请求/响应、数据库结构或密钥格式变化。
+
+- 删除 AgentControlOptions、ModelProfileIds 绑定及旧 dotenv 模型目录填充；平台模型列表仍由数据库目录提供。
+- 删除宿主 ModelEndpoint、ModelCredentialAlias、QwenThinkingByModel 和 ModelTimeoutSeconds 的旧配置入口。聊天模型的 EnableThinking 与 TimeoutSeconds 均取 AgModelConfig；EnableThinking 为空时保持供应商默认，裁判维持原来的默认思考行为。
+- 删除 IModelCredentialResolver / EnvironmentAndDotEnvModelCredentialResolver 及引擎回退分支。模型配置不存在、禁用、删除、解密失败或凭据为空时禁止发起模型请求，不回退到环境变量。
+- AgentRuntimeOptions 仅承载工具超时及运行预算，在 Program 中构造一次。聊天引擎通过构造函数注入预算与模型解析器；裁判引擎只注入模型解析器，不再接受占位地址、空别名和无关预算。
+- C# 构造函数签名发生变化：两个模型引擎必须提供 IAgentModelProfileResolver，AgentRuntimeOptions 不再包含旧模型参数。仓库内调用方及测试同步更新；仓库外若引用 Runtime 程序集，需要同步重新编译，不能混用新旧 DLL。
+- MCP/审批的凭据与 dotenv 用途、后台 Worker 状态、中间件顺序不变。不读取、迁移或轮换现有环境变量密钥；旧非敏感模型配置项不会再生效。
+- 上线时整体部署并重启 Agent 及其匹配的 Runtime 程序集，数据库模型无需重新发布。回滚需整体恢复匹配的旧宿主/Runtime 构建，不修改数据库或 Redis 主密钥。
+- 离线回归见 AgentLegacyModelConfigurationTests、AgModelConfigAgentIntegrationTests、AgentModelThinkingOptionsTests 和 BusinessQuerySingleShotRuntimeTests；真实数据库及模型服务仍需部署后验证。
+
 ## 标准开发约定（后续必须遵循）
 
 ### 模型配置边界修正（2026-09-14）
@@ -12,7 +25,7 @@
 
 - 实体和 Base DTO 的 `ApiKeyCiphertext` 同时标记 Newtonsoft.Json / System.Text.Json 的 JsonIgnore；标准详情 DTO 继承后不再输出密文，也不接受客户端密文赋值。数据库列、加密格式和服务端按列持久化保持不变。生成器重新生成这些文件后必须保留该安全标记。
 - 标准 object Add/Update 与运行时解析共用模型配置校验：合法公开标识、OpenAICompatible、非空且不含控制字符的模型名、5–600 秒超时及无凭据/查询参数/片段的非回环 HTTPS 地址。部分更新合并当前值后校验，不把省略字段当成 null；显式清空必需字段会失败。没有新增主机白名单。
-- 当前 Agent 宿主不再根据旧 `ModelEndpoint` 构造客户端地址，也不校验旧地址/别名格式或静态 `ModelProfileIds` 目录；实际配置只从数据库解析。现有敏感配置检测及 MCP、审批等非模型配置检查保持不变，兼容运行时类型和其他用途的 dotenv 支持未删除。
+- 当前 Agent 宿主不再根据旧 `ModelEndpoint` 构造客户端地址，也不校验旧地址/别名格式或静态 `ModelProfileIds` 目录；实际配置只从数据库解析。现有敏感配置检测及 MCP、审批等非模型配置检查保持不变，旧模型运行时兼容类型已在下述清理中移除，其他用途的 dotenv 支持保留。
 - 宿主模型配置解析器将配置查询/校验/解密失败转换为 `MODEL_CONFIGURATION_UNAVAILABLE`，运行审计和失败事件沿用现有领域错误码传播；模型供应商调用失败仍为 `MODEL_INVOCATION_FAILED`。请求取消继续传播，不改判配置失败。日志只记录固定错误码与异常类型，不保留原异常正文或内部异常。
 - 仓库内 React 消费者不依赖密文字段，错误码按字符串展示，无需修改页面。仓库外如依赖密文输出需移除依赖；先部署后端，再验证模型维护、运行事件与就绪接口。无数据库迁移；回滚代码会恢复旧输出和校验行为，不建议为兼容恢复密文输出。
 - 本次未扩展到通用批量/DTO 保存重载、全局请求/AOP/SQL 日志脱敏，也未增加外部模型网络探测。不能据此宣称所有日志和所有继承入口均已完成安全加固。
@@ -74,7 +87,7 @@ AgModelConfigController : BaseController<...>
 2. 保存记录前，由部署侧在 Redis DB 9 的 Hash `<Redis:InstanceName>ModelConfig` 中配置 `EncryptionKey` 字段。EU.Core.Api 与 Agent 宿主必须使用同一 Redis 实例及键前缀；前缀直接拼接，未配置时为 `nc`。两个宿主的 appsettings.json 均无需配置 ModelConfig.EncryptionKey。已有密文必须使用原主密钥，不得在迁移存储位置时直接换成新值。
 3. Endpoint 必须是无用户名密码、查询参数、fragment 的非回环 HTTPS 地址。2026-09-11 按项目所有者要求移除模型专用 `ModelConfig:AllowedHosts` 校验，不再依赖旧 `AgentPlatform:ModelEndpoint` 授权主机。模型配置由可信管理员维护；填写错误或恶意地址可能导致凭据外发，HTTPS 基础校验不等同于完整 SSRF 防护，部署网络仍应限制内部地址访问与 DNS 重绑定。`AgentMcp:AllowedHosts` 不受影响。
 4. 重新编译并重启 Agent 宿主，刷新 Agent 编辑页，检查可选模型来自数据库。已有 Agent 的 ProfileCode 无需修改；如换用新标识则重新保存、发布。
-5. 新建对话验证实际调用。数据库没有启用模型时目录为空，不能再依赖 `AgentControl:ModelProfileIds` 提供兜底。旧环境变量解析实现仍保留兼容其他运行时消费者，但当前 Agent 宿主的聊天及裁判路径均使用数据库解析器。
+5. 新建对话验证实际调用。数据库没有启用模型时目录为空，不能再依赖 `AgentControl:ModelProfileIds` 提供兜底。旧环境变量模型凭据解析实现已移除，聊天及裁判路径均只使用数据库解析器。
 
 本次不修改 appsettings 中的真实值、不访问数据库、不迁移既有环境变量里的 API Key。沿用已有主密钥。若回退本次接入，恢复上一版 Agent 宿主及其原模型配置即可；不删除数据库记录或轮换密钥。
 

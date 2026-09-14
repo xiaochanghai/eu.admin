@@ -7,8 +7,6 @@ public sealed class AgentExecutionOptions
 {
     public const string SectionName = "AgentExecution";
 
-    public int ModelTimeoutSeconds { get; init; } = 120;
-
     public int ToolCallTimeoutSeconds { get; init; } = 60;
 
     public int MaximumToolResultBytes { get; init; } = 1_048_576;
@@ -36,7 +34,6 @@ public sealed class AgentExecutionOptionsValidator :
     public ValidateOptionsResult Validate(
         string? name,
         AgentExecutionOptions options) =>
-        options.ModelTimeoutSeconds is < 1 or > 600 ||
         options.ToolCallTimeoutSeconds is < 1 or > 300 ||
         options.MaximumToolResultBytes is < 4_096 or > 4_194_304 ||
         options.MaximumModelOutputBytes is < 4_096 or > 1_048_576 ||

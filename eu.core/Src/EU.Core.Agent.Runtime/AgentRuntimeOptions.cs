@@ -1,9 +1,7 @@
 namespace EU.Core.Agent.Runtime;
 
+/// <summary>工具调用与模型输入输出预算；模型地址、凭据、超时及思考设置由模型配置解析器提供。</summary>
 public sealed record AgentRuntimeOptions(
-    Uri ModelEndpoint,
-    string ModelCredentialAlias,
-    TimeSpan ModelTimeout,
     TimeSpan ToolCallTimeout,
     int MaximumToolResultBytes = 1_048_576,
     int MaximumModelOutputBytes = 32_768,
@@ -12,100 +10,4 @@ public sealed record AgentRuntimeOptions(
     int MaximumToolArgumentBytes = 32_768,
     int MaximumInternalToolResultBytes = 32_768,
     int MaximumInternalToolCalls = 32,
-    int MaximumMcpToolCalls = 32)
-{
-    /// <summary>按精确模型名称配置 Qwen 思考模式；未配置的模型保持供应商默认值。</summary>
-    public IReadOnlyDictionary<string, bool> QwenThinkingByModel { get; init; } = new Dictionary<string, bool>();
-}
-
-public interface IModelCredentialResolver
-{
-    ValueTask<string?> ResolveAsync(
-        string credentialAlias,
-        CancellationToken cancellationToken = default);
-}
-
-public sealed class EnvironmentAndDotEnvModelCredentialResolver(
-    string contentRoot,
-    bool allowDotEnv = true) : IModelCredentialResolver
-{
-    public ValueTask<string?> ResolveAsync(
-        string credentialAlias,
-        CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        string aliasName = credentialAlias.StartsWith("alias:", StringComparison.Ordinal)
-            ? credentialAlias["alias:".Length..]
-            : credentialAlias;
-        string aliasVariable = "AGENT_MODEL_CREDENTIAL_" + aliasName
-            .ToUpperInvariant()
-            .Replace('-', '_')
-            .Replace('.', '_');
-        string? value = Environment.GetEnvironmentVariable(aliasVariable) ??
-                        Environment.GetEnvironmentVariable("AGENT_MODEL_API_KEY");
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            return ValueTask.FromResult<string?>(value);
-        }
-
-        if (!allowDotEnv)
-        {
-            return ValueTask.FromResult<string?>(null);
-        }
-
-        string? path = FindNearestDotEnv(contentRoot);
-        if (path is null)
-        {
-            return ValueTask.FromResult<string?>(null);
-        }
-
-        foreach (string line in File.ReadLines(path))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            int equals = line.IndexOf('=');
-            if (equals <= 0)
-            {
-                continue;
-            }
-
-            string key = line[..equals].Trim();
-            if (!string.Equals(key, aliasVariable, StringComparison.Ordinal) &&
-                !string.Equals(key, "AGENT_MODEL_API_KEY", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            string candidate = line[(equals + 1)..].Trim();
-            if (candidate.Length >= 2 &&
-                ((candidate[0] == '"' && candidate[^1] == '"') ||
-                 (candidate[0] == '\'' && candidate[^1] == '\'')))
-            {
-                candidate = candidate[1..^1];
-            }
-
-            if (!string.IsNullOrWhiteSpace(candidate))
-            {
-                return ValueTask.FromResult<string?>(candidate);
-            }
-        }
-
-        return ValueTask.FromResult<string?>(null);
-    }
-
-    private static string? FindNearestDotEnv(string startDirectory)
-    {
-        DirectoryInfo? directory = new(Path.GetFullPath(startDirectory));
-        while (directory is not null)
-        {
-            string candidate = Path.Combine(directory.FullName, ".env");
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            directory = directory.Parent;
-        }
-
-        return null;
-    }
-}
+    int MaximumMcpToolCalls = 32);

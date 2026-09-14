@@ -13,8 +13,6 @@ internal static class AgentApiOptionsServiceCollectionExtensions
             .BindConfiguration(AgentPlatformOptions.SectionName)
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<AgentPlatformOptions>, AgentPlatformOptionsValidator>();
-        services.AddOptions<AgentControlOptions>()
-            .BindConfiguration(AgentControlOptions.SectionName);
         services.AddOptions<AgentStorageOptions>()
             .BindConfiguration(AgentStorageOptions.SectionName)
             .ValidateOnStart();

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using EU.Core.Agent.Runtime;
 using EU.Core.IServices.Mcp;
+using EU.Core.IServices;
 using EU.Core.IServices.Runtime;
 using EU.Core.IServices.UnifiedEntry;
 using Microsoft.Extensions.AI;
@@ -63,12 +64,17 @@ public sealed class BusinessQuerySingleShotRuntimeTests
         {
             McpToolCallLimits = [limit with { CompleteAfterSuccess = singleShot }]
         };
-        var engine = new MicrosoftAgentRuntimeEngine(new AgentRuntimeOptions(new Uri("https://localhost"), "alias:offline",
-            TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5)), null!, invoker, NullLogger<MicrosoftAgentRuntimeEngine>.Instance);
+        var engine = new MicrosoftAgentRuntimeEngine(new AgentRuntimeOptions(TimeSpan.FromSeconds(5)),
+            new UnusedModelResolver(), invoker, NullLogger<MicrosoftAgentRuntimeEngine>.Instance);
         var channel = Channel.CreateUnbounded<AgentRunEvent>();
         var build = typeof(MicrosoftAgentRuntimeEngine).GetMethod("BuildTools", BindingFlags.Instance | BindingFlags.NonPublic)!;
         var tools = (IReadOnlyList<AITool>)build.Invoke(engine, [context, channel.Writer])!;
         return (Assert.IsAssignableFrom<AIFunction>(Assert.Single(tools)), channel);
+    }
+
+    private sealed class UnusedModelResolver : IAgentModelProfileResolver
+    {
+        public Task<AgentModelRuntimeProfile> ResolveAsync(string profileCode, CancellationToken cancellationToken = default) => throw new NotSupportedException("This test only builds tools.");
     }
 
     private sealed class Invoker(bool succeeded) : IMcpRuntimeToolInvoker
