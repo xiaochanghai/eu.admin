@@ -45,12 +45,14 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     private readonly IMicrosoftAgentRuntimeModelClient _modelClient;
     private readonly AgentRuntimeOptions _options;
     private readonly IMcpRuntimeToolInvoker _toolInvoker;
+    private readonly IAgentModelProfileResolver? _modelProfiles;
 
     public MicrosoftAgentRuntimeEngine(
         AgentRuntimeOptions options,
         IModelCredentialResolver credentials,
         IMcpRuntimeToolInvoker toolInvoker,
-        ILogger<MicrosoftAgentRuntimeEngine> logger)
+        ILogger<MicrosoftAgentRuntimeEngine> logger,
+        IAgentModelProfileResolver? modelProfiles = null)
         : this(
             options,
             credentials,
@@ -58,6 +60,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
             new OpenAiMicrosoftAgentRuntimeModelClient(options),
             logger)
     {
+        _modelProfiles = modelProfiles;
     }
 
     internal MicrosoftAgentRuntimeEngine(
@@ -88,9 +91,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         IReadOnlyList<AITool> tools = BuildTools(context, channel.Writer);
         IReadOnlyList<AIChatMessage> messages =
             BuildConversationMessages(context);
-        string? apiKey = await _credentials.ResolveAsync(
-            _options.ModelCredentialAlias,
-            cancellationToken);
+        var profile = _modelProfiles is null ? null : await _modelProfiles.ResolveAsync(context.Snapshot.ModelProfileId, cancellationToken)
+            ?? throw new InvalidOperationException("模型配置解析失败，禁止回退到旧凭据。");
+        string? apiKey = profile is null
+            ? await _credentials.ResolveAsync(_options.ModelCredentialAlias, cancellationToken)
+            : profile.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new AgentRuntimeException(
@@ -99,13 +104,23 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         }
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(_options.ModelTimeout);
+        timeout.CancelAfter(profile?.Timeout ?? _options.ModelTimeout);
+        // 每次运行独立构造客户端，防止并发 Agent 互相覆盖地址、模型或密钥。
+        IMicrosoftAgentRuntimeModelClient modelClient = profile is null ? _modelClient
+            : new OpenAiMicrosoftAgentRuntimeModelClient(_options with
+            {
+                ModelEndpoint = profile.Endpoint,
+                QwenThinkingByModel = profile.EnableThinking.HasValue
+                    ? new Dictionary<string, bool> { [profile.ModelName] = profile.EnableThinking.Value }
+                    : new Dictionary<string, bool>()
+            }, profile.ModelName);
         Task producer = ProduceAsync(
             context,
             apiKey,
             tools,
             messages,
             channel.Writer,
+            modelClient,
             timeout.Token);
 
         await foreach (AgentRunEvent value in channel.Reader.ReadAllAsync())
@@ -263,6 +278,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         IReadOnlyList<AITool> tools,
         IReadOnlyList<AIChatMessage> messages,
         ChannelWriter<AgentRunEvent> writer,
+        IMicrosoftAgentRuntimeModelClient modelClient,
         CancellationToken cancellationToken)
     {
         Encoder outputEncoder = new UTF8Encoding(
@@ -276,7 +292,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
             context.RunId, context.Snapshot.ModelProfileId, messages.Count, tools.Count, context.Knowledge.Count);
         try
         {
-            await foreach (MicrosoftAgentRuntimeModelUpdate update in _modelClient.StreamAsync(
+            await foreach (MicrosoftAgentRuntimeModelUpdate update in modelClient.StreamAsync(
                 context,
                 apiKey,
                 tools,
@@ -549,7 +565,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     }
 
     private sealed class OpenAiMicrosoftAgentRuntimeModelClient(
-        AgentRuntimeOptions options) : IMicrosoftAgentRuntimeModelClient
+        AgentRuntimeOptions options, string? modelName = null) : IMicrosoftAgentRuntimeModelClient
     {
         public async IAsyncEnumerable<MicrosoftAgentRuntimeModelUpdate> StreamAsync(
             RuntimeRunContext context,
@@ -562,11 +578,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 new ApiKeyCredential(apiKey),
                 new OpenAIClientOptions { Endpoint = options.ModelEndpoint });
             AIAgent agent = client
-                .GetChatClient(context.Snapshot.ModelProfileId)
+                .GetChatClient(modelName ?? context.Snapshot.ModelProfileId)
                 .AsAIAgent(new ChatClientAgentOptions
                 {
                     Name = context.Snapshot.AgentCode,
-                    ChatOptions = CreateChatOptions(context.Snapshot.ModelProfileId, context.Snapshot.Instructions, tools, options)
+                    ChatOptions = CreateChatOptions(modelName ?? context.Snapshot.ModelProfileId, context.Snapshot.Instructions, tools, options)
                 });
 
             await foreach (AgentResponseUpdate update in agent.RunStreamingAsync(

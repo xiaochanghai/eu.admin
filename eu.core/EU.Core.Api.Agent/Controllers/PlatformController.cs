@@ -59,7 +59,7 @@ public sealed class PlatformController(
                 new PlatformDeploymentResponse(
                     AgentDefinition.ServerDeploymentTarget,
                     AgentDefinition.ApiHost),
-                modelProfiles.ProfileIds,
+                await modelProfiles.ListAsync(cancellationToken),
                 new PlatformFeatureResponse(
                     true, true, true, true, true, true,
                     evaluation.Value.EnableModelJudge,

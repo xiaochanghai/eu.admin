@@ -43,6 +43,8 @@
 
 ## 4. 业务模块修改边界
 
+- 新增或维护普通业务模块前，必须阅读并遵守 [`标准业务模块开发约定`](../doc/backend/标准业务模块开发约定.md)：沿用 BaseController/IBaseServices/BaseServices/IBaseRepository/BaseRepository 和现有 Autofac 自动注册；特殊业务在当前 Service 中处理，不再新增重复职责的 XxxStore/IXxxStore 或第二套业务入口。此约定适用于后续其他普通业务模块，不仅是 AgModelConfig；确需例外先取得项目所有者确认，不据此批量重构已有特殊基础设施。
+
 `BACKEND-BUSINESS` 默认只修改同一领域的：
 
 - Controller、IService、Service；

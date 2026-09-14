@@ -9,7 +9,8 @@ namespace EU.Core.Agent.Runtime;
 
 public sealed class MicrosoftExtensionsModelJudgeEngine(
     AgentRuntimeOptions options,
-    IModelCredentialResolver credentials) : IModelJudgeEngine
+    IModelCredentialResolver credentials,
+    IAgentModelProfileResolver? modelProfiles = null) : IModelJudgeEngine
 {
     public async Task<IReadOnlyList<ModelJudgeEngineMetric>> EvaluateAsync(
         string input,
@@ -18,8 +19,11 @@ public sealed class MicrosoftExtensionsModelJudgeEngine(
         IReadOnlyList<string> evaluators,
         CancellationToken cancellationToken = default)
     {
-        string? apiKey = await credentials.ResolveAsync(
-            options.ModelCredentialAlias, cancellationToken);
+        var profile = modelProfiles is null ? null : await modelProfiles.ResolveAsync(modelProfileId, cancellationToken)
+            ?? throw new InvalidOperationException("模型配置解析失败，禁止回退到旧凭据。");
+        string? apiKey = profile is null
+            ? await credentials.ResolveAsync(options.ModelCredentialAlias, cancellationToken)
+            : profile.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
@@ -28,10 +32,12 @@ public sealed class MicrosoftExtensionsModelJudgeEngine(
 
         var client = new OpenAIClient(
             new ApiKeyCredential(apiKey),
-            new OpenAIClientOptions { Endpoint = options.ModelEndpoint });
+            new OpenAIClientOptions { Endpoint = profile?.Endpoint ?? options.ModelEndpoint });
         using IChatClient chatClient = client
-            .GetChatClient(modelProfileId)
+            .GetChatClient(profile?.ModelName ?? modelProfileId)
             .AsIChatClient();
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(profile?.Timeout ?? options.ModelTimeout);
         var configuration = new ChatConfiguration(chatClient);
         var results = new List<ModelJudgeEngineMetric>(evaluators.Count);
         foreach (string name in evaluators)
@@ -47,7 +53,7 @@ public sealed class MicrosoftExtensionsModelJudgeEngine(
                 output,
                 configuration,
                 additionalContext: null,
-                cancellationToken);
+                timeout.Token);
             NumericMetric metric = evaluation.Get<NumericMetric>(name);
             results.Add(new ModelJudgeEngineMetric(
                 name,

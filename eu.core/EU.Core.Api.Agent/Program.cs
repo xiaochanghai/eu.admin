@@ -224,7 +224,8 @@ builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
         services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
     return new MicrosoftAgentRuntimeEngine(
         new AgentRuntimeOptions(
-            new Uri(platform.ModelEndpoint, UriKind.Absolute),
+            // 数据库解析器在每次调用前提供实际地址；空旧配置不再阻止宿主启动。
+            new Uri(string.IsNullOrEmpty(platform.ModelEndpoint) ? "https://unused.invalid" : platform.ModelEndpoint, UriKind.Absolute),
             platform.ModelCredentialAlias,
             TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
             TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
@@ -238,7 +239,8 @@ builder.Services.AddSingleton<IAgentRuntimeEngine>(services =>
             execution.MaximumMcpToolCalls) { QwenThinkingByModel = new Dictionary<string, bool>(platform.QwenThinkingByModel, StringComparer.Ordinal) },
         services.GetRequiredService<IModelCredentialResolver>(),
         services.GetRequiredService<IMcpRuntimeToolInvoker>(),
-        services.GetRequiredService<ILogger<MicrosoftAgentRuntimeEngine>>());
+        services.GetRequiredService<ILogger<MicrosoftAgentRuntimeEngine>>(),
+        services.GetRequiredService<IAgentModelProfileResolver>());
 });
 builder.Services.AddSingleton<IModelJudgeEngine>(services =>
 {
@@ -248,7 +250,7 @@ builder.Services.AddSingleton<IModelJudgeEngine>(services =>
         services.GetRequiredService<IOptions<AgentExecutionOptions>>().Value;
     return new MicrosoftExtensionsModelJudgeEngine(
         new AgentRuntimeOptions(
-            new Uri(platform.ModelEndpoint, UriKind.Absolute),
+            new Uri(string.IsNullOrEmpty(platform.ModelEndpoint) ? "https://unused.invalid" : platform.ModelEndpoint, UriKind.Absolute),
             platform.ModelCredentialAlias,
             TimeSpan.FromSeconds(execution.ModelTimeoutSeconds),
             TimeSpan.FromSeconds(execution.ToolCallTimeoutSeconds),
@@ -260,7 +262,8 @@ builder.Services.AddSingleton<IModelJudgeEngine>(services =>
             execution.MaximumInternalToolResultBytes,
             execution.MaximumInternalToolCalls,
             execution.MaximumMcpToolCalls),
-        services.GetRequiredService<IModelCredentialResolver>());
+        services.GetRequiredService<IModelCredentialResolver>(),
+        services.GetRequiredService<IAgentModelProfileResolver>());
 });
 builder.Services.AddSingleton<ControlledSkillFileStore>(services =>
 {
@@ -276,9 +279,9 @@ builder.Services.AddSingleton<ISkillFileStore>(services =>
 builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
     services.GetRequiredService<ControlledSkillFileStore>());
 builder.Services.AddSingleton<JsonSchemaValidator>();
-builder.Services.AddSingleton<IPublicModelProfileCatalog>(services =>
-    new PublicModelProfileCatalog(
-        services.GetRequiredService<IOptions<AgentControlOptions>>().Value.ModelProfileIds));
+builder.Services.AddSingleton<AgModelProfileCatalog>();
+builder.Services.AddSingleton<IAgentModelProfileResolver>(services => services.GetRequiredService<AgModelProfileCatalog>());
+builder.Services.AddSingleton<IPublicModelProfileCatalog>(services => services.GetRequiredService<AgModelProfileCatalog>());
 builder.Services.AddSingleton<IModelProfileReferenceCatalog>(services =>
     services.GetRequiredService<IPublicModelProfileCatalog>());
 builder.Services.AddSingleton<OrchestrationRuntimeService>();

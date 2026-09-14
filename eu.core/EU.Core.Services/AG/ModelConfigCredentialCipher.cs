@@ -61,10 +61,10 @@ public static class ModelConfigCredentialCipher
     {
         byte[] key;
         try { key = Convert.FromBase64String(value ?? ""); }
-        catch (FormatException) { throw new InvalidOperationException("请配置 ModelConfig:EncryptionKey（32 字节 Base64 主密钥）。"); }
+        catch (FormatException) { throw new InvalidOperationException("请在 Redis 中配置 ModelConfig 的 EncryptionKey 字段（32 字节主密钥的 Base64 表示）。"); }
         if (key.Length == 32) return key;
         CryptographicOperations.ZeroMemory(key);
-        throw new InvalidOperationException("请配置 ModelConfig:EncryptionKey（32 字节 Base64 主密钥）。");
+        throw new InvalidOperationException("请在 Redis 中配置 ModelConfig 的 EncryptionKey 字段（32 字节主密钥的 Base64 表示）。");
     }
     #endregion
 }

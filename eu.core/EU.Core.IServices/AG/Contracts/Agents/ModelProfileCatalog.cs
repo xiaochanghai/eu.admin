@@ -23,8 +23,10 @@ public interface IModelProfileReferenceCatalog
 /// </summary>
 public interface IPublicModelProfileCatalog : IModelProfileReferenceCatalog
 {
-    /// <summary>获取可公开使用的模型配置标识集合。</summary>
-    IReadOnlyList<string> ProfileIds { get; }
+    /// <summary>异步获取可公开使用的模型配置标识集合。</summary>
+    /// <param name="cancellationToken">取消本次查询的令牌。</param>
+    /// <returns>当前可用的公开模型标识集合。</returns>
+    Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -100,6 +102,17 @@ public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
     /// 获取可公开使用的模型配置标识集合。
     /// </summary>
     public IReadOnlyList<string> ProfileIds { get; }
+
+    #region 获取公开模型目录（ListAsync）
+    /// <summary>异步读取公开模型标识，不访问模型凭据。</summary>
+    /// <param name="cancellationToken">取消本次读取的令牌。</param>
+    /// <returns>构造时保存的只读公开标识集合。</returns>
+    public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(ProfileIds);
+    }
+    #endregion
 
     #region 查询公开模型配置是否存在（ExistsAsync）
     /// <summary>

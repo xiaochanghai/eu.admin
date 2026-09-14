@@ -57,14 +57,14 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
             failures.Add("AgentPlatform:ServiceName is required and must be a lowercase service identifier.");
         }
 
-        if (!Uri.TryCreate(options.ModelEndpoint, UriKind.Absolute, out Uri? endpoint) ||
+        if (!string.IsNullOrEmpty(options.ModelEndpoint) && (!Uri.TryCreate(options.ModelEndpoint, UriKind.Absolute, out Uri? endpoint) ||
             (endpoint.Scheme != Uri.UriSchemeHttp && endpoint.Scheme != Uri.UriSchemeHttps) ||
-            !string.IsNullOrEmpty(endpoint.UserInfo))
+            !string.IsNullOrEmpty(endpoint.UserInfo)))
         {
             failures.Add("AgentPlatform:ModelEndpoint is required and must be an absolute HTTP or HTTPS URI.");
         }
 
-        if (!CredentialAliasPattern().IsMatch(options.ModelCredentialAlias) || SecretShapedAliasPattern().IsMatch(options.ModelCredentialAlias))
+        if (!string.IsNullOrEmpty(options.ModelCredentialAlias) && (!CredentialAliasPattern().IsMatch(options.ModelCredentialAlias) || SecretShapedAliasPattern().IsMatch(options.ModelCredentialAlias)))
         {
             failures.Add("AgentPlatform:ModelCredentialAlias is required and must be a credential alias, not a credential value.");
         }

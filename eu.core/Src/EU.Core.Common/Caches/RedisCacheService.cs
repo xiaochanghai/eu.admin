@@ -643,6 +643,22 @@ public class RedisCacheService : IDisposable
         return JsonConvert.DeserializeObject<T>(value);
     }
 
+    /// <summary>
+    /// 异步获取哈希表中指定字段的字符串值，不进行 JSON 反序列化
+    /// </summary>
+    /// <param name="key">哈希表键，自动添加配置的 Redis 键前缀</param>
+    /// <param name="hashField">哈希表中的字段名，不添加键前缀</param>
+    /// <returns>字段的字符串值；哈希表或字段不存在时返回 <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> 为 null 或空字符串时抛出异常</exception>
+    public async Task<string> GetAsync(string key, string hashField)
+    {
+        if (key.IsNullOrEmpty())
+            throw new ArgumentNullException(nameof(key));
+        key = _redisKeyPrefix + key;
+        var value = await _cache.HashGetAsync(key, hashField);
+        return value;
+    }
+
     #endregion
 
     #region 资源释放
