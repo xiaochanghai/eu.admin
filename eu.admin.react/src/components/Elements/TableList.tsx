@@ -78,6 +78,7 @@ export const TableList: React.FC<TableListProps> = props => {
    * 关闭表单抽屉或模态框
    */
   const onClose = () => {
+    if (formPageRef.current?.onBeforeClose?.() === false) return;
     setDrawerOpen(false);
     setDisabled(true);
     setModalVisible(false);

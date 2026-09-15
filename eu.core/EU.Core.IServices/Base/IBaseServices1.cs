@@ -64,5 +64,24 @@ public interface IBaseServices<TEntity> where TEntity : class
     Task<bool> UpdateSplit(TEntity entity, DateTime dateTime);
     Task<PageModel<TEntity>> QueryPageSplit(Expression<Func<TEntity, bool>> whereExpression, DateTime beginTime, DateTime endTime, int pageIndex = 1, int pageSize = 20, string orderByFields = null);
     #endregion
+
+    #region 数据存在性检查
+    /// <summary>
+    /// 根据主键ID检查数据是否存在
+    /// </summary>
+    /// <param name="objId">主键ID（必须在实体上标记[SugarColumn(IsPrimaryKey=true)]特性）</param>
+    /// <returns>存在返回true，否则返回false</returns>
+    Task<bool> AnyAsync(object objId);
+
+    /// <summary>
+    /// 根据条件表达式检查数据是否存在
+    /// </summary>
+    /// <param name="whereExpression">Lambda条件表达式</param>
+    /// <returns>存在返回true，否则返回false</returns>
+    /// <example>
+    /// bool exists = await AnyAsync(x => x.Code == "USER001" && x.IsDeleted == false);
+    /// </example>
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> whereExpression);
+    #endregion
 }
- 
+
