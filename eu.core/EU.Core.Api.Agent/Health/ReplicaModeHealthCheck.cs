@@ -1,7 +1,5 @@
-using System.Text.Json;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Text.Json;
 
 namespace EU.Core.Api.Agent.Health;
 
