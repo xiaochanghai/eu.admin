@@ -33,6 +33,14 @@ public class SmApplicationVersionController : BaseController<ISmApplicationVersi
     /// </summary>
     /// <returns></returns>
     [HttpGet("Latest"), AllowAnonymous]
-    public async Task<ServiceResult<SmApplicationVersion>> Latest() => await _service.Latest();
+    public async Task<ServiceResult<SmApplicationVersion>> Latest() => await _service.Latest(null);
+
+    /// <summary>
+    /// 获取最新版本信息
+    /// </summary>
+    /// <param name="channel">渠道</param>
+    /// <returns></returns>
+    [HttpGet("Latest/{channel}"), AllowAnonymous]
+    public async Task<ServiceResult<SmApplicationVersion>> Latest(string channel) => await _service.Latest(channel);
     #endregion
 }

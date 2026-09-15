@@ -22,6 +22,6 @@ namespace EU.Core.IServices;
 public interface ISmApplicationVersionServices : IBaseServices<SmApplicationVersion, SmApplicationVersionDto, InsertSmApplicationVersionInput, EditSmApplicationVersionInput>
 {
 
-    Task<ServiceResult<SmApplicationVersion>> Latest();
+    Task<ServiceResult<SmApplicationVersion>> Latest(string channel);
 
 }
