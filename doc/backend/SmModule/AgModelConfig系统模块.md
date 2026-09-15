@@ -19,6 +19,14 @@
 
 ## 标准开发约定（后续必须遵循）
 
+### Agent 配置源初始化（2026-09-15）
+
+分类：BACKEND-HOST。配置源初始化参考 EU.Core.Api，集中在 Program 的 ConfigureAppConfiguration 中；删除 LocalDotEnvConfiguration 及所有 Agent 宿主 dotenv 文件读取入口。
+
+清空默认源后加载 appsettings.json（不热更新）、进程环境变量、命令行。ServiceName 缺省为 agent-api，显式空值或非法值仍拒绝启动；AgentPlatform:LoadDotEnv 不再生效。不会查找父目录的 .env，也不删除已有 .env 文件。原 dotenv 宿主参数需改用 appsettings.json 或进程环境变量；模型继续从数据库读取。
+
+审批启用时，开发环境仍使用 DevelopmentPayloadKey，非开发环境仅从进程环境变量 AGENT_TOOL_APPROVAL_PAYLOAD_KEY 获取密钥，不再回退到 dotenv；缺失或格式错误仍拒绝启用，不生成默认密钥或绕过校验。MCP 凭据仍使用原有进程环境变量解析。没有新增 Apollo、环境专属 JSON 或 HTTP 契约变化。上线前迁移实际使用的 dotenv 参数；回滚需恢复匹配的 Agent 宿主构建，无数据库迁移。
+
 ### 模型配置边界修正（2026-09-14）
 
 分类：BACKEND-BUSINESS + BACKEND-HOST + API-CONTRACT。

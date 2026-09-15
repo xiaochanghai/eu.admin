@@ -16,8 +16,7 @@ public sealed class ToolApprovalOptions
 }
 
 public sealed class ToolApprovalOptionsValidator(
-    IHostEnvironment environment,
-    IConfiguration configuration) :
+    IHostEnvironment environment) :
     IValidateOptions<ToolApprovalOptions>
 {
     public ValidateOptionsResult Validate(string? name, ToolApprovalOptions options)
@@ -35,9 +34,7 @@ public sealed class ToolApprovalOptionsValidator(
 
         string configured = environment.IsDevelopment()
             ? options.DevelopmentPayloadKey
-            : ToolApprovalPayloadKeyResolver.ResolveEncoded(
-                environment.ContentRootPath,
-                configuration.GetValue<bool>("AgentPlatform:LoadDotEnv"));
+            : ToolApprovalPayloadKeyResolver.ResolveEncoded();
         byte[]? key = null;
         try
         {
@@ -70,55 +67,6 @@ internal static class ToolApprovalPayloadKeyResolver
 {
     private const string VariableName = "AGENT_TOOL_APPROVAL_PAYLOAD_KEY";
 
-    public static string ResolveEncoded(string contentRoot, bool allowDotEnv)
-    {
-        string? process = Environment.GetEnvironmentVariable(VariableName);
-        if (!string.IsNullOrWhiteSpace(process))
-        {
-            return process.Trim();
-        }
-
-        if (!allowDotEnv)
-        {
-            return string.Empty;
-        }
-
-        for (DirectoryInfo? directory = new(Path.GetFullPath(contentRoot));
-             directory is not null;
-             directory = directory.Parent)
-        {
-            string path = Path.Combine(directory.FullName, ".env");
-            if (!File.Exists(path))
-            {
-                continue;
-            }
-
-            foreach (string line in File.ReadLines(path))
-            {
-                int equals = line.IndexOf('=');
-                if (equals <= 0
-                    || !string.Equals(
-                        line[..equals].Trim(),
-                        VariableName,
-                        StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                string value = line[(equals + 1)..].Trim();
-                if (value.Length >= 2
-                    && ((value[0] == '"' && value[^1] == '"')
-                        || (value[0] == '\'' && value[^1] == '\'')))
-                {
-                    value = value[1..^1];
-                }
-
-                return value;
-            }
-
-            return string.Empty;
-        }
-
-        return string.Empty;
-    }
+    public static string ResolveEncoded() =>
+        Environment.GetEnvironmentVariable(VariableName)?.Trim() ?? string.Empty;
 }

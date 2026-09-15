@@ -31,18 +31,23 @@ using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-LocalDotEnvConfiguration.ConfigureWithDotEnvFallback(
-    builder.Configuration,
-    builder.Environment.ContentRootPath,
-    AppContext.BaseDirectory,
-    args);
 
 builder.Host
     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(container =>
         container.RegisterModule(new AutofacModuleRegister()))
-    .ConfigureAppConfiguration((hostingContext, _) =>
-        hostingContext.Configuration.ConfigureApplication());
+    .ConfigureAppConfiguration((hostingContext, config) =>
+    {
+        config.Sources.Clear();
+        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables();
+        if (args.Length > 0)
+        {
+            config.AddCommandLine(args);
+        }
+
+        hostingContext.Configuration.ConfigureApplication();
+    });
 builder.ConfigureApplication();
 
 builder.Services.AddSingleton(new AppSettings(builder.Configuration));
@@ -175,9 +180,7 @@ if (toolApproval.Enabled)
         IHostEnvironment environment = services.GetRequiredService<IHostEnvironment>();
         string encoded = environment.IsDevelopment()
             ? options.DevelopmentPayloadKey
-            : ToolApprovalPayloadKeyResolver.ResolveEncoded(
-                environment.ContentRootPath,
-                builder.Configuration.GetValue<bool>("AgentPlatform:LoadDotEnv"));
+            : ToolApprovalPayloadKeyResolver.ResolveEncoded();
         byte[] key = Convert.FromBase64String(encoded);
         try
         {

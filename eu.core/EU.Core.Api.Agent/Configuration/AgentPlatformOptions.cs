@@ -8,7 +8,7 @@ public sealed class AgentPlatformOptions
 {
     public const string SectionName = "AgentPlatform";
 
-    public string ServiceName { get; init; } = string.Empty;
+    public string ServiceName { get; init; } = "agent-api";
 
     public bool ExposeOpenApi { get; init; }
 }

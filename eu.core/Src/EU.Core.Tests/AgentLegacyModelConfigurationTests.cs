@@ -13,35 +13,18 @@ namespace EU.Core.Tests;
 /// <summary>模型旧配置清理回归；仅使用独立临时文件和替身，不访问模型或数据库。</summary>
 public sealed class AgentLegacyModelConfigurationTests
 {
-    [Fact]
-    public void Dotenv_ignores_old_model_keys_but_keeps_other_host_settings()
+    [Theory]
+    [InlineData(null, "agent-api", true)]
+    [InlineData("custom-agent", "custom-agent", true)]
+    [InlineData("", "", false)]
+    [InlineData("Invalid_Name", "Invalid_Name", false)]
+    public void Service_name_uses_default_without_dotenv_and_validates_overrides(string? configured, string expected, bool valid)
     {
-        string root = Path.Combine(Path.GetTempPath(), "agent-config-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        try
-        {
-            File.WriteAllText(Path.Combine(root, ".env"), """
-                AgentPlatform__ServiceName=offline-agent
-                AgentPlatform__ModelEndpoint=https://old.example.test
-                AgentPlatform__ModelCredentialAlias=alias:old
-                AGENT_MODEL_DEFAULT_ID=old-model
-                AgentControl__ModelProfileIds__0=old-model
-                AgentExecution__ModelTimeoutSeconds=1
-                AgentMcp__AllowedHosts__0=mcp.example.test
-                AgentExecution__ToolCallTimeoutSeconds=45
-                """);
-            using var configuration = new ConfigurationManager();
-            configuration["AgentPlatform:LoadDotEnv"] = "true";
-            LocalDotEnvConfiguration.Apply(configuration, root, root);
-            Assert.Equal("offline-agent", configuration["AgentPlatform:ServiceName"]);
-            Assert.Equal("mcp.example.test", configuration["AgentMcp:AllowedHosts:0"]);
-            Assert.Equal("45", configuration["AgentExecution:ToolCallTimeoutSeconds"]);
-            Assert.Null(configuration["AgentPlatform:ModelEndpoint"]);
-            Assert.Null(configuration["AgentPlatform:ModelCredentialAlias"]);
-            Assert.Empty(configuration.GetSection("AgentControl").GetChildren());
-            Assert.Null(configuration["AgentExecution:ModelTimeoutSeconds"]);
-        }
-        finally { Directory.Delete(root, recursive: true); }
+        using var configuration = new ConfigurationManager();
+        if (configured is not null) configuration["AgentPlatform:ServiceName"] = configured;
+        var options = configuration.GetSection(AgentPlatformOptions.SectionName).Get<AgentPlatformOptions>() ?? new AgentPlatformOptions();
+        Assert.Equal(expected, options.ServiceName);
+        Assert.Equal(valid, new AgentPlatformOptionsValidator(configuration).Validate(null, options).Succeeded);
     }
 
     [Theory]
