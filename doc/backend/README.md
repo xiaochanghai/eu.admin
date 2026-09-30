@@ -21,6 +21,7 @@
 - Agent 统一认证：[`Agent统一认证.md`](Agent统一认证.md)
 - Agent 请求体与日志边界：[`Agent请求体日志边界.md`](Agent请求体日志边界.md)
 - 通用 BusinessQuery 项目适配：[`BusinessQuery项目适配.md`](BusinessQuery项目适配.md)
+- WorkBuddy 本机接入执行方案：[`WorkBuddy本机接入执行方案.md`](WorkBuddy本机接入执行方案.md)（同一 MCP 宿主下 Supplier 与 BusinessQuery 双端点接入，待实施）
 - SmModule 页面元数据专题索引：[`SmModule/README.md`](SmModule/README.md)
 - 后端解决方案：[`../../eu.core/EU.Core.sln`](../../eu.core/EU.Core.sln)
 

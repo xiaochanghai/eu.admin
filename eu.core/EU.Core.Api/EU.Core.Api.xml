@@ -24,6 +24,11 @@
             Agent 发布快照表，冻结发布时的 Agent 运行配置(Controller)
             </summary>
         </member>
+        <member name="T:EU.Core.Api.Controllers.AgModelConfigController">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。(Controller)
+            </summary>
+        </member>
         <member name="T:EU.Core.Api.Controllers.BdColorController">
             <summary>
             颜色(Controller)

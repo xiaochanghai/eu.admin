@@ -1,5 +1,6 @@
 using SqlSugar;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 namespace EU.Core.Api.MCP.Interfaces;
 
@@ -97,8 +98,8 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
         if (!CanHandle(toolName))
             throw new ArgumentException($"No service found for tool: {toolName}");
 
-        var dynamicObject = ConvertToDynamic(arguments);
-        return await ExecuteToolAsync(toolName, arguments, dynamicObject);
+        object? dynamicObject = ConvertToDynamic(arguments);
+        return await ExecuteToolAsync(toolName, arguments, dynamicObject, cancellationToken);
     }
 
     public static dynamic? ConvertToDynamic(JsonElement element)
@@ -175,8 +176,10 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
         return _toolMethods.ContainsKey(toolName);
     }
 
-    public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments, dynamic? dynamicObject)
+    public virtual async Task<McpToolResult> ExecuteToolAsync(string toolName, JsonElement arguments, dynamic? dynamicObject, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        _ = ServiceInstance; // 直接调用执行入口时也需要完成工具发现。
         _logger.LogInformation("Executing tool: {ToolName}", toolName);
 
         if (!_toolMethods.TryGetValue(toolName, out var method))
@@ -186,8 +189,16 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
 
         try
         {
-            // 动态调用服务方法
-            var result = method.Invoke(ServiceInstance, [dynamicObject]);
+            // 兼容旧 Tool(arguments)，新工具可声明 Tool(arguments, CancellationToken)。
+            var parameters = method.GetParameters();
+            object?[] invocationArguments = parameters.Length switch
+            {
+                1 when parameters[0].ParameterType == typeof(object) => [dynamicObject],
+                2 when parameters[0].ParameterType == typeof(object)
+                    && parameters[1].ParameterType == typeof(CancellationToken) => [dynamicObject, cancellationToken],
+                _ => throw new InvalidOperationException($"Unsupported MCP tool signature: {toolName}")
+            };
+            var result = method.Invoke(ServiceInstance, invocationArguments);
 
             // 处理异步方法
             if (result is Task task)
@@ -202,12 +213,14 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
         catch (TargetInvocationException ex) when (ex.InnerException != null)
         {
             _logger.LogError(ex.InnerException, "Error executing tool {ToolName}", toolName);
-            throw new InvalidOperationException($"Error executing tool {toolName}: {ex.InnerException.Message}", ex.InnerException);
+            // 保留参数、权限和取消异常类型，由现有协议边界统一处理。
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error executing tool {ToolName}", toolName);
-            throw new InvalidOperationException($"Error executing tool {toolName}: {ex.Message}", ex);
+            throw;
         }
     }
 

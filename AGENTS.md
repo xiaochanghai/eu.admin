@@ -10,6 +10,7 @@
 | .NET Web API | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | `EU.Core.sln`、对应 Controller、Service、IService、Model、Repository |
 | 后台任务 | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | `EU.Core.Jobs`、Tasks、调度配置、依赖服务和持久化边界 |
 | 网关与 MCP | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | Gateway/MCP 各自配置、宿主代码和被调用服务 |
+| Agent 宿主、运行时与工具集成 | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | `EU.Core.Api.Agent`、`Src/EU.Core.Agent.Runtime`、`Src/EU.Core.Agent.Infrastructure`；跨端时继续读取 React 局部约束 |
 | 后端公共能力 | [`eu.core/AGENTS.md`](eu.core/AGENTS.md) | Common、Extensions、DataAccess、EventBus、Tasks、Serilog 等拥有模块 |
 | 数据库与模型 | [`db`](db)、[`model`](model) | 实体、DTO、仓储、服务和所有调用方 |
 | 前端开发文档 | [`doc/frontend/README.md`](doc/frontend/README.md) | 前端模块文档和源码旁 README |
@@ -58,7 +59,7 @@
 
 ## 5. 前端约束
 
-- 使用项目现有 React、TypeScript、Vite、Ant Design、Redux Toolkit 和 React Router 体系；Zustand 目前仅存在于依赖清单，除非已有拥有模块或任务明确批准，不得据此新建第二套全局状态体系。
+- 使用项目现有 React、TypeScript、Vite、Ant Design、Redux Toolkit 和 React Router 体系；当前未使用 Zustand，未经任务明确批准，不新增第二套全局状态体系。
 - 保持类型明确，不新增无必要的 `any`、非空断言或关闭检查来掩盖契约问题；历史类型债务不要求在无关任务中清理。外部数据在边界处处理空值和异常。
 - 遵循 [`eu.admin.react/.editorconfig`](eu.admin.react/.editorconfig)、ESLint、Prettier 和 Stylelint，只格式化任务拥有文件。
 - `lint:eslint`、`lint:prettier`、`lint:stylelint` 包含自动修复；运行前确认作用域，不得改写无关文件。

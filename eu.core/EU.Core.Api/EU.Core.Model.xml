@@ -199,6 +199,66 @@
             发布时冻结的 Agent 说明
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Base.AgModelConfigBase">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。 (Dto.Base)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.ProfileCode">
+            <summary>
+            不可变的公开模型配置标识，区分大小写且唯一，供 Agent 引用。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.DisplayName">
+            <summary>
+            模型配置在管理页面显示的名称。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.Provider">
+            <summary>
+            模型协议提供商，目前仅支持 OpenAICompatible。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.Endpoint">
+            <summary>
+            经部署白名单校验的 HTTPS 模型服务基础地址。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.ModelName">
+            <summary>
+            供应商实际模型名称，可以不同于公开模型配置标识。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.ApiKeyCiphertext">
+            <summary>
+            绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.CredentialRevision">
+            <summary>
+            凭据修订号，更新 API 密钥时递增。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.LogicalRevision">
+            <summary>
+            配置乐观并发修订号，用于防止并发更新覆盖。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.Enabled">
+            <summary>
+            模型调用启用开关；1 允许新运行使用该配置，0 禁用。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.TimeoutSeconds">
+            <summary>
+            模型请求超时秒数，允许范围 5 至 600。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.AgModelConfigBase.EnableThinking">
+            <summary>
+            Qwen 思考开关；1 开启，0 关闭，NULL 使用供应商默认。
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.BdColorBase">
             <summary>
             颜色 (Dto.Base)
@@ -6777,6 +6837,11 @@
             Agent 发布快照表，冻结发布时的 Agent 运行配置 (Dto.EditInput)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Edit.EditAgModelConfigInput">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。 (Dto.EditInput)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Edit.EditBdColorInput">
             <summary>
             颜色 (Dto.EditInput)
@@ -8290,12 +8355,7 @@
         </member>
         <member name="T:EU.Core.Model.Entity.AgEvaluationSuite">
             <summary>
-            评测套件定义主表。
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.CurrentNode">
-            <summary>
-            当前流程节点
+            评测套件定义主表 (Model)
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.TenantId">
@@ -8306,6 +8366,11 @@
         <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Code">
             <summary>
             租户内唯一编码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.LogicalRevision">
+            <summary>
+            逻辑修订号
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Name">
@@ -8320,12 +8385,7 @@
         </member>
         <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.Status">
             <summary>
-            生命周期状态
-            </summary>
-        </member>
-        <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.LogicalRevision">
-            <summary>
-            逻辑修订号
+            生命周期状态：Active 或 Archived
             </summary>
         </member>
         <member name="P:EU.Core.Model.Entity.AgEvaluationSuite.CreatedAtUtc">
@@ -8676,6 +8736,66 @@
         <member name="P:EU.Core.Model.Entity.AgMcpToolVersion.DiscoveredAtUtc">
             <summary>
             发现 UTC 时间
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgModelConfig">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。 (Model)
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.ProfileCode">
+            <summary>
+            不可变的公开模型配置标识，区分大小写且唯一，供 Agent 引用。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.DisplayName">
+            <summary>
+            模型配置在管理页面显示的名称。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.Provider">
+            <summary>
+            模型协议提供商，目前仅支持 OpenAICompatible。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.Endpoint">
+            <summary>
+            经部署白名单校验的 HTTPS 模型服务基础地址。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.ModelName">
+            <summary>
+            供应商实际模型名称，可以不同于公开模型配置标识。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.ApiKeyCiphertext">
+            <summary>
+            绑定当前记录 ID 的 AES-GCM API 密钥密文，禁止明文存储、接口输出或日志记录。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.CredentialRevision">
+            <summary>
+            凭据修订号，更新 API 密钥时递增。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.LogicalRevision">
+            <summary>
+            配置乐观并发修订号，用于防止并发更新覆盖。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.Enabled">
+            <summary>
+            模型调用启用开关；1 允许新运行使用该配置，0 禁用。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.TimeoutSeconds">
+            <summary>
+            模型请求超时秒数，允许范围 5 至 600。
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgModelConfig.EnableThinking">
+            <summary>
+            Qwen 思考开关；1 开启，0 关闭，NULL 使用供应商默认。
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.AgOrchestrationAgentBinding">
@@ -15938,6 +16058,11 @@
             Agent 发布快照表，冻结发布时的 Agent 运行配置(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.AgModelConfigDto">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。(Dto.View)
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdColorDto">
             <summary>
             颜色(Dto.View)
@@ -16730,6 +16855,11 @@
         <member name="T:EU.Core.Model.Insert.InsertAgAgentVersionSnapshotInput">
             <summary>
             Agent 发布快照表，冻结发布时的 Agent 运行配置 (Dto.InsertInput)
+            </summary>
+        </member>
+        <member name="T:EU.Core.Model.Insert.InsertAgModelConfigInput">
+            <summary>
+            平台共享模型配置，API 密钥仅以密文持久化。 (Dto.InsertInput)
             </summary>
         </member>
         <member name="T:EU.Core.Model.Insert.InsertBdColorInput">
@@ -17677,6 +17807,42 @@
             <summary>
             操作代码
             </summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.SupplierQueryInput">
+            <summary>供应商只读列表查询条件，不允许客户端指定数据权限范围。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryInput.SupplierNo">
+            <summary>供应商编号，精确匹配；为空时不限定编号，最长 32 个字符。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryInput.Keyword">
+            <summary>供应商全称或简称关键字，最长 100 个字符。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryInput.PageIndex">
+            <summary>页码，从 1 开始，默认第 1 页。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryInput.PageSize">
+            <summary>每页数量，范围 1–100，默认 20。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.SupplierQueryItem">
+            <summary>供应商查询的最小返回字段，不包含联系或银行信息。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.Id">
+            <summary>供应商唯一标识。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.SupplierNo">
+            <summary>供应商编号。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.FullName">
+            <summary>供应商全称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.ShortName">
+            <summary>供应商简称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.TaxType">
+            <summary>税别参数值。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SupplierQueryItem.TaxRate">
+            <summary>税率，沿用数据库原值，不擅自换算百分比。</summary>
         </member>
         <member name="T:EU.Core.Model.ViewModels.IPLocation">
             <summary>

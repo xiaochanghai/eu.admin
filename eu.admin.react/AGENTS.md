@@ -21,6 +21,7 @@
 | 布局、标签页、主题、国际化 | `src/layouts/**`、`src/redux/modules/tabs.ts`、`src/styles/**`、`src/languages/**` |
 | 共享 UI、表单、上传附件 | `src/components/**`、相关 API 与业务页面 |
 | 普通业务页面 | 对应 `src/views/<domain>/**`、`src/api/**`、相关 Redux 模块 |
+| Agent 管理、聊天、运行轨迹与业务查询展示 | `src/views/agent/**`、[`src/layouts/LayoutChat/README.md`](src/layouts/LayoutChat/README.md)、`src/layouts/LayoutChat/**`、`src/api/modules/agent*.ts` 及实际引用的组件/Hook；跨端核对 `../eu.core/EU.Core.Api.Agent/Controllers/**`，模型维护核对主 API 的 `AgModelConfigController`，并遵守后端局部约束 |
 | 动态页面、通用表格/表单、模块维护 | [`../doc/frontend/SmModule/README.md`](../doc/frontend/SmModule/README.md)，再按索引读取目标专题和源码 |
 | 工作流运行与设计器 | [`src/workflow/README.md`](src/workflow/README.md)、[`src/workflow/WorkflowEditor/README.md`](src/workflow/WorkflowEditor/README.md)、[`src/workflow/setters/README.md`](src/workflow/setters/README.md) |
 | 新版工作流编辑器 | [`src/workflow-editor/README.md`](src/workflow-editor/README.md)、`src/workflow-editor/**` |
@@ -33,7 +34,7 @@
 - `src/api/**` 拥有 EU 后端业务 HTTP 边界；页面和组件不得另建 Axios 实例或散落服务地址、鉴权 Header 与响应解包逻辑。静态资源/版本探测和用户明确配置的第三方 API 可作为受控例外，但必须限制输入、响应、超时和错误处理，且不得复用 EU 登录凭据。
 - 路由、菜单、按钮权限和用户会话是同一授权链路。不能只隐藏 UI 而仍允许未授权操作，也不能用前端判断代替服务端授权。
 - 服务端响应、URL 参数、localStorage、上传文件、Markdown、DSL 和工作流数据均按不可信输入处理；渲染或执行前进行类型与边界校验。
-- Redux、Context 和组件状态各守现有职责；Zustand 当前仅存在于依赖清单，除非已有拥有模块或任务明确批准，不得据此建立第二套全局状态体系。不创建万能 Store，也不为单一页面复制会话、请求或缓存状态。
+- Redux、Context 和组件状态各守现有职责；当前未使用 Zustand，未经任务明确批准，不新增第二套全局状态体系。不创建万能 Store，也不为单一页面复制会话、请求或缓存状态。
 - `src/workflow/**` 与 `src/workflow-editor/**` 是两套现存边界。修改前确认实际消费者，禁止凭名称批量同步或合并实现。
 - 路由离开、用户登出、租户/账号切换、组件卸载时，必须清理 listener、timer、订阅、未完成请求和临时状态，避免旧结果写回新会话。
 - `.env*` 中进入 Vite 客户端的值都会暴露给浏览器，不得放置服务端密钥；新增变量必须有明确环境语义和安全分类。
@@ -52,6 +53,7 @@
 ## 5. 交互与质量要求
 
 - 新增异步交互必须覆盖 loading、成功、空数据、失败、取消或重复触发；错误不能静默吞掉。
+- Agent 聊天变更须区分 SSE 运行完成、失败、取消和审批暂停，不能把流断开一律显示为成功。业务查询使用服务端 `business-query-result` 及持久化的结果/展示数据，不依赖模型文本重建表格。修改 `src/layouts/LayoutChat/**` 或 Agent 事件契约时，同时验证实时展示与刷新后的历史恢复，覆盖无模型文本、暂无数据、切换会话和重复事件；不得重复插入结果或将旧运行结果写入新会话。
 - 表单提交、删除、上传和批量操作应防止重复执行，并保持成功后的缓存、列表和详情状态一致。
 - 新增页面或入口必须检查路由注册、菜单/权限来源、直接访问、刷新恢复及无权限场景。
 - 样式遵循现有主题 Token 和布局体系，不硬编码会破坏暗色、紧凑、响应式或国际化布局的值。
