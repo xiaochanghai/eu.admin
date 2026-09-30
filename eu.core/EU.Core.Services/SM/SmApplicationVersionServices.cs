@@ -34,15 +34,18 @@ public class SmApplicationVersionServices : BaseServices<SmApplicationVersion, S
     /// </summary>
     /// <param name="device">设备信息</param>
     /// <returns></returns>
-    public async Task<ServiceResult<SmApplicationVersion>> Latest()
+    public async Task<ServiceResult<SmApplicationVersion>> Latest(string channel)
     {
         var platform = App.User.GetPlatform() ?? "ios";
 
         var version = await Db.Queryable<SmApplicationVersion>()
             .OrderByDescending(x => x.BuildNum)
+            .WhereIF(channel.IsNotEmptyOrNull(), x => x.Channel == channel)
             .Where(x => x.Platform == platform).FirstAsync();
 
         return Success(version, ResponseText.QUERY_SUCCESS);
     }
+
+
     #endregion
 }

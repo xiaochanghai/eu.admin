@@ -385,4 +385,5 @@ public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : clas
         T data = default,
         string messageDev = null) =>
         ServiceResult<T>.Failure(status, message, data, messageDev);
+    public static ServiceResult<T> Failed<T>(string message) => ServiceResult<T>.OprateFailed(message);
 }
