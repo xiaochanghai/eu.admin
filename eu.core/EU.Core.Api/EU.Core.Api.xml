@@ -937,6 +937,13 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:EU.Core.Api.Controllers.SmApplicationVersionController.Latest(System.String)">
+            <summary>
+            获取最新版本信息
+            </summary>
+            <param name="channel">渠道</param>
+            <returns></returns>
+        </member>
         <member name="T:EU.Core.Api.Controllers.SmAutoCodeController">
             <summary>
             自动编号(Controller)
