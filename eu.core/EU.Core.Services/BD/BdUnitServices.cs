@@ -20,7 +20,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// 计量单位 (服务)
 /// </summary>
-public class BdUnitServices : BaseServices<BdUnit, BdUnitDto, InsertBdUnitInput, EditBdUnitInput>, IBdUnitServices
+public partial class BdUnitServices : BaseServices<BdUnit, BdUnitDto, InsertBdUnitInput, EditBdUnitInput>, IBdUnitServices
 {
     public BdUnitServices(IBaseRepository<BdUnit> dal)
     {

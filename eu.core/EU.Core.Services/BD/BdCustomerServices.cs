@@ -20,7 +20,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// 客户 (服务)
 /// </summary>
-public class BdCustomerServices : BaseServices<BdCustomer, BdCustomerDto, InsertBdCustomerInput, EditBdCustomerInput>, IBdCustomerServices
+public partial class BdCustomerServices : BaseServices<BdCustomer, BdCustomerDto, InsertBdCustomerInput, EditBdCustomerInput>, IBdCustomerServices
 {
     private readonly IBaseRepository<BdCustomer> _dal;
     public BdCustomerServices(IBaseRepository<BdCustomer> dal)

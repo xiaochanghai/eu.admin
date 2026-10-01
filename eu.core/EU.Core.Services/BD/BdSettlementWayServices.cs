@@ -20,7 +20,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// 结算方式 (服务)
 /// </summary>
-public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlementWayDto, InsertBdSettlementWayInput, EditBdSettlementWayInput>, IBdSettlementWayServices
+public partial class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlementWayDto, InsertBdSettlementWayInput, EditBdSettlementWayInput>, IBdSettlementWayServices
 {
     private readonly IBaseRepository<BdSettlementWay> _dal;
     public BdSettlementWayServices(IBaseRepository<BdSettlementWay> dal)
@@ -48,8 +48,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
             var info = enumData.Where(x => x.Value == model.SettlementAccountType).SingleOrDefault();
             if (info != null)
                 SettlementName = info.Text;
-            if (model.Days > 0)
-                SettlementName += ",付款天数为" + model.Days + "天";
+            SettlementName = ComposeSettlementName(SettlementName, model.Days);
             model.SettlementName = SettlementName;
             lstColumns.Add("SettlementName");
         }
@@ -76,8 +75,7 @@ public class BdSettlementWayServices : BaseServices<BdSettlementWay, BdSettlemen
             var info = enumData.Where(x => x.Value == model.SettlementAccountType).SingleOrDefault();
             if (info != null)
                 SettlementName = info.Text;
-            if (model.Days > 0)
-                SettlementName += ",付款天数为" + model.Days + "天";
+            SettlementName = ComposeSettlementName(SettlementName, model.Days);
             model.SettlementName = SettlementName;
         }
 

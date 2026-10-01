@@ -9,10 +9,14 @@ using EU.Core.Api.MCP.Models;
 
 namespace EU.Core.Api.MCP.Services;
 
-/// <summary>统一入口供应商写工具；复用标准业务服务，旧供应商 MCP 服务保持不变。</summary>
-public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSupplier>, IBusinessMcpService
+/// <summary>统一基础数据维护入口；复用标准业务服务，旧供应商 MCP 服务保持不变。</summary>
+public sealed partial class BusinessMcpService : BaseService<BusinessMcpService, BdSupplier>, IBusinessMcpService
 {
     private readonly IBdSupplierServices _suppliers;
+    private readonly IBdCustomerServices _customers;
+    private readonly IBdCurrencyServices _currencies;
+    private readonly IBdUnitServices _units;
+    private readonly IBdSettlementWayServices _settlementWays;
     // 仅业务 DTO 自身声明的字段，不包含 BasePoco 的主键、公司、租户及审计字段。
     private static readonly IReadOnlyDictionary<string, PropertyInfo> Fields = typeof(BdSupplierBase)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -24,9 +28,21 @@ public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSuppl
 
     #region 构造函数
     /// <summary>注入标准业务服务，基类负责当前服务的工具发现及分发。</summary>
-    public BusinessMcpService(ILogger<BusinessMcpService> logger, IBaseRepository<BdSupplier> baseDal, IBdSupplierServices suppliers) : base(logger, baseDal)
+    /// <param name="logger">工具日志。</param>
+    /// <param name="baseDal">基类所需仓储，业务写入交给对应业务服务。</param>
+    /// <param name="suppliers">供应商业务服务。</param>
+    /// <param name="customers">客户业务服务。</param>
+    /// <param name="currencies">币别业务服务。</param>
+    /// <param name="units">计量单位业务服务。</param>
+    /// <param name="settlementWays">结算方式业务服务。</param>
+    public BusinessMcpService(ILogger<BusinessMcpService> logger, IBaseRepository<BdSupplier> baseDal, IBdSupplierServices suppliers,
+        IBdCustomerServices customers, IBdCurrencyServices currencies, IBdUnitServices units, IBdSettlementWayServices settlementWays) : base(logger, baseDal)
     {
         _suppliers = suppliers;
+        _customers = customers;
+        _currencies = currencies;
+        _units = units;
+        _settlementWays = settlementWays;
     }
     #endregion
 

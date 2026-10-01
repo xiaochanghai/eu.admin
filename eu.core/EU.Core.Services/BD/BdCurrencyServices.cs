@@ -20,7 +20,7 @@ namespace EU.Core.Services;
 /// <summary>
 /// 币别 (服务)
 /// </summary>
-public class BdCurrencyServices : BaseServices<BdCurrency, BdCurrencyDto, InsertBdCurrencyInput, EditBdCurrencyInput>, IBdCurrencyServices
+public partial class BdCurrencyServices : BaseServices<BdCurrency, BdCurrencyDto, InsertBdCurrencyInput, EditBdCurrencyInput>, IBdCurrencyServices
 {
     public BdCurrencyServices(IBaseRepository<BdCurrency> dal)
     {

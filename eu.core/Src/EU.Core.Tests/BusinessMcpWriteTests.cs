@@ -20,7 +20,7 @@ public sealed class BusinessMcpWriteTests
     private static JsonElement Call(string name, object arguments) => JsonSerializer.SerializeToElement(new { name, arguments });
 
     private static BusinessMcpService CreateService(IBdSupplierServices business) => new(
-        NullLogger<BusinessMcpService>.Instance, DispatchProxy.Create<IBaseRepository<BdSupplier>, UnusedRepository>(), business);
+        NullLogger<BusinessMcpService>.Instance, DispatchProxy.Create<IBaseRepository<BdSupplier>, UnusedRepository>(), business, null!, null!, null!, null!);
 
     public class UnusedRepository : DispatchProxy
     {
@@ -165,11 +165,11 @@ public sealed class BusinessMcpWriteTests
     }
 
     [Fact]
-    public void Independent_service_discovers_four_tools_and_marks_writes()
+    public void Independent_service_discovers_twenty_tools_and_marks_writes()
     {
         var service = CreateService(DispatchProxy.Create<IBdSupplierServices, BusinessProxy>());
         var tools = JsonSerializer.SerializeToElement(service.GetAvailableTools()).GetProperty("tools");
-        Assert.Equal(4, tools.GetArrayLength());
+        Assert.Equal(20, tools.GetArrayLength());
         var byName = tools.EnumerateArray().ToDictionary(tool => tool.GetProperty("name").GetString()!);
         Assert.False(byName["create_supplier"].GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         var updateProperties = byName["update_supplier"].GetProperty("inputSchema").GetProperty("properties");

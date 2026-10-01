@@ -21,4 +21,29 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface IBdCustomerServices : IBaseServices<BdCustomer, BdCustomerDto, InsertBdCustomerInput, EditBdCustomerInput>
 {
+
+    /// <summary>查询客户最小业务字段，受控环境内按编号和名称分页。</summary>
+    /// <param name="input">编号、关键字和分页条件。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>白名单字段分页数据。</returns>
+    Task<PageModel<Dictionary<string, object>>> QueryForMcpAsync(EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery input, CancellationToken cancellationToken = default);
+
+    /// <summary>校验并新增客户，调用标准业务持久化。</summary>
+    /// <param name="input">白名单业务字段。</param>
+    /// <param name="cancellationToken">写入开始前的取消令牌。</param>
+    /// <returns>新增记录 ID。</returns>
+    Task<Guid> CreateForMcpAsync(EU.Core.Model.ViewModels.Extend.CustomerMcpValues input, CancellationToken cancellationToken = default);
+
+    /// <summary>按原名称定位唯一客户，只修改传入字段。</summary>
+    /// <param name="target">原名称或客户原简称。</param>
+    /// <param name="values">待修改字段 JSON。</param>
+    /// <param name="cancellationToken">写入开始前的取消令牌。</param>
+    /// <returns>实际修改的记录 ID。</returns>
+    Task<Guid> UpdateForMcpAsync(EU.Core.Model.ViewModels.Extend.BasicDataMcpTarget target, System.Text.Json.JsonElement values, CancellationToken cancellationToken = default);
+
+    /// <summary>按名称定位并检查已知引用后逻辑删除客户。</summary>
+    /// <param name="target">原名称或客户原简称。</param>
+    /// <param name="cancellationToken">删除开始前的取消令牌。</param>
+    /// <returns>实际删除的记录 ID。</returns>
+    Task<Guid> DeleteForMcpAsync(EU.Core.Model.ViewModels.Extend.BasicDataMcpTarget target, CancellationToken cancellationToken = default);
 }

@@ -1,8 +1,8 @@
 # 通用 BusinessQuery 项目适配
 
-## 统一业务 MCP 入口（供应商首批接入）
+## 统一业务 MCP 入口
 
-`POST /Business/mcp` 由独立的 `BusinessMcpService` 提供供应商增删查改 4 个工具，直接调用 `IBdSupplierServices`，不依赖 `SupplierService` 或 `ISupplierService`。原 `POST /Supplier/mcp` 和 `SupplierService` 保持不变；BusinessQuery 仍在 `/mcp/business-query/controller`，本次未迁入统一入口。
+`POST /Business/mcp` 由独立的 `BusinessMcpService` 提供供应商、客户、币别、计量单位、结算方式的增删查改，共 20 个工具，直接调用各自的业务 IService，不依赖 `SupplierService` 或 `ISupplierService`。原 `POST /Supplier/mcp` 和 `SupplierService` 保持不变；BusinessQuery 仍在 `/mcp/business-query/controller`，本次未迁入统一入口。
 
 `BusinessMcpService` 与 `SupplierService` 使用相同的 `BaseService<TService, TEntity>` 结构：构造函数注入依赖，工具用 `[McpTool]` 声明并由基类发现和分发，方法按职责划分 `#region`。统一入口不再重写 `GetAvailableTools` 或按工具名称构造 Schema，写入仍全部调用业务服务。
 
@@ -31,6 +31,46 @@
 部署后可在 Agent 注册 `http://localhost:8020/Business/mcp`（端口以实际部署为准），使用 StreamableHttp 并同步工具；该入口沿用现有无会话 JSON-RPC POST 协议，非完整 SDK 会话端点。支持 initialize、tools/list、tools/call，notifications/initialized 返回 202。无须修改旧供应商绑定；回退可继续使用旧地址。携带有效 JWT 的访问与 Agent 同步需在重启后验收，离线测试不执行供应商写操作。
 
 > 当前临时状态：按用户明确要求，所有环境均暂停项目模块权限和公司范围校验，原实现已注释保留。此状态随本次代码部署生效，不是 Development 专用开关。可调用工具的用户可以查询目录内所有公司的有效、未删除记录，包括公司为空的记录。身份认证、租户匹配、签名、防重放、字段白名单、状态过滤、币别分组、配额和审计仍然启用。
+
+## 客户、币别、计量单位、结算方式维护
+
+新增 16 个工具，均复用既有业务服务和标准 Add/Update/Delete。实现放在 `BusinessMcpService.BasicData.cs` 与各业务服务的 `.Mcp.cs` 部分文件，不修改旧供应商契约。
+
+| 数据 | 查询 / 新增 / 修改 / 删除 | values 白名单 |
+| --- | --- | --- |
+| 客户 | query_customers / create_customer / update_customer / delete_customer | CustomerNo、CustomerName（新增必填）、CustomerShortName、TaxRate、Consignee、ConsigneePhone、ConsigneeAddress、Remark |
+| 币别 | query_currencies / create_currency / update_currency / delete_currency | CurrencyNo、CurrencyName（新增必填）、Remark |
+| 计量单位 | query_units / create_unit / update_unit / delete_unit | UnitNo、UnitNames（新增必填）、DecimalPlaces、Remark |
+| 结算方式 | query_settlement_ways / create_settlement_way / update_settlement_way / delete_settlement_way | SettlementNo、SettlementAccountType（新增必填）、Days、SettlementBillType（新增必填）、Remark |
+
+- 查询参数为 `Code`（编号精确匹配）、`Keyword`（名称/客户简称关键字）、`PageIndex`（默认 1）、`PageSize`（默认 20，上限 100）。只查询有效、未删除记录，返回 `{type, untrustedData:true, page}`，page 沿用 PageModel；字段只包含上表业务字段和 ID，结算方式额外返回派生的 SettlementName。
+- 新增参数为 `{values:{...}}`；修改参数为 `{name:"原名称",values:{...}}`；删除为 `{name:"原名称"}`。客户还支持根参数 `shortName` 原简称，名称/简称至少一个，同时提供取交集。其余三类只用 name。目标必须唯一、有效且未删除，不接收 ID 定位，不自动选择第一条。
+- values 使用表中精确大小写，不接受系统字段、未知字段和空补丁。修改未提供字段保持原值，显式 null 按可空模型处理，但必填名称/类型不可清空。编号可不传，是否自动编号仍由原业务表单元数据决定；标准业务服务的其他必填规则也保留。
+- 编号、名称（客户另含非空简称）分别做应用层查重，包含停用记录，排除删除记录和自身；不跨字段比较。没有新增数据库唯一索引，不保证并发和其他入口的唯一性。历史重名必须先人工处理，不批量清理。
+- 结算名称不允许直接输入，沿用 SettlementAccountType 字典文本和 Days 派生；Days 不得为负，SettlementBillType 为 Get（收款）或 Out（付款）。字典依赖原有 LOV/缓存配置；未知字典值拒绝，不能自行猜造名称。仅改备注也保留原账期。
+- 四类新删除工具使用标准逻辑删除。删除前检查源码中已知的未删除业务引用（包含停用引用方）：客户检查销售各单据、出库和送货地址；币别检查客户、供应商、销售订单/变更单；单位检查物料单位/重量单位；结算方式检查客户、供应商、销售订单/变更单和采购订单。检查与删除不是原子事务，不能保证其他并发入口或扩展表不会新增引用；未修改旧供应商删除语义。
+- 成功写入返回 `{succeeded:true,entity,id,operation}`，删除另含 `softDeleted:true`。常见拒绝码：BASIC_DATA_VALUES_INVALID、BASIC_DATA_TARGET_INVALID、BASIC_DATA_NOT_FOUND、BASIC_DATA_TARGET_AMBIGUOUS、BASIC_DATA_DUPLICATE:字段、BASIC_DATA_IN_USE；MCP 控制器沿用既有错误包装。工具不承诺幂等，写入开始后的超时不得自动重试，先查询核实。
+
+工具参数示例（放入 JSON-RPC tools/call 的 params）：
+
+```json
+{"name":"create_currency","arguments":{"values":{"CurrencyNo":"TEST-CNY","CurrencyName":"测试人民币"}}}
+{"name":"update_customer","arguments":{"shortName":"测试客户","values":{"ConsigneePhone":"000"}}}
+{"name":"create_settlement_way","arguments":{"values":{"SettlementNo":"TEST-PAY","SettlementAccountType":"ImmediatePay","Days":0,"SettlementBillType":"Out"}}}
+{"name":"delete_unit","arguments":{"name":"测试单位"}}
+```
+
+部署时一起更新 MCP、Model、IService、Service 程序集，重启 MCP 后在 Agent 重新同步并审批新增写工具；入口地址和现有供应商绑定不变。仓库内无这些新增工具的固定前端消费者，仓库外消费者按 tools/list 新契约接入。回滚需移除新增工具绑定并整体回退上述程序集。生成器再次生成四类服务/接口时，须保留 partial 声明、MCP 接口成员及结算名称共享方法调用。
+
+离线测试 `BusinessMcpBasicDataTests` 使用 SQLite 内存库验证工具发现、契约、查询、名称定位、查重、部分更新、派生名称和引用拒绝；标准持久化/字典用隔离替身，不代表生产数据库、表单元数据、登录授权、Redis 或真实 HTTP 已通过验收。四类真实写入须在获得授权的测试环境另行联调。
+
+## BusinessQuery 原始查询参数校验
+
+`/mcp/business-query/controller` 的 tools/call 在签名上下文验证通过后，将 `arguments.GetRawText()` 直接交给现有 `BusinessQueryPlanValidator`，然后执行校验器返回的冻结计划。禁止先反序列化为 DTO 再序列化校验，避免重复属性被覆盖、未知属性被丢弃、原始大小被压缩。
+
+校验保留现有 32 KiB UTF-8 上限、16 层 JSON 深度和结构限制；重复属性、未知属性、超限计划分别返回 BUSINESS_QUERY_PLAN_DUPLICATE_PROPERTY、BUSINESS_QUERY_PLAN_UNKNOWN_PROPERTY、BUSINESS_QUERY_PLAN_TOO_LARGE。校验失败不访问业务数据库或预留查询配额，仍通过共同执行链路写终态失败审计；审计不可用时返回 BUSINESS_QUERY_AUDIT_UNAVAILABLE。
+
+正常参数、工具 Schema 和结果结构不变。以前被宽松反序列化忽略的参数现在被拒绝，外部客户端需删除额外属性和重复键；部署修复后重启 MCP，无需更改目录或工具哈希。SDK 强类型入口继续校验自身的参数模型，两种入口共享后续执行与审计路径。离线回归 `BusinessQueryRawPlanTests` 使用测试 JWT 配置和唯一临时 SQLite 防重放库，不访问真实业务数据库。
 
 ## 临时停用与恢复
 

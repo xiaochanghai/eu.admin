@@ -108,27 +108,11 @@ public sealed class BusinessQueryService(
             throw new ArgumentException("Tool arguments are required.");
         }
 
-        BusinessQueryPlan plan;
-        try
-        {
-            plan = JsonSerializer.Deserialize<BusinessQueryPlan>(
-                arguments.GetRawText(),
-                PlanSerializer) ?? throw new JsonException();
-        }
-        catch (JsonException exception)
-        {
-            throw new ArgumentException("Tool arguments are invalid.", exception);
-        }
-
         using IDisposable scope = executionContextAccessor.Enter(validation.Context!);
-        QueryBusinessDataResponse response = await QueryAsync(
-            plan.Entity,
-            plan.Dimensions,
-            plan.Measures,
-            plan.Filters,
-            plan.TimeRange,
-            plan.OrderBy,
-            plan.Limit,
+        // 必须保留原始 JSON 的重复键、未知字段、深度和 UTF-8 大小信息。
+        BusinessQueryPlanParseResult parsed = new BusinessQueryPlanValidator().Parse(arguments.GetRawText());
+        QueryBusinessDataResponse response = await ExecuteParsedAsync(
+            parsed,
             cancellationToken);
         return new CallToolResult
         {
@@ -154,6 +138,20 @@ public sealed class BusinessQueryService(
         int limit,
         CancellationToken cancellationToken)
     {
+        var supplied = new BusinessQueryPlan(
+            entity, dimensions, measures, filters, timeRange, orderBy, limit);
+        BusinessQueryPlanParseResult parsed = new BusinessQueryPlanValidator().Parse(
+            JsonSerializer.Serialize(supplied, PlanSerializer));
+        return await ExecuteParsedAsync(parsed, cancellationToken);
+    }
+
+    #region 执行已校验业务查询
+    /// <summary>两种工具入口共用已校验计划及失败审计，避免原始 JSON 校验被 DTO 转换绕过。</summary>
+    /// <param name="parsed">校验器返回的冻结计划或错误。</param>
+    /// <param name="cancellationToken">调用方取消令牌。</param>
+    /// <returns>业务结果或经审计的失败响应。</returns>
+    private async Task<QueryBusinessDataResponse> ExecuteParsedAsync(BusinessQueryPlanParseResult parsed, CancellationToken cancellationToken)
+    {
         Guid queryId = Guid.NewGuid();
         Stopwatch elapsed = Stopwatch.StartNew();
         BusinessQueryOptions configuration = options.Value;
@@ -162,10 +160,6 @@ public sealed class BusinessQueryService(
             ?? throw new InvalidOperationException(
                 "BUSINESS_QUERY_EXECUTION_CONTEXT_REQUIRED");
         string userId = trustedContext.UserId;
-        var supplied = new BusinessQueryPlan(
-            entity, dimensions, measures, filters, timeRange, orderBy, limit);
-        BusinessQueryPlanParseResult parsed = new BusinessQueryPlanValidator().Parse(
-            JsonSerializer.Serialize(supplied, PlanSerializer));
         if (!parsed.Succeeded)
         {
             return await AuditedAsync(
@@ -353,6 +347,7 @@ public sealed class BusinessQueryService(
             decision.PlanHash, decision.AppliedRuleIds, sqlTemplateHash, rowCount,
             elapsed, response);
     }
+    #endregion
 
     private async Task<QueryBusinessDataResponse> AuditedAsync(
         Guid queryId,
