@@ -46,11 +46,58 @@ public sealed class BusinessMcpWriteTests
         var business = DispatchProxy.Create<IBdSupplierServices, BusinessProxy>();
         var proxy = (BusinessProxy)(object)business;
         await CreateService(business).HandleToolCallAsync(Call("update_supplier",
-            new { supplierId = proxy.Id, values = new { ShortName = "Changed" } }), default);
+            new { fullName = "Existing", values = new { ShortName = "Changed" } }), default);
         Assert.Equal("Existing", proxy.Edit.FullName);
         Assert.Equal("Changed", proxy.Edit.ShortName);
         Assert.Equal(new[] { "ShortName" }, proxy.Columns);
         Assert.Equal(1, proxy.Writes);
+        Assert.Equal("Existing", proxy.TargetFullName);
+        Assert.True(proxy.NamesChecked);
+        Assert.Equal(proxy.Id, proxy.ExcludedId);
+    }
+
+    [Theory]
+    [InlineData("SUPPLIER_FULLNAME_DUPLICATE")]
+    [InlineData("SUPPLIER_SHORTNAME_DUPLICATE")]
+    public async Task Duplicate_names_prevent_create_and_rename(string error)
+    {
+        var business = DispatchProxy.Create<IBdSupplierServices, BusinessProxy>();
+        var proxy = (BusinessProxy)(object)business;
+        proxy.NameError = error;
+        var service = CreateService(business);
+        var createError = await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Call("create_supplier",
+            new { values = new { SupplierNo = "TEST", FullName = "Duplicate", ShortName = "Dup" } }), default));
+        Assert.Equal(error, createError.Message);
+        var updateError = await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Call("update_supplier",
+            new { fullName = "Existing", values = new { ShortName = "Dup" } }), default));
+        Assert.Equal(error, updateError.Message);
+        Assert.Equal(0, proxy.Writes);
+    }
+
+    [Fact]
+    public async Task Update_by_short_name_passes_normalized_target_and_token()
+    {
+        var business = DispatchProxy.Create<IBdSupplierServices, BusinessProxy>();
+        var proxy = (BusinessProxy)(object)business;
+        using var cancellation = new CancellationTokenSource();
+        await CreateService(business).HandleToolCallAsync(Call("update_supplier",
+            new { shortName = " Old ", values = new { Phone = "000" } }), cancellation.Token);
+        Assert.Equal("Old", proxy.TargetShortName);
+        Assert.Null(proxy.TargetFullName);
+        Assert.Equal(cancellation.Token, proxy.Token);
+        Assert.False(proxy.NamesChecked);
+        Assert.Equal(new[] { "Phone" }, proxy.Columns);
+    }
+
+    [Theory]
+    [InlineData("{\"fullName\":\" \",\"shortName\":null,\"values\":{\"Phone\":\"000\"}}")]
+    [InlineData("{\"fullName\":123,\"values\":{\"Phone\":\"000\"}}")]
+    [InlineData("{\"supplierId\":\"f5a17c17-5fe3-4caf-8e63-4da90f746bb5\",\"values\":{\"Phone\":\"000\"}}")]
+    public async Task Update_rejects_invalid_or_old_targets(string json)
+    {
+        var business = DispatchProxy.Create<IBdSupplierServices, BusinessProxy>();
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateService(business).HandleToolCallAsync(Call("update_supplier", JsonSerializer.Deserialize<JsonElement>(json)), default));
+        Assert.Equal(0, ((BusinessProxy)(object)business).Writes);
     }
 
     [Theory]
@@ -112,7 +159,7 @@ public sealed class BusinessMcpWriteTests
         var proxy = (BusinessProxy)(object)business;
         proxy.Missing = true;
         var service = CreateService(business);
-        await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Call("update_supplier", new { supplierId = proxy.Id, values = new { FullName = "Test" } }), default));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Call("update_supplier", new { shortName = "missing", values = new { FullName = "Test" } }), default));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.HandleToolCallAsync(Call("create_supplier", new { values = new { FullName = "Test" } }), new CancellationToken(true)));
         Assert.Equal(0, proxy.Writes);
     }
@@ -125,7 +172,10 @@ public sealed class BusinessMcpWriteTests
         Assert.Equal(4, tools.GetArrayLength());
         var byName = tools.EnumerateArray().ToDictionary(tool => tool.GetProperty("name").GetString()!);
         Assert.False(byName["create_supplier"].GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
-        Assert.True(byName["update_supplier"].GetProperty("inputSchema").GetProperty("properties").TryGetProperty("supplierId", out _));
+        var updateProperties = byName["update_supplier"].GetProperty("inputSchema").GetProperty("properties");
+        Assert.False(updateProperties.TryGetProperty("supplierId", out _));
+        Assert.True(updateProperties.TryGetProperty("fullName", out _));
+        Assert.True(updateProperties.TryGetProperty("shortName", out _));
         Assert.True(byName["query_suppliers"].GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.True(byName["delete_supplier"].GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
         Assert.DoesNotContain(typeof(BusinessMcpService).GetConstructors().Single().GetParameters(), parameter => parameter.ParameterType == typeof(ISupplierService));
@@ -140,7 +190,7 @@ public sealed class BusinessMcpWriteTests
         Assert.Equal("object", values.GetProperty("type").GetString());
         Assert.False(values.GetProperty("additionalProperties").GetBoolean());
         Assert.Equal(1, values.GetProperty("minProperties").GetInt32());
-        Assert.Equal("FullName", values.GetProperty("required")[0].GetString());
+        Assert.Contains(values.GetProperty("required").EnumerateArray(), field => field.GetString() == "FullName");
         var fields = values.GetProperty("properties");
         Assert.False(fields.TryGetProperty("CompanyId", out _));
         Assert.False(fields.TryGetProperty("ID", out _));
@@ -158,6 +208,11 @@ public sealed class BusinessMcpWriteTests
         public Guid Id = Guid.NewGuid();
         public int Writes;
         public bool Missing;
+        public string NameError;
+        public string TargetFullName;
+        public string TargetShortName;
+        public Guid? ExcludedId;
+        public bool NamesChecked;
         public InsertBdSupplierInput Insert;
         public EditBdSupplierInput Edit;
         public List<string> Columns;
@@ -168,7 +223,17 @@ public sealed class BusinessMcpWriteTests
         {
             if (method.Name == "QuerySuppliersAsync") { Query = Assert.IsType<SupplierQueryInput>(args[0]); Token = (CancellationToken)args[1]; return Task.FromResult(new EU.Core.Model.PageModel<SupplierQueryItem>()); }
             if (method.Name == "DeleteSupplierForMcpAsync") { DeleteId = (string)args[0]; Token = (CancellationToken)args[2]; Writes++; return Task.FromResult(true); }
-            if (method.Name == "QuerySingle") return Task.FromResult(Missing ? null : new BdSupplier { ID = Id, FullName = "Existing", ShortName = "Old", IsActive = true });
+            if (method.Name == "ResolveSupplierByNamesAsync")
+            {
+                TargetFullName = (string)args[0]; TargetShortName = (string)args[1]; Token = (CancellationToken)args[2];
+                return Missing ? Task.FromException<BdSupplier>(new ArgumentException("SUPPLIER_NOT_FOUND"))
+                    : Task.FromResult(new BdSupplier { ID = Id, FullName = "Existing", ShortName = "Old", IsActive = true });
+            }
+            if (method.Name == "EnsureSupplierNamesAvailableAsync")
+            {
+                NamesChecked = true; ExcludedId = (Guid?)args[2]; Token = (CancellationToken)args[3];
+                return NameError is null ? Task.CompletedTask : Task.FromException(new ArgumentException(NameError));
+            }
             if (method.Name == "Add") { Insert = Assert.IsType<InsertBdSupplierInput>(args[0]); Writes++; return Task.FromResult(Id); }
             if (method.Name == "Update") { Assert.Equal(Id, args[0]); Edit = Assert.IsType<EditBdSupplierInput>(args[1]); Columns = Assert.IsType<List<string>>(args[2]); Writes++; return Task.FromResult(true); }
             throw new NotSupportedException(method.Name);

@@ -47,9 +47,13 @@ public sealed class BusinessSupplierCreateValues
 /// <summary>供应商部分更新工具参数契约。</summary>
 public sealed class BusinessSupplierUpdateInput
 {
-    /// <summary>待修改供应商的唯一标识。</summary>
-    [Required, JsonPropertyName("supplierId")]
-    public Guid SupplierId { get; set; }
+    /// <summary>待修改供应商的原全称，与原简称至少提供一项。</summary>
+    [JsonPropertyName("fullName"), Description("供应商原全称，与 shortName 至少提供一项；两者都提供时必须同时匹配"), MaxLength(32)]
+    public string? FullName { get; set; }
+
+    /// <summary>待修改供应商的原简称，与原全称至少提供一项。</summary>
+    [JsonPropertyName("shortName"), Description("供应商原简称，精确匹配；新名称放在 values 中"), MaxLength(32)]
+    public string? ShortName { get; set; }
 
     /// <summary>只提供需要修改的业务字段，未传字段保持不变。</summary>
     [Required, JsonPropertyName("values")]

@@ -29,6 +29,53 @@ public class BdSupplierServices : BaseServices<BdSupplier, BdSupplierDto, Insert
         base.BaseDal = dal;
     }
 
+    #region 按名称定位供应商
+    /// <summary>按原名称精确定位有效记录，拒绝无条件、无匹配和多条匹配。</summary>
+    /// <param name="fullName">原全称。</param>
+    /// <param name="shortName">原简称，与全称至少提供一项。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>唯一匹配的供应商。</returns>
+    public async Task<BdSupplier> ResolveSupplierByNamesAsync(string fullName, string shortName, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        fullName = fullName?.Trim();
+        shortName = shortName?.Trim();
+        if ((string.IsNullOrEmpty(fullName) && string.IsNullOrEmpty(shortName)) || fullName?.Length > 32 || shortName?.Length > 32)
+            throw new ArgumentException("SUPPLIER_TARGET_INVALID");
+        var targets = await Db.Queryable<BdSupplier>()
+            .Where(row => !row.IsDeleted && row.IsActive == true)
+            .WhereIF(!string.IsNullOrEmpty(fullName), row => row.FullName.Trim() == fullName)
+            .WhereIF(!string.IsNullOrEmpty(shortName), row => row.ShortName.Trim() == shortName)
+            .Take(2).ToListAsync(cancellationToken);
+        if (targets.Count == 0) throw new ArgumentException("SUPPLIER_NOT_FOUND");
+        if (targets.Count != 1) throw new ArgumentException("SUPPLIER_TARGET_AMBIGUOUS");
+        return targets[0];
+    }
+    #endregion
+
+    #region 校验供应商名称唯一性
+    /// <summary>在未删除记录中分别检查全称和非空简称，包含停用记录；不替代数据库唯一约束。</summary>
+    /// <param name="fullName">待保存全称。</param>
+    /// <param name="shortName">待保存简称。</param>
+    /// <param name="excludeId">修改时排除自身 ID。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>校验任务，重复时拒绝写入。</returns>
+    public async Task EnsureSupplierNamesAvailableAsync(string fullName, string shortName, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        fullName = fullName?.Trim();
+        shortName = shortName?.Trim();
+        if (string.IsNullOrEmpty(fullName) || fullName.Length > 32 || shortName?.Length > 32)
+            throw new ArgumentException("SUPPLIER_NAME_INVALID");
+        var query = Db.Queryable<BdSupplier>().Where(row => !row.IsDeleted)
+            .WhereIF(excludeId.HasValue, row => row.ID != excludeId);
+        if (await query.Clone().Where(row => row.FullName.Trim() == fullName).CountAsync(cancellationToken) > 0)
+            throw new ArgumentException("SUPPLIER_FULLNAME_DUPLICATE");
+        if (!string.IsNullOrEmpty(shortName) && await query.Clone().Where(row => row.ShortName.Trim() == shortName).CountAsync(cancellationToken) > 0)
+            throw new ArgumentException("SUPPLIER_SHORTNAME_DUPLICATE");
+    }
+    #endregion
+
     #region 查询供应商数据
     /// <summary>按编号或名称匿名查询全部公司的有效供应商，仅返回最小业务字段。</summary>
     /// <param name="input">查询条件；页大小最多 100，返回最小业务字段。</param>

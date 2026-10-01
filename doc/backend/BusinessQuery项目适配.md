@@ -14,12 +14,17 @@
 - 统一入口的 `create_supplier`、`update_supplier`：直接新增/修改数据，返回 `succeeded`、`supplierId`、`operation`，不返回表单导航。旧 `/Supplier/mcp` 中同名工具仍打开表单，两者参数和副作用不同，切换入口必须重新同步并审批写工具版本，不能复用旧只读工具定义。
 - `delete_supplier`：直接调用现有业务服务的实际删除方法。
 - 页面导航 `get_supplier`、模板 `get_supplier_import_template` 和旧导入 `create_supplier_from_file` 不在新入口发布，仍保留在旧供应商入口。不复制旧导入的固定 ID 占位实现。
-- 已同步过统一入口的客户端需重新同步工具并移除上述三个旧工具绑定；已有增改输入格式不变。回滚需部署原版本并重新同步工具。
+- 已同步过统一入口的客户端需重新同步工具并移除上述三个旧工具绑定。修改工具已从 supplierId 定位改为名称定位，旧修改参数会被拒绝；回滚需部署原版本并重新同步工具。
 
 当前 `GET /Business` 健康检查允许匿名；`POST /Business/mcp` 已按用户调整移除 AllowAnonymous，继承基类认证策略，需要有效项目 JWT 及有效登录会话。模块和公司权限仍按原要求暂缓，不应把登录校验当作完整业务授权。删除关联业务保护等既有限制不变。新路径不匹配原 `/mcp` 正文日志中间件。
 
-新增参数示例：`{"name":"create_supplier","arguments":{"values":{"SupplierNo":"TEST-001","FullName":"测试供应商"}}}`。
-修改参数示例：`{"name":"update_supplier","arguments":{"supplierId":"<目标供应商GUID>","values":{"ShortName":"新简称"}}}`。
+新增参数示例：`{"name":"create_supplier","arguments":{"values":{"SupplierNo":"TEST-001","FullName":"测试供应商","ShortName":"测试简称"}}}`。
+修改参数示例：`{"name":"update_supplier","arguments":{"fullName":"测试供应商","values":{"ShortName":"新简称"}}}`。
+也可用 `shortName` 指定原简称；`fullName` 和 `shortName` 至少提供一个，两者同时提供时必须匹配同一记录。目标条件与 `values.FullName/ShortName`（新名称）分开，支持改名；输入名称去除首尾空白，精确匹配不做模糊搜索。有效且未删除记录匹配为零返回 SUPPLIER_NOT_FOUND，超过一条返回 SUPPLIER_TARGET_AMBIGUOUS，不默认更新第一条。返回结果仍包含实际 supplierId，删除工具的参数不变。
+
+新增调用业务层 EnsureSupplierNamesAvailableAsync：全称、非空简称分别检查未删除记录（包含停用记录），修改名称时排除自身后执行同样校验。重复分别返回 SUPPLIER_FULLNAME_DUPLICATE / SUPPLIER_SHORTNAME_DUPLICATE，空简称不参与查重；查重按对应字段比较，不将某供应商全称与另一供应商简称交叉比较，大小写语义遵循数据库排序规则。按用户要求只做应用层检查，不创建唯一索引，不更改表结构或清理历史重复数据；并发或其他写入口仍可能插入重名，不能宣称数据库级唯一性保证。旧 SupplierService 及普通后台写入流程未改。
+
+上线顺序：部署 MCP 及业务服务程序集，重启后在 Agent 重新同步、审批 update_supplier 工具版本，再用新参数调用；仓库内无前端固定 update_supplier 参数消费者，仓库外客户端需同步调整。服务和接口包含生成标记，后续重新生成时须保留名称规则及接口声明。
 
 `create_supplier.values` 仅开放 SupplierNo（编号）、FullName（全称）、ShortName（简称）、TaxRate（税率）、Contact（联系人）、Phone（电话）、Remark（备注）七个字段，发布 Schema 与运行时白名单一致，额外字段拒绝。FullName 新增必填且不能显式清空，其余仍可选；类型/长度和既有业务规则继续校验。`update_supplier.values` 暂时保留 BdSupplierBase 自身声明的全部业务字段，不受本次收窄影响。字段名区分大小写，不允许 ID、公司、租户或审计字段；修改未传字段保持原值。重启 MCP 并重新同步工具 Schema 后使用，依赖旧新增字段的调用方需调整；回滚需同步恢复参数模型和运行时白名单。未新增幂等保证，新增超时不可自动重试。
 

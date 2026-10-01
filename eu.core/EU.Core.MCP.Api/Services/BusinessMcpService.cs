@@ -101,16 +101,16 @@ public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSuppl
     /// <param name="arguments">包含业务字段 values 的参数对象。</param>
     /// <param name="cancellationToken">调用取消令牌。</param>
     /// <returns>新增供应商标识及执行结果。</returns>
-    [McpTool("create_supplier", "直接新增供应商数据库记录，不打开表单。values 使用供应商业务字段（名称区分大小写），FullName 必填；其他必填和唯一性规则由现有业务服务校验。属于写操作，确认用户新增意图后调用，不自动重试。", typeof(BusinessSupplierCreateInput), DetailedSchema = true, HasAnnotations = true, DestructiveHint = false, OpenWorldHint = false)]
+    [McpTool("create_supplier", "直接新增供应商数据库记录，不打开表单。values 使用供应商业务字段（名称区分大小写），FullName 必填；全称、非空简称分别在未删除记录中应用层查重，任一重复则拒绝。其他规则由现有业务服务校验。属于写操作，确认用户新增意图后调用，不自动重试。", typeof(BusinessSupplierCreateInput), DetailedSchema = true, HasAnnotations = true, DestructiveHint = false, OpenWorldHint = false)]
     public Task<McpToolResult> CreateSupplier(object arguments, CancellationToken cancellationToken = default) => SaveSupplierAsync(arguments, false, cancellationToken);
     #endregion
 
     #region 修改供应商
-    /// <summary>按 ID 直接修改指定业务字段，未传字段保持原值。</summary>
-    /// <param name="arguments">包含 supplierId 和 values 的参数对象。</param>
+    /// <summary>按原全称或简称定位唯一供应商，直接修改指定字段。</summary>
+    /// <param name="arguments">包含 fullName 或 shortName，以及 values 的参数对象。</param>
     /// <param name="cancellationToken">调用取消令牌。</param>
     /// <returns>修改供应商标识及执行结果。</returns>
-    [McpTool("update_supplier", "直接修改供应商数据库记录，不打开表单。必须提供 supplierId；values 只包含需要修改的业务字段（名称区分大小写），未传字段保留。属于写操作，确认用户修改意图后调用。", typeof(BusinessSupplierUpdateInput), DetailedSchema = true, HasAnnotations = true, DestructiveHint = true, OpenWorldHint = false)]
+    [McpTool("update_supplier", "按 fullName（原全称）或 shortName（原简称）精确定位供应商，至少提供一个，两者同时提供必须匹配同一记录；多条匹配拒绝修改。不接受 supplierId。values 放需要修改的业务字段，新名称也放在 values，未传字段保留。直接写入，确认用户修改意图后调用。", typeof(BusinessSupplierUpdateInput), DetailedSchema = true, HasAnnotations = true, DestructiveHint = true, OpenWorldHint = false)]
     public Task<McpToolResult> UpdateSupplier(object arguments, CancellationToken cancellationToken = default) => SaveSupplierAsync(arguments, true, cancellationToken);
     #endregion
 
@@ -125,7 +125,7 @@ public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSuppl
         cancellationToken.ThrowIfCancellationRequested();
         var args = JsonSerializer.SerializeToElement(arguments);
         if (args.ValueKind != JsonValueKind.Object
-            || args.EnumerateObject().Any(property => property.Name != "values" && !(update && property.Name == "supplierId"))
+            || args.EnumerateObject().Any(property => property.Name != "values" && !(update && property.Name is "fullName" or "shortName"))
             || args.EnumerateObject().Select(property => property.Name).Distinct().Count() != args.EnumerateObject().Count()
             || !args.TryGetProperty("values", out var values) || values.ValueKind != JsonValueKind.Object
             || !values.EnumerateObject().Any()
@@ -135,14 +135,24 @@ public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSuppl
             throw new ArgumentException("SUPPLIER_VALUES_INVALID");
 
         Guid id = Guid.Empty;
-        if (update && (!args.TryGetProperty("supplierId", out var target) || target.ValueKind != JsonValueKind.String
-            || !Guid.TryParse(target.GetString(), out id) || id == Guid.Empty))
-            throw new ArgumentException("SUPPLIER_TARGET_INVALID");
+        string? fullName = null, shortName = null;
+        if (update)
+        {
+            foreach (string key in new[] { "fullName", "shortName" })
+                if (args.TryGetProperty(key, out var value) && value.ValueKind is not (JsonValueKind.String or JsonValueKind.Null))
+                    throw new ArgumentException("SUPPLIER_TARGET_INVALID");
+            fullName = args.TryGetProperty("fullName", out var full) ? full.GetString()?.Trim() : null;
+            shortName = args.TryGetProperty("shortName", out var shortValue) ? shortValue.GetString()?.Trim() : null;
+            if ((string.IsNullOrEmpty(fullName) && string.IsNullOrEmpty(shortName)) || fullName?.Length > 32 || shortName?.Length > 32)
+                throw new ArgumentException("SUPPLIER_TARGET_INVALID");
+        }
 
         // 在任何业务读取或写入前验证字段类型、长度及显式清空名称。
         InsertBdSupplierInput supplied;
         try { supplied = values.Deserialize<InsertBdSupplierInput>()!; }
         catch (JsonException) { throw new ArgumentException("SUPPLIER_VALUES_INVALID"); }
+        supplied.FullName = supplied.FullName?.Trim();
+        supplied.ShortName = supplied.ShortName?.Trim();
         if ((!update || values.TryGetProperty("FullName", out _)) && string.IsNullOrWhiteSpace(supplied.FullName))
             throw new ArgumentException("SUPPLIER_NAME_REQUIRED");
         if (!Validator.TryValidateObject(supplied, new ValidationContext(supplied), new List<ValidationResult>(), true))
@@ -150,16 +160,19 @@ public sealed class BusinessMcpService : BaseService<BusinessMcpService, BdSuppl
 
         if (!update)
         {
+            await _suppliers.EnsureSupplierNamesAvailableAsync(supplied.FullName, supplied.ShortName, null, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             id = await _suppliers.Add(supplied);
             if (id == Guid.Empty) throw new InvalidOperationException("Supplier creation did not return an identifier.");
         }
         else
         {
-            var existing = await _suppliers.QuerySingle(row => row.ID == id && !row.IsDeleted && row.IsActive == true);
-            if (existing is null) throw new ArgumentException("SUPPLIER_NOT_FOUND");
+            var existing = await _suppliers.ResolveSupplierByNamesAsync(fullName, shortName, cancellationToken);
+            id = existing.ID;
             var edit = JsonSerializer.SerializeToElement(existing).Deserialize<EditBdSupplierInput>()!;
             foreach (var field in values.EnumerateObject()) Fields[field.Name].SetValue(edit, Fields[field.Name].GetValue(supplied));
+            if (values.TryGetProperty("FullName", out _) || values.TryGetProperty("ShortName", out _))
+                await _suppliers.EnsureSupplierNamesAvailableAsync(edit.FullName, edit.ShortName, id, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             if (!await _suppliers.Update(id, edit, values.EnumerateObject().Select(property => property.Name).ToList(), null, null))
                 throw new ArgumentException("SUPPLIER_UPDATE_FAILED");

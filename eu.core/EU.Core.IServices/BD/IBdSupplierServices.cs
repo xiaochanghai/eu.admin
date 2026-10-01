@@ -21,6 +21,21 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface IBdSupplierServices :IBaseServices<BdSupplier, BdSupplierDto, InsertBdSupplierInput, EditBdSupplierInput>
 {
+    /// <summary>按原全称或简称精确定位唯一有效供应商；两者都有时须同时匹配。</summary>
+    /// <param name="fullName">原全称，可空。</param>
+    /// <param name="shortName">原简称，可空，与全称至少提供一项。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>唯一供应商；无匹配或有歧义时拒绝。</returns>
+    Task<BdSupplier> ResolveSupplierByNamesAsync(string fullName, string shortName, CancellationToken cancellationToken = default);
+
+    /// <summary>校验全称和非空简称分别在未删除供应商中不重复。</summary>
+    /// <param name="fullName">待保存的全称。</param>
+    /// <param name="shortName">待保存的简称，空值不查重。</param>
+    /// <param name="excludeId">修改时排除自身 ID。</param>
+    /// <param name="cancellationToken">取消令牌。</param>
+    /// <returns>校验完成任务；重复时抛出参数异常。</returns>
+    Task EnsureSupplierNamesAvailableAsync(string fullName, string shortName, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
     /// <summary>不校验身份和权限，物理删除唯一匹配供应商，仅用于受控环境。</summary>
     /// <param name="supplierId">供应商 ID，与编号至少提供一个。</param>
     /// <param name="supplierNo">供应商编号，同时提供 ID 时必须同时匹配。</param>
