@@ -1,5 +1,30 @@
 # 通用 BusinessQuery 项目适配
 
+## 统一业务 MCP 入口（供应商首批接入）
+
+`POST /Business/mcp` 由独立的 `BusinessMcpService` 提供供应商增删查改 4 个工具，直接调用 `IBdSupplierServices`，不依赖 `SupplierService` 或 `ISupplierService`。原 `POST /Supplier/mcp` 和 `SupplierService` 保持不变；BusinessQuery 仍在 `/mcp/business-query/controller`，本次未迁入统一入口。
+
+`BusinessMcpService` 与 `SupplierService` 使用相同的 `BaseService<TService, TEntity>` 结构：构造函数注入依赖，工具用 `[McpTool]` 声明并由基类发现和分发，方法按职责划分 `#region`。统一入口不再重写 `GetAvailableTools` 或按工具名称构造 Schema，写入仍全部调用业务服务。
+
+公共 MCP 能力支持显式 `DetailedSchema = true`：按参数模型生成嵌套对象、数组、JSON 字段名、Required、MaxLength、Guid 格式及禁止额外字段的契约；`McpObjectFields` 可限制仅使用属性类型自身声明的字段，并声明嵌套必填字段和最少字段数。循环引用、不支持的集合及枚举模型明确拒绝，不静默生成不完整契约。供应商新增 values 使用七字段专用模型，修改 values 复用 BdSupplierBase 自身业务字段，不暴露继承的系统字段。Schema 不替代运行时业务校验。
+
+工具通过 `HasAnnotations = true` 及 ReadOnlyHint/DestructiveHint/IdempotentHint/OpenWorldHint 声明风险。未启用的新能力不影响旧工具输出：旧 Schema 保持不变，annotations 缺省时不输出。BusinessQuery 自有目录契约保持原实现；回滚公共能力时同时回滚新工具声明。部署后重新同步统一入口工具版本，查询和写入数据逻辑不变。
+
+- `query_suppliers`：查询真实分页数据。
+- 统一入口的 `create_supplier`、`update_supplier`：直接新增/修改数据，返回 `succeeded`、`supplierId`、`operation`，不返回表单导航。旧 `/Supplier/mcp` 中同名工具仍打开表单，两者参数和副作用不同，切换入口必须重新同步并审批写工具版本，不能复用旧只读工具定义。
+- `delete_supplier`：直接调用现有业务服务的实际删除方法。
+- 页面导航 `get_supplier`、模板 `get_supplier_import_template` 和旧导入 `create_supplier_from_file` 不在新入口发布，仍保留在旧供应商入口。不复制旧导入的固定 ID 占位实现。
+- 已同步过统一入口的客户端需重新同步工具并移除上述三个旧工具绑定；已有增改输入格式不变。回滚需部署原版本并重新同步工具。
+
+当前 `GET /Business` 健康检查允许匿名；`POST /Business/mcp` 已按用户调整移除 AllowAnonymous，继承基类认证策略，需要有效项目 JWT 及有效登录会话。模块和公司权限仍按原要求暂缓，不应把登录校验当作完整业务授权。删除关联业务保护等既有限制不变。新路径不匹配原 `/mcp` 正文日志中间件。
+
+新增参数示例：`{"name":"create_supplier","arguments":{"values":{"SupplierNo":"TEST-001","FullName":"测试供应商"}}}`。
+修改参数示例：`{"name":"update_supplier","arguments":{"supplierId":"<目标供应商GUID>","values":{"ShortName":"新简称"}}}`。
+
+`create_supplier.values` 仅开放 SupplierNo（编号）、FullName（全称）、ShortName（简称）、TaxRate（税率）、Contact（联系人）、Phone（电话）、Remark（备注）七个字段，发布 Schema 与运行时白名单一致，额外字段拒绝。FullName 新增必填且不能显式清空，其余仍可选；类型/长度和既有业务规则继续校验。`update_supplier.values` 暂时保留 BdSupplierBase 自身声明的全部业务字段，不受本次收窄影响。字段名区分大小写，不允许 ID、公司、租户或审计字段；修改未传字段保持原值。重启 MCP 并重新同步工具 Schema 后使用，依赖旧新增字段的调用方需调整；回滚需同步恢复参数模型和运行时白名单。未新增幂等保证，新增超时不可自动重试。
+
+部署后可在 Agent 注册 `http://localhost:8020/Business/mcp`（端口以实际部署为准），使用 StreamableHttp 并同步工具；该入口沿用现有无会话 JSON-RPC POST 协议，非完整 SDK 会话端点。支持 initialize、tools/list、tools/call，notifications/initialized 返回 202。无须修改旧供应商绑定；回退可继续使用旧地址。携带有效 JWT 的访问与 Agent 同步需在重启后验收，离线测试不执行供应商写操作。
+
 > 当前临时状态：按用户明确要求，所有环境均暂停项目模块权限和公司范围校验，原实现已注释保留。此状态随本次代码部署生效，不是 Development 专用开关。可调用工具的用户可以查询目录内所有公司的有效、未删除记录，包括公司为空的记录。身份认证、租户匹配、签名、防重放、字段白名单、状态过滤、币别分组、配额和审计仍然启用。
 
 ## 临时停用与恢复

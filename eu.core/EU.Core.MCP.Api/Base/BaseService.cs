@@ -158,7 +158,14 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
             {
                 Name = kvp.Key,
                 Description = toolAttr?.Description ?? $"Tool: {method.Name}",
-                InputSchema = toolAttr?.InputSchema ?? new
+                Annotations = toolAttr?.HasAnnotations == true ? new McpToolAnnotations
+                {
+                    ReadOnlyHint = toolAttr.ReadOnlyHint,
+                    DestructiveHint = toolAttr.DestructiveHint,
+                    IdempotentHint = toolAttr.IdempotentHint,
+                    OpenWorldHint = toolAttr.OpenWorldHint
+                } : null,
+                InputSchema = toolAttr?.GetInputSchema() ?? new
                 {
                     type = "object",
                     properties = new { }

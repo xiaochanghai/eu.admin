@@ -25,6 +25,7 @@ public static class McpServiceExtensions
         IConfiguration configuration)
     {
         services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IBusinessMcpService, EU.Core.Api.MCP.Services.BusinessMcpService>();
         if (!configuration.GetValue<bool>(EnabledKey))
         {
             return services;

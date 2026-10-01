@@ -55,6 +55,14 @@
 
 ## 4. 业务模块修改边界
 
+### MCP 工具服务结构约束
+
+- 新增或维护 `EU.Core.MCP.Api` 的业务 MCP 工具服务（包括统一 Business 入口及后续供应商、销售、采购等模块）时，必须先阅读并遵循 [`SupplierService.cs`](EU.Core.MCP.Api/Services/BD/SupplierService.cs) 的结构：继承现有 `BaseService<TService, TEntity>`，使用常规构造函数注入依赖，工具方法通过 `[McpTool]` 声明名称、用途及输入模型，复用基类工具发现与分发，不另建一套重复的协议分发机制。
+- 每个工具独立成方法，按职责使用带中文说明的 `#region` 包裹；辅助方法同样分区。补齐 XML `summary`、参数及返回值说明；方法签名除超长情况外不换行。可复用的参数模型使用明确类型，字段补齐说明。
+- 数据增删改查调用已有业务 IService/Service，保留其校验和持久化边界，不在 MCP 适配层重复实现 CRUD。统一入口可以聚合和委派已有工具；基类 Schema 无法表达的嵌套白名单、必填约束及风险声明可作最小补充，但须说明原因并补测试。
+- 参考的是代码组织和复用方式，不是照搬旧工具的业务语义或历史安全缺口。不得把直接写入改成表单导航，不得复制匿名写入、固定数据 ID 或缺失权限校验；认证授权、取消、审计、输入校验及读写风险声明仍遵守本文件其他约束。未经明确要求，不改变原 `SupplierService` 和旧入口行为。
+- 此约束不用于普通业务 `EU.Core.Services` 的基类选择，也不要求将 BusinessQuery 编译器、审计存储等非工具基础组件强行改成实体工具服务。已有特殊工具机制确需例外时，先说明差异并取得项目所有者确认，不据此批量重构无关代码。
+
 - 新增或维护普通业务模块前，必须阅读并遵守 [`标准业务模块开发约定`](../doc/backend/标准业务模块开发约定.md)：沿用 BaseController/IBaseServices/BaseServices/IBaseRepository/BaseRepository 和现有 Autofac 自动注册；特殊业务在当前 Service 中处理，不再新增重复职责的 XxxStore/IXxxStore 或第二套业务入口。此约定适用于后续其他普通业务模块，不仅是 AgModelConfig；确需例外先取得项目所有者确认，不据此批量重构已有特殊基础设施。
 - 自动注册不等于所有类型都可省略注册。修改 DI 前检查 `Src/EU.Core.Extensions/ServiceExtensions/AutofacModuleRegister.cs` 的程序集扫描范围和排除清单，以及宿主显式注册。Agent 运行时、工具适配器和具有专属生命周期的组件按现有边界处理，不为减少 Program 行数强行迁入普通业务层或新增转发包装。
 

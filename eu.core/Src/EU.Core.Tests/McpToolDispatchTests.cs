@@ -71,6 +71,12 @@ public sealed class McpToolDispatchTests
     {
         var service = new SupplierService(NullLogger<SupplierService>.Instance, Repository(), null!, null!, null!);
         Assert.Equal(7, service.GetTools().Count());
+        var definitions = JsonSerializer.SerializeToElement(service.GetAvailableTools()).GetProperty("tools");
+        foreach (var definition in definitions.EnumerateArray())
+            Assert.False(definition.TryGetProperty("annotations", out _));
+        var legacyQuery = definitions.EnumerateArray().Single(tool => tool.GetProperty("name").GetString() == "query_suppliers").GetProperty("inputSchema");
+        Assert.False(legacyQuery.TryGetProperty("additionalProperties", out _));
+        Assert.False(legacyQuery.TryGetProperty("required", out _));
         Assert.IsType<McpToolResult>(await service.HandleToolCallAsync(Request("get_supplier"), CancellationToken.None));
         // 未知字段必须在具体工具解析处拒绝，不能进入 null 业务依赖。
         await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Request("query_suppliers", new { CompanyId = "forbidden" }), CancellationToken.None));

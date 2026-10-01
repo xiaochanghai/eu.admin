@@ -96,6 +96,7 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Method == "POST"
         && context.Request.Path.StartsWithSegments("/mcp")
+        && !context.Request.Path.StartsWithSegments("/mcp/business")
         && !context.Request.Path.StartsWithSegments("/mcp/business-query"))
     {
         context.Request.EnableBuffering();

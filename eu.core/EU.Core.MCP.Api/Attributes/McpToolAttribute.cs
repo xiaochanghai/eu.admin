@@ -5,6 +5,17 @@ namespace EU.Core.Api.MCP.Attributes;
 [AttributeUsage(AttributeTargets.Method)]
 public class McpToolAttribute : Attribute
 {
+    /// <summary>显式启用完整参数模型 Schema；旧工具保持原输出。</summary>
+    public bool DetailedSchema { get; set; }
+    /// <summary>显式输出风险提示；未声明的旧工具不新增风险分类。</summary>
+    public bool HasAnnotations { get; set; }
+    public bool ReadOnlyHint { get; set; }
+    public bool DestructiveHint { get; set; } = true;
+    public bool IdempotentHint { get; set; }
+    public bool OpenWorldHint { get; set; } = true;
+
+    /// <summary>按工具选择的兼容模式生成参数契约。</summary>
+    public object? GetInputSchema() => DetailedSchema && InputSchemaType != null ? McpSchemaBuilder.Build(InputSchemaType) : InputSchema;
     public string Name { get; set; }
     public string Description { get; set; }
     // 运行时生成的 Schema 对象和 JSON
