@@ -17783,6 +17783,102 @@
         <member name="P:EU.Core.Model.ViewModels.Extend.AgentApiErrorDescriptor.HttpStatus">
             <summary>默认 HTTP 状态；运行记录或已开始的流式事件没有该状态。</summary>
         </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery">
+            <summary>基础数据分页条件，不接受任意 SQL 或系统字段。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery.Code">
+            <summary>业务编号，精确匹配。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery.Keyword">
+            <summary>名称或简称关键字。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery.PageIndex">
+            <summary>页码，从 1 开始。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpQuery.PageSize">
+            <summary>每页条数，1 至 100。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.BasicDataMcpTarget">
+            <summary>按原名称或原简称定位，不接受系统 ID。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpTarget.Name">
+            <summary>原名称，精确匹配，不能填新名称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.BasicDataMcpTarget.ShortName">
+            <summary>原简称，仅客户支持；其他模块必须使用 name。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.CustomerMcpValues">
+            <summary>客户 MCP 维护字段，不含主键、公司、租户和审计字段。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.CustomerNo">
+            <summary>客户编号。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.CustomerName">
+            <summary>客户全称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.CustomerShortName">
+            <summary>客户简称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.TaxRate">
+            <summary>税率，沿用业务原值。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.Consignee">
+            <summary>收货人。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.ConsigneePhone">
+            <summary>收货电话。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.ConsigneeAddress">
+            <summary>收货地址。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CustomerMcpValues.Remark">
+            <summary>备注。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.CurrencyMcpValues">
+            <summary>币别 MCP 维护字段，不含主键、公司、租户和审计字段。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CurrencyMcpValues.CurrencyNo">
+            <summary>币别编号。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CurrencyMcpValues.CurrencyName">
+            <summary>币别名称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.CurrencyMcpValues.Remark">
+            <summary>备注。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.UnitMcpValues">
+            <summary>计量单位 MCP 维护字段，不含主键、公司、租户和审计字段。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.UnitMcpValues.UnitNo">
+            <summary>单位编号。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.UnitMcpValues.UnitNames">
+            <summary>单位名称。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.UnitMcpValues.DecimalPlaces">
+            <summary>沿用当前单位模块的 DecimalPlaces 字段值。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.UnitMcpValues.Remark">
+            <summary>备注。</summary>
+        </member>
+        <member name="T:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues">
+            <summary>结算方式 MCP 维护字段，不含主键、公司、租户和审计字段。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues.SettlementNo">
+            <summary>结算编号。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues.SettlementAccountType">
+            <summary>账款类型：ImmediatePay、MonthlyPay、NextMonthlyPay、PayOnDelivery、Other。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues.Days">
+            <summary>账期天数，不小于零。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues.SettlementBillType">
+            <summary>收付款类型：Get 收款、Out 付款。</summary>
+        </member>
+        <member name="P:EU.Core.Model.ViewModels.Extend.SettlementWayMcpValues.Remark">
+            <summary>备注。</summary>
+        </member>
         <member name="T:EU.Core.Model.ViewModels.Extend.SmRoleFunctionExtend">
             <summary>
             角色功能权限
