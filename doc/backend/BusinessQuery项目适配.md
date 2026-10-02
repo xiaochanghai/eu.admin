@@ -2,7 +2,7 @@
 
 ## 统一业务 MCP 入口
 
-`POST /Business/mcp` 由独立的 `BusinessMcpService` 提供供应商、客户、币别、计量单位、结算方式的增删查改，共 20 个工具，直接调用各自的业务 IService，不依赖 `SupplierService` 或 `ISupplierService`。原 `POST /Supplier/mcp` 和 `SupplierService` 保持不变；BusinessQuery 仍在 `/mcp/business-query/controller`，本次未迁入统一入口。
+`POST /Business/mcp` 由独立的 `BusinessMcpService` 提供供应商、客户、币别、计量单位、结算方式的增删查改，共 20 个工具，直接调用各自的业务 IService，不依赖 `SupplierService` 或 `ISupplierService`。原 `POST /Supplier/mcp` 路由保留，但已移除其中的 `query_suppliers` 真实数据查询工具及适配接口，保留其余 6 个旧工具；真实供应商查询统一使用 `/Business/mcp`。BusinessQuery 仍在 `/mcp/business-query/controller`，未迁入统一入口。
 
 `BusinessMcpService` 与 `SupplierService` 使用相同的 `BaseService<TService, TEntity>` 结构：构造函数注入依赖，工具用 `[McpTool]` 声明并由基类发现和分发，方法按职责划分 `#region`。统一入口不再重写 `GetAvailableTools` 或按工具名称构造 Schema，写入仍全部调用业务服务。
 
@@ -11,6 +11,7 @@
 工具通过 `HasAnnotations = true` 及 ReadOnlyHint/DestructiveHint/IdempotentHint/OpenWorldHint 声明风险。未启用的新能力不影响旧工具输出：旧 Schema 保持不变，annotations 缺省时不输出。BusinessQuery 自有目录契约保持原实现；回滚公共能力时同时回滚新工具声明。部署后重新同步统一入口工具版本，查询和写入数据逻辑不变。
 
 - `query_suppliers`：查询真实分页数据。
+- 旧 `/Supplier/mcp` 不再发现或接受 `query_suppliers`。原查询调用方须改用 `/Business/mcp`、携带有效项目 JWT，并在 Agent 重新同步工具和调整绑定；查询参数及分页结果不变，底层 `IBdSupplierServices.QuerySuppliersAsync` 保留。先迁移客户端查询绑定，再部署移除旧工具的版本；回滚需恢复旧适配方法、接口声明并重新同步旧入口。此调整不恢复或回退旧删除逻辑，不更改旧导航、导入和模板工具。
 - 统一入口的 `create_supplier`、`update_supplier`：直接新增/修改数据，返回 `succeeded`、`supplierId`、`operation`，不返回表单导航。旧 `/Supplier/mcp` 中同名工具仍打开表单，两者参数和副作用不同，切换入口必须重新同步并审批写工具版本，不能复用旧只读工具定义。
 - `delete_supplier`：直接调用现有业务服务的实际删除方法。
 - 页面导航 `get_supplier`、模板 `get_supplier_import_template` 和旧导入 `create_supplier_from_file` 不在新入口发布，仍保留在旧供应商入口。不复制旧导入的固定 ID 占位实现。

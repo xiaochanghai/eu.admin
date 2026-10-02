@@ -70,16 +70,17 @@ public sealed class McpToolDispatchTests
     public async Task Supplier_uses_base_dispatch_for_navigation_and_tool_owned_parsing()
     {
         var service = new SupplierService(NullLogger<SupplierService>.Instance, Repository(), null!, null!, null!);
-        Assert.Equal(7, service.GetTools().Count());
+        Assert.Equal(6, service.GetTools().Count());
         var definitions = JsonSerializer.SerializeToElement(service.GetAvailableTools()).GetProperty("tools");
         foreach (var definition in definitions.EnumerateArray())
             Assert.False(definition.TryGetProperty("annotations", out _));
-        var legacyQuery = definitions.EnumerateArray().Single(tool => tool.GetProperty("name").GetString() == "query_suppliers").GetProperty("inputSchema");
-        Assert.False(legacyQuery.TryGetProperty("additionalProperties", out _));
-        Assert.False(legacyQuery.TryGetProperty("required", out _));
+        Assert.DoesNotContain(definitions.EnumerateArray(), tool => tool.GetProperty("name").GetString() == "query_suppliers");
+        Assert.False(service.CanHandle("query_suppliers"));
         Assert.IsType<McpToolResult>(await service.HandleToolCallAsync(Request("get_supplier"), CancellationToken.None));
+        Assert.IsType<McpToolResult>(await service.HandleToolCallAsync(Request("create_supplier"), CancellationToken.None));
+        var removedQuery = await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Request("query_suppliers"), CancellationToken.None));
+        Assert.Equal("No service found for tool: query_suppliers", removedQuery.Message);
         // 未知字段必须在具体工具解析处拒绝，不能进入 null 业务依赖。
-        await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Request("query_suppliers", new { CompanyId = "forbidden" }), CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentException>(() => service.HandleToolCallAsync(Request("delete_supplier", new { CompanyId = "forbidden" }), CancellationToken.None));
         Assert.Equal(typeof(BaseService<SupplierService, BdSupplier>), typeof(SupplierService).GetMethod("HandleToolCallAsync")!.DeclaringType);
     }

@@ -1,5 +1,11 @@
 # WorkBuddy 本机接入执行方案
 
+## 最新查询入口调整（2026-10-02，覆盖下文旧查询接入说明）
+
+供应商真实数据查询统一使用 `POST /Business/mcp` 的 `query_suppliers`，携带有效项目登录 JWT 和有效登录会话。旧 `/Supplier/mcp` 已移除真实查询工具、`SupplierService.QuerySuppliersAsync` 和 `ISupplierService` 对应声明；旧页面导航、导入、模板及删除工具保持不变。底层 `IBdSupplierServices.QuerySuppliersAsync` 由 Business 入口继续复用，不删除业务查询实现。
+
+WorkBuddy 原真实查询连接须由 `/Supplier/mcp` 改为 `/Business/mcp`，重新获取工具目录并更新绑定，查询参数和分页结果不变；不要把旧匿名入口的访问方式用于新入口。先迁移客户端再部署移除旧查询的版本。回滚需恢复旧适配方法和接口声明并重新同步工具。下文查询路径与匿名查询描述仅为历史记录，不代表当前 MCP 入口契约；旧删除的既有限制仍然存在。
+
 ## 最新权限调整（2026-09-23，覆盖下文旧权限说明）
 
 项目所有者确认：Supplier 查询和删除均不校验登录身份、用户 ID、租户、角色、模块、操作权限及公司范围。已移除 `GetSupplierCompaniesAsync` 和无用的 IUser 依赖。查询仍只返回有效、未删除供应商的最小业务字段；删除仍保留 ID/编号必填、GUID 格式、唯一匹配、取消及目标 ID 写入条件。
