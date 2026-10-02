@@ -10,6 +10,8 @@
 
 工具通过 `HasAnnotations = true` 及 ReadOnlyHint/DestructiveHint/IdempotentHint/OpenWorldHint 声明风险。未启用的新能力不影响旧工具输出：旧 Schema 保持不变，annotations 缺省时不输出。BusinessQuery 自有目录契约保持原实现；回滚公共能力时同时回滚新工具声明。部署后重新同步统一入口工具版本，查询和写入数据逻辑不变。
 
+MCP 基类动态参数转换按 `int → long → decimal → double` 选择数字类型，嵌套对象和数组沿用同一规则。供应商、客户税率等可用 `decimal` 表示的值不再先经过 `double`，避免工具重新序列化参数时损失业务精度；超过 `decimal` 范围的数字仍使用原 `double` 后备路径，字段是否接受由原业务模型校验。不改变 JSON Schema、字段白名单、整数类型和数据库精度，也不保证超出 `decimal` 自身精度的任意数字无损。影响范围是复用基类动态分发的 Business 和旧 Supplier 工具；BusinessQuery 仍直接校验原始 JSON，不使用此转换路径。更新 MCP 程序集并重启即可生效，客户端无需改参或重新审批工具 Schema；回滚该转换会恢复旧精度损失。离线 `McpNumericPrecisionTests` 覆盖数字边界、嵌套分发和供应商/客户新增修改向业务服务传值，不代表真实数据库落库验收。
+
 - `query_suppliers`：查询真实分页数据。
 - 旧 `/Supplier/mcp` 不再发现或接受 `query_suppliers`。原查询调用方须改用 `/Business/mcp`、携带有效项目 JWT，并在 Agent 重新同步工具和调整绑定；查询参数及分页结果不变，底层 `IBdSupplierServices.QuerySuppliersAsync` 保留。先迁移客户端查询绑定，再部署移除旧工具的版本；回滚需恢复旧适配方法、接口声明并重新同步旧入口。此调整不恢复或回退旧删除逻辑，不更改旧导航、导入和模板工具。
 - 统一入口的 `create_supplier`、`update_supplier`：直接新增/修改数据，返回 `succeeded`、`supplierId`、`operation`，不返回表单导航。旧 `/Supplier/mcp` 中同名工具仍打开表单，两者参数和副作用不同，切换入口必须重新同步并审批写工具版本，不能复用旧只读工具定义。

@@ -142,6 +142,8 @@ public class BaseService<TService, TEntity> : IBaseService where TService : clas
     {
         if (element.TryGetInt32(out int intValue)) return intValue;
         if (element.TryGetInt64(out long longValue)) return longValue;
+        // 业务小数优先使用 decimal，避免税率、金额在动态分发和再次序列化时丢失精度。
+        if (element.TryGetDecimal(out decimal decimalValue)) return decimalValue;
         return element.GetDouble();
     }
 
