@@ -32,7 +32,9 @@ internal interface IMicrosoftAgentRuntimeModelClient
 
 internal sealed record MicrosoftAgentRuntimeModelUpdate(
     string Text,
-    ToolApprovalRequestContent? ApprovalRequest = null)
+    ToolApprovalRequestContent? ApprovalRequest = null,
+    string? ResponseId = null,
+    IReadOnlyList<UsageDetails>? Usages = null)
 {
     public static implicit operator MicrosoftAgentRuntimeModelUpdate(string text) =>
         new(text);
@@ -45,13 +47,17 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     private readonly AgentRuntimeOptions _options;
     private readonly IMcpRuntimeToolInvoker _toolInvoker;
     private readonly IAgentModelProfileResolver _modelProfiles;
+    private readonly IAgentRuntimeTelemetry? _telemetry;
+    private readonly IAgentUserTokenQuota? _userQuota;
 
-    public MicrosoftAgentRuntimeEngine(AgentRuntimeOptions options, IAgentModelProfileResolver modelProfiles, IMcpRuntimeToolInvoker toolInvoker, ILogger<MicrosoftAgentRuntimeEngine> logger)
+    public MicrosoftAgentRuntimeEngine(AgentRuntimeOptions options, IAgentModelProfileResolver modelProfiles, IMcpRuntimeToolInvoker toolInvoker, ILogger<MicrosoftAgentRuntimeEngine> logger, IAgentRuntimeTelemetry? telemetry = null, IAgentUserTokenQuota? userQuota = null)
     {
         _options = options;
         _modelProfiles = modelProfiles ?? throw new ArgumentNullException(nameof(modelProfiles));
         _toolInvoker = toolInvoker;
         _logger = logger;
+        _telemetry = telemetry;
+        _userQuota = userQuota;
     }
 
     public async IAsyncEnumerable<AgentRunEvent> StreamAsync(
@@ -81,7 +87,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(profile.Timeout);
         // 每次运行独立构造客户端，防止并发 Agent 互相覆盖地址、模型或密钥。
-        IMicrosoftAgentRuntimeModelClient modelClient = new OpenAiMicrosoftAgentRuntimeModelClient(profile);
+        IMicrosoftAgentRuntimeModelClient modelClient = new OpenAiMicrosoftAgentRuntimeModelClient(profile, _options, _telemetry, _userQuota);
         Task producer = ProduceAsync(
             context,
             apiKey,
@@ -256,6 +262,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
         int outputEventCount = 0;
         var modelClock = System.Diagnostics.Stopwatch.StartNew();
         bool firstUpdate = true;
+        long? firstTextMilliseconds = null;
+        var usage = new ModelUsageAccumulator();
+        Exception? failure = null;
+        bool completed = false;
+        bool approvalPending = false;
         _logger.LogInformation("Agent model request started. RunId: {RunId}, ModelProfileId: {ModelProfileId}, MessageCount: {MessageCount}, ToolCount: {ToolCount}, KnowledgeCount: {KnowledgeCount}",
             context.RunId, context.Snapshot.ModelProfileId, messages.Count, tools.Count, context.Knowledge.Count);
         try
@@ -267,6 +278,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 messages,
                 cancellationToken))
             {
+                usage.Observe(update.ResponseId, update.Usages ?? Array.Empty<UsageDetails>());
                 if (firstUpdate)
                 {
                     firstUpdate = false;
@@ -274,6 +286,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 }
                 if (update.ApprovalRequest is not null)
                 {
+                    approvalPending = true;
                     await PersistApprovalRequestAsync(
                         context,
                         update.ApprovalRequest,
@@ -284,6 +297,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
 
                 if (update.Text.Length > 0)
                 {
+                    firstTextMilliseconds ??= modelClock.ElapsedMilliseconds;
                     if (outputEventCount >= _options.MaximumModelOutputEvents)
                     {
                         throw new AgentRuntimeException(
@@ -326,12 +340,12 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                     "The model output exceeded the configured size limit.");
             }
 
-            writer.TryComplete();
+            completed = !approvalPending;
         }
         catch (OperationCanceledException exception)
             when (cancellationToken.IsCancellationRequested)
         {
-            writer.TryComplete(exception);
+            failure = exception;
         }
         catch (Exception exception)
         {
@@ -342,10 +356,16 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 context.AgentId,
                 context.Snapshot.VersionId,
                 context.Snapshot.ModelProfileId);
-            writer.TryComplete(exception);
+            failure = exception;
         }
         finally
         {
+            // 流失败或取消也先交付已收到的统计，再完成通道；不用已取消的请求令牌。
+            writer.TryWrite(new AgentRunEvent(context.RunId, 0, AgentRunEventKind.ModelUsage, DateTimeOffset.UtcNow)
+            {
+                ModelUsage = usage.Snapshot(completed, modelClock.ElapsedMilliseconds, firstTextMilliseconds)
+            });
+            writer.TryComplete(failure);
             _logger.LogInformation("Agent model execution ended. RunId: {RunId}, ElapsedMs: {ElapsedMs}, OutputEvents: {OutputEvents}",
                 context.RunId, modelClock.ElapsedMilliseconds, outputEventCount);
         }
@@ -533,7 +553,7 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
     }
 
     private sealed class OpenAiMicrosoftAgentRuntimeModelClient(
-        AgentModelRuntimeProfile profile) : IMicrosoftAgentRuntimeModelClient
+        AgentModelRuntimeProfile profile, AgentRuntimeOptions runtimeOptions, IAgentRuntimeTelemetry? telemetry, IAgentUserTokenQuota? userQuota) : IMicrosoftAgentRuntimeModelClient
     {
         public async IAsyncEnumerable<MicrosoftAgentRuntimeModelUpdate> StreamAsync(
             RuntimeRunContext context,
@@ -545,9 +565,11 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
             var client = new OpenAIClient(
                 new ApiKeyCredential(apiKey),
                 new OpenAIClientOptions { Endpoint = profile.Endpoint });
-            AIAgent agent = client
-                .GetChatClient(profile.ModelName)
-                .AsAIAgent(new ChatClientAgentOptions
+            // 预算客户端位于 SDK 工具循环内侧，每轮模型请求均使用同一运行内的剩余额度。
+            using IChatClient budgetClient = new AgentTokenBudgetChatClient(
+                new AgentUserTokenQuotaChatClient(client.GetChatClient(profile.ModelName).AsIChatClient(), userQuota, context),
+                runtimeOptions, context.ModelTokenBudget, telemetry);
+            AIAgent agent = budgetClient.AsAIAgent(new ChatClientAgentOptions
                 {
                     Name = context.Snapshot.AgentCode,
                     ChatOptions = CreateChatOptions(profile.ModelName, context.Snapshot.Instructions, tools, profile.EnableThinking)
@@ -559,22 +581,23 @@ public sealed class MicrosoftAgentRuntimeEngine : IAgentRuntimeEngine
                 options: null,
                 cancellationToken: cancellationToken))
             {
-                ToolApprovalRequestContent[] approvals = update.Contents
-                    .OfType<ToolApprovalRequestContent>()
-                    .ToArray();
-                if (approvals.Length > 1)
-                {
-                    throw new AgentRuntimeException(
-                        AgentRunErrorCodes.ToolBlocked,
-                        "Parallel approval-required tool calls are not permitted.");
-                }
-
-                ToolApprovalRequestContent? approval = approvals.SingleOrDefault();
-                yield return new MicrosoftAgentRuntimeModelUpdate(
-                    approval is null ? update.ToString() : string.Empty,
-                    approval);
+                yield return ToModelUpdate(update);
             }
         }
+    }
+
+    /// <summary>分离 SDK 文本、审批和用量内容，usage-only 更新不能变成聊天文本。</summary>
+    internal static MicrosoftAgentRuntimeModelUpdate ToModelUpdate(AgentResponseUpdate update)
+    {
+        ToolApprovalRequestContent[] approvals = update.Contents.OfType<ToolApprovalRequestContent>().ToArray();
+        if (approvals.Length > 1)
+            throw new AgentRuntimeException(AgentRunErrorCodes.ToolBlocked, "Parallel approval-required tool calls are not permitted.");
+        ToolApprovalRequestContent? approval = approvals.SingleOrDefault();
+        // SDK 为本地工具结果生成的响应 ID 不是模型响应，不能要求它携带 Token 统计。
+        bool isToolResult = update.Role == ChatRole.Tool ||
+            (update.Contents.Count > 0 && update.Contents.All(content => content is FunctionResultContent));
+        return new(approval is null ? update.Text : string.Empty, approval, isToolResult ? null : update.ResponseId,
+            update.Contents.OfType<UsageContent>().Select(content => content.Details).ToArray());
     }
 
     internal static ChatOptions CreateChatOptions(string model, string instructions, IReadOnlyList<AITool> tools, bool? enableThinking)

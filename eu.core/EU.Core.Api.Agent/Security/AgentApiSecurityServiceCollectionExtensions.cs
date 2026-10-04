@@ -84,12 +84,14 @@ internal static class AgentApiSecurityServiceCollectionExtensions
         services.AddAuthenticationAndAuthorizationSetup(
             new JwtBearerAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme));
 
+        services.AddScoped<IAuthorizationHandler, AgentQuotaManagementAuthorizationHandler>();
         services.AddAuthorization(options =>
         {
             AuthorizationPolicy authenticated = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
             options.FallbackPolicy = authenticated;
+            options.AddPolicy(AgentAuthorizationPolicies.QuotaManage, policy => policy.RequireAuthenticatedUser().AddRequirements(new AgentQuotaManagementRequirement()));
             AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Admin);
             AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Debug);
             AddAuthenticatedPolicy(options, AgentAuthorizationPolicies.Chat);

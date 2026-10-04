@@ -63,7 +63,14 @@ public sealed class AgAgentRunAuditServices :
                         value.InputSha256,
                         value.OutputCharacters,
                         value.ToolCallCount,
-                        value.ErrorCode
+                        value.ErrorCode,
+                        value.ModelProfileId,
+                        value.InputTokens,
+                        value.OutputTokens,
+                        value.TotalTokens,
+                        value.TokenUsageStatus,
+                        value.ModelDurationMilliseconds,
+                        value.TimeToFirstTextMilliseconds
                     })
                     .Where(value => value.ID == record.RunId && !value.IsDeleted)
                     .ExecuteCommandAsync();
@@ -193,7 +200,14 @@ public sealed class AgAgentRunAuditServices :
             toolCalls.OrderBy(tool => Required(tool.Ordinal, "ToolCall.Ordinal"))
                 .ThenBy(tool => tool.ID)
                 .Select(MapToolCall)
-                .ToArray());
+                .ToArray())
+        {
+            ModelProfileId = value.ModelProfileId,
+            ModelUsage = string.IsNullOrEmpty(value.TokenUsageStatus) ? null : new AgentModelUsage(
+                value.InputTokens, value.OutputTokens, value.TotalTokens,
+                Enum.Parse<AgentTokenUsageStatus>(value.TokenUsageStatus, false),
+                value.ModelDurationMilliseconds, value.TimeToFirstTextMilliseconds)
+        };
     #endregion
 
     #region 映射（MapToolCall）
@@ -232,6 +246,13 @@ public sealed class AgAgentRunAuditServices :
         OutputCharacters = value.OutputCharacters,
         ToolCallCount = value.ToolCallCount,
         ErrorCode = value.ErrorCode,
+        ModelProfileId = value.ModelProfileId,
+        InputTokens = value.ModelUsage?.InputTokens,
+        OutputTokens = value.ModelUsage?.OutputTokens,
+        TotalTokens = value.ModelUsage?.TotalTokens,
+        TokenUsageStatus = value.ModelUsage?.Status.ToString(),
+        ModelDurationMilliseconds = value.ModelUsage?.ModelDurationMilliseconds,
+        TimeToFirstTextMilliseconds = value.ModelUsage?.TimeToFirstTextMilliseconds,
         IsDeleted = false,
         IsActive = true
     };

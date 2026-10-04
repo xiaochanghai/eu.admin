@@ -62,7 +62,7 @@ public sealed class AgentRunsController(
                 caller.UserId,
                 caller.TenantId,
                 caller.Permissions,
-                caller.CorrelationId)
+                caller.CorrelationId) { GroupId = caller.GroupId, CompanyId = caller.CompanyId }
         };
 
         Response.StatusCode = StatusCodes.Status200OK;

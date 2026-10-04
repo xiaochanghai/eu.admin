@@ -15,7 +15,7 @@ public static class AgentDatabaseSynchronizer
 
     private static readonly string[] AgentTableOrder =
     [
-        "AgAgentDefinition", "AgAgentVersion", "AgAgentVersionSnapshot", "AgAgentVersionBinding",
+        "AgModelConfig", "AgAgentDefinition", "AgAgentVersion", "AgAgentVersionSnapshot", "AgAgentVersionBinding",
         "AgSkillDefinition", "AgSkillVersion", "AgSkillVersionFile",
         "AgMcpServerDefinition", "AgMcpToolVersion", "AgMcpServerArgument",
         "AgKnowledgeBaseDefinition", "AgKnowledgeDocument", "AgKnowledgeChunk",
@@ -33,7 +33,8 @@ public static class AgentDatabaseSynchronizer
         "AgToolApprovalExecutionResult", "AgChatConversation", "AgChatMessage",
         "AgUnifiedEntryRun", "AgUnifiedAgentRun", "AgUnifiedOrchestrationLink",
         "AgUnifiedToolCall", "AgUnifiedRunEvent", "AgAgentTask", "AgAgentTaskAttempt",
-        "AgAgentTaskEvent"
+        "AgAgentTaskEvent", "AgUserTokenQuotaPolicy", "AgUserTokenQuotaPeriod",
+        "AgUserTokenQuotaReservation", "AgUserTokenQuotaAdjustment"
     ];
 
     /// <summary>

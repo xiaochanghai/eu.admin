@@ -9,6 +9,10 @@ internal static class AgentApiOptionsServiceCollectionExtensions
 {
     public static IServiceCollection AddAgentApiOptions(this IServiceCollection services)
     {
+        services.AddOptions<AgentUserTokenQuotaOptions>()
+            .BindConfiguration(AgentUserTokenQuotaOptions.SectionName)
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<AgentUserTokenQuotaOptions>, AgentUserTokenQuotaOptionsValidator>();
         services.AddOptions<AgentPlatformOptions>()
             .BindConfiguration(AgentPlatformOptions.SectionName)
             .ValidateOnStart();

@@ -38,6 +38,7 @@ public sealed class UnifiedEntryService
     private readonly BusinessQueryToolPolicy? _businessQueryPolicy;
     private readonly BusinessQueryResultLimits _businessQueryResultLimits;
     private readonly IAgentToolApprovalHandler? _toolApprovalHandler;
+    private readonly IAgentRuntimeTelemetry? _telemetry;
     private readonly ConcurrentDictionary<Guid, ActiveUnifiedEntryExecution> _active = [];
 
     internal Action? BeforeRuntimeOwnershipClaim { get; set; }
@@ -55,6 +56,7 @@ public sealed class UnifiedEntryService
     /// <param name="businessQueryPolicy">受控业务查询的工具调用策略。</param>
     /// <param name="businessQueryResultLimits">业务查询结果的载荷限制。</param>
     /// <param name="toolApprovalHandler">工具调用审批处理器。</param>
+    /// <param name="telemetry">宿主提供的预算监控，不持有数据库作用域。</param>
     public UnifiedEntryService(
         IMainAgentAssignmentService mainAgents,
         IAgentRuntimeService agentRuntime,
@@ -64,7 +66,8 @@ public sealed class UnifiedEntryService
         TimeProvider? timeProvider = null,
         BusinessQueryToolPolicyAccessor? businessQueryPolicy = null,
         BusinessQueryResultLimits? businessQueryResultLimits = null,
-        IAgentToolApprovalHandler? toolApprovalHandler = null)
+        IAgentToolApprovalHandler? toolApprovalHandler = null,
+        IAgentRuntimeTelemetry? telemetry = null)
     {
         _mainAgents = mainAgents
             ?? throw new ArgumentNullException(nameof(mainAgents));
@@ -80,6 +83,7 @@ public sealed class UnifiedEntryService
         _businessQueryResultLimits = businessQueryResultLimits
             ?? BusinessQueryResultLimits.Default;
         _toolApprovalHandler = toolApprovalHandler;
+        _telemetry = telemetry;
     }
     #endregion
 
@@ -335,7 +339,8 @@ public sealed class UnifiedEntryService
                 _limits,
                 correlationId,
                 executionCancellation.Token,
-                _timeProvider);
+                _timeProvider,
+                _telemetry);
             mainLease = scope.EnterMainAgent(assignment.AgentVersionId);
             var internalTools = new List<IAgentInternalTool>();
             if (preparedMainContext.Skills.Count > 0)
@@ -382,6 +387,7 @@ public sealed class UnifiedEntryService
                 InternalTools = internalTools,
                 McpCallGuard = scope,
                 McpResultGuard = scope,
+                ModelTokenBudget = scope.ModelTokenBudget,
                 McpToolCallLimits = BusinessQueryMcpToolCallLimits.Create(
                     _businessQueryPolicy,
                     preparedMainContext.Tools),
@@ -677,10 +683,13 @@ public sealed class UnifiedEntryService
         var mainBusinessResults = new BusinessQueryRunResultCollector(_businessQueryPolicy, context.MainAgentContext);
         long yieldedSequence = 0;
         IAsyncEnumerator<AgentRunEvent>? enumerator = null;
+        Task<bool>? moveNext = null;
+        Task<bool>? resultReady = null;
         using var effectiveCancellation =
             CancellationTokenSource.CreateLinkedTokenSource(
                 consumerCancellationToken,
                 active.Scope.EntryCancellationToken);
+        using var resultNotificationCancellation = CancellationTokenSource.CreateLinkedTokenSource(effectiveCancellation.Token);
         try
         {
             await AppendEventAsync(
@@ -702,43 +711,47 @@ public sealed class UnifiedEntryService
             enumerator = _agentRuntime
                 .StreamAsync(context.MainAgentContext, effectiveCancellation.Token)
                 .GetAsyncEnumerator(effectiveCancellation.Token);
-            Task<bool> moveNext = enumerator.MoveNextAsync().AsTask();
+            resultReady = active.Scope.WaitForBusinessQueryResultAsync(resultNotificationCancellation.Token).AsTask();
+            moveNext = enumerator.MoveNextAsync().AsTask();
             int pendingDeltaEvents = 0;
             DateTimeOffset lastPersistenceAt = _timeProvider.GetUtcNow();
             while (true)
             {
+                Task? interval = null;
                 if (pendingDeltaEvents > 0)
                 {
                     TimeSpan remaining = MaximumDeltaPersistenceInterval
                         - (_timeProvider.GetUtcNow() - lastPersistenceAt);
-                    if (remaining > TimeSpan.Zero)
+                    interval = Task.Delay(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, effectiveCancellation.Token);
+                }
+
+                Task completed = interval is null
+                    ? await Task.WhenAny(moveNext, resultReady).ConfigureAwait(false)
+                    : await Task.WhenAny(moveNext, resultReady, interval).ConfigureAwait(false);
+                if (completed == resultReady)
+                {
+                    await resultReady.ConfigureAwait(false);
+                    // 先消费通知再保存；保存期间的新通知仍可触发下一轮，不丢失唤醒。
+                    resultReady = active.Scope.WaitForBusinessQueryResultAsync(resultNotificationCancellation.Token).AsTask();
+                }
+                else if (interval is not null && completed == interval)
+                {
+                    await interval.ConfigureAwait(false);
+                }
+
+                if (completed != moveNext)
+                {
+                    foreach (UnifiedRunEvent value in await PersistAndCollectAsync(
+                                 active,
+                                 yieldedSequence).ConfigureAwait(false))
                     {
-                        Task interval = Task.Delay(
-                            remaining,
-                            effectiveCancellation.Token);
-                        Task completed = await Task.WhenAny(moveNext, interval)
-                            .ConfigureAwait(false);
-                        if (completed == interval)
-                        {
-                            await interval.ConfigureAwait(false);
-                        }
+                        yieldedSequence = value.Sequence;
+                        await writer.WriteAsync(value, CancellationToken.None).ConfigureAwait(false);
                     }
 
-                    if (!moveNext.IsCompleted)
-                    {
-                        foreach (UnifiedRunEvent value in await PersistAndCollectAsync(
-                                     active,
-                                     yieldedSequence).ConfigureAwait(false))
-                        {
-                            yieldedSequence = value.Sequence;
-                            await writer.WriteAsync(value, CancellationToken.None)
-                                .ConfigureAwait(false);
-                        }
-
-                        pendingDeltaEvents = 0;
-                        lastPersistenceAt = _timeProvider.GetUtcNow();
-                        continue;
-                    }
+                    pendingDeltaEvents = 0;
+                    lastPersistenceAt = _timeProvider.GetUtcNow();
+                    continue;
                 }
 
                 if (!await moveNext.ConfigureAwait(false))
@@ -812,7 +825,7 @@ public sealed class UnifiedEntryService
                         active,
                         source,
                         output,
-                        effectiveCancellation.Token).ConfigureAwait(false);
+                        businessResult is null ? effectiveCancellation.Token : CancellationToken.None).ConfigureAwait(false);
 
                     if (source.Kind == AgentRunEventKind.ToolFailed
                         && IsFatalPlatformFailure(source.ErrorCode))
@@ -892,6 +905,23 @@ public sealed class UnifiedEntryService
         finally
         {
             TryCancel(active.Cancellation);
+            TryCancel(resultNotificationCancellation);
+            if (resultReady is not null)
+            {
+                try { await resultReady.ConfigureAwait(false); }
+                catch (Exception exception) when (exception is OperationCanceledException or ChannelClosedException)
+                {
+                    // 释放本次通知等待，不影响不受取消令牌约束的终态持久化。
+                }
+            }
+            if (moveNext is not null)
+            {
+                try { await moveNext.ConfigureAwait(false); }
+                catch (Exception exception) when (exception is OperationCanceledException || terminalStatus != UnifiedRunStatus.Completed)
+                {
+                    // 先等待已取消的读取完成，再 Dispose，避免仍在执行的子流访问已释放作用域。
+                }
+            }
             if (enumerator is not null)
             {
                 try
@@ -1059,6 +1089,13 @@ public sealed class UnifiedEntryService
     /// <returns>表示该异步操作完成的任务。</returns>
     private async Task PersistMainEventAsync(ActiveUnifiedEntryExecution active, AgentRunEvent source, string output, CancellationToken cancellationToken)
     {
+        bool toolResult = source.ToolVersionId.HasValue && source.Kind is
+            AgentRunEventKind.ToolSucceeded or AgentRunEventKind.ToolBlocked or AgentRunEventKind.ToolFailed;
+        // JSON 字符串包装最多产生六倍转义开销；正文仍单独受 MCP 结果预算约束。
+        int eventLimit = toolResult
+            ? (int)Math.Min(int.MaxValue, MaximumStoredPayloadBytes + _limits.MaxMcpResultUtf8Bytes * 6L)
+            : MaximumStoredPayloadBytes;
+        ProtectedUnifiedPayload text = toolResult ? ProtectToolResult(source.Text) : Protect(source.Text);
         string rawPayloadJson = JsonSerializer.Serialize(new
         {
             agentRunId = source.RunId,
@@ -1075,12 +1112,12 @@ public sealed class UnifiedEntryService
             source.KnowledgeBaseCount,
             source.KnowledgeHitCount
         });
-        ProtectedUnifiedPayload rawPayload = Protect(rawPayloadJson);
+        ProtectedUnifiedPayload rawPayload = Protect(rawPayloadJson, eventLimit);
         ProtectedUnifiedPayload persistedPayload = Protect(JsonSerializer.Serialize(new
         {
             agentRunId = source.RunId,
             eventKind = source.Kind.ToString(),
-            text = Protect(source.Text).Content,
+            text = text.Content,
             argumentsJson = Protect(source.ArgumentsJson).Content,
             source.ErrorCode,
             source.ToolVersionId,
@@ -1091,7 +1128,7 @@ public sealed class UnifiedEntryService
             source.ApprovalId,
             source.KnowledgeBaseCount,
             source.KnowledgeHitCount
-        }));
+        }), eventLimit);
         string kind = MapMainEventKind(source);
         await active.Scope.MutateAggregateAndAppendEventAsync(
             aggregate => ApplyMainEvent(aggregate, source, output),
@@ -1204,7 +1241,7 @@ public sealed class UnifiedEntryService
             return aggregate.Details.ToolCalls;
         }
 
-        ProtectedUnifiedPayload result = Protect(source.Text);
+        ProtectedUnifiedPayload result = ProtectToolResult(source.Text);
         UnifiedRunStatus status = source.Kind switch
         {
             AgentRunEventKind.ToolSucceeded => UnifiedRunStatus.Completed,
@@ -1370,37 +1407,15 @@ public sealed class UnifiedEntryService
             if (active.TerminalSnapshot is null)
             {
                 DateTimeOffset finishedAt = _timeProvider.GetUtcNow();
-                IReadOnlyList<BusinessQueryAuthoritativeResult> businessResults =
-                    status == UnifiedRunStatus.Completed
-                        ? active.Scope.GetBusinessQueryResults()
-                        : [];
-                string[] businessContents = businessResults
-                    .Select(value => value.ToPersistedContent())
-                    .ToArray();
-                UnifiedEntryAggregate preFinalization =
-                    await active.Scope.GetAggregateSnapshotAsync(CancellationToken.None)
-                        .ConfigureAwait(false);
-                int existingBusinessBytes = preFinalization.Messages
-                    .Where(value => value.Kind == ConversationMessageKind.BusinessQueryResult)
-                    .Sum(value => value.ContentUtf8Bytes);
-                int newBusinessBytes = businessContents.Sum(Encoding.UTF8.GetByteCount);
-                if (businessContents.Any(value => Encoding.UTF8.GetByteCount(value)
-                        > _businessQueryResultLimits.MaximumResultBytes)
-                    || existingBusinessBytes > _businessQueryResultLimits.MaximumConversationBytes
-                        - newBusinessBytes)
+                // 查询成功是独立事实，不以模型 Completed 为条件；补存取消或失败前已登记的结果。
+                if (!await AppendBusinessQueryResultsAsync(active).ConfigureAwait(false))
                 {
                     status = UnifiedRunStatus.Failed;
                     errorCode = UnifiedEntryErrorCodes.BusinessQueryResultLimitExceeded;
                     output = string.Empty;
-                    businessResults = [];
-                    businessContents = [];
                 }
 
                 ProtectedUnifiedPayload protectedOutput = Protect(output);
-                (BusinessQueryAuthoritativeResult Result, ProtectedUnifiedPayload Payload)[]
-                    protectedBusinessResults = businessResults
-                        .Select((value, index) => (value, Protect(businessContents[index])))
-                        .ToArray();
                 await active.Scope.MutateAggregateAsync(aggregate =>
                 {
                     UnifiedEntryRunRecord entry = aggregate.Details.EntryRun with
@@ -1412,26 +1427,6 @@ public sealed class UnifiedEntryService
                     };
                     IReadOnlyList<ConversationMessageRecord> messages =
                         aggregate.Messages;
-                    foreach ((BusinessQueryAuthoritativeResult result,
-                              ProtectedUnifiedPayload payload) in protectedBusinessResults)
-                    {
-                        messages = messages.Append(new ConversationMessageRecord(
-                            Guid.NewGuid(),
-                            aggregate.Conversation.Id,
-                            ConversationMessageRole.Assistant,
-                            payload.Content,
-                            payload.OriginalSha256,
-                            payload.OriginalUtf8Bytes,
-                            finishedAt)
-                        {
-                            Kind = ConversationMessageKind.BusinessQueryResult,
-                            BusinessQueryId = result.QueryId,
-                            BusinessQueryReceiptJson = result.ReceiptJson,
-                            BusinessQueryPresentationJson = result.PresentationJson,
-                            BusinessQueryIntegritySha256 = result.IntegritySha256
-                        }).ToArray();
-                    }
-
                     if (status == UnifiedRunStatus.Completed
                         || (status is UnifiedRunStatus.Cancelled or UnifiedRunStatus.Failed
                             && !string.IsNullOrWhiteSpace(output)))
@@ -1475,24 +1470,6 @@ public sealed class UnifiedEntryService
                         aggregate.Events,
                         aggregate.PersistenceRevision);
                 }, CancellationToken.None).ConfigureAwait(false);
-
-                foreach ((BusinessQueryAuthoritativeResult result,
-                          ProtectedUnifiedPayload payload) in protectedBusinessResults)
-                {
-                    await active.Scope.AppendEventAsync(sequence =>
-                        new UnifiedRunEventRecord(
-                            Guid.NewGuid(),
-                            active.RunId,
-                            sequence,
-                            active.Scope.CorrelationId,
-                            "business-query-result",
-                            finishedAt,
-                            null,
-                            0,
-                            payload.Content,
-                            payload.OriginalSha256),
-                        CancellationToken.None).ConfigureAwait(false);
-                }
 
                 string terminalKind = status switch
                 {
@@ -1932,6 +1909,54 @@ public sealed class UnifiedEntryService
     }
     #endregion
 
+    #region 保存独立业务查询结果（AppendBusinessQueryResultsAsync）
+    /// <summary>将已校验成功的查询结果原子加入消息及事件，按 queryId 去重，不依赖模型终态。</summary>
+    /// <param name="active">持有已登记查询结果和会话聚合的当前执行。</param>
+    /// <returns>结果在单次及会话预算内时返回 true；超限返回 false，不追加超限结果。</returns>
+    private async Task<bool> AppendBusinessQueryResultsAsync(ActiveUnifiedEntryExecution active)
+    {
+        UnifiedEntryAggregate snapshot = await active.Scope.GetAggregateSnapshotAsync(CancellationToken.None).ConfigureAwait(false);
+        var existingIds = snapshot.Messages
+            .Where(value => value.Kind == ConversationMessageKind.BusinessQueryResult)
+            .Select(value => value.BusinessQueryId).ToHashSet();
+        var pending = active.Scope.GetBusinessQueryResults()
+            .Where(value => existingIds.Add(value.QueryId))
+            .Select(value => (Result: value, Content: value.ToPersistedContent())).ToArray();
+        long existingBytes = snapshot.Messages
+            .Where(value => value.Kind == ConversationMessageKind.BusinessQueryResult)
+            .Sum(value => (long)value.ContentUtf8Bytes);
+        long pendingBytes = pending.Sum(value => (long)Encoding.UTF8.GetByteCount(value.Content));
+        if (pending.Any(value => Encoding.UTF8.GetByteCount(value.Content) > _businessQueryResultLimits.MaximumResultBytes)
+            || existingBytes + pendingBytes > _businessQueryResultLimits.MaximumConversationBytes)
+            return false;
+
+        foreach (var (result, content) in pending)
+        {
+            ProtectedUnifiedPayload payload = Protect(content, _businessQueryResultLimits.MaximumResultBytes);
+            DateTimeOffset occurredAt = _timeProvider.GetUtcNow();
+            await active.Scope.MutateAggregateAndAppendEventAsync(aggregate =>
+                new UnifiedEntryAggregate(
+                    aggregate.Conversation with { UpdatedAtUtc = occurredAt },
+                    aggregate.Messages.Append(new ConversationMessageRecord(
+                        Guid.NewGuid(), aggregate.Conversation.Id, ConversationMessageRole.Assistant,
+                        payload.Content, payload.OriginalSha256, payload.OriginalUtf8Bytes, occurredAt)
+                    {
+                        Kind = ConversationMessageKind.BusinessQueryResult,
+                        BusinessQueryId = result.QueryId,
+                        BusinessQueryReceiptJson = result.ReceiptJson,
+                        BusinessQueryPresentationJson = result.PresentationJson,
+                        BusinessQueryIntegritySha256 = result.IntegritySha256
+                    }).ToArray(),
+                    aggregate.Details, aggregate.Events, aggregate.PersistenceRevision),
+                (aggregate, sequence) => new UnifiedRunEventRecord(
+                    Guid.NewGuid(), active.RunId, sequence, active.Scope.CorrelationId,
+                    "business-query-result", occurredAt, null, 0, payload.Content, payload.OriginalSha256),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        return true;
+    }
+    #endregion
+
     #region 处理（PersistAndCollectAsync）
     /// <summary>
     /// 处理（PersistAndCollectAsync）
@@ -1941,6 +1966,9 @@ public sealed class UnifiedEntryService
     /// <returns>聚合成功持久化后指定序号之后的运行事件。</returns>
     private async Task<IReadOnlyList<UnifiedRunEvent>> PersistAndCollectAsync(ActiveUnifiedEntryExecution active, long afterSequence)
     {
+        if (!await AppendBusinessQueryResultsAsync(active).ConfigureAwait(false))
+            throw new UnifiedEntryException(UnifiedEntryErrorCodes.BusinessQueryResultLimitExceeded,
+                "The business query result exceeds its configured retention budget.");
         UnifiedEntryAggregate snapshot = await active.Scope.PersistAsync(
                 _repository,
                 CancellationToken.None)
@@ -2126,11 +2154,26 @@ public sealed class UnifiedEntryService
     /// </summary>
     /// <param name="value">待校验字节上限并脱敏的原始文本；null 按空字符串处理。</param>
     /// <returns>按持久化载荷上限处理的脱敏内容、原始摘要及字节数。</returns>
-    private static ProtectedUnifiedPayload Protect(string? value) =>
+    private static ProtectedUnifiedPayload Protect(string? value) => Protect(value, MaximumStoredPayloadBytes);
+    #endregion
+
+    #region 按指定字节预算保护载荷（Protect）
+    /// <summary>按指定预算校验并脱敏载荷，保持原始摘要和字节数，不截断业务结果。</summary>
+    /// <param name="value">待保护的文本。</param>
+    /// <param name="maximumBytes">原文及脱敏后内容的最大 UTF-8 字节数。</param>
+    /// <returns>通过预算及编码校验的脱敏载荷。</returns>
+    private static ProtectedUnifiedPayload Protect(string? value, int maximumBytes) =>
         UnifiedEntryPayloadProtector.Protect(
             value,
-            MaximumStoredPayloadBytes,
-            MaximumStoredPayloadBytes);
+            maximumBytes,
+            maximumBytes);
+    #endregion
+
+    #region 保护工具结果（ProtectToolResult）
+    /// <summary>工具返回使用执行范围的 MCP 结果预算，不沿用输入和模型文本的限制。</summary>
+    /// <param name="value">原始工具返回文本。</param>
+    /// <returns>经字节限制、编码和敏感内容保护的工具结果。</returns>
+    private ProtectedUnifiedPayload ProtectToolResult(string? value) => Protect(value, _limits.MaxMcpResultUtf8Bytes);
     #endregion
 
     #region 处理（NonNegative）

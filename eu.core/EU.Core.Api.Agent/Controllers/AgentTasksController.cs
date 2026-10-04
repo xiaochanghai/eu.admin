@@ -54,7 +54,7 @@ public sealed class AgentTasksController(
                 "chat",
                 request.SourceId ?? string.Empty, request.IdempotencyKey ?? string.Empty,
                 request.ConversationId, request.Priority ?? 0, request.MaximumAttempts ?? 3,
-                request.AvailableAtUtc ?? timeProvider.GetUtcNow()), cancellationToken);
+                request.AvailableAtUtc ?? timeProvider.GetUtcNow()) { GroupId = caller.GroupId, CompanyId = caller.CompanyId }, cancellationToken);
             return Success(value);
         }
         catch (AgentTaskException exception) { return FromError(exception.ErrorCode, exception.Message); }
@@ -238,7 +238,7 @@ public sealed class AgentTasksController(
             if (cancelled.CurrentRunId.HasValue)
             {
                 await unifiedEntry.CancelAsync(cancelled.CurrentRunId.Value,
-                    new AgentExecutionIdentity(caller.UserId, caller.TenantId, caller.Permissions, caller.CorrelationId),
+                    new AgentExecutionIdentity(caller.UserId, caller.TenantId, caller.Permissions, caller.CorrelationId) { GroupId = caller.GroupId, CompanyId = caller.CompanyId },
                     cancellationToken);
             }
 

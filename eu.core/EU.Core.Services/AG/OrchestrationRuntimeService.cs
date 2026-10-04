@@ -736,6 +736,8 @@ public sealed class OrchestrationRuntimeService(
                         ?? prepared.Context.McpCallGuard,
                     McpResultGuard = executionOptions?.McpResultGuard
                         ?? prepared.Context.McpResultGuard,
+                    ModelTokenBudget = executionOptions?.ModelTokenBudget
+                        ?? prepared.Context.ModelTokenBudget,
                     ExecutionIdentity = executionOptions?.ExecutionIdentity
                         ?? prepared.Context.ExecutionIdentity,
                     ToolApprovalBinding = executionOptions?.ToolApprovalBinding

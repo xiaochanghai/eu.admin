@@ -1,6 +1,7 @@
 #nullable enable
 
 using EU.Core.IServices.Runtime;
+using System.Threading.Channels;
 
 namespace EU.Core.IServices.UnifiedEntry;
 
@@ -21,6 +22,7 @@ public sealed class UnifiedEntryExecutionScope :
     private readonly CancellationTokenSource _entryCancellation;
     private readonly CancellationTokenSource _entryTimeoutCancellation;
     private readonly TimeProvider _timeProvider;
+    private readonly UnifiedEntryModelTokenBudget? _modelTokenBudget;
     private UnifiedEntryAggregate? _aggregate;
     private long _sequence;
     private int _childCallCount;
@@ -30,6 +32,14 @@ public sealed class UnifiedEntryExecutionScope :
     private int _terminalTransitionCount;
     private readonly Dictionary<Guid, BusinessQueryAuthoritativeResult>
         _businessQueryResults = [];
+    private readonly Channel<bool> _businessQueryResultNotifications = Channel.CreateBounded<bool>(
+        new BoundedChannelOptions(1)
+        {
+            SingleReader = true,
+            SingleWriter = false,
+            AllowSynchronousContinuations = false,
+            FullMode = BoundedChannelFullMode.DropWrite
+        });
     private bool _mainEntered;
     private bool _disposed;
 
@@ -42,12 +52,14 @@ public sealed class UnifiedEntryExecutionScope :
     /// <param name="correlationId">关联当前请求与运行记录的标识。</param>
     /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
     /// <param name="timeProvider">用于读取当前时间的时间提供器。</param>
+    /// <param name="telemetry">宿主提供的可选监控，不改变共享预算策略。</param>
     public UnifiedEntryExecutionScope(
         UnifiedEntryAggregate? aggregate = null,
         UnifiedEntryLimits? limits = null,
         Guid? correlationId = null,
         CancellationToken cancellationToken = default,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        IAgentRuntimeTelemetry? telemetry = null)
     {
         Limits = ValidateLimits(limits ?? UnifiedEntryLimits.Default);
         Guid? aggregateCorrelationId = aggregate?.Details.EntryRun.CorrelationId;
@@ -94,6 +106,9 @@ public sealed class UnifiedEntryExecutionScope :
             _entryTimeoutCancellation.Dispose();
             throw;
         }
+        _modelTokenBudget = Limits.MaxModelTotalTokens is long maximum
+            ? new UnifiedEntryModelTokenBudget(maximum, _entryCancellation.Token, Limits.ModelTokenBudgetWarningPercent, telemetry)
+            : null;
     }
     #endregion
 
@@ -101,6 +116,9 @@ public sealed class UnifiedEntryExecutionScope :
     /// 获取统一入口执行限制。
     /// </summary>
     public UnifiedEntryLimits Limits { get; }
+
+    /// <summary>本作用域唯一的共享模型预算；主、子 Agent 和委派编排使用同一实例。</summary>
+    public IAgentModelTokenBudget? ModelTokenBudget => _modelTokenBudget;
 
     /// <summary>
     /// 获取关联标识。
@@ -174,6 +192,20 @@ public sealed class UnifiedEntryExecutionScope :
                 .ToArray();
         }
     }
+    #endregion
+
+    #region 通知业务查询结果已就绪（NotifyBusinessQueryResultReady）
+    /// <summary>子查询结果及成功事件已登记后，唤醒父入口持久化；合并通知但不丢弃结果。</summary>
+    /// <remarks>结果正文保留在当前作用域；通知只用于唤醒，作用域释放后不再接收。</remarks>
+    internal void NotifyBusinessQueryResultReady() => _businessQueryResultNotifications.Writer.TryWrite(true);
+    #endregion
+
+    #region 等待业务查询结果就绪（WaitForBusinessQueryResultAsync）
+    /// <summary>父入口等待并消费一个结果就绪通知；先到达的通知保留，避免丢失唤醒。</summary>
+    /// <param name="cancellationToken">用于取消当前异步等待的令牌。</param>
+    /// <returns>收到通知时返回 true；取消或作用域释放时结束等待。</returns>
+    internal ValueTask<bool> WaitForBusinessQueryResultAsync(CancellationToken cancellationToken) =>
+        _businessQueryResultNotifications.Reader.ReadAsync(cancellationToken);
     #endregion
 
     #region 处理（NextSequence）
@@ -714,6 +746,8 @@ public sealed class UnifiedEntryExecutionScope :
             _disposed = true;
         }
 
+        _businessQueryResultNotifications.Writer.TryComplete();
+        _modelTokenBudget?.Dispose();
         var failures = new List<Exception>();
         try
         {
@@ -1036,7 +1070,7 @@ public sealed class UnifiedEntryExecutionScope :
     /// 校验（ValidateLimits）
     /// </summary>
     /// <param name="limits">执行次数、时间或载荷的限制配置。</param>
-    /// <returns>通过非负预算及受支持超时检查的限制配置副本；无效配置抛出参数异常。</returns>
+    /// <returns>通过非负调用额度、可选正 Token 额度及受支持超时检查的配置副本；无效配置抛出参数异常。</returns>
     private static UnifiedEntryLimits ValidateLimits(UnifiedEntryLimits limits)
     {
         if (limits.MaxAgentDepth < 0
@@ -1045,12 +1079,14 @@ public sealed class UnifiedEntryExecutionScope :
             || limits.MaxMcpCalls < 0
             || limits.InternalPayloadUtf8Bytes < 0
             || limits.MaxMcpResultUtf8Bytes < 0
+            || limits.MaxModelTotalTokens is < 1
+            || limits.ModelTokenBudgetWarningPercent is < 1 or > 99
             || !IsSupportedTimeout(limits.EntryTimeout)
             || !IsSupportedTimeout(limits.ChildTimeout))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(limits),
-                "Unified entry limits must be non-negative and timeouts must be positive supported CancelAfter values.");
+                "Unified entry call limits must be non-negative, Token limits null or positive, and timeouts positive supported CancelAfter values.");
         }
 
         return limits with { };

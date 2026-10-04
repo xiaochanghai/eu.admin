@@ -280,6 +280,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                     ? new BusinessQueryMcpCallGuard(_scope)
                     : _scope,
                 McpResultGuard = _scope,
+                ModelTokenBudget = _scope.ModelTokenBudget,
                 McpToolCallLimits = BusinessQueryMcpToolCallLimits.Create(
                     _businessQueryPolicy,
                     preparedChildContext.Tools),
@@ -311,6 +312,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                 .ConfigureAwait(false))
             {
                 AgentRunEvent persistedSource = source;
+                bool businessResultRegistered = false;
                 if (source.Kind == AgentRunEventKind.Delta && !controlledBusinessQuery)
                 {
                     output.Append(source.Text);
@@ -324,7 +326,9 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                     {
                         businessQueryCallId = source.ToolCallId;
                     }
-                    if (source.ToolVersionId != businessQueryTool!.ToolVersionId
+                    if (source.RunId != childContext.RunId
+                        || source.ToolCallId is not Guid callId || callId == Guid.Empty
+                        || source.ToolVersionId != businessQueryTool!.ToolVersionId
                         || !string.Equals(
                             source.ToolName,
                             businessQueryTool.ToolName,
@@ -344,14 +348,19 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                     && source.Kind == AgentRunEventKind.ToolSucceeded)
                 {
                     businessQuerySuccesses++;
-                    if (businessQueryAttempts != 1
+                    if (businessQueryViolation.Length > 0
+                        || businessQueryAttempts != 1
                         || businessQuerySuccesses != 1
+                        || source.RunId != childContext.RunId
+                        || source.ToolCallId is not Guid callId || callId == Guid.Empty
                         || source.ToolCallId != businessQueryCallId
                         || source.ToolVersionId != businessQueryTool!.ToolVersionId
+                        || !string.Equals(source.ToolName, businessQueryTool.ToolName, StringComparison.Ordinal)
                         || !BusinessQueryAuthoritativeResult.TryParse(
                             source.Text,
                             _businessQueryPolicy!,
-                            out authoritativeResult))
+                            out authoritativeResult)
+                        || authoritativeResult is null)
                     {
                         authoritativeResult = null;
                         if (businessQueryViolation.Length == 0)
@@ -363,6 +372,14 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                                     ? businessError
                                     : UnifiedEntryErrorCodes.BusinessQueryEvidenceRequired;
                         }
+                    }
+                    else
+                    {
+                        // 成功查询是独立事实；不能等子模型及其终态审计完成后才登记。
+                        if (!_scope.TryRegisterBusinessQueryResult(childContext.RunId, authoritativeResult))
+                            throw new UnifiedEntryException(UnifiedEntryErrorCodes.BusinessQueryEvidenceRequired,
+                                "The controlled business query evidence could not be registered.");
+                        businessResultRegistered = true;
                     }
                 }
 
@@ -411,19 +428,21 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                     output.ToString(),
                     arguments.Reason,
                     controlledBusinessQuery,
-                    IsTerminal(persistedSource.Kind)
+                    IsTerminal(persistedSource.Kind) || businessResultRegistered
                         ? CancellationToken.None
                         : effectiveToken).ConfigureAwait(false);
+                if (businessResultRegistered)
+                {
+                    // 成功事件已入聚合再通知，父入口无需等待子流或终态审计返回。
+                    _scope.NotifyBusinessQueryResultReady();
+                }
             }
 
             if (terminalStatus == UnifiedRunStatus.Completed)
             {
                 if (controlledBusinessQuery)
                 {
-                    if (authoritativeResult is null
-                        || !_scope.TryRegisterBusinessQueryResult(
-                            childContext.RunId,
-                            authoritativeResult))
+                    if (authoritativeResult is null)
                     {
                         return Failure(
                             UnifiedEntryErrorCodes.BusinessQueryEvidenceRequired,
@@ -592,6 +611,15 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
         bool controlledBusinessQuery,
         CancellationToken cancellationToken)
     {
+        bool toolResult = source.ToolVersionId.HasValue && source.Kind is
+            AgentRunEventKind.ToolSucceeded or AgentRunEventKind.ToolBlocked or AgentRunEventKind.ToolFailed;
+        // 工具正文独立受 MCP 结果预算保护，事件包装另计最多六倍 JSON 转义开销。
+        int eventLimit = toolResult
+            ? (int)Math.Min(int.MaxValue, _scope.Limits.InternalPayloadUtf8Bytes + _scope.Limits.MaxMcpResultUtf8Bytes * 6L)
+            : _scope.Limits.InternalPayloadUtf8Bytes;
+        ProtectedUnifiedPayload protectedText = toolResult
+            ? Protect(source.Text, _scope.Limits.MaxMcpResultUtf8Bytes)
+            : Protect(source.Text);
         ProtectedUnifiedPayload protectedOutput = Protect(accumulatedOutput);
         UnifiedRunStatus status = source.Kind switch
         {
@@ -664,13 +692,13 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                 ? reason
                 : string.Empty
         });
-        ProtectedUnifiedPayload rawPayload = Protect(rawPayloadJson);
+        ProtectedUnifiedPayload rawPayload = Protect(rawPayloadJson, eventLimit);
         string persistedPayloadJson = JsonSerializer.Serialize(new
         {
             agentRunId = childRunId,
             agentVersionId = lease.AgentVersionId,
             eventKind = source.Kind.ToString(),
-            text = Protect(source.Text).Content,
+            text = protectedText.Content,
             argumentsJson = Protect(source.ArgumentsJson).Content,
             source.ErrorCode,
             source.ToolVersionId,
@@ -691,7 +719,7 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
                 ? Protect(reason).Content
                 : string.Empty
         });
-        ProtectedUnifiedPayload persistedPayload = Protect(persistedPayloadJson);
+        ProtectedUnifiedPayload persistedPayload = Protect(persistedPayloadJson, eventLimit);
         Guid entryRunId = (await _scope.GetAggregateSnapshotAsync(
             cancellationToken).ConfigureAwait(false)).Details.EntryRun.Id;
         await _scope.AppendEventAsync(sequence => new UnifiedRunEventRecord(
@@ -840,11 +868,19 @@ public sealed class DelegateToAgentTool : IAgentInternalTool
     /// </summary>
     /// <param name="value">待校验字节上限并脱敏的原始文本；null 按空字符串处理。</param>
     /// <returns>按当前执行范围内部载荷上限处理的脱敏内容、原始摘要及字节数。</returns>
-    private ProtectedUnifiedPayload Protect(string? value) =>
+    private ProtectedUnifiedPayload Protect(string? value) => Protect(value, _scope.Limits.InternalPayloadUtf8Bytes);
+    #endregion
+
+    #region 按指定字节预算保护载荷（Protect）
+    /// <summary>按指定预算校验并脱敏载荷，保留原始摘要和字节数，不截断工具结果。</summary>
+    /// <param name="value">待保护的文本。</param>
+    /// <param name="maximumBytes">原文及脱敏后内容允许的最大 UTF-8 字节数。</param>
+    /// <returns>通过编码、字节预算及敏感内容保护的载荷。</returns>
+    private static ProtectedUnifiedPayload Protect(string? value, int maximumBytes) =>
         UnifiedEntryPayloadProtector.Protect(
             value,
-            _scope.Limits.InternalPayloadUtf8Bytes,
-            _scope.Limits.InternalPayloadUtf8Bytes);
+            maximumBytes,
+            maximumBytes);
     #endregion
 
     #region 取消（CancellationFailure）

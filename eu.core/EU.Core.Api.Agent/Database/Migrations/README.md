@@ -2,6 +2,26 @@
 
 These baseline scripts create the Agent module in the shared EU.Core database.
 
+Optional shared tenant Token quotas: before enabling `AgentUserTokenQuota`, stop
+writes, back up, and apply SQL Server `075_add_user_token_quota.sql` or MySQL 8
+`013_add_user_token_quota.sql` in the existing main SqlSugar database. These add
+two BasePoco tables with GroupId + CompanyId owner/period keys and pending reservations. The reservation keeps `ConsumerUserId` only as request attribution; it is not part of the balance owner. The tables reuse inherited GroupId/CompanyId columns, not ITenantEntity or a TenantId quota column.
+They never reset balances, expire/refund pending requests, or run at startup.
+Incompatible existing schemas stop instead of being converted. MySQL DDL
+auto-commits; inspect failures and rerun. Roll back by disabling both period
+limits and restarting (disabled calls are not billed by this ledger), retaining
+both tables and all reservations. Re-enabling requires an explicit policy for
+usage during the disabled interval. Management is a separate opt-in migration
+described below; automatic reconciliation is never performed.
+
+Run usage extension: after normalizing Agent run audits, apply SQL Server
+`074_add_agent_run_usage.sql`, or MySQL `012_add_agent_run_usage.sql`, **before**
+deploying the runtime usage feature. Both scripts only add nullable fields; old
+usage remains unknown. MySQL's legacy `001` DocumentJson audit table must be
+normalized first and is explicitly rejected by `012`. For field semantics,
+rollout and non-destructive rollback, see
+[`Agent运行用量与监控`](../../../../doc/backend/Agent运行用量与监控.md).
+
 - MySQL: 8.0.13 or later
 - SQL Server: 2014 or later
 - Table names use the EU.Core `Ag` module prefix.
@@ -501,3 +521,49 @@ EU.Core SqlSugar data source. The legacy SQLite/InMemory repository selection an
 its separate SQL Server connection-string resolver are no longer part of runtime
 persistence. `AgentStorage` now contains only the local Skill root setting and
 must not be used to select a second relational data source.
+
+## User Token quota management
+
+Quota management is disabled by default. After SQL Server `075` / MySQL `013`,
+back up and stop writes, then manually run `SqlServer/076_add_user_token_quota_management.sql`
+or `MySql/014_add_user_token_quota_management.sql`. These add the BaseEntity-complete
+policy and append-only adjustment audit tables without modifying current consumption.
+Scripts are repeatable and reject incompatible existing columns; MySQL DDL auto-commits.
+Configure explicit GroupId/CompanyId/UserId administrator combinations before enabling
+`AgentUserTokenQuota:ManagementEnabled`. No automatic migration or refund is performed.
+
+Rollback by stopping writes and disabling management / restoring matching binaries,
+retaining all policy, ledger and audit data. Disabling management restores host defaults;
+verify those limits before rollback to avoid unintentionally loosening tenant quotas.
+See [usage and quota guide](../../../../doc/backend/Agent运行用量与监控.md) for ownership,
+optimistic concurrency, reconciliation evidence and terminal-run requirements.
+
+
+
+### Quota ownership correction and legacy empty tables
+
+Scripts 075/076 (SQL Server) and 013/014 (MySQL) use GroupId + CompanyId for
+owner indexes, policy overrides, reconciliation and balances. The administrator
+configuration still includes UserId because it identifies who may operate the tenant quota.
+All inherited BaseEntity columns retain their mapping. Business commands require
+nonempty group/company GUIDs from the trusted login context. Deferred tasks preserve
+their original group/company in existing task columns; missing legacy scope fails closed
+when quotas are enabled. Other Agent TenantId contracts are unchanged.
+
+For a fresh database, run corrected 075 followed by 076. If an old preview already
+created TenantId or per-user quota columns, stop Agent writes, back up, then run SQL Server
+077 or MySQL 015 before rerunning 075/076 or 013/014. The conversion counts every row,
+including logically deleted rows, and proceeds only when every existing quota table is
+empty. It removes only recognized legacy owner columns/indexes, renames reservation
+UserId to ConsumerUserId, and recreates GroupId + CompanyId indexes. Custom dependencies,
+unknown indexes or any row abort before conversion. SQL Server performs the conversion in
+one transaction; MySQL DDL auto-commits, so its preflight checks and backup are mandatory.
+No DELETE, DROP TABLE, owner inference, balance reset or refund is performed.
+
+Populated legacy tables require a separate reviewed upgrade that preserves owner mapping,
+period IDs, reservation references and idempotency receipts; 077/015 are not that upgrade.
+Roll back failed SQL Server conversion through its transaction; after a
+successful cutover, disable quotas/management before any application rollback. Do not
+start old TenantId-based quota code against the converted schema. Restore the pre-cutover
+schema backup only while writes are stopped and before new group/company ledger data is
+created; otherwise reconcile and preserve new records first. Never drop a live ledger.

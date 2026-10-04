@@ -23,6 +23,12 @@ public sealed class UnifiedEntryOptions
 
     public int MaximumMcpResultBytes { get; init; } = 4_194_304;
 
+    /// <summary>一次统一入口执行树（含主、子 Agent 和编排节点）的模型总 Token 阈值；null 不启用。</summary>
+    public long? MaximumModelTotalTokens { get; init; }
+
+    /// <summary>执行树预算的已知累计用量预警百分比，默认 80；null 只关闭接近上限预警。</summary>
+    public int? TokenBudgetWarningPercent { get; init; } = 80;
+
     public UnifiedEntryLimits ToLimits() =>
         new(
             MaximumDelegationDepth,
@@ -32,7 +38,9 @@ public sealed class UnifiedEntryOptions
             TimeSpan.FromSeconds(EntryTimeoutSeconds),
             TimeSpan.FromSeconds(ChildTimeoutSeconds),
             MaximumInternalPayloadBytes,
-            MaximumMcpResultBytes);
+            MaximumMcpResultBytes,
+            MaximumModelTotalTokens,
+            TokenBudgetWarningPercent);
 }
 
 public sealed class UnifiedEntryOptionsValidator
@@ -58,6 +66,16 @@ public sealed class UnifiedEntryOptionsValidator
         {
             return ValidateOptionsResult.Fail(
                 "UnifiedEntry:MaximumMcpResultBytes must be from 4096 through 16777216.");
+        }
+
+        if (options.MaximumModelTotalTokens is < 1)
+        {
+            return ValidateOptionsResult.Fail("UnifiedEntry:MaximumModelTotalTokens must be null or positive.");
+        }
+
+        if (options.TokenBudgetWarningPercent is < 1 or > 99)
+        {
+            return ValidateOptionsResult.Fail("UnifiedEntry:TokenBudgetWarningPercent must be null or from 1 through 99.");
         }
 
         if (!IsSupportedTimeout(options.EntryTimeoutSeconds)

@@ -20,6 +20,7 @@
 - Agent 数据库同步：[`Agent数据库同步.md`](Agent数据库同步.md)
 - Agent 统一认证：[`Agent统一认证.md`](Agent统一认证.md)
 - Agent 请求体与日志边界：[`Agent请求体日志边界.md`](Agent请求体日志边界.md)
+- Agent 运行用量与监控：[`Agent运行用量与监控.md`](Agent运行用量与监控.md)（Token 审计、单次/执行树预算、集团公司共享日/月配额及余额入口、管理员额度设置/人工对账、告警规则、固定桶指标、迁移与回滚）
 - 通用 BusinessQuery 项目适配：[`BusinessQuery项目适配.md`](BusinessQuery项目适配.md)
 - WorkBuddy 本机接入执行方案：[`WorkBuddy本机接入执行方案.md`](WorkBuddy本机接入执行方案.md)（同一 MCP 宿主下 Supplier 与 BusinessQuery 双端点接入，待实施）
 - SmModule 页面元数据专题索引：[`SmModule/README.md`](SmModule/README.md)

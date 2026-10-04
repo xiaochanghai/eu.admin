@@ -7,6 +7,7 @@ public static class AgentAuthorizationPolicies
     public const string Chat = "AgentChat";
     public const string AuditRead = "AgentAuditRead";
     public const string HistoryRead = "AgentHistoryRead";
+    public const string QuotaManage = "AgentQuotaManage";
     public const string ApprovalRead = "AgentApprovalRead";
     public const string ApprovalDecide = "AgentApprovalDecide";
     public const string ApprovalDecideHighRisk = "AgentApprovalDecideHighRisk";

@@ -78,6 +78,7 @@ builder.Services.AddHttpContextSetup();
 builder.Services.AddScoped<ICallerContext, HttpCallerContext>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<AgentMetrics>();
+builder.Services.AddSingleton<IAgentRuntimeTelemetry>(provider => provider.GetRequiredService<AgentMetrics>());
 builder.Services.AddSingleton<HostDrainState>();
 builder.Services.AddSingleton<
     IAuthorizationMiddlewareResultHandler,
@@ -224,8 +225,12 @@ builder.Services.AddSingleton(services =>
         execution.MaximumToolArgumentBytes,
         execution.MaximumInternalToolResultBytes,
         execution.MaximumInternalToolCalls,
-        execution.MaximumMcpToolCalls);
+        execution.MaximumMcpToolCalls,
+        execution.MaximumModelOutputTokens,
+        execution.MaximumRunTotalTokens,
+        execution.TokenBudgetWarningPercent);
 });
+builder.Services.AddSingleton<IAgentUserTokenQuota, AgUserTokenQuotaProvider>();
 builder.Services.AddSingleton<IAgentRuntimeEngine, MicrosoftAgentRuntimeEngine>();
 builder.Services.AddSingleton<IModelJudgeEngine, MicrosoftExtensionsModelJudgeEngine>();
 builder.Services.AddSingleton<ControlledSkillFileStore>(services =>

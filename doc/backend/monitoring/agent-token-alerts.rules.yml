@@ -1,0 +1,38 @@
+# 示例规则，部署方按实际抓取标签限制到 Agent 服务；不含通知地址或凭据。
+# signal 为事件计数，不是当前余额/冻结状态。只有明确接入 Alertmanager 后才会发送通知。
+groups:
+  - name: eu-agent-token-budget
+    rules:
+      - alert: AgentTokenBudgetWarning
+        expr: >-
+          sum by (job, instance, scope) (increase(agent_runtime_token_budget_signals_total{signal="Warning"}[10m])) > 0
+          or
+          sum by (job, instance, scope) (agent_runtime_token_budget_signals_total{signal="Warning"} > 0 unless agent_runtime_token_budget_signals_total{signal="Warning"} offset 10m) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent Token 预算接近阈值"
+          description: "近期出现预算预警，查看运行审计；指标不是账单，不包含用户信息。"
+      - alert: AgentTokenBudgetBlocked
+        expr: >-
+          sum by (job, instance, scope, signal) (increase(agent_runtime_token_budget_signals_total{signal=~"Exhausted|Exceeded|UsageUnavailable"}[10m])) > 0
+          or
+          sum by (job, instance, scope, signal) (agent_runtime_token_budget_signals_total{signal=~"Exhausted|Exceeded|UsageUnavailable"} > 0 unless agent_runtime_token_budget_signals_total{signal=~"Exhausted|Exceeded|UsageUnavailable"} offset 10m) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent Token 预算阻止了请求"
+          description: "请核对上限和供应商 usage 支持，不要将缺失用量当作零。"
+      - alert: AgentSharedQuotaNeedsAttention
+        expr: >-
+          sum by (job, instance, signal) (increase(agent_user_token_quota_signals_total[10m])) > 0
+          or
+          sum by (job, instance, signal) (agent_user_token_quota_signals_total > 0 unless agent_user_token_quota_signals_total offset 10m) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "用户共享 Token 额度需要处理"
+          description: "Rejected 为不足，Frozen 为未知用量，Unavailable 为依赖失败；用授权管理入口核查，不自动退款。"

@@ -177,6 +177,7 @@ public sealed class RunOrchestrationTool : IAgentInternalTool
                         _scope)
                     {
                         McpResultGuard = _scope,
+                        ModelTokenBudget = _scope.ModelTokenBudget,
                         ExecutionIdentity = _executionIdentity,
                         ToolApprovalBinding = _toolApprovalBinding,
                         ToolApprovalHandler = _toolApprovalHandler

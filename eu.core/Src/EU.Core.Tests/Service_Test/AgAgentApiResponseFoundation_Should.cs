@@ -14,7 +14,7 @@ public sealed class AgAgentApiResponseFoundation_Should
     [Fact]
     public void Register_every_fixed_error_code_with_unique_business_status()
     {
-        Assert.Equal(182, AgentApiErrorCatalog.All.Count);
+        Assert.Equal(189, AgentApiErrorCatalog.All.Count);
         Assert.Equal(
             AgentApiErrorCatalog.All.Count,
             AgentApiErrorCatalog.All.Keys.Distinct(StringComparer.Ordinal).Count());
@@ -35,6 +35,13 @@ public sealed class AgAgentApiResponseFoundation_Should
     [InlineData("KNOWLEDGE_SERVICE_UNAVAILABLE", 640010, 503)]
     [InlineData("ORCHESTRATION_RUN_INPUT_INVALID", 650010, 400)]
     [InlineData("MODEL_INVOCATION_FAILED", 660003, 502)]
+    [InlineData("MODEL_TOKEN_BUDGET_EXCEEDED", 660040, 429)]
+    [InlineData("MODEL_TOKEN_USAGE_UNAVAILABLE", 660041, 503)]
+    [InlineData("MODEL_TOKEN_QUOTA_EXCEEDED", 660042, 429)]
+    [InlineData("MODEL_TOKEN_QUOTA_UNAVAILABLE", 660043, 503)]
+    [InlineData("MODEL_TOKEN_QUOTA_INVALID", 660044, 400)]
+    [InlineData("MODEL_TOKEN_QUOTA_CONFLICT", 660045, 409)]
+    [InlineData("MODEL_TOKEN_QUOTA_NOT_FOUND", 660046, 404)]
     [InlineData("MODEL_JUDGE_EXECUTION_FAILED", 670029, 502)]
     [InlineData("AGENT_AUDIT_UNAVAILABLE", 680001, 503)]
     [InlineData("UNEXPECTED_ERROR", 690001, 500)]

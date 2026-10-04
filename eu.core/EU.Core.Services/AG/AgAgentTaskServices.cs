@@ -74,6 +74,8 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
             ID = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
+            GroupId = command.GroupId,
+            CompanyId = command.CompanyId,
             Title = command.Title.Trim(),
             Description = command.Description?.Trim() ?? string.Empty,
             Input = normalizedInput,
@@ -1004,7 +1006,8 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
     /// <param name="inputSha256">输入内容的 SHA-256 摘要。</param>
     private static void EnsureIdempotencyMatch(AgAgentTask existing, CreateAgentTaskCommand command, string sourceType, string inputSha256)
     {
-        if (!string.Equals(existing.UserId, command.UserId.Trim(), StringComparison.Ordinal) ||
+        if (existing.GroupId != command.GroupId || existing.CompanyId != command.CompanyId ||
+            !string.Equals(existing.UserId, command.UserId.Trim(), StringComparison.Ordinal) ||
             !string.Equals(existing.Title, command.Title.Trim(), StringComparison.Ordinal) ||
             !string.Equals(existing.Description ?? string.Empty, command.Description?.Trim() ?? string.Empty, StringComparison.Ordinal) ||
             !string.Equals(existing.SourceType, sourceType, StringComparison.Ordinal) ||
@@ -1150,7 +1153,7 @@ public sealed class AgAgentTaskServices : BaseServices<AgAgentTask>, IAgAgentTas
         value.CheckpointKind ?? string.Empty,
         value.CheckpointJson ?? string.Empty,
         value.LastErrorCode ?? string.Empty,
-        value.LastErrorMessage ?? string.Empty);
+        value.LastErrorMessage ?? string.Empty) { GroupId = value.GroupId, CompanyId = value.CompanyId };
     #endregion
 
     #region 映射（MapAttempt）

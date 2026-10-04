@@ -58,7 +58,9 @@ public enum AgentRunEventKind
     /// <summary>运行失败。</summary>
     Failed,
     /// <summary>运行已取消。</summary>
-    Cancelled
+    Cancelled,
+    /// <summary>运行引擎内部的模型统计事件，由运行服务消费，不转发到 SSE。</summary>
+    ModelUsage
 }
 
 /// <summary>
@@ -127,6 +129,10 @@ public sealed record AgentRunEvent(
     /// 知识检索命中数量。
     /// </summary>
     public int KnowledgeHitCount { get; init; }
+
+    /// <summary>引擎报告的用量，仅供运行服务保存审计，不写入聊天事件。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AgentModelUsage? ModelUsage { get; init; }
 }
 
 /// <summary>
@@ -170,7 +176,14 @@ public sealed record AgentRunAuditRecord(
     int OutputCharacters,
     int ToolCallCount,
     string ErrorCode,
-    IReadOnlyList<AgentToolCallAuditRecord> ToolCalls);
+    IReadOnlyList<AgentToolCallAuditRecord> ToolCalls)
+{
+    /// <summary>执行使用的模型配置编码；历史记录可能为空。</summary>
+    public string? ModelProfileId { get; init; }
+
+    /// <summary>模型返回的用量及耗时；历史记录或未调用模型时为空。</summary>
+    public AgentModelUsage? ModelUsage { get; init; }
+}
 
 /// <summary>
 /// Agent 工具调用的审计记录。
@@ -244,6 +257,11 @@ public sealed record AgentRunContext(
     /// MCP 调用结果守卫。
     /// </summary>
     public IAgentMcpResultGuard? McpResultGuard { get; init; }
+
+    /// <summary>当前执行树共享的模型预算；空值保持单运行预算，不序列化进持久记录或事件。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public IAgentModelTokenBudget? ModelTokenBudget { get; init; }
 
     /// <summary>
     /// 各 MCP 工具的调用限制。
@@ -381,6 +399,11 @@ public sealed record AgentRunExecutionOptions(
     /// </summary>
     public IAgentMcpResultGuard? McpResultGuard { get; init; }
 
+    /// <summary>沿委派编排传递的同一执行树模型预算，不重新分配额度。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    public IAgentModelTokenBudget? ModelTokenBudget { get; init; }
+
     /// <summary>
     /// 当前执行身份信息。
     /// </summary>
@@ -458,6 +481,14 @@ public static class AgentRunErrorCodes
         "MODEL_OUTPUT_EVENT_LIMIT_EXCEEDED";
     /// <summary>表示 <c>ModelInputLimitExceeded</c> 场景的错误码。</summary>
     public const string ModelInputLimitExceeded = "MODEL_INPUT_LIMIT_EXCEEDED";
+    /// <summary>模型报告的用量超过 Token 预算、累计预算耗尽或响应因 Token 限制截断。</summary>
+    public const string ModelTokenBudgetExceeded = "MODEL_TOKEN_BUDGET_EXCEEDED";
+    /// <summary>启用累计 Token 预算时没有可信的总 Token 统计，禁止继续执行模型循环。</summary>
+    public const string ModelTokenUsageUnavailable = "MODEL_TOKEN_USAGE_UNAVAILABLE";
+    /// <summary>集团公司共享日/月额度不足，或实际请求总用量超过本次预占阈值。</summary>
+    public const string ModelTokenQuotaExceeded = "MODEL_TOKEN_QUOTA_EXCEEDED";
+    /// <summary>集团公司共享 Token 账本或可信所有者身份不可用，禁止发出新模型请求。</summary>
+    public const string ModelTokenQuotaUnavailable = "MODEL_TOKEN_QUOTA_UNAVAILABLE";
     /// <summary>表示 <c>OutputInvalid</c> 场景的错误码。</summary>
     public const string OutputInvalid = "AGENT_OUTPUT_INVALID";
 }

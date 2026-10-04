@@ -31,7 +31,7 @@ public sealed class ChatAgentTaskExecutor(
             task.UserId,
             task.TenantId,
             new HashSet<string>(_options.ExecutionPermissions ?? [], StringComparer.Ordinal),
-            $"agent-task:{task.Id:D}");
+            $"agent-task:{task.Id:D}") { GroupId = task.GroupId, CompanyId = task.CompanyId };
         UnifiedEntryPreparationResult preparation = await unifiedEntry.PrepareAsync(
             task.Input, task.ConversationId, identity, cancellationToken);
         if (!preparation.Succeeded)

@@ -7498,6 +7498,27 @@
             运行错误码
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.ModelProfileId">
+            <summary>执行使用的模型配置编码，历史记录可为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.InputTokens">
+            <summary>模型报告的输入 Token 数，未报告时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.OutputTokens">
+            <summary>模型报告的输出 Token 数，未报告时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.TotalTokens">
+            <summary>模型报告的总 Token 数，不按字符数推算。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.TokenUsageStatus">
+            <summary>Token 统计完整性：Unknown、Partial 或 Reported。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.ModelDurationMilliseconds">
+            <summary>模型循环耗时（毫秒），包含循环内的工具等待。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgAgentRunAudit.TimeToFirstTextMilliseconds">
+            <summary>首段非空文本等待时间（毫秒），没有文本时为空。</summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.AgAgentTask">
             <summary>Durable Agent task.</summary>
         </member>
@@ -9454,6 +9475,108 @@
         </member>
         <member name="T:EU.Core.Model.Entity.AgUnifiedToolCall">
             <summary>统一入口工具调用明细表。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment">
+            <summary>额度设置及人工对账的追加式审计，和修改在同一事务提交。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.OperatorId">
+            <summary>执行人工操作的认证用户。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.Kind">
+            <summary>Policy 或 Reconcile，不接受外部自定义操作种类。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.TargetId">
+            <summary>设置记录或预占记录标识。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.CommandHash">
+            <summary>命令哈希，检测幂等标识被不同命令复用。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.BeforeJson">
+            <summary>修改前快照，内部有界结构。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.ResultJson">
+            <summary>修改后回执，重复提交的事实源。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.Reason">
+            <summary>人工修改原因。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.EvidenceReference">
+            <summary>核查依据引用，不存放凭据或供应商账单正文。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaAdjustment.AppliedAtUtc">
+            <summary>事务应用时间（UTC）。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUserTokenQuotaPeriod">
+            <summary>集团、公司共享的日/月 Token 账本，所有用户和 Agent 共用同一周期。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.PeriodKind">
+            <summary>0 为自然日，1 为自然月。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.PeriodKey">
+            <summary>本地日期及配置时区组成的周期键。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.StartUtc">
+            <summary>周期起点（含），UTC。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.EndUtc">
+            <summary>周期终点（不含），UTC。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.UsedTokens">
+            <summary>已经按供应商完整响应结算的实际总 Token。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.ReservedTokens">
+            <summary>尚未结算的预占量，重启后保留，不自动过期退还。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.HasUnknownUsage">
+            <summary>是否存在未知用量；为真时禁止当前周期新增调用。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPeriod.Revision">
+            <summary>乐观并发版本，防止多请求丢失更新。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUserTokenQuotaPolicy">
+            <summary>同一集团、公司内所有用户和 Agent 共用的额度覆盖设置。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPolicy.UseDefaults">
+            <summary>使用宿主默认设置。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPolicy.DailyTotalTokens">
+            <summary>日额度，未启用时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPolicy.MonthlyTotalTokens">
+            <summary>月额度，未启用时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPolicy.RequestReservationTokens">
+            <summary>每次请求预占量。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaPolicy.Revision">
+            <summary>乐观并发版本，每次修改递增。</summary>
+        </member>
+        <member name="T:EU.Core.Model.Entity.AgUserTokenQuotaReservation">
+            <summary>一次供应商模型请求的预占及幂等结算记录。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.ConsumerUserId">
+            <summary>实际发起模型请求的用户，仅用于追踪，不参与额度归属。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.RunId">
+            <summary>实际发出供应商请求的运行标识，不用于配额分组。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.DailyPeriodId">
+            <summary>原始日周期，未配置日额度时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.MonthlyPeriodId">
+            <summary>原始月周期，未配置月额度时为空。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.ReservedTokens">
+            <summary>本次请求预占量。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.ActualTokens">
+            <summary>实际报告的总 Token，未知或未完成时为空，不能当成零。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.State">
+            <summary>0 预占，1 已开始，2 已结算，3 用量未知，4 未开始已释放，5 人工核实已结算。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.AgUserTokenQuotaReservation.SettledAtUtc">
+            <summary>最终结算或释放时间（UTC），处理中为空。</summary>
         </member>
         <member name="T:EU.Core.Model.Entity.BdColor">
             <summary>

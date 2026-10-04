@@ -64,6 +64,8 @@ public sealed record UnifiedEntryLimits
     /// <param name="ChildTimeout">子 Agent 执行超时；未指定时使用默认值。</param>
     /// <param name="InternalPayloadUtf8Bytes">内部载荷允许的最大 UTF-8 字节数。</param>
     /// <param name="MaxMcpResultUtf8Bytes">单次 MCP 结果允许的最大 UTF-8 字节数。</param>
+    /// <param name="MaxModelTotalTokens">主 Agent、委派 Agent 及编排节点共享的总 Token 阈值；null 不启用。</param>
+    /// <param name="ModelTokenBudgetWarningPercent">共享预算预警百分比，1–99，默认 80；null 只关闭预警。</param>
     public UnifiedEntryLimits(
         int MaxAgentDepth = 4,
         int MaxChildCalls = 8,
@@ -72,7 +74,9 @@ public sealed record UnifiedEntryLimits
         TimeSpan? EntryTimeout = null,
         TimeSpan? ChildTimeout = null,
         int InternalPayloadUtf8Bytes = 32_768,
-        int MaxMcpResultUtf8Bytes = 4_194_304)
+        int MaxMcpResultUtf8Bytes = 4_194_304,
+        long? MaxModelTotalTokens = null,
+        int? ModelTokenBudgetWarningPercent = 80)
     {
         this.MaxAgentDepth = MaxAgentDepth;
         this.MaxChildCalls = MaxChildCalls;
@@ -82,6 +86,8 @@ public sealed record UnifiedEntryLimits
         this.ChildTimeout = ChildTimeout ?? TimeSpan.FromSeconds(120);
         this.InternalPayloadUtf8Bytes = InternalPayloadUtf8Bytes;
         this.MaxMcpResultUtf8Bytes = MaxMcpResultUtf8Bytes;
+        this.MaxModelTotalTokens = MaxModelTotalTokens;
+        this.ModelTokenBudgetWarningPercent = ModelTokenBudgetWarningPercent;
     }
     #endregion
 
@@ -124,6 +130,12 @@ public sealed record UnifiedEntryLimits
     /// 单次 MCP 结果允许的最大 UTF-8 字节数。
     /// </summary>
     public int MaxMcpResultUtf8Bytes { get; init; }
+
+    /// <summary>整个执行树模型上报的累计总 Token 阈值；null 不启用，非空必须大于零。</summary>
+    public long? MaxModelTotalTokens { get; init; }
+
+    /// <summary>执行树已知用量预警百分比；null 关闭预警，不放宽总 Token 阈值。</summary>
+    public int? ModelTokenBudgetWarningPercent { get; init; }
 
     public static UnifiedEntryLimits Default { get; } = new();
 }

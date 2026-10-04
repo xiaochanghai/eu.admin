@@ -122,7 +122,15 @@ public sealed record AgentTaskRecord(
     string CheckpointKind,
     string CheckpointJson,
     string LastErrorCode,
-    string LastErrorMessage);
+    string LastErrorMessage)
+{
+    /// <summary>持久化任务的可信集团归属，仅用于后台执行额度，不扩展 HTTP 响应。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Guid? GroupId { get; init; }
+    /// <summary>持久化任务的可信公司归属，仅用于后台执行额度。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Guid? CompanyId { get; init; }
+}
 
 /// <summary>
 /// Agent 任务单次执行尝试记录。
@@ -199,7 +207,13 @@ public sealed record CreateAgentTaskCommand(
     Guid? ConversationId,
     int Priority,
     int MaximumAttempts,
-    DateTimeOffset AvailableAtUtc);
+    DateTimeOffset AvailableAtUtc)
+{
+    /// <summary>由调用边界提供的集团归属，不是客户端请求字段。</summary>
+    public Guid? GroupId { get; init; }
+    /// <summary>由调用边界提供的公司归属，创建后不修改。</summary>
+    public Guid? CompanyId { get; init; }
+}
 
 /// <summary>
 /// Agent 任务的查询条件。

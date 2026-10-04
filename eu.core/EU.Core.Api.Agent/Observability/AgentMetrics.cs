@@ -3,6 +3,8 @@ using System.Diagnostics.Metrics;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using EU.Core.IServices.Runtime;
+using Microsoft.Extensions.Logging;
 
 namespace EU.Core.Api.Agent.Observability;
 
@@ -28,7 +30,10 @@ public enum AgentResilienceEvent
     HostDrainRejected
 }
 
-public sealed class AgentMetrics : IDisposable
+/// <summary>有界共享额度信号，不把用户、租户或额度作为指标标签。</summary>
+public enum AgentUserQuotaSignal { Rejected, Frozen, Unavailable }
+
+public sealed class AgentMetrics : IDisposable, IAgentRuntimeTelemetry
 {
     public const string MeterName = "EU.Core.Api.Agent";
 
@@ -42,9 +47,41 @@ public sealed class AgentMetrics : IDisposable
     private readonly ConcurrentDictionary<CompletionKey, CompletionStats> _completed = new();
     private readonly ConcurrentDictionary<AgentResilienceEvent, long> _resilience = new();
     private long _activeExpensive;
+    private readonly Counter<long> _runs;
+    private readonly Counter<long> _tokens;
+    private readonly Counter<long> _usageReports;
+    private readonly Counter<long> _tools;
+    private readonly Histogram<double> _runDuration;
+    private readonly Histogram<double> _modelDuration;
+    private readonly Histogram<double> _firstTextDuration;
+    private readonly Histogram<double> _toolDuration;
+    private readonly ConcurrentDictionary<AgentRunStatus, long> _runCounts = new();
+    private readonly ConcurrentDictionary<AgentTokenUsageStatus, long> _usageCounts = new();
+    private readonly ConcurrentDictionary<AgentRunEventKind, long> _toolCounts = new();
+    private readonly ConcurrentDictionary<(AgentTokenUsageStatus Status, string Kind), long> _tokenCounts = new();
+    private readonly DurationStats _runTimes = new();
+    private readonly DurationStats _modelTimes = new();
+    private readonly DurationStats _firstTextTimes = new();
+    private readonly DurationStats _toolTimes = new();
+    private readonly Counter<long> _budgetSignals;
+    private readonly ConcurrentDictionary<(AgentTokenBudgetScope Scope, AgentTokenBudgetSignal Signal), long> _budgetCounts = new();
+    private readonly ILogger<AgentMetrics>? _logger;
+    private readonly Counter<long> _userQuotaSignals;
+    private readonly ConcurrentDictionary<AgentUserQuotaSignal, long> _userQuotaCounts = new();
 
-    public AgentMetrics()
+    public AgentMetrics(ILogger<AgentMetrics>? logger = null)
     {
+        _logger = logger;
+        _userQuotaSignals = _meter.CreateCounter<long>("agent.user_token_quota.signals", unit: "{signal}");
+        _budgetSignals = _meter.CreateCounter<long>("agent.runtime.token_budget_signals", unit: "{signal}");
+        _runs = _meter.CreateCounter<long>("agent.runtime.runs", unit: "{run}");
+        _tokens = _meter.CreateCounter<long>("agent.runtime.tokens", unit: "{token}");
+        _usageReports = _meter.CreateCounter<long>("agent.runtime.usage_reports", unit: "{run}");
+        _tools = _meter.CreateCounter<long>("agent.runtime.tools", unit: "{call}");
+        _runDuration = _meter.CreateHistogram<double>("agent.runtime.duration", unit: "ms");
+        _modelDuration = _meter.CreateHistogram<double>("agent.model.duration", unit: "ms");
+        _firstTextDuration = _meter.CreateHistogram<double>("agent.model.time_to_first_text", unit: "ms");
+        _toolDuration = _meter.CreateHistogram<double>("agent.tool.duration", unit: "ms");
         _requests = _meter.CreateCounter<long>(
             "agent.api.requests",
             unit: "{request}");
@@ -60,6 +97,72 @@ public sealed class AgentMetrics : IDisposable
         _activeExpensiveRequests = _meter.CreateUpDownCounter<long>(
             "agent.expensive.active_requests",
             unit: "{request}");
+    }
+
+    #region 记录共享额度信号（RecordUserQuota）
+    /// <summary>只接收固定枚举，不暴露所有者或供应商内容。</summary>
+    /// <param name="signal">拒绝、冻结或依赖不可用。</param>
+    public void RecordUserQuota(AgentUserQuotaSignal signal)
+    {
+        if (!Enum.IsDefined(signal)) return;
+        _userQuotaCounts.AddOrUpdate(signal, 1, static (_, count) => count + 1);
+        _userQuotaSignals.Add(1, new KeyValuePair<string, object?>("signal", signal.ToString()));
+        _logger?.LogWarning("Agent shared Token quota signal: {QuotaSignal}.", signal);
+    }
+    #endregion
+
+    #region 记录预算监控信号（RecordTokenBudget）
+    /// <summary>只输出固定枚举标签与日志，不记录额度、用户、输入、输出或凭据。</summary>
+    /// <param name="scope">预算范围。</param>
+    /// <param name="signal">已由预算实例去重的信号。</param>
+    public void RecordTokenBudget(AgentTokenBudgetScope scope, AgentTokenBudgetSignal signal)
+    {
+        if (!Enum.IsDefined(scope) || !Enum.IsDefined(signal)
+            || (signal == AgentTokenBudgetSignal.OutputLimited && scope != AgentTokenBudgetScope.ModelOutput)) return;
+        _budgetCounts.AddOrUpdate((scope, signal), 1, static (_, count) => count + 1);
+        _budgetSignals.Add(1, new TagList { { "scope", scope.ToString() }, { "signal", signal.ToString() } });
+        _logger?.LogWarning("Agent Token budget signal: {BudgetScope} / {BudgetSignal}.", scope, signal);
+    }
+    #endregion
+
+    /// <summary>记录一次运行终态，未知用量不加入 Token 总量。</summary>
+    public void RecordRun(AgentRunStatus status, AgentModelUsage? usage, long durationMilliseconds)
+    {
+        _runs.Add(1, new KeyValuePair<string, object?>("status", status.ToString()));
+        _runCounts.AddOrUpdate(status, 1, static (_, count) => count + 1);
+        RecordDuration(_runDuration, _runTimes, durationMilliseconds);
+        AgentTokenUsageStatus usageStatus = usage?.Status ?? AgentTokenUsageStatus.Unknown;
+        _usageReports.Add(1, new KeyValuePair<string, object?>("usage_status", usageStatus.ToString()));
+        _usageCounts.AddOrUpdate(usageStatus, 1, static (_, count) => count + 1);
+        if (usage is null) return;
+        RecordTokens("input", usage.InputTokens, usageStatus);
+        RecordTokens("output", usage.OutputTokens, usageStatus);
+        RecordTokens("total", usage.TotalTokens, usageStatus);
+        if (usage.ModelDurationMilliseconds is long modelTime) RecordDuration(_modelDuration, _modelTimes, modelTime);
+        if (usage.TimeToFirstTextMilliseconds is long firstText) RecordDuration(_firstTextDuration, _firstTextTimes, firstText);
+    }
+
+    /// <summary>记录 MCP 工具终态；不使用工具名称作为指标标签。</summary>
+    public void RecordTool(AgentRunEventKind status, long durationMilliseconds)
+    {
+        if (status is not (AgentRunEventKind.ToolSucceeded or AgentRunEventKind.ToolFailed or AgentRunEventKind.ToolBlocked)) return;
+        _tools.Add(1, new KeyValuePair<string, object?>("status", status.ToString()));
+        _toolCounts.AddOrUpdate(status, 1, static (_, count) => count + 1);
+        RecordDuration(_toolDuration, _toolTimes, durationMilliseconds);
+    }
+
+    private void RecordTokens(string kind, long? count, AgentTokenUsageStatus status)
+    {
+        if (count is not >= 0) return;
+        _tokens.Add(count.Value, new TagList { { "kind", kind }, { "usage_status", status.ToString() } });
+        _tokenCounts.AddOrUpdate((status, kind), count.Value, (_, previous) => previous + count.Value);
+    }
+
+    private static void RecordDuration(Histogram<double> histogram, DurationStats stats, long milliseconds)
+    {
+        milliseconds = Math.Max(0, milliseconds);
+        histogram.Record(milliseconds);
+        stats.Record(milliseconds);
     }
 
     public void RecordResilience(AgentResilienceEvent resilienceEvent)
@@ -166,6 +269,30 @@ public sealed class AgentMetrics : IDisposable
             .AppendLine(Math.Max(0, Interlocked.Read(ref _activeExpensive))
                 .ToString(CultureInfo.InvariantCulture));
 
+        output.AppendLine("# TYPE agent_runtime_runs_total counter");
+        foreach (var (status, count) in _runCounts.OrderBy(value => value.Key))
+            output.AppendLine($"agent_runtime_runs_total{{status=\"{status}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        output.AppendLine("# TYPE agent_runtime_usage_reports_total counter");
+        foreach (var (status, count) in _usageCounts.OrderBy(value => value.Key))
+            output.AppendLine($"agent_runtime_usage_reports_total{{usage_status=\"{status}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        output.AppendLine("# TYPE agent_runtime_tokens_total counter");
+        foreach (var (key, count) in _tokenCounts.OrderBy(value => value.Key.Status).ThenBy(value => value.Key.Kind))
+            output.AppendLine($"agent_runtime_tokens_total{{usage_status=\"{key.Status}\",kind=\"{key.Kind}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        output.AppendLine("# TYPE agent_runtime_tool_calls_total counter");
+        foreach (var (status, count) in _toolCounts.OrderBy(value => value.Key))
+            output.AppendLine($"agent_runtime_tool_calls_total{{status=\"{status}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        output.AppendLine("# HELP agent_user_token_quota_signals_total Shared quota rejection, freezing and unavailability signals, not balance gauges.");
+        output.AppendLine("# TYPE agent_user_token_quota_signals_total counter");
+        foreach (var (signal, count) in _userQuotaCounts.OrderBy(value => value.Key))
+            output.AppendLine($"agent_user_token_quota_signals_total{{signal=\"{signal}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        output.AppendLine("# HELP agent_runtime_token_budget_signals_total Deduplicated signals from enabled Token budgets, not failed-run counts.");
+        output.AppendLine("# TYPE agent_runtime_token_budget_signals_total counter");
+        foreach (var (key, count) in _budgetCounts.OrderBy(value => value.Key.Scope).ThenBy(value => value.Key.Signal))
+            output.AppendLine($"agent_runtime_token_budget_signals_total{{scope=\"{key.Scope}\",signal=\"{key.Signal}\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+        _runTimes.Render(output, "agent_runtime_duration_milliseconds");
+        _modelTimes.Render(output, "agent_model_duration_milliseconds");
+        _firstTextTimes.Render(output, "agent_model_time_to_first_text_milliseconds");
+        _toolTimes.Render(output, "agent_tool_duration_milliseconds");
         return output.ToString();
     }
 
@@ -251,5 +378,33 @@ public sealed class AgentMetrics : IDisposable
     {
         public long Count;
         public long DurationMilliseconds;
+    }
+
+    // 固定桶及枚举标签限制基数，不携带用户、运行、模型地址、参数或输出内容。
+    private sealed class DurationStats
+    {
+        private static readonly long[] Bounds = [100, 500, 1000, 2500, 5000, 10000, 30000, 60000, 120000, 300000];
+        private readonly long[] _buckets = new long[Bounds.Length];
+        private long _count;
+        private long _sum;
+
+        public void Record(long milliseconds)
+        {
+            Interlocked.Increment(ref _count);
+            Interlocked.Add(ref _sum, milliseconds);
+            for (int index = 0; index < Bounds.Length; index++)
+                if (milliseconds <= Bounds[index]) Interlocked.Increment(ref _buckets[index]);
+        }
+
+        public void Render(StringBuilder output, string name)
+        {
+            output.AppendLine($"# TYPE {name} histogram");
+            for (int index = 0; index < Bounds.Length; index++)
+                output.AppendLine($"{name}_bucket{{le=\"{Bounds[index].ToString(CultureInfo.InvariantCulture)}\"}} {Interlocked.Read(ref _buckets[index]).ToString(CultureInfo.InvariantCulture)}");
+            long count = Interlocked.Read(ref _count);
+            output.AppendLine($"{name}_bucket{{le=\"+Inf\"}} {count.ToString(CultureInfo.InvariantCulture)}");
+            output.AppendLine($"{name}_sum {Interlocked.Read(ref _sum).ToString(CultureInfo.InvariantCulture)}");
+            output.AppendLine($"{name}_count {count.ToString(CultureInfo.InvariantCulture)}");
+        }
     }
 }

@@ -18,7 +18,7 @@ public sealed partial class AgentPlatformOptionsValidator(IConfiguration configu
     [GeneratedRegex("^[a-z0-9][a-z0-9-]{0,62}$", RegexOptions.CultureInvariant)]
     private static partial Regex ServiceNamePattern();
 
-    [GeneratedRegex("(?i)(api[_-]?key|authorization|password|pwd|token|secret|connection[_-]?string)", RegexOptions.CultureInvariant)]
+    [GeneratedRegex("(?i)(api[_-]?key|authorization|password|pwd|secret|connection[_-]?string|token(?!(?:s?(?:budget|lifetime|usage|count|quota|limit|total|maximum|minimum|reservation|per)|s$)))", RegexOptions.CultureInvariant)]
     private static partial Regex SensitiveKeyPattern();
 
     [GeneratedRegex("(?i)(password|pwd|token|api[_-]?key|authorization|connection[_-]?string)\\s*=", RegexOptions.CultureInvariant)]

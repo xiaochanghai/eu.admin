@@ -55,7 +55,7 @@ public sealed class EvaluationBatchesController(
                 caller.UserId,
                 caller.TenantId,
                 caller.Permissions,
-                caller.CorrelationId),
+                caller.CorrelationId) { GroupId = caller.GroupId, CompanyId = caller.CompanyId },
             cancellationToken);
         return result.Success
             ? result

@@ -170,7 +170,7 @@ public sealed class ToolApprovalsController(
                     caller.UserId,
                     caller.TenantId,
                     caller.Permissions,
-                    caller.CorrelationId),
+                    caller.CorrelationId) { GroupId = caller.GroupId, CompanyId = caller.CompanyId },
                 cancellationToken);
             AgentTaskStatus taskStatus = value.Status switch
             {

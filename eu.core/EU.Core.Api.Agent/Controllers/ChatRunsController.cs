@@ -89,7 +89,7 @@ public sealed class ChatRunsController : Base.ControllerBase
                 _caller.UserId,
                 _caller.TenantId,
                 _caller.Permissions,
-                _caller.CorrelationId),
+                _caller.CorrelationId) { GroupId = _caller.GroupId, CompanyId = _caller.CompanyId },
             cancellationToken);
         if (!preparation.Succeeded)
         {
@@ -646,7 +646,7 @@ public sealed class ChatRunsController : Base.ControllerBase
         _caller.UserId,
         _caller.TenantId,
         _caller.Permissions,
-        _caller.CorrelationId);
+        _caller.CorrelationId) { GroupId = _caller.GroupId, CompanyId = _caller.CompanyId };
     #endregion
 }
 

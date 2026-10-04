@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { DownloadOutlined, RocketOutlined, SyncOutlined } from "@ant-design/icons";
 import { message } from "@/hooks/useMessage";
+import { store, useSelector } from "@/redux";
 import {
   AgentDefinition,
   AgentExportError,
@@ -42,10 +43,12 @@ import {
   PublishedToolReference,
   saveAgentDraft,
   setAgentStatus,
-  setMainAgent
-  , listAgentRuns, runAgent, AgentRunAuditRecord
+  setMainAgent,
+  runAgent
 } from "@/api/modules/agent";
 import { SaveTypeEnum } from "@/typings";
+import RunHistory from "./RunHistory";
+import { describeRunTerminalEvent } from "./runHistoryPresentation";
 import "./index.less";
 
 interface AgentFormValues {
@@ -113,14 +116,34 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
   const [references, setReferences] = useState<ReferenceState>(emptyReferences);
   const [mainAssignment, setMainAssignmentState] = useState<MainAgentAssignment | null>(null);
   const [runOpen, setRunOpen] = useState(false);
+  const [runOwner, setRunOwner] = useState<{ agentId: string; token: string }>();
+  const [showRunner, setShowRunner] = useState(true);
   const [runInput, setRunInput] = useState("");
   const [runOutput, setRunOutput] = useState("");
   const [runStatus, setRunStatus] = useState("");
   const [runToolEvents, setRunToolEvents] = useState<AgentRunToolEvent[]>([]);
   const [runCitations, setRunCitations] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
-  const [runHistory, setRunHistory] = useState<AgentRunAuditRecord[]>([]);
+  const [runHistoryRevision, setRunHistoryRevision] = useState(0);
   const runController = React.useRef<AbortController>();
+  const token = useSelector(state => state.user.token);
+  const runAgentId = agent && (!Id || agent.Id === Id) ? agent.Id : undefined;
+  const runVisible = runOpen && runOwner?.agentId === runAgentId && runOwner?.token === token;
+
+  useEffect(() => {
+    setRunOpen(false);
+    setRunning(false);
+    setRunInput("");
+    setRunOutput("");
+    setRunStatus("");
+    setRunToolEvents([]);
+    setRunCitations([]);
+    return () => {
+      const controller = runController.current;
+      runController.current = undefined;
+      controller?.abort();
+    };
+  }, [runAgentId, token]);
 
   const archived = agent?.RuntimeStatus === "Archived";
   const readOnly = Boolean(IsView || archived);
@@ -297,22 +320,35 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
     }
   };
 
-  const loadRunHistory = useCallback(async () => {
-    if (!agent) return;
-    try { setRunHistory(await listAgentRuns(agent.Id)); } catch (error) { message.error(error instanceof Error ? error.message : "运行历史读取失败"); }
-  }, [agent]);
-
-  const openRunner = () => { setRunOpen(true); setRunOutput(""); setRunStatus(""); setRunToolEvents([]); setRunCitations([]); void loadRunHistory(); };
+  const openRunner = (withRunner: boolean) => {
+    if (!runAgentId || !token) return;
+    setRunOwner({ agentId: runAgentId, token });
+    setShowRunner(withRunner);
+    setRunOpen(true);
+    setRunOutput("");
+    setRunStatus("");
+    setRunToolEvents([]);
+    setRunCitations([]);
+  };
   const startRun = async () => {
-    if (!agent || !runInput.trim() || running) return;
+    if (!runAgentId || !token || !runInput.trim() || runController.current || dirty
+      || agent?.RuntimeStatus !== "Enabled" || !latestVersion) return;
     const controller = new AbortController();
     runController.current = controller;
-    setRunning(true); setRunOutput(""); setRunStatus("运行中"); setRunToolEvents([]); setRunCitations([]);
+    const isCurrent = () => runController.current === controller && store.getState().user.token === token;
+    let terminalStatus: string | undefined;
+    setRunning(true);
+    setRunOutput("");
+    setRunStatus("运行中");
+    setRunToolEvents([]);
+    setRunCitations([]);
     try {
-      await runAgent(agent.Id, runInput.trim(), (name, event) => {
+      await runAgent(runAgentId, runInput.trim(), (name, event) => {
+        if (!isCurrent() || controller.signal.aborted) return;
         if (name === "delta" && event.text) setRunOutput(value => value + event.text);
         if (name === "citation" && event.text) {
-          setRunCitations(value => value.includes(event.text as string) ? value : [...value, event.text as string]);
+          const citation = event.text;
+          setRunCitations(value => value.includes(citation) ? value : [...value, citation]);
         }
         if (name === "knowledge-retrieved") {
           setRunCitations(value => [...value, `知识库检索：${event.knowledgeBaseCount || 0} 个知识库，命中 ${event.knowledgeHitCount || 0} 个分块`]);
@@ -327,10 +363,30 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
               : value.map((item, itemIndex) => itemIndex === index ? { ...item, ...next, text: next.text || item.text } : item);
           });
         }
-        if (["completed", "failed", "cancelled"].includes(name)) setRunStatus(name === "completed" ? "运行完成" : `运行${name === "cancelled" ? "已取消" : "失败"}${event.errorCode ? ` · ${event.errorCode}` : ""}`);
+        const outcome = describeRunTerminalEvent(name, event.errorCode);
+        if (outcome) {
+          terminalStatus = outcome;
+          setRunStatus(outcome);
+        }
       }, controller.signal);
-    } catch (error) { setRunStatus(error instanceof Error ? error.message : "运行失败"); }
-    finally { runController.current = undefined; setRunning(false); void loadRunHistory(); }
+      if (isCurrent() && !terminalStatus) {
+        setRunStatus(controller.signal.aborted
+          ? "已取消本次请求；请刷新运行历史确认服务端状态"
+          : "运行流已结束，但未收到终态；请刷新运行历史确认状态");
+      }
+    } catch (error) {
+      if (isCurrent()) {
+        setRunStatus(terminalStatus || (controller.signal.aborted
+          ? "已取消本次请求；请刷新运行历史确认服务端状态"
+          : error instanceof Error ? error.message : "运行失败"));
+      }
+    } finally {
+      if (isCurrent()) {
+        runController.current = undefined;
+        setRunning(false);
+        setRunHistoryRevision(value => value + 1);
+      }
+    }
   };
 
   const skillOptions = references.skills.map(item => ({
@@ -465,7 +521,8 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
                 <Descriptions.Item label="部署">{agent.DeploymentTarget} / {agent.Host}</Descriptions.Item>
               </Descriptions>
               <Space wrap>
-                <Button onClick={openRunner} disabled={dirty || agent.RuntimeStatus !== "Enabled" || !latestVersion}>运行 Agent</Button>
+                <Button onClick={() => openRunner(true)} disabled={running || dirty || agent.RuntimeStatus !== "Enabled" || !latestVersion}>运行 Agent</Button>
+                <Button onClick={() => openRunner(false)} disabled={running}>运行历史</Button>
                 <Button icon={<DownloadOutlined />} onClick={() => void handleExport()} disabled={dirty}>导出</Button>
                 {agent.RuntimeStatus !== "Archived" && (
                   <Button icon={<RocketOutlined />} type="primary" onClick={() => void handlePublish()} disabled={dirty || readOnly}>发布版本</Button>
@@ -501,25 +558,56 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
         >
           <Tabs items={items} destroyOnHidden={false} />
         </Form>
-        <Drawer title={`运行 Agent · ${agent?.Name || agent?.Code || ""}`} open={runOpen} width={620} onClose={() => !running && setRunOpen(false)} extra={<Button danger disabled={!running} onClick={() => runController.current?.abort()}>取消运行</Button>}>
-          <Typography.Paragraph type="secondary">仅运行当前已发布版本；运行结果会记录在服务端审计中。</Typography.Paragraph>
-          <Input.TextArea value={runInput} onChange={event => setRunInput(event.target.value)} disabled={running} rows={4} maxLength={32768} placeholder="输入测试内容" />
-          <Button type="primary" loading={running} disabled={!runInput.trim()} onClick={() => void startRun()} style={{ marginTop: 12 }}>开始运行</Button>
-          {runStatus && <Typography.Paragraph style={{ marginTop: 16 }}>{runStatus}</Typography.Paragraph>}
-          <pre className="agent-definition-form__run-output">{runOutput || "等待输出"}</pre>
-          {runToolEvents.length ? <section className="agent-definition-form__run-events">
-            <Typography.Title level={5}>MCP 工具调用</Typography.Title>
-            <List size="small" dataSource={runToolEvents} renderItem={item => <List.Item><Flex vertical gap={6}>
-              <Space><Typography.Text strong>{item.toolName}</Typography.Text><Tag color={item.name === "tool-succeeded" ? "success" : item.name === "tool-failed" || item.name === "tool-blocked" ? "error" : "processing"}>{item.name.replace("tool-", "")}</Tag>{item.errorCode ? <Typography.Text type="danger">{item.errorCode}</Typography.Text> : null}</Space>
-              {item.text ? <pre className="agent-definition-form__run-tool-result">{item.text}</pre> : null}
-            </Flex></List.Item>} />
-          </section> : null}
-          {runCitations.length ? <section className="agent-definition-form__run-events">
-            <Typography.Title level={5}>知识库引用</Typography.Title>
-            <List size="small" dataSource={runCitations} renderItem={item => <List.Item><Typography.Text type="secondary">{item}</Typography.Text></List.Item>} />
-          </section> : null}
-          <Typography.Title level={5}>近期运行</Typography.Title>
-          <List size="small" dataSource={runHistory} locale={{ emptyText: "尚无运行记录" }} renderItem={item => <List.Item><Space><Tag color={item.Status === "Completed" ? "success" : item.Status === "Failed" ? "error" : "default"}>{item.Status}</Tag><Typography.Text type="secondary">{item.StartedAtUtc} · {item.ToolCallCount} 次工具调用</Typography.Text></Space></List.Item>} />
+        <Drawer
+          title={`${showRunner ? "运行 Agent" : "运行历史"} · ${agent?.Name || agent?.Code || ""}`}
+          open={runVisible}
+          width={620}
+          onClose={() => !running && setRunOpen(false)}
+          extra={showRunner && <Button danger disabled={!running} onClick={() => runController.current?.abort()}>取消运行</Button>}
+        >
+          {showRunner && (
+            <>
+              <Typography.Paragraph type="secondary">仅运行当前已发布版本；运行结果会记录在服务端审计中。</Typography.Paragraph>
+              <Input.TextArea value={runInput} onChange={event => setRunInput(event.target.value)} disabled={running} rows={4} maxLength={32768} placeholder="输入测试内容" />
+              <Button
+                type="primary"
+                loading={running}
+                disabled={!runInput.trim() || dirty || agent?.RuntimeStatus !== "Enabled" || !latestVersion}
+                onClick={() => void startRun()}
+                style={{ marginTop: 12 }}
+              >开始运行</Button>
+              {runStatus && <Typography.Paragraph style={{ marginTop: 16 }}>{runStatus}</Typography.Paragraph>}
+              <pre className="agent-definition-form__run-output">{runOutput || "等待输出"}</pre>
+              {runToolEvents.length > 0 && (
+                <section className="agent-definition-form__run-events">
+                  <Typography.Title level={5}>MCP 工具调用</Typography.Title>
+                  <List size="small" dataSource={runToolEvents} renderItem={item => (
+                    <List.Item>
+                      <Flex vertical gap={6}>
+                        <Space wrap>
+                          <Typography.Text strong>{item.toolName}</Typography.Text>
+                          <Tag color={item.name === "tool-succeeded" ? "success" : item.name === "tool-failed" || item.name === "tool-blocked" ? "error" : "processing"}>
+                            {item.name.replace("tool-", "")}
+                          </Tag>
+                          {item.errorCode && <Typography.Text type="danger">{item.errorCode}</Typography.Text>}
+                        </Space>
+                        {item.text && <pre className="agent-definition-form__run-tool-result">{item.text}</pre>}
+                      </Flex>
+                    </List.Item>
+                  )} />
+                </section>
+              )}
+              {runCitations.length > 0 && (
+                <section className="agent-definition-form__run-events">
+                  <Typography.Title level={5}>知识库引用</Typography.Title>
+                  <List size="small" dataSource={runCitations} renderItem={item => (
+                    <List.Item><Typography.Text type="secondary">{item}</Typography.Text></List.Item>
+                  )} />
+                </section>
+              )}
+            </>
+          )}
+          {runVisible && runAgentId && <RunHistory key={runAgentId} agentId={runAgentId} revision={runHistoryRevision} />}
         </Drawer>
       </div>
     </Spin>

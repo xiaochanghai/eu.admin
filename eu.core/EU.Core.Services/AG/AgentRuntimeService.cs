@@ -23,6 +23,7 @@ namespace EU.Core.Services;
 /// <param name="knowledgeRetriever">可选的知识库检索器。</param>
 /// <param name="skillCatalog">用于查询已发布技能版本的目录。</param>
 /// <param name="skillContentStore">用于读取已发布技能文件内容的存储。</param>
+/// <param name="telemetry">宿主提供的可选运行监控，不改变执行策略。</param>
 public sealed class AgentRuntimeService(
     IAgentDefinitionCatalog agents,
     IPublishedMcpToolCatalog toolCatalog,
@@ -31,7 +32,8 @@ public sealed class AgentRuntimeService(
     JsonSchemaValidator schemaValidator,
     IKnowledgeRetriever? knowledgeRetriever = null,
     IPublishedSkillVersionCatalog? skillCatalog = null,
-    IPublishedSkillContentStore? skillContentStore = null) : IAgentRuntimeService
+    IPublishedSkillContentStore? skillContentStore = null,
+    IAgentRuntimeTelemetry? telemetry = null) : IAgentRuntimeService
 {
     /// <summary>单次运行输入允许的最大字符数。</summary>
     public const int MaximumInputCharacters = 32_768;
@@ -439,6 +441,9 @@ public sealed class AgentRuntimeService(
         var output = new StringBuilder();
         var toolCalls = new Dictionary<Guid, AgentToolCallAuditRecord>();
         bool waitingForApproval = false;
+        AgentModelUsage? modelUsage = null;
+        AgentRunStatus terminalStatus = AgentRunStatus.Failed;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             await writer.WriteAsync(new AgentRunEvent(
@@ -488,6 +493,11 @@ public sealed class AgentRuntimeService(
                 .StreamAsync(context, cancellationToken)
                 .WithCancellation(cancellationToken))
             {
+                if (source.Kind == AgentRunEventKind.ModelUsage)
+                {
+                    modelUsage = source.ModelUsage;
+                    continue;
+                }
                 AgentRunEvent value = source with
                 {
                     RunId = context.RunId,
@@ -510,7 +520,8 @@ public sealed class AgentRuntimeService(
                         AgentRunEventKind.ToolFailed
                         ? CancellationToken.None
                         : cancellationToken;
-                await writer.WriteAsync(value, eventCancellation);
+                // 取消后仍消费引擎尾部的统计和工具终态，最终由下面的取消路径终结。
+                if (!eventCancellation.IsCancellationRequested) await writer.WriteAsync(value, CancellationToken.None);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -523,7 +534,8 @@ public sealed class AgentRuntimeService(
                     DateTimeOffset.UtcNow,
                     outputCharacters,
                     AgentRunErrorCodes.ToolApprovalRequired,
-                    toolCalls.Values), CancellationToken.None);
+                    toolCalls.Values, modelUsage), CancellationToken.None);
+                terminalStatus = AgentRunStatus.WaitingForApproval;
                 return;
             }
 
@@ -545,7 +557,8 @@ public sealed class AgentRuntimeService(
                 finishedAt,
                 outputCharacters,
                 "",
-                toolCalls.Values), CancellationToken.None);
+                toolCalls.Values, modelUsage), CancellationToken.None);
+            terminalStatus = AgentRunStatus.Completed;
             await writer.WriteAsync(new AgentRunEvent(
                 context.RunId,
                 ++sequence,
@@ -554,6 +567,7 @@ public sealed class AgentRuntimeService(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            terminalStatus = AgentRunStatus.Cancelled;
             DateTimeOffset finishedAt = DateTimeOffset.UtcNow;
             await auditRepository.SaveAsync(CreateAudit(
                 context,
@@ -561,10 +575,11 @@ public sealed class AgentRuntimeService(
                 finishedAt,
                 outputCharacters,
                 "",
-                toolCalls.Values), CancellationToken.None);
+                toolCalls.Values, modelUsage), CancellationToken.None);
         }
         catch (Exception exception)
         {
+            terminalStatus = AgentRunStatus.Failed;
             string errorCode = exception switch
             {
                 InvalidDataException => AgentRunErrorCodes.OutputInvalid,
@@ -579,7 +594,7 @@ public sealed class AgentRuntimeService(
                 finishedAt,
                 outputCharacters,
                 errorCode,
-                toolCalls.Values), CancellationToken.None);
+                toolCalls.Values, modelUsage), CancellationToken.None);
             await writer.WriteAsync(new AgentRunEvent(
                 context.RunId,
                 ++sequence,
@@ -590,6 +605,33 @@ public sealed class AgentRuntimeService(
         finally
         {
             writer.TryComplete();
+            RecordTerminalTelemetry(terminalStatus, modelUsage, clock.ElapsedMilliseconds, toolCalls.Values);
+        }
+    }
+    #endregion
+
+    #region 尽力记录终态监控（RecordTerminalTelemetry）
+    /// <summary>运行和各工具分别隔离监控异常，不覆盖持久化错误、取消或已经产生的终态。</summary>
+    /// <param name="status">实际运行终态。</param>
+    /// <param name="usage">已收到的模型统计，未知值保持为空。</param>
+    /// <param name="durationMilliseconds">运行耗时。</param>
+    /// <param name="calls">已经去重的工具调用记录。</param>
+    private void RecordTerminalTelemetry(AgentRunStatus status, AgentModelUsage? usage, long durationMilliseconds, IEnumerable<AgentToolCallAuditRecord> calls)
+    {
+        if (telemetry is null) return;
+        try { telemetry.RecordRun(status, usage, durationMilliseconds); }
+        catch (Exception)
+        {
+            // 与预算监控一致：可选监听器/导出器失败不能改变运行或终态审计。
+        }
+        foreach (AgentToolCallAuditRecord call in calls)
+        {
+            if (call.Status is not (AgentRunEventKind.ToolSucceeded or AgentRunEventKind.ToolFailed or AgentRunEventKind.ToolBlocked)) continue;
+            try { telemetry.RecordTool(call.Status, Math.Max(0, (long)(call.FinishedAtUtc - call.StartedAtUtc).TotalMilliseconds)); }
+            catch (Exception)
+            {
+                // 单个工具统计失败也不能跳过其他工具统计或替代业务错误。
+            }
         }
     }
     #endregion
@@ -645,6 +687,7 @@ public sealed class AgentRuntimeService(
     /// <param name="outputCharacters">输出字符数。</param>
     /// <param name="errorCode">失败对应的错误码。</param>
     /// <param name="calls">调用记录集合。</param>
+    /// <param name="modelUsage">模型返回的用量与耗时，未调用模型时为空。</param>
     /// <returns>包含输入摘要、输出长度和按开始时间排序的工具调用明细的运行审计记录。</returns>
     private static AgentRunAuditRecord CreateAudit(
         AgentRunContext context,
@@ -652,7 +695,8 @@ public sealed class AgentRuntimeService(
         DateTimeOffset? finishedAt,
         int outputCharacters,
         string errorCode,
-        IEnumerable<AgentToolCallAuditRecord> calls) =>
+        IEnumerable<AgentToolCallAuditRecord> calls,
+        AgentModelUsage? modelUsage = null) =>
         new(
             context.RunId,
             context.AgentId,
@@ -665,7 +709,11 @@ public sealed class AgentRuntimeService(
             outputCharacters,
             calls.Count(),
             errorCode,
-            calls.OrderBy(call => call.StartedAtUtc).ToArray());
+            calls.OrderBy(call => call.StartedAtUtc).ToArray())
+        {
+            ModelProfileId = context.Snapshot.ModelProfileId,
+            ModelUsage = modelUsage
+        };
     #endregion
 
     #region 处理（TrackToolCall）

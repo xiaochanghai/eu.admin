@@ -49,6 +49,12 @@ public sealed partial class AgentExecutionIdentity
     /// </summary>
     public string TenantId { get; }
 
+    /// <summary>可信集团归属；与公司、用户共同确定共享额度，不使用 TenantId 分账。</summary>
+    public Guid? GroupId { get; init; }
+
+    /// <summary>可信公司归属；由请求边界或持久化任务传递，运行期间不可修改。</summary>
+    public Guid? CompanyId { get; init; }
+
     /// <summary>
     /// 获取执行身份拥有的权限集合。
     /// </summary>

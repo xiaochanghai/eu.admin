@@ -71,4 +71,34 @@ public class AgAgentRunAudit : BasePoco
     /// </summary>
     [Display(Name = "ErrorCode"), Description("运行错误码"), Column(TypeName = "varchar(128)"), SugarColumn(IsNullable = true, Length = 128)]
     public string ErrorCode { get; set; }
+
+#nullable enable
+    /// <summary>执行使用的模型配置编码，历史记录可为空。</summary>
+    [Display(Name = "ModelProfileId"), Description("执行使用的模型配置编码"), Column(TypeName = "varchar(256)"), SugarColumn(IsNullable = true, Length = 256)]
+    public string? ModelProfileId { get; set; }
+
+    /// <summary>模型报告的输入 Token 数，未报告时为空。</summary>
+    [Display(Name = "InputTokens"), Description("模型报告的输入 Token 数，未报告时为空"), SugarColumn(IsNullable = true)]
+    public long? InputTokens { get; set; }
+
+    /// <summary>模型报告的输出 Token 数，未报告时为空。</summary>
+    [Display(Name = "OutputTokens"), Description("模型报告的输出 Token 数，未报告时为空"), SugarColumn(IsNullable = true)]
+    public long? OutputTokens { get; set; }
+
+    /// <summary>模型报告的总 Token 数，不按字符数推算。</summary>
+    [Display(Name = "TotalTokens"), Description("模型报告的总 Token 数，不自行推算"), SugarColumn(IsNullable = true)]
+    public long? TotalTokens { get; set; }
+
+    /// <summary>Token 统计完整性：Unknown、Partial 或 Reported。</summary>
+    [Display(Name = "TokenUsageStatus"), Description("Token 统计完整性"), Column(TypeName = "varchar(32)"), SugarColumn(IsNullable = true, Length = 32)]
+    public string? TokenUsageStatus { get; set; }
+
+    /// <summary>模型循环耗时（毫秒），包含循环内的工具等待。</summary>
+    [Display(Name = "ModelDurationMilliseconds"), Description("模型循环耗时（毫秒）"), SugarColumn(IsNullable = true)]
+    public long? ModelDurationMilliseconds { get; set; }
+
+    /// <summary>首段非空文本等待时间（毫秒），没有文本时为空。</summary>
+    [Display(Name = "TimeToFirstTextMilliseconds"), Description("首段非空文本等待时间（毫秒）"), SugarColumn(IsNullable = true)]
+    public long? TimeToFirstTextMilliseconds { get; set; }
+#nullable restore
 }
