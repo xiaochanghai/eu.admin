@@ -794,6 +794,7 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
             obj.IsShowRowSelection = module.IsShowRowSelection;
             obj.optionPosition = module.OptionPosition == "right" ? "right" : "left";
             obj.isAllowCustomColumn = module.IsAllowCustomColumn != false;
+            obj.isShowSearch = module.IsShowSearch == true;
 
             message = "获取成功！";
         }

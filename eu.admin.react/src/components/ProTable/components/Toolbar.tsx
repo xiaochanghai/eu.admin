@@ -150,15 +150,17 @@ export const Toolbar = (props: ToolbarProps) => {
 
     expendAction?.(action, selectedRows, selectedRowKeys),
 
-    <Button
-      key="search-btn"
-      type="dashed"
-      onClick={onSearchToggle}
-      style={{ border: 0, padding: 0, boxShadow: "none" }}
-    >
-      <Tooltip placement="top" title={t("proTable.search")}>
-        <Icon name="SearchOutlined" className="font-size16" />
-      </Tooltip>
-    </Button>
+    moduleInfo.isShowSearch === true && (
+      <Button
+        key="search-btn"
+        type="dashed"
+        onClick={onSearchToggle}
+        style={{ border: 0, padding: 0, boxShadow: "none" }}
+      >
+        <Tooltip placement="top" title={t("proTable.search")}>
+          <Icon name="SearchOutlined" className="font-size16" />
+        </Tooltip>
+      </Button>
+    )
   ].filter(Boolean);
 };

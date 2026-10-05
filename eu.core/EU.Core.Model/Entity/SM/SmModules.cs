@@ -239,4 +239,10 @@ public class SmModules : BasePoco
     /// </summary>
     [Display(Name = "IsAllowCustomColumn"), Description("是否允许设置自定义列"), SugarColumn(IsNullable = true)]
     public bool? IsAllowCustomColumn { get; set; }
+
+    /// <summary>
+    /// 是否显示查询按钮
+    /// </summary>
+    [Display(Name = "IsShowSearch"), Description("是否显示查询按钮"), SugarColumn(IsNullable = true)]
+    public bool? IsShowSearch { get; set; }
 }
