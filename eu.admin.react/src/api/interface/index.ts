@@ -88,6 +88,7 @@ export interface ModuleInfo {
   IsShowRowSelection?: boolean;
   optionPosition?: "left" | "right";
   isAllowCustomColumn?: boolean;
+  isShowSearch?: boolean;
 }
 export interface ModuleInfo1 {
   ModuleName: string;
