@@ -83,4 +83,22 @@ public class SmApiLog : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), SugarColumn(IsNullable = true, Length = 2000)]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 响应状态码
+    /// </summary>
+    [Display(Name = "StatusCode"), Description("响应状态码"), SugarColumn(IsNullable = true)]
+    public int? StatusCode { get; set; }
+
+    /// <summary>
+    /// 访问结果
+    /// </summary>
+    [Display(Name = "Outcome"), Description("访问结果"), SugarColumn(IsNullable = true, Length = 32)]
+    public string Outcome { get; set; }
+
+    /// <summary>
+    /// 错误码
+    /// </summary>
+    [Display(Name = "ErrorCode"), Description("错误码"), SugarColumn(IsNullable = true, Length = 128)]
+    public string ErrorCode { get; set; }
 }

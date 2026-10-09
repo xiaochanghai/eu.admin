@@ -82,4 +82,22 @@ public class SmApiLogBase : BasePoco
     /// </summary>
     [Display(Name = "Remark"), Description("备注"), MaxLength(2000, ErrorMessage = "备注 不能超过 2000 个字符")]
     public string Remark { get; set; }
+
+    /// <summary>
+    /// 响应状态码
+    /// </summary>
+    [Display(Name = "StatusCode"), Description("响应状态码")]
+    public int? StatusCode { get; set; }
+
+    /// <summary>
+    /// 访问结果
+    /// </summary>
+    [Display(Name = "Outcome"), Description("访问结果"), MaxLength(32, ErrorMessage = "访问结果不能超过 32 个字符")]
+    public string Outcome { get; set; }
+
+    /// <summary>
+    /// 错误码
+    /// </summary>
+    [Display(Name = "ErrorCode"), Description("错误码"), MaxLength(128, ErrorMessage = "错误码不能超过 128 个字符")]
+    public string ErrorCode { get; set; }
 }

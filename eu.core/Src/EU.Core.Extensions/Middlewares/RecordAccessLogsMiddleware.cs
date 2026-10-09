@@ -9,6 +9,7 @@ using EU.Core.Common.LogHelper;
 using EU.Core.Model;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace EU.Core.Extensions.Middlewares;
@@ -27,33 +28,36 @@ public class RecordAccessLogsMiddleware
     private readonly IUser _user;
     private readonly ILogger<RecordAccessLogsMiddleware> _logger;
     private readonly IWebHostEnvironment _environment;
-    private Stopwatch _stopwatch;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="next"></param>
-    public RecordAccessLogsMiddleware(RequestDelegate next, IUser user, ILogger<RecordAccessLogsMiddleware> logger,
-        IWebHostEnvironment environment)
+    /// <param name="user"></param>
+    /// <param name="logger"></param>
+    /// <param name="environment"></param>
+    /// <param name="configuration"></param>
+    public RecordAccessLogsMiddleware(RequestDelegate next, IUser user, ILogger<RecordAccessLogsMiddleware> logger, IWebHostEnvironment environment, IConfiguration configuration)
     {
         _next = next;
         _user = user;
         _logger = logger;
         _environment = environment;
-        _stopwatch = new Stopwatch();
+        _configuration = configuration;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (AppSettings.app("Middleware", "RecordAccessLogs", "Enabled").ObjToBool())
+        if (_configuration.GetValue<bool>("Middleware:RecordAccessLogs:Enabled"))
         {
             var api = context.Request.Path.ObjToString().TrimEnd('/');
-            var ignoreApis = AppSettings.app("Middleware", "RecordAccessLogs", "IgnoreApis");
+            var ignoreApis = _configuration["Middleware:RecordAccessLogs:IgnoreApis"] ?? string.Empty;
 
             // 过滤，只有接口
             if (api.ToLower().Contains("api") && !ignoreApis.Contains(api))
             {
-                _stopwatch.Restart();
+                var stopwatch = Stopwatch.StartNew();
                 var userAccessModel = new UserAccessModel();
 
                 HttpRequest request = context.Request;
@@ -65,29 +69,37 @@ public class RecordAccessLogsMiddleware
                 userAccessModel.RequestMethod = request.Method;
                 userAccessModel.Agent = request.Headers["User-Agent"].ObjToString();
                 userAccessModel.Filter = request.Headers["filter"].ObjToString();
+                userAccessModel.Source = _configuration["Middleware:RecordAccessLogs:Source"];
 
 
-                // 获取请求body内容
-                if (request.Method.ToLower().Equals("post") || request.Method.ToLower().Equals("put"))
+                if (_configuration.GetValue("Middleware:RecordAccessLogs:CaptureRequestData", true))
                 {
-                    if (IsMultipartRequest(request))
+                    // 获取请求body内容
+                    if (request.Method.ToLower().Equals("post") || request.Method.ToLower().Equals("put"))
                     {
-                        userAccessModel.RequestData = "[multipart/form-data skipped]";
+                        if (IsMultipartRequest(request))
+                        {
+                            userAccessModel.RequestData = "[multipart/form-data skipped]";
+                        }
+                        else
+                        {
+                            // 启用倒带功能，就可以让 Request.Body 可以再次读取
+                            request.EnableBuffering();
+
+                            using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
+                            userAccessModel.RequestData = await reader.ReadToEndAsync();
+
+                            request.Body.Position = 0;
+                        }
                     }
-                    else
+                    else if (request.Method.ToLower().Equals("get") || request.Method.ToLower().Equals("delete"))
                     {
-                        // 启用倒带功能，就可以让 Request.Body 可以再次读取
-                        request.EnableBuffering();
-
-                        using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
-                        userAccessModel.RequestData = await reader.ReadToEndAsync();
-
-                        request.Body.Position = 0;
+                        userAccessModel.RequestData = HttpUtility.UrlDecode(request.QueryString.ObjToString(), Encoding.UTF8);
                     }
                 }
-                else if (request.Method.ToLower().Equals("get") || request.Method.ToLower().Equals("delete"))
+                else
                 {
-                    userAccessModel.RequestData = HttpUtility.UrlDecode(request.QueryString.ObjToString(), Encoding.UTF8);
+                    userAccessModel.RequestData = "[request data capture disabled]";
                 }
 
                 await _next(context);
@@ -95,9 +107,11 @@ public class RecordAccessLogsMiddleware
                 // 响应完成记录时间和存入日志
                 context.Response.OnCompleted(() =>
                 {
-                    _stopwatch.Stop();
+                    stopwatch.Stop();
 
-                    userAccessModel.OPTime = _stopwatch.ElapsedMilliseconds + "ms";
+                    userAccessModel.OPTime = stopwatch.ElapsedMilliseconds + "ms";
+                    userAccessModel.StatusCode = context.Response.StatusCode;
+                    (userAccessModel.Outcome, userAccessModel.ErrorCode) = GetOutcome(context.Response.StatusCode);
 
                     // 自定义log输出
                     var requestInfo = JsonHelper.ObjToJson(userAccessModel);
@@ -125,6 +139,13 @@ public class RecordAccessLogsMiddleware
 
     private static bool IsMultipartRequest(HttpRequest request) =>
         request.ContentType?.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
+
+    private static (string Outcome, string ErrorCode) GetOutcome(int statusCode) => statusCode switch
+    {
+        >= 200 and < 400 => ("Succeeded", null),
+        StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden => ("Rejected", $"HTTP_{statusCode}"),
+        _ => ("Failed", $"HTTP_{statusCode}")
+    };
 
 }
 

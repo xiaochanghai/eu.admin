@@ -339,8 +339,8 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 app.UseCors(AgentHttpSecurityOptions.CorsPolicyName);
+app.UseRecordAccessLogsMiddle();
 app.UseAuthentication();
-app.UseMiddleware<AgentOperationAuditMiddleware>();
 app.UseRateLimiter();
 app.UseMiddleware<ProblemDetailsMiddleware>();
 app.UseMiddleware<RequestBodyLimitMiddleware>();

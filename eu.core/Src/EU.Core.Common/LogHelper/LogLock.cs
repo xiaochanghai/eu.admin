@@ -262,10 +262,14 @@ public class LogLock : IDisposable
             dbInsert.Values("IP", ip == "::1" ? "localhost" : ip);
             dbInsert.Values("Path", requestInfo.API);
             dbInsert.Values("Method", requestInfo.RequestMethod);
+            dbInsert.Values("Source", requestInfo.Source);
             dbInsert.Values("RequestData", requestInfo.RequestData + requestInfo.Filter);
             dbInsert.Values("BeginTime", requestInfo.BeginTime);
             dbInsert.Values("OPTime", requestInfo.OPTime.Replace("ms", string.Empty));
             dbInsert.Values("Agent", requestInfo.Agent);
+            dbInsert.Values("StatusCode", requestInfo.StatusCode);
+            dbInsert.Values("Outcome", requestInfo.Outcome);
+            dbInsert.Values("ErrorCode", requestInfo.ErrorCode);
 
             DBHelper.ExecuteNonQuery(dbInsert.GetSql());
         }
