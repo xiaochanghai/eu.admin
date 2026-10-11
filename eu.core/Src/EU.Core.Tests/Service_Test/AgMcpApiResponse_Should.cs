@@ -50,7 +50,7 @@ public sealed class AgMcpApiResponse_Should
     public async Task Discovery_prefers_alias_over_caller_token(string alias, string? caller, string? expected)
     {
         var discovery = new EU.Core.Agent.Infrastructure.Mcp.SdkMcpToolDiscovery(
-            new([], [], [], false, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)),
+            new([], false, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)),
             new TestCredentialResolver());
         var method = discovery.GetType().GetMethod("ResolveHttpBearerTokenAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
         var result = (ValueTask<string?>)method.Invoke(discovery,

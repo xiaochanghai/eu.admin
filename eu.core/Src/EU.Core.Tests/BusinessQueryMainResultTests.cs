@@ -21,8 +21,10 @@ public sealed class BusinessQueryMainResultTests
     {
         var tool = new PublishedMcpToolReference(Guid.NewGuid(), "business-query", "Business Query", Guid.NewGuid(),
             "query_business_data", "test", "{}", McpToolRisk.ReadOnly, new string('b', 64));
-        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data", new Uri("https://localhost"),
-            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45), false);
+        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data",
+            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45));
+        Assert.True(policy.Matches("business-query", "query_business_data"));
+        Assert.False(policy.Matches("other", "query_business_data"));
         var context = new AgentRunContext(Guid.NewGuid(), Guid.NewGuid(), null!, "test", "", DateTimeOffset.UtcNow, [tool]);
         var collector = new BusinessQueryRunResultCollector(policy, context);
         var started = new AgentRunEvent(context.RunId, 1, AgentRunEventKind.ToolStarted, DateTimeOffset.UtcNow,

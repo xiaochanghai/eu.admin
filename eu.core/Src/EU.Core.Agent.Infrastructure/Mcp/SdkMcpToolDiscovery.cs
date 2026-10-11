@@ -10,13 +10,10 @@ using ModelContextProtocol.Client;
 namespace EU.Core.Agent.Infrastructure.Mcp;
 
 public sealed record McpDiscoverySettings(
-    IReadOnlyList<string> AllowedHosts,
-    IReadOnlyList<int> AllowedPorts,
     IReadOnlyList<McpStdioInvocation> StdioInvocations,
     bool EnableStdio,
     TimeSpan ConnectionTimeout,
-    TimeSpan DiscoveryTimeout,
-    bool AllowDevelopmentHttp = false);
+    TimeSpan DiscoveryTimeout);
 
 public sealed record McpStdioInvocation(
     string Command,
@@ -55,10 +52,6 @@ public sealed class SdkMcpToolDiscovery(
         "The MCP stdio executable failed integrity validation.";
     private readonly IMcpCredentialResolver _credentialResolver =
         credentialResolver ?? new EnvironmentMcpCredentialResolver();
-    private readonly HashSet<string> _allowedHosts = new(
-        settings.AllowedHosts.Select(NormalizeHost),
-        StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<int> _allowedPorts = new(settings.AllowedPorts);
     private readonly IReadOnlyList<McpStdioInvocation> _stdioInvocations =
         settings.StdioInvocations
             .Select(invocation => new McpStdioInvocation(
@@ -319,18 +312,14 @@ public sealed class SdkMcpToolDiscovery(
         Uri endpoint,
         CancellationToken cancellationToken)
     {
-        string host = NormalizeHost(endpoint.IdnHost);
-        bool isDevelopmentHttp =
-            endpoint.Scheme == Uri.UriSchemeHttp && settings.AllowDevelopmentHttp;
-        if ((endpoint.Scheme != Uri.UriSchemeHttps && !isDevelopmentHttp) ||
-            !string.IsNullOrEmpty(endpoint.UserInfo) ||
-            !_allowedHosts.Contains(host) ||
-            !_allowedPorts.Contains(endpoint.Port))
+        if (endpoint.Scheme != Uri.UriSchemeHttp &&
+            endpoint.Scheme != Uri.UriSchemeHttps)
         {
             throw new InvalidOperationException(
-                "The MCP endpoint is not an allowlisted HTTP or HTTPS origin.");
+                "The MCP endpoint must use HTTP or HTTPS.");
         }
 
+        string host = NormalizeHost(endpoint.IdnHost);
         IPAddress[] addresses = IPAddress.TryParse(
             host,
             out IPAddress? literal)
@@ -340,12 +329,6 @@ public sealed class SdkMcpToolDiscovery(
         {
             throw new InvalidOperationException(
                 "The MCP endpoint resolves to an invalid network address.");
-        }
-
-        if (isDevelopmentHttp && addresses.Any(address => !IPAddress.IsLoopback(address)))
-        {
-            throw new InvalidOperationException(
-                "Development HTTP MCP endpoints must resolve only to loopback addresses.");
         }
 
         return addresses;

@@ -98,16 +98,13 @@ builder.Services.AddSingleton<SdkMcpToolDiscovery>(services =>
     AgentMcpOptions options =
         services.GetRequiredService<IOptions<AgentMcpOptions>>().Value;
     return new SdkMcpToolDiscovery(new McpDiscoverySettings(
-        options.AllowedHosts,
-        options.AllowedPorts,
         options.StdioProfiles.Select(profile => new McpStdioInvocation(
             profile.Command,
             profile.Arguments.ToArray(),
             profile.ExecutableSha256)).ToArray(),
         options.EnableStdio,
         TimeSpan.FromSeconds(options.ConnectionTimeoutSeconds),
-        TimeSpan.FromSeconds(options.DiscoveryTimeoutSeconds),
-        options.AllowDevelopmentHttp),
+        TimeSpan.FromSeconds(options.DiscoveryTimeoutSeconds)),
         services.GetRequiredService<IMcpCredentialResolver>());
 });
 builder.Services.AddSingleton<IMcpCredentialResolver,
@@ -127,15 +124,13 @@ builder.Services.AddSingleton(services =>
         ? new BusinessQueryToolPolicy(
             forwarding.ServerCode,
             forwarding.ToolName,
-            new Uri(forwarding.Origin, UriKind.Absolute),
             forwarding.Issuer,
             forwarding.Audience,
             forwarding.SigningKeyAlias,
             forwarding.CatalogRevision,
             forwarding.CatalogHash,
             forwarding.ToolSchemaHash,
-            TimeSpan.FromSeconds(forwarding.TokenLifetimeSeconds),
-            forwarding.AllowDevelopmentHttp)
+            TimeSpan.FromSeconds(forwarding.TokenLifetimeSeconds))
         : null;
     return new BusinessQueryToolPolicyAccessor(policy);
 });

@@ -80,8 +80,8 @@ public sealed class BusinessQuerySharedJwtKeyTests
         var agentKeys = new DevelopmentBusinessQuerySigningKeyResolver(agentProvider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>());
         var mcpKeys = new BusinessQueryExecutionContextKeyResolver(mcpProvider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>());
         var now = new FixedTime(DateTimeOffset.UtcNow);
-        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data", new Uri("https://localhost"),
-            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45), false);
+        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data",
+            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45));
         string tenantId = scenario is "success-zero" or "zero-versus-development" ? "0" : "7";
         bool shouldSucceed = scenario is "success" or "success-zero";
         var identity = new AgentExecutionIdentity(Guid.NewGuid().ToString("D"), tenantId, ["business.project.query"], "test-trace");

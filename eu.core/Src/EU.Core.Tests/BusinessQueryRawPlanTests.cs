@@ -123,8 +123,8 @@ public sealed class BusinessQueryRawPlanTests
             var verifier = new BusinessQueryExecutionContextVerifier(configuration, definition,
                 new BusinessQueryExecutionContextKeyResolver(jwtOptions),
                 new SqliteBusinessQueryReplayRepository(_store, configuration, TimeProvider.System), Accessor, Audit, TimeProvider.System);
-            _policy = new BusinessQueryToolPolicy("business-query", definition.Name, new Uri("https://localhost"), "eu-agent", "eu-mcp",
-                "alias:test-jwt", definition.CatalogRevision, definition.CatalogHash, definition.ToolVersionHash, TimeSpan.FromSeconds(45), false);
+            _policy = new BusinessQueryToolPolicy("business-query", definition.Name, "eu-agent", "eu-mcp",
+                "alias:test-jwt", definition.CatalogRevision, definition.CatalogHash, definition.ToolVersionHash, TimeSpan.FromSeconds(45));
             _tool = new PublishedMcpToolReference(Guid.NewGuid(), "business-query", "Business Query", Guid.NewGuid(),
                 definition.Name, definition.Description, definition.InputSchemaJson, McpToolRisk.ReadOnly, definition.ToolVersionHash);
             _service = new BusinessQueryService(NullLogger<BusinessQueryService>.Instance,

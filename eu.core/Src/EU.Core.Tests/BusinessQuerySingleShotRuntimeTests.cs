@@ -56,8 +56,8 @@ public sealed class BusinessQuerySingleShotRuntimeTests
     {
         var tool = new PublishedMcpToolReference(Guid.NewGuid(), "business-query", "Business Query", Guid.NewGuid(),
             "query_business_data", "test", "{\"type\":\"object\",\"properties\":{}}", McpToolRisk.ReadOnly, new string('b', 64));
-        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data", new Uri("https://localhost"),
-            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45), false);
+        var policy = new BusinessQueryToolPolicy("business-query", "query_business_data",
+            "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45));
         var limit = Assert.Single(BusinessQueryMcpToolCallLimits.Create(policy, [tool]));
         Assert.True(limit.CompleteAfterSuccess);
         var context = new AgentRunContext(Guid.NewGuid(), Guid.NewGuid(), null!, "test", "", DateTimeOffset.UtcNow, [tool])

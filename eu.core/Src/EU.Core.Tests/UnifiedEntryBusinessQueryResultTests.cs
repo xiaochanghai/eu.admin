@@ -392,8 +392,8 @@ public sealed class UnifiedEntryBusinessQueryResultTests
             _delegated = delegated;
             _tool = new PublishedMcpToolReference(Guid.NewGuid(), "business-query", "Business Query", Guid.NewGuid(),
                 "query_business_data", "test", "{}", McpToolRisk.ReadOnly, new string('b', 64));
-            var policy = new BusinessQueryToolPolicy("business-query", "query_business_data", new Uri("https://localhost"),
-                "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45), false);
+            var policy = new BusinessQueryToolPolicy("business-query", "query_business_data",
+                "eu-agent", "eu-mcp", "alias:project-jwt", 1, new string('a', 64), new string('b', 64), TimeSpan.FromSeconds(45));
             var snapshot = new AgentVersionSnapshot(Guid.NewGuid(), "test", "test", "test", AgentOutputMode.Text, null, [], []);
             if (delegated) snapshot = snapshot with
             {

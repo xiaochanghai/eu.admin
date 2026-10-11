@@ -58,9 +58,6 @@ internal static class AgentApiOptionsServiceCollectionExtensions
         services.AddSingleton<
             IValidateOptions<BusinessQueryForwardingOptions>,
             BusinessQueryForwardingOptionsValidator>();
-        services.AddSingleton<
-            IValidateOptions<BusinessQueryForwardingOptions>,
-            BusinessQueryMcpEgressOptionsValidator>();
         services.AddOptions<AgentExecutionOptions>()
             .BindConfiguration(AgentExecutionOptions.SectionName)
             .ValidateOnStart();

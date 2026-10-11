@@ -157,8 +157,7 @@ public sealed class SdkMcpRuntimeToolInvoker(
                 StringComparison.Ordinal);
             bool exactTarget = businessQueryPolicy.Matches(
                 server.Code,
-                version.Name,
-                server.Endpoint);
+                version.Name);
             if ((reservedServer || reservedTool) && !exactTarget)
             {
                 return BlockedConfiguration();
