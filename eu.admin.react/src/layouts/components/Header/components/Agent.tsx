@@ -37,7 +37,7 @@ const Agent: React.FC<AgentProps> = ({ layout }) => {
         justifyContent: "center"
       }}
     >
-      <Icon name={iconName} style={{ fontSize: 16 }} />
+      <Icon name={iconName} style={{ fontSize: 20 }} />
     </button>
   );
 };
