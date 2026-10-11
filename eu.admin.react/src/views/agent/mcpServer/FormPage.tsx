@@ -422,7 +422,7 @@ const FormPage: React.FC<FormPageProps> = ({ Id, IsView, formPageRef, onReload, 
               </Form.Item>
             </>
           ) : (
-            <Form.Item name="endpoint" label="Endpoint" rules={[{ required: true }, { type: "url", message: "请输入有效 URL" }]}>
+            <Form.Item name="endpoint" label="Endpoint" rules={[{ required: true }]}>
               <Input placeholder={transport === "Sse" ? "https://example.com/sse" : "https://example.com/mcp"} />
             </Form.Item>
           )}
