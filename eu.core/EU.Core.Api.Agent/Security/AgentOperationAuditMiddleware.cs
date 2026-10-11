@@ -94,30 +94,52 @@ public sealed class AgentOperationAuditMiddleware(
         try
         {
             await next(context);
-            AgentOperationAuditRecord terminal = await SaveTerminalAsync(
+            ScheduleTerminalAudit(
+                context,
                 repository,
                 record,
                 context.Response.StatusCode,
-                ElapsedMilliseconds(started),
                 context.Items.ContainsKey(CancelledItemKey),
-                CancellationToken.None);
-            metrics.RecordCompleted(
                 method,
                 route,
                 policy,
-                terminal.StatusCode,
-                terminal.Outcome,
-                terminal.DurationMilliseconds);
+                started);
         }
         catch (Exception)
+        {
+            ScheduleTerminalAudit(
+                context,
+                repository,
+                record,
+                StatusCodes.Status500InternalServerError,
+                cancelled: false,
+                method,
+                route,
+                policy,
+                started);
+            throw;
+        }
+    }
+
+    private void ScheduleTerminalAudit(
+        HttpContext context,
+        IAgAgentOperationAuditServices repository,
+        AgentOperationAuditRecord record,
+        int statusCode,
+        bool cancelled,
+        string method,
+        string route,
+        string policy,
+        long started)
+    {
+        context.Response.OnCompleted(async () =>
         {
             AgentOperationAuditRecord terminal = await SaveTerminalAsync(
                 repository,
                 record,
-                StatusCodes.Status500InternalServerError,
+                statusCode,
                 ElapsedMilliseconds(started),
-                cancelled: false,
-                CancellationToken.None);
+                cancelled);
             metrics.RecordCompleted(
                 method,
                 route,
@@ -125,8 +147,7 @@ public sealed class AgentOperationAuditMiddleware(
                 terminal.StatusCode,
                 terminal.Outcome,
                 terminal.DurationMilliseconds);
-            throw;
-        }
+        });
     }
 
     private async Task<AgentOperationAuditRecord> SaveTerminalAsync(
@@ -134,8 +155,7 @@ public sealed class AgentOperationAuditMiddleware(
         AgentOperationAuditRecord record,
         int statusCode,
         long durationMilliseconds,
-        bool cancelled,
-        CancellationToken cancellationToken)
+        bool cancelled)
     {
         string outcome = (statusCode, cancelled) switch
         {
@@ -162,11 +182,9 @@ public sealed class AgentOperationAuditMiddleware(
         };
         try
         {
-            await repository.SaveAsync(terminal, cancellationToken);
+            await repository.SaveAsync(terminal, CancellationToken.None);
         }
-        catch (Exception exception) when (
-            exception is not OperationCanceledException ||
-            !cancellationToken.IsCancellationRequested)
+        catch (Exception exception)
         {
             logger.LogError(
                 exception,

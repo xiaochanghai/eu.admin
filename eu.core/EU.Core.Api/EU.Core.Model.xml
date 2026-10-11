@@ -3572,6 +3572,21 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.StatusCode">
+            <summary>
+            响应状态码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.Outcome">
+            <summary>
+            访问结果
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmApiLogBase.ErrorCode">
+            <summary>
+            错误码
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmApplicationDeviceBase">
             <summary>
             APP客户端记录 (Dto.Base)
@@ -5790,6 +5805,11 @@
         <member name="P:EU.Core.Model.Base.SmModulesBase.IsAllowCustomColumn">
             <summary>
             是否允许设置自定义列
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsShowSearch">
+            <summary>
+            是否显示查询按钮
             </summary>
         </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
@@ -12888,6 +12908,21 @@
             备注
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.StatusCode">
+            <summary>
+            响应状态码
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.Outcome">
+            <summary>
+            访问结果
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmApiLog.ErrorCode">
+            <summary>
+            错误码
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmApplicationDevice">
             <summary>
             APP客户端记录 (Model)
@@ -15111,6 +15146,11 @@
         <member name="P:EU.Core.Model.Entity.SmModules.IsAllowCustomColumn">
             <summary>
             是否允许设置自定义列
+            </summary>
+        </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsShowSearch">
+            <summary>
+            是否显示查询按钮
             </summary>
         </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">

@@ -31,12 +31,12 @@ SQL 示例是解释材料，不是现库事实源。文档与代码或数据库�
 
 ## 文档地图
 
-- [AgModelConfig 系统模块](AgModelConfig系统模块.md)：模型配置标准 Controller/Service/基类复用约定、自动注册；禁止另建 ModelConfigStore/IModelConfigStore，以及历史脚本适用边界。
 - [元数据模型与维护约束](元数据模型与维护约束.md)：三表聚合、组装链路、写入不变量、缓存和契约验证。
 - [配置脚本说明](配置脚本说明.md)：两个用户提供脚本的语义、静态校验和使用边界。
 - [数据库只读核对基线](数据库只读核对基线.md)：2026-08-07 的表结构、完整性问题及示例与现库差异。
 - [QueryApiUrl 自定义列表查询](QueryApiUrl自定义查询.md)：字段职责、接口契约、人工数据库迁移、上线顺序和回退方式。
 - [`examples/供应商等级页面模块配置.sql`](examples/供应商等级页面模块配置.sql)：保留原始值序列的不可执行快照。
 - [`examples/终端客户页面模块配置.sql`](examples/终端客户页面模块配置.sql)：结构完整但与现库不同的历史/迁移快照。
+- [`examples/智能体管理模块配置.MySQL.sql`](examples/智能体管理模块配置.MySQL.sql)：由默认 MSSQL 的智能体管理模块只读导出并转换的 MySQL UPSERT 脚本。
 
 新增 SmModule 说明应进入本目录并更新本索引；`AGENTS.md` 只保留入口和跨模块硬约束，不堆放字段说明、脚本分析或环境核对结果。
