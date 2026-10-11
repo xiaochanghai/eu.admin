@@ -4,7 +4,7 @@ import { DEFAULT_PRIMARY } from "@/config";
 
 const globalState: GlobalState = {
   // layout mode (vertical | classic | transverse | columns)
-  layout: "vertical",
+  layout: "chat",
   // antd component size ("small" | "middle" | "large")
   componentSize: "middle",
   // antd compact theme
