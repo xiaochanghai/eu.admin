@@ -24,6 +24,12 @@ namespace EU.Core.Tests;
 public sealed class AgModelConfigAgentIntegrationTests
 {
     [Fact]
+    public void Host_resolver_implements_only_runtime_profile_resolver()
+    {
+        Assert.Equal([typeof(IAgentModelProfileResolver)], typeof(AgModelProfileResolver).GetInterfaces());
+    }
+
+    [Fact]
     public async Task Add_writes_complete_encrypted_record_once_before_runtime_use()
     {
         var fixture = Create();
@@ -132,22 +138,19 @@ public sealed class AgModelConfigAgentIntegrationTests
     }
 
     [Fact]
-    public async Task Host_catalog_opens_fresh_service_scopes_and_observes_disable()
+    public async Task Host_resolver_opens_fresh_service_scopes_and_observes_disable()
     {
         var fixture = Create();
         int scopes = 0;
         var services = new ServiceCollection();
         services.AddScoped<IAgModelConfigServices>(_ => { scopes++; return fixture.Service; });
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-        var catalog = new AgModelProfileCatalog(provider.GetRequiredService<IServiceScopeFactory>());
-        Assert.True(await catalog.ExistsAsync("sales-model"));
-        Assert.False(await catalog.ExistsAsync("Sales-model"));
-        Assert.Equal("qwen-offline", (await catalog.ResolveAsync("sales-model")).ModelName);
+        var resolver = new AgModelProfileResolver(provider.GetRequiredService<IServiceScopeFactory>());
+        Assert.Equal("qwen-offline", (await resolver.ResolveAsync("sales-model")).ModelName);
         fixture.Rows[0].Enabled = false;
-        Assert.Empty(await catalog.ListAsync());
-        var failure = await Assert.ThrowsAsync<AgentRuntimeException>(() => catalog.ResolveAsync("sales-model"));
+        var failure = await Assert.ThrowsAsync<AgentRuntimeException>(() => resolver.ResolveAsync("sales-model"));
         Assert.Equal(AgentRunErrorCodes.ModelConfigurationUnavailable, failure.ErrorCode);
-        Assert.Equal(5, scopes);
+        Assert.Equal(2, scopes);
     }
 
     [Theory]
@@ -501,14 +504,14 @@ public sealed class AgModelConfigAgentIntegrationTests
         var services = new ServiceCollection();
         services.AddScoped<IAgModelConfigServices>(_ => fixture.Service);
         using var provider = services.BuildServiceProvider();
-        var catalog = new AgModelProfileCatalog(provider.GetRequiredService<IServiceScopeFactory>());
-        var error = await Assert.ThrowsAsync<AgentRuntimeException>(() => catalog.ResolveAsync("sales-model"));
+        var resolver = new AgModelProfileResolver(provider.GetRequiredService<IServiceScopeFactory>());
+        var error = await Assert.ThrowsAsync<AgentRuntimeException>(() => resolver.ResolveAsync("sales-model"));
         Assert.Equal(AgentRunErrorCodes.ModelConfigurationUnavailable, error.ErrorCode);
         Assert.DoesNotContain("offline-secret-connection", error.ToString());
         Assert.Null(error.InnerException);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => catalog.ResolveAsync("sales-model", cancellation.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => resolver.ResolveAsync("sales-model", cancellation.Token));
     }
 
     [Fact]

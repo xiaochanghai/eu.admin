@@ -1,38 +1,11 @@
 #nullable enable
 
-using EU.Core.Model.ViewModels.Extend;
-
 namespace EU.Core.IServices.Agents;
 
 /// <summary>
-/// 定义模型配置标识的查询目录。
+/// 提供模型配置标识的安全格式校验。
 /// </summary>
-public interface IModelProfileReferenceCatalog
-{
-    #region 检查模型配置引用是否存在。
-    /// <summary>检查模型配置引用是否存在。</summary>
-    /// <param name="modelProfileId">模型配置标识。</param>
-    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
-    /// <returns>异步查询结果：指定模型配置引用存在时返回 true，否则返回 false。</returns>
-    Task<bool> ExistsAsync(string modelProfileId, CancellationToken cancellationToken = default);
-    #endregion
-}
-
-/// <summary>
-/// 定义可公开展示的模型配置目录。
-/// </summary>
-public interface IPublicModelProfileCatalog : IModelProfileReferenceCatalog
-{
-    /// <summary>异步获取可公开使用的模型配置标识集合。</summary>
-    /// <param name="cancellationToken">取消本次查询的令牌。</param>
-    /// <returns>当前可用的公开模型标识集合。</returns>
-    Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default);
-}
-
-/// <summary>
-/// 基于配置提供可公开展示的模型配置目录。
-/// </summary>
-public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
+public static class PublicModelProfileCatalog
 {
     private static readonly string[] SensitiveTerms =
     [
@@ -44,34 +17,6 @@ public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
         "secret",
         "token"
     ];
-
-    private readonly HashSet<string> _profileIds;
-
-    #region 构造（PublicModelProfileCatalog）
-    /// <summary>
-    /// 构造（PublicModelProfileCatalog）
-    /// </summary>
-    /// <param name="profileIds">允许公开使用的模型配置标识集合。</param>
-    public PublicModelProfileCatalog(IEnumerable<string> profileIds)
-    {
-        ArgumentNullException.ThrowIfNull(profileIds);
-        string[] configuredValues = profileIds.ToArray();
-        if (!AreValid(configuredValues))
-        {
-            throw new ArgumentException(
-                "The public model profile identifier configuration is invalid.",
-                nameof(profileIds));
-        }
-
-        string[] values = configuredValues
-            .Select(value => value.Trim())
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToArray();
-        ProfileIds = AgentContractCloner.ReadOnly(values);
-        _profileIds = new HashSet<string>(values, StringComparer.Ordinal);
-    }
-    #endregion
 
     #region 校验公开模型配置标识集合（AreValid）
     /// <summary>
@@ -95,36 +40,6 @@ public sealed class PublicModelProfileCatalog : IPublicModelProfileCatalog
         }
 
         return true;
-    }
-    #endregion
-
-    /// <summary>
-    /// 获取可公开使用的模型配置标识集合。
-    /// </summary>
-    public IReadOnlyList<string> ProfileIds { get; }
-
-    #region 获取公开模型目录（ListAsync）
-    /// <summary>异步读取公开模型标识，不访问模型凭据。</summary>
-    /// <param name="cancellationToken">取消本次读取的令牌。</param>
-    /// <returns>构造时保存的只读公开标识集合。</returns>
-    public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(ProfileIds);
-    }
-    #endregion
-
-    #region 查询公开模型配置是否存在（ExistsAsync）
-    /// <summary>
-    /// 按区分大小写的完整标识查询公开模型配置是否存在（ExistsAsync）。
-    /// </summary>
-    /// <param name="modelProfileId">模型配置标识。</param>
-    /// <param name="cancellationToken">用于取消当前异步操作的令牌。</param>
-    /// <returns>异步查询结果：标识存在于已配置的公开目录中时返回 true，否则返回 false。</returns>
-    public Task<bool> ExistsAsync(string modelProfileId, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(_profileIds.Contains(modelProfileId));
     }
     #endregion
 
