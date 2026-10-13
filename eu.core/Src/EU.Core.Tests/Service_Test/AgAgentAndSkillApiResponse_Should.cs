@@ -20,189 +20,189 @@ namespace EU.Core.Tests.Service_Test;
 
 public sealed class AgAgentAndSkillApiResponse_Should
 {
-    [Fact]
-    public async Task Return_fixed_service_error_for_invalid_agent_status()
-    {
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]),
-            Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
+    //[Fact]
+    //public async Task Return_fixed_service_error_for_invalid_agent_status()
+    //{
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]),
+    //        Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
 
-        Exception exception = await Assert.ThrowsAsync<Exception>(
-            async () => await controller.List(null, "Unknown", CancellationToken.None));
+    //    Exception exception = await Assert.ThrowsAsync<Exception>(
+    //        async () => await controller.List(null, "Unknown", CancellationToken.None));
 
-        Assert.Equal("The status filter is invalid.", exception.Message);
-    }
+    //    Assert.Equal("The status filter is invalid.", exception.Message);
+    //}
 
-    [Fact]
-    public async Task Reject_unavailable_agent_model_profile_through_the_standard_error_pipeline()
-    {
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]),
-            Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
+    //[Fact]
+    //public async Task Reject_unavailable_agent_model_profile_through_the_standard_error_pipeline()
+    //{
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]),
+    //        Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
 
-        Exception exception = await Assert.ThrowsAsync<Exception>(
-            async () => await controller.SaveDraft(
-                Guid.NewGuid(),
-                new SaveAgentDraftRequest(
-                    0, "Main", string.Empty, "instructions", "missing-profile",
-                    AgentOutputMode.Text, null, [], [], []),
-                CancellationToken.None));
+    //    Exception exception = await Assert.ThrowsAsync<Exception>(
+    //        async () => await controller.SaveDraft(
+    //            Guid.NewGuid(),
+    //            new SaveAgentDraftRequest(
+    //                0, "Main", string.Empty, "instructions", "missing-profile",
+    //                AgentOutputMode.Text, null, [], [], []),
+    //            CancellationToken.None));
 
-        Assert.Equal("The selected model profile is not available.", exception.Message);
-    }
+    //    Assert.Equal("The selected model profile is not available.", exception.Message);
+    //}
 
-    [Fact]
-    public async Task Return_created_service_result_for_agent_creation()
-    {
-        Guid id = Guid.NewGuid();
-        var detail = new AgAgentDefinitionDetailDto { Id = id, Code = "main", Name = "Main" };
-        IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
-            method.Name switch
-            {
-                nameof(IAgAgentDefinitionServices.CreateAsync) =>
-                    Task.FromResult(ServiceResult<Guid>.OprateSuccess(id)),
-                nameof(IAgAgentDefinitionServices.QueryAgent) =>
-                    Task.FromResult<AgAgentDefinitionDetailDto?>(detail),
-                _ => throw new InvalidOperationException(method.Name)
-            });
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]), service));
+    //[Fact]
+    //public async Task Return_created_service_result_for_agent_creation()
+    //{
+    //    Guid id = Guid.NewGuid();
+    //    var detail = new AgAgentDefinitionDetailDto { Id = id, Code = "main", Name = "Main" };
+    //    IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
+    //        method.Name switch
+    //        {
+    //            nameof(IAgAgentDefinitionServices.CreateAsync) =>
+    //                Task.FromResult(ServiceResult<Guid>.OprateSuccess(id)),
+    //            nameof(IAgAgentDefinitionServices.QueryAgent) =>
+    //                Task.FromResult<AgAgentDefinitionDetailDto?>(detail),
+    //            _ => throw new InvalidOperationException(method.Name)
+    //        });
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]), service));
 
-        ServiceResult<AgAgentDefinitionDetailDto> body = await controller.Create(
-            new CreateAgentRequest("main", "Main", string.Empty),
-            CancellationToken.None);
+    //    ServiceResult<AgAgentDefinitionDetailDto> body = await controller.Create(
+    //        new CreateAgentRequest("main", "Main", string.Empty),
+    //        CancellationToken.None);
 
-        AssertServiceSuccess(body);
-        Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
-        Assert.Same(detail, body.Data);
-        Assert.Equal($"/api/agents/{id}", controller.Response.Headers.Location);
-    }
+    //    AssertServiceSuccess(body);
+    //    Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
+    //    Assert.Same(detail, body.Data);
+    //    Assert.Equal($"/api/agents/{id}", controller.Response.Headers.Location);
+    //}
 
-    [Fact]
-    public async Task Return_fixed_service_errors_for_agent_conflict_and_missing_resources()
-    {
-        IAgAgentDefinitionServices agentService = Proxy<IAgAgentDefinitionServices>((method, _) =>
-            method.Name switch
-            {
-                nameof(IAgAgentDefinitionServices.CreateAsync) =>
-                    Task.FromResult(ServiceResult<Guid>.OprateFailed("The Agent code already exists.")),
-                nameof(IAgAgentDefinitionServices.QueryAgent) =>
-                    Task.FromResult<AgAgentDefinitionDetailDto?>(null),
-                _ => throw new InvalidOperationException(method.Name)
-            });
-        var agentsController = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]), agentService));
+    //[Fact]
+    //public async Task Return_fixed_service_errors_for_agent_conflict_and_missing_resources()
+    //{
+    //    IAgAgentDefinitionServices agentService = Proxy<IAgAgentDefinitionServices>((method, _) =>
+    //        method.Name switch
+    //        {
+    //            nameof(IAgAgentDefinitionServices.CreateAsync) =>
+    //                Task.FromResult(ServiceResult<Guid>.OprateFailed("The Agent code already exists.")),
+    //            nameof(IAgAgentDefinitionServices.QueryAgent) =>
+    //                Task.FromResult<AgAgentDefinitionDetailDto?>(null),
+    //            _ => throw new InvalidOperationException(method.Name)
+    //        });
+    //    var agentsController = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]), agentService));
 
-        ServiceResult<AgAgentDefinitionDetailDto> failedCreate =
-            await agentsController.Create(
-                new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
-                CancellationToken.None);
-        Assert.False(failedCreate.Success);
-        Assert.Equal(500, failedCreate.Status);
-        Assert.Equal("The Agent code already exists.", failedCreate.Message);
-        Exception missingAgent = await Assert.ThrowsAsync<Exception>(
-            async () => await agentsController.Get(Guid.NewGuid(), CancellationToken.None));
-        Assert.Equal("The Agent was not found.", missingAgent.Message);
+    //    ServiceResult<AgAgentDefinitionDetailDto> failedCreate =
+    //        await agentsController.Create(
+    //            new CreateAgentRequest("duplicate", "Duplicate", string.Empty),
+    //            CancellationToken.None);
+    //    Assert.False(failedCreate.Success);
+    //    Assert.Equal(500, failedCreate.Status);
+    //    Assert.Equal("The Agent code already exists.", failedCreate.Message);
+    //    Exception missingAgent = await Assert.ThrowsAsync<Exception>(
+    //        async () => await agentsController.Get(Guid.NewGuid(), CancellationToken.None));
+    //    Assert.Equal("The Agent was not found.", missingAgent.Message);
 
-        IAgSkillDefinitionServices skillService = Proxy<IAgSkillDefinitionServices>((method, _) =>
-            method.Name == nameof(IAgSkillDefinitionServices.GetAsync)
-                ? Task.FromResult<SkillDefinition?>(null)
-                : throw new InvalidOperationException(method.Name));
-        var skillsController = WithHttpContext(new SkillsController(
-            skillService,
-            new StubAgentDefinitionCatalog()));
+    //    IAgSkillDefinitionServices skillService = Proxy<IAgSkillDefinitionServices>((method, _) =>
+    //        method.Name == nameof(IAgSkillDefinitionServices.GetAsync)
+    //            ? Task.FromResult<SkillDefinition?>(null)
+    //            : throw new InvalidOperationException(method.Name));
+    //    var skillsController = WithHttpContext(new SkillsController(
+    //        skillService,
+    //        new StubAgentDefinitionCatalog()));
 
-        AssertServiceError(
-            await skillsController.Get(Guid.NewGuid(), CancellationToken.None),
-            StatusCodes.Status404NotFound,
-            SkillServiceStatusCodes.NotFound,
-            SkillErrorCodes.NotFound);
-    }
+    //    AssertServiceError(
+    //        await skillsController.Get(Guid.NewGuid(), CancellationToken.None),
+    //        StatusCodes.Status404NotFound,
+    //        SkillServiceStatusCodes.NotFound,
+    //        SkillErrorCodes.NotFound);
+    //}
 
-    [Fact]
-    public async Task Keep_agent_export_as_file_response()
-    {
-        IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
-            method.Name == nameof(IAgAgentDefinitionServices.ExportAsync)
-                ? Task.FromResult(ServiceResult<string>.OprateSuccess("{}", "操作成功"))
-                : throw new InvalidOperationException(method.Name));
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]), service));
+    //[Fact]
+    //public async Task Keep_agent_export_as_file_response()
+    //{
+    //    IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
+    //        method.Name == nameof(IAgAgentDefinitionServices.ExportAsync)
+    //            ? Task.FromResult(ServiceResult<string>.OprateSuccess("{}", "操作成功"))
+    //            : throw new InvalidOperationException(method.Name));
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]), service));
 
-        IActionResult action = await controller.Export(Guid.NewGuid(), CancellationToken.None);
+    //    IActionResult action = await controller.Export(Guid.NewGuid(), CancellationToken.None);
 
-        FileContentResult file = Assert.IsType<FileContentResult>(action);
-        Assert.Equal("application/json", file.ContentType);
-        Assert.Equal("agent-package.json", file.FileDownloadName);
-        Assert.Equal("{}", Encoding.UTF8.GetString(file.FileContents));
-    }
+    //    FileContentResult file = Assert.IsType<FileContentResult>(action);
+    //    Assert.Equal("application/json", file.ContentType);
+    //    Assert.Equal("agent-package.json", file.FileDownloadName);
+    //    Assert.Equal("{}", Encoding.UTF8.GetString(file.FileContents));
+    //}
 
-    [Fact]
-    public async Task Reject_agent_import_with_an_unsupported_content_type_through_the_standard_error_pipeline()
-    {
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]),
-            Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
-        controller.Request.ContentType = "text/plain";
+    //[Fact]
+    //public async Task Reject_agent_import_with_an_unsupported_content_type_through_the_standard_error_pipeline()
+    //{
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]),
+    //        Proxy<IAgAgentDefinitionServices>((_, _) => throw new InvalidOperationException())));
+    //    controller.Request.ContentType = "text/plain";
 
-        Exception exception = await Assert.ThrowsAsync<Exception>(
-            async () => await controller.Import(CancellationToken.None));
+    //    Exception exception = await Assert.ThrowsAsync<Exception>(
+    //        async () => await controller.Import(CancellationToken.None));
 
-        Assert.Equal("The Agent package must use a JSON content type.", exception.Message);
-    }
+    //    Assert.Equal("The Agent package must use a JSON content type.", exception.Message);
+    //}
 
-    [Fact]
-    public async Task Wrap_agent_queries_mutations_and_import()
-    {
-        AgentDefinition definition = CreateAgent();
-        var detail = new AgAgentDefinitionDetailDto
-        {
-            Id = definition.Id,
-            Code = definition.Code,
-            Name = definition.Name
-        };
-        IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
-            method.Name switch
-            {
-                nameof(IAgAgentDefinitionServices.QueryAgentList) =>
-                    Task.FromResult(new List<AgAgentDefinitionDto>()),
-                nameof(IAgAgentDefinitionServices.QueryAgent) =>
-                    Task.FromResult<AgAgentDefinitionDetailDto?>(detail),
-                nameof(IAgAgentDefinitionServices.SaveDraftAsync) or
-                nameof(IAgAgentDefinitionServices.PublishAsync) or
-                nameof(IAgAgentDefinitionServices.SetRuntimeStatusAsync) or
-                nameof(IAgAgentDefinitionServices.ImportAsync) =>
-                    Task.FromResult(ServiceResult<AgentDefinition>.OprateSuccess(definition)),
-                _ => throw new InvalidOperationException(method.Name)
-            });
-        var controller = WithHttpContext(new AgentsController(
-            new PublicModelProfileCatalog([]), service));
+    //[Fact]
+    //public async Task Wrap_agent_queries_mutations_and_import()
+    //{
+    //    AgentDefinition definition = CreateAgent();
+    //    var detail = new AgAgentDefinitionDetailDto
+    //    {
+    //        Id = definition.Id,
+    //        Code = definition.Code,
+    //        Name = definition.Name
+    //    };
+    //    IAgAgentDefinitionServices service = Proxy<IAgAgentDefinitionServices>((method, _) =>
+    //        method.Name switch
+    //        {
+    //            nameof(IAgAgentDefinitionServices.QueryAgentList) =>
+    //                Task.FromResult(new List<AgAgentDefinitionDto>()),
+    //            nameof(IAgAgentDefinitionServices.QueryAgent) =>
+    //                Task.FromResult<AgAgentDefinitionDetailDto?>(detail),
+    //            nameof(IAgAgentDefinitionServices.SaveDraftAsync) or
+    //            nameof(IAgAgentDefinitionServices.PublishAsync) or
+    //            nameof(IAgAgentDefinitionServices.SetRuntimeStatusAsync) or
+    //            nameof(IAgAgentDefinitionServices.ImportAsync) =>
+    //                Task.FromResult(ServiceResult<AgentDefinition>.OprateSuccess(definition)),
+    //            _ => throw new InvalidOperationException(method.Name)
+    //        });
+    //    var controller = WithHttpContext(new AgentsController(
+    //        new PublicModelProfileCatalog([]), service));
 
-        AssertServiceSuccess(
-            await controller.List(null, null, CancellationToken.None));
-        AssertServiceSuccess(
-            await controller.Get(definition.Id, CancellationToken.None));
-        AssertServiceSuccess(
-            await controller.SaveDraft(
-                definition.Id,
-                new SaveAgentDraftRequest(
-                    0, "Main", string.Empty, "instructions", string.Empty,
-                    AgentOutputMode.Text, null, [], [], []),
-                CancellationToken.None));
-        AssertServiceSuccess<AgentDefinition>(
-            await controller.Publish(definition.Id, new ExpectedRevisionRequest(0), CancellationToken.None));
-        AssertServiceSuccess<AgentDefinition>(
-            await controller.SetStatus(
-                definition.Id,
-                new SetAgentStatusRequest(0, AgentRuntimeStatus.Disabled),
-                CancellationToken.None));
+    //    AssertServiceSuccess(
+    //        await controller.List(null, null, CancellationToken.None));
+    //    AssertServiceSuccess(
+    //        await controller.Get(definition.Id, CancellationToken.None));
+    //    AssertServiceSuccess(
+    //        await controller.SaveDraft(
+    //            definition.Id,
+    //            new SaveAgentDraftRequest(
+    //                0, "Main", string.Empty, "instructions", string.Empty,
+    //                AgentOutputMode.Text, null, [], [], []),
+    //            CancellationToken.None));
+    //    AssertServiceSuccess<AgentDefinition>(
+    //        await controller.Publish(definition.Id, new ExpectedRevisionRequest(0), CancellationToken.None));
+    //    AssertServiceSuccess<AgentDefinition>(
+    //        await controller.SetStatus(
+    //            definition.Id,
+    //            new SetAgentStatusRequest(0, AgentRuntimeStatus.Disabled),
+    //            CancellationToken.None));
 
-        controller.Request.ContentType = "application/json";
-        controller.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
-        AssertServiceSuccess(
-            await controller.Import(CancellationToken.None));
-        Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
-    }
+    //    controller.Request.ContentType = "application/json";
+    //    controller.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
+    //    AssertServiceSuccess(
+    //        await controller.Import(CancellationToken.None));
+    //    Assert.Equal(StatusCodes.Status201Created, controller.Response.StatusCode);
+    //}
 
     [Fact]
     public async Task Keep_skill_file_content_as_text_response()

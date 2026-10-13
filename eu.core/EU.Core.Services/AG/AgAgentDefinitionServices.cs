@@ -42,7 +42,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private readonly IPublishedOrchestrationCatalog? _orchestrationCatalog;
     private readonly IOrchestrationRepository? _orchestrations;
     private readonly IMainAgentAssignmentRepository? _mainAgentAssignments;
-    private readonly IModelProfileReferenceCatalog? _modelProfiles;
+    private readonly IAgModelConfigServices? _modelConfigs;
 
     #region 构造
 
@@ -57,7 +57,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     /// <param name="orchestrationCatalog">已发布编排目录。</param>
     /// <param name="orchestrations">编排仓储。</param>
     /// <param name="mainAgentAssignments">主 Agent 分配记录仓储。</param>
-    /// <param name="modelProfiles">模型配置目录。</param>
+    /// <param name="modelConfigs">模型配置服务。</param>
     public AgAgentDefinitionServices(
         IBaseRepository<AgAgentDefinition> dal,
         JsonSchemaValidator? jsonSchemaValidator = null,
@@ -67,7 +67,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         IPublishedOrchestrationCatalog? orchestrationCatalog = null,
         IOrchestrationRepository? orchestrations = null,
         IMainAgentAssignmentRepository? mainAgentAssignments = null,
-        IModelProfileReferenceCatalog? modelProfiles = null)
+        IAgModelConfigServices? modelConfigs = null)
     {
         BaseDal = dal ?? throw new ArgumentNullException(nameof(dal));
         _jsonSchemaValidator = jsonSchemaValidator ?? new JsonSchemaValidator();
@@ -77,7 +77,7 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
         _orchestrationCatalog = orchestrationCatalog;
         _orchestrations = orchestrations;
         _mainAgentAssignments = mainAgentAssignments;
-        _modelProfiles = modelProfiles;
+        _modelConfigs = modelConfigs;
     }
 
     #endregion
@@ -1155,8 +1155,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
 
     #region Agent 管理
 
-    private IModelProfileReferenceCatalog ModelProfiles =>
-        _modelProfiles ?? throw AgentManagementUnavailable();
+    private IAgModelConfigServices ModelConfigs =>
+        _modelConfigs ?? throw AgentManagementUnavailable();
 
     #region 创建（CreateAsync）
     /// <summary>
@@ -1609,13 +1609,13 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     /// 导入或导出等管理操作，则在这里提前抛出明确的配置异常。
     /// </summary>
     /// <remarks>
-    /// 模型配置目录是 Agent 管理操作必须具备的依赖，因此使用
-    /// <see cref="_modelProfiles"/> 是否已注册作为管理能力可用性的判断标志。
+    /// 模型配置服务是 Agent 管理操作必须具备的依赖，因此使用
+    /// <see cref="_modelConfigs"/> 是否已注册作为管理能力可用性的判断标志。
     /// </remarks>
     private void EnsureAgentManagementAvailable()
     {
         // 避免管理依赖缺失时继续执行，并在后续流程中产生不明确的空引用异常。
-        if (_modelProfiles is null)
+        if (_modelConfigs is null)
             throw AgentManagementUnavailable();
     }
     #endregion
@@ -2226,7 +2226,8 @@ public class AgAgentDefinitionServices : BaseServices<AgAgentDefinition, AgAgent
     private async Task<string?> ValidateModelReferenceAsync(string modelProfileId, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(modelProfileId) &&
-            !await ModelProfiles.ExistsAsync(modelProfileId, cancellationToken))
+            !(await ModelConfigs.ListAvailableProfilesAsync(cancellationToken))
+                .Contains(modelProfileId, StringComparer.Ordinal))
         {
             return "The package references a model profile that is not available.";
         }

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Runtime.CompilerServices;
+using System.Reflection;
 using System.Text.Json;
 using EU.Core.IServices.Abstractions.Auditing;
 using EU.Core.IServices.Abstractions.Security;
@@ -140,10 +141,14 @@ public sealed class AgRuntimeApiResponse_Should
         Assert.NotNull(cleanup.Data);
 
         var mainAgent = new MainAgentAssignmentService(new EmptyAgentCatalog(), new MainAgentRepository());
+        IAgModelConfigServices modelConfigs = Proxy<IAgModelConfigServices>((method, _) =>
+            method.Name == nameof(IAgModelConfigServices.ListAvailableProfilesAsync)
+                ? Task.FromResult<IReadOnlyList<string>>(["model-profile"])
+                : throw new InvalidOperationException(method.Name));
         var platform = new PlatformController(
             Options.Create(new AgentPlatformOptions { ServiceName = "agent-api" }),
             Options.Create(new AgentEvaluationOptions { EnableModelJudge = true }),
-            new PublicModelProfileCatalog(["model-profile"]),
+            modelConfigs,
             mainAgent)
         { ControllerContext = Context() };
         ServiceResult<PlatformServiceResponse> service =
@@ -166,6 +171,21 @@ public sealed class AgRuntimeApiResponse_Should
                 .BuildServiceProvider()
         }
     };
+
+    private static T Proxy<T>(Func<MethodInfo, object?[]?, object?> handler) where T : class
+    {
+        var proxy = DispatchProxy.Create<T, DelegateProxy>();
+        ((DelegateProxy)(object)proxy).Handler = handler;
+        return proxy;
+    }
+
+    private class DelegateProxy : DispatchProxy
+    {
+        public Func<MethodInfo, object?[]?, object?> Handler { get; set; } = null!;
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            Handler(targetMethod ?? throw new InvalidOperationException(), args);
+    }
 
     private static object AssertServiceSuccess(
         IActionResult action,

@@ -1,6 +1,5 @@
 using EU.Core.Api.Agent.Security;
 using EU.Core.IServices;
-using EU.Core.IServices.Agents;
 using EU.Core.Model;
 using EU.Core.Model.Models;
 using EU.Core.Model.ViewModels.Extend;
@@ -14,11 +13,11 @@ namespace EU.Core.Api.Agent.Controllers;
 /// <summary>
 /// 提供 Agent 定义及版本管理的 HTTP 接口。
 /// </summary>
-/// <param name="modelProfiles">用于查询可公开展示的模型配置的目录。</param>
 /// <param name="agentDefinitionServices">用于管理 Agent 定义及版本的服务。</param>
+/// <param name="agModelConfigServices">用于校验 Agent 可引用的模型配置。</param>
 [Route("api/agents")]
 [Authorize(Policy = AgentAuthorizationPolicies.Admin)]
-public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, IAgAgentDefinitionServices agentDefinitionServices) : Base.ControllerBase
+public sealed class AgentsController(IAgAgentDefinitionServices agentDefinitionServices, IAgModelConfigServices agModelConfigServices) : Base.ControllerBase
 {
     #region 查询列表（List）
     /// <summary>
@@ -139,10 +138,9 @@ public sealed class AgentsController(IPublicModelProfileCatalog modelProfiles, I
     public async Task<ServiceResult<AgentDefinition>> SaveDraft(Guid id, [FromBody] SaveAgentDraftRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.ModelProfileId) &&
-            !await modelProfiles.ExistsAsync(request.ModelProfileId, cancellationToken))
-        {
+            !(await agModelConfigServices.ListAvailableProfilesAsync(cancellationToken))
+                .Contains(request.ModelProfileId, StringComparer.Ordinal))
             throw new Exception("The selected model profile is not available.");
-        }
 
         ServiceResult<AgentDefinition> result = await agentDefinitionServices.SaveDraftAsync(
             new SaveAgentDraftCommand(

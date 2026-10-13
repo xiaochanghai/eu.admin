@@ -1,15 +1,12 @@
 using EU.Core.Api.Agent.Configuration;
 using EU.Core.Api.Agent.Health;
-using EU.Core.IServices.Agents;
+using EU.Core.Api.Agent.Security;
+using EU.Core.IServices;
+using EU.Core.Model;
 using EU.Core.Model.ViewModels.Extend;
-using EU.Core.IServices.MainAgent;
-using EU.Core.IServices.Skills;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Authorization;
-using EU.Core.Api.Agent.Security;
-using EU.Core.Model;
-using EU.Core.IServices;
 
 namespace EU.Core.Api.Agent.Controllers;
 
@@ -20,14 +17,14 @@ namespace EU.Core.Api.Agent.Controllers;
 /// </summary>
 /// <param name="platform">Agent 平台能力配置。</param>
 /// <param name="evaluation">Agent 评测功能配置。</param>
-/// <param name="modelProfiles">用于查询可公开展示的模型配置的目录。</param>
+/// <param name="agModelConfigServices">用于查询已启用模型配置的服务。</param>
 /// <param name="mainAgentAssignments">用于查询和维护当前主 Agent 分配的服务。</param>
 [Route("api/platform")]
 [Authorize(Policy = AgentAuthorizationPolicies.AuditRead)]
 public sealed class PlatformController(
     IOptions<AgentPlatformOptions> platform,
     IOptions<AgentEvaluationOptions> evaluation,
-    IPublicModelProfileCatalog modelProfiles,
+    IAgModelConfigServices agModelConfigServices,
     IMainAgentAssignmentService mainAgentAssignments) : Base.ControllerBase
 {
     #region 处理（Service）
@@ -52,6 +49,8 @@ public sealed class PlatformController(
     public async Task<ServiceResult<PlatformCapabilitiesResponse>> Capabilities(CancellationToken cancellationToken)
     {
         bool mainAgent = (await mainAgentAssignments.GetAsync(cancellationToken)).Success;
+
+        var codes = await agModelConfigServices.ListAvailableProfilesAsync(cancellationToken);
         return ServiceResult<PlatformCapabilitiesResponse>.QuerySuccess(
             new PlatformCapabilitiesResponse(
                 "sqlsugar",
@@ -59,7 +58,7 @@ public sealed class PlatformController(
                 new PlatformDeploymentResponse(
                     AgentDefinition.ServerDeploymentTarget,
                     AgentDefinition.ApiHost),
-                await modelProfiles.ListAsync(cancellationToken),
+                codes,
                 new PlatformFeatureResponse(
                     true, true, true, true, true, true,
                     evaluation.Value.EnableModelJudge,

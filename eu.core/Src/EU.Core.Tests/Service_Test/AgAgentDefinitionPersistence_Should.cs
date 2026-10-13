@@ -1,3 +1,5 @@
+using System.Reflection;
+using EU.Core.IServices;
 using EU.Core.IServices.Agents;
 using EU.Core.IServices.MainAgent;
 using EU.Core.IServices.Orchestration;
@@ -24,7 +26,7 @@ public sealed class AgAgentDefinitionPersistence_Should
         const string modelProfileId = "test-model";
         var service = new AgAgentDefinitionServices(
             fixture.CreateRepository<AgAgentDefinition>(),
-            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+            modelConfigs: ModelConfigs(modelProfileId));
         string code = $"agent-{Guid.NewGuid():N}";
 
         var created = await service.CreateAsync(
@@ -110,7 +112,7 @@ public sealed class AgAgentDefinitionPersistence_Should
         const string modelProfileId = "test-model";
         var service = new AgAgentDefinitionServices(
             fixture.CreateRepository<AgAgentDefinition>(),
-            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+            modelConfigs: ModelConfigs(modelProfileId));
 
         Guid childId = (await service.CreateAsync(
             new CreateAgentCommand(
@@ -200,7 +202,7 @@ public sealed class AgAgentDefinitionPersistence_Should
         var service = new AgAgentDefinitionServices(
             fixture.CreateRepository<AgAgentDefinition>(),
             mainAgentAssignments: assignments,
-            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+            modelConfigs: ModelConfigs(modelProfileId));
 
         Guid agentId = (await service.CreateAsync(new CreateAgentCommand(
             $"main-{Guid.NewGuid():N}",
@@ -260,7 +262,7 @@ public sealed class AgAgentDefinitionPersistence_Should
             fixture.CreateRepository<AgAgentDefinition>(),
             orchestrations: orchestrations,
             mainAgentAssignments: assignments,
-            modelProfiles: new PublicModelProfileCatalog([modelProfileId]));
+            modelConfigs: ModelConfigs(modelProfileId));
         Guid agentId = (await service.CreateAsync(
             new CreateAgentCommand(
                 $"referenced-{Guid.NewGuid():N}",
@@ -369,5 +371,22 @@ public sealed class AgAgentDefinitionPersistence_Should
                 AgentRuntimeStatus.Archived));
         Assert.True(archived.Success);
         Assert.Equal(AgentRuntimeStatus.Archived, archived.Data.RuntimeStatus);
+    }
+
+    private static IAgModelConfigServices ModelConfigs(params string[] profileIds)
+    {
+        var proxy = DispatchProxy.Create<IAgModelConfigServices, ModelConfigProxy>();
+        ((ModelConfigProxy)(object)proxy).ProfileIds = profileIds;
+        return proxy;
+    }
+
+    private class ModelConfigProxy : DispatchProxy
+    {
+        public IReadOnlyList<string> ProfileIds { get; set; } = [];
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            targetMethod?.Name == nameof(IAgModelConfigServices.ListAvailableProfilesAsync)
+                ? Task.FromResult(ProfileIds)
+                : throw new InvalidOperationException(targetMethod?.Name);
     }
 }

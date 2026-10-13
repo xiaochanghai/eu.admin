@@ -244,9 +244,8 @@ builder.Services.AddSingleton<IPublishedSkillContentStore>(services =>
 builder.Services.AddSingleton<JsonSchemaValidator>();
 builder.Services.AddSingleton<AgModelProfileCatalog>();
 builder.Services.AddSingleton<IAgentModelProfileResolver>(services => services.GetRequiredService<AgModelProfileCatalog>());
-builder.Services.AddSingleton<IPublicModelProfileCatalog>(services => services.GetRequiredService<AgModelProfileCatalog>());
 builder.Services.AddSingleton<IModelProfileReferenceCatalog>(services =>
-    services.GetRequiredService<IPublicModelProfileCatalog>());
+    services.GetRequiredService<AgModelProfileCatalog>());
 builder.Services.AddSingleton<OrchestrationRuntimeService>();
 builder.Services.AddSingleton(services =>
     services.GetRequiredService<IOptions<UnifiedEntryOptions>>()

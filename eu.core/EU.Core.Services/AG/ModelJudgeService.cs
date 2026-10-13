@@ -23,7 +23,7 @@ namespace EU.Core.Services;
 /// <param name="suites">用于管理评测套件及用例的服务。</param>
 /// <param name="reports">用于读取和持久化模型裁判报告的仓储。</param>
 /// <param name="unifiedRuns">用于读取和持久化统一入口会话、运行及事件的仓储。</param>
-/// <param name="modelProfiles">用于查询模型配置引用的目录。</param>
+/// <param name="modelConfigs">用于查询已启用模型配置的服务。</param>
 /// <param name="engine">用于执行模型裁判评测的引擎。</param>
 /// <param name="policy">模型裁判评测使用的执行策略。</param>
 /// <param name="timeProvider">用于获取当前时间的时间提供器；为 null 时使用系统时间提供器。</param>
@@ -32,7 +32,7 @@ public sealed class ModelJudgeService(
     IAgEvaluationSuiteServices suites,
     IModelJudgeReportRepository reports,
     IUnifiedEntryRepository unifiedRuns,
-    IModelProfileReferenceCatalog modelProfiles,
+    IAgModelConfigServices modelConfigs,
     IModelJudgeEngine engine,
     ModelJudgePolicy policy,
     TimeProvider? timeProvider = null) : BaseServices, IModelJudgeService
@@ -124,7 +124,8 @@ public sealed class ModelJudgeService(
                 "The batch exceeds the configured model judge case budget.");
         }
 
-        if (!await modelProfiles.ExistsAsync(specification.ModelProfileId, cancellationToken))
+        if (!(await modelConfigs.ListAvailableProfilesAsync(cancellationToken))
+            .Contains(specification.ModelProfileId, StringComparer.Ordinal))
         {
             return Failure(ModelJudgeErrorCodes.ModelUnavailable,
                 "The selected model profile is not available.");
