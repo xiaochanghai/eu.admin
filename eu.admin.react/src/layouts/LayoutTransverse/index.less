@@ -4,6 +4,7 @@
   height: 100%;
   .ant-layout-header {
     display: flex;
+    flex-shrink: 0;
     height: 55px;
     padding: 0 40px 0 11px;
     line-height: 55px;
@@ -55,6 +56,13 @@
         }
       }
     }
+  }
+  > .ant-layout {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
   }
 
   @media screen and (max-width: 700px) {
