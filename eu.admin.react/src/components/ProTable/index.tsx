@@ -37,19 +37,22 @@ interface ActionButtonProps {
 
 const ActionButton: React.FC<ActionButtonProps> = React.memo(({ icon, onClick, disabled = false }) => {
   return (
-    <Button
-      type="dashed"
-      size="small"
-      icon={<Icon name={icon} />}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        border: 0,
-        background: "transparent",
-        boxShadow: "0 0px 0 rgb(255 255 255 / 2%)",
-        marginRight: 8
-      }}
-    />
+    <Button size="small" color="primary" onClick={onClick} disabled={disabled} icon={<Icon name={icon} />} variant="filled">
+      编辑
+    </Button>
+    // <Button
+    //   type="dashed"
+    //   size="small"
+    //   icon={<Icon name={icon} />}
+    //   onClick={onClick}
+    //   disabled={disabled}
+    //   style={{
+    //     border: 0,
+    //     background: "transparent",
+    //     boxShadow: "0 0px 0 rgb(255 255 255 / 2%)",
+    //     marginRight: 8
+    //   }}
+    // />
   );
 });
 
@@ -332,57 +335,90 @@ const SmProTable: React.FC<ProTableProps> = props => {
   const actionColumn: any =
     moduleInfo?.Success === true && moduleInfo.actionCount > 0
       ? {
-        title: t("proTable.operation"),
-        dataIndex: "option",
-        fixed: optionPosition === "right" ? "right" : "left",
-        valueType: "option",
-        width: 100,
-        align: "center",
-        render: (_: any, record: { ID: string }, index: number, action: any) => (
-          <>
-            {record.ID !== SUM_ROW_ID && (
-              <>
-                {optionAuthButton.Update && !IsView && (
-                  <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
-                )}
-                {optionAuthButton.View && (
-                  <Button
-                    type="dashed"
-                    key={"View" + index}
-                    size="small"
-                    icon={<Icon name="EyeOutlined" />}
-                    onClick={() => onOptionView(record)}
-                    style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                  />
-                )}
-                {optionAuthButton.Delete && !IsView && (
-                  <Button
-                    key={"Delete" + index}
-                    type="dashed"
-                    size="small"
-                    icon={<Icon name="DeleteOutlined" />}
-                    onClick={() => onOptionDelete(action, record)}
-                    style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                  />
-                )}
+          title: t("proTable.operation"),
+          dataIndex: "option",
+          fixed: optionPosition === "right" ? "right" : "left",
+          valueType: "option",
+          width: 250,
+          align: "center",
+          render: (_: any, record: { ID: string }, index: number, action: any) => (
+            <>
+              {record.ID !== SUM_ROW_ID && (
                 <Flex gap="small" wrap>
-                  {getBeforeActionActions(record, action)}
-                </Flex>
-                {dropActions && dropActions.length > 0 && (
-                  <Dropdown placement="bottom" arrow menu={{ items: getDropActions(record, action) }}>
+                  {optionAuthButton.Update && !IsView && (
+                    <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
+                  )}
+                  {optionAuthButton.View && (
                     <Button
-                      type="dashed"
                       size="small"
+                      key={"View" + index}
+                      color="orange"
+                      onClick={() => onOptionView(record)}
+                      // disabled={disabled}
+                      icon={<Icon name="EyeOutlined" />}
+                      variant="filled"
+                    >
+                      查看
+                    </Button>
+                    // <Button
+                    //   type="dashed"
+                    //   key={"View" + index}
+                    //   size="small"
+                    //   icon={<Icon name="EyeOutlined" />}
+                    //   onClick={() => onOptionView(record)}
+                    //   style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                    // />
+                  )}
+                  {optionAuthButton.Delete && !IsView && (
+                    // <Button
+                    //   key={"Delete" + index}
+                    //   type="dashed"
+                    //   size="small"
+                    //   icon={<Icon name="DeleteOutlined" />}
+                    //   onClick={() => onOptionDelete(action, record)}
+                    //   style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                    // />
+                    <Button
+                      key={"Delete" + index}
+                      size="small"
+                      color="danger"
+                      onClick={() => onOptionDelete(action, record)}
+                      // disabled={disabled}
+                      icon={<Icon name="DeleteOutlined" />}
+                      variant="filled"
+                    >
+                      删除
+                    </Button>
+                  )}
+                  <Flex gap="small" wrap>
+                    {getBeforeActionActions(record, action)}
+                  </Flex>
+                  {dropActions && dropActions.length > 0 && (
+                    <Dropdown placement="bottom" arrow menu={{ items: getDropActions(record, action) }}>
+                      {/* <Button
+                        type="dashed"
+                        size="small"
+                        icon={<Icon name="MoreOutlined" />}
+                        style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
+                      /> */}
+                      <Button
+                      size="small"
+                      key={"More" + index}
+                      color="purple"
+                      // onClick={() => onOptionView(record)}
+                      // disabled={disabled}
                       icon={<Icon name="MoreOutlined" />}
-                      style={{ border: 0, background: "transparent", boxShadow: "0 0px 0 rgb(255 255 255 / 2%)" }}
-                    />
-                  </Dropdown>
-                )}
-              </>
-            )}
-          </>
-        )
-      }
+                      variant="filled"
+                    >
+                      更多
+                    </Button>
+                    </Dropdown>
+                  )}
+                </Flex>
+              )}
+            </>
+          )
+        }
       : [];
 
   /**
@@ -466,18 +502,22 @@ const SmProTable: React.FC<ProTableProps> = props => {
           onDoubleClick: () => handleDoubleClick(record)
         })}
         className="ant-pro-table-scroll"
-        rowSelection={IsShowRowSelection === false ? undefined : {
-          fixed: "left",
-          selectedRowKeys,
-          preserveSelectedRowKeys: true,
-          onChange: (keys: React.Key[], rows: any[]) => {
-            setSelectedRowKeys(keys);
-            setSelectedRows(rows);
-          },
-          getCheckboxProps: (record: any) => ({
-            disabled: record.ID === SUM_ROW_ID
-          })
-        }}
+        rowSelection={
+          IsShowRowSelection === false
+            ? undefined
+            : {
+                fixed: "left",
+                selectedRowKeys,
+                preserveSelectedRowKeys: true,
+                onChange: (keys: React.Key[], rows: any[]) => {
+                  setSelectedRowKeys(keys);
+                  setSelectedRows(rows);
+                },
+                getCheckboxProps: (record: any) => ({
+                  disabled: record.ID === SUM_ROW_ID
+                })
+              }
+        }
         onReset={handleResetWithClearSelection}
         actionRef={actionRef}
         formRef={formRef}
@@ -505,8 +545,8 @@ const SmProTable: React.FC<ProTableProps> = props => {
         search={
           searchVisible
             ? {
-              labelWidth: "auto"
-            }
+                labelWidth: "auto"
+              }
             : false
         }
         columnsState={{

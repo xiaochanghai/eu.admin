@@ -16,7 +16,7 @@ const LayoutVertical: React.FC = () => {
   const isCollapse = useSelector((state: RootState) => state.global.isCollapse);
 
   return (
-    <section className="layout-vertical">
+    <section className="layout-vertical layout-vertical-admin">
       <Sider width={210} collapsed={isCollapse}>
         <div className="logo">
           <img src={logo} alt="logo" className="logo-img" />

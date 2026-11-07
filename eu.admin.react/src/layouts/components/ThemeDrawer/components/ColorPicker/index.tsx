@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "antd";
 import { HexColorPicker } from "react-colorful";
 import { isHexColor } from "@/utils/is";
 import { convertToSixDigitHexColor } from "@/utils";
 
-import { setGlobalState } from "@/redux/modules/global";
-import { RootState, useDispatch, useSelector } from "@/redux";
 import "./index.less";
 
 const presetColors = [
@@ -23,36 +21,43 @@ const presetColors = [
   "#9B59B6"
 ];
 
-const ColorPicker = () => {
-  const dispatch = useDispatch();
-  const primary = useSelector((state: RootState) => state.global.primary);
-  const [inputPrimary, setInputPrimary] = useState(primary);
+interface ColorPickerProps {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}
+
+const ColorPicker = ({ value, onChange, disabled = false }: ColorPickerProps) => {
+  const [inputPrimary, setInputPrimary] = useState(value);
+  useEffect(() => setInputPrimary(value), [value]);
 
   const changePrimary = (value: string) => {
-    dispatch(setGlobalState({ key: "primary", value }));
+    if (disabled) return;
+    onChange(value);
+    setInputPrimary(value);
   };
 
   return (
     <div className="color-picker">
       <HexColorPicker
-        color={primary}
+        color={value}
         onChange={e => {
           changePrimary(e.toLocaleUpperCase());
-          setInputPrimary(e.toLocaleUpperCase());
         }}
       />
       <Input
         value={inputPrimary}
         className="picker-input"
+        disabled={disabled}
         addonBefore="HEX"
         onChange={e => setInputPrimary(e.target.value)}
         onBlur={e => {
+          if (disabled) return;
           if (isHexColor(e.target.value)) {
             let value = e.target.value;
             if (e.target.value[0] !== "#") value = `#${e.target.value}`;
             changePrimary(convertToSixDigitHexColor(value));
-            setInputPrimary(convertToSixDigitHexColor(value));
-          }
+          } else setInputPrimary(value);
         }}
       />
       <div className="picker-swatches">
@@ -60,10 +65,12 @@ const ColorPicker = () => {
           <button
             className="picker-swatch"
             key={presetColor}
+            type="button"
+            aria-label={`选择颜色 ${presetColor}`}
+            disabled={disabled}
             style={{ background: presetColor }}
             onClick={() => {
               changePrimary(presetColor);
-              setInputPrimary(presetColor);
             }}
           />
         ))}

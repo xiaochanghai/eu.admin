@@ -6,6 +6,19 @@
   overflow: auto;
   background-color: var(--hooks-colorBgContent);
 }
+.layout-classic .classic-main,
+.layout-columns > .ant-layout,
+.layout-transverse > .ant-layout {
+  .tabs-box {
+    flex-shrink: 0;
+  }
+  .keep-alive-render {
+    flex: 1 1 0%;
+    height: auto !important;
+    min-height: 0;
+    overflow: auto;
+  }
+}
 
 /* maximize */
 .maximize-icon {
