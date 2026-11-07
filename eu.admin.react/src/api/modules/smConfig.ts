@@ -38,6 +38,11 @@ export const updateConfig = (params: Partial<SmConfigItem>) => {
   return http.put<any>(`/api/SmConfig/${params.ID}`, params);
 };
 
+/** 新增参数；服务端返回新记录 ID。 */
+export const createConfig = (params: Omit<SmConfigItem, "ID">) => {
+  return http.post<string>("/api/SmConfig", params);
+};
+
 /**
  * 批量保存系统参数
  */

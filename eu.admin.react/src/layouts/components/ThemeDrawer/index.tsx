@@ -75,6 +75,7 @@ const ThemeSection: React.FC<ThemeSectionProps> = ({ icon, title, children }) =>
 const ThemeDrawer: React.FC = () => {
   const dispatch = useDispatch();
   const {
+    primary,
     layout,
     compactAlgorithm,
     borderRadius,
@@ -244,8 +245,12 @@ const ThemeDrawer: React.FC = () => {
       <ThemeSection icon="FireOutlined" title="全局主题">
         <div className="theme-item">
           <span>主题颜色</span>
-          <Popover placement="left" trigger="click" content={ColorPicker}>
-            <label className="primary"></label>
+          <Popover
+            placement="left"
+            trigger="click"
+            content={<ColorPicker value={primary} onChange={value => handleStateChange("primary", value)} />}
+          >
+            <button type="button" aria-label="主题颜色" className="primary" style={{ border: 0, padding: 0 }} />
           </Popover>
         </div>
         <ThemeItem
@@ -258,11 +263,7 @@ const ThemeDrawer: React.FC = () => {
         <ThemeItem label="灰色模式" checked={isGrey} onChange={handleGreyModeChange} />
         <ThemeItem label="色弱模式" checked={isWeak} onChange={handleWeakModeChange} />
         <ThemeItem label="快乐模式" checked={isHappy} onChange={value => handleStateChange("isHappy", value)} />
-        <ThemeItem
-          label="紧凑主题"
-          checked={compactAlgorithm}
-          onChange={value => handleStateChange("compactAlgorithm", value)}
-        />
+        <ThemeItem label="紧凑主题" checked={compactAlgorithm} onChange={value => handleStateChange("compactAlgorithm", value)} />
         <div className="theme-item mb35">
           <span>圆角大小</span>
           <InputNumber
@@ -283,11 +284,7 @@ const ThemeDrawer: React.FC = () => {
         <ThemeItem label="菜单手风琴" checked={accordion} onChange={value => handleStateChange("accordion", value)} />
         <ThemeItem label="水印" checked={watermark} onChange={value => handleStateChange("watermark", value)} />
         <ThemeItem label="面包屑" checked={breadcrumb} onChange={value => handleStateChange("breadcrumb", value)} />
-        <ThemeItem
-          label="面包屑图标"
-          checked={breadcrumbIcon}
-          onChange={value => handleStateChange("breadcrumbIcon", value)}
-        />
+        <ThemeItem label="面包屑图标" checked={breadcrumbIcon} onChange={value => handleStateChange("breadcrumbIcon", value)} />
         <ThemeItem label="标签栏" checked={tabs} onChange={value => handleStateChange("tabs", value)} />
         <ThemeItem label="标签栏图标" checked={tabsIcon} onChange={value => handleStateChange("tabsIcon", value)} />
         <ThemeItem label="标签栏拖拽" checked={tabsDrag} onChange={value => handleStateChange("tabsDrag", value)} />
