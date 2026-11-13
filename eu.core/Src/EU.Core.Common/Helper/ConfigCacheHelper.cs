@@ -29,11 +29,6 @@ public class ConfigCache
     /// </summary>
     private static readonly SemaphoreSlim initLock = new(1, 1);
 
-    /// <summary>
-    /// 标识配置是否已初始化
-    /// </summary>
-    private static volatile bool isInitialized = false;
-
     #endregion
 
     #region 公共方法
@@ -56,8 +51,8 @@ public class ConfigCache
         // 首次尝试从缓存获取
         var value = await redis.GetAsync<SmConfig>(cacheKey, key);
 
-        // 如果未找到且缓存未初始化，则执行初始化
-        if (value == null && !isInitialized)
+        // 未命中时检查 Redis 缓存状态，缓存键不存在则重新加载。
+        if (value == null)
         {
             await InitAsync(db);
             value = await redis.GetAsync<SmConfig>(cacheKey, key);
@@ -79,9 +74,8 @@ public class ConfigCache
         if (keys == null || keys.Length == 0)
             return new Dictionary<string, string>();
 
-        // 确保缓存已初始化
-        if (!isInitialized)
-            await InitAsync(db);
+        // 根据 Redis 缓存键是否存在决定是否加载。
+        await InitAsync(db);
 
         var result = new Dictionary<string, string>(keys.Length);
         foreach (var key in keys)
@@ -98,26 +92,26 @@ public class ConfigCache
 
     /// <summary>
     /// 初始化系统配置参数缓存
-    /// 使用 SemaphoreSlim 实现线程安全的双检锁模式，确保在高并发场景下只初始化一次
+    /// 根据 Redis 缓存键判断是否需要加载，使用 SemaphoreSlim 串行化当前进程内的初始化操作。
     /// </summary>
     /// <param name="db">数据库上下文</param>
     /// <param name="forceRefresh">是否强制刷新缓存，默认为 false</param>
-    /// <returns>初始化的配置项数量</returns>
+    /// <returns>加载的配置项数量；缓存键已存在且未强制刷新时返回 0。</returns>
     /// <exception cref="ArgumentNullException">当 db 为 null 时抛出</exception>
     public static async Task<int> InitAsync(ISqlSugarClient db, bool forceRefresh = false)
     {
         if (db == null)
             throw new ArgumentNullException(nameof(db));
 
-        // 双检锁：如果已初始化且非强制刷新，直接返回
-        if (isInitialized && !forceRefresh)
+        // 缓存状态以 Redis 为准，避免本地标记与实际缓存不一致。
+        if (!forceRefresh && await redis.ExistsAsync(cacheKey))
             return 0;
 
         await initLock.WaitAsync();
         try
         {
             // 再次检查，避免重复初始化
-            if (isInitialized && !forceRefresh)
+            if (!forceRefresh && await redis.ExistsAsync(cacheKey))
                 return 0;
 
             // 清除旧缓存
@@ -137,9 +131,6 @@ public class ConfigCache
                     }
                 }
             }
-
-            // 标记为已初始化
-            isInitialized = true;
 
             return list?.Count ?? 0;
         }
@@ -179,7 +170,6 @@ public class ConfigCache
     public static void Clear()
     {
         redis.Remove(cacheKey);
-        isInitialized = false;
     }
 
     #endregion
