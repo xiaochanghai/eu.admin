@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { RouterProvider as Router, RouteObject, createHashRouter, createBrowserRouter } from "react-router-dom";
 import { convertToDynamicRouterFormat } from "./helper/ConvertRouter";
 import { wrappedStaticRouter } from "./modules/staticRouter";
 import { RootState, useSelector } from "@/redux";
 import { RouteObjectType } from "./interface";
 import useTheme from "@/hooks/useTheme";
+import useInitSystemTheme from "@/hooks/useInitSystemTheme";
 import useMessage from "@/hooks/useMessage";
 import usePermissions from "@/hooks/usePermissions";
 import NotFound from "@/components/Error/404";
@@ -18,6 +19,7 @@ const RouterProvider: React.FC = () => {
   // useTheme && useMessage
   useTheme();
   useMessage();
+  useInitSystemTheme();
 
   const { initPermissions } = usePermissions();
 
@@ -49,7 +51,8 @@ const RouterProvider: React.FC = () => {
     history: () => createBrowserRouter(routerList as RouteObject[])
   };
 
-  return <Router router={routerMode[mode]()} />;
+  const router = useMemo(() => routerMode[mode](), [routerList]);
+  return <Router router={router} />;
 };
 
 export default RouterProvider;

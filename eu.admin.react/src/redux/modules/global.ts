@@ -1,8 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GlobalState } from "@/redux/interface";
 import { DEFAULT_PRIMARY } from "@/config";
+import type { SystemThemeSettings } from "@/config/theme";
 
-const globalState: GlobalState = {
+type GlobalThemeState = GlobalState & { allowCustomTheme: boolean };
+
+const globalState: GlobalThemeState = {
+  allowCustomTheme: false,
   // layout mode (vertical | classic | transverse | columns)
   layout: "vertical",
   // antd component size ("small" | "middle" | "large")
@@ -57,11 +61,19 @@ const globalSlice = createSlice({
   name: "hooks-global",
   initialState: globalState,
   reducers: {
-    setGlobalState<T extends keyof GlobalState>(state: GlobalState, { payload }: PayloadAction<ObjToKeyValUnion<GlobalState>>) {
-      state[payload.key as T] = payload.value as GlobalState[T];
+    initializeTheme(state, { payload }: PayloadAction<SystemThemeSettings | null>) {
+      state.allowCustomTheme = payload?.allowCustom ?? false;
+      state.themeDrawerVisible = false;
+      if (payload && !payload.allowCustom) {
+        const { allowCustom, ...theme } = payload;
+        Object.assign(state, theme);
+      }
+    },
+    setGlobalState(state, { payload }: PayloadAction<ObjToKeyValUnion<GlobalState>>) {
+      Object.assign(state, { [payload.key]: payload.value });
     }
   }
 });
 
-export const { setGlobalState } = globalSlice.actions;
+export const { setGlobalState, initializeTheme } = globalSlice.actions;
 export default globalSlice.reducer;

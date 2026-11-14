@@ -31,6 +31,15 @@ export const getConfigListByGroup = () => {
   return http.get<SmConfigGroupView[]>("/api/SmConfig/GetListByGroup");
 };
 
+/** 后端允许提供给前端的配置，主题键不含 theme. 前缀，值保持字符串形式。 */
+export interface ClientConfig {
+  Theme: Record<string, string>;
+}
+
+/** 获取前端配置，使用统一错误处理并支持取消请求。 */
+export const getClientConfig = (signal: AbortSignal) =>
+  http.get<ClientConfig>("/api/SmConfig/GetClientConfig", undefined, { signal });
+
 /**
  * 更新单个系统参数
  */

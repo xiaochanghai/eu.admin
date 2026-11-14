@@ -5547,6 +5547,11 @@
             是否允许设置自定义列
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Base.SmModulesBase.IsShowSearch">
+            <summary>
+            是否显示查询按钮
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Base.SmModuleSqlBase">
             <summary>
             系统模块SQL (Dto.Base)
@@ -12632,6 +12637,11 @@
             是否允许设置自定义列
             </summary>
         </member>
+        <member name="P:EU.Core.Model.Entity.SmModules.IsShowSearch">
+            <summary>
+            是否显示查询按钮
+            </summary>
+        </member>
         <member name="T:EU.Core.Model.Entity.SmModuleSql">
             <summary>
             系统模块SQL (Model)
@@ -13649,6 +13659,12 @@
             <summary>
             金额
             </summary>
+        </member>
+        <member name="T:EU.Core.Model.Models.ClientConfigDto">
+            <summary>允许提供给前端的配置；新增配置需显式扩展此模型及服务端映射。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.ClientConfigDto.Theme">
+            <summary>主题配置键值集合，键去掉 theme. 前缀，值保持配置表中的字符串形式。</summary>
         </member>
         <member name="T:EU.Core.Model.Models.BdColorDto">
             <summary>

@@ -1,4 +1,4 @@
-import type { ThemeSettings } from "./themeConfig";
+import type { ThemeSettings } from "@/config/theme";
 
 import { useCallback, useMemo } from "react";
 import { ConfigProvider, Divider, Switch, Popover, InputNumber, Tooltip } from "antd";
