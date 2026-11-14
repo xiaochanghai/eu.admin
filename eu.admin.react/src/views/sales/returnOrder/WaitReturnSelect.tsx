@@ -104,7 +104,7 @@ const WaitSelect: React.FC<any> = props => {
       // title='选择物料'
       open={modalVisible}
       // onOk={this.okHandle}
-      maskClosable={false}
+      mask={{ closable: false }}
       width={1100}
       closable={false}
       onCancel={() => {

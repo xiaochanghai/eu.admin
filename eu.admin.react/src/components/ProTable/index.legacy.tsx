@@ -737,7 +737,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
               destroyOnHidden
               title={`${moduleInfo.moduleName}-导入`}
               open={uploadExcelVisible}
-              maskClosable={false}
+              mask={{ closable: false }}
               width={1000}
               onCancel={() => {
                 setUploadExcelVisible(false);

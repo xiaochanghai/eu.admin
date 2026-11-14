@@ -323,7 +323,7 @@ const Index: React.FC<any> = React.memo(props => {
                       destroyOnHidden
                       title={`${moduleInfo.moduleName}-导入`}
                       open={uploadExcelVisible}
-                      maskClosable={false}
+                      mask={{ closable: false }}
                       width={1000}
                       footer={null}
                       onCancel={() => setUploadExcelVisible(false)}

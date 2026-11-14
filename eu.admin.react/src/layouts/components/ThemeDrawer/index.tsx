@@ -195,7 +195,7 @@ const ThemeDrawer: React.FC = () => {
       size={290}
       zIndex={999}
       closable={false}
-      maskClosable={true}
+      mask={{ closable: true }}
       open={themeDrawerVisible}
       className="theme-drawer"
       onClose={handleCloseDrawer}
