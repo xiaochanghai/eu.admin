@@ -183,6 +183,22 @@ public class RedisCacheService : IDisposable
         return await _cache.KeyExistsAsync(key);
     }
 
+    /// <summary>
+    /// 异步验证缓存项是否存在
+    /// </summary>
+    /// <param name="key">缓存键</param>
+    /// <param name="hashField"></param>
+    /// <returns>是否存在</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<bool> ExistsAsync(string key, string hashField)
+    {
+        if (string.IsNullOrEmpty(key))
+            throw new ArgumentNullException(nameof(key));
+
+        key = _redisKeyPrefix + key;
+        return await _cache.HashExistsAsync(key, hashField);
+    }
+
     //public List<string> Exists1(string key)
     //{
     //    if (string.IsNullOrEmpty(key))

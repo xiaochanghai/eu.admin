@@ -1,5 +1,5 @@
 import ThemeSettingsPanel from "./ThemeSettingsPanel";
-import { defaultSystemTheme, getThemeConfigChanges, readThemeConfig, SystemThemeSettings } from "./themeConfig";
+import { defaultSystemTheme, getThemeConfigChanges, readThemeConfig, SystemThemeSettings } from "@/config/theme";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Menu, Switch, Input, Select, InputNumber, Space, Button, Spin, Empty, Tag, List, Alert } from "antd";
 import { SaveOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
@@ -337,7 +337,7 @@ const SystemSetup: React.FC = () => {
                     type="info"
                     showIcon
                     title="系统主题配置"
-                    description="修改后点击保存。此处维护系统主题参数，不会即时改变当前个人主题。"
+                    description="修改后点击保存，刷新页面后生效。禁止自定义时，系统主题会覆盖本地主题缓存；允许自定义时沿用本地缓存。"
                   />
                   <div style={{ display: "flex", justifyContent: "space-between", margin: "24px 0" }}>
                     <span>允许用户自定义主题</span>

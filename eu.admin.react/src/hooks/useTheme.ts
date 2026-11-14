@@ -36,14 +36,13 @@ const useTheme = () => {
   useEffect(() => switchDark(), [isDark]);
   const switchDark = () => {
     const html = document.documentElement;
-    html.setAttribute("class", isDark ? "dark" : "");
-    changePrimary();
+    html.classList.toggle("dark", isDark);
   };
 
   /**
    * @description Toggle primary colors
    */
-  useEffect(() => changePrimary(), [primary, borderRadius, compactAlgorithm]);
+  useEffect(() => changePrimary(), [primary, borderRadius, compactAlgorithm, isDark, token]);
   const changePrimary = () => {
     const type: ThemeType = isDark ? "dark" : "light";
     // custom less variable

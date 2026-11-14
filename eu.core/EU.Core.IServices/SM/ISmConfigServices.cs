@@ -21,4 +21,6 @@ namespace EU.Core.IServices;
 /// </summary>	
 public interface ISmConfigServices : IBaseServices<SmConfig, SmConfigDto, InsertSmConfigInput, EditSmConfigInput>
 {
+    /// <summary>获取前端可用的配置，返回范围由服务端控制。</summary>
+    Task<ClientConfigDto> GetClientConfig(CancellationToken cancellationToken = default);
 }

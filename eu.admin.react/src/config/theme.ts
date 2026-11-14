@@ -56,7 +56,7 @@ const keys = Object.keys(names) as (keyof SystemThemeSettings)[];
 const layouts = ["vertical", "classic", "transverse", "columns"] as const;
 
 /** Only known, valid settings are consumed from persisted configuration. */
-export const readThemeConfig = (items: SmConfigItem[] | null = []): SystemThemeSettings => {
+export const readThemeConfig = (items: Pick<SmConfigItem, "ConfigCode" | "ConfigValue">[] | null = []): SystemThemeSettings => {
   const result = { ...defaultSystemTheme };
   for (const key of keys) {
     const raw = items?.find(item => item.ConfigCode === `theme.${key}`)?.ConfigValue;

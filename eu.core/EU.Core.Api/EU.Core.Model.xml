@@ -16226,6 +16226,12 @@
             平台共享模型配置，API 密钥仅以密文持久化。(Dto.View)
             </summary>
         </member>
+        <member name="T:EU.Core.Model.Models.ClientConfigDto">
+            <summary>允许提供给前端的配置；新增配置需显式扩展此模型及服务端映射。</summary>
+        </member>
+        <member name="P:EU.Core.Model.Models.ClientConfigDto.Theme">
+            <summary>主题配置键值集合，键去掉 theme. 前缀，值保持配置表中的字符串形式。</summary>
+        </member>
         <member name="T:EU.Core.Model.Models.BdColorDto">
             <summary>
             颜色(Dto.View)
