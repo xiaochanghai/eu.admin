@@ -37,7 +37,7 @@ const AvatarIcon: React.FC<AvatarIconProps> = React.memo(({ height = 42, layout 
       title: t("avatar.logoutModalTitle"),
       icon: <Icon name="ExclamationCircleOutlined" />,
       content: t("avatar.logoutModalContent"),
-      maskClosable: true,
+      mask: { closable: true },
       onOk: async () => {
         // Execute the logout interface
         await logoutApi();
