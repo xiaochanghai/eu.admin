@@ -14,6 +14,8 @@
 
 ## 入口
 
+- 前端配置接口：[`SmConfig.md`](SmConfig.md)
+- 系统配置缓存：[`ConfigCache.md`](ConfigCache.md)
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)
 - 数据库表设计硬约束：[`数据库表设计约束.md`](数据库表设计约束.md)
 - SmModule 页面元数据专题索引：[`SmModule/README.md`](SmModule/README.md)

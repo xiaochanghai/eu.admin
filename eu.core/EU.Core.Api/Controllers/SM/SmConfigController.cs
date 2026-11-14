@@ -14,10 +14,7 @@
 *│　版权所有：SahHsiao                                │
 *└──────────────────────────────────┘
 */
-using System.Dynamic;
 using EU.Core.Common.Const;
-using EU.Core.DataAccess;
-using Microsoft.EntityFrameworkCore;
 
 namespace EU.Core.Api.Controllers;
 
@@ -33,11 +30,28 @@ public class SmConfigController : BaseController<ISmConfigServices, SmConfig, Sm
     {
     }
 
+    #region 获取前端可用配置
 
     /// <summary>
-    /// 系统参数明细 -- 根据参数分组查询
+    /// 获取后端明确允许提供给前端的配置
     /// </summary>
-    /// <returns></returns>
+    /// <remarks>无业务入参。当前仅返回有效、未删除的系统主题分组内，处于白名单且有效、未删除的主题配置。</remarks>
+    /// <param name="cancellationToken">请求取消令牌，由 ASP.NET Core 注入，前端无需传入。</param>
+    /// <returns>包含前端配置的服务响应；Theme 为主题配置键值集合，无匹配配置时为空字典。</returns>
+    [HttpGet("GetClientConfig")]
+    public async Task<ServiceResult<ClientConfigDto>> GetClientConfig(CancellationToken cancellationToken) =>
+        Success(await _service.GetClientConfig(cancellationToken), ResponseText.QUERY_SUCCESS);
+
+    #endregion
+
+
+    #region 获取配置分组及明细
+
+    /// <summary>
+    /// 获取配置分组列表及各分组对应的配置明细。
+    /// </summary>
+    /// <remarks>无业务入参，不按指定分组查询。分组和配置明细分别按 Sequence 排序，通过 ConfigGroupId 将明细归入对应分组。</remarks>
+    /// <returns>包含配置分组列表的服务响应；每个分组的 detail 为其配置明细，无匹配明细时为空列表。</returns>
     [HttpGet, Route("GetListByGroup")]
     public async Task<ServiceResult<List<SmConfigView>>> GetListByGroup()
     {
@@ -61,13 +75,15 @@ public class SmConfigController : BaseController<ISmConfigServices, SmConfig, Sm
         //return await _systemSettingItemService.GetListByGroupAsync(groupId);
     }
 
+    #endregion
+
     /// <summary>
-    /// SmConfigView
+    /// 配置分组及其配置明细。
     /// </summary>
     public class SmConfigView : SmConfigGroup
     {
         /// <summary>
-        /// 
+        /// 当前分组对应的配置明细列表。
         /// </summary>
         public List<SmConfig> detail { get; set; }
     }

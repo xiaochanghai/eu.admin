@@ -172,5 +172,26 @@ public class ConfigCache
         redis.Remove(cacheKey);
     }
 
+    public static async Task AddThemeAsync(Dictionary<string, string> theme)
+    {
+        await redis.AddObjectAsync(cacheKey, "Theme", theme);
+    }
+
+    public static async Task<Dictionary<string, string>> GetThemeAsync()
+    {
+        var result = await redis.GetAsync<Dictionary<string, string>>(cacheKey, "Theme");
+        return result;
+    }
+
+    public static async Task<bool> ExistsThemeAsync()
+    {
+        return await redis.ExistsAsync(cacheKey, "Theme");
+    }
+
+    public static async Task<bool> ClearThemeAsync()
+    {
+        return await redis.RemoveObject(cacheKey, "Theme");
+    }
+
     #endregion
 }
