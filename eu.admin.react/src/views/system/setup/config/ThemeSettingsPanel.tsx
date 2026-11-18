@@ -11,7 +11,7 @@ interface LayoutConfig {
   key: LayoutType;
   title: string;
   className: string;
-  renderContent: () => JSX.Element;
+  renderContent: () => React.JSX.Element;
 }
 
 interface ThemeItemProps {

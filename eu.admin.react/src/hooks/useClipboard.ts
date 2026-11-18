@@ -6,7 +6,7 @@ interface ClipboardFunctions {
 
 type IsCopiedState = boolean;
 
-type TextareaRef = React.RefObject<HTMLTextAreaElement>;
+type TextareaRef = React.RefObject<HTMLTextAreaElement | null>;
 
 type ClipboardHook = ClipboardFunctions & {
   isCopied: IsCopiedState;

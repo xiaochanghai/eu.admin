@@ -15,7 +15,7 @@ const Index: React.FC<any> = () => {
   const [formPageIsView, setFormPageIsView] = useState("Index");
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let moduleInfo = moduleInfos[moduleCode] as any;
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
 
   const changePage = (value: any, id: string, isView: any) => {
     if (value == "FormPage") {

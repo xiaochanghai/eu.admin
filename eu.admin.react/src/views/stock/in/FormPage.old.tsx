@@ -29,7 +29,7 @@ const FormPage: React.FC<any> = props => {
   const [masterGoodsLocationId, setMasterGoodsLocationId] = useState(null);
 
   const [form] = Form.useForm();
-  const tableRef = useRef<any>();
+  const tableRef = useRef<any>(undefined);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let {
     Id,

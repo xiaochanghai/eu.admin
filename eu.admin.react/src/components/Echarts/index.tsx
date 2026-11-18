@@ -22,7 +22,7 @@ const EChartInner: React.ForwardRefRenderFunction<EChartsRef, EChartProps> = (
   ref: ForwardedRef<EChartsRef>
 ) => {
   const cRef = useRef<HTMLDivElement>(null);
-  const cInstance = useRef<EChartsType>();
+  const cInstance = useRef<EChartsType>(undefined);
   const [isFirstRun, setIsFirstRun] = useState(true);
 
   const { tabs, footer, maximize, menuSplit, isCollapse } = useSelector(

@@ -56,7 +56,7 @@ export const useFormPage = (options: UseFormPageOptions) => {
 
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const tableRef = useRef<any>();
+  const tableRef = useRef<any>(undefined);
 
   // State 管理
   const [isLoading, setIsLoading] = useState(true);

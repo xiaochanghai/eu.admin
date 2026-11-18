@@ -95,7 +95,7 @@ const MobileConfigList: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string>();
   const [query, setQuery] = useState<QueryFormValues>({});
   const requestIdRef = useRef(0);
-  const keywordTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const keywordTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchData = useCallback(async () => {
     const requestId = requestIdRef.current + 1;

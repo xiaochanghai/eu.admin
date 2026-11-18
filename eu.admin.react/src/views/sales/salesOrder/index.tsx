@@ -40,8 +40,8 @@ const SalesOrder: React.FC<SalesOrderProps> = () => {
   const [waitShipSelectType, setWaitShipSelectType] = useState<WaitShipSelectType>("Ship");
 
   // Refs
-  const tableRef = useRef<ActionType>();
-  const tableActionRef = useRef<any>();
+  const tableRef = useRef<ActionType>(undefined);
+  const tableActionRef = useRef<any>(undefined);
 
   // Selectors
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);

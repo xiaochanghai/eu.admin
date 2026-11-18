@@ -55,7 +55,7 @@ const ShipOrder: React.FC<ShipOrderProps> = React.memo(() => {
   // 从Redux获取模块信息
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   const moduleInfo = moduleInfos[MODULE_CODE];
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
 
   /**
    * 切换页面视图

@@ -83,7 +83,7 @@ const toolBarRender = () => [
 ];
 
 const useProTable = () => {
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
 
   return (
     <ProTable<UserList>

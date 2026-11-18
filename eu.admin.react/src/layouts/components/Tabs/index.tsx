@@ -21,6 +21,7 @@ type TargetKey = string | React.MouseEvent<Element, MouseEvent> | React.Keyboard
 
 interface DraggableTabPaneProps extends React.HTMLAttributes<HTMLDivElement> {
   "data-node-key": string;
+  children: React.ReactElement<React.ComponentPropsWithRef<"div">>;
 }
 
 const DraggableTabNode = ({ ...props }: DraggableTabPaneProps) => {
@@ -34,7 +35,7 @@ const DraggableTabNode = ({ ...props }: DraggableTabPaneProps) => {
     transition
   };
 
-  return React.cloneElement(props.children as React.ReactElement, {
+  return React.cloneElement(props.children, {
     ref: setNodeRef,
     style,
     ...attributes,
@@ -223,11 +224,19 @@ const LayoutTabs: React.FC = () => {
               <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
                 <SortableContext items={items.map(i => i.key)} strategy={horizontalListSortingStrategy}>
                   <DefaultTabBar {...tabBarProps}>
-                    {node => (
-                      <DraggableTabNode {...node.props} key={node.key}>
-                        {node}
-                      </DraggableTabNode>
-                    )}
+                    {node => {
+                      if (
+                        !React.isValidElement<React.ComponentPropsWithRef<"div"> & { "data-node-key"?: string }>(node) ||
+                        typeof node.props["data-node-key"] !== "string"
+                      ) {
+                        return node;
+                      }
+                      return (
+                        <DraggableTabNode data-node-key={node.props["data-node-key"]} style={node.props.style} key={node.key}>
+                          {node}
+                        </DraggableTabNode>
+                      );
+                    }}
                   </DefaultTabBar>
                 </SortableContext>
               </DndContext>

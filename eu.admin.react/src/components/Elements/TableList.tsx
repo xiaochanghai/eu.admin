@@ -56,7 +56,7 @@ export const TableList: React.FC<TableListProps> = props => {
 
   // 引用管理
   const formRef = React.createRef<any>();
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
   const formPageRef = React.createRef<any>();
   const extendPageRef = React.createRef<any>();
 

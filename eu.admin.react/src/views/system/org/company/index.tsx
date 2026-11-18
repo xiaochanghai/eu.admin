@@ -17,7 +17,7 @@ const GROUP_MODULE_CODE = "SM_GROUP_MNG";
 const COMPANY_MODULE_CODE = "SM_COMPANY_MNG";
 
 const Index: React.FC = () => {
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
   const [groups, setGroups] = useState<GroupRecord[]>([]);
   const [groupLoading, setGroupLoading] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");

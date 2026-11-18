@@ -63,7 +63,11 @@ export default function Canvas() {
         padding: "24px 20px"
       }}
     >
-      <div ref={drop} onClick={handleSelectPage}>
+      <div ref={node => {
+
+        drop(node);
+
+      }} onClick={handleSelectPage}>
         <PhoneFrame title={pageProps.title || "页面预览"}>
           <div
             className={cl("transition-colors duration-200", {

@@ -42,7 +42,7 @@ const FormPage: React.FC<FormPageProps> = props => {
 
   const [form] = Form.useForm();
   // const tableRef = React.createRef<any>();
-  const tableRef = useRef<any>();
+  const tableRef = useRef<any>(undefined);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let {
     Id,

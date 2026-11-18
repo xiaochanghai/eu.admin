@@ -30,7 +30,7 @@ const SystemModule: React.FC<SystemModuleProps> = () => {
   // 表单页面是否为查看模式状态
   const [formPageIsView, setFormPageIsView] = useState<boolean>(false);
   const [isWorkflowModule, setIsWorkflowModule] = useState<boolean | null>(null);
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
 
   /**
    * 页面切换处理函数

@@ -1,4 +1,5 @@
-import React, { useContext, useState, useEffect, useRef, memo, RefObject } from "react";
+import React, { useContext, useState, useEffect, useRef, memo } from "react";
+import type { InputRef } from "antd";
 import { Table, Input, Button, Popconfirm, Form, Modal, Upload } from "antd";
 import { ColumnsType } from "antd/lib/table";
 import ApiModal from "./ApiModal";
@@ -49,7 +50,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
   ...restProps
 }) => {
   const [editing, setEditing] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<InputRef>(null);
   const form = useContext(EditableContext);
 
   useEffect(() => {
@@ -87,7 +88,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
           }
         ]}
       >
-        <Input ref={inputRef as unknown as () => RefObject<HTMLInputElement>} onPressEnter={save} onBlur={save} />
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
       </Form.Item>
     ) : (
       <div className="editable-cell-value-wrap" style={{ paddingRight: 24 }} onClick={toggleEdit}>
@@ -111,7 +112,7 @@ class EditableTable extends React.Component<any, any> {
     | {
         title: string;
         dataIndex: string;
-        render: (text: string, record: any) => JSX.Element | null;
+        render: (text: string, record: any) => React.JSX.Element | null;
         width?: undefined;
         editable?: undefined;
       }

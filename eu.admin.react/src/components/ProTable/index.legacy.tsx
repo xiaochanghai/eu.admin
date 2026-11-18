@@ -583,7 +583,7 @@ const SmProTable: React.FC<any> = React.memo(props => {
     </Button>
   ];
 
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
   const enhancedColumns = [...columns];
   enhancedColumns &&
     enhancedColumns.map((item: any, index: any) => {

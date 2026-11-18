@@ -37,7 +37,11 @@ export default function DragItem({ data }: { data: MobileFieldNode }) {
 
   return (
     <div
-      ref={dragRef}
+      ref={node => {
+
+        dragRef(node);
+
+      }}
       className={cl(
         "transition-all duration-150",
         {

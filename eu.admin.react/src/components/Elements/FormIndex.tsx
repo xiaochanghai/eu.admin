@@ -23,7 +23,7 @@ export const FormIndex: React.FC<FormIndexProps> = ({ moduleCode, extendAction }
   const [viewType, setViewType] = useState(ViewType.INDEX);
   const [formPageId, setFormPageId] = useState<string>("");
   const [formPageIsView, setFormPageIsView] = useState(false);
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
 
   // 切换页面处理函数
   const handlePageChange = useCallback((page: ViewType, id: string = "", isView: boolean = false) => {

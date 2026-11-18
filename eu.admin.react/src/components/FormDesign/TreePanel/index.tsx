@@ -48,7 +48,11 @@ export default function TreePanel() {
     })
   }));
   return (
-    <div ref={drop} className="h-full relative text-gray-500 text-md leading-loose">
+    <div ref={node => {
+
+      drop(node);
+
+    }} className="h-full relative text-gray-500 text-md leading-loose">
       <ul>
         {state.children.map((sub, index) => (
           <Item parentId={state.id} index={index} data={sub} key={sub.id} />

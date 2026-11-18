@@ -42,7 +42,7 @@ const FormPage: React.FC<{
   const [waitShipSelectType, setWaitShipSelectType] = useState("Ship");
 
   const [form] = Form.useForm();
-  const tableRef = useRef<any>();
+  const tableRef = useRef<any>(undefined);
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   const moduleInfo = moduleInfos[props.moduleCode] as ModuleInfo;
   const { formColumns, url, isDetail, masterColumn, menuData } = moduleInfo;

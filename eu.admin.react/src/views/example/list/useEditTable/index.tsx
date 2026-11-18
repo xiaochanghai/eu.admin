@@ -80,7 +80,7 @@ const UseEditTable: React.FC = () => {
       tooltip: "只读，使用form.getFieldValue获取不到值",
       formItemProps: (_, { rowIndex }) => {
         return {
-          rules: rowIndex > 1 ? [{ required: true, message: "此项为必填项" }] : []
+          rules: rowIndex !== undefined && rowIndex > 1 ? [{ required: true, message: "此项为必填项" }] : []
         };
       },
       // 第一行不允许编辑
@@ -113,7 +113,7 @@ const UseEditTable: React.FC = () => {
         if (form.getFieldValue([rowKey || "", "title"]) === "不好玩") {
           return { disabled: true };
         }
-        if (rowIndex > 9) {
+        if (rowIndex !== undefined && rowIndex > 9) {
           return { disabled: true };
         }
         return {};

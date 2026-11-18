@@ -116,7 +116,7 @@ const SmProTable: React.FC<ProTableProps> = props => {
 
   const { moduleCode, columns, url, beforeActions, dropActions, IsShowRowSelection, optionPosition, isAllowCustomColumn } =
     moduleInfo;
-  const actionRef = useRef<ActionType>();
+  const actionRef = useRef<ActionType>(undefined);
   const language = useSelector((state: RootState) => state.global.language);
   const { t } = useTranslation();
 

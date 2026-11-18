@@ -20,7 +20,7 @@ const Index: React.FC<any> = () => {
   // const [waitShipSelectType, setWaitShipSelectType] = useState("Ship");
   const moduleInfos = useSelector((state: RootState) => state.module.moduleInfos);
   let moduleInfo = moduleInfos[moduleCode] as any;
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
 
   const changePage = (value: any, id: string, isView: any) => {
     setViewType(value);

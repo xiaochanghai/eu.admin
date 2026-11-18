@@ -29,7 +29,7 @@ export const WorkFlowEditorInner = memo(
   }) => {
     const { className, flowNode, onDataChange, formVo, ...other } = props;
     const edtorStore = useEditorEngine();
-    const initialFlowNodeRef = useRef<IWorkFlowNode>();
+    const initialFlowNodeRef = useRef<IWorkFlowNode>(undefined);
 
     useEffect(() => {
       //初始流程节点

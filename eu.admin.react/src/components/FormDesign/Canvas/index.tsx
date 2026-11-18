@@ -52,7 +52,11 @@ export default function Canvas({ mobile }: Props) {
   return (
     <div className="flex-1 p-4 overflow-y-scroll bg-indigo-50">
       <div
-        ref={drop}
+        ref={node => {
+
+          drop(node);
+
+        }}
         style={{ width: mobile ? 375 : "auto" }}
         className={cl("space-y-1 bg-white border-gray-200 border m-auto min-h-full  transition-all duration-300 relative", {
           "p-5": !mobile,

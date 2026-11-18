@@ -23,7 +23,7 @@ const ImportTemplate: React.FC<ImportTemplateProps> = () => {
   // 表单是否为查看模式
   const [formPageIsView, setFormPageIsView] = useState(false);
 
-  const tableRef = useRef<ActionType>();
+  const tableRef = useRef<ActionType>(undefined);
   const moduleCode = "SM_IMPORT_TEMPLATE_MNG";
 
   /**
