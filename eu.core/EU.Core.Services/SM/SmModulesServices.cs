@@ -1006,7 +1006,8 @@ public class SmModulesServices : BaseServices<SmModules, SmModulesDto, InsertSmM
                     obj.Add(new JProperty("show", x.IsShow));
                 if (x.Fixed != null)
                     obj.Add(new JProperty("fixed", x.Fixed));
-                item.Add(new JProperty(x.DataIndex, obj));
+                if (!item.ContainsKey(x.DataIndex))
+                    item.Add(new JProperty(x.DataIndex, obj));
             });
         }
 
