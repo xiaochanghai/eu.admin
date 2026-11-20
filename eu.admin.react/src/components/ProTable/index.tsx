@@ -339,12 +339,12 @@ const SmProTable: React.FC<ProTableProps> = props => {
           dataIndex: "option",
           fixed: optionPosition === "right" ? "right" : "left",
           valueType: "option",
-          width: 250,
+          width: 200,
           align: "center",
           render: (_: any, record: { ID: string }, index: number, action: any) => (
             <>
               {record.ID !== SUM_ROW_ID && (
-                <Flex gap="small" wrap>
+                <Flex gap="small" justify="center" wrap>
                   {optionAuthButton.Update && !IsView && (
                     <ActionButton icon="EditOutlined" onClick={() => onOptionEdit(record)} />
                   )}
@@ -533,14 +533,18 @@ const SmProTable: React.FC<ProTableProps> = props => {
           // 首次加载尚无请求时，回退到已保存的历史筛选条件（如从其他页返回）
           const restoreParams = latestParamsRef.current ?? tableParam?.params;
           if (restoreParams) {
-            formRef.current.setFieldsValue({ ...restoreParams });
+            const searchValues = Object.fromEntries(
+              Object.entries(restoreParams).filter(([key]) => !["current", "pageSize", "_timestamp"].includes(key))
+            );
+            formRef.current.setFieldsValue(searchValues);
           }
         }}
-        pagination={
-          tableParam?.params
-            ? { ...pagination, current: tableParam.params.current, pageSize: tableParam.params.pageSize }
-            : pagination
-        }
+        // 缓存仅用于初始化，后续分页由 ProTable 管理，避免旧缓存覆盖刚选择的页码/每页条数。
+        pagination={{
+          ...pagination,
+          defaultCurrent: tableParam?.params?.current ?? 1,
+          defaultPageSize: tableParam?.params?.pageSize ?? pagination.defaultPageSize
+        }}
         request={handleRequest}
         search={
           searchVisible

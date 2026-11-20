@@ -57,9 +57,8 @@ export const useProTableData = (
     const hasUserChangedSearchForm = form?.isFieldsTouched?.() ?? true;
 
     // 分页以 ProTable 本次请求传入的 params 为准（ProTable 内部 pageInfo 是页码的唯一来源）。
-    // onLoad 回填表单时会把 current/pageSize 一起 setFieldsValue，导致下面 getFieldsValue(true)
-    // 读到的 formValues 里残留着上一次的旧分页值；若让它参与合并（formValues 在最后 spread），
-    // 会把真实页码覆盖掉，表现为翻页时请求始终发送旧页码、翻不动页。先捕获、最后强制写回。
+    // 即使表单或缓存中残留旧分页值，也不能覆盖本次请求的页码和每页条数。
+    // 先捕获、最后强制写回，搜索条件合并只影响筛选字段。
     const requestedCurrent = params.current;
     const requestedPageSize = params.pageSize;
 

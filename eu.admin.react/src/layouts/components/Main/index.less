@@ -6,6 +6,18 @@
   overflow: auto;
   background-color: var(--hooks-colorBgContent);
 }
+// 独立列表直接挂在 Content 下，或包在用于切换视图的 div 中。
+// 不改变表单、Tabs、弹窗内明细表的父容器高度。
+.ant-layout-content:has(> .ant-pro-table-scroll),
+.ant-layout-content:has(> div:not([style*="display: none"]) > .ant-pro-table-scroll) {
+  height: 100%;
+  min-height: 0;
+
+  > div:has(> .ant-pro-table-scroll) {
+    height: 100%;
+    min-height: 0;
+  }
+}
 .layout-classic .classic-main,
 .layout-columns > .ant-layout,
 .layout-transverse > .ant-layout {
