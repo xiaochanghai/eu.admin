@@ -13,6 +13,7 @@ import LayoutTabs from "@/layouts/components/Tabs";
 import LayoutFooter from "@/layouts/components/Footer";
 import "./index.less";
 import { KeepAlive, useKeepAliveRef } from "keepalive-for-react";
+import { readPageAnimationMode } from "@/config/pageAnimation";
 
 type RouteTypeWithNodeRef = {
   nodeRef?: React.Ref<HTMLElement> | undefined;
@@ -27,6 +28,7 @@ const LayoutMain: React.FC = () => {
   // const { pathname } = useLocation();
   const { outletShow, reload } = useContext(RefreshContext);
   const aliveRef = useKeepAliveRef();
+  const pageAnimation = useSelector((state: RootState) => readPageAnimationMode(state.global.pageAnimation));
 
   const maximize = useSelector((state: RootState) => state.global.maximize);
   const isCollapse = useSelector((state: RootState) => state.global.isCollapse);
@@ -71,7 +73,14 @@ const LayoutMain: React.FC = () => {
       <LayoutTabs />
 
       {/* <KeepAlive aliveRef={aliveRef} transition activeCacheKey={cacheKey} max={20}> */}
-      <KeepAlive transition={true} aliveRef={aliveRef} activeCacheKey={cacheKey} max={18}>
+      <KeepAlive
+        transition={false}
+        cacheNodeClassName="cache-component page-cache"
+        containerClassName={`keep-alive-render page-animation-${pageAnimation}`}
+        aliveRef={aliveRef}
+        activeCacheKey={cacheKey}
+        max={18}
+      >
         {/* <SwitchTransition>
           <CSSTransition classNames="fade" key={pathname} nodeRef={nodeRef} timeout={30000} exit={false} unmountOnExit>
             <Content ref={nodeRef}>{outletShow && outlet}</Content>

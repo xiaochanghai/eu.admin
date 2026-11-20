@@ -41,7 +41,7 @@ const RouterGuard: React.FC<RouterGuardProps> = props => {
 
     // If there is menu data, token, or login on the accessed page, redirect to the home page
     if (authMenuList.length && token && isLoginPage) {
-      navigate(HOME_URL);
+      navigate(HOME_URL, { replace: true });
       return;
     }
 
@@ -50,7 +50,7 @@ const RouterGuard: React.FC<RouterGuardProps> = props => {
       navigate(LOGIN_URL, { replace: true });
       return;
     }
-  }, [loader, language]);
+  }, [loader, language, pathname, token, authMenuList, navigate]);
 
   return props.children;
 };

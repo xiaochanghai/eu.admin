@@ -4,6 +4,7 @@ import { setGlobalState } from "@/redux/modules/global";
 import { RootState, useDispatch, useSelector } from "@/redux";
 import { LayoutType, GlobalState } from "@/redux/interface";
 import ColorPicker from "./components/ColorPicker";
+import PageAnimationSetting from "./components/PageAnimationSetting";
 import "./index.less";
 import { Icon } from "@/components";
 
@@ -74,6 +75,7 @@ const ThemeSection: React.FC<ThemeSectionProps> = ({ icon, title, children }) =>
 
 const ThemeDrawer: React.FC = () => {
   const dispatch = useDispatch();
+  const pageAnimation = useSelector((state: RootState) => state.global.pageAnimation);
   const {
     primary,
     layout,
@@ -280,6 +282,7 @@ const ThemeDrawer: React.FC = () => {
 
       {/* Interface Settings */}
       <ThemeSection icon="SettingOutlined" title="界面设置">
+        <PageAnimationSetting value={pageAnimation} onChange={value => handleStateChange("pageAnimation", value)} />
         <ThemeItem label="菜单折叠" checked={isCollapse} onChange={value => handleStateChange("isCollapse", value)} />
         <ThemeItem label="菜单手风琴" checked={accordion} onChange={value => handleStateChange("accordion", value)} />
         <ThemeItem label="水印" checked={watermark} onChange={value => handleStateChange("watermark", value)} />

@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AuthState } from "@/redux/interface";
 import { getFlatMenuList, getShowMenuList } from "@/utils";
+import { setToken } from "./user";
 
 const authState: AuthState = {
+  sessionVersion: 0,
   // List of menu permissions
   authMenuList: [],
   // Menu permission list ==> left menu bar rendering, need to remove isHide == true
@@ -25,6 +27,10 @@ const authSlice = createSlice({
       state.flatMenuList = getFlatMenuList(payload);
       state.showMenuList = getShowMenuList(payload);
     }
+  },
+  extraReducers: builder => {
+    // Token updates start a new permission session, including expiry and re-login.
+    builder.addCase(setToken, state => ({ ...authState, sessionVersion: state.sessionVersion + 1 }));
   }
 });
 

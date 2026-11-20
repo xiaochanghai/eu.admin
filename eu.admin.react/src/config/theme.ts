@@ -1,8 +1,10 @@
 import { DEFAULT_PRIMARY } from "@/config";
+import { pageAnimationOptions, readPageAnimationMode } from "./pageAnimation";
 import type { GlobalState } from "@/redux/interface";
 import type { SmConfigGroupView, SmConfigItem } from "@/api/modules/smConfig";
 
 export const defaultTheme = {
+  pageAnimation: "fade-slide",
   layout: "vertical",
   primary: DEFAULT_PRIMARY,
   borderRadius: 6,
@@ -30,6 +32,7 @@ export type SystemThemeSettings = ThemeSettings & { allowCustom: boolean };
 export const defaultSystemTheme: SystemThemeSettings = { ...defaultTheme, allowCustom: true };
 
 const names: Record<keyof SystemThemeSettings, string> = {
+  pageAnimation: "页面切换动画",
   layout: "布局样式",
   primary: "主题颜色",
   borderRadius: "圆角大小",
@@ -61,7 +64,9 @@ export const readThemeConfig = (items: Pick<SmConfigItem, "ConfigCode" | "Config
   for (const key of keys) {
     const raw = items?.find(item => item.ConfigCode === `theme.${key}`)?.ConfigValue;
     if (typeof raw !== "string") continue;
-    if (key === "layout") {
+    if (key === "pageAnimation") {
+      result.pageAnimation = readPageAnimationMode(raw);
+    } else if (key === "layout") {
       const layout = layouts.find(layout => layout === raw);
       if (layout) result.layout = layout;
     } else if (key === "primary") {
@@ -96,7 +101,16 @@ export const getThemeConfigChanges = (group: SmConfigGroupView, value: SystemThe
         ConfigCode: code,
         ConfigValue: configValue,
         InputType:
-          typeof value[key] === "boolean" ? "SWITCH" : key === "borderRadius" ? "NUMBER" : key === "layout" ? "SELECT" : "INPUT",
+          typeof value[key] === "boolean"
+            ? "SWITCH"
+            : key === "borderRadius"
+              ? "NUMBER"
+              : key === "layout" || key === "pageAnimation"
+                ? "SELECT"
+                : "INPUT",
+        ...(key === "pageAnimation"
+          ? { AvailableValue: pageAnimationOptions.map(option => `${option.label}:${option.value}`).join(";") }
+          : {}),
         ...(key === "layout" ? { AvailableValue: "纵向:vertical;经典:classic;横向:transverse;分栏:columns" } : {}),
         Sequence: index
       }

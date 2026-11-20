@@ -76,7 +76,7 @@ public class SmConfigServices : BaseServices<SmConfig, SmConfigDto, InsertSmConf
             "theme.compactAlgorithm", "theme.isDark", "theme.isGrey", "theme.isWeak", "theme.isHappy",
             "theme.menuSplit", "theme.siderInverted", "theme.headerInverted", "theme.isCollapse",
             "theme.accordion", "theme.watermark", "theme.breadcrumb", "theme.breadcrumbIcon",
-            "theme.tabs", "theme.tabsIcon", "theme.tabsDrag", "theme.footer"
+            "theme.tabs", "theme.tabsIcon", "theme.tabsDrag", "theme.footer", "theme.pageAnimation"
             ];
             var rows = await Db.Queryable<SmConfig>()
                 .Where(x => x.ConfigGroupId == group.ID && x.IsActive == true && !x.IsDeleted

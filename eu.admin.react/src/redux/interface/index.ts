@@ -1,5 +1,6 @@
 import type { SizeType } from "antd/lib/config-provider/SizeContext";
 import { RouteObjectType } from "@/routers/interface";
+import type { PageAnimationMode } from "@/config/pageAnimation";
 
 export type LayoutType = "vertical" | "classic" | "transverse" | "columns" | "chat";
 
@@ -7,6 +8,7 @@ export type LanguageType = "zh" | "en" | null;
 
 /* GlobalState */
 export interface GlobalState {
+  pageAnimation: PageAnimationMode;
   layout: LayoutType;
   componentSize: SizeType;
   compactAlgorithm: boolean;
@@ -55,6 +57,7 @@ export interface UserState {
 
 /* AuthState */
 export interface AuthState {
+  sessionVersion: number;
   authMenuList: RouteObjectType[];
   showMenuList: RouteObjectType[];
   flatMenuList: RouteObjectType[];

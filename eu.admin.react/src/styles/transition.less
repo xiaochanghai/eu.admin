@@ -13,3 +13,37 @@
   opacity: 0;
   transform: translateX(40px);
 }
+
+// KeepAlive reattaches the cached DOM and marks it active on every page switch.
+@keyframes page-slide-in {
+  from {
+    opacity: 0;
+    transform: var(--page-animation-from, translateX(-30px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.keep-alive-render:not(.page-animation-none) > .page-cache.active {
+  animation: page-slide-in var(--page-animation-duration, 0.3s) var(--page-animation-easing, ease-in-out);
+}
+.page-animation-fade {
+  --page-animation-from: translateX(0);
+}
+.page-animation-fade-bottom {
+  --page-animation-from: translateY(-10%);
+}
+.page-animation-fade-scale {
+  --page-animation-from: scale(1.2);
+  --page-animation-duration: 0.28s;
+}
+.page-animation-zoom-fade {
+  --page-animation-from: scale(0.92);
+  --page-animation-easing: ease-out;
+}
+.page-animation-zoom-out {
+  --page-animation-from: scale(0);
+  --page-animation-duration: 0.15s;
+  --page-animation-easing: ease-out;
+}

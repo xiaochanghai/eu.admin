@@ -1,4 +1,5 @@
 import type { ThemeSettings } from "@/config/theme";
+import PageAnimationSetting from "@/layouts/components/ThemeDrawer/components/PageAnimationSetting";
 
 import { useCallback, useMemo } from "react";
 import { ConfigProvider, Divider, Switch, Popover, InputNumber, Tooltip } from "antd";
@@ -291,6 +292,10 @@ export const ThemeSettingsPanel = ({
 
         {/* Interface Settings */}
         <ThemeSection icon="SettingOutlined" title="界面设置">
+          <PageAnimationSetting
+            value={value.pageAnimation}
+            onChange={animation => handleStateChange("pageAnimation", animation)}
+          />
           <ThemeItem label="菜单折叠" checked={isCollapse} onChange={value => handleStateChange("isCollapse", value)} />
           <ThemeItem label="菜单手风琴" checked={accordion} onChange={value => handleStateChange("accordion", value)} />
           <ThemeItem label="水印" checked={watermark} onChange={value => handleStateChange("watermark", value)} />

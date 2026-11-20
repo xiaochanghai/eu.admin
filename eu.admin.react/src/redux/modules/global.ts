@@ -6,6 +6,7 @@ import type { SystemThemeSettings } from "@/config/theme";
 type GlobalThemeState = GlobalState & { allowCustomTheme: boolean };
 
 const globalState: GlobalThemeState = {
+  pageAnimation: "fade-slide",
   allowCustomTheme: false,
   // layout mode (vertical | classic | transverse | columns)
   layout: "vertical",
