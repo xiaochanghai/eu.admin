@@ -1,8 +1,38 @@
 import { Button, Space, Dropdown, Tooltip } from "antd";
+import type { ButtonProps } from "antd";
 import { Icon } from "@/components";
 import { ToolbarProps } from "../types";
 import { buildAuthButtonMap } from "../utils";
 import { useTranslation } from "react-i18next";
+
+const buttonColors: NonNullable<ButtonProps["color"]>[] = [
+  "default",
+  "primary",
+  "danger",
+  "blue",
+  "purple",
+  "cyan",
+  "green",
+  "magenta",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+  "volcano",
+  "geekblue",
+  "lime",
+  "gold"
+];
+
+const getMenuButtonProps = (value: unknown): Pick<ButtonProps, "type" | "color" | "variant" | "style"> => {
+  const color = typeof value === "string" ? value.trim() : "";
+  const presetColor = buttonColors.find(item => item === color);
+  if (presetColor) return { color: presetColor, variant: "solid" };
+  if (color && typeof CSS !== "undefined" && CSS.supports("color", color)) {
+    return { type: "primary", style: { backgroundColor: color, borderColor: color } };
+  }
+  return { type: "primary" };
+};
 
 /**
  * 工具栏工厂函数
@@ -92,6 +122,7 @@ export const Toolbar = (props: ToolbarProps) => {
         moduleInfo.menuData.map((item: any) => (
           <Button
             key={item.ID}
+            {...getMenuButtonProps(item.Color)}
             icon={item.Icon && <Icon name={item.Icon} />}
             onClick={() => customMenuActions[item.FunctionCode]?.(action, selectedRows, selectedRowKeys)}
           >
@@ -124,10 +155,7 @@ export const Toolbar = (props: ToolbarProps) => {
         {isModuleSuccess &&
           moduleInfo.hideMenu?.length > 0 &&
           moduleInfo.hideMenu.map((item: any) => (
-            <Button
-              key={item.ID}
-              onClick={() => customMenuActions[item.FunctionCode]?.(action, selectedRows, selectedRowKeys)}
-            >
+            <Button key={item.ID} onClick={() => customMenuActions[item.FunctionCode]?.(action, selectedRows, selectedRowKeys)}>
               {item.Icon && <Icon name={item.Icon} />}
               {item.FunctionName}
             </Button>
@@ -151,12 +179,7 @@ export const Toolbar = (props: ToolbarProps) => {
     expendAction?.(action, selectedRows, selectedRowKeys),
 
     moduleInfo.isShowSearch === true && (
-      <Button
-        key="search-btn"
-        type="dashed"
-        onClick={onSearchToggle}
-        style={{ border: 0, padding: 0, boxShadow: "none" }}
-      >
+      <Button key="search-btn" type="dashed" onClick={onSearchToggle} style={{ border: 0, padding: 0, boxShadow: "none" }}>
         <Tooltip placement="top" title={t("proTable.search")}>
           <Icon name="SearchOutlined" className="font-size16" />
         </Tooltip>

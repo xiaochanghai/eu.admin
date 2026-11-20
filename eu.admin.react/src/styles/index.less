@@ -85,6 +85,11 @@ body,
 .anticon:hover {
   color: var(--hooks-colorPrimary);
 }
+// 按钮内的图标跟随按钮文字颜色，避免单独 hover 时覆盖主按钮、危险及禁用状态。
+.ant-btn .icon:hover,
+.ant-btn .anticon:hover {
+  color: inherit;
+}
 .font-bold {
   font-weight: 700;
 }
