@@ -1,3 +1,4 @@
+using MailKit; // MailKit 5.x 的 MimeMessage 发送重载由 IMailTransportExtensions 提供。
 using MailKit.Security;
 using MimeKit;
 

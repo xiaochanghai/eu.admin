@@ -3,7 +3,6 @@ using EU.Core.Common.Extensions;
 using EU.Core.Common.Helper;
 using EU.Core.Model.Models;
 using EU.Core.Model.Tenants;
-using Magicodes.ExporterAndImporter.Excel;
 using Newtonsoft.Json;
 using SqlSugar;
 using System.Diagnostics;
@@ -129,8 +128,6 @@ public class DBSeed
                 });
 
                 Console.WriteLine($"Seeding database data (The Db Id:{MyContext.ConnId})...");
-
-                var importer = new ExcelImporter();
 
                 //种子初始化
                 await SeedDataAsync(myContext.Db);

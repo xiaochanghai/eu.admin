@@ -17,6 +17,10 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="sqlSugarCore" Version="5.1.4.213-preview05" />
+		<!-- Security floors for SqlSugar's transitive database dependencies. -->
+		<PackageReference Include="MySqlConnector" Version="2.6.2" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
 	</ItemGroup>
 
 	<ItemGroup>

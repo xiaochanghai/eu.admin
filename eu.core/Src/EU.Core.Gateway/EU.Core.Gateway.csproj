@@ -24,12 +24,13 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.2" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Ocelot" Version="24.1.0" />
     <PackageReference Include="Ocelot.Provider.Consul" Version="24.1.0" />
     <PackageReference Include="Ocelot.Provider.Polly" Version="24.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+    <!-- Keep the OpenAPI 2.x API while applying the circular-schema security fix. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
   </ItemGroup>
 
   <ItemGroup>

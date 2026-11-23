@@ -14,6 +14,7 @@
 
 ## 入口
 
+- [依赖安全更新](依赖安全更新.md)
 - 前端配置接口：[`SmConfig.md`](SmConfig.md)
 - 系统配置缓存：[`ConfigCache.md`](ConfigCache.md)
 - Agent 强制约束：[`../../eu.core/AGENTS.md`](../../eu.core/AGENTS.md)
