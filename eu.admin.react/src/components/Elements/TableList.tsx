@@ -44,6 +44,8 @@ export const TableList: React.FC<TableListProps> = props => {
   const [modalVisible, setModalVisible] = useState(false); // 模态框是否可见
   const [isView, setIsView] = useState<boolean | null | undefined>(false); // 是否为查看模式
   const [disabled, setDisabled] = useState(true); // 表单是否禁用
+  const [saving, setSaving] = useState<"onSave" | "onSaveAdd" | null>(null); // 当前提交操作
+  const savingRef = useRef(false);
 
   // 从props中解构属性
   const { moduleCode, masterId, changePage, IsView, DynamicFormPage, extendAction, tableActionRef } = props;
@@ -180,6 +182,19 @@ export const TableList: React.FC<TableListProps> = props => {
     }
   };
   const buttonDisable = isView === true ? isView : disabled;
+  const handleSave = async (action: "onSave" | "onSaveAdd") => {
+    if (buttonDisable || savingRef.current || !formPageRef.current?.[action]) return;
+
+    savingRef.current = true;
+    setSaving(action);
+    try {
+      await formPageRef.current[action]();
+    } finally {
+      savingRef.current = false;
+      setSaving(null);
+    }
+  };
+
   return (
     <>
       {moduleInfo && moduleInfo.Success === true ? (
@@ -221,17 +236,22 @@ export const TableList: React.FC<TableListProps> = props => {
                 <Space>
                   <Button
                     key="save"
-                    disabled={buttonDisable}
+                    disabled={saving !== null ? saving !== "onSave" : buttonDisable}
+                    loading={saving === "onSave"}
                     type="primary"
-                    block={true}
-                    onClick={() => formPageRef.current?.onSave()}
+                    onClick={() => handleSave("onSave")}
                   >
                     {t("formOption.save")}
                   </Button>
-                  <Button key="saveAndAdd" disabled={buttonDisable} block={true} onClick={() => formPageRef.current?.onSaveAdd()}>
+                  <Button
+                    key="saveAndAdd"
+                    disabled={saving !== null ? saving !== "onSaveAdd" : buttonDisable}
+                    loading={saving === "onSaveAdd"}
+                    onClick={() => handleSave("onSaveAdd")}
+                  >
                     {t("formOption.saveAndAdd")}
                   </Button>
-                  <Button key="back" type="text" block={true} onClick={onClose}>
+                  <Button key="back" type="text" onClick={onClose}>
                     <Icon name="RollbackOutlined" />
                   </Button>
                 </Space>
