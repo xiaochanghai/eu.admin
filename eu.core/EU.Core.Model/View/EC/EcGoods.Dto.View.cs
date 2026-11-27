@@ -22,4 +22,15 @@ namespace EU.Core.Model.Models;
 /// </summary>
 public class EcGoodsDto : EcGoods
 {
+    /// <summary>产品配件，仅返回展示字段，不暴露服务器存储路径。</summary>
+    [SqlSugar.SugarColumn(IsIgnore = true)]
+    public List<EcGoodsAccessoryDto> Accessories { get; set; } = [];
+}
+
+/// <summary>商品详情配件，原图通过 api/File/Img/{ID} 获取。</summary>
+public class EcGoodsAccessoryDto
+{
+    public Guid ID { get; set; }
+    public string FileName { get; set; }
+    public string OriginalFileName { get; set; }
 }

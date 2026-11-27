@@ -15,6 +15,8 @@
 *└──────────────────────────────────┘
 */
 
+using MathNet.Numerics.Distributions;
+
 namespace EU.Core.Services;
 
 /// <summary>
@@ -25,5 +27,44 @@ public class EcGoodsServices : BaseServices<EcGoods, EcGoodsDto, InsertEcGoodsIn
     public EcGoodsServices(IBaseRepository<EcGoods> dal)
     {
         BaseDal = dal;
+    }
+
+
+    /// <summary>商品详情：返回配件并原子累计浏览量。</summary>
+    public override async Task<EcGoodsDto> QueryById(object objId)
+    {
+        if (!Guid.TryParse(objId?.ToString(), out var id) || id == Guid.Empty)
+            return null;
+
+        var goods = await Query(id);
+        if (goods == null || goods.IsDeleted)
+            return null;
+
+        var entity = await base.QueryById(objId);
+
+
+        entity.Accessories = await Db.Queryable<FileAttachment>()
+            .Where(x => x.MasterId == id && x.ImageType == "Plugin" && !x.IsDeleted)
+            .OrderBy(x => x.CreatedTime)
+            .OrderBy(x => x.ID)
+            .Select(x => new EcGoodsAccessoryDto
+            {
+                ID = x.ID,
+                FileName = x.FileName,
+                OriginalFileName = x.OriginalFileName
+            })
+            .ToListAsync();
+
+
+        await Db.Updateable<EcGoods>()
+            .SetColumns(it => it.ViewCount == SqlFunc.IsNull(it.ViewCount, 0) + 1)
+            .Where(it => it.ID == id && !it.IsDeleted)
+            .ExecuteCommandAsync();
+
+        entity.ViewCount = await Db.Queryable<EcGoods>()
+            .Where(x => x.ID == id)
+            .Select(x => x.ViewCount)
+            .FirstAsync();
+        return entity;
     }
 }
